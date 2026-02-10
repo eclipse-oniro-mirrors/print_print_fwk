@@ -272,15 +272,15 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId, uin
     return ret;
 }
 
-int32_t PrintManagerClient::UpdatePrintJobStateForNormalApp(
+int32_t PrintManagerClient::AdapterGetFileCallBack(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    PRINT_HILOGI("PrintManagerClient UpdatePrintJobStateForNormalApp start.");
+    PRINT_HILOGI("PrintManagerClient AdapterGetFileCallBack start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->UpdatePrintJobStateForNormalApp(jobId, state, subState);
-        PRINT_HILOGI("PrintManagerClient UpdatePrintJobStateForNormalApp out ret = [%{public}d].", ret);
+        ret = printServiceProxy_->AdapterGetFileCallBack(jobId, state, subState);
+        PRINT_HILOGI("PrintManagerClient AdapterGetFileCallBack out ret = [%{public}d].", ret);
     }
     return ret;
 }

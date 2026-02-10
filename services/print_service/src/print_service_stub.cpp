@@ -41,8 +41,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERS] = &PrintServiceStub::OnRemovePrinters;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERS] = &PrintServiceStub::OnUpdatePrinters;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERSTATE] = &PrintServiceStub::OnUpdatePrinterState;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORNORMALAPP] =
-        &PrintServiceStub::OnUpdatePrintJobStateForNormalApp;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADAPTERGETFILECALLBACK] =
+        &PrintServiceStub::OnAdapterGetFileCallBack;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORSYSTEMAPP] =
         &PrintServiceStub::OnUpdatePrintJobStateOnlyForSystemApp;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEEXTENSIONINFO] = &PrintServiceStub::OnUpdateExtensionInfo;
@@ -489,17 +489,17 @@ bool PrintServiceStub::OnUpdatePrinterState(MessageParcel &data, MessageParcel &
     return ret == E_PRINT_NONE;
 }
 
-bool PrintServiceStub::OnUpdatePrintJobStateForNormalApp(MessageParcel &data, MessageParcel &reply)
+bool PrintServiceStub::OnAdapterGetFileCallBack(MessageParcel &data, MessageParcel &reply)
 {
-    PRINT_HILOGI("PrintServiceStub::OnUpdatePrintJobStateForNormalApp in");
+    PRINT_HILOGI("PrintServiceStub::OnAdapterGetFileCallBack in");
     std::string jobId = data.ReadString();
     uint32_t state = data.ReadUint32();
     uint32_t subState = data.ReadUint32();
     PRINT_HILOGD("jobId = %{public}s; state = %{public}u; subState = %{public}u",
         jobId.c_str(), state, subState);
-    int32_t ret = UpdatePrintJobStateForNormalApp(jobId, state, subState);
+    int32_t ret = AdapterGetFileCallBack(jobId, state, subState);
     reply.WriteInt32(ret);
-    PRINT_HILOGD("PrintServiceStub::OnUpdatePrintJobStateForNormalApp out");
+    PRINT_HILOGD("PrintServiceStub::OnAdapterGetFileCallBack out");
     return ret == E_PRINT_NONE;
 }
 

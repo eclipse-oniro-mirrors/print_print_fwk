@@ -1909,17 +1909,6 @@ bool PrintServiceAbility::checkJobState(uint32_t state, uint32_t subState)
     return true;
 }
 
-int32_t PrintServiceAbility::UpdatePrintJobStateForNormalApp(
-    const std::string &jobId, uint32_t state, uint32_t subState)
-{
-    ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-    return UpdatePrintJobState(jobId, state, subState);
-}
-
 int32_t PrintServiceAbility::UpdatePrintJobStateOnlyForSystemApp(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
@@ -1949,14 +1938,14 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
 
 int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState)
 {
-    if (state != PRINT_JOB_CREATE_FILE_COMPLETED) {
-        return E_PRINT_NONE;
-    }
+    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-
+    if (state != PRINT_JOB_CREATE_FILE_COMPLETED) {
+        return E_PRINT_NONE;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
     if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {

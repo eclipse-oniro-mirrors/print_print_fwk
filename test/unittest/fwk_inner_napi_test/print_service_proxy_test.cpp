@@ -944,12 +944,12 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033_NeedRename, TestSize.
 }
 
 /**
- * @tc.name: PrintServiceProxyTest_UpdatePrintJobStateForNormalApp
- * @tc.desc: Verify the UpdatePrintJobStateForNormalApp function.
+ * @tc.name: PrintServiceProxyTest_AdapterGetFileCallBack
+ * @tc.desc: Verify the AdapterGetFileCallBack function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_UpdatePrintJobStateForNormalApp, TestSize.Level0)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AdapterGetFileCallBack, TestSize.Level0)
 {
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
@@ -960,7 +960,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_UpdatePrintJobStateForNorm
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrintJobStateForNormalApp(_, _, _))
+    EXPECT_CALL(*service, AdapterGetFileCallBack(_, _, _))
         .Times(Exactly(1))
         .WillOnce([&testJobId, &testState, &testSubState](const std::string &jobId, uint32_t state, uint32_t subState) {
             EXPECT_EQ(testJobId, jobId);
@@ -974,7 +974,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_UpdatePrintJobStateForNorm
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    proxy->UpdatePrintJobStateForNormalApp(testJobId, testState, testSubState);
+    proxy->AdapterGetFileCallBack(testJobId, testState, testSubState);
 }
 
 /**

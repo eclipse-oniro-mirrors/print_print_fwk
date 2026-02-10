@@ -2827,36 +2827,36 @@ HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_GetPrintServiceProxyFail, Test
 }
 
 /**
- * @tc.name: UpdatePrintJobStateForNormalApp_LoadServerFailed
- * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.name: AdapterGetFileCallBack_LoadServerFailed
+ * @tc.desc: AdapterGetFileCallBack
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_LoadServerFailed, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_LoadServerFailed, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
- * @tc.name: UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail
- * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.name: AdapterGetFileCallBack_GetPrintServiceProxyFail
+ * @tc.desc: AdapterGetFileCallBack
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_GetPrintServiceProxyFail, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }

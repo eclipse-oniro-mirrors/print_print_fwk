@@ -373,7 +373,7 @@ int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId, uint
     return ret;
 }
 
-int32_t PrintServiceProxy::UpdatePrintJobStateForNormalApp(
+int32_t PrintServiceProxy::AdapterGetFileCallBack(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
     MessageParcel data;
@@ -383,16 +383,16 @@ int32_t PrintServiceProxy::UpdatePrintJobStateForNormalApp(
     data.WriteString(jobId);
     data.WriteUint32(state);
     data.WriteUint32(subState);
-    PRINT_HILOGI("PrintServiceProxy UpdatePrintJobStateForNormalApp started.");
+    PRINT_HILOGI("PrintServiceProxy AdapterGetFileCallBack started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy UpdatePrintJobStateForNormalApp remote is null");
+        PRINT_HILOGE("PrintServiceProxy AdapterGetFileCallBack remote is null");
         return E_PRINT_RPC_FAILURE;
     }
     int32_t ret = remote->SendRequest(
-        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORNORMALAPP, data, reply, option);
+        OHOS::Print::IPrintInterfaceCode::CMD_ADAPTERGETFILECALLBACK, data, reply, option);
     ret = GetResult(ret, reply);
-    PRINT_HILOGI("PrintServiceProxy UpdatePrintJobStateForNormalApp out. ret = [%{public}d]", ret);
+    PRINT_HILOGI("PrintServiceProxy AdapterGetFileCallBack out. ret = [%{public}d]", ret);
     return ret;
 }
 
