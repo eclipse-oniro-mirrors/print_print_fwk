@@ -82,25 +82,29 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
     }
 
     napi_value callbackFunc = NapiPrintUtils::GetReference(param->env, param->ref);
-    if (callbackFunc != nullptr) {
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateStringUtf8(param->env, param->jobId);
-        callbackValues[1] = NapiPrintUtils::CreateUint32(param->env, param->fd);
-
-        napi_value result = nullptr;
-        napi_status status = napi_call_function(param->env, nullptr, callbackFunc,
-            NapiPrintUtils::ARGC_TWO, callbackValues, &result);
-        if (status == napi_ok) {
-            PRINT_HILOGI("WatermarkCallback call JS function success");
-        } else {
-            PRINT_HILOGE("WatermarkCallback call JS function failed, status:%{public}d", status);
-        }
-    } else {
+    if (callbackFunc == nullptr) {
         PRINT_HILOGE("WatermarkCallback get reference failed");
+        close(param->fd);
+        napi_close_handle_scope(param->env, scope);
+        delete param;
+        return;
+    }
+
+    napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+    callbackValues[0] = NapiPrintUtils::CreateStringUtf8(param->env, param->jobId);
+    callbackValues[1] = NapiPrintUtils::CreateUint32(param->env, param->fd);
+
+    napi_value result = nullptr;
+    napi_status status = napi_call_function(param->env, nullptr, callbackFunc,
+        NapiPrintUtils::ARGC_TWO, callbackValues, &result);
+    if (status == napi_ok) {
+        PRINT_HILOGI("WatermarkCallback call JS function success");
+    } else {
+        PRINT_HILOGE("WatermarkCallback call JS function failed, status:%{public}d", status);
+        close(param->fd);
     }
 
     napi_close_handle_scope(param->env, scope);
-    close(param->fd);
     delete param;
 }
 
@@ -112,6 +116,7 @@ void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
     WatermarkCallbackParam *param = new (std::nothrow) WatermarkCallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create watermark callback parameter");
+        close(fd);
         return;
     }
 

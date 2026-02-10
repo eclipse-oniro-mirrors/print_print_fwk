@@ -16,6 +16,7 @@
 #ifndef PRINT_SERVICE_ABILITY_H
 #define PRINT_SERVICE_ABILITY_H
 
+#include <fcntl.h>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -151,6 +152,7 @@ public:
     int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
     int32_t UnregisterWatermarkCallback() override;
     int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
+    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
 
 protected:
     void OnStart() override;
@@ -231,7 +233,6 @@ private:
     bool CheckUserIdInEventType(const std::string &type);
     void BuildPrinterPreference(PrinterInfo &printerInfo);
     void ClosePrintJobFd(const std::shared_ptr<PrintJob> &printJob);
-    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);

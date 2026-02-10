@@ -91,6 +91,10 @@ ohos_unittest("fwk_print_cups_client_test") {
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
   }
+
+  if (print_fwk_feature_watermark_enforcing) {
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
 }
 
 group("unittest") {

@@ -24,6 +24,7 @@ namespace Print {
 class MockPrintServiceAbility final : public PrintServiceAbility {
 public:
     MOCK_METHOD1(QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo>(const std::string &));
+    MOCK_METHOD3(OpenCacheFileFd, bool(const std::string &, std::vector<uint32_t> &, int32_t));
 };
 }  // namespace Print
 }  // namespace OHOS

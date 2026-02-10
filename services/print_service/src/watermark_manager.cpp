@@ -19,12 +19,11 @@
 #include "print_constant.h"
 #include "ipc_skeleton.h"
 #include "parameters.h"
-#include <unistd.h>
 
 namespace OHOS::Print {
 
 // System parameter key for watermark enable
-static const std::string WATERMARK_PARAM_KEY = "persist.pc_service_file_guard_waterprint";
+static const std::string WATERMARK_PARAM_KEY = "persist.pc_service_file_guard_watermarkprint";
 
 WatermarkManager& WatermarkManager::GetInstance()
 {
@@ -143,11 +142,6 @@ int32_t WatermarkManager::UnregisterCallback()
     PRINT_HILOGI("Removed callback for PID: %{public}d, remaining callbacks: %{public}zu",
                  callerPid, callbacks_.size());
 
-    // Clear status map if no callbacks left
-    if (callbacks_.empty()) {
-        statusMap_.clear();
-    }
-
     PRINT_HILOGD("UnregisterCallback success");
     return E_PRINT_NONE;
 }
@@ -225,17 +219,7 @@ int32_t WatermarkManager::ProcessWatermarkForFiles(const std::string &jobId,
     }
 
     for (uint32_t fd : fdList) {
-        // Duplicate file descriptor to avoid consumption
-        int32_t dupFd = dup(fd);
-        if (dupFd < 0) {
-            PRINT_HILOGE("dup fd failed");
-            return E_PRINT_SERVER_FAILURE;
-        }
-
-        // Process watermark for this file
-        int32_t ret = ProcessWatermark(jobId, static_cast<uint32_t>(dupFd));
-        close(dupFd);
-
+        int32_t ret = ProcessWatermark(jobId, fd);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("ProcessWatermark failed, ret=%{public}d", ret);
             return ret;
@@ -354,9 +338,9 @@ void WatermarkManager::OnCallbackDied(int32_t pid)
     PRINT_HILOGI("Removed dead callback for PID: %{public}d, remaining callbacks: %{public}zu",
                  pid, callbacks_.size());
 
-    // Clear status map if no callbacks left
+    // If no callbacks left, notify waiting tasks to fail quickly instead of timing out
     if (callbacks_.empty()) {
-        statusMap_.clear();
+        cv_.notify_all();
     }
 }
 

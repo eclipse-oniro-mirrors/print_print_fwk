@@ -30,7 +30,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 
-static const char *WATERMARK_PARAM_KEY = "persist.pc_service_file_guard_waterprint";
+static const char *WATERMARK_PARAM_KEY = "persist.pc_service_file_guard_watermarkprint";
 
 class WatermarkManagerTest : public testing::Test {
 public:

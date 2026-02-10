@@ -242,6 +242,9 @@ private:
     void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
     void RemovePrintCupsJobId(const std::string &jobId);
     uint32_t GetPrintCupsJobId(const std::string &jobId);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    bool ProcessWatermarkWithCacheFd(JobParameters *jobParams);
+#endif // WATERMARK_ENFORCING_ENABLE
 
     using StdStringMap = std::map<std::string, std::string>;
     int32_t CheckOptionConflicts(ppd_file_t *ppd, const StdStringMap &mapParams, const std::string& typeChanged,
