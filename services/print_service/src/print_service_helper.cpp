@@ -42,7 +42,7 @@ bool PrintServiceHelper::CheckPermission(const std::string &name)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType == TOKEN_INVALID) {
-        PRINT_HILOGE("invalid token id %{public}d", tokenId);
+        PRINT_HILOGE("invalid token id %{private}d", tokenId);
         return false;
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, name);
@@ -67,7 +67,7 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
         if (!ret) {
             break;
         } else {
-            PRINT_HILOGE("PrintServiceHelper::StartAbility failed, err is %{public}d, retry is %{public}d", ret, retry);
+            PRINT_HILOGE("PrintServiceHelper::StartAbility failed, err is %{public}d, retry is %{public}u", ret, retry);
             std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
         }
     }
@@ -96,16 +96,17 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
     while (retry++ < MAX_RETRY_TIMES) {
         if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
-            printAbilityConnection_ = printAbilityConnection;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility %{public}d", retry);
+        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility %{public}u", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility --> failed ");
         return false;
     }
+    std::lock_guard<std::mutex> autoLock(connectionListLock_);
+    extConnectionMap_[ExtensionAbilityType::PRINT_EXTENSION_ABILITY].push_back(printAbilityConnection);
     return true;
 }
 
@@ -130,49 +131,67 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility %{public}d", retry);
+        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility %{public}u", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility --> failed ");
         return false;
     }
     std::lock_guard<std::mutex> autoLock(connectionListLock_);
-    pluginPrintConnectionList_.push(printAbilityConnection);
+    extConnectionMap_[ExtensionAbilityType::SERVICE_EXTENSION_ABILITY].push_back(printAbilityConnection);
     return true;
 }
 
-bool PrintServiceHelper::DisconnectAbility()
+bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbilityType)
 {
     PRINT_HILOGD("enter PrintServiceHelper::DisconnectAbility");
     AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
-    while (retry++ < MAX_RETRY_TIMES) {
-        if (printAbilityConnection_ != nullptr &&
-            AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(printAbilityConnection_) == 0) {
-            PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
-            printAbilityConnection_ = nullptr;
-            break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGE("PrintServiceHelper::DisconnectAbility %{public}d", retry);
-    }
-    if (retry > MAX_RETRY_TIMES) {
-        PRINT_HILOGE("PrintServiceHelper::DisconnectAbility --> failed ");
+    std::lock_guard<std::mutex> connectionLock(connectionListLock_);
+    auto connectionListIt = extConnectionMap_.find(extensionAbilityType);
+    if (connectionListIt == extConnectionMap_.end() || connectionListIt->second.size() == 0) {
+        PRINT_HILOGW("cannot find connect list of this type");
         return false;
     }
+
+    while (!connectionListIt->second.empty()) {
+        if (retry++ >= MAX_RETRY_TIMES) {
+            PRINT_HILOGW("PrintServiceHelper::DisconnectAbility --> failed ");
+            break;
+        }
+        for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
+            if (AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(*connIt) == 0) {
+                PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
+                connIt = connectionListIt->second.erase(connIt);
+            } else {
+                ++connIt;
+            }
+        }
+    }
+
+    extConnectionMap_.erase(connectionListIt);
     return true;
 }
 
 bool PrintServiceHelper::CheckPluginPrintConnected()
 {
-    std::lock_guard<std::mutex> autoLock(connectionListLock_);
-    if (pluginPrintConnectionList_.empty()) {
-        PRINT_HILOGE("get ability connection from queue failed.");
+    bool pluginConnected = true;
+    std::lock_guard<std::mutex> connectionLock(connectionListLock_);
+    auto connectionListIt = extConnectionMap_.find(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
+    if (connectionListIt == extConnectionMap_.end() || connectionListIt->second.size() == 0) {
+        PRINT_HILOGW("cannot find connect list of this type");
         return false;
     }
-    auto connection = pluginPrintConnectionList_.front();
-    pluginPrintConnectionList_.pop();
-    return connection->IsConnected();
+
+    for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
+        if ((*connIt) != nullptr && !(*connIt)->IsConnected()) {
+            pluginConnected = false;
+            connIt = connectionListIt->second.erase(connIt);
+        } else {
+            ++connIt;
+        }
+    }
+    return pluginConnected;
 }
 
 sptr<IRemoteObject> PrintServiceHelper::GetBundleMgr()

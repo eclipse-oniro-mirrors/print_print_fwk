@@ -28,20 +28,12 @@ class PrintSharedHostTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintSharedHostTest::SetUpTestCase(void)
 {}
 
 void PrintSharedHostTest::TearDownTestCase(void)
-{}
-
-void PrintSharedHostTest::SetUp(void)
-{}
-
-void PrintSharedHostTest::TearDown(void)
 {}
 
 /**

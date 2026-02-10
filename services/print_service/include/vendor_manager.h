@@ -35,14 +35,13 @@ public:
     virtual bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
                                                const std::string &ppdName, const std::string &ppdData) = 0;
     virtual bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) = 0;
-    virtual bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
-                                      const PrinterVendorStatus &status) = 0;
+    virtual bool OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status) = 0;
     virtual bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) = 0;
     virtual bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) = 0;
     virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) = 0;
     virtual std::shared_ptr<PrinterInfo> QueryConnectingPrinterInfoById(const std::string &printerId) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) = 0;
-    virtual std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) = 0;
+    virtual std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) = 0;
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) = 0;
     virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
@@ -78,6 +77,7 @@ public:
     int32_t RemovePrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;
+    bool OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status) override;
     bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
@@ -102,7 +102,7 @@ public:
         const std::string &printerId) override;
     int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) override;
-    std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) override;
+    std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) override;
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
     bool ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName) override;
@@ -134,9 +134,9 @@ private:
     std::thread statusMonitorThread;
     bool statusMonitorOn = false;
     std::mutex statusMonitorMutex;
+    std::mutex apiMutex;
     std::condition_variable statusMonitorCondition;
     ConnectState connectingState = ConnectState::STATE_NONE;
-    std::string connectingPrinterId;
     bool isConnecting = false;
     ConnectMethod connectingMethod = ID_AUTO;
     std::string connectingPrinter;

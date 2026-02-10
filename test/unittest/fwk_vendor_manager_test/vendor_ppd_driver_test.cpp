@@ -24,6 +24,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "mock/mock_vendor_manager.h"
+#include "mock/mock_vendor_ppd_driver.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -211,6 +212,49 @@ HWTEST_F(VendorPpdDriverTest, AllCallVendorMgrFunc_WhenAfterUninit_ShouldFail, T
     vendorDriver.OnStartDiscovery();
     vendorDriver.OnStopDiscovery();
     EXPECT_FALSE(vendorDriver.TryConnectByPpdDriver(printerInfo));
+}
+
+HWTEST_F(VendorPpdDriverTest, TryConnectByPpdDriverTest, TestSize.Level1)
+{
+    MockVendorManager mockVendorManager;
+    MockVendorPpdDriver vendorPpdDriver;
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("1");
+
+    EXPECT_TRUE(vendorPpdDriver.Init(&mockVendorManager));
+    EXPECT_NE(vendorPpdDriver.vendorManager, nullptr);
+    EXPECT_EQ(vendorPpdDriver.OnPrinterDiscovered(vendorPpdDriver.GetVendorName(), printerInfo), 0);
+    EXPECT_EQ(printerInfo.GetPrinterId(), "1");
+
+    EXPECT_CALL(vendorPpdDriver, QueryProperty(_, _, _))
+        .Times(3)
+        .WillOnce(Return(false))
+        .WillRepeatedly(Return(true));
+    EXPECT_CALL(mockVendorManager, AddPrinterToCupsWithPpd(_, _, _, _))
+        .Times(2)
+        .WillOnce(Return(EXTENSION_ERROR_CALLBACK_FAIL))
+        .WillOnce(Return(EXTENSION_ERROR_NONE));
+
+    EXPECT_FALSE(vendorPpdDriver.TryConnectByPpdDriver(printerInfo));
+    EXPECT_FALSE(vendorPpdDriver.TryConnectByPpdDriver(printerInfo));
+    EXPECT_TRUE(vendorPpdDriver.TryConnectByPpdDriver(printerInfo));
+}
+
+HWTEST_F(VendorPpdDriverTest, OnQueryCapabilityTest, TestSize.Level1)
+{
+    MockVendorManager mockVendorManager;
+    VendorPpdDriver vendorPpdDriver;
+    std::shared_ptr<PrinterInfo> printerInfo;
+
+    EXPECT_TRUE(vendorPpdDriver.Init(&mockVendorManager));
+    EXPECT_NE(vendorPpdDriver.vendorManager, nullptr);
+
+    EXPECT_CALL(mockVendorManager, QueryDiscoveredPrinterInfoById(_, _))
+        .WillOnce(Return(nullptr))
+        .WillOnce(Return(printerInfo));
+
+    EXPECT_FALSE(vendorPpdDriver.OnQueryCapability("testId", 0));
+    EXPECT_FALSE(vendorPpdDriver.OnQueryCapability("testId", 0));
 }
 }  // namespace Print
 }  // namespace OHOS

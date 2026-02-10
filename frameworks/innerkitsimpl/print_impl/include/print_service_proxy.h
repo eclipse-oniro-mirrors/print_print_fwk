@@ -27,6 +27,7 @@ public:
     ~PrintServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(PrintServiceProxy);
     virtual int32_t StartService() override;
+    int32_t Release() override;
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
@@ -100,6 +101,9 @@ public:
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName, char *userPasswd,
         std::vector<PrinterInfo>& printerInfos) override;
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

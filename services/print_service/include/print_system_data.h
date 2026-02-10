@@ -57,7 +57,7 @@ public:
     bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
 
     std::vector<std::string> QueryAddedPrinterIdList();
-    std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp);
+    std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId);
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId);
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoByName(const std::string &printerName);
     void AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printerInfo);

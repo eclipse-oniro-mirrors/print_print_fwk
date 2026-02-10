@@ -415,7 +415,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
         PRINT_HILOGE("Callback fail, delete param");
-        workParam = nullptr;
+        delete workParam;
         return false;
     }
     return true;

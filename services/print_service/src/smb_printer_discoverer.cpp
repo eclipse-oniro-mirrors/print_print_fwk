@@ -21,6 +21,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <sstream>
+#include <iomanip>
 #include "print_log.h"
 #include "print_util.h"
 #include "print_constant.h"
@@ -35,21 +36,18 @@ static constexpr int32_t PRINTER_TYPE = 3;
 static const char* URL_SPACE_ENCODING  = "%20";
 static constexpr uint16_t SMB2_NEGOTIATE_SIGNING_ENABLED = 0x0001;
 static constexpr int SHARE_INFO_1 = 1;
+static constexpr int FIELD_WIDTH = 2;
+static constexpr char PERCENT_SYMBOL = '%';
 
 struct SmbPrinterDiscoverer::PrinterShareInfo {
     std::string name;
     std::string remark;
 };
 
-SmbPrinterDiscoverer::SmbPrinterDiscoverer() : smbCtx_(nullptr),
-    userPasswd_(nullptr), smbLib_(DelayedSingleton<SmbLibrary>::GetInstance())
+SmbPrinterDiscoverer::SmbPrinterDiscoverer() : smbCtx_(nullptr), smbLib_(DelayedSingleton<SmbLibrary>::GetInstance())
 {
     if (smbLib_) {
         smbCtx_ = smbLib_->CreateContext();
-    }
-    userPasswd_ = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
-    if (!userPasswd_) {
-        PRINT_HILOGE("allocate userPasswd_ mem fail");
     }
 }
 
@@ -61,10 +59,6 @@ SmbPrinterDiscoverer::~SmbPrinterDiscoverer()
         }
         smbCtx_ = nullptr;
     }
-    if (userPasswd_) {
-        PrintUtil::SafeDeleteAuthInfo(userPasswd_);
-        userPasswd_ = nullptr;
-    }
 }
 
 int32_t SmbPrinterDiscoverer::SetCredentials(const std::string &userName, char *userPasswd)
@@ -74,28 +68,16 @@ int32_t SmbPrinterDiscoverer::SetCredentials(const std::string &userName, char *
 
     if (userName.empty()) {
         PRINT_HILOGI("auth as guest");
-        return E_PRINT_NONE;
+        smbLib_->SetUser(smbCtx_, "guest");
+        smbLib_->SetPassword(smbCtx_, "");
+    } else {
+        PRINT_HILOGI("auth as registered user");
+        smbLib_->SetUser(smbCtx_, userName.c_str());
+        if (userPasswd) {
+            smbLib_->SetPassword(smbCtx_, userPasswd);
+        }
     }
-
-    if (!userPasswd) {
-        PRINT_HILOGE("userPasswd is null");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-
-    if (!userPasswd_) {
-        PRINT_HILOGE("userPasswd_ is null");
-        return E_PRINT_SERVER_FAILURE;
-    }
-
-    smbLib_->SetUser(smbCtx_, userName.c_str());
-    smbLib_->SetPassword(smbCtx_, userPasswd);
     smbLib_->SetSecurityMode(smbCtx_, SMB2_NEGOTIATE_SIGNING_ENABLED);
-
-    auto memcpyRet = memcpy_s(userPasswd_, MAX_AUTH_LENGTH_SIZE, userPasswd, MAX_AUTH_LENGTH_SIZE);
-    if (memcpyRet != E_PRINT_NONE) {
-        PRINT_HILOGW("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
-    }
-    userName_ = userName;
     return E_PRINT_NONE;
 }
 
@@ -111,12 +93,12 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
         return ret;
     }
     smbLib_->SetTimeout(smbCtx_, SMB_CONNECT_TIMEOUT_MS);
-    const char* share = "print$";
     ret = smbLib_->ConnectShare(smbCtx_, sharedHost.GetIp().c_str(), "IPC$", nullptr);
     if (ret != 0) {
+        const char* errorReason = smbLib_->GetSmbError(smbCtx_);
         PRINT_HILOGE("smb2_connect_share fail, ret = %{public}d, reason = %{public}s",
-            ret, smbLib_->GetSmbError(smbCtx_));
-        return E_PRINT_INVALID_TOKEN;
+            ret, errorReason ? errorReason : "null");
+        return ParseSmbErrorCode(errorReason ? errorReason : "null");
     }
     if (smbLib_->ShareEnumAsync(smbCtx_, SHARE_INFO_1,
         [](struct smb2_context* smb2, int32_t status, void* commandData, void* privateData) {
@@ -127,8 +109,9 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
             auto* self = static_cast<SmbPrinterDiscoverer*>(privateData);
             self->ShareEnumCallback(smb2, status, commandData);
         }, this) != 0) {
+        const char* errorReason = smbLib_->GetSmbError(smbCtx_);
         PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
-            ret, smbLib_->GetSmbError(smbCtx_));
+            ret, errorReason ? errorReason : "null");
         smbLib_->DisconnectShare(smbCtx_);
         return {};
     }
@@ -159,9 +142,11 @@ int32_t SmbPrinterDiscoverer::SmbEventLoop()
         };
         int32_t ret = poll(&pfd, 1, SMB_CONNECT_TIMEOUT_MS);
         if (ret > 0) {
-            if (ret = smbLib_->Service(smbCtx_, pfd.revents) < 0) {
+            ret = smbLib_->Service(smbCtx_, pfd.revents);
+            if (ret < 0) {
+                const char* errorReason = smbLib_->GetSmbError(smbCtx_);
                 PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
-                    ret, smbLib_->GetSmbError(smbCtx_));
+                    ret, errorReason ? errorReason : "null");
                 return E_PRINT_SERVER_FAILURE;
             }
         } else if (ret == 0) {
@@ -196,7 +181,7 @@ void SmbPrinterDiscoverer::ShareEnumCallback(struct smb2_context* smb2, int32_t 
     }
     auto* rep = static_cast<struct srvsvc_NetrShareEnum_rep*>(commandData);
     if (rep->ses.ShareInfo.Level1.EntriesRead > 0) {
-        for (int32_t i = 0; i < rep->ses.ShareInfo.Level1.EntriesRead; i++) {
+        for (uint32_t i = 0; i < rep->ses.ShareInfo.Level1.EntriesRead; i++) {
             const auto& share = rep->ses.ShareInfo.Level1.Buffer->share_info_1[i];
             if ((share.type & PRINTER_TYPE) == SHARE_TYPE_PRINTQ) {
                 PrinterShareInfo printer;
@@ -226,7 +211,7 @@ void SmbPrinterDiscoverer::GeneratePrinterInfos(const std::string& ip, std::vect
         char uri[MAX_URI_LENGTH] = {0};
         std::string shareName = printer.name;
         if (sprintf_s(uri, sizeof(uri), "smb://%s/%s",
-            ip.c_str(), ReplaceSpacesInPrinterUri(printer.name).c_str()) < 0) {
+            ip.c_str(), UrlEncode(printer.name).c_str()) < 0) {
             PRINT_HILOGW("GeneratePrinterInfos sprintf_s fail");
             continue;
         }
@@ -238,17 +223,21 @@ void SmbPrinterDiscoverer::GeneratePrinterInfos(const std::string& ip, std::vect
     }
 }
 
-std::string SmbPrinterDiscoverer::ReplaceSpacesInPrinterUri(const std::string& input)
+std::string SmbPrinterDiscoverer::UrlEncode(const std::string& str)
 {
-    std::ostringstream oss;
-    for (char c : input) {
-        if (c == ' ') {
-            oss << URL_SPACE_ENCODING;
-        } else {
-            oss << c;
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex << std::uppercase;
+
+    for (char c : str) {
+        if (isalnum(static_cast<unsigned char>(c)) || c == '.' || c == '/' || c == ':') {
+            escaped << c;
+            continue;
         }
+        escaped << PERCENT_SYMBOL << std::setw(FIELD_WIDTH) << static_cast<int>(static_cast<unsigned char>(c));
     }
-    return oss.str();
+
+    return escaped.str();
 }
 
 std::string SmbPrinterDiscoverer::CreatePrinterId(const std::string& ip, const std::string& name)
@@ -277,5 +266,18 @@ std::string SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(const std::string& pri
 bool SmbPrinterDiscoverer::IsSmbPrinterId(const std::string& printerId)
 {
     return printerId.find("smb") != std::string::npos;
+}
+
+int32_t SmbPrinterDiscoverer::ParseSmbErrorCode(const std::string& errorReason)
+{
+    if (errorReason.find("STATUS_LOGON_FAILURE") != std::string::npos) {
+        return E_PRINT_INVALID_TOKEN;
+    } else if (errorReason.find("signature") != std::string::npos) {
+        return E_PRINT_INVALID_TOKEN;
+    } else if (errorReason.find("SMB2_STATUS_ACCOUNT_LOCKED_OUT") != std::string::npos) {
+        return E_PRINT_WINDOWS_LOGIN_LOCKOUT;
+    } else {
+        return E_PRINT_WINDOWS_CONNECTION_FAILURE;
+    }
 }
 }  // namespace OHOS::Print

@@ -112,25 +112,17 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
         return;
     }
     ani_ref printAdapter;
-    if (!GetRefProperty(env, para, PRINT_ADAPTER_STR, printAdapter)) {
-        PRINT_HILOGE("GetRefProperty fail");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
-        return;
-    }
     ani_ref printAttributes;
-    if (!GetRefProperty(env, para, PRINT_ATTRIBUTES_STR, printAttributes)) {
+    ani_ref context;
+    if (!GetRefProperty(env, para, PRINT_ADAPTER_STR, printAdapter) ||
+        !GetRefProperty(env, para, PRINT_ATTRIBUTES_STR, printAttributes) ||
+        !GetRefProperty(env, para, CONTEXT_STR, context)) {
         PRINT_HILOGE("GetRefProperty fail");
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     PrintAttributes attributes = AniPrintAttributesHelper::ParsePrintAttributes(env,
         static_cast<ani_object>(printAttributes));
-    ani_ref context;
-    if (!GetRefProperty(env, para, CONTEXT_STR, context)) {
-        PRINT_HILOGE("GetRefProperty fail");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
-        return;
-    }
     auto ctx = OHOS::AbilityRuntime::GetStageModeContext(env, static_cast<ani_object>(context));
     if (ctx == nullptr) {
         PRINT_HILOGE("Get Context Failed");
@@ -139,8 +131,14 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
     }
     auto nativePrintTask = new AniPrintTask(env);
     OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, static_cast<ani_object>(printAdapter));
-    if (nativePrintTask == nullptr || callbackWrapper == nullptr) {
-        PRINT_HILOGE("nativePrintTask or callbackWrapper is nullptr");
+    if (nativePrintTask == nullptr) {
+        PRINT_HILOGE("nativePrintTask is nullptr");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        delete nativePrintTask;
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }

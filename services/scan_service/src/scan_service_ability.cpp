@@ -427,19 +427,17 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info, std::vector<ScanD
 void ScanServiceAbility::SaneGetScanner()
 {
     scannerState_.store(SCANNER_SEARCHING);
-    ScanMdnsService::GetInstance().OnStopDiscoverService();
     ScanMdnsService::GetInstance().OnStartDiscoverService();
-    deviceInfos_.clear();
     SaneManagerClient::GetInstance()->SaneInit();
-    std::vector<SaneDevice> deviceInfos;
-    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
+    std::vector<SaneDevice> saneDeviceInfos;
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(saneDeviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
         scannerState_.store(SCANNER_READY);
         return;
     }
     std::vector<ScanDeviceInfo> scanDeviceInfos;
-    for (const auto &device : deviceInfos) {
+    for (const auto &device : saneDeviceInfos) {
         ScanDeviceInfo info;
         info.deviceId = device.name_;
         info.manufacturer = device.vendor_;
@@ -451,9 +449,8 @@ void ScanServiceAbility::SaneGetScanner()
     EsclDriverManager::AddEsclScannerInfo(scanDeviceInfos);
     for (auto& scanDeviceInfo : scanDeviceInfos) {
         SendDeviceInfo(scanDeviceInfo, SCAN_DEVICE_FOUND);
-        deviceInfos_.emplace_back(scanDeviceInfo);
     }
-    SendDeviceList(deviceInfos_, GET_SCANNER_DEVICE_LIST);
+    SendDeviceList(scanDeviceInfos, GET_SCANNER_DEVICE_LIST);
     scannerState_.store(SCANNER_READY);
 }
 
@@ -603,7 +600,7 @@ int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const in
 int32_t ScanServiceAbility::ActionGetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
-    SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
+    SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
     SaneStatus status = SANE_STATUS_GOOD;
     ScanOptionValueType valueType = value.GetScanOptionValueType();
     SaneControlParam controlParam;
@@ -702,7 +699,7 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
-    SCAN_HILOGD("ScanServiceAbility GetScanParameters start");
+    SCAN_HILOGI("ScanServiceAbility GetScanParameters start");
     SaneParameters saneParams;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetParameters(scannerId, saneParams);
     if (status != SANE_STATUS_GOOD) {
@@ -716,7 +713,7 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
     para.SetLines(saneParams.lines_);
     para.SetDepth(saneParams.depth_);
     para.Dump();
-    SCAN_HILOGD("ScanServiceAbility GetScanParameters end");
+    SCAN_HILOGI("ScanServiceAbility GetScanParameters end");
     return E_SCAN_NONE;
 }
 
@@ -776,10 +773,10 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
             return E_SCAN_SERVER_FAILURE;
         }
     } else {
-        SCAN_HILOGD("ScanServiceAbility::On Replace listener.");
+        SCAN_HILOGI("ScanServiceAbility::On Replace listener.");
         it->second = listener;
     }
-    SCAN_HILOGD("ScanServiceAbility::On end.");
+    SCAN_HILOGI("ScanServiceAbility::On end.");
     return E_SCAN_NONE;
 }
 
@@ -925,7 +922,7 @@ void ScanServiceAbility::NetScannerLossNotify(const ScanDeviceInfoSync& syncInfo
 void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
 {
     if (scannerState_.load() == SCANNER_SEARCHING) {
-        SCAN_HILOGD("The manufacturer's driver is still under search");
+        SCAN_HILOGI("The manufacturer's driver is still under search");
         return;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1291,7 +1288,7 @@ void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus
         SCAN_HILOGE("End of failed scan ");
     } else {
         scanTask.JpegFinishCompress();
-        SCAN_HILOGD("End of normal scan");
+        SCAN_HILOGI("End of normal scan");
     }
 }
 

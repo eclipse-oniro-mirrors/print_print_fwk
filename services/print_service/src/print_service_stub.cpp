@@ -16,6 +16,7 @@
 #include "print_service_stub.h"
 #include "ipc_skeleton.h"
 #include "iprint_service.h"
+#include "iwatermark_callback.h"
 #include "message_parcel.h"
 #include "print_constant.h"
 #include "print_extension_info.h"
@@ -65,6 +66,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE] = &PrintServiceStub::OnStartGetPrintFile;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE] = &PrintServiceStub::OnNotifyPrintService;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_SERVICE] = &PrintServiceStub::OnStartService;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RELEASE] = &PrintServiceStub::OnRelease;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_PRINTER_CB] = &PrintServiceStub::OnRegisterPrinterCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UNREG_PRINTER_CB] = &PrintServiceStub::OnUnregisterPrinterCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYPRINTERID] =
@@ -107,12 +109,18 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnGetPrinterDefaultPreferences;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS] = &PrintServiceStub::OnGetSharedHosts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTH_SMB_DEVICE] = &PrintServiceStub::OnAuthSmbDevice;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_WATERMARK_CB] =
+        &PrintServiceStub::OnRegisterWatermarkCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UNREG_WATERMARK_CB] =
+        &PrintServiceStub::OnUnregisterWatermarkCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_WATERMARK_COMPLETE] =
+        &PrintServiceStub::OnNotifyWatermarkComplete;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    PRINT_HILOGD("OnRemoteRequest started, code = %{public}d", code);
+    PRINT_HILOGD("OnRemoteRequest started, code = %{public}u", code);
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
         PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
@@ -143,6 +151,18 @@ bool PrintServiceStub::OnStartService(MessageParcel &data, MessageParcel &reply)
     return ret == E_PRINT_NONE;
 }
 
+bool PrintServiceStub::OnRelease(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("nativePrint PrintServiceStub::OnRelease in");
+    int32_t ret = E_PRINT_INVALID_PARAMETER;
+    if (data.ReadString() == "nativePrint") {
+        ret = Release();
+        reply.WriteInt32(ret);
+        PRINT_HILOGI("nativePrint PrintServiceStub::OnRelease out:%{public}d", ret);
+    }
+    return ret == E_PRINT_NONE;
+}
+
 bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnStartPrint in");
@@ -160,17 +180,17 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     }
 
     if (data.ReadBool()) {
-        int32_t len = data.ReadInt32();
+        uint32_t len = data.ReadUint32();
         if (len > PRINT_MAX_PRINT_COUNT) {
             PRINT_HILOGE("len is out of range.");
             reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
             return false;
         }
-        for (int32_t index = 0; index < len; index++) {
+        for (uint32_t index = 0; index < len; index++) {
             int fdTemp = data.ReadFileDescriptor();
             if (fdTemp >= 0) {
                 uint32_t fd = static_cast<uint32_t>(fdTemp);
-                PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
+                PRINT_HILOGD("fdList[%{public}u] = %{public}u", index, fd);
                 fdList.emplace_back(fd);
                 continue;
             }
@@ -185,6 +205,11 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     }
     std::string taskId = data.ReadString();
     int32_t ret = StartPrint(fileList, fdList, taskId);
+    if (ret != E_PRINT_NONE) {
+        for (auto fd : fdList) {
+            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+        }
+    }
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnStartPrint out");
     return ret == E_PRINT_NONE;
@@ -294,7 +319,7 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
         PRINT_HILOGE("read data len failed.");
         return false;
     }
-    PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}d", len);
+    PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}u", len);
 
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
@@ -428,7 +453,7 @@ bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data, MessageParcel &repl
         PRINT_HILOGE("read data len failed.");
         return false;
     }
-    PRINT_HILOGD("OnUpdatePrinters len = %{public}d", len);
+    PRINT_HILOGD("OnUpdatePrinters len = %{public}u", len);
 
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
@@ -470,7 +495,7 @@ bool PrintServiceStub::OnUpdatePrintJobStateForNormalApp(MessageParcel &data, Me
     std::string jobId = data.ReadString();
     uint32_t state = data.ReadUint32();
     uint32_t subState = data.ReadUint32();
-    PRINT_HILOGD("jobId = %{public}s; state = %{public}d; subState = %{public}d",
+    PRINT_HILOGD("jobId = %{public}s; state = %{public}u; subState = %{public}u",
         jobId.c_str(), state, subState);
     int32_t ret = UpdatePrintJobStateForNormalApp(jobId, state, subState);
     reply.WriteInt32(ret);
@@ -485,8 +510,8 @@ bool PrintServiceStub::OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data
     uint32_t state = data.ReadUint32();
     uint32_t subState = data.ReadUint32();
     PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp jobId = %{public}s", jobId.c_str());
-    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp state = %{public}d", state);
-    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp subState = %{public}d", subState);
+    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp state = %{public}u", state);
+    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp subState = %{public}u", subState);
 
     int32_t ret = UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
     reply.WriteInt32(ret);
@@ -611,7 +636,7 @@ bool PrintServiceStub::OnNotifyPrintServiceEvent(MessageParcel &data, MessagePar
     PRINT_HILOGI("PrintServiceStub::OnNotifyPrintServiceEvent in");
     std::string jobId = data.ReadString();
     uint32_t event = data.ReadUint32();
-    PRINT_HILOGD("OnNotifyPrintServiceEvent jobId = %{public}s, event = %{public}d", jobId.c_str(), event);
+    PRINT_HILOGD("OnNotifyPrintServiceEvent jobId = %{public}s, event = %{public}u", jobId.c_str(), event);
     int32_t ret = NotifyPrintServiceEvent(jobId, event);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnNotifyPrintServiceEvent out");
@@ -1143,6 +1168,47 @@ bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply
         }
     }
     PRINT_HILOGD("PrintServiceStub::OnAuthSmbDevice out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnRegisterWatermarkCallback in");
+    auto remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        PRINT_HILOGE("Failed to read remote object");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    sptr<IWatermarkCallback> callback = iface_cast<IWatermarkCallback>(remoteObject);
+    if (callback == nullptr) {
+        PRINT_HILOGE("Failed to cast to IWatermarkCallback");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    int32_t ret = RegisterWatermarkCallback(callback);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnRegisterWatermarkCallback out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnUnregisterWatermarkCallback in");
+    int32_t ret = UnregisterWatermarkCallback();
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnUnregisterWatermarkCallback out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete in");
+    std::string jobId = data.ReadString();
+    int32_t result = data.ReadInt32();
+    int32_t ret = NotifyWatermarkComplete(jobId, result);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete out");
     return ret == E_PRINT_NONE;
 }
 

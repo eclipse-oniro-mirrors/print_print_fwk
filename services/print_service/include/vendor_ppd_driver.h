@@ -41,8 +41,6 @@ public:
 private:
     std::string QueryPpdName(const std::string &makeAndModel);
     void DiscoverBackendPrinters();
-    void DiscoveryProcess();
-    bool WaitNext();
     bool TryConnectByPpdDriver(const PrinterInfo &printerInfo);
 
 private:
@@ -50,11 +48,6 @@ private:
     std::shared_ptr<PrinterInfo> connectingPrinterInfo;
     std::mutex updateDiscoveryMutex_;
     std::map<std::string, bool> discoveredPrinters_;
-    bool isDiscovering_ = false;
-    std::thread discoveryThread_;
-    std::mutex discoveryStateChangeMutex_;
-    std::mutex waitDiscoveryMutex_;
-    std::condition_variable waitDiscoveryCondition_;
 };
 }  // namespace Print
 }  // namespace OHOS

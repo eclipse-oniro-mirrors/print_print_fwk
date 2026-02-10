@@ -37,13 +37,12 @@ private:
     int32_t SmbEventLoop();
     std::string CreatePrinterId(const std::string& ip, const std::string& name);
     void GeneratePrinterInfos(const std::string& ip, std::vector<PrinterInfo> &infos);
-    std::string ReplaceSpacesInPrinterUri(const std::string& input);
+    std::string UrlEncode(const std::string &str);
+    int32_t ParseSmbErrorCode(const std::string& errorReason);
 
     struct PrinterShareInfo;
     struct smb2_context* smbCtx_;
-    char* userPasswd_;
     std::vector<PrinterShareInfo> printers_;
-    std::string userName_;
     std::atomic<bool> isFinished_{ false };
     std::shared_ptr<SmbLibrary> smbLib_;
 };

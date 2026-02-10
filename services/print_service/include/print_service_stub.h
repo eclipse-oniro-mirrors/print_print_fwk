@@ -28,6 +28,7 @@ public:
 
 private:
     bool OnStartService(MessageParcel &data, MessageParcel &reply);
+    bool OnRelease(MessageParcel &data, MessageParcel &reply);
     bool OnStartPrint(MessageParcel &data, MessageParcel &reply);
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);
@@ -93,6 +94,9 @@ private:
     bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);
     bool OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

@@ -25,7 +25,10 @@
 #define private public
 #include "print_service_ability.h"
 #undef private
+#include "mock/mock_print_service_ability.h"
+#include "mock/mock_print_cups_client.h"
 
+using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
@@ -765,26 +768,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043_NeedRename, TestSize.Leve
 }
 
 /**
- * @tc.name: PrintCupsClientTest_0047
- * @tc.desc: JobStatusCallback
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047_NeedRename, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.IsPrinterStopped(nullptr);
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    EXPECT_FALSE(printCupsClient.IsPrinterStopped(param));
-}
-
-/**
  * @tc.name: PrintCupsClientTest_0048
  * @tc.desc: JobStatusCallback
  * @tc.type: FUNC
@@ -1003,31 +986,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055_NeedRename, TestSize.Leve
     EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
     param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0056
- * @tc.desc: QueryJobState
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056_NeedRename, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.ParseStateReasons(nullptr);
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    param->isPrinterStopped = false;
-    printCupsClient.ParseStateReasons(param);
-    EXPECT_EQ(param->substate, 0);
-    param->isPrinterStopped = true;
-    printCupsClient.ParseStateReasons(param);
-    EXPECT_EQ(param->substate, 99);
 }
 
 /**
@@ -2161,8 +2119,6 @@ HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoValueSet_Returndefaul
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_HandleSystemAuthInfo, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    std::string userName = "userName";
-    char userPassword[] = "userPassword";
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
         TEST_SERVICE_JOB_ID,
         TEST_CUPS_JOB_ID,
@@ -2171,10 +2127,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_HandleSystemAuthInfo, TestSize
         PRINTER_PRINTER_ID,
         nullptr);
     printCupsClient.jobMonitorList_ = std::vector<std::shared_ptr<JobMonitorParam>>(1, param);
-    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo("invalidId",
-        PRINTER_URI, userName, userPassword), E_PRINT_INVALID_PRINTJOB);
-    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo(TEST_SERVICE_JOB_ID, PRINTER_URI, userName, userPassword),
-        TEST_CUPS_JOB_ID);
+    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo("invalidId"), E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo(TEST_SERVICE_JOB_ID), TEST_CUPS_JOB_ID);
 }
 
 /**
@@ -2365,5 +2319,154 @@ HWTEST_F(PrintCupsClientTest, CheckOptionConflicts_Test, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
+HWTEST_F(PrintCupsClientTest, TestHandleProcessingState, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isCanceled = true;
+    PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.HandleProcessingState(param);
+    EXPECT_TRUE(ret);
+    param->isCanceled = false;
+    param->isBlock = true;
+    ret = printCupsClient.HandleProcessingState(param);
+    EXPECT_TRUE(ret);
+    param->isBlock = false;
+    ret = printCupsClient.HandleProcessingState(param);
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(PrintCupsClientTest, TestHandleHeldState, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    
+    param->job_state = IPP_JOB_HELD;
+    strlcpy(param->job_printer_state_reasons, "smb-printer-connected-failed",
+        sizeof(param->job_printer_state_reasons));
+    PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.HandleHeldState(param);
+    EXPECT_TRUE(ret);
+    
+    strlcpy(param->job_printer_state_reasons, "", sizeof(param->job_printer_state_reasons));
+    strlcpy(param->job_state_reasons, "cups-held-for-authentication", sizeof(param->job_state_reasons));
+    ret = printCupsClient.HandleHeldState(param);
+    EXPECT_TRUE(ret);
+    
+    strlcpy(param->job_state_reasons, "", sizeof(param->job_state_reasons));
+    ret = printCupsClient.HandleHeldState(param);
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(PrintCupsClientTest, TestHandlePendingState, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    
+    param->job_state = IPP_JOB_PENDING;
+    strlcpy(param->job_state_reasons, "printer-stopped", sizeof(param->job_state_reasons));
+    PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.HandlePendingState(param);
+    EXPECT_TRUE(ret);
+    ret = printCupsClient.HandleJobIsQueued(param);
+    EXPECT_TRUE(ret);
+    
+    strlcpy(param->job_state_reasons, "job-hold-until-specified", sizeof(param->job_state_reasons));
+    strlcpy(param->job_printer_state_reasons, "stopped", sizeof(param->job_printer_state_reasons));
+    ret = printCupsClient.HandlePendingState(param);
+    EXPECT_TRUE(ret);
+    ret = printCupsClient.HandleJobIsQueued(param);
+    EXPECT_TRUE(ret);
+    
+    strlcpy(param->job_state_reasons, "", sizeof(param->job_state_reasons));
+    strlcpy(param->job_printer_state_reasons, "", sizeof(param->job_printer_state_reasons));
+    ret = printCupsClient.HandlePendingState(param);
+    EXPECT_TRUE(ret);
+    ret = printCupsClient.HandleJobIsQueued(param);
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(PrintCupsClientTest, TestHandleStoppedState, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.HandleStoppedState(param);
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(PrintCupsClientTest, TestHandleCompletedState, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isBlock = false;
+    PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.HandleCompletedState(param);
+    EXPECT_FALSE(ret);
+    param->isBlock = true;
+    param->timesOfSameState = 0;
+    ret = printCupsClient.HandleCompletedState(param);
+    EXPECT_TRUE(ret);
+    param->timesOfSameState = 10;
+    ret = printCupsClient.HandleCompletedState(param);
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
+{
+    const std::string ippOverUsbPrinter = PRINTER_PRINTER_ID + ":IPP-" + PRINTER_URI;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    auto param = std::make_shared<JobMonitorParam>(
+        mock,
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        ippOverUsbPrinter,
+        ippOverUsbPrinter,
+        nullptr
+    );
+    param->isBlock = false;
+
+    PrinterInfo info;
+    info.SetPrinterId(ippOverUsbPrinter);
+
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
+        .WillOnce(Return(std::make_shared<PrinterInfo>(info)))
+        .WillOnce(Return(nullptr))
+        .WillOnce(Return(std::make_shared<PrinterInfo>(info)));
+
+    PrintCupsClient printCupsClient;
+    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
+    EXPECT_FALSE(param->isIPPOverUsbOffline);
+    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
+    EXPECT_TRUE(param->isIPPOverUsbOffline);
+    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
+    EXPECT_TRUE(param->isIPPOverUsbOffline);
+}
 }  // namespace Print
 }  // namespace OHOS

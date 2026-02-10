@@ -42,6 +42,7 @@
 #ifdef HAVE_SMB_PRINTER
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
+#include "print_caller_app_monitor.h"
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
@@ -56,6 +57,7 @@ public:
     ~PrintServiceAbility();
     static sptr<PrintServiceAbility> GetInstance();
     int32_t StartService() override;
+    int32_t Release() override;
     int32_t StartPrint(
         const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
@@ -98,6 +100,7 @@ public:
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
+    bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
     int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override;
@@ -145,6 +148,9 @@ public:
         const std::string &ppdName);
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
 
 protected:
     void OnStart() override;
@@ -246,11 +252,10 @@ private:
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
     bool CheckPrintConstraint(std::string option, std::string jobId);
-    bool IsAppAlive(const std::string &bundleName, int32_t pid);
+    bool IsAppAlive(const PrintCallerAppInfo &appInfo);
     void DiscoveryCallerAppsMonitor();
     void StartDiscoveryCallerMonitorThread();
     void StopDiscoveryInternal();
-    bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     void RegisterSettingDataObserver();
     bool IsPcModeSupported();
     void UpdatePpdForPreinstalledDriverPrinter();
@@ -263,6 +268,7 @@ private:
         const std::string &keyword, const Json::Value &singleOptArray, Json::Value &singleAdvanceOptJson);
     void IncrementPrintCounterByPcSettings();
     void DecrementPrintCounterByPcSettings();
+    bool CheckStartExtensionPermission();
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -271,8 +277,7 @@ public:
     bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
     bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
-    bool OnVendorStatusUpdate(
-        const std::string &globalVendorName, const std::string &printerId, const PrinterVendorStatus &status) override;
+    bool OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status) override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) override;
@@ -280,7 +285,7 @@ public:
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
-    std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) override;
+    std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) override;
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:
@@ -288,7 +293,9 @@ private:
     void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
         const sptr<IPrintCallback> &listener, const std::string &eventType);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
+    bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
@@ -342,7 +349,7 @@ private:
     bool isLowPowerMode_;
     VendorManager vendorManager;
 
-    std::map<int32_t, std::string> discoveryCallerMap_;
+    std::map<int32_t, PrintCallerAppInfo> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;
 

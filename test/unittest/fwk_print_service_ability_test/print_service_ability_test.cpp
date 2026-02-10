@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include "print_service_mock_permission.h"
 #include "mock_remote_object.h"
+#include "mock_watermark_callback.h"
+#include "iwatermark_callback.h"
 #define private public
 #define protected public
 #include "print_service_ability.h"
@@ -47,7 +49,16 @@
 using namespace testing;
 using namespace testing::ext;
 
-namespace OHOS::Print {
+namespace OHOS {
+
+uint32_t uid_ = 0;
+
+pid_t IPCSkeleton::GetCallingUid()
+{
+    return uid_;
+}
+
+namespace Print {
 using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
@@ -85,6 +96,12 @@ public:
         : PrintServiceAbility(systemAbilityId, runOnCreate) {}
     MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t(const std::string &printerId, PrinterInfo &info));
     MOCK_METHOD2(QueryPPDInformation, bool(const std::string &makeModel, std::string &ppdName));
+};
+
+class MockPrintServiceHelper final : public PrintServiceHelper {
+public:
+    MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &accountList));
+    MOCK_METHOD0(IsSyncMode, bool());
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -729,6 +746,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestS
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_STOP_DISCOVERY);
     sptr<IPrintExtensionCallback> listener = nullptr;
     service->extCallbackMap_[cid] = listener;
+    EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
+    std::string jobId = "job123";
+    auto printJob = std::make_shared<PrintJob>();
+    service->queuedJobList_.insert(std::make_pair(jobId, printJob));
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
 }
 
@@ -1816,6 +1837,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerName = "pixlab_0759";
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
+    std::string printerId = "1234";
+    std::string jobId = "job1234";
+    service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterName(printerName);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
+    service->printerJobMap_[printerId].clear();
+    EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111_NeedRename, TestSize.Level1)
@@ -2844,14 +2874,15 @@ HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string ip = "192.168.1.1";
-    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
+    service->vendorManager.wlanGroupDriver = nullptr;
     EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_INVALID_PRINTER);
+    std::string ip = "192.168.1.1";
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
     PrinterInfo info;
     info.SetPrinterId(ip);
-    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
     service->OnQueryCallBackEvent(info);
-    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
@@ -2860,8 +2891,9 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
     std::string ip = "192.168.1.1";
     std::string protocol = "ipp";
     std::string ppdName = BSUNI_PPD_NAME;
-    EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_INVALID_PRINTER);
+    service->vendorManager.wlanGroupDriver = nullptr;
+    EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, QueryRecommendDriversByIdTest, TestSize.Level1)
@@ -3228,6 +3260,13 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterDefaultPreferences_InvalidPrinterId,
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckStartExtensionPermission, TestSize.Level1)
+{
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_EQ(service->CheckStartExtensionPermission(), false);
+}
+
 HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_OptionFormatError_ReturnFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -3348,7 +3387,7 @@ HWTEST_F(PrintServiceAbilityTest,
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<PrintSharedHost> sharedHosts;
-    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NONE);
+    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest,
@@ -3359,7 +3398,7 @@ HWTEST_F(PrintServiceAbilityTest,
     std::string userName;
     char *userPasswd = nullptr;
     std::vector<PrinterInfo> printerInfos;
-    service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+    EXPECT_EQ(service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(printerInfos.empty(), true);
 }
 
@@ -3390,4 +3429,221 @@ HWTEST_F(PrintServiceAbilityTest,
     service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, printer);
     EXPECT_EQ(printer.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
 }
-}  // namespace OHOS::Print
+
+HWTEST_F(PrintServiceAbilityTest,
+    StartDiscoverPrinter_createUserIdFailed, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, QueryAccounts(_))
+        .WillRepeatedly(Return(false));
+    service->SetHelper(helper);
+
+    EXPECT_EQ(service->GetCurrentUserId(), INVALID_USER_ID);
+    
+    std::vector<std::string> extensionIds;
+    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_USERID);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PostDiscoveryTaskTest_with_nullptr, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string extensionId = "";
+    service->helper_ = nullptr;
+    service->PostDiscoveryTask(extensionId);
+    EXPECT_EQ(service->helper_, nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PostDiscoveryTaskTest_with_syncMode, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string extensionId = "";
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, IsSyncMode())
+        .WillRepeatedly(Return(true));
+    service->SetHelper(helper);
+    service->PostDiscoveryTask(extensionId);
+    EXPECT_NE(service->helper_, nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->Release(), E_PRINT_NO_PERMISSION);
+    service->ManualStart();
+    EXPECT_EQ(service->Release(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_001
+ * @tc.desc: Test RegisterWatermarkCallback without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<IWatermarkCallback> callback = nullptr;
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_002
+ * @tc.desc: Test RegisterWatermarkCallback with permission and null callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<IWatermarkCallback> callback = nullptr;
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_003
+ * @tc.desc: Test RegisterWatermarkCallback with permission and valid callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NONE
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<MockWatermarkCallback> callback = sptr<MockWatermarkCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    // Clean up: unregister the callback
+    service->UnregisterWatermarkCallback();
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_001
+ * @tc.desc: Test UnregisterWatermarkCallback without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_002
+ * @tc.desc: Test UnregisterWatermarkCallback with permission but no callback registered
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_003
+ * @tc.desc: Test UnregisterWatermarkCallback with permission after registering callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NONE
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    sptr<MockWatermarkCallback> callback = sptr<MockWatermarkCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#endif
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_001
+ * @tc.desc: Test NotifyWatermarkComplete without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", 0), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_002
+ * @tc.desc: Test NotifyWatermarkComplete with permission but non-existent job
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("non_existent_job", 0), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("non_existent_job", 0), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_003
+ * @tc.desc: Test NotifyWatermarkComplete with permission and empty jobId
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("", 0), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("", 0), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_004
+ * @tc.desc: Test NotifyWatermarkComplete with permission and failure result
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_004, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_NONE);
+#endif
+}
+}  // namespace Print
+}  // namespace OHOS

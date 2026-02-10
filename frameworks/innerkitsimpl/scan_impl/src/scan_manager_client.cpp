@@ -122,7 +122,7 @@ void ScanManagerClient::OnRemoteSaDied(const wptr<IRemoteObject>& object)
 
 int32_t ScanManagerClient::InitScan()
 {
-    SCAN_HILOGD("ScanManagerClient InitScan start.");
+    SCAN_HILOGI("ScanManagerClient InitScan start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("do GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -133,13 +133,13 @@ int32_t ScanManagerClient::InitScan()
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->InitScan();
-    SCAN_HILOGD("ScanManagerClient InitScan end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient InitScan end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::ExitScan()
 {
-    SCAN_HILOGD("ScanManagerClient ExitScan start.");
+    SCAN_HILOGI("ScanManagerClient ExitScan start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("do GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -150,13 +150,13 @@ int32_t ScanManagerClient::ExitScan()
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->ExitScan();
-    SCAN_HILOGD("ScanManagerClient ExitScan end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient ExitScan end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::GetScannerList()
 {
-    SCAN_HILOGD("ScanManagerClient GetScannerList start.");
+    SCAN_HILOGI("ScanManagerClient GetScannerList start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -167,13 +167,13 @@ int32_t ScanManagerClient::GetScannerList()
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->GetScannerList();
-    SCAN_HILOGD("ScanManagerClient GetScannerList end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient GetScannerList end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::OpenScanner(const std::string scannerId)
 {
-    SCAN_HILOGD("ScanManagerClient OpenScanner start.");
+    SCAN_HILOGI("ScanManagerClient OpenScanner start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -184,13 +184,13 @@ int32_t ScanManagerClient::OpenScanner(const std::string scannerId)
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->OpenScanner(scannerId);
-    SCAN_HILOGD("ScanManagerClient OpenScanner end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient OpenScanner end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::CloseScanner(const std::string scannerId)
 {
-    SCAN_HILOGD("ScanManagerClient CloseScanner start.");
+    SCAN_HILOGI("ScanManagerClient CloseScanner start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -201,14 +201,14 @@ int32_t ScanManagerClient::CloseScanner(const std::string scannerId)
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->CloseScanner(scannerId);
-    SCAN_HILOGD("ScanManagerClient CloseScanner end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient CloseScanner end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::GetScanOptionDesc(
     const std::string scannerId, const int32_t optionIndex, ScanOptionDescriptor &desc)
 {
-    SCAN_HILOGD("ScanManagerClient GetScanOptionDesc start.");
+    SCAN_HILOGI("ScanManagerClient GetScanOptionDesc start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -260,7 +260,7 @@ int32_t ScanManagerClient::GetScanParameters(const std::string scannerId, ScanPa
 
 int32_t ScanManagerClient::StartScan(const std::string scannerId, const bool &batchMode)
 {
-    SCAN_HILOGD("ScanManagerClient StartScan start.");
+    SCAN_HILOGI("ScanManagerClient StartScan start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -271,13 +271,13 @@ int32_t ScanManagerClient::StartScan(const std::string scannerId, const bool &ba
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->StartScan(scannerId, batchMode);
-    SCAN_HILOGD("ScanManagerClient StartScan end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient StartScan end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::CancelScan(const std::string scannerId)
 {
-    SCAN_HILOGD("ScanManagerClient CancelScan start.");
+    SCAN_HILOGI("ScanManagerClient CancelScan start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -288,13 +288,13 @@ int32_t ScanManagerClient::CancelScan(const std::string scannerId)
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->CancelScan(scannerId);
-    SCAN_HILOGD("ScanManagerClient CancelScan end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient CancelScan end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::On(const std::string &taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    SCAN_HILOGD("ScanManagerClient On start.");
+    SCAN_HILOGI("ScanManagerClient On start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -305,7 +305,7 @@ int32_t ScanManagerClient::On(const std::string &taskId, const std::string &type
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->On(taskId, type, listener);
-    SCAN_HILOGD("ScanManagerClient On out ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient On out ret = [%{public}d].", ret);
     return ret;
 }
 
@@ -345,7 +345,7 @@ int32_t ScanManagerClient::GetScanProgress(const std::string scannerId, ScanProg
 
 int32_t ScanManagerClient::AddScanner(const std::string& serialNumber, const std::string& discoverMode)
 {
-    SCAN_HILOGD("ScanManagerClient AddScanner start.");
+    SCAN_HILOGI("ScanManagerClient AddScanner start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -356,13 +356,13 @@ int32_t ScanManagerClient::AddScanner(const std::string& serialNumber, const std
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->AddScanner(serialNumber, discoverMode);
-    SCAN_HILOGD("ScanManagerClient AddScanner end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient AddScanner end ret = [%{public}d].", ret);
     return ret;
 }
 
 int32_t ScanManagerClient::DeleteScanner(const std::string& serialNumber, const std::string& discoverMode)
 {
-    SCAN_HILOGD("ScanManagerClient DeleteScanner start.");
+    SCAN_HILOGI("ScanManagerClient DeleteScanner start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
@@ -373,7 +373,7 @@ int32_t ScanManagerClient::DeleteScanner(const std::string& serialNumber, const 
         return E_SCAN_RPC_FAILURE;
     }
     int32_t ret = scanServiceProxy_->DeleteScanner(serialNumber, discoverMode);
-    SCAN_HILOGD("ScanManagerClient DeleteScanner end ret = [%{public}d].", ret);
+    SCAN_HILOGI("ScanManagerClient DeleteScanner end ret = [%{public}d].", ret);
     return ret;
 }
 

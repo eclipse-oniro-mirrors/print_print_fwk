@@ -91,17 +91,17 @@ bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void
             SCAN_HILOGE("param is a nullptr");
             return;
         }
+        std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
             delete param;
             return;
         }
-        std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
         napi_value callbackFunc = NapiScanUtils::GetReference(param->env, param->ref);
         if (callbackFunc != nullptr) {
             workFunc(param);
-            SCAN_HILOGD("run napi call deviceInfo callback fun success");
+            SCAN_HILOGI("run napi call deviceInfo callback fun success");
         } else {
             SCAN_HILOGE("get reference failed");
         }
@@ -133,7 +133,7 @@ void ScanCallback::NapiCallFunction(CallbackParam* cbParam, size_t argcCount, na
 
 bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
-    SCAN_HILOGD("Enter OnCallback::ScanDeviceInfo");
+    SCAN_HILOGI("Enter OnCallback::ScanDeviceInfo");
 
     CallbackParam *param = new (std::nothrow) CallbackParam;
     if (param == nullptr) {

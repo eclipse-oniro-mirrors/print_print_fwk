@@ -23,6 +23,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "../service_test/mock",
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
   ]
@@ -51,7 +52,11 @@ ohos_unittest("fwk_print_service_ability_test") {
   if (print_fwk_feature_virtual_printer) {
     cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
   }
-  
+
+  if (print_fwk_feature_watermark_enforcing) {
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
   deps = [
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",

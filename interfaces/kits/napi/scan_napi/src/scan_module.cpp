@@ -180,7 +180,7 @@ static napi_value Init(napi_env env, napi_value exports)
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
-    SCAN_HILOGD("init scan module %{public}d", status);
+    SCAN_HILOGI("init scan module %{public}d", status);
     return exports;
 }
 
@@ -194,5 +194,5 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_priv = ((void *)0),
         .reserved = { 0 } };
     napi_module_register(&module);
-    SCAN_HILOGD("module register scan");
+    SCAN_HILOGI("module register scan");
 }

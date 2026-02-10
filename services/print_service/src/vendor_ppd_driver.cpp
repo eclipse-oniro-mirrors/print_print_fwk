@@ -17,8 +17,6 @@
 #include "print_log.h"
 
 using namespace OHOS::Print;
-const int DISCOVERY_INTERVAL_MS = 5000;
-const bool NEED_DISCOVERY_PULLIG = false;
 
 VendorPpdDriver::VendorPpdDriver()
 {}
@@ -142,62 +140,12 @@ void VendorPpdDriver::OnStartDiscovery()
         PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
         return;
     }
-    if (!NEED_DISCOVERY_PULLIG) {
-        DiscoverBackendPrinters();
-        return;
-    }
-    std::unique_lock<std::mutex> lock(discoveryStateChangeMutex_);
-    if (!isDiscovering_) {
-        isDiscovering_ = true;
-        discoveryThread_ = std::thread(&VendorPpdDriver::DiscoveryProcess, this);
-    } else {
-        PRINT_HILOGW("allready start backend discovery.");
-    }
+    DiscoverBackendPrinters();
 }
 
 void VendorPpdDriver::OnStopDiscovery()
 {
     PRINT_HILOGI("OnStopDiscovery enter");
-    std::unique_lock<std::mutex> lock(discoveryStateChangeMutex_);
-    if (!isDiscovering_) {
-        PRINT_HILOGW("already stop discovery");
-        return;
-    }
-    isDiscovering_ = false;
-    waitDiscoveryCondition_.notify_all();
-    if (discoveryThread_.joinable()) {
-        discoveryThread_.join();
-    }
-}
-
-void VendorPpdDriver::DiscoveryProcess()
-{
-    PRINT_HILOGI("DiscoveryProcess Enter");
-    while (WaitNext()) {
-        DiscoverBackendPrinters();
-    }
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("VendorManager is null. DiscoveryProcess Quit");
-        return;
-    }
-    std::unique_lock<std::mutex> lock(updateDiscoveryMutex_);
-    for (const auto &isDiscoveredPair : discoveredPrinters_) {
-        vendorManager->RemovePrinterFromDiscovery(GetVendorName(), isDiscoveredPair.first);
-    }
-    PRINT_HILOGI("DiscoveryProcess Quit");
-}
-
-bool VendorPpdDriver::WaitNext()
-{
-    {
-        std::unique_lock<std::mutex> lock(waitDiscoveryMutex_);
-        waitDiscoveryCondition_.wait_for(
-            lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS), [this] { return !isDiscovering_; });
-    }
-    if (!isDiscovering_) {
-        return false;
-    }
-    return true;
 }
 
 bool VendorPpdDriver::TryConnectByPpdDriver(const PrinterInfo &printerInfo)

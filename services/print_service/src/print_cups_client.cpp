@@ -47,12 +47,14 @@
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
+#ifdef WATERMARK_ENFORCING_ENABLE
+#include "watermark_manager.h"
+#endif // WATERMARK_ENFORCING_ENABLE
 
 namespace OHOS::Print {
 using namespace std;
 
 const uint32_t THOUSAND_INCH = 1000;
-const uint32_t CUPS_SEVER_PORT = 1631;
 const uint32_t TIME_OUT = 2000;
 const uint32_t CONVERSION_UNIT = 2540;
 const uint32_t LONG_TIME_OUT = 3000;
@@ -137,20 +139,24 @@ static const std::string PRINTER_SPOOL_AREA_FULL = "spool-area-full";
 static const std::string PRINTER_STATE_STOPPED = "stopped";
 static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string JOB_STATE_REASON_AUTHENTICATION = "cups-held-for-authentication";
+static const std::string JOB_STATE_REASON_SMB_PRINTER_CONNECTED_FAILED = "smb-printer-connected-failed";
 static const std::string JOB_STATE_REASON_JOB_HOLD = "job-hold-until-specified";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string USB_PRINTER = "usb";
 static const std::string NOT_BACKEND_PRINTER = "ipp,ipps,lpd,socket,usb,http,bsUniBackend";
 static const std::string SERIAL = "serial=";
+static const std::string CUPS_SOCKET_PATH = "/data/service/el1/public/print_service/cups/socket/cups.sock";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
-static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
+static const std::string IPPOVERUSB_PREFIX = ":IPP-";
 #ifdef ENTERPRISE_ENABLE
 static const std::string CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
+static const std::string CUPS_ENTERPRISE_SOCKET_PATH =
+    "/data/service/el1/public/print_service/cups_enterprise/socket/cups.sock";
 #endif  // ENTERPRISE_ENABLE
 
 static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
@@ -169,7 +175,10 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY{
-    {"default", {{PRINTER_STATE_MEDIA_EMPTY, STATE_POLICY_BLOCK}, {PRINTER_STATE_MEDIA_JAM, STATE_POLICY_BLOCK}}},
+    {"default", {{PRINTER_STATE_MEDIA_EMPTY, STATE_POLICY_BLOCK},
+                {PRINTER_STATE_MEDIA_JAM, STATE_POLICY_BLOCK},
+                {PRINTER_STATE_DOOR_EMPTY, STATE_POLICY_BLOCK},
+                {PRINTER_STATE_COVER_OPEN, STATE_POLICY_BLOCK}}},
 };
 
 std::mutex jobMutex;
@@ -339,16 +348,20 @@ PrintCupsClient::~PrintCupsClient()
         delete printAbility_;
         printAbility_ = nullptr;
     }
-    for (auto jobItem : jobQueue_) {
-        if (jobItem != nullptr) {
-            delete jobItem;
-            jobItem = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        for (auto jobItem : jobQueue_) {
+            if (jobItem != nullptr) {
+                delete jobItem;
+                jobItem = nullptr;
+            }
+        }
+        if (currentJob_ != nullptr) {
+            delete currentJob_;
+            currentJob_ = nullptr;
         }
     }
-    if (currentJob_ != nullptr) {
-        delete currentJob_;
-        currentJob_ = nullptr;
-    }
+    std::lock_guard<std::mutex> lock(jobMonitorMutex_);
     jobMonitorList_.clear();
 }
 
@@ -765,7 +778,6 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(
 
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", standardName.c_str());
@@ -799,7 +811,6 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
-    ippSetPort(CUPS_SEVER_PORT);
     _cupsSetError(IPP_STATUS_OK, nullptr, 0);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     if (request == nullptr) {
@@ -1033,12 +1044,12 @@ JobParameters *PrintCupsClient::GetNextJob()
             return currentJob_;
         }
         lastJob = jobQueue_.back();
+        PRINT_HILOGI("a active job is sending, job len: %{public}zd", jobQueue_.size());
     }
     if (lastJob != nullptr) {
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             lastJob->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
     }
-    PRINT_HILOGI("a active job is sending, job len: %{public}zd", jobQueue_.size());
     return nullptr;
 }
 
@@ -1060,9 +1071,12 @@ void PrintCupsClient::StartNextJob()
 void PrintCupsClient::JobSentCallback()
 {
     PRINT_HILOGI("Previous job send success, start next job");
-    if (currentJob_ != nullptr) {
-        delete currentJob_;
-        currentJob_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        if (currentJob_ != nullptr) {
+            delete currentJob_;
+            currentJob_ = nullptr;
+        }
     }
     StartNextJob();
 }
@@ -1236,9 +1250,8 @@ int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+        cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");
         return E_PRINT_SERVER_FAILURE;
@@ -1518,15 +1531,28 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     if (!ResumePrinter(jobParams->printerName)) {
         PRINT_HILOGW("[Job Id: %{public}s] ResumePrinter fail", jobParams->serviceJobId.c_str());
     }
+
+    // Process watermark before sending files to printer
+#ifdef WATERMARK_ENFORCING_ENABLE
+    int32_t watermarkRet = WatermarkManager::GetInstance().ProcessWatermarkForFiles(
+        jobParams->serviceJobId, jobParams->fdList);
+    if (watermarkRet != E_PRINT_NONE) {
+        PRINT_HILOGE("ProcessWatermarkForFiles failed, ret: %{public}d, jobId: %{public}s.",
+            watermarkRet, jobParams->serviceJobId.c_str());
+        UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
+        callback();
+        return;
+    }
+#endif // WATERMARK_ENFORCING_ENABLE
+
     uint32_t num_files = jobParams->fdList.size();
-    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
+    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}u", num_files);
     if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {
         callback();
         return;
     }
     http_t *monitorHttp = nullptr;
-    ippSetPort(CUPS_SEVER_PORT);
-    monitorHttp = httpConnect2(cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1,
+    monitorHttp = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1,
         LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
         return;
@@ -1562,11 +1588,9 @@ void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monito
         return;
     }
     PrinterInfo addedPrinterInfo;
-    if (PrintServiceAbility::GetInstance()->QueryPrinterInfoByPrinterId(monitorParams->printerId, addedPrinterInfo) !=
-        E_PRINT_NONE) {
-        PRINT_HILOGW("[Job Id: %{public}s] printer make is empty, use default policy",
-            monitorParams->serviceJobId.c_str());
-        return;
+    if (!PrintServiceAbility::GetInstance()->QueryAddedPrinterInfoByPrinterId(
+        monitorParams->printerId, addedPrinterInfo)) {
+        PRINT_HILOGW("[Job Id: %{public}s] cannot find printer by printerId", monitorParams->serviceJobId.c_str());
     }
     auto policyPair = SPECIAL_PRINTER_POLICY.find(addedPrinterInfo.GetPrinterMake());
     if (policyPair == SPECIAL_PRINTER_POLICY.end()) {
@@ -1587,9 +1611,9 @@ void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monito
 void PrintCupsClient::StartMonitor()
 {
     PRINT_HILOGI("state monitor start");
-    ippSetPort(CUPS_SEVER_PORT);
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList;
-    while (!jobMonitorList_.empty()) {
+    bool isMonitor = true;
+    while (isMonitor) {
         uint64_t lastUpdateTime = GetNowTime();
         {
             std::lock_guard<std::mutex> lock(jobMonitorMutex_);
@@ -1612,6 +1636,8 @@ void PrintCupsClient::StartMonitor()
         if (currentTime < lastUpdateTime + MONITOR_STEP_TIME_MS) {
             std::this_thread::sleep_for(std::chrono::milliseconds(lastUpdateTime + MONITOR_STEP_TIME_MS - currentTime));
         }
+        std::lock_guard<std::mutex> lock(jobMonitorMutex_);
+        isMonitor = !jobMonitorList_.empty();
     }
     PRINT_HILOGI("jobMonitorList is empty, exit monitor");
 }
@@ -1627,7 +1653,7 @@ void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, u
 
 bool PrintCupsClient::IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    if (monitorParams == nullptr) {
+    if (monitorParams == nullptr || monitorParams->serviceAbility == nullptr) {
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return false;
     }
@@ -1662,8 +1688,18 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             PRINT_HILOGE("[Job Id: %{public}s] serviceAbility is null", monitorParams->serviceJobId.c_str());
             return false;
         }
+        if (monitorParams->printerId.find(IPPOVERUSB_PREFIX) != std::string::npos) {
+            PRINT_HILOGW("IPPOverUsb Printer Disconnect");
+            monitorParams->isIPPOverUsbOffline = true;
+        }
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
+        return true;
+    }
+    if (monitorParams->isIPPOverUsbOffline) {
+        PRINT_HILOGW("IPPOverUsb Printer, Print Failed");
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
         return true;
     }
     if (monitorParams->isFirstQueryState) {
@@ -1674,7 +1710,6 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
     if (!QueryJobState(monitorParams->http, monitorParams)) {
         return true;
     }
-    monitorParams->isPrinterStopped = IsPrinterStopped(monitorParams);
     ParseStateReasons(monitorParams);
     if (JobStatusCallback(monitorParams)) {
         PRINT_HILOGD("the job is processing");
@@ -1684,76 +1719,125 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
     return false;
 }
 
-bool PrintCupsClient::IsPrinterStopped(std::shared_ptr<JobMonitorParam> monitorParams)
-{
-    if (monitorParams == nullptr) {
-        PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
-        return false;
-    }
-    PRINT_HILOGI("[Job Id: %{public}s] IsPrinterStopped start", monitorParams->serviceJobId.c_str());
-    PrinterStatus printerStatus = PRINTER_STATUS_BUSY;
-    bool isPrinterStatusAvailable = QueryPrinterStatusByUri(monitorParams->printerUri, printerStatus) == E_PRINT_NONE;
-    PRINT_HILOGD("is printer status available: %{public}d, state: %{public}d", isPrinterStatusAvailable, printerStatus);
-    if (isPrinterStatusAvailable && printerStatus == PRINTER_STATUS_UNAVAILABLE) {
-        return true;
-    }
-    return false;
-}
-
 bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
     if (monitorParams == nullptr) {
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return false;
     }
+    
     PRINT_HILOGI("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s\n",
         monitorParams->cupsJobId, ippEnumString("job-state", (int)monitorParams->job_state),
         monitorParams->job_state_reasons, monitorParams->job_printer_state_reasons);
-    if (monitorParams->job_state == IPP_JOB_PROCESSING) {
-        if (monitorParams->isCanceled) {
-            PRINT_HILOGI("Job canceled by user, waiting for CUPS job cancellation to complete");
-            return true;
-        }
-        if (monitorParams->isBlock) {
-            PRINT_HILOGI("job is blocked");
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
-            return true;
-        }
-        PRINT_HILOGI("job is running");
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_RUNNING, monitorParams->substate);
-        return true;
+    
+    switch (monitorParams->job_state) {
+        case IPP_JOB_PROCESSING:
+            return HandleProcessingState(monitorParams);
+        case IPP_JOB_HELD:
+            return HandleHeldState(monitorParams);
+        case IPP_JOB_PENDING:
+            return HandlePendingState(monitorParams);
+        case IPP_JOB_STOPPED:
+            return HandleStoppedState(monitorParams);
+        case IPP_JOB_COMPLETED:
+            return HandleCompletedState(monitorParams);
+        default:
+            return SpecialJobStatusCallback(monitorParams);
     }
-    if (monitorParams->job_state == IPP_JOB_HELD) {
-        if (monitorParams->job_state_reasons == JOB_STATE_REASON_AUTHENTICATION) {
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_AUTHENTICATION);
-            return true;
-        }
-    }
-    if (monitorParams->job_state == IPP_JOB_PENDING || monitorParams->job_state == IPP_JOB_HELD) {
-        PRINT_HILOGI("job is queued");
-        if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
-            return true;
-        }
-        if (monitorParams->job_state_reasons == JOB_STATE_REASON_JOB_HOLD &&
-            monitorParams->job_printer_state_reasons == PRINTER_STATE_STOPPED) {
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
-            return true;
-        }
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_COMPLETED_SUCCESS);
-        return true;
-    }
-    return SpecialJobStatusCallback(monitorParams);
 }
 
-int32_t PrintCupsClient::HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
-    const std::string &userName, char *userPasswd)
+bool PrintCupsClient::HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (monitorParams->isCanceled) {
+        PRINT_HILOGI("Job canceled by user, waiting for CUPS job cancellation to complete");
+        return true;
+    }
+    
+    if (monitorParams->isBlock) {
+        PRINT_HILOGI("job is blocked");
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
+        return true;
+    }
+    
+    PRINT_HILOGI("job is running");
+    monitorParams->serviceAbility->UpdatePrintJobState(
+        monitorParams->serviceJobId, PRINT_JOB_RUNNING, monitorParams->substate);
+    return true;
+}
+
+bool PrintCupsClient::HandleHeldState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (monitorParams->job_printer_state_reasons == JOB_STATE_REASON_SMB_PRINTER_CONNECTED_FAILED) {
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SMB_PRINTER);
+        return true;
+    }
+    
+    if (monitorParams->job_state_reasons == JOB_STATE_REASON_AUTHENTICATION) {
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_AUTHENTICATION);
+        return true;
+    }
+    return HandleJobIsQueued(monitorParams);
+}
+
+bool PrintCupsClient::HandlePendingState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    return HandleJobIsQueued(monitorParams);
+}
+
+bool PrintCupsClient::HandleStoppedState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (CancelPrinterJob(monitorParams->cupsJobId)) {
+        PRINT_HILOGI("cancel PrinterJob because stopped");
+        return true;
+    }
+    monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
+        PRINT_JOB_COMPLETED,
+        GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
+    return false;
+}
+
+bool PrintCupsClient::HandleCompletedState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (!monitorParams->isBlock) {
+        PRINT_HILOGI("job complete success");
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
+        return false;
+    }
+    PRINT_HILOGI("job complete with error");
+    if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
+        return true;
+    }
+    monitorParams->serviceAbility->UpdatePrintJobState(
+        monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
+    return false;
+}
+
+bool PrintCupsClient::HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    PRINT_HILOGI("job is queued");
+    if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
+        return true;
+    }
+    if (monitorParams->job_state_reasons == JOB_STATE_REASON_JOB_HOLD &&
+        monitorParams->job_printer_state_reasons == PRINTER_STATE_STOPPED) {
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
+        return true;
+    }
+    monitorParams->serviceAbility->UpdatePrintJobState(
+        monitorParams->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_COMPLETED_SUCCESS);
+    return true;
+}
+
+int32_t PrintCupsClient::HandleSystemAuthInfo(const std::string &jobId)
 {
     std::lock_guard<std::mutex> lock(jobMonitorMutex_);
     auto item = std::find_if(jobMonitorList_.begin(), jobMonitorList_.end(),
@@ -1773,7 +1857,7 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     const std::string &userName, char *userPasswd)
 {
     PRINT_HILOGI("[Job Id: %{public}s] AuthCupsPrintJob start", jobId.c_str());
-    int32_t cupsJobId = HandleSystemAuthInfo(jobId, printerUri, userName, userPasswd);
+    int32_t cupsJobId = HandleSystemAuthInfo(jobId);
     if (cupsJobId == E_PRINT_INVALID_PRINTJOB) {
         PRINT_HILOGE("invalid auth print job!");
         return false;
@@ -1782,7 +1866,7 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     ipp_t *request = NULL;
     ipp_t *response = NULL;
     http = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+        cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (!http) {
         PRINT_HILOGE("Printer authenticate http fail.");
         return false;
@@ -1857,39 +1941,6 @@ int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd
 
 bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    if (monitorParams == nullptr) {
-        PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
-        return false;
-    }
-    if (monitorParams->job_state == IPP_JOB_STOPPED) {
-        if (CancelPrinterJob(monitorParams->cupsJobId)) {
-            PRINT_HILOGI("cancel PrinterJob because stopped");
-            return true;
-        }
-        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
-            PRINT_JOB_COMPLETED,
-            GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
-        return false;
-    }
-
-    if (monitorParams->job_state == IPP_JOB_COMPLETED) {
-        if (!monitorParams->isBlock) {
-            PRINT_HILOGI("job complete success");
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
-            return false;
-        }
-        PRINT_HILOGI("job complete with error");
-        if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
-            return true;
-        }
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
-        return false;
-    }
-
     // IPP_JOB_CANCELED or IPP_JOB_ABORTED
     if (!monitorParams->isBlock) {
         PRINT_HILOGI("job is canceled");
@@ -1914,7 +1965,7 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return;
     }
-    monitorParams->isBlock = monitorParams->isPrinterStopped;
+    monitorParams->isBlock = false;
     monitorParams->substate = 0;
     int32_t index = 0;
     for (auto stateItem = FOLLOW_STATE_LIST.begin(); stateItem != FOLLOW_STATE_LIST.end(); stateItem++) {
@@ -1925,7 +1976,7 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
     if (monitorParams->isBlock && monitorParams->substate == 0) {
         monitorParams->substate = GetNewSubstate(monitorParams->substate, PRINT_JOB_BLOCKED_UNKNOWN);
     }
-    PRINT_HILOGI("state reasons parse result: isblocked(%{public}d), substate(%{public}d)",
+    PRINT_HILOGI("state reasons parse result: isblocked(%{public}d), substate(%{public}u)",
         monitorParams->isBlock,
         monitorParams->substate);
 }
@@ -1964,7 +2015,7 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
 
 uint32_t PrintCupsClient::GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate)
 {
-    PRINT_HILOGD("add new substate(%{public}d) to substate(%{public}d)", singleSubstate, substate);
+    PRINT_HILOGD("add new substate(%{public}d) to substate(%{public}u)", singleSubstate, substate);
     return substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
 }
 
@@ -2164,7 +2215,6 @@ bool PrintCupsClient::ModifyCupsPrinterUri(const std::string &printerName, const
 
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
@@ -2185,6 +2235,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] CancelCupsJob(): Enter", serviceJobId.c_str());
     int jobIndex = -1;
+    std::unique_lock<std::mutex> jobLock(jobMutex);
     for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
         PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
         if (jobQueue_[index]->serviceJobId == serviceJobId) {
@@ -2200,6 +2251,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
             delete erasedJob;
         }
         jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        jobLock.unlock(); // jobMutex
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     } else {
@@ -2207,6 +2259,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
         if (currentJob_ != nullptr && currentJob_->serviceJobId == serviceJobId) {
             currentJob_->isCanceled = true;
         }
+        jobLock.unlock(); // jobMutex
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
             return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);
@@ -2228,6 +2281,7 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] InterruptCupsJob(): Enter", serviceJobId.c_str());
     int jobIndex = -1;
+    std::unique_lock<std::mutex> jobLock(jobMutex);
     for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
         PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
         if (jobQueue_[index]->serviceJobId == serviceJobId) {
@@ -2243,6 +2297,7 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
             delete erasedJob;
         }
         jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        jobLock.unlock(); // jobMutex
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_INTERRUPT);
     } else {
@@ -2250,6 +2305,7 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
         if (currentJob_ != nullptr && currentJob_->serviceJobId == serviceJobId) {
             currentJob_->isCanceled = true;
         }
+        jobLock.unlock(); // jobMutex
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
             return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);
@@ -2441,15 +2497,29 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
 bool PrintCupsClient::IsCupsServerAlive()
 {
     http_t *http = nullptr;
-    ippSetPort(CUPS_SEVER_PORT);
+    SetCupsClientEnv();
     http = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+        cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");
         return false;
     }
     httpClose(http);
     return true;
+}
+
+void PrintCupsClient::SetCupsClientEnv()
+{
+    std::lock_guard<std::mutex> lock(envMutex_);
+    ippSetPort(0);
+#ifdef ENTERPRISE_ENABLE
+    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
+        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        setenv("CUPS_SERVER", CUPS_ENTERPRISE_SOCKET_PATH.c_str(), 1);
+        return;
+    }
+#endif  // ENTERPRISE_ENABLE
+    setenv("CUPS_SERVER", CUPS_SOCKET_PATH.c_str(), 1);
 }
 
 /**
@@ -2732,7 +2802,6 @@ bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const
 
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
@@ -3101,8 +3170,7 @@ int32_t PrintCupsClient::DeleteExtraJobsFromCups()
     ipp_t *request = nullptr;
     ipp_t *response = nullptr;
 
-    ippSetPort(CUPS_SEVER_PORT);
-    http = httpConnect2(cupsServer(), ippPort(), nullptr, AF_UNSPEC,
+    http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL,
                         HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");

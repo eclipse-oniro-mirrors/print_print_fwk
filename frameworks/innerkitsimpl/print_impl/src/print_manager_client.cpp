@@ -821,16 +821,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     }
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetExtCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetExtCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetExtCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -852,16 +855,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetPrintJobCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetPrintJobCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetPrintJobCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -883,16 +889,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetCapabilityCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetCapabilityCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetCapabilityCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -914,16 +923,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetPrinterCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetPrinterCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetPrinterCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -1058,9 +1070,14 @@ int32_t PrintManagerClient::Init()
 
 int32_t PrintManagerClient::Release()
 {
-    SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
-    SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
-    return E_PRINT_NONE;
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    PRINT_HILOGI("PrintManagerClient Release start");
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->Release();
+    }
+    PRINT_HILOGI("PrintManagerClient Release out ret = [%{public}d].", ret);
+    return ret;
 }
 
 int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::string &userName,
@@ -1157,4 +1174,40 @@ int32_t PrintManagerClient::AuthSmbDevice(const PrintSharedHost &sharedHost, con
     return ret;
 }
 
+int32_t PrintManagerClient::RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback)
+{
+    PRINT_HILOGD("PrintManagerClient RegisterWatermarkCallback in");
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->RegisterWatermarkCallback(callback);
+        PRINT_HILOGD("PrintManagerClient RegisterWatermarkCallback out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UnregisterWatermarkCallback()
+{
+    PRINT_HILOGD("PrintManagerClient UnregisterWatermarkCallback in");
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UnregisterWatermarkCallback();
+        PRINT_HILOGD("PrintManagerClient UnregisterWatermarkCallback out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::NotifyWatermarkComplete(const std::string &jobId, int32_t result)
+{
+    PRINT_HILOGD("PrintManagerClient NotifyWatermarkComplete in, jobId=%{public}s, result=%{public}d",
+        jobId.c_str(), result);
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->NotifyWatermarkComplete(jobId, result);
+        PRINT_HILOGD("PrintManagerClient NotifyWatermarkComplete out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

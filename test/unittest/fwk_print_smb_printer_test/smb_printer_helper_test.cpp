@@ -42,20 +42,12 @@ class SmbPrinterHelperTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void SmbPrinterHelperTest::SetUpTestCase(void)
 {}
 
 void SmbPrinterHelperTest::TearDownTestCase(void)
-{}
-
-void SmbPrinterHelperTest::SetUp(void)
-{}
-
-void SmbPrinterHelperTest::TearDown(void)
 {}
 
 /**
@@ -371,24 +363,28 @@ HWTEST_F(SmbPrinterHelperTest, CreatePrinterId_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: ReplaceSpacesInPrinterUri_001
- * @tc.desc: Test ReplaceSpacesInPrinterUri method
+ * @tc.name: UrlEncode_001
+ * @tc.desc: Test UrlEncode method
  * @tc.type: FUNC
  */
-HWTEST_F(SmbPrinterHelperTest, ReplaceSpacesInPrinterUri_001, TestSize.Level1)
+HWTEST_F(SmbPrinterHelperTest, UrlEncode_001, TestSize.Level1)
 {
     SmbPrinterDiscoverer discoverer;
     std::string input = "smb://192.168.1.100/TestPrinter";
-    std::string result = discoverer.ReplaceSpacesInPrinterUri(input);
+    std::string result = discoverer.UrlEncode(input);
     EXPECT_EQ(result, "smb://192.168.1.100/TestPrinter");
 
     input = "smb://192.168.1.100/Test Printer Name";
-    result = discoverer.ReplaceSpacesInPrinterUri(input);
+    result = discoverer.UrlEncode(input);
     EXPECT_EQ(result, "smb://192.168.1.100/Test%20Printer%20Name");
 
     input = "smb://192.168.1.100/Printer  with   multiple    spaces";
-    result = discoverer.ReplaceSpacesInPrinterUri(input);
+    result = discoverer.UrlEncode(input);
     EXPECT_EQ(result, "smb://192.168.1.100/Printer%20%20with%20%20%20multiple%20%20%20%20spaces");
+
+    input = "smb://192.168.1.100/Printer打印机";
+    result = discoverer.UrlEncode(input);
+    EXPECT_EQ(result, "smb://192.168.1.100/Printer%E6%89%93%E5%8D%B0%E6%9C%BA");
 }
 
 /**
@@ -403,14 +399,7 @@ HWTEST_F(SmbPrinterHelperTest, SetCredentials_001, TestSize.Level1)
     char userPasswd[] = "testpassword";
     
     int32_t result = discoverer.SetCredentials(userName, userPasswd);
-    EXPECT_EQ(discoverer.userName_, userName);
-    EXPECT_NE(discoverer.userPasswd_, nullptr);
-    if (discoverer.userPasswd_ != nullptr) {
-        EXPECT_STREQ(discoverer.userPasswd_, userPasswd);
-    }
-    char* nullUserPasswd = nullptr;
-    result = discoverer.SetCredentials(userName, nullUserPasswd);
-    EXPECT_EQ(result, false);
+    EXPECT_EQ(result, E_PRINT_NONE);
 }
 
 

@@ -48,7 +48,8 @@ PrinterInfo::PrinterInfo()
       ppdHashCode_(""),
       hasSelectedDriver_(false),
       hasSelectedProtocol_(false),
-      selectedProtocol_("")
+      selectedProtocol_(""),
+      hasOriginId_(false)
 {
     capability_.Reset();
     preferences_.Reset();
@@ -87,7 +88,9 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       hasSelectedDriver_(right.hasSelectedDriver_),
       selectedDriver_(right.selectedDriver_),
       hasSelectedProtocol_(right.hasSelectedProtocol_),
-      selectedProtocol_(right.selectedProtocol_)
+      selectedProtocol_(right.selectedProtocol_),
+      hasOriginId_(right.hasOriginId_),
+      originId_(right.originId_)
 {
 }
 PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
@@ -125,6 +128,8 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         selectedDriver_ = right.selectedDriver_;
         hasSelectedProtocol_ = right.hasSelectedProtocol_;
         selectedProtocol_ = right.selectedProtocol_;
+        hasOriginId_ = right.hasOriginId_;
+        originId_ = right.originId_;
     }
     return *this;
 }
@@ -375,6 +380,12 @@ void PrinterInfo::SetSelectedProtocol(const std::string &selectedProtocol)
     selectedProtocol_ = selectedProtocol;
 }
 
+void PrinterInfo::SetOriginId(const std::string &originId)
+{
+    hasOriginId_ = true;
+    originId_ = originId;
+}
+
 bool PrinterInfo::HasSelectedProtocol() const
 {
     return hasSelectedProtocol_;
@@ -385,6 +396,15 @@ std::string PrinterInfo::GetSelectedProtocol() const
     return selectedProtocol_;
 }
 
+bool PrinterInfo::HasOriginId() const
+{
+    return hasOriginId_;
+}
+
+std::string PrinterInfo::GetOriginId() const
+{
+    return originId_;
+}
 
 bool PrinterInfo::ReadFromParcel(Parcel &parcel)
 {
@@ -636,8 +656,15 @@ void PrinterInfo::Dump() const
     if (hasSelectedProtocol_) {
         PRINT_HILOGD("selectedProtocol: %{public}s", selectedProtocol_.c_str());
     }
+    DumpInnerInfo();
 }
 
+void PrinterInfo::DumpInnerInfo() const
+{
+    if (hasOriginId_) {
+        PRINT_HILOGD("originId: %{private}s", originId_.c_str());
+    }
+}
 void PrinterInfo::DumpInfo() const
 {
     PRINT_HILOGI("printerId: %{public}s", PrintUtils::AnonymizePrinterId(printerId_).c_str());
@@ -657,6 +684,22 @@ void PrinterInfo::DumpInfo() const
     if (hasPreferences_) {
         preferences_.DumpInfo();
     }
+}
+
+void PrinterInfo::SetOptionField(const std::string &key, const std::string &value)
+{
+    if (key.empty()) {
+        return;
+    }
+    Json::Value optionJson(Json::objectValue);
+    if (HasOption()) {
+        std::string option = GetOption();
+        PrintJsonUtil::Parse(option, optionJson);
+    }
+    if (optionJson.isObject()) {
+        optionJson[key] = value;
+    }
+    SetOption(PrintJsonUtil::WriteString(optionJson));
 }
 
 }  // namespace OHOS::Print

@@ -39,7 +39,7 @@ int32_t ScanServiceProxy::GetResult(int32_t retCode, MessageParcel &reply)
 
 int32_t ScanServiceProxy::InitScan()
 {
-    SCAN_HILOGD("ScanServiceProxy InitScan start");
+    SCAN_HILOGI("ScanServiceProxy InitScan start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -52,13 +52,13 @@ int32_t ScanServiceProxy::InitScan()
         SCAN_HILOGE("ScanServiceProxy InitScan failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy InitScan end.");
+    SCAN_HILOGI("ScanServiceProxy InitScan end.");
     return ret;
 }
 
 int32_t ScanServiceProxy::ExitScan()
 {
-    SCAN_HILOGD("ScanServiceProxy ExitScan start");
+    SCAN_HILOGI("ScanServiceProxy ExitScan start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -71,13 +71,13 @@ int32_t ScanServiceProxy::ExitScan()
         SCAN_HILOGE("ScanServiceProxy ExitScan failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy ExitScan end");
+    SCAN_HILOGI("ScanServiceProxy ExitScan end");
     return ret;
 }
 
 int32_t ScanServiceProxy::GetScannerList()
 {
-    SCAN_HILOGD("ScanServiceProxy GetScannerList start");
+    SCAN_HILOGI("ScanServiceProxy GetScannerList start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -90,13 +90,13 @@ int32_t ScanServiceProxy::GetScannerList()
         SCAN_HILOGE("ScanServiceProxy GetScannerList failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy GetScannerList end");
+    SCAN_HILOGI("ScanServiceProxy GetScannerList end");
     return ret;
 }
 
 int32_t ScanServiceProxy::OpenScanner(const std::string scannerId)
 {
-    SCAN_HILOGD("ScanServiceProxy OpenScanner start");
+    SCAN_HILOGI("ScanServiceProxy OpenScanner start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -110,13 +110,13 @@ int32_t ScanServiceProxy::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("ScanServiceProxy OpenScanner failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy OpenScanner end");
+    SCAN_HILOGI("ScanServiceProxy OpenScanner end");
     return ret;
 }
 
 int32_t ScanServiceProxy::CloseScanner(const std::string scannerId)
 {
-    SCAN_HILOGD("ScanServiceProxy CloseScanner start");
+    SCAN_HILOGI("ScanServiceProxy CloseScanner start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -130,14 +130,14 @@ int32_t ScanServiceProxy::CloseScanner(const std::string scannerId)
         SCAN_HILOGE("ScanServiceProxy CloseScanner failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy CloseScanner end");
+    SCAN_HILOGI("ScanServiceProxy CloseScanner end");
     return ret;
 }
 
 int32_t ScanServiceProxy::GetScanOptionDesc(const std::string scannerId, const int32_t optionIndex,
     ScanOptionDescriptor &desc)
 {
-    SCAN_HILOGD("ScanServiceProxy GetScanOptionDesc start");
+    SCAN_HILOGI("ScanServiceProxy GetScanOptionDesc start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -216,7 +216,7 @@ int32_t ScanServiceProxy::GetScanParameters(const std::string scannerId, ScanPar
 
 int32_t ScanServiceProxy::StartScan(const std::string scannerId, const bool &batchMode)
 {
-    SCAN_HILOGD("ScanServiceProxy StartScan start");
+    SCAN_HILOGI("ScanServiceProxy StartScan start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -231,13 +231,13 @@ int32_t ScanServiceProxy::StartScan(const std::string scannerId, const bool &bat
         SCAN_HILOGE("ScanServiceProxy StartScan failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy StartScan end");
+    SCAN_HILOGI("ScanServiceProxy StartScan end");
     return ret;
 }
 
 int32_t ScanServiceProxy::CancelScan(const std::string scannerId)
 {
-    SCAN_HILOGD("ScanServiceProxy CancelScan start");
+    SCAN_HILOGI("ScanServiceProxy CancelScan start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -251,13 +251,13 @@ int32_t ScanServiceProxy::CancelScan(const std::string scannerId)
         SCAN_HILOGE("ScanServiceProxy CancelScan failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy CancelScan end");
+    SCAN_HILOGI("ScanServiceProxy CancelScan end");
     return ret;
 }
 
 int32_t ScanServiceProxy::On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    SCAN_HILOGD("ScanServiceProxy On start");
+    SCAN_HILOGI("ScanServiceProxy On start");
     if (listener == nullptr) {
         SCAN_HILOGE("listener is nullptr");
         return E_SCAN_INVALID_PARAMETER;
@@ -286,7 +286,7 @@ int32_t ScanServiceProxy::On(const std::string taskId, const std::string &type, 
         return ret;
     }
 
-    SCAN_HILOGD("ScanServiceProxy On end");
+    SCAN_HILOGI("ScanServiceProxy On end");
     return ret;
 }
 
@@ -348,7 +348,7 @@ int32_t ScanServiceProxy::GetScanProgress(const std::string scannerId, ScanProgr
 
 int32_t ScanServiceProxy::AddScanner(const std::string& serialNumber, const std::string& discoverMode)
 {
-    SCAN_HILOGD("ScanServiceProxy AddScanner start");
+    SCAN_HILOGI("ScanServiceProxy AddScanner start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -363,13 +363,13 @@ int32_t ScanServiceProxy::AddScanner(const std::string& serialNumber, const std:
         SCAN_HILOGE("ScanServiceProxy AddScanner failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy AddScanner end");
+    SCAN_HILOGI("ScanServiceProxy AddScanner end");
     return ret;
 }
 
 int32_t ScanServiceProxy::DeleteScanner(const std::string& serialNumber, const std::string& discoverMode)
 {
-    SCAN_HILOGD("ScanServiceProxy DeleteScanner start");
+    SCAN_HILOGI("ScanServiceProxy DeleteScanner start");
     CREATE_PRC_MESSAGE;
     auto remote = Remote();
     if (remote == nullptr) {
@@ -384,7 +384,7 @@ int32_t ScanServiceProxy::DeleteScanner(const std::string& serialNumber, const s
         SCAN_HILOGE("ScanServiceProxy DeleteScanner failed");
         return ret;
     }
-    SCAN_HILOGD("ScanServiceProxy DeleteScanner end");
+    SCAN_HILOGI("ScanServiceProxy DeleteScanner end");
     return ret;
 }
 

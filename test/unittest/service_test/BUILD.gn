@@ -45,6 +45,7 @@ ohos_unittest("print_service_test") {
     "print_service_helper_test.cpp",
     "print_system_data_test.cpp",
     "print_user_data_test.cpp",
+    "watermark_callback_proxy_test.cpp",
   ]
 
   deps = [
@@ -98,6 +99,12 @@ ohos_unittest("print_service_test") {
       "cups-filters:cupsfilters",
     ]
   }
+
+  if (print_fwk_feature_watermark_enforcing) {
+    sources += [ "watermark_manager_test.cpp" ]
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
 }
 
 ohos_unittest("scan_service_test") {

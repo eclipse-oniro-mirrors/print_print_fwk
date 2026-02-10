@@ -93,6 +93,8 @@ enum PrintErrorCode {
     E_PRINT_TOO_MANY_FILES = 13100010,
     E_PRINT_UNKNOWN = 13100255,
     E_PRINT_BANNED = 13100011,
+    E_PRINT_WINDOWS_LOGIN_LOCKOUT = 13100012,
+    E_PRINT_WINDOWS_CONNECTION_FAILURE = 13100013,
 };
 
 const uint32_t PRINT_INVALID_ID = 0xFFFFFFFF;   // -1
@@ -163,6 +165,8 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_INTERRUPT = 35, // print job interrupt
     PRINT_JOB_BLOCKED_AUTHENTICATION = 36,  // print job need authenticate.
     PRINT_JOB_BLOCKED_BANNED = 37,  // print job has been banned by organization.
+    PRINT_JOB_BLOCKED_SMB_PRINTER = 38,  // SMB print job transmission failed.
+    PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 39, // print job restricted by security policy.
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -220,6 +224,20 @@ enum PrintQualityCode {
     PRINT_QUALITY_HIGH = 5
 };
 
+enum PrintDocumentFormat {
+    PRINT_DOCUMENT_FORMAT_AUTO = 0,
+    PRINT_DOCUMENT_FORMAT_JPEG = 1,
+    PRINT_DOCUMENT_FORMAT_PDF = 2,
+    PRINT_DOCUMENT_FORMAT_POSTSCRIPT = 3,
+    PRINT_DOCUMENT_FORMAT_TEXT = 4,
+    PRINT_DOCUMENT_FORMAT_RAW = 5,
+};
+
+enum PrintDocFlavor {
+    PRINT_FILE_DESCRIPTOR = 0,
+    PRINT_BYTES = 1,
+};
+
 enum PrintOrientationMode {
     PRINT_ORIENTATION_MODE_PORTRAIT = 0,
     PRINT_ORIENTATION_MODE_LANDSCAPE = 1,
@@ -265,14 +283,20 @@ enum PrinterEvent {
 };
 
 enum DefaultPrinterType {
-    DEFAULT_PRINTER_TYPE_SETTED_BY_USER = 0,
+    DEFAULT_PRINTER_TYPE_SET_BY_USER = 0,
     DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
+};
+
+enum WatermarkHandleResult {
+    WATERMARK_HANDLE_SUCCESS = 0,  // Processing completed successfully
+    WATERMARK_HANDLE_FAILURE = 1,  // Processing failed
 };
 
 const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
+static const std::string PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT = "ohos.permission.ENTERPRISE_MANAGE_PRINT";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =
@@ -303,6 +327,8 @@ static std::map<PrintErrorCode, const std::string> PRINT_ERROR_MSG_MAP {
     {E_PRINT_INVALID_PARAMETER,     E_PRINT_MSG_INVALID_PARAMETER   },
 };
 
+const std::string VENDOR_MANAGER_PREFIX = "fwk.";
+const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
 const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
 const std::string VENDOR_PPD_DRIVER = "driver.ppd";

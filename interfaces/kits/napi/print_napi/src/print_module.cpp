@@ -31,7 +31,8 @@ static constexpr const char *FUNCTION_START_DISCOVERY = "startDiscoverPrinter";
 static constexpr const char *FUNCTION_STOP_DISCOVERY = "stopDiscoverPrinter";
 static constexpr const char *FUNCTION_CONNECT_PRINT = "connectPrinter";
 static constexpr const char *FUNCTION_DISCONNECT_PRINT = "disconnectPrinter";
-static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
+static constexpr const char *FUNCTION_START_PRINT_JOB = "startPrintJob";
+static constexpr const char *FUNCTION_START_PRINT = "startPrint";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_RESTART_PRINT = "restartPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
@@ -81,6 +82,9 @@ static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrin
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
 static constexpr const char *AUTH_SMB_DEVICE_AS_GUEST = "authSmbDeviceAsGuest";
 static constexpr const char *AUTH_SMB_DEVICE_AS_REGISTERED_USER = "authSmbDeviceAsRegisteredUser";
+static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWatermarkCallback";
+static constexpr const char *FUNCTION_UNREGISTER_WATERMARK_CALLBACK = "unregisterWatermarkCallback";
+static constexpr const char *FUNCTION_NOTIFY_WATERMARK_COMPLETE = "notifyWatermarkComplete";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_COMPLETED_SUCCESS", PRINT_JOB_COMPLETED_SUCCESS},
@@ -111,7 +115,6 @@ static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION", PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION},
     {"PRINT_JOB_RUNNING_UPLOADING_FILES", PRINT_JOB_RUNNING_UPLOADING_FILES},
     {"PRINT_JOB_RUNNING_CONVERTING_FILES", PRINT_JOB_RUNNING_CONVERTING_FILES},
-    {"PRINT_JOB_BLOCK_INTERRUPT", PRINT_JOB_BLOCKED_INTERRUPT},
     {"PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR", PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR},
     {"PRINT_JOB_BLOCK_DRIVER_MISSING", PRINT_JOB_BLOCKED_DRIVER_MISSING},
     {"PRINT_JOB_BLOCK_INTERRUPT", PRINT_JOB_BLOCKED_INTERRUPT},
@@ -200,6 +203,36 @@ static napi_value NapiCreateQualityEnum(napi_env env)
     SetEnumProperty(env, object, "QUALITY_DRAFT", static_cast<int32_t>(PRINT_QUALITY_DRAFT));
     SetEnumProperty(env, object, "QUALITY_NORMAL", static_cast<int32_t>(PRINT_QUALITY_NORMAL));
     SetEnumProperty(env, object, "QUALITY_HIGH", static_cast<int32_t>(PRINT_QUALITY_HIGH));
+    return object;
+}
+
+static napi_value NapiCreateDocumentFormatEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_AUTO", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_AUTO));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_JPEG", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_JPEG));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_PDF", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_PDF));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_POSTSCRIPT", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_POSTSCRIPT));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_TEXT", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_TEXT));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_RAW", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_RAW));
+    return object;
+}
+
+static napi_value NapiCreateDocFlavorEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "FILE_DESCRIPTOR", static_cast<int32_t>(PRINT_FILE_DESCRIPTOR));
+    SetEnumProperty(env, object, "BYTES", static_cast<int32_t>(PRINT_BYTES));
     return object;
 }
 
@@ -401,11 +434,24 @@ static napi_value NapiCreateDefaultPrinterTypeEnum(napi_env env)
         return nullptr;
     }
     SetEnumProperty(
-        env, object, "DEFAULT_PRINTER_TYPE_SETTED_BY_USER", static_cast<int32_t>(DEFAULT_PRINTER_TYPE_SETTED_BY_USER));
+        env, object, "DEFAULT_PRINTER_TYPE_SET_BY_USER", static_cast<int32_t>(DEFAULT_PRINTER_TYPE_SET_BY_USER));
     SetEnumProperty(env,
         object,
         "DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER",
         static_cast<int32_t>(DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER));
+    return object;
+}
+
+static napi_value NapiCreateWatermarkHandleResultEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "WATERMARK_HANDLE_SUCCESS", static_cast<int32_t>(WATERMARK_HANDLE_SUCCESS));
+    SetEnumProperty(env, object, "WATERMARK_HANDLE_FAILURE", static_cast<int32_t>(WATERMARK_HANDLE_FAILURE));
     return object;
 }
 
@@ -416,6 +462,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintQuality", NapiCreateQualityEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintDocumentFormat", NapiCreateDocumentFormatEnum(env)),
+        PRINT_NAPI_PROPERTY("DocFlavor", NapiCreateDocFlavorEnum(env)),
         PRINT_NAPI_PROPERTY("PrintOrientationMode", NapiCreateOrientationEnum(env)),
         PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
@@ -428,6 +476,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrinterEvent", NapiCreatePrintEventEnum(env)),
         PRINT_NAPI_PROPERTY("ApplicationEvent", NapiCreateApplicationEventEnum(env)),
         PRINT_NAPI_PROPERTY("DefaultPrinterType", NapiCreateDefaultPrinterTypeEnum(env)),
+        PRINT_NAPI_PROPERTY("WatermarkHandleResult", NapiCreateWatermarkHandleResultEnum(env)),
 
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
@@ -435,7 +484,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
         PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrinter),
-        PRINT_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_START_PRINT_JOB, NapiInnerPrint::StartPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrint),
         PRINT_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_RESTART_PRINT, NapiInnerPrint::RestartPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
@@ -485,6 +535,9 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_GUEST, NapiInnerPrint::AuthSmbDeviceAsGuest),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_REGISTERED_USER, NapiInnerPrint::AuthSmbDeviceAsRegisteredUser),
+        PRINT_NAPI_METHOD(FUNCTION_REGISTER_WATERMARK_CALLBACK, NapiInnerPrint::RegisterWatermarkCallback),
+        PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_WATERMARK_CALLBACK, NapiInnerPrint::UnregisterWatermarkCallback),
+        PRINT_NAPI_METHOD(FUNCTION_NOTIFY_WATERMARK_COMPLETE, NapiInnerPrint::NotifyWatermarkComplete),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

@@ -26,8 +26,6 @@
 
 using namespace OHOS::Print;
 namespace {
-const std::string VENDOR_MANAGER_PREFIX = "fwk.";
-const std::string GLOBAL_ID_DELIMITER = ":";
 const int MONITOR_CHECK_INTERVAL_MS = 1000;
 const size_t IP_LENGTH_MIN = 7;
 }  // namespace
@@ -375,11 +373,16 @@ bool VendorManager::OnPrinterStatusChanged(
     if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->OnPrinterStatusChanged(vendorName, printerId, status);
     }
-    std::string globalVendorName = GetGlobalVendorName(vendorName);
-    if (printServiceAbility != nullptr) {
-        return printServiceAbility->OnVendorStatusUpdate(globalVendorName, printerId, status);
-    }
     return true;
+}
+
+bool VendorManager::OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("printServiceAbility is null");
+        return false;
+    }
+    return printServiceAbility->OnVendorStatusUpdate(globalPrinterId, status);
 }
 
 std::shared_ptr<VendorDriverBase> VendorManager::FindDriverByPrinterId(const std::string &globalPrinterId)
@@ -410,6 +413,7 @@ std::shared_ptr<VendorDriverBase> VendorManager::FindDriverByVendorName(const st
 void VendorManager::StartStatusMonitor()
 {
     PRINT_HILOGI("StartStatusMonitor Enter");
+    std::lock_guard<std::mutex> lock(apiMutex);
     {
         std::unique_lock<std::mutex> lock(statusMonitorMutex);
         if (statusMonitorOn) {
@@ -426,6 +430,7 @@ void VendorManager::StartStatusMonitor()
 void VendorManager::StopStatusMonitor()
 {
     PRINT_HILOGI("StopStatusMonitor Enter");
+    std::lock_guard<std::mutex> lock(apiMutex);
     {
         std::unique_lock<std::mutex> lock(statusMonitorMutex);
         statusMonitorOn = false;
@@ -502,10 +507,10 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->IsConnectingPrinter(globalPrinterIdOrIp, uri);
     }
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     PRINT_HILOGI("IsConnectingPrinter globalPrinterIdOrIp: %{private}s, connectingPrinter: %{private}s",
         globalPrinterIdOrIp.c_str(),
         connectingPrinter.c_str());
-    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_CONNECTING && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
@@ -565,9 +570,9 @@ bool VendorManager::IsQueryingPrinter(const std::string &globalPrinterIdOrIp, co
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->IsQueryingPrinter(globalPrinterIdOrIp, uri);
     }
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     PRINT_HILOGI("IsQueryingPrinter globalPrinterIdOrIp:%{private}s, connectingPrinter:%{private}s",
         globalPrinterIdOrIp.c_str(), connectingPrinter.c_str());
-    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_QUERYING && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
@@ -610,12 +615,15 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
         return false;
     }
     SetConnectingPrinter(IP_AUTO, printerIp);
-    connectingProtocol = protocol;
-    if (connectingProtocol.empty()) {
-        connectingProtocol = "auto";
+    {
+        std::lock_guard<std::mutex> lock(simpleObjectMutex);
+        connectingProtocol = protocol;
+        if (connectingProtocol.empty()) {
+            connectingProtocol = "auto";
+        }
+        connectingPpdName = ppdName;
     }
-    connectingPpdName = ppdName;
-    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, connectingProtocol, ppdName);
+    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName);
 }
 
 bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap)
@@ -656,13 +664,13 @@ int32_t VendorManager::QueryPrinterInfoByPrinterId(
     return printServiceAbility->QueryPrinterInfoByPrinterId(globalPrinterId, info);
 }
 
-std::vector<std::string> VendorManager::QueryAddedPrintersByIp(const std::string &printerIp)
+std::vector<std::string> VendorManager::QueryAddedPrintersByOriginId(const std::string &originId)
 {
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("printServiceAbility is null");
         return std::vector<std::string>();
     }
-    return printServiceAbility->QueryAddedPrintersByIp(printerIp);
+    return printServiceAbility->QueryAddedPrintersByOriginId(originId);
 }
 
 bool VendorManager::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
@@ -734,11 +742,14 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
         return false;
     }
     SetConnectingPrinter(ID_AUTO, globalPrinterId);
-    connectingProtocol = protocol;
-    if (connectingProtocol.empty()) {
-        connectingProtocol = "auto";
+    {
+        std::lock_guard<std::mutex> lock(simpleObjectMutex);
+        connectingProtocol = protocol;
+        if (connectingProtocol.empty()) {
+            connectingProtocol = "auto";
+        }
+        connectingPpdName = ppdName;
     }
-    connectingPpdName = ppdName;
     PRINT_HILOGI("[Printer: %{public}s] Connecting Printer", PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::string globalVendorName = ExtractGlobalVendorName(globalPrinterId);
     std::string vendorName = ExtractVendorName(globalVendorName);

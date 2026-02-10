@@ -84,10 +84,10 @@ struct JobMonitorParam {
     int32_t timesOfSameState = -1;
     bool isBlock = false;
     uint32_t substate = 0;
-    bool isPrinterStopped = false;
     std::string jobOriginatingUserName;
     bool isCanceled = false;
     bool isInterrupt = false;
+    bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,
@@ -127,6 +127,7 @@ public:
     void StopCupsdEnterpriseService();
 #endif // ENTERPRISE_ENABLE
     bool IsCupsServerAlive();
+    void SetCupsClientEnv();
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName);
     bool QueryAllPPDInformation(const std::string &makeModel, std::vector<PpdInfo> &ppdInfos);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
@@ -197,7 +198,6 @@ private:
     void StartMonitor();
     bool JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     bool SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
-    bool IsPrinterStopped(std::shared_ptr<JobMonitorParam> monitorParams);
     bool GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
@@ -207,6 +207,12 @@ private:
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleHeldState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandlePendingState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleStoppedState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleCompletedState(std::shared_ptr<JobMonitorParam> monitorParams);
 
     int32_t StartCupsdService();
     JobParameters *GetNextJob();
@@ -232,8 +238,7 @@ private:
     std::string GetCurCupsModelDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
-    int32_t HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
-        const std::string &userName, char *userPasswd);
+    int32_t HandleSystemAuthInfo(const std::string &jobId);
     void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
     void RemovePrintCupsJobId(const std::string &jobId);
     uint32_t GetPrintCupsJobId(const std::string &jobId);
@@ -255,6 +260,7 @@ private:
     JobParameters *currentJob_ = nullptr;
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList_;
     std::mutex jobMonitorMutex_;
+    std::mutex envMutex_;
     std::map<std::string, uint32_t> cupsJobIdMap_;
     std::mutex cupsJobIdMapMutex_;
 };
