@@ -22,6 +22,7 @@
 #define protected public
 #include "print_service_ability.h"
 #include "print_bms_helper.h"
+#include "event_listener_mgr.h"
 #undef protected
 #undef private
 #ifdef CUPS_ENABLE
@@ -560,6 +561,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012_NeedRename, TestS
     std::string taskId = "";
     std::string type = "";
     sptr<IPrintCallback> listener = nullptr;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_INVALID_PARAMETER);
     taskId = "1";
@@ -571,7 +573,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012_NeedRename, TestS
     if (listener != nullptr) {
         service->On(taskId, type, listener);
     }
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     taskId = "";
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NONE);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NONE);
@@ -1118,6 +1120,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0050_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     std::string jobId = "1";
     uint32_t state = PRINTER_UNKNOWN;
     uint32_t subState = 0;
@@ -1128,7 +1131,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestS
     EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
     std::string type = PRINT_GET_FILE_EVENT_TYPE;
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     service->AdapterGetFileCallBack(jobId, state, subState);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
     service->AdapterGetFileCallBack(jobId, state, subState);
@@ -1474,6 +1477,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     uint32_t state = PRINT_JOB_CREATE_FILE_COMPLETED;
     uint32_t subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
     std::string jobId = "123";
@@ -1483,7 +1487,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestS
         .WillRepeatedly(Return(true));
     service->SetHelper(mockHelper);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     auto ret = service->AdapterGetFileCallBack(jobId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NONE);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_FAILED;
@@ -1641,10 +1645,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
     service->SendPrinterEvent(info);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[PRINTER_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(PRINTER_EVENT_TYPE,
+        listener));
     service->SendPrinterEvent(info);
     EXPECT_EQ(info.GetPrinterState(), PRINTER_UNKNOWN);
 }
@@ -1652,28 +1658,31 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
     PrinterEvent printerEvent = PRINTER_EVENT_STATE_CHANGED;
-    service->registeredListeners_["test"] = nullptr;
+    EXPECT_FALSE(DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener("test"));
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 
     std::string eventType = "123" + PRINTER_CHANGE_EVENT_TYPE;
-    service->registeredListeners_[eventType] = nullptr;
+    EXPECT_FALSE(DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener(eventType));
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[eventType] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(eventType, listener));
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrintJob jobInfo;
     jobInfo.SetJobId("1");
     service->SendPrintJobEvent(jobInfo);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[PRINTJOB_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(PRINTJOB_EVENT_TYPE,
+        listener));
     service->SendPrintJobEvent(jobInfo);
     jobInfo.SetJobState(PRINT_JOB_COMPLETED);
     service->SendPrintJobEvent(jobInfo);
@@ -1686,10 +1695,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestS
     service->SendPrintJobEvent(jobInfo);
     jobInfo.SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
     std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), EVENT_CANCEL);
-    service->registeredListeners_[taskEvent] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(taskEvent, listener));
     service->SendPrintJobEvent(jobInfo);
     taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), PRINT_CALLBACK_JOB_STATE_TYPE);
-    service->registeredListeners_[taskEvent] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(taskEvent, listener));
     jobInfo.SetJobState(PRINT_JOB_BLOCKED);
     service->SendPrintJobEvent(jobInfo);
 }
@@ -1697,11 +1706,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     std::string extensionId = "123";
     std::string extInfo = "123";
     EXPECT_EQ(service->SendExtensionEvent(extensionId, extInfo), 0);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[EXTINFO_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(EXTINFO_EVENT_TYPE,
+        listener));
     EXPECT_NE(service->SendExtensionEvent(extensionId, extInfo), 0);
 }
 
@@ -1807,12 +1818,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     std::string jobId = "123";
     service->RegisterAdapterListener(jobId);
     auto lisIt = service->adapterListenersByJobId_.find(jobId);
     EXPECT_EQ(lisIt, service->adapterListenersByJobId_.end());
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[PRINT_ADAPTER_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(PRINT_ADAPTER_EVENT_TYPE,
+        listener));
     service->RegisterAdapterListener(jobId);
     lisIt = service->adapterListenersByJobId_.find(jobId);
     EXPECT_NE(lisIt, service->adapterListenersByJobId_.end());
@@ -2864,6 +2877,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryAllPpdsTest, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
     info.SetPrinterMake("fake make");
@@ -2873,9 +2887,9 @@ HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
     info.SetOption(PrintJsonUtil::WriteString(option));
     std::string type = PRINT_QUERY_INFO_EVENT_TYPE;
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
-    service->registeredListeners_[type] = nullptr;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener(type));
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
 }
 

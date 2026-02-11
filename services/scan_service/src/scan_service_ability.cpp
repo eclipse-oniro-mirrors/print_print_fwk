@@ -761,7 +761,7 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     constexpr int32_t MAX_LISTENERS_COUNT = 1000;
-    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
+    if (registeredListeners_.size() >= MAX_LISTENERS_COUNT) {
         SCAN_HILOGE("Exceeded the maximum number of registration.");
         return E_SCAN_GENERIC_FAILURE;
     }

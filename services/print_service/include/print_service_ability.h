@@ -321,7 +321,6 @@ private:
     static std::string ingressPackage;
 
     std::recursive_mutex apiMutex_;
-    std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
     std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
 
