@@ -373,7 +373,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
         return;
     }
     PRINT_HILOGD("jobSubState = %{public}u", jobSubState);
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(id, jobState, jobSubState);
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(id, jobState, jobSubState);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }

@@ -358,7 +358,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_Shou
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_NO_PERMISSION);
     uint32_t subState = 0;
     EXPECT_EQ(service->UpdatePrintJobStateOnlyForSystemApp(printJobId, state, subState), E_PRINT_NO_PERMISSION);
-    EXPECT_EQ(service->AdapterGetFileCallBack(printJobId, state, subState), E_PRINT_NONE);
     state = PrintJobState::PRINT_JOB_CREATE_FILE_COMPLETED;
     EXPECT_EQ(service->AdapterGetFileCallBack(printJobId, state, subState), E_PRINT_NO_PERMISSION);
     std::string extInfo = "";
@@ -1122,6 +1121,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestS
     std::string jobId = "1";
     uint32_t state = PRINTER_UNKNOWN;
     uint32_t subState = 0;
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
     std::string type = PRINT_GET_FILE_EVENT_TYPE;
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
@@ -1475,16 +1478,20 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestS
     uint32_t subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
     std::string jobId = "123";
     std::string type = PRINT_GET_FILE_EVENT_TYPE;
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     service->registeredListeners_[type] = listener;
     auto ret = service->AdapterGetFileCallBack(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_FAILED;
     ret = service->AdapterGetFileCallBack(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     subState = PRINT_JOB_BLOCKED_UNKNOWN;
     ret = service->AdapterGetFileCallBack(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083_NeedRename, TestSize.Level1)

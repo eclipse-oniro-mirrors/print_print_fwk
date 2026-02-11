@@ -81,7 +81,7 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override
+    int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState) override
     {
         return E_PRINT_NONE;
     }
@@ -291,7 +291,7 @@ public:
     MOCK_METHOD1(RemovePrinters, int32_t(const std::vector<std::string> &));
     MOCK_METHOD1(UpdatePrinters, int32_t(const std::vector<PrinterInfo> &));
     MOCK_METHOD2(UpdatePrinterState, int32_t(const std::string &, uint32_t));
-    MOCK_METHOD3(UpdatePrintJobStateForNormalApp, int32_t(const std::string &, uint32_t, uint32_t));
+    MOCK_METHOD3(AdapterGetFileCallBack, int32_t(const std::string &, uint32_t, uint32_t));
     MOCK_METHOD3(UpdatePrintJobStateOnlyForSystemApp, int32_t(const std::string &, uint32_t, uint32_t));
     MOCK_METHOD1(UpdateExtensionInfo, int32_t(const std::string &));
     MOCK_METHOD2(RequestPreview, int32_t(const PrintJob &, std::string &));
