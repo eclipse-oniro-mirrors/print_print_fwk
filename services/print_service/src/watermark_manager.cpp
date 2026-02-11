@@ -25,11 +25,38 @@ namespace OHOS::Print {
 // System parameter key for watermark enable
 static const std::string WATERMARK_PARAM_KEY = "persist.pc_service_file_guard_watermarkprint";
 
+#ifdef UNIT_TEST
+WatermarkManager* WatermarkManager::instance_ = nullptr;
+std::mutex WatermarkManager::instanceLock_;
+
+WatermarkManager& WatermarkManager::GetInstance()
+{
+    std::lock_guard<std::mutex> lock(instanceLock_);
+    if (instance_ == nullptr) {
+        static WatermarkManager defaultInstance;
+        instance_ = &defaultInstance;
+    }
+    return *instance_;
+}
+
+void WatermarkManager::SetInstance(WatermarkManager* instance)
+{
+    std::lock_guard<std::mutex> lock(instanceLock_);
+    instance_ = instance;
+}
+
+void WatermarkManager::ResetInstance()
+{
+    std::lock_guard<std::mutex> lock(instanceLock_);
+    instance_ = nullptr;
+}
+#else
 WatermarkManager& WatermarkManager::GetInstance()
 {
     static WatermarkManager instance;
     return instance;
 }
+#endif // UNIT_TEST
 
 int32_t WatermarkManager::FindCallbackIndexByPid(int32_t pid) const
 {
@@ -74,11 +101,13 @@ int32_t WatermarkManager::AddNewCallback(const sptr<IWatermarkCallback> &callbac
     info.callback = callback;
     info.deathRecipient = new (std::nothrow) WatermarkDeathRecipient(callerPid);
 
-    if (info.deathRecipient != nullptr) {
-        if (!remoteObject->AddDeathRecipient(info.deathRecipient)) {
-            PRINT_HILOGE("Failed to add death recipient for PID: %{public}d", callerPid);
-            info.deathRecipient = nullptr;
-        }
+    if (info.deathRecipient == nullptr) {
+        PRINT_HILOGE("Failed to create death recipient for PID: %{public}d", callerPid);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (!remoteObject->AddDeathRecipient(info.deathRecipient)) {
+        PRINT_HILOGE("Failed to add death recipient for PID: %{public}d", callerPid);
+        return E_PRINT_SERVER_FAILURE;
     }
 
     callbacks_.push_back(info);

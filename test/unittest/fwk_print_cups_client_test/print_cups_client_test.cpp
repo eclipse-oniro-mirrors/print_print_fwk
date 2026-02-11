@@ -27,6 +27,9 @@
 #undef private
 #include "mock/mock_print_service_ability.h"
 #include "mock/mock_print_cups_client.h"
+#ifdef WATERMARK_ENFORCING_ENABLE
+#include "mock/mock_watermark_manager.h"
+#endif
 
 using namespace testing;
 using namespace testing::ext;
@@ -2471,13 +2474,48 @@ HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
 
 #ifdef WATERMARK_ENFORCING_ENABLE
 /**
+ * @tc.name: ProcessWatermarkWithCacheFd_WatermarkDisabled_Test
+ * @tc.desc: Test ProcessWatermarkWithCacheFd returns true immediately when watermark is disabled
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_WatermarkDisabled_Test, TestSize.Level1)
+{
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillOnce(Return(false));
+    EXPECT_CALL(mockWatermarkManager, ProcessWatermarkForFiles(_, _))
+        .Times(0);
+
+    PrintCupsClient printCupsClient;
+    JobParameters jobParams;
+    jobParams.serviceJobId = "test_job_id";
+    jobParams.serviceAbility = nullptr;
+    jobParams.fdList = {1, 2};
+
+    bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(jobParams.fdList.size(), 2u);
+
+    WatermarkManager::ResetInstance();
+}
+
+/**
  * @tc.name: ProcessWatermarkWithCacheFd_NullServiceAbility_Test
- * @tc.desc: Test ProcessWatermarkWithCacheFd with null serviceAbility falls back to original fds
+ * @tc.desc: Test ProcessWatermarkWithCacheFd with null serviceAbility returns false
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_NullServiceAbility_Test, TestSize.Level1)
 {
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
     PrintCupsClient printCupsClient;
     JobParameters jobParams;
     jobParams.serviceJobId = "test_job_id";
@@ -2485,17 +2523,25 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_NullServiceAbility_Tes
     jobParams.fdList = {};
 
     bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
+
+    WatermarkManager::ResetInstance();
 }
 
 /**
  * @tc.name: ProcessWatermarkWithCacheFd_FirstOpenFails_Test
- * @tc.desc: Test ProcessWatermarkWithCacheFd when first OpenCacheFileFd fails, falls back to original fds
+ * @tc.desc: Test ProcessWatermarkWithCacheFd when first OpenCacheFileFd fails returns false
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_FirstOpenFails_Test, TestSize.Level1)
 {
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
     PrintCupsClient printCupsClient;
     sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
 
@@ -2508,17 +2554,25 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_FirstOpenFails_Test, T
         .WillOnce(Return(false));
 
     bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
+
+    WatermarkManager::ResetInstance();
 }
 
 /**
  * @tc.name: ProcessWatermarkWithCacheFd_FirstOpenReturnsEmpty_Test
- * @tc.desc: Test ProcessWatermarkWithCacheFd when first OpenCacheFileFd returns empty list
+ * @tc.desc: Test ProcessWatermarkWithCacheFd when first OpenCacheFileFd returns empty list returns false
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_FirstOpenReturnsEmpty_Test, TestSize.Level1)
 {
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
     PrintCupsClient printCupsClient;
     sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
 
@@ -2531,7 +2585,9 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_FirstOpenReturnsEmpty_
         .WillOnce(DoAll(SetArgReferee<1>(std::vector<uint32_t>{}), Return(true)));
 
     bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
+
+    WatermarkManager::ResetInstance();
 }
 
 /**
@@ -2542,22 +2598,37 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_FirstOpenReturnsEmpty_
  */
 HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_SecondOpenFails_Test, TestSize.Level1)
 {
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
     PrintCupsClient printCupsClient;
     sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
 
     JobParameters jobParams;
     jobParams.serviceJobId = "test_job_id";
     jobParams.serviceAbility = mockAbility;
-    jobParams.fdList = {1, 2};
+    jobParams.fdList = {dup(1), dup(2)};
 
-    std::vector<uint32_t> cacheFds = {10, 11};
+    std::vector<uint32_t> cacheFds = {dup(1), dup(2)};
     EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDWR))
         .WillOnce(DoAll(SetArgReferee<1>(cacheFds), Return(true)));
+    EXPECT_CALL(mockWatermarkManager, ProcessWatermarkForFiles(_, _))
+        .WillOnce(Return(E_PRINT_NONE));
     EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDONLY))
         .WillOnce(Return(false));
 
     bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
     EXPECT_FALSE(ret);
+
+    // Close the fds in jobParams.fdList to avoid fd leak
+    for (auto fd : jobParams.fdList) {
+        close(fd);
+    }
+
+    WatermarkManager::ResetInstance();
 }
 
 /**
@@ -2568,22 +2639,37 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_SecondOpenFails_Test, 
  */
 HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_SecondOpenReturnsEmpty_Test, TestSize.Level1)
 {
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
     PrintCupsClient printCupsClient;
     sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
 
     JobParameters jobParams;
     jobParams.serviceJobId = "test_job_id";
     jobParams.serviceAbility = mockAbility;
-    jobParams.fdList = {1, 2};
+    jobParams.fdList = {dup(1), dup(2)};
 
-    std::vector<uint32_t> cacheFds = {10, 11};
+    std::vector<uint32_t> cacheFds = {dup(1), dup(2)};
     EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDWR))
         .WillOnce(DoAll(SetArgReferee<1>(cacheFds), Return(true)));
+    EXPECT_CALL(mockWatermarkManager, ProcessWatermarkForFiles(_, _))
+        .WillOnce(Return(E_PRINT_NONE));
     EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDONLY))
         .WillOnce(DoAll(SetArgReferee<1>(std::vector<uint32_t>{}), Return(true)));
 
     bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
     EXPECT_FALSE(ret);
+
+    // Close the fds in jobParams.fdList to avoid fd leak
+    for (auto fd : jobParams.fdList) {
+        close(fd);
+    }
+
+    WatermarkManager::ResetInstance();
 }
 
 /**
@@ -2594,26 +2680,39 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_SecondOpenReturnsEmpty
  */
 HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_Success_Test, TestSize.Level1)
 {
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
     PrintCupsClient printCupsClient;
     sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
 
     JobParameters jobParams;
     jobParams.serviceJobId = "test_job_id";
     jobParams.serviceAbility = mockAbility;
-    jobParams.fdList = {1, 2};
+    jobParams.fdList = {dup(1), dup(2)};
 
-    std::vector<uint32_t> cacheFds = {10, 11};
-    std::vector<uint32_t> freshFds = {20, 21};
+    std::vector<uint32_t> cacheFds = {dup(1), dup(2)};
+    std::vector<uint32_t> freshFds = {dup(1), dup(2)};
     EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDWR))
         .WillOnce(DoAll(SetArgReferee<1>(cacheFds), Return(true)));
+    EXPECT_CALL(mockWatermarkManager, ProcessWatermarkForFiles(_, _))
+        .WillOnce(Return(E_PRINT_NONE));
     EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDONLY))
         .WillOnce(DoAll(SetArgReferee<1>(freshFds), Return(true)));
 
     bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
     EXPECT_TRUE(ret);
     EXPECT_EQ(jobParams.fdList.size(), 2u);
-    EXPECT_EQ(jobParams.fdList[0], 20u);
-    EXPECT_EQ(jobParams.fdList[1], 21u);
+
+    // Close the fds in jobParams.fdList to avoid fd leak
+    for (auto fd : jobParams.fdList) {
+        close(fd);
+    }
+
+    WatermarkManager::ResetInstance();
 }
 #endif // WATERMARK_ENFORCING_ENABLE
 }  // namespace Print

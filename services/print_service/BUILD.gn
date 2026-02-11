@@ -200,6 +200,8 @@ ohos_static_library("print_service_test") {
   deps = _deps
   external_deps = _external_deps
 
+  cflags_cc += [ "-DUNIT_TEST" ]
+
   if (cups_enable) {
     sources += [
       "src/print_cups_attribute.cpp",

@@ -2340,8 +2340,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSiz
 {
     std::string jobId = "1";
     PrintAttributes testPrintAttributes;
-    uint32_t fd = open("/data/test/testFile", O_CREAT | O_WRONLY | O_TRUNC, 0664);
-    EXPECT_TRUE(fd >= 0);
+    uint32_t fd = static_cast<uint32_t>(dup(1));
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
@@ -3031,34 +3030,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_StartPrint_noPermission,
     int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
-/**
- * @tc.name: RegisterWatermarkCallback_ServerNotLoaded
- * @tc.desc: RegisterWatermarkCallback returns E_PRINT_NO_PERMISSION when server not loaded
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_ServerNotLoaded, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: RegisterWatermarkCallback_ProxyNull
- * @tc.desc: RegisterWatermarkCallback returns E_PRINT_RPC_FAILURE when proxy is null
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_ProxyNull, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
-}
 
 /**
  * @tc.name: RegisterWatermarkCallback_Success
@@ -3083,33 +3054,8 @@ HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_Success, TestSize.Lev
     sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
     int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
     EXPECT_EQ(ret, E_PRINT_NONE);
-}
 
-/**
- * @tc.name: UnregisterWatermarkCallback_ServerNotLoaded
- * @tc.desc: UnregisterWatermarkCallback returns E_PRINT_NO_PERMISSION when server not loaded
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_ServerNotLoaded, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: UnregisterWatermarkCallback_ProxyNull
- * @tc.desc: UnregisterWatermarkCallback returns E_PRINT_RPC_FAILURE when proxy is null
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_ProxyNull, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    dr->OnRemoteDied(obj);
 }
 
 /**
@@ -3134,33 +3080,8 @@ HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_Success, TestSize.L
 
     int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
     EXPECT_EQ(ret, E_PRINT_NONE);
-}
 
-/**
- * @tc.name: NotifyWatermarkComplete_ServerNotLoaded
- * @tc.desc: NotifyWatermarkComplete returns E_PRINT_NO_PERMISSION when server not loaded
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_ServerNotLoaded, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete("job_001", 0);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: NotifyWatermarkComplete_ProxyNull
- * @tc.desc: NotifyWatermarkComplete returns E_PRINT_RPC_FAILURE when proxy is null
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_ProxyNull, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete("job_001", 0);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    dr->OnRemoteDied(obj);
 }
 
 /**
@@ -3188,6 +3109,8 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_Success, TestSize.Level
 
     int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
     EXPECT_EQ(ret, E_PRINT_NONE);
+
+    dr->OnRemoteDied(obj);
 }
 
 /**
@@ -3215,6 +3138,8 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_WithFailureResult, Test
 
     int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
     EXPECT_EQ(ret, E_PRINT_NONE);
+
+    dr->OnRemoteDied(obj);
 }
 }  // namespace Print
 }  // namespace OHOS

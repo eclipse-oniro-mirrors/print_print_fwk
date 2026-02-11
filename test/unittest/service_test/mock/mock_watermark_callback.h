@@ -30,6 +30,7 @@ namespace Print {
  * and the MDM application's callback. It allows tests to:
  * - Verify that OnCallback is called with correct parameters
  * - Track the number of callback invocations
+ * - Simulate proper IPC behavior by supporting AddDeathRecipient
  */
 class MockWatermarkCallback : public IRemoteStub<IWatermarkCallback> {
 public:
@@ -52,6 +53,40 @@ public:
     {
         return 0;
     }
+
+    /**
+     * @brief Override AsObject to return this mock as remote object
+     */
+    sptr<IRemoteObject> AsObject() override
+    {
+        return this;
+    }
+
+    /**
+     * @brief Override AddDeathRecipient to return true in test environment
+     *
+     * In production, AddDeathRecipient is used to monitor process death.
+     * In test environment, we simulate successful registration.
+     */
+    bool AddDeathRecipient(const sptr<IRemoteObject::DeathRecipient> &recipient) override
+    {
+        deathRecipient_ = recipient;
+        return true;
+    }
+
+    /**
+     * @brief Override RemoveDeathRecipient for proper cleanup
+     */
+    bool RemoveDeathRecipient(const sptr<IRemoteObject::DeathRecipient> &recipient) override
+    {
+        if (deathRecipient_ == recipient) {
+            deathRecipient_ = nullptr;
+        }
+        return true;
+    }
+
+private:
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_;
 };
 
 }  // namespace Print

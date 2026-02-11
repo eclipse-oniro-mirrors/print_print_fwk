@@ -39,6 +39,19 @@ class WatermarkManager : public NoCopyable {
 public:
     static WatermarkManager& GetInstance();
 
+#ifdef UNIT_TEST
+    /**
+     * @brief Set custom instance for testing (unit test only)
+     * @param instance The instance to use, nullptr to reset to default
+     */
+    static void SetInstance(WatermarkManager* instance);
+
+    /**
+     * @brief Reset instance to default (unit test only)
+     */
+    static void ResetInstance();
+#endif // UNIT_TEST
+
     /**
      * @brief Register watermark callback from MDM
      * @param callback The watermark callback interface
@@ -68,7 +81,7 @@ public:
      * @param fdList The list of file descriptors to process
      * @return E_PRINT_NONE if success, error code otherwise
      */
-    int32_t ProcessWatermarkForFiles(const std::string &jobId, const std::vector<uint32_t> &fdList);
+    virtual int32_t ProcessWatermarkForFiles(const std::string &jobId, const std::vector<uint32_t> &fdList);
 
     /**
      * @brief Notify watermark processing complete (called by MDM)
@@ -89,7 +102,7 @@ public:
      * @return true if watermark is enabled, false otherwise
      * @note Checks system parameter: persist.pc_service_file_guard_watermarkprint
      */
-    bool IsWatermarkEnabled();
+    virtual bool IsWatermarkEnabled();
 
     /**
      * @brief Handle callback death notification (called by WatermarkDeathRecipient)
@@ -97,9 +110,15 @@ public:
      */
     void OnCallbackDied(int32_t pid);
 
+#ifdef UNIT_TEST
+protected:
+#else
 private:
+#endif // UNIT_TEST
     WatermarkManager() = default;
     ~WatermarkManager() override = default;
+
+private:
 
     /**
      * @brief Trigger watermark processing by calling a single MDM callback
@@ -160,6 +179,12 @@ private:
 
     // Mutex for thread safety
     std::mutex mutex_;
+
+#ifdef UNIT_TEST
+    // Instance pointer for unit test injection
+    static WatermarkManager* instance_;
+    static std::mutex instanceLock_;
+#endif
 };
 
 } // namespace OHOS::Print

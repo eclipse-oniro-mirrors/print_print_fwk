@@ -35,7 +35,7 @@ ohos_unittest("fwk_print_cups_client_test") {
   }
 
   sources = []
-  cflags_cc = []
+  cflags_cc = [ "-DUNIT_TEST" ]
 
   deps = [
     "${print_path}/etc/init:printservice.rc",

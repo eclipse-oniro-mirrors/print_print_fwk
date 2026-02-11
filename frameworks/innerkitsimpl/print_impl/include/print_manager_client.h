@@ -147,8 +147,8 @@ public:
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);
-    bool LoadServer();
-    bool GetPrintServiceProxy();
+    virtual bool LoadServer();
+    virtual bool GetPrintServiceProxy();
     int32_t runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func);
 #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
