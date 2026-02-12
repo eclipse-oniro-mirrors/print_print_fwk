@@ -201,6 +201,7 @@ constexpr int32_t BYTE_BITS = 8;
 constexpr int32_t CHANNEL_ONE = 1;
 constexpr int32_t CHANNEL_THREE = 3;
 constexpr int32_t JPEG_QUALITY_SEVENTY_FIVE = 75;
+constexpr uint32_t IMAGE_COMPRESS_QUALITY_MAX = 100;
 constexpr int32_t BUFFER_SIZE = 1024 * 100; // 100KB
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

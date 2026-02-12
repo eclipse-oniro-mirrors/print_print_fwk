@@ -60,8 +60,8 @@
         "cJSON",
         "runtime_core",
         "ace_engine",
-        "libjpeg-turbo",
         "input",
+        "image_framework",
         "data_share",
         "enterprise_device_management",
         "security_guard"
@@ -167,6 +167,7 @@
       "//base/print/print_fwk/test/unittest/fwk_print_helper_test:fwk_print_helper_test",
       "//base/print/print_fwk/test/unittest/fwk_print_service_ability_test:fwk_print_service_ability_test",
       "//base/print/print_fwk/test/unittest/service_test:print_service_test",
+      "//base/print/print_fwk/test/unittest/service_test:scan_task_test",
       "//base/print/print_fwk/test/unittest/extension_test:print_ext_test",
       "//base/print/print_fwk/test/unittest/fwk_vendor_manager_test:fwk_vendor_manager_test",
       "//base/print/print_fwk/test/unittest/fwk_print_smb_printer_test:fwk_print_smb_printer_test",

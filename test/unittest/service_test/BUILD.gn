@@ -157,6 +157,35 @@ ohos_unittest("scan_service_test") {
   ]
 }
 
+ohos_unittest("scan_task_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/frameworks/models/scan_models/include",
+    "${print_path}/services/scan_service/include",
+    "${print_utils_path}/include",
+  ]
+
+  sources = [
+    "scan_task_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/services/scan_service:scan_service_test",
+  ]
+
+  external_deps = [
+    "image_framework:image_ndk",
+    "image_framework:image_native",
+    "googletest:gtest_main",
+    "googletest:gmock_main",
+  ]
+
+  cflags = [
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+}
+
 group("unittest") {
   testonly = true
 
@@ -164,4 +193,5 @@ group("unittest") {
 
   deps += [ ":print_service_test" ]
   deps += [ ":scan_service_test" ]
+  deps += [ ":scan_task_test" ]
 }
