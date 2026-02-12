@@ -715,7 +715,6 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
-    vendorManager.ClearConnectingPrinter();
     std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         vendorManager.MonitorPrinterStatus(printerId, true);
