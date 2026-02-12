@@ -148,7 +148,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestSetPrintJobCanceled
     };
     TestHandler handler = dataProvider->PickValueInArray(tasks);
-    handler(data, size, &dataProvider);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print
