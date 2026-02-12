@@ -18,6 +18,8 @@
 #include "scanusbmanager_fuzzer.h"
 #include "scan_usb_manager.h"
 #include "scan_service_ability.h"
+#include "print_log.h"
+#include <functional>
 
 
 namespace OHOS {
@@ -91,10 +93,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestDealUsbDevStatusChange(data, size, &dataProvider);
-    OHOS::Scan::TestUsbUpdateUsbScannerId(data, size, &dataProvider);
-    OHOS::Scan::TestUsbDisConnectUsbScanner(data, size, &dataProvider);
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::TestDealUsbDevStatusChange,
+        &OHOS::Scan::TestUsbUpdateUsbScannerId,
+        &OHOS::Scan::TestUsbDisConnectUsbScanner
+    };
 
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

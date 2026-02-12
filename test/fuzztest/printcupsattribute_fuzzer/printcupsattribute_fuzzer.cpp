@@ -15,6 +15,8 @@
 #include "printcupsattribute_fuzzer.h"
 #include "fuzzer/FuzzedDataProvider.h"
 #include "print_cups_attribute.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -66,8 +68,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Print::TestParsePrinterStatusAttributes(data, size, &dataProvider);
-    OHOS::Print::TestParsePrinterAttributes(data, size, &dataProvider);
-    
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Print::TestParsePrinterStatusAttributes,
+        &OHOS::Print::TestParsePrinterAttributes
+    };
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
