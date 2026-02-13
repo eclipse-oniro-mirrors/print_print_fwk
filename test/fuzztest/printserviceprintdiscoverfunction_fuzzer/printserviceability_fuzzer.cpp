@@ -161,7 +161,6 @@ void TestRemoveVendorPrinterFromDiscovery(const uint8_t *data, size_t size, Fuzz
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-
     PRINT_HILOGI("multithreading is running at function TestAllFunction.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
