@@ -23,6 +23,8 @@
 #include "scan_mdns_service.h"
 #include "mdns_common.h"
 #include "scan_task.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS {
 namespace Scan {
@@ -227,20 +229,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->OnStop();
     }
 
-    void TestNotPublicFunction(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        if (dataProvider == nullptr) {
-            return;
-        }
-        OHOS::Scan::TestNoParmFuncs(data, size, dataProvider);
-        OHOS::Scan::TestCheckPermission(data, size, dataProvider);
-        OHOS::Scan::TestGeneratePictureBatch(data, size, dataProvider);
-        OHOS::Scan::TestAddFoundScanner(data, size, dataProvider);
-        OHOS::Scan::TestSendDeviceList(data, size, dataProvider);
-        OHOS::Scan::TestAddScanner(data, size, dataProvider);
-        OHOS::Scan::TestGetAddedScanner(data, size, dataProvider);
-    }
-
     void TestCleanUpAfterScan(FuzzedDataProvider* dataProvider)
     {
         if (dataProvider == nullptr) {
@@ -416,15 +404,6 @@ namespace Scan {
         ScanMDnsDiscoveryObserver observer(info);
         observer.HandleStopDiscover(info, retCode);
     }
-
-    void TestAllMdnsService(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        TestMdnsDiscoveryHandleServiceFound(data, size, dataProvider);
-        TestMdnsResolveHandleResolveResult(data, size, dataProvider);
-        TestMdnsDiscoveryHandleServiceLost(data, size, dataProvider);
-        TestMdnsLossResolveHandleResolveResult(data, size, dataProvider);
-        TestHandDiscoveryleStopDiscover(data, size, dataProvider);
-    }
 }
 }
 
@@ -440,30 +419,53 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
     FuzzedDataProvider dataProvider(data, size);
     OHOS::Scan::ScanServiceAbilityMock::MockPermission();
-    OHOS::Scan::TestOpenScanner(data, size, &dataProvider);
-    OHOS::Scan::TestCloseScanner(data, size, &dataProvider);
-    OHOS::Scan::TestGetScanOptionDesc(data, size, &dataProvider);
-    OHOS::Scan::TestStartScan(data, size, &dataProvider);
-    OHOS::Scan::TestCancelScan(data, size, &dataProvider);
-    OHOS::Scan::TestOn(data, size, &dataProvider);
-    OHOS::Scan::TestOff(data, size, &dataProvider);
-    OHOS::Scan::TestOnStartScan(data, size, &dataProvider);
-    OHOS::Scan::TestSendDeviceInfo(data, size, &dataProvider);
-    OHOS::Scan::TestSendDeviceInfoSync(data, size, &dataProvider);
-    OHOS::Scan::TestDisConnectUsbScanner(data, size, &dataProvider);
-    OHOS::Scan::TestUpdateUsbScannerId(data, size, &dataProvider);
-    OHOS::Scan::TestSetScannerSerialNumber(data, size, &dataProvider);
-    OHOS::Scan::TestNotPublicFunction(data, size, &dataProvider);
-    OHOS::Scan::TestCleanUpAfterScan(&dataProvider);
-    OHOS::Scan::TestActionSetAuto(data, size, &dataProvider);
-    OHOS::Scan::TestActionGetValue(data, size, &dataProvider);
-    OHOS::Scan::TestOpScanOptionValue(data, size, &dataProvider);
-    OHOS::Scan::TestGetScanParameters(data, size, &dataProvider);
-    OHOS::Scan::TestGetScanProgress(data, size, &dataProvider);
-    OHOS::Scan::TestDeleteScanner(data, size, &dataProvider);
-    OHOS::Scan::TestStartScanTask(data, size, &dataProvider);
-    OHOS::Scan::TestDoScanTask(data, size, &dataProvider);
-    OHOS::Scan::TestGetPicFrame(data, size, &dataProvider);
-    OHOS::Scan::TestAllMdnsService(data, size, &dataProvider);
+    const int cntFuncs = 36;
+    const int rndInt = dataProvider.ConsumeIntegralInRange(0, cntFuncs - 1);
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    if (rndInt == cntFuncs - 1) {
+        OHOS::Scan::TestCleanUpAfterScan(&dataProvider);
+        return 0;
+    }
+
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::TestOpenScanner,
+        &OHOS::Scan::TestCloseScanner,
+        &OHOS::Scan::TestGetScanOptionDesc,
+        &OHOS::Scan::TestStartScan,
+        &OHOS::Scan::TestCancelScan,
+        &OHOS::Scan::TestOn,
+        &OHOS::Scan::TestOff,
+        &OHOS::Scan::TestOnStartScan,
+        &OHOS::Scan::TestSendDeviceInfo,
+        &OHOS::Scan::TestSendDeviceInfoSync,
+        &OHOS::Scan::TestDisConnectUsbScanner,
+        &OHOS::Scan::TestUpdateUsbScannerId,
+        &OHOS::Scan::TestSetScannerSerialNumber,
+        &OHOS::Scan::TestNoParmFuncs,
+        &OHOS::Scan::TestCheckPermission,
+        &OHOS::Scan::TestGeneratePictureBatch,
+        &OHOS::Scan::TestAddFoundScanner,
+        &OHOS::Scan::TestSendDeviceList,
+        &OHOS::Scan::TestAddScanner,
+        &OHOS::Scan::TestGetAddedScanner,
+        &OHOS::Scan::TestActionSetAuto,
+        &OHOS::Scan::TestActionGetValue,
+        &OHOS::Scan::TestActionSetValue,
+        &OHOS::Scan::TestOpScanOptionValue,
+        &OHOS::Scan::TestGetScanParameters,
+        &OHOS::Scan::TestGetScanProgress,
+        &OHOS::Scan::TestDeleteScanner,
+        &OHOS::Scan::TestStartScanTask,
+        &OHOS::Scan::TestDoScanTask,
+        &OHOS::Scan::TestGetPicFrame,
+        &OHOS::Scan::TestMdnsDiscoveryHandleServiceFound,
+        &OHOS::Scan::TestMdnsResolveHandleResolveResult,
+        &OHOS::Scan::TestMdnsDiscoveryHandleServiceLost,
+        &OHOS::Scan::TestMdnsLossResolveHandleResolveResult,
+        &OHOS::Scan::TestHandDiscoveryleStopDiscover
+    };
+
+    tasks[rndInt](data, size, &dataProvider);
     return 0;
 }

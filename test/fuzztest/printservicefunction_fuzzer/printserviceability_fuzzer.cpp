@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -258,32 +259,39 @@ void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestChangeDefaultPrinterForDelete(data, size, dataProvider);
-    TestGetUserDataByUserId(data, size, dataProvider);
-    TestDetermineUserJobStatus(data, size, dataProvider);
-    TestNotifyCurrentUserChanged(data, size, dataProvider);
-    TestHandleExtensionConnectPrinter(data, size, dataProvider);
-    TestSendQueuePrintJob(data, size, dataProvider);
-    TestAddPrinterToDiscovery(data, size, dataProvider);
-    TestUpdatePrinterInDiscovery(data, size, dataProvider);
-    TestRemovePrinterFromDiscovery(data, size, dataProvider);
-    TestUpdatePrinterInSystem(data, size, dataProvider);
-    TestDeletePrinterFromUserData(data, size, dataProvider);
-    TestNotifyAppDeletePrinter(data, size, dataProvider);
-    TestAddVendorPrinterToDiscovery(data, size, dataProvider);
-    TestAuthPrintJob(data, size, dataProvider);
-    TestAnalyzePrintEvents(data, size, dataProvider);
-    TestAddPrintEvent(data, size, dataProvider);
-    TestSavePdfFileJob(data, size, dataProvider);
-    TestQueryAllPrinterPpds(data, size, dataProvider);
-    TestQueryPrinterInfoByIp(data, size, dataProvider);
-    TestConnectPrinterByIpAndPpd(data, size, dataProvider);
-    TestQueryRecommendDriversById(data, size, dataProvider);
-    TestQueryPrinterCapabilityByUri(data, size, dataProvider);
-    TestUpdateBsuniPrinterAdvanceOptions(data, size, dataProvider);
-    TestParseSingleAdvanceOptJson(data, size, dataProvider);
-    TestBlockPrintJob(data, size, dataProvider);
-    TestGetConnectUri(data, size, dataProvider);
+    PRINT_HILOGI("multithreading is running at function TestPrintFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestChangeDefaultPrinterForDelete,
+        &TestGetUserDataByUserId,
+        &TestDetermineUserJobStatus,
+        &TestNotifyCurrentUserChanged,
+        &TestHandleExtensionConnectPrinter,
+        &TestSendQueuePrintJob,
+        &TestAddPrinterToDiscovery,
+        &TestUpdatePrinterInDiscovery,
+        &TestRemovePrinterFromDiscovery,
+        &TestUpdatePrinterInSystem,
+        &TestDeletePrinterFromUserData,
+        &TestNotifyAppDeletePrinter,
+        &TestAddVendorPrinterToDiscovery,
+        &TestAuthPrintJob,
+        &TestAnalyzePrintEvents,
+        &TestAddPrintEvent,
+        &TestSavePdfFileJob,
+        &TestQueryAllPrinterPpds,
+        &TestQueryPrinterInfoByIp,
+        &TestConnectPrinterByIpAndPpd,
+        &TestQueryRecommendDriversById,
+        &TestQueryPrinterCapabilityByUri,
+        &TestUpdateBsuniPrinterAdvanceOptions,
+        &TestParseSingleAdvanceOptJson,
+        &TestBlockPrintJob,
+        &TestGetConnectUri
+    };
+
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print

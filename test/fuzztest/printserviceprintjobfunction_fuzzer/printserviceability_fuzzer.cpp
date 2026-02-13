@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -156,15 +157,22 @@ void TestFlushCacheFileToUserData(const uint8_t *data, size_t size, FuzzedDataPr
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestStartPrint(data, size, dataProvider);
-    TestConnectPrinter(data, size, dataProvider);
-    TestDisconnectPrinter(data, size, dataProvider);
-    TestStartDiscoverPrinter(data, size, dataProvider);
-    TestQueryAllExtension(data, size, dataProvider);
-    TestStartPrintJob(data, size, dataProvider);
-    TestCancelPrintJob(data, size, dataProvider);
-    TestRestartPrintJob(data, size, dataProvider);
-    TestFlushCacheFileToUserData(data, size, dataProvider);
+    PRINT_HILOGI("multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestStartPrint,
+        &TestConnectPrinter,
+        &TestDisconnectPrinter,
+        &TestStartDiscoverPrinter,
+        &TestQueryAllExtension,
+        &TestStartPrintJob,
+        &TestCancelPrintJob,
+        &TestRestartPrintJob,
+        &TestFlushCacheFileToUserData
+    };
+
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print
