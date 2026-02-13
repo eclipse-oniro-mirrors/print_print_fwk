@@ -311,6 +311,7 @@ private:
     void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
+    void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

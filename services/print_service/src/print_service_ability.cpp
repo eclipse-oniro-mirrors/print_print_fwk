@@ -3745,6 +3745,18 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
     return true;
 }
 
+void PrintServiceAbility::SyncAddedPrinterInfo(
+    const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo)
+{
+    OHOS::Print::PrinterInfo printer;
+    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+        printerInfo->SetPrinterName(printer.GetPrinterName());
+        if (printer.HasAlias()) {
+            printerInfo->SetAlias(printer.GetAlias());
+        }
+    }
+}
+
 bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -3758,10 +3770,7 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             PRINT_HILOGW("allocate printer info fail");
             return false;
         }
-        OHOS::Print::PrinterInfo printer;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
-            printerInfo->SetPrinterName(printer.GetPrinterName());
-        }
+        SyncAddedPrinterInfo(globalPrinterId, printerInfo);
         printerInfo->SetPrinterId(globalPrinterId);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
     }
@@ -3799,10 +3808,7 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
             printerInfo->SetPrinterId(globalPrinterId);
         }
     }
-    OHOS::Print::PrinterInfo printer;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
-        printerInfo->SetPrinterName(printer.GetPrinterName());
-    }
+    SyncAddedPrinterInfo(globalPrinterId, printerInfo);
     return true;
 }
 
@@ -4029,10 +4035,7 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
             PRINT_HILOGW("allocate printer info fail");
             return false;
         }
-        OHOS::Print::PrinterInfo printer;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
-            printerInfo->SetPrinterName(printer.GetPrinterName());
-        }
+        SyncAddedPrinterInfo(globalPrinterId, printerInfo);
         printerInfo->SetPrinterId(globalPrinterId);
         printSystemData_.AddIpPrinterToList(printerInfo);
     }

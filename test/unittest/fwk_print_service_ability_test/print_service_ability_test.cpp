@@ -3645,5 +3645,98 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplet
     EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_NONE);
 #endif
 }
+
+/**
+ * @tc.name: PrintServiceAbilityTest_AddVendorPrinterToDiscovery_SyncAlias_001
+ * @tc.desc: Test AddVendorPrinterToDiscovery syncs alias from added printer
+ * @tc.type: FUNC
+ * @tc.require: When discovering a previously added printer, alias should be synced
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddVendorPrinterToDiscovery_SyncAlias_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string expectedAlias = "MyPrinter";
+    std::string expectedPrinterName = "TestPrinterName";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(expectedPrinterName);
+    addedPrinter.SetAlias(expectedAlias);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
+    EXPECT_TRUE(printerInfo->HasAlias());
+    EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_AddVendorPrinterToDiscovery_NoAlias_001
+ * @tc.desc: Test AddVendorPrinterToDiscovery when added printer has no alias
+ * @tc.type: FUNC
+ * @tc.require: When added printer has no alias, discovered printer should not have alias
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddVendorPrinterToDiscovery_NoAlias_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string expectedPrinterName = "TestPrinterName";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(expectedPrinterName);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
+    EXPECT_FALSE(printerInfo->HasAlias());
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UpdateVendorPrinterToDiscovery_SyncAlias_001
+ * @tc.desc: Test UpdateVendorPrinterToDiscovery syncs alias from added printer
+ * @tc.type: FUNC
+ * @tc.require: When updating discovered printer, alias should be synced from added printer
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UpdateVendorPrinterToDiscovery_SyncAlias_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string expectedAlias = "UpdatedAlias";
+    std::string expectedPrinterName = "UpdatedPrinterName";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(expectedPrinterName);
+    addedPrinter.SetAlias(expectedAlias);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
+    EXPECT_TRUE(printerInfo->HasAlias());
+    EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
+}
 }  // namespace Print
 }  // namespace OHOS
