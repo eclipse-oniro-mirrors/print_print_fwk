@@ -92,7 +92,7 @@ void TestSetOptionConstraintString(const uint8_t* data, size_t size, FuzzedDataP
     ScanOptionDescriptor scanOptDes;
     std::vector<std::string> optionConstraintString;
     int32_t vectorSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    for (int i = 0; i< vectorSize; i++) {
+    for (int i = 0; i < vectorSize; i++) {
         std::string teststr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         optionConstraintString.emplace_back(teststr);
     }
