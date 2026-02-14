@@ -614,7 +614,7 @@ int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &t
     }
 
     tmpPath = GenerateTempFilePath(filesDir);
-    if (!IsPathValid(tmpPath)) {
+    if (!IsPathValid(filesDir)) {
         return -1;
     }
     std::ofstream tempFile(tmpPath, std::ios::binary);
