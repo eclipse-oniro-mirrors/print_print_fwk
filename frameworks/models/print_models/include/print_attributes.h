@@ -27,7 +27,6 @@
 #include "print_page_size.h"
 #include "print_preview_attribute.h"
 #include "print_range.h"
-#include "print_custom_option.h"
 
 namespace OHOS::Print {
 class PrintAttributes final : public Parcelable {
@@ -60,8 +59,6 @@ public:
 
     void SetOption(const std::string &option);
 
-    void SetCustomOption(const std::vector<PrintCustomOption> &customOption);
-
     void UpdateParams(const PrintAttributes& jobInfo);
 
     [[nodiscard]] uint32_t GetCopyNumber() const;
@@ -81,8 +78,6 @@ public:
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
     void GetMargin(PrintMargin &printMargin) const;
-
-    void GetCustomOption(std::vector<PrintCustomOption> &customOption) const;
 
     [[nodiscard]] bool HasPreview() const;
 
@@ -107,8 +102,6 @@ public:
     [[nodiscard]] bool HasMargin() const;
 
     [[nodiscard]] bool HasOption() const;
-
-    [[nodiscard]] bool HasCustomOption() const;
 
     [[nodiscard]] const std::string &GetOption() const;
 
@@ -149,8 +142,6 @@ private:
     PrintMargin margin_;
     bool hasOption_;
     std::string option_;
-    bool hasCustomOption_;
-    std::vector<PrintCustomOption> customOption_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_FWK_PRINT_ATTRIBUTES_H
