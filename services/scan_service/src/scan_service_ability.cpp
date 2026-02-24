@@ -1200,7 +1200,7 @@ void ScanServiceAbility::GeneratePictureBatch(ScanTask &scanTask)
             }
         }
         if (!CreateAndOpenScanFile(scanTask)) {
-            status = E_SCAN_GENERIC_FAILURE;
+            status = E_SCAN_SERVER_FAILURE;
             SCAN_HILOGE("CreateAndOpenScanFile fail");
             break;
         }
@@ -1219,7 +1219,7 @@ void ScanServiceAbility::GeneratePictureSingle(ScanTask &scanTask)
 {
     int32_t status = E_SCAN_NONE;
     if (!CreateAndOpenScanFile(scanTask)) {
-        status = E_SCAN_GENERIC_FAILURE;
+        status = E_SCAN_SERVER_FAILURE;
         SCAN_HILOGE("CreateAndOpenScanFile fail");
         return;
     }
@@ -1326,9 +1326,10 @@ void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, Sc
             break;
         }
         scanPictureData_.SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
-        if (scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm) != E_SCAN_NONE) {
+        int32_t writePicDataRet = scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm);
+        if (writePicDataRet != E_SCAN_NONE) {
             SCAN_HILOGE("WritePicData fail");
-            scanStatus = E_SCAN_GENERIC_FAILURE;
+            scanStatus = writePicDataRet;
             break;
         }
         if (scanStatus == SANE_STATUS_EOF) {
@@ -1385,7 +1386,7 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     }
     if (resolutionIndex == 0) {
         SCAN_HILOGE("cannot find dpi option");
-        return E_SCAN_GENERIC_FAILURE;
+        return E_SCAN_SERVER_FAILURE;
     }
     controlParam.action_ = SANE_ACTION_GET_VALUE;
     controlParam.valueType_ = SCAN_VALUE_NUM;

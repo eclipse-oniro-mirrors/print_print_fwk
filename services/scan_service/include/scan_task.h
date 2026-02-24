@@ -21,6 +21,7 @@
 #include <mutex>
 #include <vector>
 #include <queue>
+#include <setjmp.h>
 #include "scanner_info.h"
 #include "jpeglib.h"
 #include "scan_parameters.h"
@@ -45,12 +46,12 @@ private:
     static void JpegErrorExit(j_common_ptr cinfo);
     std::string scannerId_;
     bool batchMode_;
-    bool isJpegWriteSuccess_;
     int32_t userId_;
     FILE *ofp_;
     JSAMPLE *jpegbuf_;
     struct jpeg_compress_struct cinfo_;
     struct jpeg_error_mgr jerr_;
+    jmp_buf jpegJumpBuffer_;
 };
 
 } // namespace OHOS::Scan
