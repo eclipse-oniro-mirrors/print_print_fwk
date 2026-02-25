@@ -25,6 +25,7 @@
 #include "vendor_ppd_driver.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
+#include <functional>
 
 
 namespace OHOS {
@@ -193,21 +194,6 @@ void TestPpdDriverOtherFunction(const uint8_t *data, size_t size, FuzzedDataProv
     vendorPpdDriver->vendorManager = nullptr;
     vendorPpdDriver->QueryProperty(printerId, key, value);
 }
-
-void TestVendorWlanGroup(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    TestWlanGroupDiscoverPrinterActions(data, size, dataProvider);
-    TestWlanGroupConnectPrinterActions(data, size, dataProvider);
-    TestWlanGroupOtherFunction(data, size, dataProvider);
-    TestWlanGroupWithoutVendorManager(data, size, dataProvider);
-}
-
-void TestVendorPpdDriver(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    TestPpdDriverConnectPrinterActions(data, size, dataProvider);
-    TestPpdDriverOtherFunction(data, size, dataProvider);
-}
-
 }  // namespace Print
 }  // namespace OHOS
 
@@ -227,8 +213,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::PrintServiceAbilityMockPermission::MockPermission();
     OHOS::Print::PrintServiceAbility::GetInstance()->vendorManager.Init(
         OHOS::Print::PrintServiceAbility::GetInstance());
-    OHOS::Print::TestVendorWlanGroup(data, size, &dataProvider);
-    OHOS::Print::TestVendorPpdDriver(data, size, &dataProvider);
+
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Print::TestWlanGroupDiscoverPrinterActions,
+        &OHOS::Print::TestWlanGroupConnectPrinterActions,
+        &OHOS::Print::TestWlanGroupOtherFunction,
+        &OHOS::Print::TestWlanGroupWithoutVendorManager,
+        &OHOS::Print::TestPpdDriverConnectPrinterActions,
+        &OHOS::Print::TestPpdDriverOtherFunction,
+    };
+
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

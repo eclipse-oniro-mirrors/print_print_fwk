@@ -284,7 +284,7 @@ bool PrinterCapabilityHelper::BuildArrayPropertyFromJs(napi_env env, napi_value 
 bool PrinterCapabilityHelper::BuildSupportedPageSizes(napi_env env, napi_value jsValue,
                                                       std::shared_ptr<PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<PrintPageSize>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_PAGESIZES,
+    return ProcessJsArrayProperty<PrintPageSize>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_PAGESIZES,
         [nativeObj](const std::vector<PrintPageSize>& pageSizes) {
             nativeObj->SetSupportedPageSize(pageSizes);
         },
@@ -294,7 +294,7 @@ bool PrinterCapabilityHelper::BuildSupportedPageSizes(napi_env env, napi_value j
 bool PrinterCapabilityHelper::BuildSupportedResolutions(napi_env env, napi_value jsValue,
                                                         std::shared_ptr<PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<PrintResolution>(env, jsValue, PARAM_CAPABILITY_RESOLUTION,
+    return ProcessJsArrayProperty<PrintResolution>(env, jsValue, PARAM_CAPABILITY_RESOLUTION,
         [nativeObj](const std::vector<PrintResolution>& resolutions) {
             nativeObj->SetResolution(resolutions);
         },
@@ -304,7 +304,7 @@ bool PrinterCapabilityHelper::BuildSupportedResolutions(napi_env env, napi_value
 bool PrinterCapabilityHelper::BuildSupportedColorModes(napi_env env, napi_value jsValue,
                                                        std::shared_ptr <PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_COLORMODES,
+    return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_COLORMODES,
         [nativeObj](const std::vector<uint32_t>& colorModes) { nativeObj->SetSupportedColorMode(colorModes); },
         [](napi_env env, napi_value jsValue) -> std::shared_ptr<uint32_t> {
             uint32_t colorMode = NapiPrintUtils::GetUint32FromValue(env, jsValue);
@@ -315,7 +315,7 @@ bool PrinterCapabilityHelper::BuildSupportedColorModes(napi_env env, napi_value 
 bool PrinterCapabilityHelper::BuildSupportedDuplexModes(napi_env env, napi_value jsValue,
                                                         std::shared_ptr<PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES,
+    return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES,
         [nativeObj](const std::vector<uint32_t>& duplexModes) {
             nativeObj->SetSupportedDuplexMode(duplexModes);
         },
@@ -327,7 +327,7 @@ bool PrinterCapabilityHelper::BuildSupportedDuplexModes(napi_env env, napi_value
 bool PrinterCapabilityHelper::BuildSupportedQualities(napi_env env, napi_value jsValue,
                                                       std::shared_ptr<PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_QUALITIES,
+    return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_QUALITIES,
         [nativeObj](const std::vector<uint32_t>& qualities) {
             nativeObj->SetSupportedQuality(qualities);
         },
@@ -339,7 +339,7 @@ bool PrinterCapabilityHelper::BuildSupportedQualities(napi_env env, napi_value j
 bool PrinterCapabilityHelper::BuildSupportedMediaTypes(napi_env env, napi_value jsValue,
                                                        std::shared_ptr<PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<std::string>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES,
+    return ProcessJsArrayProperty<std::string>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES,
         [nativeObj](const std::vector<std::string>& mediaTypes) {
             nativeObj->SetSupportedMediaType(mediaTypes);
         },
@@ -351,7 +351,7 @@ bool PrinterCapabilityHelper::BuildSupportedMediaTypes(napi_env env, napi_value 
 bool PrinterCapabilityHelper::BuildSupportedOrientations(napi_env env, napi_value jsValue,
                                                          std::shared_ptr<PrinterCapability> nativeObj)
 {
-    return NapiPrintUtils::ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS,
+    return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS,
         [nativeObj](const std::vector<uint32_t>& orientations) {
             nativeObj->SetSupportedOrientation(orientations);
         },

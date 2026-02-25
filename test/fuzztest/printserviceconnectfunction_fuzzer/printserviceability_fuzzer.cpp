@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -129,19 +130,25 @@ void TestSetPrintJobCanceled(const uint8_t *data, size_t size, FuzzedDataProvide
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestRemoveVendorPrinterFromCups(data, size, dataProvider);
-    TestOnVendorStatusUpdate(data, size, dataProvider);
-    TestQueryVendorPrinterInfo(data, size, dataProvider);
-    TestHandlePrinterStateChangeRegister(data, size, dataProvider);
-    TestHandlePrinterChangeRegister(data, size, dataProvider);
-    TestUpdateAddedPrinterInCups(data, size, dataProvider);
-    TestRenamePrinterWhenAdded(data, size, dataProvider);
-    TestQueryDiscoveredPrinterInfoById(data, size, dataProvider);
-    TestCheckUserIdInEventType(data, size, dataProvider);
-    TestCallSpooler(data, size, dataProvider);
-    TestAddNativePrintJob(data, size, dataProvider);
-    TestIsQueuedJobListEmpty(data, size, dataProvider);
-    TestSetPrintJobCanceled(data, size, dataProvider);
+    PRINT_HILOGI("multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestRemoveVendorPrinterFromCups,
+        &TestOnVendorStatusUpdate,
+        &TestQueryVendorPrinterInfo,
+        &TestHandlePrinterStateChangeRegister,
+        &TestHandlePrinterChangeRegister,
+        &TestUpdateAddedPrinterInCups,
+        &TestRenamePrinterWhenAdded,
+        &TestQueryDiscoveredPrinterInfoById,
+        &TestCheckUserIdInEventType,
+        &TestCallSpooler,
+        &TestAddNativePrintJob,
+        &TestIsQueuedJobListEmpty,
+        &TestSetPrintJobCanceled
+    };
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print

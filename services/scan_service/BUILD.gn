@@ -50,6 +50,8 @@ _sources = [
   "src/scan_picture_data.cpp",
   "src/caller_app_monitor.cpp",
   "src/escl_driver_manager.cpp",
+  "src/escl_scanner_status.cpp",
+  "src/curl_http_client.cpp",
 ]
 
 _branch_protector_ret = "pac_ret"
@@ -105,6 +107,8 @@ _external_deps = [
   "usb_manager:usbsrv_client",
   "image_framework:image_ndk",
   "image_framework:image_native",
+  "curl:curl_shared",
+  "libxml2:libxml2"
 ]
 
 ohos_shared_library("scan_service") {

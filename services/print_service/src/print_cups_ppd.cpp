@@ -36,7 +36,8 @@ const std::vector<std::string> baseOptionStr = {
     "Collate",
     "OutputOrder",
     "CNGrayscale",
-    "BRMonoColor"
+    "BRMonoColor",
+    "orientation-requested"
 };
 
 using StdStringMultiMap = std::multimap<const std::string, const std::string>;

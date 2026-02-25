@@ -16,19 +16,17 @@
 #include "print_attributes.h"
 #include "print_constant.h"
 #include "print_log.h"
-#include "print_utils.h"
 
 namespace OHOS::Print {
 PrintAttributes::PrintAttributes()
     : hasCopyNumber_(false), copyNumber_(0), hasPageRange_(false), hasSequential_(false), isSequential_(false),
       hasPageSize_(false), hasLandscape_(false), isLandscape_(false), hasDirectionMode_(false), directionMode_(0),
       hasColorMode_(false), colorMode_(0), hasDuplexMode_(false), duplexMode_(0), hasMargin_(false), hasOption_(false),
-      option_(""), hasCustomOption_(false)
+      option_("")
 {
     pageRange_.Reset();
     pageSize_.Reset();
     margin_.Reset();
-    customOption_.clear();
 }
 
 PrintAttributes::PrintAttributes(const PrintAttributes &right)
@@ -53,8 +51,6 @@ PrintAttributes::PrintAttributes(const PrintAttributes &right)
     margin_ = right.margin_;
     hasOption_ = right.hasOption_;
     option_ = right.option_;
-    hasCustomOption_ = right.hasCustomOption_;
-    customOption_.assign(right.customOption_.begin(), right.customOption_.end());
 }
 
 PrintAttributes &PrintAttributes::operator=(const PrintAttributes &right)
@@ -80,8 +76,6 @@ PrintAttributes &PrintAttributes::operator=(const PrintAttributes &right)
         margin_ = right.margin_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
-        hasCustomOption_ = right.hasCustomOption_;
-        customOption_.assign(right.customOption_.begin(), right.customOption_.end());
     }
     return *this;
 }
@@ -149,12 +143,6 @@ void PrintAttributes::SetOption(const std::string &option)
     option_ = option;
 }
 
-void PrintAttributes::SetCustomOption(const std::vector<PrintCustomOption> &customOption)
-{
-    hasCustomOption_ = true;
-    customOption_.assign(customOption.begin(), customOption.end());
-}
-
 void PrintAttributes::UpdateParams(const PrintAttributes &jobInfo)
 {
     hasCopyNumber_ = jobInfo.hasCopyNumber_;
@@ -177,9 +165,6 @@ void PrintAttributes::UpdateParams(const PrintAttributes &jobInfo)
     margin_ = jobInfo.margin_;
     hasOption_ = jobInfo.hasOption_;
     option_ = jobInfo.option_;
-    hasCustomOption_ = jobInfo.hasCustomOption_;
-    customOption_.clear();
-    customOption_.assign(jobInfo.customOption_.begin(), jobInfo.customOption_.end());
 }
 
 uint32_t PrintAttributes::GetCopyNumber() const
@@ -231,11 +216,6 @@ const std::string &PrintAttributes::GetOption() const
     return option_;
 }
 
-void PrintAttributes::GetCustomOption(std::vector<PrintCustomOption> &customOption) const
-{
-    customOption.assign(customOption_.begin(), customOption_.end());
-}
-
 bool PrintAttributes::HasCopyNumber() const
 {
     return hasCopyNumber_;
@@ -284,11 +264,6 @@ bool PrintAttributes::HasMargin() const
 bool PrintAttributes::HasOption() const
 {
     return hasOption_;
-}
-
-bool PrintAttributes::HasCustomOption() const
-{
-    return hasCustomOption_;
 }
 
 bool PrintAttributes::ReadFromParcel(Parcel &parcel)
@@ -357,14 +332,6 @@ bool PrintAttributes::ReadNextDataFromParcel(Parcel &parcel)
     if (hasOption_) {
         SetOption(parcel.ReadString());
     }
-    PrintUtils::readListFromParcel<PrintCustomOption>(parcel, customOption_,
-        [](Parcel& p) -> std::optional<PrintCustomOption> {
-            auto ptr = PrintCustomOption::Unmarshalling(p);
-            if (ptr) {
-                return std::optional<PrintCustomOption>(*ptr);
-            }
-            return std::nullopt;
-        }, &hasCustomOption_);
     return true;
 }
 
@@ -425,9 +392,6 @@ bool PrintAttributes::MarshallingParam(Parcel &parcel) const
         parcel.WriteString(GetOption());
     }
 
-    PrintUtils::WriteListToParcel(
-        parcel, customOption_, [](Parcel &p, const PrintCustomOption &item) { item.Marshalling(p); }, hasCustomOption_);
-
     return true;
 }
 
@@ -472,11 +436,6 @@ void PrintAttributes::Dump()
     }
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
-    }
-    if (hasCustomOption_) {
-        for (auto customOptionItem : customOption_) {
-            customOptionItem.Dump();
-        }
     }
 }
 }  // namespace OHOS::Print

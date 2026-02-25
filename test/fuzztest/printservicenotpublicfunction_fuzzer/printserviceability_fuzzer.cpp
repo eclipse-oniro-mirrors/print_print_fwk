@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -180,23 +181,30 @@ void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestCheckIsDefaultPrinter(data, size, dataProvider);
-    TestCheckIsLastUsedPrinter(data, size, dataProvider);
-    TestSetLastUsedPrinter(data, size, dataProvider);
-    TestSendPrintJobEvent(data, size, dataProvider);
-    TestStartPrintJobCB(data, size, dataProvider);
-    TestCheckPrinterUriDifferent(data, size, dataProvider);
-    TestUpdatePrinterCapability(data, size, dataProvider);
-    TestReportCompletedPrint(data, size, dataProvider);
-    TestNotifyAppJobQueueChanged(data, size, dataProvider);
-    TestSendPrinterChangeEvent(data, size, dataProvider);
-    TestCheckJobQueueBlocked(data, size, dataProvider);
-    TestGetListeningState(data, size, dataProvider);
-    TestUpdatePageSizeNameWithPrinterInfo(data, size, dataProvider);
-    TestUpdatePrintJobOptionWithPrinterPreferences(data, size, dataProvider);
-    TestConnectUsbPrinter(data, size, dataProvider);
-    TestClosePrintJobFd(data, size, dataProvider);
-    TestNoParmFuncs(data, size, dataProvider);
+    PRINT_HILOGI("multithreading is running at function TestNotPublicFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestCheckIsDefaultPrinter,
+        &TestCheckIsLastUsedPrinter,
+        &TestSetLastUsedPrinter,
+        &TestSendPrintJobEvent,
+        &TestStartPrintJobCB,
+        &TestCheckPrinterUriDifferent,
+        &TestUpdatePrinterCapability,
+        &TestReportCompletedPrint,
+        &TestNotifyAppJobQueueChanged,
+        &TestSendPrinterChangeEvent,
+        &TestCheckJobQueueBlocked,
+        &TestGetListeningState,
+        &TestUpdatePageSizeNameWithPrinterInfo,
+        &TestUpdatePrintJobOptionWithPrinterPreferences,
+        &TestConnectUsbPrinter,
+        &TestClosePrintJobFd,
+        &TestNoParmFuncs,
+    };
+
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print

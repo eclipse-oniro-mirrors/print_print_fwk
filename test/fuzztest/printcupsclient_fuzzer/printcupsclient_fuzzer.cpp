@@ -20,6 +20,7 @@
 #include "printer_capability.h"
 #include "print_log.h"
 #include "print_cups_client.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -366,38 +367,43 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Print::TestQueryPPDInformation(data, size, &dataProvider);
-    OHOS::Print::TestAddPrinterToCups(data, size, &dataProvider);
-    OHOS::Print::TestQueryPrinterAttributesByUri(data, size, &dataProvider);
-    OHOS::Print::TestQueryPrinterCapabilityByUri(data, size, &dataProvider);
-    OHOS::Print::TestQueryPrinterStatusByUri(data, size, &dataProvider);
-    OHOS::Print::TestDeleteCupsPrinter(data, size, &dataProvider);
-    OHOS::Print::TestAddCupsPrintJob(data, size, &dataProvider);
-    OHOS::Print::TestCancelCupsJob(data, size, &dataProvider);
-    OHOS::Print::TestQueryAddedPrinterList(data, size, &dataProvider);
-    OHOS::Print::TestSetDefaultPrinter(data, size, &dataProvider);
-    OHOS::Print::TestQueryPrinterAttrList(data, size, &dataProvider);
-    OHOS::Print::TestQueryPrinterInfoByPrinterId(data, size, &dataProvider);
-    OHOS::Print::TestCheckPrinterMakeModel(data, size, &dataProvider);
-    OHOS::Print::TestDeletePrinterFromCups(data, size, &dataProvider);
-    OHOS::Print::TestCheckPrinterOnline(data, size, &dataProvider);
-    OHOS::Print::TestGetIpAddress(data, size, &dataProvider);
-    OHOS::Print::TestIsIpConflict(data, size, &dataProvider);
-    OHOS::Print::TestConvertInchTo100MM(data, size, &dataProvider);
-    OHOS::Print::TestGetColorString(data, size, &dataProvider);
-    OHOS::Print::TestGetDulpexString(data, size, &dataProvider);
-    OHOS::Print::TestGetMedieSize(data, size, &dataProvider);
-    OHOS::Print::TestDumpJobParameters(data, size, &dataProvider);
-    OHOS::Print::TestBuildJobParameters(data, size, &dataProvider);
-    OHOS::Print::TestCheckPrinterDriverExist(data, size, &dataProvider);
-    OHOS::Print::TestStartMonitor(data, size, &dataProvider);
-    OHOS::Print::TestJobStatusCallback(data, size, &dataProvider);
-    OHOS::Print::TestIfContinueToHandleJobState(data, size, &dataProvider);
-    OHOS::Print::TestQueryJobState(data, size, &dataProvider);
-    OHOS::Print::TestBuildMonitorPolicy(data, size, &dataProvider);
-    OHOS::Print::TestParseStateReasons(data, size, &dataProvider);
-    OHOS::Print::TestGetBlockedAndUpdateSubstate(data, size, &dataProvider);
-    OHOS::Print::TestGetNewSubstate(data, size, &dataProvider);
-    
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Print::TestQueryPPDInformation,
+        &OHOS::Print::TestAddPrinterToCups,
+        &OHOS::Print::TestQueryPrinterAttributesByUri,
+        &OHOS::Print::TestQueryPrinterCapabilityByUri,
+        &OHOS::Print::TestQueryPrinterStatusByUri,
+        &OHOS::Print::TestDeleteCupsPrinter,
+        &OHOS::Print::TestAddCupsPrintJob,
+        &OHOS::Print::TestCancelCupsJob,
+        &OHOS::Print::TestQueryAddedPrinterList,
+        &OHOS::Print::TestSetDefaultPrinter,
+        &OHOS::Print::TestQueryPrinterAttrList,
+        &OHOS::Print::TestQueryPrinterInfoByPrinterId,
+        &OHOS::Print::TestCheckPrinterMakeModel,
+        &OHOS::Print::TestDeletePrinterFromCups,
+        &OHOS::Print::TestCheckPrinterOnline,
+        &OHOS::Print::TestGetIpAddress,
+        &OHOS::Print::TestIsIpConflict,
+        &OHOS::Print::TestConvertInchTo100MM,
+        &OHOS::Print::TestGetColorString,
+        &OHOS::Print::TestGetDulpexString,
+        &OHOS::Print::TestGetMedieSize,
+        &OHOS::Print::TestDumpJobParameters,
+        &OHOS::Print::TestBuildJobParameters,
+        &OHOS::Print::TestCheckPrinterDriverExist,
+        &OHOS::Print::TestStartMonitor,
+        &OHOS::Print::TestJobStatusCallback,
+        &OHOS::Print::TestIfContinueToHandleJobState,
+        &OHOS::Print::TestQueryJobState,
+        &OHOS::Print::TestBuildMonitorPolicy,
+        &OHOS::Print::TestParseStateReasons,
+        &OHOS::Print::TestGetBlockedAndUpdateSubstate,
+        &OHOS::Print::TestGetNewSubstate
+    };
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }

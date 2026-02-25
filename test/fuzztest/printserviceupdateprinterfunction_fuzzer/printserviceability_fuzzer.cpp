@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -136,17 +137,24 @@ void TestQueryPrinterCapability(const uint8_t *data, size_t size, FuzzedDataProv
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestAddPrinters(data, size, dataProvider);
-    TestRemovePrinters(data, size, dataProvider);
-    TestUpdatePrinters(data, size, dataProvider);
-    TestUpdatePrinterState(data, size, dataProvider);
-    TestUpdatePrintJobStateOnlyForSystemApp(data, size, dataProvider);
-    TestAdapterGetFileCallBack(data, size, dataProvider);
-    TestUnregisterPrintTaskCallback(data, size, dataProvider);
-    TestUpdateExtensionInfo(data, size, dataProvider);
-    TestRequestPreview(data, size, dataProvider);
-    TestQueryPrinterCapability(data, size, dataProvider);
-    TestAddRawPrinter(data, size, dataProvider);
+    PRINT_HILOGI("multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestAddPrinters,
+        &TestRemovePrinters,
+        &TestUpdatePrinters,
+        &TestUpdatePrinterState,
+        &TestUpdatePrintJobStateOnlyForSystemApp,
+        &TestAdapterGetFileCallBack,
+        &TestUnregisterPrintTaskCallback,
+        &TestUpdateExtensionInfo,
+        &TestRequestPreview,
+        &TestQueryPrinterCapability,
+        &TestAddRawPrinter
+    };
+
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print

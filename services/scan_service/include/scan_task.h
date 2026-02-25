@@ -21,6 +21,7 @@
 #include <mutex>
 #include <vector>
 #include <queue>
+#include <setjmp.h>
 #include "scanner_info.h"
 #include "scan_parameters.h"
 #include "pixel_map.h"

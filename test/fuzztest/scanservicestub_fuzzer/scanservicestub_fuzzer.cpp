@@ -17,6 +17,8 @@
 #include "fuzzer/FuzzedDataProvider.h"
 #include "scanservicestub_fuzzer.h"
 #include "scan_service_ability.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS {
 namespace Scan {
@@ -256,18 +258,26 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestOnOpenScanner(data, size, &dataProvider);
-    OHOS::Scan::TestOnCloseScanner(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScanOptionDesc(data, size, &dataProvider);
-    OHOS::Scan::TestOnOpScanOptionValue(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScanParameters(data, size, &dataProvider);
-    OHOS::Scan::TestOnStartScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnCancelScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScanProgress(data, size, &dataProvider);
-    OHOS::Scan::TestOnEventOn(data, size, &dataProvider);
-    OHOS::Scan::TestOnEventOff(data, size, &dataProvider);
-    OHOS::Scan::TestOnConnectScanner(data, size, &dataProvider);
-    OHOS::Scan::TestOnDisConnectScanner(data, size, &dataProvider);
-    OHOS::Scan::TestNoParmFuncs(data, size, &dataProvider);
+
+    PRINT_HILOGI("multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::TestOnOpenScanner,
+        &OHOS::Scan::TestOnCloseScanner,
+        &OHOS::Scan::TestOnGetScanOptionDesc,
+        &OHOS::Scan::TestOnOpScanOptionValue,
+        &OHOS::Scan::TestOnGetScanParameters,
+        &OHOS::Scan::TestOnStartScan,
+        &OHOS::Scan::TestOnCancelScan,
+        &OHOS::Scan::TestOnGetScanProgress,
+        &OHOS::Scan::TestOnEventOn,
+        &OHOS::Scan::TestOnEventOff,
+        &OHOS::Scan::TestOnConnectScanner,
+        &OHOS::Scan::TestOnDisConnectScanner,
+        &OHOS::Scan::TestNoParmFuncs
+    };
+
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }

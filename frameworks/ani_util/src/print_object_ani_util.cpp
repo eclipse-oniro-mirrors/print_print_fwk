@@ -46,7 +46,7 @@ bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_int value;
         if ((status = env->Object_CallMethodByName_Int(
-            reinterpret_cast<ani_object>(arrayObj), "intValue", nullptr, &value)) != ANI_OK) {
+            reinterpret_cast<ani_object>(arrayObj), "toInt", nullptr, &value)) != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
         }

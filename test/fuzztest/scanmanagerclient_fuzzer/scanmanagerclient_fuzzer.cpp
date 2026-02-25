@@ -17,6 +17,8 @@
 #include "scan_callback.h"
 #include "scanner_info.h"
 #include "scanmanagerclient_fuzzer.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS::Scan {
 constexpr uint8_t MAX_STRING_LENGTH = 255;
@@ -183,18 +185,24 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestGetScannerList(data, size, &dataProvider);
-    OHOS::Scan::TestGetScanOptionDesc(data, size, &dataProvider);
-    OHOS::Scan::TestOpScanOptionValue(data, size, &dataProvider);
-    OHOS::Scan::TestGetScanParameters(data, size, &dataProvider);
-    OHOS::Scan::TestStartScan(data, size, &dataProvider);
-    OHOS::Scan::TestOn(data, size, &dataProvider);
-    OHOS::Scan::TestOff(data, size, &dataProvider);
-    OHOS::Scan::TestGetScanProgress(data, size, &dataProvider);
-    OHOS::Scan::TestAddScanner(data, size, &dataProvider);
-    OHOS::Scan::TestDeleteScanner(data, size, &dataProvider);
-    OHOS::Scan::TestGetAddedScanner(data, size, &dataProvider);
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::TestGetScannerList,
+        &OHOS::Scan::TestGetScanOptionDesc,
+        &OHOS::Scan::TestOpScanOptionValue,
+        &OHOS::Scan::TestGetScanParameters,
+        &OHOS::Scan::TestStartScan,
+        &OHOS::Scan::TestOn,
+        &OHOS::Scan::TestOff,
+        &OHOS::Scan::TestGetScanProgress,
+        &OHOS::Scan::TestAddScanner,
+        &OHOS::Scan::TestDeleteScanner,
+        &OHOS::Scan::TestGetAddedScanner
+    };
 
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

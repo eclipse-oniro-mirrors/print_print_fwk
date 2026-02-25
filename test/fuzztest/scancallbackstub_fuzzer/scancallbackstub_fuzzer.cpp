@@ -19,6 +19,8 @@
 #include "napi/native_api.h"
 #include "scan_callback.h"
 #include "scancallbackstub_fuzzer.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS::Scan {
 constexpr int MAX_SET_NUMBER = 100;
@@ -83,10 +85,18 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::OnRemoteRequestFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleDeviceInfoEventFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleDeviceInfoSyncEventFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleSendDeviceListFuzzTest(data, size, &dataProvider);
+
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::OnRemoteRequestFuzzTest,
+        &OHOS::Scan::HandleDeviceInfoEventFuzzTest,
+        &OHOS::Scan::HandleDeviceInfoSyncEventFuzzTest,
+        &OHOS::Scan::HandleSendDeviceListFuzzTest
+    };
+
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

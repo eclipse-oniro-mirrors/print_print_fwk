@@ -18,7 +18,7 @@ import("//build/test.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintServiceUpdatePrinterFunctionFuzzTest") {
-  module_out_path = fuzz_test_output_path
+  module_out_path = "${fuzz_test_output_path}/concurrent"
 
   fuzz_config_file = "${print_path}/test/fuzztest/printserviceupdateprinterfunction_fuzzer"
 

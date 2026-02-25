@@ -17,7 +17,7 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ohos_fuzztest("ScanCapiFuzzTest") {
-  module_out_path = fuzz_test_output_path
+  module_out_path = "${fuzz_test_output_path}/concurrent"
 
   fuzz_config_file = "${print_path}/test/fuzztest/scancapi_fuzzer"
 

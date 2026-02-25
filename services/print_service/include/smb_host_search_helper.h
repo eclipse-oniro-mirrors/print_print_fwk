@@ -67,6 +67,11 @@ private:
         std::unordered_map<uint32_t, std::string> responsedHosts_;
     };
 
+    class EncodingConverter {
+    public:
+        static bool GbkToUtf8Iconv(const std::string& gbkInput, std::string& utf8Output);
+    };
+
     struct NbnameRequest {
         uint16_t transactionId;
         uint16_t flags;

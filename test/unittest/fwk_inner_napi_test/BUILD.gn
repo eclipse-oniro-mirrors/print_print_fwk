@@ -55,8 +55,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "printer_preferences_test.cpp",
     "ppd_info_test.cpp",
     "print_shared_host_test.cpp",
-    "print_custom_option_test.cpp",
-    "print_menu_option_test.cpp",
     "watermark_callback_stub_test.cpp",
   ]
 

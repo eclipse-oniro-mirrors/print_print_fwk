@@ -16,12 +16,17 @@
 #ifndef ESCL_DRIVER_MANAGER
 #define ESCL_DRIVER_MANAGER
 #include "scanner_info.h"
+#include <string>
 namespace OHOS::Scan {
 class EsclDriverManager {
 public:
     static int32_t InitializeEsclScannerDriver();
     static bool GenerateEsclScannerInfo(const ScanDeviceInfoTCP& rawInfo, ScanDeviceInfo& info);
     static void AddEsclScannerInfo(std::vector<ScanDeviceInfo>& discoveredScanners);
+    static bool IsEsclScanner(const std::string& scannerId);
+    static bool IsAdfMode(const std::string& scannerId);
+    static bool ExtractIpAndPort(const std::string& scannerId, std::string& ipAddress, int32_t& portNumber);
+    static bool IsAdfEmpty(const std::string& ipAddress, int32_t portNumber);
 private:
     static bool CreateSoftLink();
     static bool CreateAirscanConfigFile();

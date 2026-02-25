@@ -25,7 +25,6 @@
 #include "print_preview_attribute_helper.h"
 #include "print_page_size_helper.h"
 #include "print_range_helper.h"
-#include "print_custom_option_helper.h"
 
 namespace OHOS::Print {
 class PrintAttributesHelper {
@@ -38,7 +37,6 @@ private:
     static bool CreatePageRange(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);
     static bool CreatePageSize(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);
     static bool CreateMargin(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);
-    static bool CreateCustomOption(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);
 
     static bool ValidateProperty(napi_env env, napi_value object);
     static void BuildFromJsPageSize(napi_env env, napi_value jsValue, std::shared_ptr<PrintAttributes> &nativeObj);
