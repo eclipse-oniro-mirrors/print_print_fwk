@@ -57,6 +57,9 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
         PRINT_HILOGI("screen unlocked");
         // -1 will be replaced by the current user id in NotifyCurrentUserChanged.
         PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(-1);
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN) {
+        PRINT_HILOGI("device shutdown, unload print system");
+        PrintServiceAbility::GetInstance()->UnloadSystemAbility();
     }
 }
 
