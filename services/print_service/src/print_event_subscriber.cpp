@@ -59,7 +59,7 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
         PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(-1);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN) {
         PRINT_HILOGI("device shutdown, unload print system");
-        PrintServiceAbility::GetInstance()->UnloadSystemAbility();
+        PrintServiceAbility::GetInstance()->StopCupsService();
     }
 }
 

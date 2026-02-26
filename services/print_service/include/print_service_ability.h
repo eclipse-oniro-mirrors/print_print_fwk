@@ -133,7 +133,6 @@ public:
 
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
-    bool UnloadSystemAbility();
     bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
     int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
     void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
@@ -153,6 +152,7 @@ public:
     int32_t UnregisterWatermarkCallback() override;
     int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
     bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
+    void StopCupsService();
 
 protected:
     void OnStart() override;
@@ -203,6 +203,7 @@ private:
     std::shared_ptr<PrintUserData> GetUserDataByJobId(const std::string jobId);
     bool IsQueuedJobListEmpty(const std::string &jobId);
     void SetPrintJobCanceled(PrintJob &jobinfo);
+    bool UnloadSystemAbility();
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);

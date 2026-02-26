@@ -2265,17 +2265,7 @@ bool PrintServiceAbility::UnloadSystemAbility()
         PRINT_HILOGE("DestroyExtension failed.");
         return false;
     }
-#ifdef CUPS_ENABLE
-#ifdef ENTERPRISE_ENABLE
-    if (IsEnterpriseEnable() && IsEnterprise()) {
-        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdEnterpriseService();
-    } else {
-#endif  // ENTERPRISE_ENABLE
-        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
-#ifdef ENTERPRISE_ENABLE
-    }
-#endif  // ENTERPRISE_ENABLE
-#endif  // CUPS_ENABLE
+    StopCupsService();
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgrProxy == nullptr) {
         PRINT_HILOGE("get samgr failed");
@@ -4693,11 +4683,7 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     BlockUserPrintJobs(lastUserId_);
     UpdateIsEnterprise();
     vendorManager.UpdateIsEnterprise(isEnterprise_);
-    if (IsEnterpriseEnable() && IsEnterprise()) {
-        PrintCupsClient::GetInstance()->StopCupsdService();
-    } else {
-        PrintCupsClient::GetInstance()->StopCupsdEnterpriseService();
-    }
+    StopCupsService();
     printSystemData_.Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
     vendorManager.SwitchSpace();
@@ -5377,5 +5363,20 @@ int32_t PrintServiceAbility::NotifyWatermarkComplete(const std::string &jobId, i
 #else
     return E_PRINT_NONE;
 #endif // WATERMARK_ENFORCING_ENABLE
+}
+
+void StopCupsService()
+{
+#ifdef CUPS_ENABLE
+#ifdef ENTERPRISE_ENABLE
+    if (IsEnterpriseEnable() && IsEnterprise()) {
+        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdEnterpriseService();
+    } else {
+#endif  // ENTERPRISE_ENABLE
+        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
+#ifdef ENTERPRISE_ENABLE
+    }
+#endif  // ENTERPRISE_ENABLE
+#endif  // CUPS_ENABLE
 }
 }  // namespace OHOS::Print
