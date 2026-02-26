@@ -194,7 +194,7 @@ public:
     void TearDown(void){};
 };
 
-struct BuildSubscribeInfoParam{
+struct BuildSubscribeInfoParam {
     std::string action;
     int32_t code;
 };
