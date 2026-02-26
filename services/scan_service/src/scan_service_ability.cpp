@@ -1327,7 +1327,7 @@ void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, Sc
         scanPictureData_.SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
         int32_t writeImgDataRet = scanTask.WriteImageData(pictureData.dataBuffer_);
         if (writeImgDataRet != E_SCAN_NONE) {
-            SCAN_HILOGE("WritePicData fail");
+            SCAN_HILOGE("WriteImageData fail");
             scanStatus = writeImgDataRet;
             break;
         }
