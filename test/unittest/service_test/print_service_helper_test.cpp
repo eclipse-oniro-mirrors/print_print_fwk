@@ -183,5 +183,61 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSiz
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartExtensionAbility(want));
 }
+
+class PrintServiceHelperCommon {
+public:
+    static void SetUpTestCase(void){};
+    static void TearDownTestCase(void){};
+    void SetUp(void){};
+    void TearDown(void){};
+};
+
+struct BuildSubscribeInfoParam{
+    std::string action;
+};
+
+class CheckSubscribeInfoTest : public PrintServiceHelperCommon,
+                        public testing::TestWithParam<BuildSubscribeInfoParam> {
+public:
+    using PrintServiceHelperCommon::SetUp;
+    using PrintServiceHelperCommon::SetUpTestCase;
+    using PrintServiceHelperCommon::TearDown;
+    using PrintServiceHelperCommon::TearDownTestCase;
+};
+
+void TestSubscribeEventTemplate(const std::string action)
+{
+    PrintServiceHelper helper;
+    helper.PrintSubscribeCommonEvent();
+    OHOS::EventFwk::Want want;
+    want.SetAction(action);
+    EventFwk::CommonEventData data;
+    data.SetWant(want);
+    data.SetCode(100);
+    helper.userStatusListener->OnReceiveEvent(data);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+HWTEST_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest_P, TestSize.Level1)
+{
+    BuildSubscribeInfoParam param = GetParam();
+    TestSubscribeEventTemplate(param.action);
+}
+
+INSTANTIATE_TEST_SUITE_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest,
+    testing::Values(
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_HIBERNATE},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_HIBERNATE},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_FORCE_SLEEP},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN},
+        BuildSubscribeInfoParam{"unknown.event"},
+        BuildSubscribeInfoParam{""}
+    ));
 }  // namespace Print
 }  // namespace OHOS
