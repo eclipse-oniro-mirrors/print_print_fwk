@@ -5369,7 +5369,7 @@ int32_t PrintServiceAbility::NotifyWatermarkComplete(const std::string &jobId, i
 #endif // WATERMARK_ENFORCING_ENABLE
 }
 
-void StopCupsService()
+void PrintServiceAbility::StopCupsService()
 {
 #ifdef CUPS_ENABLE
 #ifdef ENTERPRISE_ENABLE
