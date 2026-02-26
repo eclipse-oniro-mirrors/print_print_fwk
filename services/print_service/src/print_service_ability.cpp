@@ -4683,7 +4683,11 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     BlockUserPrintJobs(lastUserId_);
     UpdateIsEnterprise();
     vendorManager.UpdateIsEnterprise(isEnterprise_);
-    StopCupsService();
+    if (IsEnterpriseEnable() && IsEnterprise()) {
+        PrintCupsClient::GetInstance()->StopCupsdService();
+    } else {
+        PrintCupsClient::GetInstance()->StopCupsdEnterpriseService();
+    }
     printSystemData_.Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
     vendorManager.SwitchSpace();
