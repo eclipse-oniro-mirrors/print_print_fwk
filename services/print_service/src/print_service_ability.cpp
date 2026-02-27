@@ -341,13 +341,8 @@ int32_t PrintServiceAbility::Init()
     RefreshVirtualPrinter();
 #endif
     StartDiscoverPrinter();
-<<<<<<< HEAD
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
-    return ERR_OK;
-=======
-    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
     return E_PRINT_NONE;
->>>>>>> origin/master
 }
 
 void PrintServiceAbility::StartDiscoverPrinter()
