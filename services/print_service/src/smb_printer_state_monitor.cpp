@@ -137,4 +137,16 @@ void SmbPrinterStateMonitor::EraseSmbPrinterInMonitorListById(const std::string&
     std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
     monitorSmbPrinters_.erase(printerId);
 }
+
+bool SmbPrinterStateMonitor::IsSmbPrinterOnline(const std::string& printerId)
+{
+    std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
+    auto it = monitorSmbPrinters_.find(printerId);
+    if (it == monitorSmbPrinters_.end()) {
+        PRINT_HILOGW("Smb printer not found in monitor list");
+        return false;
+    }
+    bool isOnline = it->second.second == HostStatus::ALIVE;
+    return isOnline;
+}
 } // namespace OHOS::Print
