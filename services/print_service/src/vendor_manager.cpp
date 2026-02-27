@@ -359,7 +359,7 @@ bool VendorManager::OnPrinterPpdQueried(
         PRINT_HILOGW("not connecting");
         return false;
     }
-    if (AddPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData) != EXTENSION_ERROR_NONE) {
+    if (AddPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData) != EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
         return false;
     }
