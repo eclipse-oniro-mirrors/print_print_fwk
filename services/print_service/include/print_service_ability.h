@@ -315,7 +315,7 @@ private:
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
-    ServiceRunningState state_;
+    std::atomic<ServiceRunningState> state_;
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;
     static std::chrono::time_point<std::chrono::high_resolution_clock> startPrintTime_;

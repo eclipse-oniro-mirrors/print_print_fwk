@@ -269,7 +269,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    int state = static_cast<int>(service->state_);
+    int state = static_cast<int>(service->state_.load());
     service->ManualStart();
     EXPECT_EQ(state, 0);
 }
@@ -731,10 +731,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0026_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->state_ = ServiceRunningState::STATE_NOT_START;
     service->OnStop();
-    EXPECT_EQ(service->state_, ServiceRunningState::STATE_NOT_START);
+    EXPECT_EQ(service->state_.load(), ServiceRunningState::STATE_NOT_START);
     service->state_ = ServiceRunningState::STATE_RUNNING;
     service->OnStop();
-    EXPECT_EQ(service->state_, ServiceRunningState::STATE_NOT_START);
+    EXPECT_EQ(service->state_.load(), ServiceRunningState::STATE_NOT_START);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestSize.Level1)

@@ -186,7 +186,7 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
 
 PrintServiceAbility::~PrintServiceAbility()
 {
-    PRINT_HILOGE("~PrintServiceAbility state_  is %{public}d.", static_cast<int>(state_));
+    PRINT_HILOGE("~PrintServiceAbility state_  is %{public}d.", static_cast<int>(state_.load()));
 }
 
 sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
@@ -320,7 +320,7 @@ int32_t PrintServiceAbility::Init()
     }
 #endif
     CheckCupsServerAlive();
-    auto tmpState = state_;
+    auto tmpState = state_.load();
     state_ = ServiceRunningState::STATE_RUNNING;
     if (!g_publishState) {
         if (!Publish(PrintServiceAbility::GetInstance())) {
@@ -341,7 +341,7 @@ int32_t PrintServiceAbility::Init()
     RefreshVirtualPrinter();
 #endif
     StartDiscoverPrinter();
-    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
+    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
     return E_PRINT_NONE;
 }
 
@@ -435,7 +435,10 @@ void PrintServiceAbility::OnStart()
 {
     PRINT_HILOGI("PrintServiceAbility::Enter OnStart.");
     if (instance_ == nullptr) {
-        instance_ = this;
+        std::lock_guard<std::mutex> autoLock(instanceLock_);
+        if (instance_ == nullptr) {
+            instance_ = this;
+        }
     }
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility is already running.");
