@@ -17,12 +17,14 @@ import("//build/ohos.gni")
 cflags_cc = []
 
 _sources = [
+  "src/event_listener_mgr.cpp",
   "src/hisys_event_util.cpp",
   "src/operation_queue.cpp",
   "src/print_bms_death_recipient.cpp",
   "src/print_bms_helper.cpp",
   "src/print_callback_proxy.cpp",
   "src/print_caller_app_monitor.cpp",
+  "src/print_common_death_recipient.cpp",
   "src/print_event_container.cpp",
   "src/print_event_subscriber.cpp",
   "src/print_extension_callback_proxy.cpp",
@@ -44,6 +46,7 @@ _sources = [
   "src/vendor_manager.cpp",
   "src/vendor_ppd_driver.cpp",
   "src/vendor_wlan_group.cpp",
+  "src/watermark_callback_proxy.cpp",
 ]
 
 _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
@@ -176,6 +179,14 @@ ohos_shared_library("print_service") {
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
   }
 
+  if (print_fwk_feature_watermark_enforcing) {
+      sources += [
+        "src/watermark_manager.cpp",
+        "src/watermark_death_recipient.cpp",
+      ]
+      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
@@ -235,6 +246,14 @@ ohos_static_library("print_service_test") {
         "src/smb_library.cpp"
       ]
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+  }
+
+  if (print_fwk_feature_watermark_enforcing) {
+      sources += [
+        "src/watermark_manager.cpp",
+        "src/watermark_death_recipient.cpp",
+      ]
+      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
   subsystem_name = "print"
   part_name = "print_fwk"

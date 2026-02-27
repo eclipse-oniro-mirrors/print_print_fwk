@@ -22,6 +22,7 @@
 
 #include "want.h"
 #include "iprint_callback.h"
+#include "iwatermark_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
 #include "print_extension_callback_stub.h"
@@ -63,7 +64,7 @@ public:
     int32_t CancelPrintJob(const std::string &jobId);
     int32_t RestartPrintJob(const std::string &jobId);
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state);
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState);
+    int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdateExtensionInfo(const std::string &extensionId);
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
@@ -140,6 +141,9 @@ public:
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts);
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos);
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback);
+    int32_t UnregisterWatermarkCallback();
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

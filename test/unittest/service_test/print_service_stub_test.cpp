@@ -619,7 +619,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0026_NeedRename, TestSize.Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_UPDATEPRINTJOBSTATE_FORNORMALAPP);
+    uint32_t code = static_cast<uint32_t>(CMD_ADAPTERGETFILECALLBACK);
 
     std::string testJobId = "jodId:1234";
     uint32_t testState = static_cast<uint32_t>(PRINT_JOB_COMPLETED);

@@ -21,6 +21,7 @@
 
 #include "iprint_callback.h"
 #include "iprint_extension_callback.h"
+#include "iwatermark_callback.h"
 #include "iremote_broker.h"
 #include "print_extension_info.h"
 #include "print_job.h"
@@ -50,7 +51,7 @@ public:
     virtual int32_t RemovePrinters(const std::vector<std::string> &printerIds) = 0;
     virtual int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
     virtual int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) = 0;
-    virtual int32_t UpdatePrintJobStateForNormalApp(
+    virtual int32_t AdapterGetFileCallBack(
         const std::string &jobId, uint32_t state, uint32_t subState) = 0;
     virtual int32_t UpdatePrintJobStateOnlyForSystemApp(
         const std::string &jobId, uint32_t state, uint32_t subState) = 0;
@@ -110,6 +111,9 @@ public:
     virtual int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) = 0;
     virtual int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos) = 0;
+    virtual int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) = 0;
+    virtual int32_t UnregisterWatermarkCallback() = 0;
+    virtual int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

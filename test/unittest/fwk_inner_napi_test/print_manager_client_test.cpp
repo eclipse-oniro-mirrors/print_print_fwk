@@ -31,6 +31,7 @@
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
 #include "mock_print_manager_client.h"
+#include "mock_watermark_callback_stub.h"
 #include "print_shared_host.h"
 
 using namespace testing;
@@ -2826,36 +2827,36 @@ HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_GetPrintServiceProxyFail, Test
 }
 
 /**
- * @tc.name: UpdatePrintJobStateForNormalApp_LoadServerFailed
- * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.name: AdapterGetFileCallBack_LoadServerFailed
+ * @tc.desc: AdapterGetFileCallBack
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_LoadServerFailed, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_LoadServerFailed, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
- * @tc.name: UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail
- * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.name: AdapterGetFileCallBack_GetPrintServiceProxyFail
+ * @tc.desc: AdapterGetFileCallBack
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_GetPrintServiceProxyFail, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -3019,6 +3020,201 @@ HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
     EXPECT_TRUE(printerInfos.empty());
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_StartPrint_noPermission, TestSize.Level0)
+{
+    std::vector<std::string> testFileList = {
+        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+/**
+ * @tc.name: RegisterWatermarkCallback_ServerNotLoaded
+ * @tc.desc: RegisterWatermarkCallback returns E_PRINT_NO_PERMISSION when server not loaded
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_ServerNotLoaded, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: RegisterWatermarkCallback_ProxyNull
+ * @tc.desc: RegisterWatermarkCallback returns E_PRINT_RPC_FAILURE when proxy is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_ProxyNull, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: RegisterWatermarkCallback_Success
+ * @tc.desc: RegisterWatermarkCallback success case
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_Success, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, RegisterWatermarkCallback(_))
+        .Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+
+    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: UnregisterWatermarkCallback_ServerNotLoaded
+ * @tc.desc: UnregisterWatermarkCallback returns E_PRINT_NO_PERMISSION when server not loaded
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_ServerNotLoaded, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: UnregisterWatermarkCallback_ProxyNull
+ * @tc.desc: UnregisterWatermarkCallback returns E_PRINT_RPC_FAILURE when proxy is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_ProxyNull, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: UnregisterWatermarkCallback_Success
+ * @tc.desc: UnregisterWatermarkCallback success case
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_Success, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, UnregisterWatermarkCallback())
+        .Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+
+    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_ServerNotLoaded
+ * @tc.desc: NotifyWatermarkComplete returns E_PRINT_NO_PERMISSION when server not loaded
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_ServerNotLoaded, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete("job_001", 0);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_ProxyNull
+ * @tc.desc: NotifyWatermarkComplete returns E_PRINT_RPC_FAILURE when proxy is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_ProxyNull, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete("job_001", 0);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_Success
+ * @tc.desc: NotifyWatermarkComplete success case
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_Success, TestSize.Level1)
+{
+    std::string testJobId = "job_001";
+    int32_t testResult = 0;
+
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, NotifyWatermarkComplete(testJobId, testResult))
+        .Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_WithFailureResult
+ * @tc.desc: NotifyWatermarkComplete with failure result
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_WithFailureResult, TestSize.Level1)
+{
+    std::string testJobId = "job_002";
+    int32_t testResult = -1;
+
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, NotifyWatermarkComplete(testJobId, testResult))
+        .Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 }  // namespace Print
 }  // namespace OHOS

@@ -17,6 +17,8 @@
 #include "fuzzer/FuzzedDataProvider.h"
 #include "ohscan.h"
 #include "scancapi_fuzzer.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS {
 namespace Scan {
@@ -89,12 +91,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::OHScanOpenScannerFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanGetScannerParameterFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanSetScannerParameterFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanStartScanFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanCancelScanFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanGetScanPictureProgressFuzzTest(data, size, &dataProvider);
+
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::OHScanOpenScannerFuzzTest,
+        &OHOS::Scan::OHScanGetScannerParameterFuzzTest,
+        &OHOS::Scan::OHScanSetScannerParameterFuzzTest,
+        &OHOS::Scan::OHScanStartScanFuzzTest,
+        &OHOS::Scan::OHScanCancelScanFuzzTest,
+        &OHOS::Scan::OHScanGetScanPictureProgressFuzzTest
+    };
+
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

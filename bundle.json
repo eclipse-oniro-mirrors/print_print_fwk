@@ -19,7 +19,8 @@
       "print_fwk_feature_enterprise",
       "print_fwk_feature_edm_service",
       "print_fwk_feature_virtual_printer",
-      "print_fwk_feature_smb_printer"
+      "print_fwk_feature_smb_printer",
+      "print_fwk_feature_watermark_enforcing"
     ],
     "adapted_system_type": [
       "standard"
@@ -38,6 +39,7 @@
         "common_event_service",
         "cups",
         "cups-filters",
+        "curl",
         "drivers_interface_usb",
         "eventhandler",
         "hisysevent",
@@ -60,6 +62,7 @@
         "runtime_core",
         "ace_engine",
         "libjpeg-turbo",
+        "libxml2",
         "input",
         "data_share",
         "enterprise_device_management",

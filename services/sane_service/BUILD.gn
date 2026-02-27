@@ -35,7 +35,10 @@ config("sane_service_config") {
 
 _include_dirs = [ "${print_utils_path}/include" ]
 
-_sources = [ "src/sane_service_ability.cpp" ]
+_sources = [ 
+  "src/sane_service_ability.cpp",
+  "src/safe_sane_api.cpp"
+]
 
 _deps = [ "${print_path}/frameworks/ISaneBackends:sane_backends" ]
 

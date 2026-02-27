@@ -47,6 +47,9 @@
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
+#ifdef WATERMARK_ENFORCING_ENABLE
+#include "watermark_manager.h"
+#endif // WATERMARK_ENFORCING_ENABLE
 
 namespace OHOS::Print {
 using namespace std;
@@ -1508,6 +1511,49 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
     return true;
 }
 
+#ifdef WATERMARK_ENFORCING_ENABLE
+/*
+ * Process watermark using cache files. Opens cache fds twice with different modes:
+ * 1st open (O_RDWR): writable fds for MDM callback to embed watermark into cached files.
+ * 2nd open (O_RDONLY): fresh fds with offset=0 containing watermarked content for HandleFiles.
+ * Falls back to original fds if cache files are unavailable.
+ */
+bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
+{
+    /* Open cache fds (O_RDWR) for watermark processing */
+    std::vector<uint32_t> cacheFdList;
+    if (jobParams->serviceAbility == nullptr ||
+        !jobParams->serviceAbility->OpenCacheFileFd(jobParams->serviceJobId, cacheFdList, O_RDWR) ||
+        cacheFdList.empty()) {
+        PRINT_HILOGW("cache fd not available, using original fds");
+        return WatermarkManager::GetInstance().ProcessWatermarkForFiles(
+            jobParams->serviceJobId, jobParams->fdList) == E_PRINT_NONE;
+    }
+
+    /* Pass writable cache fds to MDM callback for watermark embedding, then close them */
+    int32_t ret = WatermarkManager::GetInstance().ProcessWatermarkForFiles(
+        jobParams->serviceJobId, cacheFdList);
+    for (auto fd : cacheFdList) { close(fd); }
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("ProcessWatermarkForFiles failed, ret: %{public}d, jobId: %{public}s.",
+            ret, jobParams->serviceJobId.c_str());
+        return false;
+    }
+
+    /* Reopen cache fds (O_RDONLY, offset=0) with watermarked content to replace jobParams->fdList */
+    std::vector<uint32_t> freshFdList;
+    if (!jobParams->serviceAbility->OpenCacheFileFd(jobParams->serviceJobId, freshFdList) ||
+        freshFdList.empty()) {
+        PRINT_HILOGE("Failed to reopen cache fds after watermark processing, jobId: %{public}s",
+            jobParams->serviceJobId.c_str());
+        return false;
+    }
+    for (auto fd : jobParams->fdList) { close(fd); }
+    jobParams->fdList = std::move(freshFdList);
+    return true;
+}
+#endif // WATERMARK_ENFORCING_ENABLE
+
 void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
 {
     if (jobParams == nullptr) {
@@ -1528,6 +1574,16 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     if (!ResumePrinter(jobParams->printerName)) {
         PRINT_HILOGW("[Job Id: %{public}s] ResumePrinter fail", jobParams->serviceJobId.c_str());
     }
+
+    // Process watermark before sending files to printer
+#ifdef WATERMARK_ENFORCING_ENABLE
+    if (!ProcessWatermarkWithCacheFd(jobParams)) {
+        UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
+        callback();
+        return;
+    }
+#endif // WATERMARK_ENFORCING_ENABLE
+
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}u", num_files);
     if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {
@@ -2493,6 +2549,7 @@ bool PrintCupsClient::IsCupsServerAlive()
 
 void PrintCupsClient::SetCupsClientEnv()
 {
+    std::lock_guard<std::mutex> lock(envMutex_);
     ippSetPort(0);
 #ifdef ENTERPRISE_ENABLE
     if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&

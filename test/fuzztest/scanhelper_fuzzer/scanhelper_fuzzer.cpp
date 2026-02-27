@@ -29,6 +29,8 @@
 #include "scan_range_helper.h"
 #include "scanner_info_helper.h"
 #include "napi_scan_utils.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS {
 namespace Scan {
@@ -90,7 +92,7 @@ void TestSetOptionConstraintString(const uint8_t* data, size_t size, FuzzedDataP
     ScanOptionDescriptor scanOptDes;
     std::vector<std::string> optionConstraintString;
     int32_t vectorSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    for (int i = 0; i< vectorSize; i++) {
+    for (int i = 0; i < vectorSize; i++) {
         std::string teststr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         optionConstraintString.emplace_back(teststr);
     }
@@ -103,7 +105,7 @@ void TestSetOptionConstraintNumber(const uint8_t* data, size_t size, FuzzedDataP
     ScanOptionDescriptor scanOptDes;
     std::vector<int32_t> optionConstraintNumber;
     int32_t vectorSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    for (int i = 0; i< vectorSize; i++) {
+    for (int i = 0; i < vectorSize; i++) {
         int32_t testNumber = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
         optionConstraintNumber.emplace_back(testNumber);
     }
@@ -672,124 +674,6 @@ void TestNoParmFuncs(const uint8_t* data, size_t size, FuzzedDataProvider* dataP
     NapiScanUtils::IsPathValid(filePath);
     NapiScanUtils::DecodeExtensionCid(cid, extensionId, callbackId);
 }
-
-void ScanOptionDescriptorFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestSetOptionName(data, size, dataProvider);
-    TestSetOptionTitle(data, size, dataProvider);
-    TestSetOptionDesc(data, size, dataProvider);
-    TestSetOptionType(data, size, dataProvider);
-    TestSetOptionUnit(data, size, dataProvider);
-    TestSetOptionConstraintType(data, size, dataProvider);
-    TestSetOptionConstraintString(data, size, dataProvider);
-    TestSetOptionConstraintNumber(data, size, dataProvider);
-    TestSetOptionConstraintRange(data, size, dataProvider);
-    TestScanOptionDescriptor(data, size, dataProvider);
-    TestNoParmFuncs(data, size, dataProvider);
-}
-
-void ScanOptionValueFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestSetScanOptionValueType(data, size, dataProvider);
-    TestSetValueSize(data, size, dataProvider);
-    TestSetNumValue(data, size, dataProvider);
-    TestSetNumListValue(data, size, dataProvider);
-    TestSetStrValue(data, size, dataProvider);
-    TestSetBoolValue(data, size, dataProvider);
-    TestScanOptionValue(data, size, dataProvider);
-}
-
-void ScanParametersFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestSetFormat(data, size, dataProvider);
-    TestSetLastFrame(data, size, dataProvider);
-    TestSetBytesPerLine(data, size, dataProvider);
-    TestSetPixelsPerLine(data, size, dataProvider);
-    TestSetLines(data, size, dataProvider);
-    TestSetDepth(data, size, dataProvider);
-    TestScanParameters(data, size, dataProvider);
-}
-
-void ScanDeviceInfoFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestSetScanProgress(data, size, dataProvider);
-    TestSetScanPictureFd(data, size, dataProvider);
-    TestSetIsFinal(data, size, dataProvider);
-    TestSetPictureId(data, size, dataProvider);
-    TestSetTaskCode(data, size, dataProvider);
-    TestScanProgress(data, size, dataProvider);
-}
-
-void ScannerInfoFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestTCPSetDeviceName(data, size, dataProvider);
-    TestTCPSetUuid(data, size, dataProvider);
-    TestTCPSetModel(data, size, dataProvider);
-    TestTCPSetManufacturer(data, size, dataProvider);
-    TestTCPSetDeviceType(data, size, dataProvider);
-    TestTCPSetPort(data, size, dataProvider);
-    TestTCPSetAddr(data, size, dataProvider);
-    TestTCPSetButton(data, size, dataProvider);
-    TestTCPSetFeeder(data, size, dataProvider);
-    TestTCPSetDeviceState(data, size, dataProvider);
-    TestUSBSetDeviceId(data, size, dataProvider);
-    TestUSBSetManufacturer(data, size, dataProvider);
-    TestUSBSetModel(data, size, dataProvider);
-    TestUSBSetDeviceType(data, size, dataProvider);
-    TestUSBSetDeviceState(data, size, dataProvider);
-    TestUSBSetDiscoverMode(data, size, dataProvider);
-    TestUSBSetSerialNumber(data, size, dataProvider);
-    TestDeviceInfo(data, size, dataProvider);
-}
-
-void ScanRangeFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestSetMinValue(data, size, dataProvider);
-    TestSetMaxValue(data, size, dataProvider);
-    TestSetQuantValue(data, size, dataProvider);
-    TestScanRange(data, size, dataProvider);
-}
-
-void ScanOptionDescriptorHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestScanOptDesNapiInterface(data, size, dataProvider);
-}
-
-void ScanOptionValueHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestScanOptValNapiInterface(data, size, dataProvider);
-}
-
-void ScanProgressHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestScanProgNapiInterface(data, size, dataProvider);
-}
-
-void ScanRangeHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestScanRangeNapiInterface(data, size, dataProvider);
-}
-
-void ScannerInfoHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestScannerInfoNapiInterface(data, size, dataProvider);
-}
-
-void NapiScanUtilsFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestSetNamedProperty(data, size, dataProvider);
-    TestGetBooleanProperty(data, size, dataProvider);
-    TestSetBooleanProperty(data, size, dataProvider);
-    TestToLower(data, size, dataProvider);
-    TestGetExtensionIdInterface(data, size, dataProvider);
-    TestGetGlobalIdInterface(data, size, dataProvider);
-    TestGetLocalIdInterface(data, size, dataProvider);
-    TestEncodeExtensionCidInterface(data, size, dataProvider);
-    TestDecodeExtensionCid(data, size, dataProvider);
-    TestOpenFile(data, size, dataProvider);
-    TestIsPathValid(data, size, dataProvider);
-}
-
 }
 }
 
@@ -803,19 +687,84 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     if (size < OHOS::Scan::U32_AT_SIZE || size > OHOS::Scan::FOO_MAX_LEN) {
         return 0;
     }
+
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::ScanOptionDescriptorFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanOptionValueFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanParametersFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanDeviceInfoFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScannerInfoFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanRangeFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanOptionDescriptorHelperFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanOptionValueHelperFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanProgressHelperFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanRangeHelperFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScannerInfoHelperFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::NapiScanUtilsFuzzTest(data, size, &dataProvider);
+    TestHandler tasks[] = {
+        &OHOS::Scan::TestSetNamedProperty,
+        &OHOS::Scan::TestGetBooleanProperty,
+        &OHOS::Scan::TestSetBooleanProperty,
+        &OHOS::Scan::TestToLower,
+        &OHOS::Scan::TestGetExtensionIdInterface,
+        &OHOS::Scan::TestGetGlobalIdInterface,
+        &OHOS::Scan::TestGetLocalIdInterface,
+        &OHOS::Scan::TestEncodeExtensionCidInterface,
+        &OHOS::Scan::TestDecodeExtensionCid,
+        &OHOS::Scan::TestOpenFile,
+        &OHOS::Scan::TestIsPathValid,
+        &OHOS::Scan::TestScannerInfoNapiInterface,
+        &OHOS::Scan::TestScanRangeNapiInterface,
+        &OHOS::Scan::TestScanProgNapiInterface,
+        &OHOS::Scan::TestScanOptValNapiInterface,
+        &OHOS::Scan::TestScanOptDesNapiInterface,
+        &OHOS::Scan::TestSetMinValue,
+        &OHOS::Scan::TestSetMaxValue,
+        &OHOS::Scan::TestSetQuantValue,
+        &OHOS::Scan::TestScanRange,
+        &OHOS::Scan::TestTCPSetDeviceName,
+        &OHOS::Scan::TestTCPSetUuid,
+        &OHOS::Scan::TestTCPSetModel,
+        &OHOS::Scan::TestTCPSetManufacturer,
+        &OHOS::Scan::TestTCPSetDeviceType,
+        &OHOS::Scan::TestTCPSetPort,
+        &OHOS::Scan::TestTCPSetAddr,
+        &OHOS::Scan::TestTCPSetButton,
+        &OHOS::Scan::TestTCPSetFeeder,
+        &OHOS::Scan::TestTCPSetDeviceState,
+        &OHOS::Scan::TestUSBSetDeviceId,
+        &OHOS::Scan::TestUSBSetManufacturer,
+        &OHOS::Scan::TestUSBSetModel,
+        &OHOS::Scan::TestUSBSetDeviceType,
+        &OHOS::Scan::TestUSBSetDeviceState,
+        &OHOS::Scan::TestUSBSetDiscoverMode,
+        &OHOS::Scan::TestUSBSetSerialNumber,
+        &OHOS::Scan::TestDeviceInfo,
+        &OHOS::Scan::TestSetScanProgress,
+        &OHOS::Scan::TestSetScanPictureFd,
+        &OHOS::Scan::TestSetIsFinal,
+        &OHOS::Scan::TestSetPictureId,
+        &OHOS::Scan::TestSetTaskCode,
+        &OHOS::Scan::TestScanProgress,
+        &OHOS::Scan::TestSetFormat,
+        &OHOS::Scan::TestSetLastFrame,
+        &OHOS::Scan::TestSetBytesPerLine,
+        &OHOS::Scan::TestSetPixelsPerLine,
+        &OHOS::Scan::TestSetLines,
+        &OHOS::Scan::TestSetDepth,
+        &OHOS::Scan::TestScanParameters,
+        &OHOS::Scan::TestSetScanOptionValueType,
+        &OHOS::Scan::TestSetValueSize,
+        &OHOS::Scan::TestSetNumValue,
+        &OHOS::Scan::TestSetNumListValue,
+        &OHOS::Scan::TestSetStrValue,
+        &OHOS::Scan::TestSetBoolValue,
+        &OHOS::Scan::TestScanOptionValue,
+        &OHOS::Scan::TestSetOptionName,
+        &OHOS::Scan::TestSetOptionTitle,
+        &OHOS::Scan::TestSetOptionDesc,
+        &OHOS::Scan::TestSetOptionType,
+        &OHOS::Scan::TestSetOptionUnit,
+        &OHOS::Scan::TestSetOptionConstraintType,
+        &OHOS::Scan::TestSetOptionConstraintString,
+        &OHOS::Scan::TestSetOptionConstraintNumber,
+        &OHOS::Scan::TestSetOptionConstraintRange,
+        &OHOS::Scan::TestScanOptionDescriptor,
+        &OHOS::Scan::TestNoParmFuncs
+    };
+
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

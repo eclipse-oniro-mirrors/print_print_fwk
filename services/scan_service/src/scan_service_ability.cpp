@@ -761,7 +761,7 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     constexpr int32_t MAX_LISTENERS_COUNT = 1000;
-    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
+    if (registeredListeners_.size() >= MAX_LISTENERS_COUNT) {
         SCAN_HILOGE("Exceeded the maximum number of registration.");
         return E_SCAN_GENERIC_FAILURE;
     }
@@ -1101,6 +1101,20 @@ int32_t ScanServiceAbility::StartScanOnce(const std::string scannerId)
         SCAN_HILOGE("scan task is canceling");
         return E_SCAN_DEVICE_BUSY;
     }
+
+    if (EsclDriverManager::IsEsclScanner(scannerId)) {
+        std::string ipAddress;
+        int32_t portNumber = 0;
+        if (!EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
+            SCAN_HILOGE("Failed to extract IP and port from scannerId");
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(ipAddress, portNumber)) {
+            SCAN_HILOGI("ADF is empty, no paper available");
+            return E_SCAN_NO_DOCS;
+        }
+    }
+
     SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneStart(scannerId);
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneStart failed, status is %{public}u", saneStatus);
@@ -1186,7 +1200,7 @@ void ScanServiceAbility::GeneratePictureBatch(ScanTask &scanTask)
             }
         }
         if (!CreateAndOpenScanFile(scanTask)) {
-            status = E_SCAN_GENERIC_FAILURE;
+            status = E_SCAN_SERVER_FAILURE;
             SCAN_HILOGE("CreateAndOpenScanFile fail");
             break;
         }
@@ -1205,7 +1219,7 @@ void ScanServiceAbility::GeneratePictureSingle(ScanTask &scanTask)
 {
     int32_t status = E_SCAN_NONE;
     if (!CreateAndOpenScanFile(scanTask)) {
-        status = E_SCAN_GENERIC_FAILURE;
+        status = E_SCAN_SERVER_FAILURE;
         SCAN_HILOGE("CreateAndOpenScanFile fail");
         return;
     }
@@ -1312,9 +1326,10 @@ void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, Sc
             break;
         }
         scanPictureData_.SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
-        if (scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm) != E_SCAN_NONE) {
+        int32_t writePicDataRet = scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm);
+        if (writePicDataRet != E_SCAN_NONE) {
             SCAN_HILOGE("WritePicData fail");
-            scanStatus = E_SCAN_GENERIC_FAILURE;
+            scanStatus = writePicDataRet;
             break;
         }
         if (scanStatus == SANE_STATUS_EOF) {
@@ -1371,7 +1386,7 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     }
     if (resolutionIndex == 0) {
         SCAN_HILOGE("cannot find dpi option");
-        return E_SCAN_GENERIC_FAILURE;
+        return E_SCAN_SERVER_FAILURE;
     }
     controlParam.action_ = SANE_ACTION_GET_VALUE;
     controlParam.valueType_ = SCAN_VALUE_NUM;

@@ -15,6 +15,8 @@
 #include "fuzzer/FuzzedDataProvider.h"
 #include "scancallbackproxy_fuzzer.h"
 #include "scan_callback_proxy.h"
+#include "print_log.h"
+#include <functional>
 
 namespace OHOS {
 namespace Scan {
@@ -54,8 +56,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestUsbOnCallback(data, size, &dataProvider);
-    OHOS::Scan::TestOnCallbackSync(data, size, &dataProvider);
+
+    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &OHOS::Scan::TestUsbOnCallback,
+        &OHOS::Scan::TestOnCallbackSync
+    };
+
+    TestHandler handler = dataProvider.PickValueInArray(tasks);
+    handler(data, size, &dataProvider);
     return 0;
 }
 

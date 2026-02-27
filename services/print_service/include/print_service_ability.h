@@ -16,6 +16,7 @@
 #ifndef PRINT_SERVICE_ABILITY_H
 #define PRINT_SERVICE_ABILITY_H
 
+#include <fcntl.h>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -73,7 +74,6 @@ public:
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extInfo) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
@@ -148,6 +148,10 @@ public:
         const std::string &ppdName);
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
+    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
 
 protected:
     void OnStart() override;
@@ -161,7 +165,6 @@ private:
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
-    void ReStartAllDiscovery();
     int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
     int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info, const std::string userId = "");
@@ -229,7 +232,6 @@ private:
     bool CheckUserIdInEventType(const std::string &type);
     void BuildPrinterPreference(PrinterInfo &printerInfo);
     void ClosePrintJobFd(const std::shared_ptr<PrintJob> &printJob);
-    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
@@ -291,6 +293,7 @@ private:
     void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
         const sptr<IPrintCallback> &listener, const std::string &eventType);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
@@ -308,6 +311,7 @@ private:
     void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
+    void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -318,7 +322,6 @@ private:
     static std::string ingressPackage;
 
     std::recursive_mutex apiMutex_;
-    std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
     std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
 

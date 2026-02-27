@@ -43,7 +43,7 @@ public:
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
+    int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extensionId) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
@@ -101,6 +101,9 @@ public:
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName, char *userPasswd,
         std::vector<PrinterInfo>& printerInfos) override;
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

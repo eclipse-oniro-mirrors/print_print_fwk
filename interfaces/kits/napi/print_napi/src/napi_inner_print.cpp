@@ -17,6 +17,7 @@
 
 #include "napi_print_utils.h"
 #include "print_callback.h"
+#include "watermark_callback.h"
 #include "print_extension_info_helper.h"
 #include "print_job_helper.h"
 #include "print_attributes_helper.h"
@@ -1705,6 +1706,154 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
     context->SetAction(std::move(input), std::move(output));
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
     return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::RegisterWatermarkCallback(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("NapiInnerPrint::RegisterWatermarkCallback in");
+
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+
+    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+
+    // Check parameter count
+    if (argc != NapiPrintUtils::ARGC_ONE) {
+        PRINT_HILOGE("Invalid parameter count, argc = %{public}zu", argc);
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+
+    // Check callback is function
+    napi_valuetype valuetype = napi_undefined;
+    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+    if (valuetype != napi_function) {
+        PRINT_HILOGE("callback is not a function");
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+
+    // Create callback reference
+    napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    if (callbackRef == nullptr) {
+        PRINT_HILOGE("Failed to create callback reference");
+        NapiThrowError(env, E_PRINT_GENERIC_FAILURE);
+        return nullptr;
+    }
+
+    // Create WatermarkCallback object
+    sptr<WatermarkCallback> callback = new (std::nothrow) WatermarkCallback(env, callbackRef);
+    if (callback == nullptr) {
+        PRINT_HILOGE("Failed to create WatermarkCallback object");
+        NapiPrintUtils::DeleteReference(env, callbackRef);
+        NapiThrowError(env, E_PRINT_GENERIC_FAILURE);
+        return nullptr;
+    }
+
+    // Register to print service
+    // Note: If registration fails, WatermarkCallback destructor will clean up callbackRef
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to register watermark callback, ret=%{public}d", ret);
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+
+    PRINT_HILOGD("RegisterWatermarkCallback success");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value NapiInnerPrint::UnregisterWatermarkCallback(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("NapiInnerPrint::UnregisterWatermarkCallback in");
+
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+
+    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+
+    // Check parameter count
+    if (argc != NapiPrintUtils::ARGC_ZERO) {
+        PRINT_HILOGE("Invalid parameter count, argc = %{public}zu", argc);
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+
+    // Unregister from print service
+    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to unregister watermark callback, ret=%{public}d", ret);
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+
+    PRINT_HILOGD("UnregisterWatermarkCallback success");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("NapiInnerPrint::NotifyWatermarkComplete in");
+
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+
+    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+
+    // Check parameter count
+    if (argc != NapiPrintUtils::ARGC_TWO) {
+        PRINT_HILOGE("Invalid parameter count, argc = %{public}zu", argc);
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+
+    // Parse jobId (string)
+    napi_valuetype jobIdType;
+    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &jobIdType);
+    if (jobIdType != napi_string) {
+        PRINT_HILOGE("Invalid jobId type, expected string");
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+    std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    if (jobId.empty()) {
+        PRINT_HILOGE("Invalid jobId");
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+
+    // Parse result (number)
+    napi_valuetype valueType;
+    napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType);
+    if (valueType != napi_number) {
+        PRINT_HILOGE("Invalid result type, expected number");
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+    int32_t result = NapiPrintUtils::GetInt32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
+
+    // Notify print service
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(jobId, result);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to notify watermark complete, ret=%{public}d", ret);
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+
+    PRINT_HILOGD("NotifyWatermarkComplete success, jobId=%{public}s, result=%{public}d", jobId.c_str(), result);
+    napi_value retValue = nullptr;
+    napi_get_undefined(env, &retValue);
+    return retValue;
 }
 
 bool NapiInnerPrint::IsSupportType(const std::string &type)

@@ -82,6 +82,9 @@ static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrin
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
 static constexpr const char *AUTH_SMB_DEVICE_AS_GUEST = "authSmbDeviceAsGuest";
 static constexpr const char *AUTH_SMB_DEVICE_AS_REGISTERED_USER = "authSmbDeviceAsRegisteredUser";
+static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWatermarkCallback";
+static constexpr const char *FUNCTION_UNREGISTER_WATERMARK_CALLBACK = "unregisterWatermarkCallback";
+static constexpr const char *FUNCTION_NOTIFY_WATERMARK_COMPLETE = "notifyWatermarkComplete";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_COMPLETED_SUCCESS", PRINT_JOB_COMPLETED_SUCCESS},
@@ -439,6 +442,19 @@ static napi_value NapiCreateDefaultPrinterTypeEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreateWatermarkHandleResultEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "WATERMARK_HANDLE_SUCCESS", static_cast<int32_t>(WATERMARK_HANDLE_SUCCESS));
+    SetEnumProperty(env, object, "WATERMARK_HANDLE_FAILURE", static_cast<int32_t>(WATERMARK_HANDLE_FAILURE));
+    return object;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
@@ -460,6 +476,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrinterEvent", NapiCreatePrintEventEnum(env)),
         PRINT_NAPI_PROPERTY("ApplicationEvent", NapiCreateApplicationEventEnum(env)),
         PRINT_NAPI_PROPERTY("DefaultPrinterType", NapiCreateDefaultPrinterTypeEnum(env)),
+        PRINT_NAPI_PROPERTY("WatermarkHandleResult", NapiCreateWatermarkHandleResultEnum(env)),
 
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
@@ -518,6 +535,9 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_GUEST, NapiInnerPrint::AuthSmbDeviceAsGuest),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_REGISTERED_USER, NapiInnerPrint::AuthSmbDeviceAsRegisteredUser),
+        PRINT_NAPI_METHOD(FUNCTION_REGISTER_WATERMARK_CALLBACK, NapiInnerPrint::RegisterWatermarkCallback),
+        PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_WATERMARK_CALLBACK, NapiInnerPrint::UnregisterWatermarkCallback),
+        PRINT_NAPI_METHOD(FUNCTION_NOTIFY_WATERMARK_COMPLETE, NapiInnerPrint::NotifyWatermarkComplete),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

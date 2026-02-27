@@ -17,6 +17,7 @@
 #define PRINT_USER_DATA_H
 
 #include <charconv>
+#include <fcntl.h>
 #include <string>
 #include <map>
 #include <deque>
@@ -68,7 +69,7 @@ public:
     void DeletePrinter(const std::string &printerId);
     bool FlushCacheFileToUserData(const std::string &jobId);
     bool DeleteCacheFileFromUserData(const std::string &jobId);
-    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
+    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::string &printerId, const std::string &jobId,
         const std::shared_ptr<PrintJob> &printjob);

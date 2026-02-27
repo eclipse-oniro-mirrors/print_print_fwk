@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -91,12 +92,12 @@ void TestUpdatePrintJobStateOnlyForSystemApp(const uint8_t *data, size_t size, F
     PrintServiceAbility::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
 }
 
-void TestUpdatePrintJobStateForNormalApp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestAdapterGetFileCallBack(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    PrintServiceAbility::GetInstance()->UpdatePrintJobStateForNormalApp(jobId, state, subState);
+    PrintServiceAbility::GetInstance()->AdapterGetFileCallBack(jobId, state, subState);
 }
 
 void TestUnregisterPrintTaskCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -136,17 +137,24 @@ void TestQueryPrinterCapability(const uint8_t *data, size_t size, FuzzedDataProv
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestAddPrinters(data, size, dataProvider);
-    TestRemovePrinters(data, size, dataProvider);
-    TestUpdatePrinters(data, size, dataProvider);
-    TestUpdatePrinterState(data, size, dataProvider);
-    TestUpdatePrintJobStateOnlyForSystemApp(data, size, dataProvider);
-    TestUpdatePrintJobStateForNormalApp(data, size, dataProvider);
-    TestUnregisterPrintTaskCallback(data, size, dataProvider);
-    TestUpdateExtensionInfo(data, size, dataProvider);
-    TestRequestPreview(data, size, dataProvider);
-    TestQueryPrinterCapability(data, size, dataProvider);
-    TestAddRawPrinter(data, size, dataProvider);
+    PRINT_HILOGI("multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestAddPrinters,
+        &TestRemovePrinters,
+        &TestUpdatePrinters,
+        &TestUpdatePrinterState,
+        &TestUpdatePrintJobStateOnlyForSystemApp,
+        &TestAdapterGetFileCallBack,
+        &TestUnregisterPrintTaskCallback,
+        &TestUpdateExtensionInfo,
+        &TestRequestPreview,
+        &TestQueryPrinterCapability,
+        &TestAddRawPrinter
+    };
+
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print

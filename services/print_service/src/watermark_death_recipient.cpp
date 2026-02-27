@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_MENU_OPTION_HELPER_H
-#define PRINT_MENU_OPTION_HELPER_H
-
-#include <map>
-#include "napi/native_api.h"
-#include "print_menu_option.h"
+#include "watermark_death_recipient.h"
+#include "watermark_manager.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
-class PrintMenuOptionHelper {
-public:
-    static napi_value MakeJsObject(napi_env env, const PrintMenuOption &menuOption);
-    static std::shared_ptr<PrintMenuOption> BuildFromJs(napi_env env, napi_value jsValue);
 
-private:
-    static bool ValidateProperty(napi_env env, napi_value object);
-};
-}  // namespace OHOS::Print
-#endif  // PRINT_MENU_OPTION_HELPER_H
+WatermarkDeathRecipient::WatermarkDeathRecipient(int32_t pid) : pid_(pid) {}
+
+void WatermarkDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    PRINT_HILOGI("MDM app died, pid=%{public}d, removing watermark callback", pid_);
+    WatermarkManager::GetInstance().OnCallbackDied(pid_);
+}
+
+} // namespace OHOS::Print

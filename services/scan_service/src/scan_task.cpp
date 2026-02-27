@@ -25,7 +25,6 @@ constexpr int32_t BIT = 1;
 ScanTask::ScanTask(const std::string& scannerId, int32_t userId, bool batchMode)
     :   scannerId_(scannerId),
         batchMode_(batchMode),
-        isJpegWriteSuccess_(true),
         userId_(userId),
         ofp_(nullptr),
         jpegbuf_(nullptr)
@@ -35,6 +34,9 @@ ScanTask::ScanTask(const std::string& scannerId, int32_t userId, bool batchMode)
     }
     if (memset_s(&jerr_, sizeof(jerr_), 0, sizeof(jerr_)) != 0) {
         SCAN_HILOGW("jerr memset fail");
+    }
+    if (memset_s(&jpegJumpBuffer_, sizeof(jpegJumpBuffer_), 0, sizeof(jpegJumpBuffer_)) != 0) {
+        SCAN_HILOGW("jpegJumpBuffer memset fail");
     }
 }
 
@@ -78,14 +80,21 @@ bool ScanTask::CreateAndOpenScanFile(std::string& filePath)
 
 int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
 {
+    if (setjmp(jpegJumpBuffer_) != 0) {
+        SCAN_HILOGE("WriteJpegHeader failed, longjmp from JpegErrorExit");
+        return E_SCAN_INVAL;
+    }
     ScanFrame format = parm.GetFormat();
     int32_t width = parm.GetPixelsPerLine();
     int32_t height = parm.GetLines();
+    if (width <= 0 || height <= 0 || dpi <= 0) {
+        SCAN_HILOGE("Invalid param: width:%{public}d, height:%{public}d, dpi:%{public}d", width, height, dpi);
+        return E_SCAN_INVAL;
+    }
     cinfo_.err = jpeg_std_error(&jerr_);
     cinfo_.err->error_exit = &ScanTask::JpegErrorExit;
     cinfo_.client_data = this;
     jpeg_create_compress(&cinfo_);
-    isJpegWriteSuccess_ = true;
     jpeg_stdio_dest(&cinfo_, ofp_);
     cinfo_.image_width = static_cast<JDIMENSION>(width);
     cinfo_.image_height = static_cast<JDIMENSION>(height);
@@ -112,7 +121,7 @@ int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
     jpegbuf_ = new (std::nothrow) JSAMPLE[parm.GetBytesPerLine() / sizeof(JSAMPLE)]{};
     if (jpegbuf_ == nullptr) {
         SCAN_HILOGE("jpegbuf new fail");
-        return E_SCAN_GENERIC_FAILURE;
+        return E_SCAN_SERVER_FAILURE;
     }
     return E_SCAN_NONE;
 }
@@ -121,15 +130,15 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
 {
     int32_t i = 0;
     int32_t left = static_cast<int32_t>(dataBuffer.size());
+    if (setjmp(jpegJumpBuffer_) != 0) {
+        SCAN_HILOGE("WritePicData failed, longjmp from JpegErrorExit");
+        return E_SCAN_NO_MEM;
+    }
     while (jpegrow + left >= parm.GetBytesPerLine()) {
-        if (!isJpegWriteSuccess_) {
-            SCAN_HILOGE("isJpegWrite FaiL");
-            return E_SCAN_NO_MEM;
-        }
         if (memcpy_s(jpegbuf_ + jpegrow, parm.GetBytesPerLine() - jpegrow, dataBuffer.data() + i,
             parm.GetBytesPerLine() - jpegrow) != E_SCAN_NONE) {
             SCAN_HILOGE("memcpy_s failed");
-            return E_SCAN_GENERIC_FAILURE;
+            return E_SCAN_SERVER_FAILURE;
         }
         if (parm.GetDepth() != 1) {
             jpeg_write_scanlines(&cinfo_, &jpegbuf_, BIT);
@@ -141,7 +150,7 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
         int64_t jpegImageBytes = static_cast<int64_t>(parm.GetBytesPerLine()) * BYTE_BITS;
         if (jpegImageBytes < 0 || jpegImageBytes > MAX_BUFLEN) {
             SCAN_HILOGE("nultiplication would overflow");
-            return E_SCAN_GENERIC_FAILURE;
+            return E_SCAN_SERVER_FAILURE;
         }
         std::vector<JSAMPLE> buf8(static_cast<int32_t>(jpegImageBytes));
         for (int32_t col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
@@ -158,7 +167,7 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
     }
     if (memcpy_s(jpegbuf_ + jpegrow, parm.GetBytesPerLine(), dataBuffer.data() + i, left) != E_SCAN_NONE) {
         SCAN_HILOGE("memcpy_s failed");
-        return E_SCAN_GENERIC_FAILURE;
+        return E_SCAN_SERVER_FAILURE;
     }
     jpegrow += left;
     return E_SCAN_NONE;
@@ -189,7 +198,7 @@ void ScanTask::JpegErrorExit(j_common_ptr cinfo)
     ScanTask* self = static_cast<ScanTask*>(cinfo->client_data);
     if (self != nullptr) {
         SCAN_HILOGE("ScanTask JpegErrorExit");
-        self->isJpegWriteSuccess_ = false;
+        longjmp(self->jpegJumpBuffer_, 1);
     }
 }
 } // namespace OHOS::Scan

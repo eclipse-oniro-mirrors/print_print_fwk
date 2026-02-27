@@ -47,7 +47,7 @@ private:
     bool OnStartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnCancelPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply);
-    bool OnUpdatePrintJobStateForNormalApp(MessageParcel &data, MessageParcel &reply);
+    bool OnAdapterGetFileCallBack(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);
@@ -94,6 +94,9 @@ private:
     bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);
     bool OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

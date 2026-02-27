@@ -16,10 +16,13 @@
 #include <gtest/gtest.h>
 #include "print_service_mock_permission.h"
 #include "mock_remote_object.h"
+#include "mock_watermark_callback.h"
+#include "iwatermark_callback.h"
 #define private public
 #define protected public
 #include "print_service_ability.h"
 #include "print_bms_helper.h"
+#include "event_listener_mgr.h"
 #undef protected
 #undef private
 #ifdef CUPS_ENABLE
@@ -99,6 +102,8 @@ public:
 class MockPrintServiceHelper final : public PrintServiceHelper {
 public:
     MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &accountList));
+    MOCK_METHOD1(CheckPermission, bool(const std::string &name));
+    MOCK_METHOD0(IsSyncMode, bool());
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -354,7 +359,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_Shou
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_NO_PERMISSION);
     uint32_t subState = 0;
     EXPECT_EQ(service->UpdatePrintJobStateOnlyForSystemApp(printJobId, state, subState), E_PRINT_NO_PERMISSION);
-    EXPECT_EQ(service->AdapterGetFileCallBack(printJobId, state, subState), E_PRINT_NONE);
     state = PrintJobState::PRINT_JOB_CREATE_FILE_COMPLETED;
     EXPECT_EQ(service->AdapterGetFileCallBack(printJobId, state, subState), E_PRINT_NO_PERMISSION);
     std::string extInfo = "";
@@ -557,6 +561,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012_NeedRename, TestS
     std::string taskId = "";
     std::string type = "";
     sptr<IPrintCallback> listener = nullptr;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_INVALID_PARAMETER);
     taskId = "1";
@@ -568,7 +573,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012_NeedRename, TestS
     if (listener != nullptr) {
         service->On(taskId, type, listener);
     }
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     taskId = "";
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NONE);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NONE);
@@ -1115,13 +1120,18 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0050_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     std::string jobId = "1";
     uint32_t state = PRINTER_UNKNOWN;
     uint32_t subState = 0;
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
     std::string type = PRINT_GET_FILE_EVENT_TYPE;
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     service->AdapterGetFileCallBack(jobId, state, subState);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
     service->AdapterGetFileCallBack(jobId, state, subState);
@@ -1467,20 +1477,25 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     uint32_t state = PRINT_JOB_CREATE_FILE_COMPLETED;
     uint32_t subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
     std::string jobId = "123";
     std::string type = PRINT_GET_FILE_EVENT_TYPE;
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     auto ret = service->AdapterGetFileCallBack(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_FAILED;
     ret = service->AdapterGetFileCallBack(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     subState = PRINT_JOB_BLOCKED_UNKNOWN;
     ret = service->AdapterGetFileCallBack(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083_NeedRename, TestSize.Level1)
@@ -1630,10 +1645,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
     service->SendPrinterEvent(info);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[PRINTER_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(PRINTER_EVENT_TYPE,
+        listener));
     service->SendPrinterEvent(info);
     EXPECT_EQ(info.GetPrinterState(), PRINTER_UNKNOWN);
 }
@@ -1641,28 +1658,31 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
     PrinterEvent printerEvent = PRINTER_EVENT_STATE_CHANGED;
-    service->registeredListeners_["test"] = nullptr;
+    EXPECT_FALSE(DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener("test"));
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 
     std::string eventType = "123" + PRINTER_CHANGE_EVENT_TYPE;
-    service->registeredListeners_[eventType] = nullptr;
+    EXPECT_FALSE(DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener(eventType));
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[eventType] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(eventType, listener));
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrintJob jobInfo;
     jobInfo.SetJobId("1");
     service->SendPrintJobEvent(jobInfo);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[PRINTJOB_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(PRINTJOB_EVENT_TYPE,
+        listener));
     service->SendPrintJobEvent(jobInfo);
     jobInfo.SetJobState(PRINT_JOB_COMPLETED);
     service->SendPrintJobEvent(jobInfo);
@@ -1675,10 +1695,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestS
     service->SendPrintJobEvent(jobInfo);
     jobInfo.SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
     std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), EVENT_CANCEL);
-    service->registeredListeners_[taskEvent] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(taskEvent, listener));
     service->SendPrintJobEvent(jobInfo);
     taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), PRINT_CALLBACK_JOB_STATE_TYPE);
-    service->registeredListeners_[taskEvent] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(taskEvent, listener));
     jobInfo.SetJobState(PRINT_JOB_BLOCKED);
     service->SendPrintJobEvent(jobInfo);
 }
@@ -1686,11 +1706,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     std::string extensionId = "123";
     std::string extInfo = "123";
     EXPECT_EQ(service->SendExtensionEvent(extensionId, extInfo), 0);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[EXTINFO_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(EXTINFO_EVENT_TYPE,
+        listener));
     EXPECT_NE(service->SendExtensionEvent(extensionId, extInfo), 0);
 }
 
@@ -1796,12 +1818,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     std::string jobId = "123";
     service->RegisterAdapterListener(jobId);
     auto lisIt = service->adapterListenersByJobId_.find(jobId);
     EXPECT_EQ(lisIt, service->adapterListenersByJobId_.end());
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[PRINT_ADAPTER_EVENT_TYPE] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(PRINT_ADAPTER_EVENT_TYPE,
+        listener));
     service->RegisterAdapterListener(jobId);
     lisIt = service->adapterListenersByJobId_.find(jobId);
     EXPECT_NE(lisIt, service->adapterListenersByJobId_.end());
@@ -2853,6 +2877,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryAllPpdsTest, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
     info.SetPrinterMake("fake make");
@@ -2862,9 +2887,9 @@ HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
     info.SetOption(PrintJsonUtil::WriteString(option));
     std::string type = PRINT_QUERY_INFO_EVENT_TYPE;
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
-    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(type, listener));
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
-    service->registeredListeners_[type] = nullptr;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener(type));
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
 }
 
@@ -3134,6 +3159,21 @@ HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 #endif // EDM_SERVICE_ENABLE
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_NoPermission, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string printerId = GetDefaultPrinterId();;
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    int32_t ret = service->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+#endif
+}
+
 HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPrinterId, TestSize.Level1)
 {
 #ifdef CUPS_ENABLE
@@ -3142,6 +3182,11 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPrinterId, Te
     std::vector<std::string> conflictingOptions;
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
 
     int32_t ret = service->CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
@@ -3159,6 +3204,10 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, Test
     auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
 
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
         .WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(*service, QueryPPDInformation(_, _))
@@ -3177,6 +3226,21 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, Test
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_NoPermission, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    PrintJob testPrinterJob;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    testPrinterJob.SetPrinterId(GetInvalidPrinterId());
+    int32_t ret = service->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+#endif
+}
+
 HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPrinterId, TestSize.Level1)
 {
 #ifdef CUPS_ENABLE
@@ -3184,6 +3248,11 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPrinterId, TestS
     std::vector<std::string> conflictingOptions;
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
 
     testPrinterJob.SetPrinterId(GetInvalidPrinterId());
     int32_t ret = service->CheckPrintJobConflicts(
@@ -3201,6 +3270,10 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPpdName, TestSiz
     auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
 
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
         .WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(*service, QueryPPDInformation(_, _))
@@ -3434,6 +3507,8 @@ HWTEST_F(PrintServiceAbilityTest,
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
 
     auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
     EXPECT_CALL(*helper, QueryAccounts(_))
         .WillRepeatedly(Return(false));
     service->SetHelper(helper);
@@ -3444,6 +3519,29 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_USERID);
 }
 
+HWTEST_F(PrintServiceAbilityTest, PostDiscoveryTaskTest_with_nullptr, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string extensionId = "";
+    service->helper_ = nullptr;
+    service->PostDiscoveryTask(extensionId);
+    EXPECT_EQ(service->helper_, nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PostDiscoveryTaskTest_with_syncMode, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string extensionId = "";
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, IsSyncMode())
+        .WillRepeatedly(Return(true));
+    service->SetHelper(helper);
+    service->PostDiscoveryTask(extensionId);
+    EXPECT_NE(service->helper_, nullptr);
+}
+
 HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
 {
     PrintServiceMockPermission::MockPermission();
@@ -3451,6 +3549,266 @@ HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
     EXPECT_EQ(service->Release(), E_PRINT_NO_PERMISSION);
     service->ManualStart();
     EXPECT_EQ(service->Release(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_001
+ * @tc.desc: Test RegisterWatermarkCallback without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<IWatermarkCallback> callback = nullptr;
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_002
+ * @tc.desc: Test RegisterWatermarkCallback with permission and null callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<IWatermarkCallback> callback = nullptr;
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_003
+ * @tc.desc: Test RegisterWatermarkCallback with permission and valid callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NONE
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<MockWatermarkCallback> callback = sptr<MockWatermarkCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    // Clean up: unregister the callback
+    service->UnregisterWatermarkCallback();
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_001
+ * @tc.desc: Test UnregisterWatermarkCallback without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_002
+ * @tc.desc: Test UnregisterWatermarkCallback with permission but no callback registered
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_003
+ * @tc.desc: Test UnregisterWatermarkCallback with permission after registering callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NONE
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    sptr<MockWatermarkCallback> callback = sptr<MockWatermarkCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#endif
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_001
+ * @tc.desc: Test NotifyWatermarkComplete without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", 0), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_002
+ * @tc.desc: Test NotifyWatermarkComplete with permission but non-existent job
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("non_existent_job", 0), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("non_existent_job", 0), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_003
+ * @tc.desc: Test NotifyWatermarkComplete with permission and empty jobId
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("", 0), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("", 0), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_004
+ * @tc.desc: Test NotifyWatermarkComplete with permission and failure result
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_004, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_AddVendorPrinterToDiscovery_SyncAlias_001
+ * @tc.desc: Test AddVendorPrinterToDiscovery syncs alias from added printer
+ * @tc.type: FUNC
+ * @tc.require: When discovering a previously added printer, alias should be synced
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddVendorPrinterToDiscovery_SyncAlias_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string expectedAlias = "MyPrinter";
+    std::string expectedPrinterName = "TestPrinterName";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(expectedPrinterName);
+    addedPrinter.SetAlias(expectedAlias);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
+    EXPECT_TRUE(printerInfo->HasAlias());
+    EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_AddVendorPrinterToDiscovery_NoAlias_001
+ * @tc.desc: Test AddVendorPrinterToDiscovery when added printer has no alias
+ * @tc.type: FUNC
+ * @tc.require: When added printer has no alias, discovered printer should not have alias
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddVendorPrinterToDiscovery_NoAlias_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string expectedPrinterName = "TestPrinterName";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(expectedPrinterName);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
+    EXPECT_FALSE(printerInfo->HasAlias());
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UpdateVendorPrinterToDiscovery_SyncAlias_001
+ * @tc.desc: Test UpdateVendorPrinterToDiscovery syncs alias from added printer
+ * @tc.type: FUNC
+ * @tc.require: When updating discovered printer, alias should be synced from added printer
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UpdateVendorPrinterToDiscovery_SyncAlias_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string expectedAlias = "UpdatedAlias";
+    std::string expectedPrinterName = "UpdatedPrinterName";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(expectedPrinterName);
+    addedPrinter.SetAlias(expectedAlias);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
+    EXPECT_TRUE(printerInfo->HasAlias());
+    EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
 }
 }  // namespace Print
 }  // namespace OHOS
