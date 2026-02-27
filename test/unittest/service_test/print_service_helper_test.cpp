@@ -21,6 +21,8 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "common_event_support.h"
+#include <thread>
 
 using namespace testing::ext;
 
@@ -183,5 +185,62 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSiz
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartExtensionAbility(want));
 }
+
+class PrintServiceHelperCommon {
+public:
+    static void SetUpTestCase(void){};
+    static void TearDownTestCase(void){};
+    void SetUp(void){};
+    void TearDown(void){};
+};
+
+struct BuildSubscribeInfoParam {
+    std::string action;
+    int32_t code;
+};
+
+class CheckSubscribeInfoTest : public PrintServiceHelperCommon,
+                        public testing::TestWithParam<BuildSubscribeInfoParam> {
+public:
+    using PrintServiceHelperCommon::SetUp;
+    using PrintServiceHelperCommon::SetUpTestCase;
+    using PrintServiceHelperCommon::TearDown;
+    using PrintServiceHelperCommon::TearDownTestCase;
+};
+
+void TestSubscribeEventTemplate(const std::string &action, const int32_t code)
+{
+    PrintServiceHelper helper;
+    helper.PrintSubscribeCommonEvent();
+    OHOS::EventFwk::Want want;
+    want.SetAction(action);
+    EventFwk::CommonEventData data;
+    data.SetWant(want);
+    data.SetCode(code);
+    helper.userStatusListener->OnReceiveEvent(data);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+HWTEST_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest_P, TestSize.Level1)
+{
+    BuildSubscribeInfoParam param = GetParam();
+    TestSubscribeEventTemplate(param.action, param.code);
+}
+
+INSTANTIATE_TEST_SUITE_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest,
+    testing::Values(
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_HIBERNATE, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_HIBERNATE, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_FORCE_SLEEP, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN, 0},
+        BuildSubscribeInfoParam{"unknown.event", 0},
+        BuildSubscribeInfoParam{"", 0}
+    ));
 }  // namespace Print
 }  // namespace OHOS

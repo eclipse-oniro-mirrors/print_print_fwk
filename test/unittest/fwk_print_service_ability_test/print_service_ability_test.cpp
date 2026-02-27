@@ -3810,5 +3810,35 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UpdateVendorPrinterToD
     EXPECT_TRUE(printerInfo->HasAlias());
     EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
 }
+
+HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_EnterpriseSpace, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
+    service->isEnterprise_ = true;
+    service->StopCupsService();
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+#endif  // ENTERPRISE_ENABLE
+}
+
+HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_PersonalSpace, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
+    service->isEnterprise_ = false;
+    service->StopCupsService();
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+#endif  // ENTERPRISE_ENABLE
+}
+
+HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedDisable, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->StopCupsService();
+}
 }  // namespace Print
 }  // namespace OHOS
