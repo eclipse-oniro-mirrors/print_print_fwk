@@ -263,6 +263,7 @@ private:
     JobParameters *currentJob_ = nullptr;
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList_;
     std::mutex jobMonitorMutex_;
+    std::atomic<bool> isMonitoringRunning_{false};
     std::mutex envMutex_;
     std::map<std::string, uint32_t> cupsJobIdMap_;
     std::mutex cupsJobIdMapMutex_;

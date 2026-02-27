@@ -1607,13 +1607,11 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     monitorParams->jobOriginatingUserName = jobParams->jobOriginatingUserName;
     {
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
-        if (jobMonitorList_.empty()) {
-            jobMonitorList_.push_back(monitorParams);
+        jobMonitorList_.push_back(monitorParams);
+        if (!isMonitoringRunning_.exchange(true)) {
             auto self = shared_from_this();
             std::thread startMonitotThread([self] { self->StartMonitor(); });
             startMonitotThread.detach();
-        } else {
-            jobMonitorList_.push_back(monitorParams);
         }
     }
     callback();
@@ -1679,6 +1677,7 @@ void PrintCupsClient::StartMonitor()
         isMonitor = !jobMonitorList_.empty();
     }
     PRINT_HILOGI("jobMonitorList is empty, exit monitor");
+    isMonitoringRunning_.store(false);
 }
 
 void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState)
