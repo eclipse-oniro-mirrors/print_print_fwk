@@ -3818,7 +3818,13 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_EnterpriseSpace, T
     std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
     service->isEnterprise_ = true;
+    service->OnStart();
     service->StopCupsService();
+
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_ENTERPRISE_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+    EXPECT_STREQ(value, "false");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
 #endif  // ENTERPRISE_ENABLE
 }
@@ -3830,7 +3836,13 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_PersonalSpace, Tes
     std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
     service->isEnterprise_ = false;
+    service->OnStart();
     service->StopCupsService();
+
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+    EXPECT_STREQ(value, "false");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
 #endif  // ENTERPRISE_ENABLE
 }
@@ -3838,7 +3850,21 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_PersonalSpace, Tes
 HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedDisable, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->OnStart();
     service->StopCupsService();
+
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+    EXPECT_STREQ(value, "false");
+}
+
+HWTEST_F(PrintServiceAbilityTest, StartDiscovery_NoClearConnect, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->vendorManager.SetConnectingPrinter(IP_AUTO, "testIP");
+    service->StartDiscoverPrinter();
+    EXPECT_FALSE(service->vendorManager.GetConnectingPrinter().empty());
 }
 }  // namespace Print
 }  // namespace OHOS
