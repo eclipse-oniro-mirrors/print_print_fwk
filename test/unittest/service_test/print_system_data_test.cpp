@@ -1845,5 +1845,62 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfoTest, TestSize.Level1)
     EXPECT_TRUE(object["selectedDriver"].isObject());
     EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
 }
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_VirtualPrinter_StatusIdle, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterInfo info;
+    info.SetPrinterId(VIRTUAL_PRINTER_ID);
+    Json::Value printerJson;
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+    EXPECT_EQ(info.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_WrongPreferencesType_NoPreferences, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterInfo info;
+    Json::Value printerJson;
+    printerJson["preferences"] = "test";
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+    EXPECT_EQ(info.HasPreferences(), false);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_CorrectPreferencesType_HasPreferences, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterInfo info;
+    Json::Value printerJson;
+    Json::Value preferencesJson;
+    preferencesJson["key"] = "value";
+    printerJson["preferences"] = preferencesJson;
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+    EXPECT_EQ(info.HasPreferences(), true);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_WrongOriginIdType_NoOriginId, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterInfo info;
+    Json::Value printerJson;
+    printerJson["originId"] = 1;
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+    EXPECT_EQ(info.HasOriginId(), false);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_CorrectOriginIdType_HasOriginId, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterInfo info;
+    Json::Value printerJson;
+    printerJson["originId"] = "id";
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+    EXPECT_EQ(info.HasOriginId(), true);
+}
 }  // namespace Print
 }  // namespace OHOS

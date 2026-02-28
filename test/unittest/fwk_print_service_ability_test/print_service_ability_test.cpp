@@ -3840,45 +3840,5 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedDisable, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->StopCupsService();
 }
-
-HWTEST_F(PrintServiceAbilityTest, QueryPrinterProperties_HasPreferences_ReturnNone, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "testPrinterId";
-    PrinterInfo printerInfo;
-    addedPrinter.SetPrinterId(printerId);
-    PrinterPreferences preferences;
-    printerInfo.SetPreferences(preferences);
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    std::vector<std::string> keyList;
-    keyList.emplace_back("printerPreference");
-    std::vector<std::string> valueList;
-    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_NONE);
-}
-
-HWTEST_F(PrintServiceAbilityTest, QueryPrinterProperties_NoPreferences_ReturnNone, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "testPrinterId";
-    PrinterInfo printerInfo;
-    addedPrinter.SetPrinterId(printerId);
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    std::vector<std::string> keyList;
-    keyList.emplace_back("printerPreference");
-    std::vector<std::string> valueList;
-    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_NONE);
-}
-
-HWTEST_F(PrintServiceAbilityTest, QueryPrinterProperties_NoPreferencesKey_ReturnNone, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "testPrinterId";
-    PrinterInfo printerInfo;
-    addedPrinter.SetPrinterId(printerId);
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    std::vector<std::string> keyList;
-    std::vector<std::string> valueList;
-    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_NONE);
-}
 }  // namespace Print
 }  // namespace OHOS
