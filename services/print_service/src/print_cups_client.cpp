@@ -50,6 +50,9 @@
 #ifdef WATERMARK_ENFORCING_ENABLE
 #include "watermark_manager.h"
 #endif // WATERMARK_ENFORCING_ENABLE
+#ifdef HAVE_SMB_PRINTER
+#include "smb_printer_state_monitor.h"
+#endif // HAVE_SMB_PRINTER
 
 namespace OHOS::Print {
 using namespace std;
@@ -2192,8 +2195,8 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     }
 #ifdef HAVE_SMB_PRINTER
     if (PrintUtil::startsWith(printerId, "smb")) {
-        PRINT_HILOGI("printer is smb printer.");
-        return true;
+        bool isOnline = SmbPrinterStateMonitor::GetInstance().IsSmbPrinterOnline(printerId);
+        return isOnline;
     }
 #endif // HAVE_SMB_PRINTER
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {

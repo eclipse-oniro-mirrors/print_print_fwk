@@ -32,6 +32,7 @@ public:
     void StopSmbPrinterStatusMonitor();
     void SetSmbPrinterInMonitorList(const PrinterInfo& info);
     void EraseSmbPrinterInMonitorListById(const std::string& printerId);
+    bool IsSmbPrinterOnline(const std::string& printerId);
 
 private:
     enum class HostStatus {
