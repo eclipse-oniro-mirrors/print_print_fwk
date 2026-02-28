@@ -183,7 +183,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSiz
 {
     PrintServiceHelper helper;
     AAFwk::Want want;
-    EXPECT_FALSE(helper.StartExtensionAbility(want));
+    EXPECT_FALSE(helper.StartExtensionAbility(want, nullptr));
 }
 
 class PrintServiceHelperCommon {
