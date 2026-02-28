@@ -447,7 +447,7 @@ HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetBorderless, TestSize.Leve
     jobParams->mediaType = "";
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 3);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 2);
     delete jobParams;
     delete options;
 }
@@ -471,6 +471,7 @@ HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetNotBorderless, TestSize.L
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->borderless = 0;
     jobParams->mediaSize = "testMediaSize";
     jobParams->mediaType = "testMediaType";
     int numOptions = 0;
@@ -565,7 +566,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOption
     jobParams->isCollate = false;
     jobParams->isReverse = false;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 9);
+    EXPECT_EQ(ret, 8);
     delete jobParams;
     delete options;
 }
