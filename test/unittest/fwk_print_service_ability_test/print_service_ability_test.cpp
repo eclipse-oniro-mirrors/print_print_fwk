@@ -46,6 +46,7 @@
 #include <json/json.h>
 #include "mock_print_callback_proxy.h"
 #include "mock_print_extension_callback_proxy.h"
+#include "parameter.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -84,6 +85,8 @@ static constexpr uint32_t ISO_A4_HEIGHT = 11692;
 static const std::string IS_ENTERPRISE_ENABLE = "true";
 static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_enable";
 static const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
+static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
+static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
 
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,
@@ -3818,7 +3821,13 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_EnterpriseSpace, T
     std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
     service->isEnterprise_ = true;
+    service->OnStart();
     service->StopCupsService();
+
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_ENTERPRISE_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+    EXPECT_STREQ(value, "false");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
 #endif  // ENTERPRISE_ENABLE
 }
@@ -3830,7 +3839,13 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_PersonalSpace, Tes
     std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
     service->isEnterprise_ = false;
+    service->OnStart();
     service->StopCupsService();
+
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+    EXPECT_STREQ(value, "false");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
 #endif  // ENTERPRISE_ENABLE
 }
@@ -3838,7 +3853,21 @@ HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_PersonalSpace, Tes
 HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedDisable, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->OnStart();
     service->StopCupsService();
+
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+    EXPECT_STREQ(value, "false");
+}
+
+HWTEST_F(PrintServiceAbilityTest, StartDiscovery_NoClearConnect, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->vendorManager.SetConnectingPrinter(IP_AUTO, "testIP");
+    service->StartDiscoverPrinter();
+    EXPECT_FALSE(service->vendorManager.GetConnectingPrinter().empty());
 }
 }  // namespace Print
 }  // namespace OHOS
