@@ -119,9 +119,10 @@ void EventListenerMgr::OnRemoteListenerDied(const sptr<IRemoteObject> &listener)
         if (listenerItem.second == nullptr || listenerItem.second->AsObject() != listener) {
             continue;
         }
+        std::string eventType = listenerItem.first;
         RemoveDeathRecipient(listenerItem.second);
-        registeredListeners_.erase(listenerItem.first);
-        PRINT_HILOGI("listener removed, type = %{public}s, size = %{public}zu", listenerItem.first.c_str(),
+        registeredListeners_.erase(eventType);
+        PRINT_HILOGI("listener removed, type = %{public}s, size = %{public}zu", eventType.c_str(),
             registeredListeners_.size());
         break;
     }
