@@ -3094,8 +3094,20 @@ bool PrintServiceAbility::StartExtensionAbility(const AAFwk::Want &want)
         PRINT_HILOGE("Invalid print service helper.");
         return false;
     }
+    AppExecFwk::ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
     PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
-    return helper_->StartExtensionAbility(want);
+    return helper_->StartExtensionAbility(want, [=]() { ResetExtensionState(bundleName); });
+}
+
+void PrintServiceAbility::ResetExtensionState(const std::string& bundleName)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    extensionStateList_[bundleName] = PRINT_EXTENSION_UNLOAD;
+    for (uint32_t i = PRINT_EXTCB_START_DISCOVERY; i < PRINT_EXTCB_MAX; i++) {
+        std::string extensionCID = PrintUtils::EncodeExtensionCid(bundleName, i);
+        extCallbackMap_.erase(extensionCID);
+    }
 }
 
 bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)

@@ -43,20 +43,50 @@ public:
                                     std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
     virtual bool QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name);
     virtual bool IsSyncMode();
-    virtual bool StartExtensionAbility(const AAFwk::Want &want);
+    virtual bool StartExtensionAbility(const AAFwk::Want &want, std::function<void()> deathCallback);
     virtual bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     virtual void PrintSubscribeCommonEvent();
     virtual bool DisconnectAbility(ExtensionAbilityType extensionAbilityType);
     virtual bool CheckPluginPrintConnected();
 
 private:
+    class PrintConnectCallbackRecipient : public IRemoteObject::DeathRecipient {
+    public:
+        explicit PrintConnectCallbackRecipient(std::function<void()> func) : func_(std::move(func))
+        {}
+        ~PrintConnectCallbackRecipient() = default;
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) override
+        {
+            PRINT_HILOGI("extension connection died.");
+            if (func_) {
+                func_();
+            }
+        }
+
+    private:
+        std::function<void()> func_ = nullptr;
+    };
+
     class PrintAbilityConnection : public AAFwk::AbilityConnectionStub {
+    public:
+        PrintAbilityConnection() = default;
+        PrintAbilityConnection(std::function<void()> func) : func_(std::move(func))
+        {
+            deathRecipient_ = new (std::nothrow) PrintConnectCallbackRecipient(func_);
+        }
+
+    private:
         void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
             int32_t resultCode) override
         {
             if (resultCode == ERR_OK) {
                 PRINT_HILOGI("connect done");
                 isConnected_ = true;
+                if (remoteObject == nullptr || deathRecipient_ == nullptr) {
+                    PRINT_HILOGE("fail to create DeathRecipient");
+                    return;
+                }
+                remoteObject->AddDeathRecipient(deathRecipient_);
             } else {
                 PRINT_HILOGI("connect failed, ret = %{public}d", resultCode);
             }
@@ -78,6 +108,8 @@ private:
     private:
         std::atomic<bool> isConnected_ = false;
         std::atomic<bool> isDisonnected_ = false;
+        std::function<void()> func_ = nullptr;
+        sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
     };
 
 private:
