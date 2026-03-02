@@ -1258,9 +1258,9 @@ int32_t ScanServiceAbility::DoScanTask(ScanTask &scanTask)
             if (scanStatus != E_SCAN_NONE) {
                 SCAN_HILOGW("GetScannerImageDpi fail");
             }
-            scanStatus = scanTask.WriteJpegHeader(parm, dpi);
+            scanStatus = scanTask.WriteImageHeader(parm, static_cast<uint16_t>(dpi));
             if (scanStatus != E_SCAN_NONE) {
-                SCAN_HILOGE("StartScanTask error exit after WriteJpegHeader");
+                SCAN_HILOGE("StartScanTask error exit after WriteiImageHeader");
                 break;
             }
         }
@@ -1298,10 +1298,10 @@ int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
 void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus)
 {
     if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
-        scanTask.JpegDestroyCompress();
+        scanTask.ImageDestroyCompress();
         SCAN_HILOGE("End of failed scan ");
     } else {
-        scanTask.JpegFinishCompress();
+        scanTask.ImageFinishCompress();
         SCAN_HILOGI("End of normal scan");
     }
 }
@@ -1309,7 +1309,6 @@ void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus
 void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, ScanParameters &parm)
 {
     int64_t totalBytes = 0;
-    int32_t jpegrow = 0;
     int64_t hundredPercent =
         ((int64_t)parm.GetBytesPerLine()) * parm.GetLines() *
         (((SaneFrame)parm.GetFormat() == SANE_FRAME_RGB || (SaneFrame)parm.GetFormat() == SANE_FRAME_GRAY)
@@ -1326,10 +1325,10 @@ void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, Sc
             break;
         }
         scanPictureData_.SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
-        int32_t writePicDataRet = scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm);
-        if (writePicDataRet != E_SCAN_NONE) {
-            SCAN_HILOGE("WritePicData fail");
-            scanStatus = writePicDataRet;
+        int32_t writeImgDataRet = scanTask.WriteImageData(pictureData.dataBuffer_);
+        if (writeImgDataRet != E_SCAN_NONE) {
+            SCAN_HILOGE("WriteImageData fail");
+            scanStatus = writeImgDataRet;
             break;
         }
         if (scanStatus == SANE_STATUS_EOF) {

@@ -23,35 +23,55 @@
 #include <queue>
 #include <setjmp.h>
 #include "scanner_info.h"
-#include "jpeglib.h"
 #include "scan_parameters.h"
+#include "pixel_map.h"
+#include "image_packer.h"
 
 namespace OHOS::Scan {
+
+enum class ImageFormat : int32_t {
+    IMAGE_TYPE_NONE,
+    IMAGE_TYPE_JPEG,
+    IMAGE_TYPE_PNG
+};
 
 class ScanTask {
 public:
     ScanTask(const std::string& scannerId, int32_t userId, bool batchMode);
-    std::string GetScannerId() const;
     ~ScanTask();
-    bool GetBatchMode();
-    bool CreateAndOpenScanFile(std::string& filePath);
-    int32_t WriteJpegHeader(ScanParameters &parm, const UINT16& dpi);
-    int32_t WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffer, ScanParameters &parm);
-    void JpegDestroyCompress();
-    void JpegFinishCompress();
+    std::string GetScannerId() const;
+    bool GetBatchMode() const;
+    bool CreateAndOpenScanFile(std::string& filePath, ImageFormat imgFmt = ImageFormat::IMAGE_TYPE_JPEG,
+        uint32_t quality = JPEG_QUALITY_SEVENTY_FIVE);
+    int32_t WriteImageHeader(const ScanParameters &parm, uint16_t dpi);
+    int32_t WriteImageData(const std::vector<uint8_t>& dataBuffer);
+    void ImageDestroyCompress();
+    void ImageFinishCompress();
+    ImageFormat GetImageFormat() const;
 
 private:
     ScanTask(const ScanTask&) = delete;
     ScanTask& operator=(const ScanTask&) = delete;
-    static void JpegErrorExit(j_common_ptr cinfo);
+
+    bool GetImageOutputDir(ImageFormat imgFmt, std::string& path, std::string& mimeType);
+    int32_t WriteRgbData(const std::vector<uint8_t>& dataBuffer);
+    int32_t WriteGreyData(const std::vector<uint8_t>& dataBuffer);
+    int32_t WriteMonoData(const std::vector<uint8_t>& dataBuffer);
+    void WriteJfifDensityField();
+
     std::string scannerId_;
+    std::string filePath_;
     bool batchMode_;
     int32_t userId_;
-    FILE *ofp_;
-    JSAMPLE *jpegbuf_;
-    struct jpeg_compress_struct cinfo_;
-    struct jpeg_error_mgr jerr_;
-    jmp_buf jpegJumpBuffer_;
+
+    uint16_t dpi_ = 0;
+    ImageFormat imageFormat_ = ImageFormat::IMAGE_TYPE_NONE;
+    uint8_t *picBuf_ = nullptr;
+    size_t rowWriteIdx_ = 0;
+    size_t colWriteIdx_ = 0;
+    ScanParameters scanParams_;
+    std::unique_ptr<Media::PixelMap> pixMap_;
+    std::unique_ptr<Media::ImagePacker> imagePacker_;
 };
 
 } // namespace OHOS::Scan
