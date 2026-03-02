@@ -412,6 +412,14 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_028_NeedRename, TestSize.Level1)
     EXPECT_TRUE(ScanErrorCode.count(status))
 }
 
+HWTEST_F(ScanServiceAbilityTest, NotstartInitInManualStart, TestSize.Level1)
+{
+    SetUp();
+    scanSa->state_ = ServiceRunningState::STATE_NOT_START;
+    scanSa->ManualStart();
+    EXPECT_EQ(scanSa->state_, ServiceRunningState::STATE_NOT_START);
+}
+
 }  // namespace Scan
 
 }  // namespace OHOS
