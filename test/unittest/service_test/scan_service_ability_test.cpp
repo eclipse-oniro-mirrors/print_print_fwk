@@ -411,6 +411,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_028_NeedRename, TestSize.Level1)
     status = scanSa->OnStartScan(scannerId);
     EXPECT_TRUE(ScanErrorCode.count(status))
 }
+
 }  // namespace Scan
 
 }  // namespace OHOS
