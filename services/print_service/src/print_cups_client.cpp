@@ -139,6 +139,7 @@ static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string PRINTER_STATE_TIMED_OUT = "timed-out";
 static const std::string PRINTER_SPOOL_AREA_FULL = "spool-area-full";
+static const std::string PRINTER_INPUT_TRAY_MISSING = "input-tray-missing";
 static const std::string PRINTER_STATE_STOPPED = "stopped";
 static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string JOB_STATE_REASON_AUTHENTICATION = "cups-held-for-authentication";
@@ -175,12 +176,14 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
     {PRINTER_STATE_OTHER, PRINT_JOB_BLOCKED_UNKNOWN},
     {PRINTER_STATE_TIMED_OUT, PRINT_JOB_BLOCKED_UNKNOWN},
     {PRINTER_SPOOL_AREA_FULL, PRINT_JOB_BLOCKED_UNKNOWN},
+    {PRINTER_INPUT_TRAY_MISSING, PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING},
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY{
     {"default", {{PRINTER_STATE_MEDIA_EMPTY, STATE_POLICY_BLOCK},
                 {PRINTER_STATE_MEDIA_JAM, STATE_POLICY_BLOCK},
                 {PRINTER_STATE_DOOR_EMPTY, STATE_POLICY_BLOCK},
+                {PRINTER_INPUT_TRAY_MISSING, STATE_POLICY_BLOCK},
                 {PRINTER_STATE_COVER_OPEN, STATE_POLICY_BLOCK}}},
 };
 
