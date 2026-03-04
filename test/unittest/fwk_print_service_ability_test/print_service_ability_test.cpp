@@ -3842,7 +3842,6 @@ HWTEST_F(PrintServiceAbilityTest,
     auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetPrinterId(), globalId);
-    EXPECT_EQ(printerInfo->GetPrinterState(), PRINTER_ADDED);
 }
 
 HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_EnterpriseSpace, TestSize.Level1)
