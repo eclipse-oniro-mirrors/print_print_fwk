@@ -1574,5 +1574,19 @@ HWTEST_F(PrintServiceProxyTest, NotifyWatermarkComplete_WithFailureResult, TestS
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddPriner, TestSize.Level1)
+{
+    std::string testPrinterName = "test-printer";
+    std::string testUri = "ipp://192.168.1.1:631/ipp/print";
+    std::string testPpdName = DEFAULT_PPD_NAME;
+    std::string testOptions = "";
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    proxy->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+}
+
+
 }  // namespace Print
 }  // namespace OHOS

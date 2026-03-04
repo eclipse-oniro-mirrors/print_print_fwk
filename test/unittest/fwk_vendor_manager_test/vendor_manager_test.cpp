@@ -399,19 +399,19 @@ HWTEST_F(VendorManagerTest, ConnectByIpAndPpdTest, TestSize.Level2)
     auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
     ASSERT_NE(vendorIppEverywhere, nullptr);
     EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
-    bool res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    bool res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName, "");
     EXPECT_TRUE(res);
     EXPECT_EQ(vendorManager.GetConnectingProtocol(), protocol);
     EXPECT_EQ(vendorManager.connectingPrinter, testIp);
     EXPECT_EQ(vendorManager.GetConnectingPpdName(), ppdName);
     protocol = "";
-    res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName, "");
     EXPECT_TRUE(res);
     EXPECT_EQ(vendorManager.connectingProtocol, "auto");
     vendorManager.wlanGroupDriver = nullptr;
-    res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName, "");
     EXPECT_FALSE(res);
-    res = vendorManager.ConnectPrinterByIpAndPpd("", protocol, ppdName);
+    res = vendorManager.ConnectPrinterByIpAndPpd("", protocol, ppdName, "");
     EXPECT_FALSE(res);
 }
 

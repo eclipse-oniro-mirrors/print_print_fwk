@@ -27,7 +27,8 @@ public:
     explicit VendorWlanGroup(VendorManager *vendorManager);
     std::string GetVendorName() override;
     bool OnQueryCapability(const std::string &printerId, int timeout) override;
-    bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol) override;
+    bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+        const std::string &printQueue) override;
     int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     int32_t OnPrinterRemoved(const std::string &vendorName, const std::string &printerId) override;
     bool IsGroupDriver(const std::string &bothPrinterId) override;
@@ -40,7 +41,7 @@ public:
     bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
     void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName) override;
+        const std::string &ppdName, const std::string &printQueue) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
     bool MonitorPrinterStatus(const std::string &groupPrinterId, bool on) override;
@@ -67,8 +68,9 @@ private:
     bool ConnectByBsuni(const std::string &printerId);
     bool ConnectByIppEverywhere(const std::string &printerId);
     bool ConnectByPpdDriver(const std::string &printerId);
-    bool ConnectByBsuni(const std::string &printerIp, const std::string &protocol);
-    bool ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol);
+    bool ConnectByBsuni(const std::string &printerIp, const std::string &protocol, const std::string &printQueue);
+    bool ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol,
+        const std::string &printQueue);
     void SetGroupPrinterFromVendorGroupList(const std::string &printerId, const std::string &vendorName);
 
 private:

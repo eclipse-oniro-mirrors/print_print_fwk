@@ -104,6 +104,8 @@ public:
     int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
     int32_t UnregisterWatermarkCallback() override;
     int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

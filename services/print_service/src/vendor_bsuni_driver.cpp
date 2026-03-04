@@ -51,7 +51,8 @@ bool VendorBsuniDriver::CheckVendorExtension(Print_VendorExtension *extension)
     if (extension->onCreate == nullptr || extension->onDestroy == nullptr || extension->onStartDiscovery == nullptr ||
         extension->onStopDiscovery == nullptr || extension->onConnectPrinter == nullptr ||
         extension->onDisconnectPrinter == nullptr || extension->onQueryCapability == nullptr ||
-        extension->onQueryCapabilityByIp == nullptr || extension->onQueryProperties == nullptr) {
+        extension->onQueryCapabilityByIp == nullptr || extension->onQueryProperties == nullptr ||
+        extension->onQueryCapabilityByIpAndQueue == nullptr) {
         PRINT_HILOGW("invalid extension");
         return false;
     }
@@ -452,7 +453,8 @@ bool VendorBsuniDriver::OnQueryCapability(const std::string &printerId, int time
     return false;
 }
 
-bool VendorBsuniDriver::OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol)
+bool VendorBsuniDriver::OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+    const std::string &printQueue)
 {
     PRINT_HILOGD("OnQueryCapabilityByIp enter");
     if (vendorExtension == nullptr) {
@@ -463,7 +465,8 @@ bool VendorBsuniDriver::OnQueryCapabilityByIp(const std::string &printerIp, cons
         PRINT_HILOGW("OnQueryCapabilityByIp is null");
         return false;
     }
-    int32_t result = vendorExtension->onQueryCapabilityByIp(printerIp.c_str(), protocol.c_str());
+    const char *bsuniQueue = printQueue.empty() ? nullptr : printQueue.c_str();
+    int32_t result = vendorExtension->onQueryCapabilityByIpAndQueue(printerIp.c_str(), protocol.c_str(), bsuniQueue);
     PRINT_HILOGI("OnQueryCapabilityByIp quit: %{public}d", result);
     return result == 0;
 }

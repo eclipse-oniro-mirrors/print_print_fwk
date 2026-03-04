@@ -97,6 +97,7 @@ private:
     bool OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
     bool OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
     bool OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply);
+    bool OnAddPrinter(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

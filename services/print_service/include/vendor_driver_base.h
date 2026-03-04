@@ -71,7 +71,7 @@ public:
     virtual void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
     virtual bool OnQueryCallBackEvent(const PrinterInfo &info) = 0;
     virtual bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName) = 0;
+        const std::string &ppdName, const std::string &printQueue) = 0;
     virtual bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) = 0;
     virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) = 0;
@@ -102,7 +102,8 @@ public:
     virtual void OnStartDiscovery();
     virtual void OnStopDiscovery();
     virtual bool OnQueryCapability(const std::string &printerId, int timeout);
-    virtual bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol);
+    virtual bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+        const std::string &printQueue);
     virtual bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys);
     virtual std::string GetVendorName() = 0;
     virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);

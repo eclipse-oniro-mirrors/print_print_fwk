@@ -114,6 +114,8 @@ public:
     virtual int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) = 0;
     virtual int32_t UnregisterWatermarkCallback() = 0;
     virtual int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) = 0;
+    virtual int32_t AddPrinter(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

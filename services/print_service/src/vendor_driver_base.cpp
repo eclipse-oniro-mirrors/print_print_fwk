@@ -54,7 +54,8 @@ bool VendorDriverBase::OnQueryCapability(const std::string &printerId, int timeo
 {
     return false;
 }
-bool VendorDriverBase::OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol)
+bool VendorDriverBase::OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+    const std::string &printQueue)
 {
     return false;
 }

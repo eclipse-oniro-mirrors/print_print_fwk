@@ -96,7 +96,7 @@ public:
     void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnQueryCallBackEvent(const PrinterInfo &info) override;
     bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName) override;
+        const std::string &ppdName, const std::string &printQueue) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) override;

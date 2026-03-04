@@ -59,6 +59,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] =
         &PrintServiceStub::OnQueryAllPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID] = &PrintServiceStub::OnQueryPrintJobById;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTER] = &PrintServiceStub::OnAddPrinter;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS] = &PrintServiceStub::OnAddPrinterToCups;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI] =
         &PrintServiceStub::OnQueryPrinterCapabilityByUri;
@@ -1209,6 +1210,19 @@ bool PrintServiceStub::OnNotifyWatermarkComplete(MessageParcel &data, MessagePar
     int32_t ret = NotifyWatermarkComplete(jobId, result);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnAddPrinter in");
+    std::string printerName = data.ReadString();
+    std::string uri = data.ReadString();
+    std::string ppdName = data.ReadString();
+    std::string options = data.ReadString();
+    int32_t ret = AddPrinter(printerName, uri, ppdName, options);
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnAddPrinter out");
     return ret == E_PRINT_NONE;
 }
 

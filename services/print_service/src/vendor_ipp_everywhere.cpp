@@ -78,14 +78,16 @@ bool VendorIppEveryWhere::OnQueryCapability(const std::string &printerId, int ti
     return opQueue.Push(op);
 }
 
-bool VendorIppEveryWhere::OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol)
+bool VendorIppEveryWhere::OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+    const std::string &printQueue)
 {
     if (protocol != "auto" && protocol != "ipp") {
         PRINT_HILOGW("protocol not support");
         return false;
     }
-    PRINT_HILOGI("QueryCapabilityByIp begin");
-    std::string uri = "ipp://" + printerIp + ":631/ipp/print";
+    PRINT_HILOGI("QueryCapabilityByIpAndQueue begin");
+    std::string queue = printQueue.empty() ? "/ipp/print" : printQueue;
+    std::string uri = "ipp://" + printerIp + ":631" + queue;
     auto op = std::bind(&VendorIppEveryWhere::ConnectPrinterByUri, this, uri);
     return opQueue.Push(op);
 }

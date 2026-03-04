@@ -31,6 +31,7 @@ public:
     MOCK_METHOD1(OnDisconnectPrinter, int32_t(const char *));
     MOCK_METHOD1(OnQueryCapability, int32_t(const char *));
     MOCK_METHOD2(OnQueryCapabilityByIp, int32_t(const char *, const char *protocol));
+    MOCK_METHOD3(onQueryCapabilityByIpAndQueue, int32_t(const char *, const char *, const char *));
     MOCK_METHOD2(OnQueryProperties, int32_t(const char *, const Print_StringList *));
 };
 }  // namespace Print

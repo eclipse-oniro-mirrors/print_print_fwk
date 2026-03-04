@@ -153,6 +153,8 @@ public:
     int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
     bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     void StopCupsService();
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options);
 
 protected:
     void OnStart() override;

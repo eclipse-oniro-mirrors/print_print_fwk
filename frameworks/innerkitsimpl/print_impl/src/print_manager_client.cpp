@@ -1120,6 +1120,18 @@ int32_t PrintManagerClient::ConnectPrinterByIpAndPpd(const std::string &printerI
     return CALL_COMMON_CLIENT(func);
 }
 
+int32_t PrintManagerClient::AddPrinter(const std::string &printerName, const std::string &uri,
+    const std::string &ppdName, const std::string &options)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AddPrinter(printerName, uri, ppdName, options);
+        PRINT_HILOGD("PrintManagerClient AddPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::SavePdfFileJob(const std::string &jobId, uint32_t fd)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
