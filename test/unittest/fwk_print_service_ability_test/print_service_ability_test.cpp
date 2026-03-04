@@ -3811,6 +3811,40 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UpdateVendorPrinterToD
     EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
 }
 
+/**
+ * @tc.name: PrintServiceAbilityTest_AddVendorPrinterToDiscovery_QueryAddedPrinterInfoFailed_001
+ * @tc.desc: Test AddVendorPrinterToDiscovery when QueryAddedPrinterInfoByPrinterId fails
+ * @tc.type: FUNC
+ * @tc.require: When printer is added but QueryAddedPrinterInfoByPrinterId fails, should handle gracefully
+ */
+HWTEST_F(PrintServiceAbilityTest,
+    PrintServiceAbilityTest_AddVendorPrinterToDiscovery_QueryAddedPrinterInfoFailed_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string printerName = "TestPrinterName";
+    std::string printerUri = "ipp://192.168.1.1:631/ipp/print";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(printerName);
+    addedPrinter.SetUri(printerUri);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    discoveredPrinter.SetPrinterName(printerName);
+    discoveredPrinter.SetUri(printerUri);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterId(), globalId);
+    EXPECT_EQ(printerInfo->GetPrinterState(), PRINTER_ADDED);
+}
+
 HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_EnterpriseSpace, TestSize.Level1)
 {
 #ifdef ENTERPRISE_ENABLE
