@@ -67,7 +67,7 @@
 #include "smb_printer_discoverer.h"
 #include "smb_printer_state_monitor.h"
 #endif // HAVE_SMB_PRINTER
-
+#include "print_failure_ai_notifier.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -75,6 +75,8 @@ using namespace Security::AccessToken;
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
+constexpr uint32_t DISABLE_SOUND_BIT = 1 << 0;
+constexpr uint32_t ENABLE_BANNER_BIT = 1 << 9;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
@@ -2003,9 +2005,50 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
     return E_PRINT_NONE;
 }
 
+void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
+{
+    AddPrintJobToHistoryList(printJob);
+    auto printerId = printJob->GetPrinterId();
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo) {
+        PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printerId, subState, printerInfo->GetPrinterName());
+    } else {
+        PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
+    }
+}
+
+void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
+    bool jobInQueue)
+{
+    auto printerId = printJob->GetPrinterId();
+
+    if (jobInQueue) {
+        ClosePrintJobFd(printJob);
+        DeleteCacheFileFromUserData(jobId);
+        printerJobMap_[printerId].erase(jobId);
+        auto userData = GetUserDataByJobId(jobId);
+        if (userData != nullptr) {
+            userData->queuedJobList_.erase(jobId);
+        }
+        queuedJobList_.erase(jobId);
+    }
+
+    DeletePrintJobFromHistoryList(jobId);
+    ReportPrinterIdle(printerId);
+
+    if (IsQueuedJobListEmpty(jobId)) {
+        ReportCompletedPrint(printerId);
+    }
+
+    SendQueuePrintJob(printerId);
+    PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
+}
+
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
-    PRINT_HILOGI("[Job Id: %{public}s] CheckAndSendQueuePrintJob start", jobId.c_str());
+    PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
+        jobId.c_str(), state, subState);
+
     auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
@@ -2017,39 +2060,30 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     if (jobIt == userData->queuedJobList_.end()) {
         jobInQueue = false;
         if (QueryHistoryPrintJobById(jobId, *printJob) != E_PRINT_NONE) {
-            PRINT_HILOGD("Invalid print job id");
+            PRINT_HILOGE("Invalid print job id");
             return E_PRINT_INVALID_PRINTJOB;
         }
     } else {
         printJob = jobIt->second;
     }
+    if (!printJob) {
+        PRINT_HILOGE("Invalid print job");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
     printJob->SetJobState(state);
     printJob->SetSubState(subState);
+
     if (state == PRINT_JOB_BLOCKED) {
-        AddPrintJobToHistoryList(printJob);
+        HandleJobBlockedState(printJob, subState);
+    } else if (state == PRINT_JOB_COMPLETED) {
+        HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
+
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
     CheckJobQueueBlocked(*printJob);
 
-    auto printerId = printJob->GetPrinterId();
-    if (state == PRINT_JOB_COMPLETED) {
-        if (jobInQueue) {
-            ClosePrintJobFd(jobIt->second);  // Close fd dependency primitive class.
-            DeleteCacheFileFromUserData(jobId);
-            printerJobMap_[printerId].erase(jobId);
-            userData->queuedJobList_.erase(jobId);
-            queuedJobList_.erase(jobId);
-        }
-        DeletePrintJobFromHistoryList(jobId);
-        ReportPrinterIdle(printerId);
-        if (IsQueuedJobListEmpty(jobId)) {
-            ReportCompletedPrint(printerId);
-        }
-        SendQueuePrintJob(printerId);
-        PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
-    }
-    PRINT_HILOGD("CheckAndSendQueuePrintJob end.");
+    PRINT_HILOGI("CheckAndSendQueuePrintJob end.");
     return E_PRINT_NONE;
 }
 
@@ -5441,4 +5475,5 @@ void PrintServiceAbility::StopCupsService()
 #endif  // ENTERPRISE_ENABLE
 #endif  // CUPS_ENABLE
 }
+
 }  // namespace OHOS::Print

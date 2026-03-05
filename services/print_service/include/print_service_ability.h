@@ -44,6 +44,7 @@
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
 #include "print_caller_app_monitor.h"
+
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
@@ -186,6 +187,11 @@ private:
     void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
+
+private:
+    void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
+    void HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
+        bool jobInQueue);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void RegisterAdapterListener(const std::string &jobId);
