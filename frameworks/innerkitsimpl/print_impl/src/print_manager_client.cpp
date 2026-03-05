@@ -746,7 +746,7 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
     }
 
     auto func = [printJobName, listener, printAttributes, &taskId](sptr<IPrintService> serviceProxy) {
-        serviceProxy->On("", PRINT_CALLBACK_ADAPTER, listener);
+        serviceProxy->On(taskId, PRINT_CALLBACK_ADAPTER, listener);
         return serviceProxy->PrintByAdapter(printJobName, printAttributes, taskId);
     };
     return CALL_COMMON_CLIENT(func);

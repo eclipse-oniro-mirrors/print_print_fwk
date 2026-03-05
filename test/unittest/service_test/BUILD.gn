@@ -25,6 +25,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 

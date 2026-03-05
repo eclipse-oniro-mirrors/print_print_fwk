@@ -17,6 +17,9 @@ import("//build/ohos.gni")
 cflags_cc = []
 
 _sources = [
+  "src/event_callback/extension_event_callback.cpp",
+  "src/event_callback/printer_event_callback.cpp",
+  "src/event_callback/print_job_event_callback.cpp",
   "src/event_listener_mgr.cpp",
   "src/hisys_event_util.cpp",
   "src/operation_queue.cpp",
@@ -86,6 +89,7 @@ _public_configs = [ ":print_service_config" ]
 _include_dirs = [
   "${print_path}/frameworks/innerkitsimpl/print_impl/include",
   "${print_path}/frameworks/ohprint/include",
+  "${print_path}/services/print_service/include/event_callback",
   "${print_utils_path}/include",
 ]
 

@@ -40,6 +40,7 @@
 #include "singleton.h"
 #include "app_mgr_client.h"
 #include "ppd_info.h"
+#include "event_listener_mgr.h"
 #ifdef HAVE_SMB_PRINTER
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
@@ -186,7 +187,6 @@ private:
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
-    void RegisterAdapterListener(const std::string &jobId);
     int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState);
     bool UpdatePrintJobOptionByPrinterId(PrintJob &printJob);
     std::shared_ptr<PrintJob> AddNativePrintJob(const std::string &jobId, PrintJob &printJob);
@@ -238,7 +238,7 @@ private:
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::shared_ptr<PrintUserData> userData,
-        const sptr<IPrintExtensionCallback> cbFunc, const std::string &jobId);
+        const std::string& extensionId, const std::string &jobId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
@@ -292,8 +292,7 @@ public:
 
 private:
     void GetPrintJobStateInfo(const PrintJob &jobInfo, std::string& stateInfo, uint32_t &state);
-    void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
-        const sptr<IPrintCallback> &listener, const std::string &eventType);
+    void HandleJobStateChanged(const std::string &jobId, CallbackInfo &cbInfo);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
@@ -324,15 +323,12 @@ private:
     static std::string ingressPackage;
 
     std::recursive_mutex apiMutex_;
-    std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
-    std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
-
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> extensionList_;
     std::map<std::string, PrintExtensionState> extensionStateList_;
     std::map<std::string, std::shared_ptr<PrintJob>> printJobList_;
     std::map<std::string, std::shared_ptr<PrintJob>> queuedJobList_;
     std::map<std::string, std::string, JobIdCmp> jobOrderList_;
-    std::map<std::string, PrintAttributes> printAttributesList_;
+    std::map<std::string, std::shared_ptr<PrintAttributes>> printAttributesList_;
 
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
