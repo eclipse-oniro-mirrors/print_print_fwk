@@ -272,6 +272,11 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri, const std::string &ppdName,
+        const std::string &options) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -331,6 +336,8 @@ public:
     MOCK_METHOD1(RegisterWatermarkCallback, int32_t(const sptr<IWatermarkCallback> &callback));
     MOCK_METHOD0(UnregisterWatermarkCallback, int32_t());
     MOCK_METHOD2(NotifyWatermarkComplete, int32_t(const std::string &jobId, int32_t result));
+    MOCK_METHOD4(AddPrinter, int32_t(const std::string &printerName, const std::string &uri, const std::string &ppdName,
+        const std::string &options));
 };
 }  // namespace Print
 }  // namespace OHOS

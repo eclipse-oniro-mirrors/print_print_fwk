@@ -76,9 +76,9 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
 {
     VendorIppEveryWhere vendorDriver;
     EXPECT_EQ(vendorDriver.Init(nullptr), false);
-    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "protocol"));
-    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "auto"));
-    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
+    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "protocol", ""));
+    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "auto", ""));
+    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""));
     std::vector<std::string> propertyKeys;
     EXPECT_FALSE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
     propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
@@ -87,7 +87,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
     vendorDriver.OnCreate();
     ThreadSyncWait syncWait;
     syncWait.Wait(WAIT_TIME_MS);
-    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
+    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""));
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
     EXPECT_FALSE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
     syncWait.Wait(WAIT_TIME_MS);
@@ -111,7 +111,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0003, TestSize.Level2)
     EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).Times(1).WillRepeatedly(Return(false));
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
+    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""));
     EXPECT_FALSE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
@@ -134,7 +134,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0004, TestSize.Level2)
     EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
     vendorDriver.MonitorPrinterStatus(PRINTER_TEST_IP, true);
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
+    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.MonitorPrinterStatus(PRINTER_TEST_IP, false);
     syncWait.Wait(WAIT_TIME_MS);
@@ -200,7 +200,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
     EXPECT_TRUE(vendorDriver.MonitorPrinterStatus(printerId, true));
     vendorDriver.UpdateAllPrinterStatus();
     EXPECT_FALSE(vendorDriver.OnQueryCapability(printerId, 0));
-    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(printerId, ""));
+    EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(printerId, "", ""));
     std::vector<std::string> propertyKeys;
     EXPECT_FALSE(vendorDriver.OnQueryProperties(printerId, propertyKeys));
 }

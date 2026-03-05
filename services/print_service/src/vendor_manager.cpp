@@ -179,7 +179,7 @@ bool VendorManager::ConnectPrinterByIp(const std::string &printerIp, const std::
         PRINT_HILOGE("no driver to connect printer by ip");
         return false;
     }
-    return wlanGroupDriver->OnQueryCapabilityByIp(printerIp, protocol);
+    return wlanGroupDriver->OnQueryCapabilityByIp(printerIp, protocol, "");
 }
 
 bool VendorManager::QueryPrinterInfo(const std::string &globalPrinterId, int timeout)
@@ -607,7 +607,7 @@ bool VendorManager::OnQueryCallBackEvent(const PrinterInfo &info)
 }
 
 bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-    const std::string &ppdName)
+    const std::string &ppdName, const std::string &printQueue)
 {
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     if (wlanGroupDriver == nullptr) {
@@ -623,7 +623,7 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
         }
         connectingPpdName = ppdName;
     }
-    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName);
+    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName, printQueue);
 }
 
 bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap)

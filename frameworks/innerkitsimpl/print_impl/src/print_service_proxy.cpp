@@ -732,6 +732,29 @@ int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const
     return ret;
 }
 
+int32_t PrintServiceProxy::AddPrinter(const std::string &printerName, const std::string &uri,
+    const std::string &ppdName, const std::string &options)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printerName);
+    data.WriteString(uri);
+    data.WriteString(ppdName);
+    data.WriteString(options);
+    PRINT_HILOGD("PrintServiceProxy AddPrinter started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTER, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy AddPrinter succeeded.");
+    return ret;
+}
+
 int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
     PrinterCapability &printerCaps)
 {

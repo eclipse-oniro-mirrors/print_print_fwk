@@ -159,6 +159,14 @@ int32_t OnQueryPropertiesTest(const char *printerId, const Print_StringList *pro
     }
     return 0;
 }
+int32_t onQueryCapabilityByIpAndQueueTest(const char *printerIp, const char *protocol, const char *printQueue)
+{
+    if (g_mockDriver != nullptr) {
+        return g_mockDriver->onQueryCapabilityByIpAndQueue(printerIp, protocol, printQueue);
+    }
+    return 0;
+}
+
 using MockTestFunc =
     std::function<void(VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager)>;
 class VendorBsuniDriverTest : public testing::Test {
@@ -203,7 +211,8 @@ void VendorBsuniDriverTest::DoMockTest(MockTestFunc func)
         .onDisconnectPrinter = OnDisconnectPrinterTest,
         .onQueryCapability = OnQueryCapabilityTest,
         .onQueryCapabilityByIp = OnQueryCapabilityByIpTest,
-        .onQueryProperties = OnQueryPropertiesTest};
+        .onQueryProperties = OnQueryPropertiesTest,
+        .onQueryCapabilityByIpAndQueue = onQueryCapabilityByIpAndQueueTest};
     vendorDriver->vendorExtension = &vendorExtension;
     vendorDriver->vendorManager = &mockManager;
     EXPECT_CALL(mockDriver, OnCreate(_, _)).Times(1).WillOnce(Return(0));
@@ -229,7 +238,8 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0001, TestSize.Level1)
         .onDisconnectPrinter = OnDisconnectPrinterTest,
         .onQueryCapability = OnQueryCapabilityTest,
         .onQueryCapabilityByIp = OnQueryCapabilityByIpTest,
-        .onQueryProperties = OnQueryPropertiesTest};
+        .onQueryProperties = OnQueryPropertiesTest,
+        .onQueryCapabilityByIpAndQueue = onQueryCapabilityByIpAndQueueTest};
     EXPECT_TRUE(VendorBsuniDriver::CheckVendorExtension(&vendorExtension));
     vendorExtension.onQueryProperties = nullptr;
     EXPECT_FALSE(VendorBsuniDriver::CheckVendorExtension(&vendorExtension));
@@ -272,7 +282,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0003, TestSize.Level2)
     vendorDriver->OnStartDiscovery();
     vendorDriver->OnStopDiscovery();
     EXPECT_EQ(vendorDriver->OnQueryCapability("", 0), false);
-    EXPECT_EQ(vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"), false);
+    EXPECT_EQ(vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""), false);
     EXPECT_EQ(vendorDriver->OnQueryProperties(PRINTER_TEST_IP, propertyKeys), false);
     Print_VendorExtension vendorExtension = {0};
     vendorDriver->vendorExtension = &vendorExtension;
@@ -281,7 +291,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0003, TestSize.Level2)
     vendorDriver->OnStartDiscovery();
     vendorDriver->OnStopDiscovery();
     EXPECT_EQ(vendorDriver->OnQueryCapability("", 0), false);
-    EXPECT_EQ(vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"), false);
+    EXPECT_EQ(vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""), false);
     EXPECT_EQ(vendorDriver->OnQueryProperties(PRINTER_TEST_IP, propertyKeys), false);
 }
 
@@ -293,7 +303,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level2)
     vendorDriver->OnDestroy();
     vendorDriver->OnStartDiscovery();
     EXPECT_EQ(vendorDriver->OnQueryCapability(PRINTER_TEST_IP, 0), false);
-    vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp");
+    vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", "");
     std::vector<std::string> propertyKeys;
     vendorDriver->OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
 }
@@ -311,13 +321,14 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
         .onDisconnectPrinter = OnDisconnectPrinterTest,
         .onQueryCapability = OnQueryCapabilityTest,
         .onQueryCapabilityByIp = OnQueryCapabilityByIpTest,
-        .onQueryProperties = OnQueryPropertiesTest};
+        .onQueryProperties = OnQueryPropertiesTest,
+        .onQueryCapabilityByIpAndQueue = onQueryCapabilityByIpAndQueueTest};
     vendorDriver->vendorExtension = &vendorExtension;
     vendorDriver->OnCreate();
     vendorDriver->OnDestroy();
     vendorDriver->OnStartDiscovery();
     EXPECT_EQ(vendorDriver->OnQueryCapability(PRINTER_TEST_IP, 0), true);
-    vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp");
+    vendorDriver->OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", "");
     std::vector<std::string> propertyKeys;
     vendorDriver->OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
 }
@@ -350,10 +361,11 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0008, TestSize.Level2)
 {
     MockTestFunc testFunc =
         [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
-            EXPECT_CALL(mockDriver, OnQueryCapabilityByIp(_, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
+            EXPECT_CALL(mockDriver,
+                onQueryCapabilityByIpAndQueue(_, _, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
             std::string printerIp = PRINTER_TEST_IP;
-            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp");
-            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp");
+            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "");
+            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "");
         };
     DoMockTest(testFunc);
 }

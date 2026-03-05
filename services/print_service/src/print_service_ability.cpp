@@ -1091,6 +1091,46 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const std::string &uri,
+    const std::string &ppdName, const std::string &options)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
+    
+    std::string printerIp = host;
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid ip from uri");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    
+    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    
+    std::string protocol = scheme;
+    std::string printQueue = resource;
+
+    PRINT_HILOGI("[Printer: %{public}s] AddPrinter start, printerIp: %{public}s, protocol: %{public}s, \
+        ppdName: %{public}s, printQueue: %{public}s.",
+        printerName.c_str(), printerIp.c_str(), protocol.c_str(), ppdName.c_str(), printQueue.c_str());
+    if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, printQueue)) {
+        PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    
+    PRINT_HILOGI("AddPrinter end.");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::AddPrinterToCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
@@ -4952,7 +4992,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         return E_PRINT_INVALID_PRINTER;
     }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
-    if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName)) {
+    if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, "")) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
             return E_PRINT_SERVER_FAILURE;
     }

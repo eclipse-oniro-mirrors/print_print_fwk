@@ -1381,6 +1381,60 @@ napi_value NapiInnerPrint::QueryPrinterInfoByIp(napi_env env, napi_callback_info
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter AddPrinter---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc >= NapiPrintUtils::ARGC_THREE && argc <= NapiPrintUtils::ARGC_FOUR,
+            " should 3 or 4 parameter!", napi_invalid_arg);
+        napi_valuetype valueType;
+        
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerName is not a string", napi_string_expected);
+        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "uri is not a string", napi_string_expected);
+        std::string uri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "ppdName is not a string", napi_string_expected);
+        std::string ppdName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+        
+        std::string options = "";
+        if (argc == NapiPrintUtils::ARGC_FOUR) {
+            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &valueType), napi_invalid_arg);
+            PRINT_ASSERT_BASE(env, valueType == napi_string, "options is not a string", napi_string_expected);
+            options = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_THREE]);
+        }
+        
+        context->printerId = printerName;
+        context->fileUri = uri;
+        context->type = ppdName;
+        context->changedType = options;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(context->printerId,
+            context->fileUri, context->type, context->changedType);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to add printer");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ConnectPrinterByIpAndPpd---->");

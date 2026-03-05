@@ -3216,5 +3216,46 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_WithFailureResult, Test
     int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
+
+HWTEST_F(PrintManagerClientTest, AddPrinter_pass, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string testPrinterName = "test-printer";
+    std::string testUri = "ipp://192.168.1.1:631/ipp/print";
+    std::string testPpdName = DEFAULT_PPD_NAME;
+    std::string testOptions = "";
+    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, AddPrinter_reload, TestSize.Level1)
+{
+    std::string testPrinterName = "test-printer";
+    std::string testUri = "ipp://192.168.1.1:631/ipp/print";
+    std::string testPpdName = DEFAULT_PPD_NAME;
+    std::string testOptions = "";
+
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, AddPrinter(_, _, _, _)).Times(1);
+    ON_CALL(*service, AddPrinter)
+        .WillByDefault([&testPrinterName, &testUri, &testPpdName, &testOptions](
+            const std::string &printerName, const std::string &uri,
+            const std::string &ppdName, const std::string &options) {
+            EXPECT_EQ(testPrinterName, printerName);
+            EXPECT_EQ(testUri, uri);
+            EXPECT_EQ(testPpdName, ppdName);
+            EXPECT_EQ(testOptions, options);
+            return E_PRINT_NONE;
+        });
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
+}
 }  // namespace Print
 }  // namespace OHOS

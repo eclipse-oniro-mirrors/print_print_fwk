@@ -35,7 +35,7 @@ public:
     virtual bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) = 0;
     virtual void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
     virtual bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName) = 0;
+        const std::string &ppdName, const std::string &printQueue) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdName, const std::string &ppdData) = 0;
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on) = 0;

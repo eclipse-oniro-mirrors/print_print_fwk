@@ -81,9 +81,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0003_NeedRename, TestSize.Leve
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_EQ(vendorWlanGroup->OnQueryCapabilityByIp(printerId, "ipp"), false);
+    EXPECT_EQ(vendorWlanGroup->OnQueryCapabilityByIp(printerId, "ipp", ""), false);
     vendorWlanGroup->parentVendorManager = nullptr;
-    EXPECT_EQ(vendorWlanGroup->OnQueryCapabilityByIp(printerId, "ipp"), false);
+    EXPECT_EQ(vendorWlanGroup->OnQueryCapabilityByIp(printerId, "ipp", ""), false);
 }
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0004_NeedRename, TestSize.Level2)
@@ -497,10 +497,10 @@ HWTEST_F(VendorWlanGroupTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIpAndPpd("192.168.1.1", "ipp", DEFAULT_PPD_NAME));
-    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIpAndPpd("192.168.1.1", "ipp", "custom.ppd"));
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIpAndPpd("192.168.1.1", "ipp", DEFAULT_PPD_NAME, ""));
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIpAndPpd("192.168.1.1", "ipp", "custom.ppd", ""));
     vendorWlanGroup->parentVendorManager = nullptr;
-    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIpAndPpd("192.168.1.1", "ipp", DEFAULT_PPD_NAME));
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIpAndPpd("192.168.1.1", "ipp", DEFAULT_PPD_NAME, ""));
 }
 
 HWTEST_F(VendorWlanGroupTest, QueryPrinterSetTest, TestSize.Level1)

@@ -77,7 +77,7 @@ void TestWlanGroupConnectPrinterActions(const uint8_t *data, size_t size, Fuzzed
     vendorWlanGroup->IsGroupDriver(printerId);
     vendorWlanGroup->IsConnectingPrinter(printerId, printerUri);
     // OnQueryCapability has some problem on fuzzFwk when call successfully.
-    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL);
+    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL, "");
 }
 void TestWlanGroupOtherFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
@@ -135,7 +135,7 @@ void TestWlanGroupWithoutVendorManager(const uint8_t *data, size_t size, FuzzedD
     vendorWlanGroup->IsGroupDriver(printerId);
     vendorWlanGroup->IsConnectingPrinter(printerId, printerUri);
     vendorWlanGroup->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
-    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL);
+    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL, "");
 }
 
 void TestPpdDriverConnectPrinterActions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

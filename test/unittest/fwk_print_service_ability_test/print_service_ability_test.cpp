@@ -3869,5 +3869,33 @@ HWTEST_F(PrintServiceAbilityTest, StartDiscovery_NoClearConnect, TestSize.Level1
     service->StartDiscoverPrinter();
     EXPECT_FALSE(service->vendorManager.GetConnectingPrinter().empty());
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddPrinter_InvalidIp, TestSize.Level0)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    
+    std::string printerName = "test-printer";
+    std::string uri = "ipp://invalid-ip:631/ipp/print";
+    std::string ppdName = "test.ppd";
+    std::string options = "option1=value1";
+
+    EXPECT_EQ(service->AddPrinter(printerName, uri, ppdName, options), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddPrinter_ConnectPrinterByIpAndPpdFailed, TestSize.Level0)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    
+    std::string printerName = "test-printer";
+    std::string uri = "ipp://192.168.1.1:631/ipp/print";
+    std::string ppdName = "test.ppd";
+    std::string options = "option1=value1";
+
+    service->vendorManager.wlanGroupDriver = nullptr;
+
+    EXPECT_EQ(service->AddPrinter(printerName, uri, ppdName, options), E_PRINT_SERVER_FAILURE);
+}
 }  // namespace Print
 }  // namespace OHOS

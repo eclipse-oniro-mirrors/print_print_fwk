@@ -1715,5 +1715,29 @@ HWTEST_F(PrintServiceStubTest, OnAuthSmbDeviceTest, TestSize.Level0)
     ON_CALL(*stub, AuthSmbDevice).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
+
+HWTEST_F(PrintServiceStubTest, OnAddPrinterTest, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADDPRINTER);
+
+    std::string printerName = "test-printer";
+    std::string uri = "ipp://192.168.1.1:631/printers/ipp/queue";
+    std::string ppdName = DEFAULT_PPD_NAME;
+    std::string options = "";
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(printerName));
+    EXPECT_TRUE(data.WriteString(uri));
+    EXPECT_TRUE(data.WriteString(ppdName));
+    EXPECT_TRUE(data.WriteString(options));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddPrinter).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
 }  // namespace Print
 }  // namespace OHOS

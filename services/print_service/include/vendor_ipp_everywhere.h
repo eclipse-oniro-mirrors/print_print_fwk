@@ -33,7 +33,8 @@ public:
     void OnStopDiscovery() override;
     std::string GetVendorName() override;
     bool OnQueryCapability(const std::string &printerId, int timeout) override;
-    bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol) override;
+    bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+        const std::string &printQueue) override;
     bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys) override;
 
 private:
