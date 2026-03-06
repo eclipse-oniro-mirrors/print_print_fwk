@@ -236,12 +236,6 @@ enum PrintNumberUpLayout {
     NUMBER_UP_LAYOUT_BTRL = 7,  // Bottom to Top, Right to Left
 };
 
-// Number-Up constants
-constexpr uint32_t NUMBER_UP_MIN = 1;
-constexpr uint32_t NUMBER_UP_MAX = 16;
-constexpr uint32_t NUMBER_UP_DEFAULT = 1;
-constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT = 0;
-
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,
     PRINT_DOCUMENT_FORMAT_JPEG = 1,
