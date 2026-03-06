@@ -626,7 +626,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     if (nativePrintJob.mediaType != nullptr) {
         jsonOptions["mediaType"] = std::string(nativePrintJob.mediaType);
     }
-    jsonOptions["isBorderless"] = nativePrintJob.borderless;
+    jsonOptions["borderless"] = nativePrintJob.borderless;
     Print_Quality quality = nativePrintJob.printQuality;
     if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH) ||
         quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
