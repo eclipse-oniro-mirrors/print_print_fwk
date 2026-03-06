@@ -339,7 +339,7 @@ int32_t PrintServiceAbility::Init()
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::InitServiceHelper();
+int32_t PrintServiceAbility::InitServiceHelper()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (helper_ == nullptr) {
