@@ -638,7 +638,7 @@ HWTEST_F(PrintUtilsTest, SetOptionInPrintJob_Test, TestSize.Level2)
     EXPECT_TRUE(json.isMember("isDocument"));
     EXPECT_TRUE(json.isMember("printQuality"));
     EXPECT_TRUE(json.isMember("mediaType"));
-    EXPECT_TRUE(json.isMember("borderless"));
+    EXPECT_TRUE(json.isMember("isBorderless"));
     EXPECT_TRUE(json.isMember("isAutoRotate"));
     EXPECT_TRUE(json.isMember("isReverse"));
     EXPECT_TRUE(json.isMember("isCollate"));
@@ -649,7 +649,7 @@ HWTEST_F(PrintUtilsTest, SetOptionInPrintJob_Test, TestSize.Level2)
     EXPECT_EQ(json["isDocument"].asBool(), true);
     EXPECT_EQ(json["printQuality"].asInt(), 4);
     EXPECT_EQ(json["mediaType"].asString(), "stationery");
-    EXPECT_EQ(json["borderless"].asBool(), false);
+    EXPECT_EQ(json["isBorderless"].asBool(), false);
     EXPECT_EQ(json["isAutoRotate"].asBool(), false);
     EXPECT_EQ(json["isReverse"].asBool(), false);
     EXPECT_EQ(json["isCollate"].asBool(), false);

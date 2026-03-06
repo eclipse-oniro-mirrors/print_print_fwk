@@ -665,7 +665,7 @@ void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_p
         jsonOptions["mediaType"] = params.mediaType;
     }
     if (params.isBorderless != PARAM_NOT_SET) {
-        jsonOptions["borderless"] = static_cast<bool>(params.isBorderless);
+        jsonOptions["isBorderless"] = static_cast<bool>(params.isBorderless);
     }
     if (params.isAutoRotate != PARAM_NOT_SET) {
         jsonOptions["isAutoRotate"] = static_cast<bool>(params.isAutoRotate);
