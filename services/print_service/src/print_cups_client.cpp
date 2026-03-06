@@ -1181,6 +1181,19 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
     return num_options;
 }
 
+int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr || jobParams->numberUp <= 1) {
+        return num_options;
+    }
+    num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
+    std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
+    num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
+    PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
+        jobParams->numberUp, layoutStr.c_str());
+    return num_options;
+}
+
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGI("FillJobOptions start.");
@@ -1221,15 +1234,7 @@ int PrintCupsClient::FillBasicJobOptions(JobParameters *jobParams, int num_optio
         num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     }
     num_options = FillLandscapeOptions(jobParams, num_options, options);
-    if (jobParams->numberUp > 1) {
-        num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
-        std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
-        num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
-        PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
-            jobParams->numberUp, layoutStr.c_str());
-    } else {
-        PRINT_HILOGI("number-up disabled (value=%{public}d, need > 1 to enable)", jobParams->numberUp);
-    }
+    num_options = FillNumberUpOptions(jobParams, num_options, options);
     return num_options;
 }
 
