@@ -191,6 +191,7 @@ private:
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);

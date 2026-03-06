@@ -1087,6 +1087,26 @@ void PrintCupsClient::JobSentCallback()
     StartNextJob();
 }
 
+int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    PRINT_HILOGD("not borderless job options");
+    if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
+        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+    }
+    num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+    if (!jobParams->mediaSize.empty()) {
+        num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_MEDIA, CUPS_MEDIA_A4, num_options, options);
+    }
+    if (!jobParams->mediaType.empty()) {
+        num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
+    }
+    return num_options;
+}
+
 int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
@@ -1123,20 +1143,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGD("value: %s", value.str().c_str());
         num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
     } else {
-        if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
-            num_options = cupsAddOption("fit-to-page", "true", num_options, options);
-        }
-        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
-        if (!jobParams->mediaSize.empty()) {
-            num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
-        } else {
-            num_options = cupsAddOption(CUPS_MEDIA, CUPS_MEDIA_A4, num_options, options);
-        }
-        if (!jobParams->mediaType.empty()) {
-            num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
-        } else {
-            num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
-        }
+        num_options = FillMediaOptions(jobParams, num_options, options);
     }
     return num_options;
 }
