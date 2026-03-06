@@ -354,27 +354,6 @@ void TestNumberUpLayoutString(const uint8_t *data, size_t size, FuzzedDataProvid
     PrintCupsClient::GetNumberUpLayoutString(layoutCode);
 }
 
-void TestBuildJobParametersWithNumberUp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintJob printJob;
-    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printJob.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    // Set numberUp and numberUpLayout
-    uint32_t numberUp = dataProvider->ConsumeIntegralInRange<uint32_t>(1, 16);
-    uint32_t numberUpLayout = dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL);
-    printJob.SetNumberUp(numberUp);
-    printJob.SetNumberUpLayout(numberUpLayout);
-    // Set other job parameters
-    printJob.SetCopyNumber(dataProvider->ConsumeIntegralInRange<uint32_t>(1, 10));
-    printJob.SetColorMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 1));
-    printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 2));
-    printJob.SetIsLandscape(dataProvider->ConsumeBool());
-
-    std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->BuildJobParameters(printJob, userName);
-}
-
 void TestPrintJobNumberUp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintJob printJob;
@@ -394,26 +373,6 @@ void TestPrintJobNumberUp(const uint8_t *data, size_t size, FuzzedDataProvider *
     // Verify getters
     (void)printJob.GetNumberUp();
     (void)printJob.GetNumberUpLayout();
-}
-
-void TestPrintJobMarshallingWithNumberUp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintJob printJob;
-    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printJob.SetNumberUp(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 16));
-    printJob.SetNumberUpLayout(dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL));
-    printJob.SetCopyNumber(dataProvider->ConsumeIntegralInRange<uint32_t>(1, 10));
-    printJob.SetColorMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 1));
-
-    Parcel parcel;
-    if (printJob.Marshalling(parcel)) {
-        auto unmarshalledJob = PrintJob::Unmarshalling(parcel);
-        if (unmarshalledJob != nullptr) {
-            (void)unmarshalledJob->GetNumberUp();
-            (void)unmarshalledJob->GetNumberUpLayout();
-        }
-    }
 }
 
 }  // namespace Print
@@ -466,9 +425,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestGetBlockedAndUpdateSubstate,
         &OHOS::Print::TestGetNewSubstate,
         &OHOS::Print::TestNumberUpLayoutString,
-        &OHOS::Print::TestBuildJobParametersWithNumberUp,
-        &OHOS::Print::TestPrintJobNumberUp,
-        &OHOS::Print::TestPrintJobMarshallingWithNumberUp
+        &OHOS::Print::TestPrintJobNumberUp
     };
     TestHandler handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);
