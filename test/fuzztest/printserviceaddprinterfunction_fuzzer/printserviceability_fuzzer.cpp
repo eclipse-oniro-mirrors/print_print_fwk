@@ -116,12 +116,6 @@ void TestNotifyAdapterJobChanged(const uint8_t *data, size_t size, FuzzedDataPro
     PrintServiceAbility::GetInstance()->notifyAdapterJobChanged(jobId, state, subState);
 }
 
-void TestRegisterAdapterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->RegisterAdapterListener(jobId);
-}
-
 void TestisEprint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -144,7 +138,6 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestAddIpPrinterToSystemData,
         &TestAddIpPrinterToCupsWithPpd,
         &TestNotifyAdapterJobChanged,
-        &TestRegisterAdapterListener,
         &TestisEprint
     };
     TestHandler handler = dataProvider->PickValueInArray(tasks);

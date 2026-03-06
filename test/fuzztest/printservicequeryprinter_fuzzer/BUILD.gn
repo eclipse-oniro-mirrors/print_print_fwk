@@ -26,6 +26,7 @@ ohos_fuzztest("PrintServiceQueryPrinterFuzzTest") {
     "mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 

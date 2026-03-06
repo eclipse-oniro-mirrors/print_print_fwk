@@ -20,7 +20,9 @@
 #include <mutex>
 #include <vector>
 #include <string>
-#include "iprint_callback.h"
+#include "printer_event_callback.h"
+#include "extension_event_callback.h"
+#include "print_job_event_callback.h"
 #include "singleton.h"
 
 namespace OHOS {
@@ -29,22 +31,40 @@ class EventListenerMgr : public DelayedSingleton<EventListenerMgr> {
 public:
     EventListenerMgr();
     virtual ~EventListenerMgr();
-    bool RegisterEventListener(const std::string &eventType, const sptr<IPrintCallback> &listener);
-    bool UnRegisterEventListener(const std::string &eventType);
-    sptr<IPrintCallback> FindEventListener(const std::string &eventType);
-    std::vector<sptr<IPrintCallback>> FindEventListeners(std::function<bool(const std::string &)> comp);
-    std::vector<std::string> FindEventTypes(std::function<bool(const std::string &)> comp);
+    bool RegisterPrinterListener(const CallbackEventType &eventType, const sptr<IPrintCallback> &listener);
+    bool RegisterExtensionListener(const CallbackEventType &eventType, const std::string &extensionId,
+        const sptr<IPrintExtensionCallback> &listener);
+    bool RegisterPrintJobListener(
+        const CallbackEventType &eventType, const std::string &jobId, const sptr<IPrintCallback> &listener);
+    bool UnRegisterPrinterListener(const CallbackEventType &eventType);
+    bool UnRegisterPrintJobListener(const CallbackEventType &eventType, const std::string &jobId);
+    bool Execute(const CallbackInfo &callbackInfo);
     void OnRemoteListenerDied(const sptr<IRemoteObject> &listener);
+    bool IsPrinterListenerEmpty(const CallbackEventType &eventType);
+    bool IsExtensionListenerEmpty(const CallbackEventType &eventType, const std::string &extensionId, int32_t userId);
+    bool IsPrintJobListenerEmpty(const CallbackEventType &eventType, const std::string &jobId);
 
 private:
+    std::shared_ptr<BaseEventCallback> FindCallback(int32_t userId, pid_t pid, CallbackEventType eventType);
     void ClearAllListeners();
-    bool RemoveDeathRecipient(sptr<IPrintCallback> listener);
-    bool AddDeathRecipient(sptr<IPrintCallback> listener);
+    bool RemoveDiedListener(std::vector<std::shared_ptr<BaseEventCallback>> &callbacks, CallbackEventType eventType,
+        const sptr<IRemoteObject> &listener);
+    bool TryDeletePrintJobListenerFromCallback(const std::shared_ptr<BaseEventCallback> &callback,
+        CallbackEventType eventType, const std::string &jobId);
+    bool DeletePrintJobListener(CallbackEventType eventType, const std::string &jobId);
+    bool ExecuteForUser(
+        const std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap,
+        CallbackEventType type, const CallbackInfo &callbackInfo);
+    bool ExecuteForAllUsers(CallbackEventType type, const CallbackInfo &callbackInfo);
+    void ClearListenersForUser(
+        std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap);
 
     std::mutex mutex_;
-    std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
-    sptr<IRemoteObject::DeathRecipient> eventListenerDeathRecipient_;
+    std::unordered_map<int32_t, std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>>>
+        registeredListeners_;
+    sptr<IRemoteObject::DeathRecipient> eventListenerDeathRecipient_ = nullptr;
+    uint32_t counter_ = 0;
 };
-} // namespace Print
-} // namespace OHOS
-#endif
+}  // namespace Print
+}  // namespace OHOS
+#endif  // EVENT_LISTENER_MGR_H

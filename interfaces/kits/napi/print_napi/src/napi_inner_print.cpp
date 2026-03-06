@@ -907,7 +907,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
             PRINT_HILOGE("create startGetPrintFile callback object fail");
             return nullptr;
         }
-        int32_t retCallback = PrintManagerClient::GetInstance()->On("", PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
+        int32_t retCallback = PrintManagerClient::GetInstance()->On(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
         if (retCallback != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to register startGetPrintFile callback");
             NapiThrowError(env, retCallback);
