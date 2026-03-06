@@ -342,6 +342,7 @@ int32_t PrintServiceAbility::Init()
 #ifdef VIRTUAL_PRINTER_ENABLE
     RefreshVirtualPrinter();
 #endif
+    RefreshIpPrinter();
     StartDiscoverPrinter();
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
     return E_PRINT_NONE;
@@ -720,11 +721,6 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
-    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
-    for (auto &printerId : printerIdList) {
-        vendorManager.MonitorPrinterStatus(printerId, true);
-    }
-    vendorManager.StartStatusMonitor();
     vendorManager.StartDiscovery();
     return StartExtensionDiscovery(extensionIds);
 }
@@ -2393,7 +2389,6 @@ void PrintServiceAbility::StopDiscoveryInternal()
 {
     PRINT_HILOGI("StopDiscoveryInternal start.");
     vendorManager.StopDiscovery();
-    vendorManager.StopStatusMonitor();
     printSystemData_.ClearDiscoveredPrinterList();
     for (auto extension : extensionStateList_) {
         if (extension.second < PRINT_EXTENSION_LOADING) {
@@ -3438,7 +3433,6 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
 #endif  // CUPS_ENABLE
     std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
-    vendorManager.MonitorPrinterStatus(printerId, false);
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
     printSystemData_.DeleteAddedPrinter(printerId, printerName);
@@ -4061,7 +4055,6 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
 }
 
 bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalVendorName, const std::string &printerId)
@@ -4083,7 +4076,6 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
         return false;
     }
 #endif  // CUPS_ENABLE
-    vendorManager.MonitorPrinterStatus(globalPrinterId, false);
     DeletePrinterFromUserData(globalPrinterId);
     NotifyAppDeletePrinter(globalPrinterId);
     printSystemData_.DeleteAddedPrinter(globalPrinterId, printer.GetPrinterName());
@@ -4136,7 +4128,6 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
 }
@@ -4787,6 +4778,7 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
 #ifdef VIRTUAL_PRINTER_ENABLE
     RefreshVirtualPrinter();
 #endif
+    RefreshIpPrinter();
     return true;
 }
 #endif  // ENTERPRISE_ENABLE
@@ -5476,4 +5468,16 @@ void PrintServiceAbility::StopCupsService()
 #endif  // CUPS_ENABLE
 }
 
+void PrintServiceAbility::RefreshIpPrinter()
+{
+    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (auto& printerId : printerIdList) {
+        PrinterInfo printerInfo;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+            DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerInfo.GetPrinterName().c_str())) {
+            PRINT_HILOGI("IP printer added, Set status to IDLE.");
+            UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
+        }
+    }
+}
 }  // namespace OHOS::Print

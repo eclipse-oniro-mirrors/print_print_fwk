@@ -3897,5 +3897,32 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddPrinter_ConnectPrin
 
     EXPECT_EQ(service->AddPrinter(printerName, uri, ppdName, options), E_PRINT_SERVER_FAILURE);
 }
+
+HWTEST_F(PrintServiceAbilityTest, RefreshIpPrinterToIdle, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string ip = "1.1.1.1";
+    std::string id = "printer";
+    PrinterInfo info, ipInfo;
+ 
+    info.SetPrinterId(id);
+    info.SetPrinterName(id);
+    info.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+ 
+    ipInfo.SetPrinterId(ip);
+    ipInfo.SetPrinterName(ip);
+    ipInfo.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+ 
+    service->printSystemData_.InsertAddedPrinter(id, info);
+    service->printSystemData_.InsertAddedPrinter(ip, ipInfo);
+ 
+    service->RefreshIpPrinter();
+ 
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, info);
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(ip, ipInfo);
+ 
+    EXPECT_EQ(info.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    EXPECT_EQ(ipInfo.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+}
 }  // namespace Print
 }  // namespace OHOS

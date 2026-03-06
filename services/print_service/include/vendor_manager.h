@@ -81,9 +81,6 @@ public:
     bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
-    bool MonitorPrinterStatus(const std::string &globalPrinterId, bool on);
-    void StartStatusMonitor();
-    void StopStatusMonitor();
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIP, const std::string &uri) override;
     ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
@@ -119,9 +116,6 @@ public:
 #endif  // ENTERPRISE_ENABLE
 
 private:
-    void StatusMonitorProcess();
-    void UpdateAllPrinterStatus();
-    bool WaitNext();
     bool IsPrivatePpdDriver(const std::string &vendorName);
     bool IsWlanGroupDriver(const std::string &bothPrinterId);
 
@@ -131,11 +125,7 @@ private:
     std::map<std::string, std::shared_ptr<VendorDriverBase>> vendorMap;
     std::mutex vendorMapMutex;
     std::shared_ptr<VendorDriverGroup> wlanGroupDriver = nullptr;
-    std::thread statusMonitorThread;
-    bool statusMonitorOn = false;
-    std::mutex statusMonitorMutex;
     std::mutex apiMutex;
-    std::condition_variable statusMonitorCondition;
     ConnectState connectingState = ConnectState::STATE_NONE;
     bool isConnecting = false;
     ConnectMethod connectingMethod = ID_AUTO;

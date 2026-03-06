@@ -36,7 +36,6 @@ public:
     void OnStartDiscovery() override;
     void OnStopDiscovery() override;
     bool OnQueryCapability(const std::string &printerId, int timeout) override;
-    void UpdateAllPrinterStatus() override;
 
 private:
     std::string QueryPpdName(const std::string &makeAndModel);
