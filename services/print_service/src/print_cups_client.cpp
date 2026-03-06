@@ -1192,7 +1192,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillCollateOptions(jobParams, num_options, options);
     num_options = FillNetworkOptions(jobParams, num_options, options);
-    num_options = FillNumberUpOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
     PRINT_HILOGI("FillJobOptions end.");
     return num_options;
@@ -1222,12 +1221,6 @@ int PrintCupsClient::FillBasicJobOptions(JobParameters *jobParams, int num_optio
         num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     }
     num_options = FillLandscapeOptions(jobParams, num_options, options);
-    return num_options;
-}
-
-int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    // N-Up (multiple pages per sheet)
     if (jobParams->numberUp > 1) {
         num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
         std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);

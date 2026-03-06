@@ -198,7 +198,6 @@ private:
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillBasicJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillCollateOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillNetworkOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
