@@ -20,8 +20,8 @@
 namespace OHOS::Print {
 PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED), subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
-      isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0), hasMargin_(false), hasPreview_(false),
-      hasOption_(false), option_("")
+      isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0), numberUp_(1), numberUpLayout_(0),
+      hasMargin_(false), hasPreview_(false), hasOption_(false), option_("")
 {
     margin_.Reset();
     preview_.Reset();
@@ -43,6 +43,8 @@ PrintJob::PrintJob(const PrintJob &right)
     isLandscape_ = right.isLandscape_;
     colorMode_ = right.colorMode_;
     duplexMode_ = right.duplexMode_;
+    numberUp_ = right.numberUp_;
+    numberUpLayout_ = right.numberUpLayout_;
     hasMargin_ = right.hasMargin_;
     margin_ = right.margin_;
     hasPreview_ = right.hasPreview_;
@@ -68,6 +70,8 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         isLandscape_ = right.isLandscape_;
         colorMode_ = right.colorMode_;
         duplexMode_ = right.duplexMode_;
+        numberUp_ = right.numberUp_;
+        numberUpLayout_ = right.numberUpLayout_;
         hasMargin_ = right.hasMargin_;
         margin_ = right.margin_;
         hasPreview_ = right.hasPreview_;
@@ -144,6 +148,16 @@ void PrintJob::SetDuplexMode(uint32_t duplexmode)
     duplexMode_ = duplexmode;
 }
 
+void PrintJob::SetNumberUp(uint32_t numberUp)
+{
+    numberUp_ = numberUp;
+}
+
+void PrintJob::SetNumberUpLayout(uint32_t numberUpLayout)
+{
+    numberUpLayout_ = numberUpLayout;
+}
+
 void PrintJob::SetMargin(const PrintMargin &margin)
 {
     hasMargin_ = true;
@@ -176,6 +190,8 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     isLandscape_ = jobInfo.isLandscape_;
     colorMode_ = jobInfo.colorMode_;
     duplexMode_ = jobInfo.duplexMode_;
+    numberUp_ = jobInfo.numberUp_;
+    numberUpLayout_ = jobInfo.numberUpLayout_;
     hasMargin_ = jobInfo.hasMargin_;
     margin_ = jobInfo.margin_;
     hasPreview_ = jobInfo.hasPreview_;
@@ -258,6 +274,16 @@ uint32_t PrintJob::GetDuplexMode() const
     return duplexMode_;
 }
 
+uint32_t PrintJob::GetNumberUp() const
+{
+    return numberUp_;
+}
+
+uint32_t PrintJob::GetNumberUpLayout() const
+{
+    return numberUpLayout_;
+}
+
 bool PrintJob::HasMargin() const
 {
     return hasMargin_;
@@ -326,6 +352,8 @@ void PrintJob::ReadFromParcel(Parcel &parcel)
     SetIsLandscape(parcel.ReadBool());
     SetColorMode(parcel.ReadUint32());
     SetDuplexMode(parcel.ReadUint32());
+    SetNumberUp(parcel.ReadUint32());
+    SetNumberUpLayout(parcel.ReadUint32());
     hasMargin_ = parcel.ReadBool();
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
@@ -372,6 +400,8 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
     parcel.WriteBool(GetIsLandscape());
     parcel.WriteUint32(GetColorMode());
     parcel.WriteUint32(GetDuplexMode());
+    parcel.WriteUint32(GetNumberUp());
+    parcel.WriteUint32(GetNumberUpLayout());
 
     parcel.WriteBool(hasMargin_);
     if (hasMargin_) {
@@ -418,6 +448,8 @@ void PrintJob::Dump()
     PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
     PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
     PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
+    PRINT_HILOGD("numberUp_ = %{public}d", numberUp_);
+    PRINT_HILOGD("numberUpLayout_ = %{public}d", numberUpLayout_);
 
     pageRange_.Dump();
     pageSize_.Dump();
@@ -463,6 +495,8 @@ Json::Value PrintJob::ConvertToJsonObject() const
     jsonObject["isLandscape"] = isLandscape_;
     jsonObject["colorMode"] = colorMode_;
     jsonObject["duplexMode"] = duplexMode_;
+    jsonObject["numberUp"] = numberUp_;
+    jsonObject["numberUpLayout"] = numberUpLayout_;
     jsonObject["hasMargin"] = hasMargin_;
     if (hasMargin_) {
         jsonObject["margin"] = margin_.ConvertToJsonObject();

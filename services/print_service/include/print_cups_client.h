@@ -47,6 +47,8 @@ struct JobParameters {
     std::string mediaType;
     std::string color;
     std::string serviceJobId;
+    uint32_t numberUp;
+    uint32_t numberUpLayout;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
@@ -223,6 +225,7 @@ private:
     void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
     std::string GetColorString(uint32_t colorCode);
+    static std::string GetNumberUpLayoutString(uint32_t layoutCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);

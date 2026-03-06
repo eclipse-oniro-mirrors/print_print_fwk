@@ -68,6 +68,8 @@ struct PrintJobParams {
     PrintPreviewAttribute preview;
     int32_t isSequential = PARAM_NOT_SET;
     std::string cupsOptions;
+    uint32_t numberUp = 1;
+    uint32_t numberUpLayout = 0;
 };
 
 class PrintUtils {

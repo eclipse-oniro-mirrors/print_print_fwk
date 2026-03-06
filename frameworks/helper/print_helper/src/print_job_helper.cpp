@@ -47,6 +47,8 @@ static constexpr const char *PARAM_JOB_DOCFLAVOR = "docFlavor";
 static constexpr const char *PARAM_JOB_ISAUTORATATE = "isAutoRotate";
 static constexpr const char *PARAM_JOB_ISREVERSE = "isReverse";
 static constexpr const char *PARAM_JOB_ISCOLLATE = "isCollate";
+static constexpr const char *PARAM_JOB_NUMBERUP = "numberUp";
+static constexpr const char *PARAM_JOB_NUMBERUPLAYOUT = "numberUpLayout";
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
 {
@@ -150,6 +152,14 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
     nativeObj->SetIsLandscape(isLandscape);
     nativeObj->SetColorMode(colorMode);
     nativeObj->SetDuplexMode(duplexMode);
+
+    // Read numberUp and numberUpLayout from JS
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP)) {
+        nativeObj->SetNumberUp(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP));
+    }
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT)) {
+        nativeObj->SetNumberUpLayout(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT));
+    }
 
     BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj, cvtToPwgSize);
     nativeObj->Dump();
@@ -296,6 +306,8 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_MARGIN, PRINT_PARAM_OPT},
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
+        {PARAM_JOB_NUMBERUP, PRINT_PARAM_OPT},
+        {PARAM_JOB_NUMBERUPLAYOUT, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
@@ -328,6 +340,8 @@ bool PrintJobHelper::ValidatePrintJobProperty(napi_env env, napi_value object)
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_ISSEQUENTIAL, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
+        {PARAM_JOB_NUMBERUP, PRINT_PARAM_OPT},
+        {PARAM_JOB_NUMBERUPLAYOUT, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
@@ -404,6 +418,14 @@ bool PrintJobHelper::FillOptionalParamsFromJs(napi_env env, napi_value jsValue, 
             NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISSEQUENTIAL));
     }
     params.cupsOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION);
+    
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP)) {
+        params.numberUp = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP);
+    }
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT)) {
+        params.numberUpLayout = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
+    }
+    
     return true;
 }
 

@@ -656,5 +656,81 @@ HWTEST_F(PrintUtilsTest, SetOptionInPrintJob_Test, TestSize.Level2)
     EXPECT_EQ(json["cupsOptions"].asString(), "test_cupsOptions");
 }
 
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUp_001
+ * @tc.desc: Verify the ConvertParamsToPrintJob function with numberUp.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUp_001, TestSize.Level2)
+{
+    PrintJobParams params;
+    params.printerId = "printer-001";
+    params.docFlavor = 0;
+    params.printFdList.emplace_back(1);
+
+    // Set numberUp and numberUpLayout
+    params.numberUp = 4;
+    params.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+
+    auto result = PrintUtils::ConvertParamsToPrintJob(params);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->GetNumberUp(), 4);
+    EXPECT_EQ(result->GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBLR);
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUp_002
+ * @tc.desc: Verify the ConvertParamsToPrintJob function with all valid numberUp values.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUp_002, TestSize.Level2)
+{
+    PrintJobParams params;
+    params.printerId = "printer-001";
+    params.docFlavor = 0;
+    params.printFdList.emplace_back(1);
+
+    // Test all valid numberUp values
+    uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
+    for (auto numberUp : validNumberUps) {
+        params.numberUp = numberUp;
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->GetNumberUp(), numberUp);
+    }
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpLayout_001
+ * @tc.desc: Verify the ConvertParamsToPrintJob function with all numberUpLayout values.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpLayout_001, TestSize.Level2)
+{
+    PrintJobParams params;
+    params.printerId = "printer-001";
+    params.docFlavor = 0;
+    params.printFdList.emplace_back(1);
+    params.numberUp = 4;
+
+    // Test all layout values
+    uint32_t layouts[] = {
+        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_LRBT,
+        NUMBER_UP_LAYOUT_RLTB, NUMBER_UP_LAYOUT_RLBT,
+        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
+        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
+    };
+
+    for (auto layout : layouts) {
+        params.numberUpLayout = layout;
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr);
+        EXPECT_EQ(result->GetNumberUpLayout(), layout);
+    }
+}
+
 }  // namespace Print
 }  // namespace OHOS

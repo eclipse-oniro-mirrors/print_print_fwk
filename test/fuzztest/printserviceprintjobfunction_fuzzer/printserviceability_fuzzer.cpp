@@ -125,6 +125,9 @@ void TestStartPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     testJob.SetOption(JOB_OPTIONS);
+    // Set numberUp and numberUpLayout
+    testJob.SetNumberUp(dataProvider->ConsumeIntegralInRange<uint32_t>(1, 16));
+    testJob.SetNumberUpLayout(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 7));
     PrintServiceAbility::GetInstance()->StartPrintJob(testJob);
     PrintServiceAbility::GetInstance()->GetCallerUserName();
 }

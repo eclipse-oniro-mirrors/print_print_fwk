@@ -1124,7 +1124,10 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
     } else {
         PRINT_HILOGD("not borderless job options");
-        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+        // fit-to-page conflicts with number-up option, skip when number-up is enabled
+        if (jobParams->numberUp <= 1) {
+            num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+        }
         if (!jobParams->mediaSize.empty()) {
             num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
         } else {
@@ -1184,6 +1187,17 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     }
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
+
+    // N-Up (multiple pages per sheet)
+    if (jobParams->numberUp > 1) {
+        num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
+        std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
+        num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
+        PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
+            jobParams->numberUp, layoutStr.c_str());
+    } else {
+        PRINT_HILOGI("number-up disabled (value=%{public}d, need > 1 to enable)", jobParams->numberUp);
+    }
 
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
@@ -2470,6 +2484,9 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->printerUri = optionJson["printerUri"].asString();
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
+    params->numberUp = jobInfo.GetNumberUp();
+    params->numberUpLayout = jobInfo.GetNumberUpLayout();
+
     UpdateJobParameterByOption(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
@@ -2496,6 +2513,8 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->mediaType: %{public}s", jobParams->mediaType.c_str());
     PRINT_HILOGI("jobParams->color: %{public}s", jobParams->color.c_str());
     PRINT_HILOGI("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
+    PRINT_HILOGI("jobParams->numberUp: %{public}d", jobParams->numberUp);
+    PRINT_HILOGI("jobParams->numberUpLayout: %{public}d", jobParams->numberUpLayout);
     PRINT_HILOGI("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
     PRINT_HILOGI("jobParams->isReverse: %{public}d", jobParams->isReverse);
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);
@@ -2535,6 +2554,31 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
             return CUPS_PRINT_COLOR_MODE_COLOR;
         default:
             return CUPS_PRINT_COLOR_MODE_AUTO;
+    }
+}
+
+std::string PrintCupsClient::GetNumberUpLayoutString(uint32_t layoutCode)
+{
+    PrintNumberUpLayout layout = static_cast<PrintNumberUpLayout>(layoutCode);
+    switch (layout) {
+        case NUMBER_UP_LAYOUT_LRTB:
+            return "lrtb";
+        case NUMBER_UP_LAYOUT_RLTB:
+            return "rltb";
+        case NUMBER_UP_LAYOUT_TBLR:
+            return "tblr";
+        case NUMBER_UP_LAYOUT_TBRL:
+            return "tbrl";
+        case NUMBER_UP_LAYOUT_LRBT:
+            return "lrbt";
+        case NUMBER_UP_LAYOUT_RLBT:
+            return "rlbt";
+        case NUMBER_UP_LAYOUT_BTLR:
+            return "btlr";
+        case NUMBER_UP_LAYOUT_BTRL:
+            return "btrl";
+        default:
+            return "lrtb";
     }
 }
 
