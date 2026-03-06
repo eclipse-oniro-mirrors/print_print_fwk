@@ -2567,29 +2567,29 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
 }
 
 std::string PrintCupsClient::GetNumberUpLayoutString(uint32_t layoutCode)
- {
-     PrintNumberUpLayout layout = static_cast<PrintNumberUpLayout>(layoutCode);
-     switch (layout) {
-         case NUMBER_UP_LAYOUT_LRTB:
-             return "lrtb";
-         case NUMBER_UP_LAYOUT_RLTB:
-             return "rltb";
-         case NUMBER_UP_LAYOUT_TBLR:
-             return "tblr";
-         case NUMBER_UP_LAYOUT_TBRL:
-             return "tbrl";
-         case NUMBER_UP_LAYOUT_LRBT:
-             return "lrbt";
-         case NUMBER_UP_LAYOUT_RLBT:
-             return "rlbt";
-         case NUMBER_UP_LAYOUT_BTLR:
-             return "btlr";
-         case NUMBER_UP_LAYOUT_BTRL:
-             return "btrl";
-         default:
-             return "lrtb";
-     }
- }
+{
+    PrintNumberUpLayout layout = static_cast<PrintNumberUpLayout>(layoutCode);
+    switch (layout) {
+        case NUMBER_UP_LAYOUT_LRTB:
+            return "lrtb";
+        case NUMBER_UP_LAYOUT_RLTB:
+            return "rltb";
+        case NUMBER_UP_LAYOUT_TBLR:
+            return "tblr";
+        case NUMBER_UP_LAYOUT_TBRL:
+            return "tbrl";
+        case NUMBER_UP_LAYOUT_LRBT:
+            return "lrbt";
+        case NUMBER_UP_LAYOUT_RLBT:
+            return "rlbt";
+        case NUMBER_UP_LAYOUT_BTLR:
+            return "btlr";
+        case NUMBER_UP_LAYOUT_BTRL:
+            return "btrl";
+        default:
+            return "lrtb";
+    }
+}
 
 bool PrintCupsClient::IsCupsServerAlive()
 {
