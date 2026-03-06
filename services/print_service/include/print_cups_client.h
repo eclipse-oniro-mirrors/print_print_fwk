@@ -47,8 +47,8 @@ struct JobParameters {
     std::string mediaType;
     std::string color;
     std::string serviceJobId;
-    uint32_t numberUp;
-    uint32_t numberUpLayout;
+    uint32_t numberUp = 1;
+    uint32_t numberUpLayout = 0;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;

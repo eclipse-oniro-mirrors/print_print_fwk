@@ -636,6 +636,18 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
 
+    // Number-Up options (valid range: numberUp 1-16, numberUpLayout 0-7)
+    uint32_t numberUp = nativePrintJob.numberUp;
+    uint32_t numberUpLayout = nativePrintJob.numberUpLayout;
+    if (numberUp >= NUMBER_UP_MIN && numberUp <= NUMBER_UP_MAX && numberUp > NUMBER_UP_MIN) {
+        jsonOptions["numberUp"] = numberUp;
+        if (numberUpLayout <= NUMBER_UP_LAYOUT_BTRL) {
+            jsonOptions["numberUpLayout"] = numberUpLayout;
+        } else {
+            jsonOptions["numberUpLayout"] = NUMBER_UP_LAYOUT_DEFAULT;
+        }
+    }
+
     Json::Value jsonAdvanceOptions;
     if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
         jsonAdvanceOptions)) {
@@ -715,6 +727,20 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
 
     printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintJob.duplexMode));
     printJob.SetColorMode(static_cast<uint32_t>(nativePrintJob.colorMode));
+
+    // Validate numberUp: valid range is 1-16, use default 1 if invalid
+    uint32_t numberUp = nativePrintJob.numberUp;
+    if (numberUp < NUMBER_UP_MIN || numberUp > NUMBER_UP_MAX) {
+        numberUp = NUMBER_UP_DEFAULT;
+    }
+    printJob.SetNumberUp(numberUp);
+
+    // Validate numberUpLayout: valid range is 0-7, use default 0 if invalid
+    uint32_t numberUpLayout = nativePrintJob.numberUpLayout;
+    if (numberUpLayout > NUMBER_UP_LAYOUT_BTRL) {
+        numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT;
+    }
+    printJob.SetNumberUpLayout(numberUpLayout);
 
     SetPrintOrientationInPrintJob(nativePrintJob, printJob);
     SetPrintMarginInPrintJob(nativePrintJob, printJob);
