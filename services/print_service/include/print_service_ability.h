@@ -280,6 +280,7 @@ private:
     void DecrementPrintCounterByPcSettings();
     bool CheckStartExtensionPermission();
     void RefreshIpPrinter();
+    int32_t InitServiceHelper;
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

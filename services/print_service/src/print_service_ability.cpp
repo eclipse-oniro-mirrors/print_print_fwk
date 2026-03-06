@@ -297,17 +297,8 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
 
 int32_t PrintServiceAbility::Init()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        if (helper_ == nullptr) {
-            helper_ = std::make_shared<PrintServiceHelper>();
-        }
-        if (helper_ == nullptr) {
-            PRINT_HILOGE("PrintServiceHelper create failed.");
-            return E_PRINT_SERVER_FAILURE;
-        }
-        DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
-        helper_->PrintSubscribeCommonEvent();
+    if (InitServiceHelper() != E_PRINT_NONE) {
+        return E_PRINT_SERVER_FAILURE;
     }
 #ifdef ENTERPRISE_ENABLE
     UpdateIsEnterprise();
@@ -345,6 +336,21 @@ int32_t PrintServiceAbility::Init()
     RefreshIpPrinter();
     StartDiscoverPrinter();
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::InitServiceHelper();
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (helper_ == nullptr) {
+        helper_ = std::make_shared<PrintServiceHelper>();
+    }
+    if (helper_ == nullptr) {
+        PRINT_HILOGE("PrintServiceHelper create failed.");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
+    helper_->PrintSubscribeCommonEvent();
     return E_PRINT_NONE;
 }
 
