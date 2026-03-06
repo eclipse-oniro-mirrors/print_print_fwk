@@ -1094,74 +1094,50 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         return num_options;
     }
     if (jobParams->borderless) {
-        num_options = FillBorderlessMediaOptions(jobParams, num_options, options);
-    } else {
-        num_options = FillNonBorderlessMediaOptions(jobParams, num_options, options);
-    }
-    return num_options;
-}
-
-int PrintCupsClient::FillBorderlessMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    PRINT_HILOGD("borderless job options");
-    num_options = cupsAddOption("print-scaling", "fill", num_options, options);
-    std::vector<MediaSize> mediaSizes;
-    mediaSizes.push_back({CUPS_MEDIA_A4, ISO_A4_WIDTH, ISO_A4_HEIGHT});
-    mediaSizes.push_back({CUPS_MEDIA_4X6, PHOTO_4R_WIDTH, PHOTO_4R_HEIGHT});
-    mediaSizes.push_back({CUPS_MEDIA_5X7, PHOTO_5R_WIDTH, PHOTO_5R_HEIGHT});
-
-    float meidaWidth = 0;
-    float mediaHeight = 0;
-    int sizeIndex = FindMediaSizeIndex(mediaSizes, jobParams->mediaSize);
-    if (sizeIndex >= 0) {
-        meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[sizeIndex].WidthInInches));
-        mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[sizeIndex].HeightInInches));
-    } else {
-        meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[0].WidthInInches));
-        mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[0].HeightInInches));
-    }
-
-    std::string mediaColValue = BuildMediaColValue(meidaWidth, mediaHeight, jobParams->mediaType);
-    PRINT_HILOGD("value: %s", mediaColValue.c_str());
-    num_options = cupsAddOption("media-col", mediaColValue.c_str(), num_options, options);
-    return num_options;
-}
-
-int PrintCupsClient::FindMediaSizeIndex(const std::vector<MediaSize> &mediaSizes, const std::string &mediaSize)
-{
-    for (int i = 0; i < static_cast<int>(mediaSizes.size()); i++) {
-        if (mediaSizes[i].name == mediaSize) {
-            return i;
+        PRINT_HILOGD("borderless job options");
+        num_options = cupsAddOption("print-scaling", "fill", num_options, options);
+        std::vector<MediaSize> mediaSizes;
+        mediaSizes.push_back({CUPS_MEDIA_A4, ISO_A4_WIDTH, ISO_A4_HEIGHT});
+        mediaSizes.push_back({CUPS_MEDIA_4X6, PHOTO_4R_WIDTH, PHOTO_4R_HEIGHT});
+        mediaSizes.push_back({CUPS_MEDIA_5X7, PHOTO_5R_WIDTH, PHOTO_5R_HEIGHT});
+        int sizeIndex = -1;
+        float meidaWidth = 0;
+        float mediaHeight = 0;
+        for (int i = 0; i < static_cast<int>(mediaSizes.size()); i++) {
+            if (mediaSizes[i].name == jobParams->mediaSize) {
+                sizeIndex = i;
+                break;
+            }
         }
-    }
-    return -1;
-}
-
-std::string PrintCupsClient::BuildMediaColValue(float width, float height, const std::string &mediaType)
-{
-    std::stringstream value;
-    value << "{media-size={x-dimension=" << width << " y-dimension=" << height;
-    value << "} media-bottom-margin=" << 0 << " media-left-margin=" << 0 << " media-right-margin=" << 0;
-    value << " media-top-margin=" << 0 << " media-type=\"" << mediaType << "\"}";
-    return value.str();
-}
-
-int PrintCupsClient::FillNonBorderlessMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    PRINT_HILOGD("not borderless job options");
-    // fit-to-page conflicts with number-up option, skip when number-up is enabled
-    if (jobParams->numberUp <= 1) {
+        if (sizeIndex >= 0) {
+            meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[sizeIndex].WidthInInches));
+            mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[sizeIndex].HeightInInches));
+        } else {
+            meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[0].WidthInInches));
+            mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[0].HeightInInches));
+        }
+        std::stringstream value;
+        value << "{media-size={x-dimension=" << meidaWidth << " y-dimension=" << mediaHeight;
+        value << "} media-bottom-margin=" << 0 << " media-left-margin=" << 0 << " media-right-margin=" << 0;
+        value << " media-top-margin=" << 0 << " media-type=\"" << jobParams->mediaType << "\"}";
+        PRINT_HILOGD("value: %s", value.str().c_str());
+        num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
+    } else {
+        PRINT_HILOGD("not borderless job options");
+        if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
+            num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+        }
         num_options = cupsAddOption("fit-to-page", "true", num_options, options);
-    }
-    if (!jobParams->mediaSize.empty()) {
-        num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_MEDIA, CUPS_MEDIA_A4, num_options, options);
-    }
-    if (!jobParams->mediaType.empty()) {
-        num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
+        if (!jobParams->mediaSize.empty()) {
+            num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
+        } else {
+            num_options = cupsAddOption(CUPS_MEDIA, CUPS_MEDIA_A4, num_options, options);
+        }
+        if (!jobParams->mediaType.empty()) {
+            num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
+        } else {
+            num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
+        }
     }
     return num_options;
 }
@@ -1183,14 +1159,21 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
 
 int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
-    if (jobParams == nullptr || jobParams->numberUp <= 1) {
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillNumberUpOptions Params is nullptr");
         return num_options;
     }
-    num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
-    std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
-    num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
-    PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
-        jobParams->numberUp, layoutStr.c_str());
+    // N-Up (multiple pages per sheet)
+    if (jobParams->numberUp > NUMBER_UP_MIN_VALUE) {
+        num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
+        std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
+        num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
+        PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
+            jobParams->numberUp, layoutStr.c_str());
+    } else {
+        PRINT_HILOGI("number-up disabled (value=%{public}d, need > %{public}d to enable)",
+            jobParams->numberUp, NUMBER_UP_MIN_VALUE);
+    }
     return num_options;
 }
 
@@ -1201,17 +1184,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
         PRINT_HILOGE("FillJobOptions Params is nullptr");
         return num_options;
     }
-    num_options = FillBasicJobOptions(jobParams, num_options, options);
-    num_options = FillBorderlessOptions(jobParams, num_options, options);
-    num_options = FillCollateOptions(jobParams, num_options, options);
-    num_options = FillNetworkOptions(jobParams, num_options, options);
-    num_options = FillAdvancedOptions(jobParams, num_options, options);
-    PRINT_HILOGI("FillJobOptions end.");
-    return num_options;
-}
-
-int PrintCupsClient::FillBasicJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
     if (jobParams->numCopies >= 1) {
         num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
     } else {
@@ -1233,13 +1205,10 @@ int PrintCupsClient::FillBasicJobOptions(JobParameters *jobParams, int num_optio
     } else {
         num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     }
+
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     num_options = FillNumberUpOptions(jobParams, num_options, options);
-    return num_options;
-}
 
-int PrintCupsClient::FillCollateOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
     } else {
@@ -1250,15 +1219,13 @@ int PrintCupsClient::FillCollateOptions(JobParameters *jobParams, int num_option
     } else {
         num_options = cupsAddOption("OutputOrder", "Normal", num_options, options);
     }
-    return num_options;
-}
-
-int PrintCupsClient::FillNetworkOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
     std::string nic;
     if (IsIpConflict(jobParams->printerId, nic)) {
         num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
     }
+    num_options = FillBorderlessOptions(jobParams, num_options, options);
+    num_options = FillAdvancedOptions(jobParams, num_options, options);
+    PRINT_HILOGI("FillJobOptions end.");
     return num_options;
 }
 
@@ -2529,7 +2496,6 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->isLandscape = jobInfo.GetIsLandscape();
     params->numberUp = jobInfo.GetNumberUp();
     params->numberUpLayout = jobInfo.GetNumberUpLayout();
-
     UpdateJobParameterByOption(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
@@ -2601,29 +2567,29 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
 }
 
 std::string PrintCupsClient::GetNumberUpLayoutString(uint32_t layoutCode)
-{
-    PrintNumberUpLayout layout = static_cast<PrintNumberUpLayout>(layoutCode);
-    switch (layout) {
-        case NUMBER_UP_LAYOUT_LRTB:
-            return "lrtb";
-        case NUMBER_UP_LAYOUT_RLTB:
-            return "rltb";
-        case NUMBER_UP_LAYOUT_TBLR:
-            return "tblr";
-        case NUMBER_UP_LAYOUT_TBRL:
-            return "tbrl";
-        case NUMBER_UP_LAYOUT_LRBT:
-            return "lrbt";
-        case NUMBER_UP_LAYOUT_RLBT:
-            return "rlbt";
-        case NUMBER_UP_LAYOUT_BTLR:
-            return "btlr";
-        case NUMBER_UP_LAYOUT_BTRL:
-            return "btrl";
-        default:
-            return "lrtb";
-    }
-}
+ {
+     PrintNumberUpLayout layout = static_cast<PrintNumberUpLayout>(layoutCode);
+     switch (layout) {
+         case NUMBER_UP_LAYOUT_LRTB:
+             return "lrtb";
+         case NUMBER_UP_LAYOUT_RLTB:
+             return "rltb";
+         case NUMBER_UP_LAYOUT_TBLR:
+             return "tblr";
+         case NUMBER_UP_LAYOUT_TBRL:
+             return "tbrl";
+         case NUMBER_UP_LAYOUT_LRBT:
+             return "lrbt";
+         case NUMBER_UP_LAYOUT_RLBT:
+             return "rlbt";
+         case NUMBER_UP_LAYOUT_BTLR:
+             return "btlr";
+         case NUMBER_UP_LAYOUT_BTRL:
+             return "btrl";
+         default:
+             return "lrtb";
+     }
+ }
 
 bool PrintCupsClient::IsCupsServerAlive()
 {

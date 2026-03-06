@@ -236,6 +236,8 @@ enum PrintNumberUpLayout {
     NUMBER_UP_LAYOUT_BTRL = 7,  // Bottom to Top, Right to Left
 };
 
+constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;  // Minimum value for numberUp (single page per sheet)
+
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,
     PRINT_DOCUMENT_FORMAT_JPEG = 1,
