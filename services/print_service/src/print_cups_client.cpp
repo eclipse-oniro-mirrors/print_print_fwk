@@ -1123,7 +1123,6 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGD("value: %s", value.str().c_str());
         num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
     } else {
-        PRINT_HILOGD("not borderless job options");
         if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
             num_options = cupsAddOption("fit-to-page", "true", num_options, options);
         }
