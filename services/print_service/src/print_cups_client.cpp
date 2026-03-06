@@ -1189,10 +1189,10 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
         return num_options;
     }
     num_options = FillBasicJobOptions(jobParams, num_options, options);
+    num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillNumberUpOptions(jobParams, num_options, options);
     num_options = FillCollateOptions(jobParams, num_options, options);
     num_options = FillNetworkOptions(jobParams, num_options, options);
-    num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
     PRINT_HILOGI("FillJobOptions end.");
     return num_options;
