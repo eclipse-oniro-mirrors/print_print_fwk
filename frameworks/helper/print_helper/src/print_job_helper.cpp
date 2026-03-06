@@ -115,12 +115,25 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
         return nullptr;
     }
 
+    if (!FillFdListFromJs(env, jsValue, nativeObj)) {
+        return nullptr;
+    }
+    FillBasicJobProperties(env, jsValue, nativeObj);
+    FillNumberUpProperties(env, jsValue, nativeObj);
+    BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
+        nativeObj->GetSubState(), nativeObj, cvtToPwgSize);
+    nativeObj->Dump();
+    return nativeObj;
+}
+
+bool PrintJobHelper::FillFdListFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
+{
     napi_value jsFdList = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_FDLIST);
     bool isFileArray = false;
     napi_is_array(env, jsFdList, &isFileArray);
     if (!isFileArray) {
         PRINT_HILOGE("Invalid file list of print job");
-        return nullptr;
+        return false;
     }
     std::vector<uint32_t> printFdList;
     uint32_t arrayReLength = 0;
@@ -133,7 +146,11 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
         printFdList.emplace_back(fd);
     }
     nativeObj->SetFdList(printFdList);
+    return true;
+}
 
+void PrintJobHelper::FillBasicJobProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
+{
     std::string jobId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_JOBID);
     std::string printerId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_PRINTERID);
     uint32_t jobState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_JOBSTATE);
@@ -152,7 +169,10 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
     nativeObj->SetIsLandscape(isLandscape);
     nativeObj->SetColorMode(colorMode);
     nativeObj->SetDuplexMode(duplexMode);
+}
 
+void PrintJobHelper::FillNumberUpProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
+{
     // Read numberUp and numberUpLayout from JS
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP)) {
         nativeObj->SetNumberUp(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP));
@@ -160,10 +180,6 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT)) {
         nativeObj->SetNumberUpLayout(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT));
     }
-
-    BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj, cvtToPwgSize);
-    nativeObj->Dump();
-    return nativeObj;
 }
 
 std::shared_ptr<PrintJob> PrintJobHelper::BuildPrintJobFromJs(napi_env env, napi_value jsValue)
@@ -381,52 +397,53 @@ bool PrintJobHelper::FillOptionalParamsFromJs(napi_env env, napi_value jsValue, 
     if (!ExtractBinaryData(env, jsValue, params.binaryData, params.dataLength)) {
         return false;
     }
+    FillIntOptionalParams(env, jsValue, params);
+    FillBoolOptionalParams(env, jsValue, params);
+    if (!GetPrintPageRange(env, jsValue, params) || !GetPrintMargin(env, jsValue, params) ||
+        !GetPrintPreview(env, jsValue, params)) {
+        return false;
+    }
+    params.cupsOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION);
+    FillNumberUpParams(env, jsValue, params);
+    return true;
+}
+
+void PrintJobHelper::FillIntOptionalParams(napi_env env, napi_value jsValue, PrintJobParams &params)
+{
     napi_value jsPrintQuality = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PRINTQUALITY);
     if (jsPrintQuality != nullptr) {
         params.printQuality = static_cast<int32_t>(
             NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_PRINTQUALITY));
     }
     params.mediaType = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_MEDIATYPE);
-    napi_value jsIsBorderless = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_ISBORDERLESS);
-    if (jsIsBorderless != nullptr) {
-        params.isBorderless = static_cast<int32_t>(
-            NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISBORDERLESS));
-    }
-    napi_value jsIsAutoRotate = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_ISAUTORATATE);
-    if (jsIsAutoRotate != nullptr) {
-        params.isAutoRotate = static_cast<int32_t>(
-            NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISAUTORATATE));
-    }
-    napi_value jsIsReverse = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_ISREVERSE);
-    if (jsIsReverse != nullptr) {
-        params.isReverse = static_cast<int32_t>(
-            NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISREVERSE));
-    }
-    napi_value jsIsCollate = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_ISCOLLATE);
-    if (jsIsCollate != nullptr) {
-        params.isCollate = static_cast<int32_t>(
-            NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISCOLLATE));
-    }
+}
 
-    if (!GetPrintPageRange(env, jsValue, params) || !GetPrintMargin(env, jsValue, params) ||
-        !GetPrintPreview(env, jsValue, params)) {
-        return false;
+void PrintJobHelper::FillBoolOptionalParams(napi_env env, napi_value jsValue, PrintJobParams &params)
+{
+    FillBoolParamIfExists(env, jsValue, PARAM_JOB_ISBORDERLESS, params.isBorderless);
+    FillBoolParamIfExists(env, jsValue, PARAM_JOB_ISAUTORATATE, params.isAutoRotate);
+    FillBoolParamIfExists(env, jsValue, PARAM_JOB_ISREVERSE, params.isReverse);
+    FillBoolParamIfExists(env, jsValue, PARAM_JOB_ISCOLLATE, params.isCollate);
+    FillBoolParamIfExists(env, jsValue, PARAM_JOB_ISSEQUENTIAL, params.isSequential);
+}
+
+void PrintJobHelper::FillBoolParamIfExists(napi_env env, napi_value jsValue,
+    const std::string &paramName, int32_t &paramValue)
+{
+    napi_value jsParam = NapiPrintUtils::GetNamedProperty(env, jsValue, paramName);
+    if (jsParam != nullptr) {
+        paramValue = static_cast<int32_t>(NapiPrintUtils::GetBooleanProperty(env, jsValue, paramName));
     }
-    napi_value jsIsSequential = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_ISSEQUENTIAL);
-    if (jsIsSequential != nullptr) {
-        params.isSequential = static_cast<int32_t>(
-            NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISSEQUENTIAL));
-    }
-    params.cupsOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION);
-    
+}
+
+void PrintJobHelper::FillNumberUpParams(napi_env env, napi_value jsValue, PrintJobParams &params)
+{
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP)) {
         params.numberUp = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP);
     }
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT)) {
         params.numberUpLayout = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
     }
-    
-    return true;
 }
 
 bool PrintJobHelper::GetFileDescriptorList(napi_env env, napi_value jsValue, std::vector<uint32_t> &printFdList)

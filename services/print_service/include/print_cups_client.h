@@ -191,8 +191,16 @@ private:
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillBorderlessMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FindMediaSizeIndex(const std::vector<MediaSize> &mediaSizes, const std::string &mediaSize);
+    static std::string BuildMediaColValue(float width, float height, const std::string &mediaType);
+    static int FillNonBorderlessMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillBasicJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillCollateOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillNetworkOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
