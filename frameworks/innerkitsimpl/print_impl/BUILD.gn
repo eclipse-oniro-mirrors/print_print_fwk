@@ -60,6 +60,8 @@ ohos_shared_library("print_client") {
     "src/print_sync_load_callback.cpp",
     "src/watermark_callback.cpp",
     "src/watermark_callback_stub.cpp",
+    "src/print_callback_native.cpp",
+    "src/kia_interceptor_callback_stub.cpp",
   ]
 
   deps = [

@@ -53,6 +53,8 @@ _sources = [
   "src/vendor_ppd_driver.cpp",
   "src/vendor_wlan_group.cpp",
   "src/watermark_callback_proxy.cpp",
+  "enterprise/src/kia_interceptor_callback_proxy.cpp",
+  "enterprise/src/kia_interceptor_manager.cpp"
 ]
 
 _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
@@ -99,6 +101,7 @@ _include_dirs = [
   "${print_path}/frameworks/innerkitsimpl/print_impl/include",
   "${print_path}/frameworks/ohprint/include",
   "${print_path}/services/print_service/include/event_callback",
+  "${print_path}/services/print_service/enterprise/include",
   "${print_utils_path}/include",
 ]
 

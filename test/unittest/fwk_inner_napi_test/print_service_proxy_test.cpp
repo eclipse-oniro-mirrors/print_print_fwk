@@ -26,6 +26,7 @@
 #include "mock_print_service.h"
 #include "mock_print_callback_stub.h"
 #include "mock_watermark_callback_stub.h"
+#include "mock_kia_interceptor_callback_stub.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -1587,6 +1588,75 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddPriner, TestSize.Level1
     proxy->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
 }
 
+HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_NullCallback, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    int32_t ret = proxy->RegisterKiaInterceptorCallback(nullptr);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_RemoteNull, TestSize.Level1)
+{
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+
+    sptr<MockKiaInterceptorCallbackStub> callback = new MockKiaInterceptorCallbackStub();
+    EXPECT_NE(callback, nullptr);
+
+    int32_t ret = proxy->RegisterKiaInterceptorCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_Success, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    sptr<MockKiaInterceptorCallbackStub> callback = new MockKiaInterceptorCallbackStub();
+    EXPECT_NE(callback, nullptr);
+
+    EXPECT_CALL(*service, RegisterKiaInterceptorCallback(_))
+        .Times(Exactly(1))
+        .WillOnce([](const sptr<IKiaInterceptorCallback> &cb) {
+            EXPECT_NE(cb, nullptr);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    int32_t ret = proxy->RegisterKiaInterceptorCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_RpcFailure, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    sptr<MockKiaInterceptorCallbackStub> callback = new MockKiaInterceptorCallbackStub();
+    EXPECT_NE(callback, nullptr);
+
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Return(ERR_TRANSACTION_FAILED));
+
+    int32_t ret = proxy->RegisterKiaInterceptorCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
 
 }  // namespace Print
 }  // namespace OHOS

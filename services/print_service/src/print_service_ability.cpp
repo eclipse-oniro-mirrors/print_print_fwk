@@ -46,6 +46,7 @@
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
 #include "uri.h"
+#include "kia_interceptor_manager.h"
 #include <fstream>
 #include <streambuf>
 #include "print_json_util.h"
@@ -569,6 +570,7 @@ int32_t PrintServiceAbility::CallSpooler(
     printJob->SetJobId(taskId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
     SendPrintJobEvent(*printJob);
@@ -1302,6 +1304,10 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(printJob.GetJobId())) {
+        PRINT_HILOGE("current print job has been rejected by kia interceptor");
+        return E_PRINT_KIA_INTERCEPTED;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!UpdatePrintJobOptionByPrinterId(printJob)) {
         PRINT_HILOGW("cannot update printer name/uri");
@@ -1371,6 +1377,10 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobInfo.GetJobId())) {
+        PRINT_HILOGE("current print job has been rejected by kia interceptor");
+        return E_PRINT_KIA_INTERCEPTED;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
@@ -1395,6 +1405,10 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
+    }
+    if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobId)) {
+        PRINT_HILOGE("current print job has been rejected by kia interceptor");
+        return E_PRINT_KIA_INTERCEPTED;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -4208,6 +4222,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
         CallStatusBar();
 #endif  // CUPS_ENABLE
     }
+    KiaInterceptorManager::GetInstance().RemoveCallerAppId(printJob->GetJobId());
     PRINT_HILOGI("StartNativePrintJob end.");
     return E_PRINT_NONE;
 }
@@ -5376,6 +5391,22 @@ int32_t PrintServiceAbility::NotifyWatermarkComplete(const std::string &jobId, i
 #else
     return E_PRINT_NONE;
 #endif // WATERMARK_ENFORCING_ENABLE
+}
+
+int32_t PrintServiceAbility::RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback)
+{
+    PRINT_HILOGI("PrintServiceAbility::RegisterKiaInterceptorCallback start");
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+    if (callback == nullptr) {
+        PRINT_HILOGE("callback is null");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    return KiaInterceptorManager::GetInstance().RegisterCallback(callback);
 }
 
 void PrintServiceAbility::StopCupsService()

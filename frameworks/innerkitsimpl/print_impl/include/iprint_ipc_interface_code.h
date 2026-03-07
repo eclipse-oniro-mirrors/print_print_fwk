@@ -85,6 +85,7 @@ namespace OHOS::Print {
         CMD_REG_WATERMARK_CB,
         CMD_UNREG_WATERMARK_CB,
         CMD_NOTIFY_WATERMARK_COMPLETE,
+        CMD_REG_KIA_INTERCEPTOR_CB,
     };
-} // namespace OHOS:Print
+} // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

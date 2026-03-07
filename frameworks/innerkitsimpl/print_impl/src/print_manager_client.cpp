@@ -1222,4 +1222,16 @@ int32_t PrintManagerClient::NotifyWatermarkComplete(const std::string &jobId, in
     }
     return ret;
 }
+
+int32_t PrintManagerClient::RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback)
+{
+    PRINT_HILOGI("PrintManagerClient RegisterKiaInterceptorCallback in");
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->RegisterKiaInterceptorCallback(callback);
+        PRINT_HILOGD("PrintManagerClient RegisterKiaInterceptorCallback out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

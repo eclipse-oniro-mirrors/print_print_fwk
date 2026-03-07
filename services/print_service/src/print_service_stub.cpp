@@ -17,6 +17,7 @@
 #include "ipc_skeleton.h"
 #include "iprint_service.h"
 #include "iwatermark_callback.h"
+#include "ikia_interceptor_callback.h"
 #include "message_parcel.h"
 #include "print_constant.h"
 #include "print_extension_info.h"
@@ -116,6 +117,8 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnUnregisterWatermarkCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_WATERMARK_COMPLETE] =
         &PrintServiceStub::OnNotifyWatermarkComplete;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_KIA_INTERCEPTOR_CB] =
+               &PrintServiceStub::OnRegisterKiaInterceptorCallback;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1210,6 +1213,27 @@ bool PrintServiceStub::OnNotifyWatermarkComplete(MessageParcel &data, MessagePar
     int32_t ret = NotifyWatermarkComplete(jobId, result);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnRegisterKiaInterceptorCallback(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnRegisterKiaInterceptorCallback in");
+    auto remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        PRINT_HILOGE("Failed to read remote object");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    sptr<IKiaInterceptorCallback> callback = iface_cast<IKiaInterceptorCallback>(remoteObject);
+    if (callback == nullptr) {
+        PRINT_HILOGE("Failed to cast to IKiaInterceptorCallback");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    int32_t ret = RegisterKiaInterceptorCallback(callback);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnRegisterKiaInterceptorCallback out");
     return ret == E_PRINT_NONE;
 }
 
