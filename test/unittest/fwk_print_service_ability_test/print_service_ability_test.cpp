@@ -1496,7 +1496,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobStateOnlyForSystemApp_Enterprise
         });
     
     auto ret = service->UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_INVALID_USERID);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestSize.Level1)
