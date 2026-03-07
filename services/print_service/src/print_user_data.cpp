@@ -906,6 +906,12 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
     if (PrintJsonUtil::IsMember(printJobInfoJson, "duplexMode") && printJobInfoJson["duplexMode"].isInt()) {
         printHistoryJob->SetDuplexMode(printJobInfoJson["duplexMode"].asInt());
     }
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUp") && printJobInfoJson["numberUp"].isInt()) {
+        printHistoryJob->SetNumberUp(printJobInfoJson["numberUp"].asInt());
+    }
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUpLayout") && printJobInfoJson["numberUpLayout"].isInt()) {
+        printHistoryJob->SetNumberUpLayout(printJobInfoJson["numberUpLayout"].asInt());
+    }
 
     ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
     return true;
