@@ -609,14 +609,6 @@ bool SetPrintPageSizeInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &
     return true;
 }
 
-void SetNumberUpOptions(const Print_PrintJob &nativePrintJob, Json::Value &jsonOptions)
-{
-    (void)nativePrintJob;
-    // Use default values since third-party apps have not adapted numberUp yet
-    jsonOptions["numberUp"] = NUMBER_UP_DEFAULT_VALUE;
-    jsonOptions["numberUpLayout"] = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
-}
-
 void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob)
 {
     PRINT_HILOGI("SetOptionInPrintJob in.");
@@ -643,8 +635,8 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
-
-    SetNumberUpOptions(nativePrintJob, jsonOptions);
+    jsonOptions["numberUp"] = NUMBER_UP_DEFAULT_VALUE;
+    jsonOptions["numberUpLayout"] = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
 
     Json::Value jsonAdvanceOptions;
     if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
