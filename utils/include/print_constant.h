@@ -236,7 +236,10 @@ enum PrintNumberUpLayout {
     NUMBER_UP_LAYOUT_BTRL = 7,  // Bottom to Top, Right to Left
 };
 
-constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;  // Minimum value for numberUp (single page per sheet)
+constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;   // Minimum value for numberUp (single page per sheet)
+constexpr uint32_t NUMBER_UP_MAX_VALUE = 16;  // Maximum value for numberUp
+constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp
+constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT_VALUE = NUMBER_UP_LAYOUT_LRTB;  // Default layout for numberUp
 
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,

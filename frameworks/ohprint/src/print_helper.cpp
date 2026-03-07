@@ -609,6 +609,21 @@ bool SetPrintPageSizeInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &
     return true;
 }
 
+void SetNumberUpOptions(const Print_PrintJob &nativePrintJob, Json::Value &jsonOptions)
+{
+    uint32_t numberUp = nativePrintJob.numberUp;
+    if (numberUp < NUMBER_UP_MIN_VALUE || numberUp > NUMBER_UP_MAX_VALUE) {
+        numberUp = NUMBER_UP_DEFAULT_VALUE;
+    }
+    jsonOptions["numberUp"] = numberUp;
+
+    uint32_t numberUpLayout = nativePrintJob.numberUpLayout;
+    if (numberUpLayout > NUMBER_UP_LAYOUT_BTRL) {
+        numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    }
+    jsonOptions["numberUpLayout"] = numberUpLayout;
+}
+
 void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob)
 {
     PRINT_HILOGI("SetOptionInPrintJob in.");
@@ -626,7 +641,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     if (nativePrintJob.mediaType != nullptr) {
         jsonOptions["mediaType"] = std::string(nativePrintJob.mediaType);
     }
-    jsonOptions["borderless"] = nativePrintJob.borderless;
+    jsonOptions["borderless"] = nativePrintJob.borderless ? "true" : "false";
     Print_Quality quality = nativePrintJob.printQuality;
     if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH) ||
         quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
@@ -636,9 +651,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
 
-    // Number-Up options
-    jsonOptions["numberUp"] = nativePrintJob.numberUp;
-    jsonOptions["numberUpLayout"] = nativePrintJob.numberUpLayout;
+    SetNumberUpOptions(nativePrintJob, jsonOptions);
 
     Json::Value jsonAdvanceOptions;
     if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),

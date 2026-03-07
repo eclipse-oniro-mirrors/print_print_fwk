@@ -25,6 +25,7 @@
 #include "print_cups_wrapper.h"
 #include "print_service_ability.h"
 #include "print_job.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 typedef std::function<void()> CallbackFunc;
@@ -47,8 +48,8 @@ struct JobParameters {
     std::string mediaType;
     std::string color;
     std::string serviceJobId;
-    uint32_t numberUp = 1;
-    uint32_t numberUpLayout = 0;
+    uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
+    uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;

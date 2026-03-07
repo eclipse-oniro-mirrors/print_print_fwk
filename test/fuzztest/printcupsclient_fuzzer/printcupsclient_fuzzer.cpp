@@ -211,6 +211,13 @@ void TestGetMedieSize(const uint8_t *data, size_t size, FuzzedDataProvider *data
     PrintCupsClient::GetInstance()->GetMedieSize(printJob);
 }
 
+void TestDumpJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    JobParameters jobParams;
+    jobParams.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->DumpJobParameters(&jobParams);
+}
+
 void TestBuildJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintJob printJob;
@@ -414,6 +421,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestGetColorString,
         &OHOS::Print::TestGetDulpexString,
         &OHOS::Print::TestGetMedieSize,
+        &OHOS::Print::TestDumpJobParameters,
         &OHOS::Print::TestBuildJobParameters,
         &OHOS::Print::TestCheckPrinterDriverExist,
         &OHOS::Print::TestStartMonitor,
