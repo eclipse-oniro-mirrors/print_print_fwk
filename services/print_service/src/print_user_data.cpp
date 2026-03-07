@@ -885,6 +885,16 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
     }
     printHistoryJob->SetJobId(printJobInfoJson["jobId"].asString());
     printHistoryJob->SetPrinterId(printJobInfoJson["printerId"].asString());
+    ParseBasicOptionsToPrintJob(printJobInfoJson, printHistoryJob);
+    ParsePrintModeOptionsToPrintJob(printJobInfoJson, printHistoryJob);
+    ParseNumberUpOptionsToPrintJob(printJobInfoJson, printHistoryJob);
+    ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    return true;
+}
+
+void PrintUserData::ParseBasicOptionsToPrintJob(
+    const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
+{
     if (PrintJsonUtil::IsMember(printJobInfoJson, "jobState") && printJobInfoJson["jobState"].isInt()) {
         printHistoryJob->SetJobState(printJobInfoJson["jobState"].asInt());
     }
@@ -900,21 +910,28 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
     if (PrintJsonUtil::IsMember(printJobInfoJson, "isLandscape") && printJobInfoJson["isLandscape"].isBool()) {
         printHistoryJob->SetIsLandscape(printJobInfoJson["isLandscape"].asBool());
     }
+}
+
+void PrintUserData::ParsePrintModeOptionsToPrintJob(
+    const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
+{
     if (PrintJsonUtil::IsMember(printJobInfoJson, "colorMode") && printJobInfoJson["colorMode"].isInt()) {
         printHistoryJob->SetColorMode(printJobInfoJson["colorMode"].asInt());
     }
     if (PrintJsonUtil::IsMember(printJobInfoJson, "duplexMode") && printJobInfoJson["duplexMode"].isInt()) {
         printHistoryJob->SetDuplexMode(printJobInfoJson["duplexMode"].asInt());
     }
+}
+
+void PrintUserData::ParseNumberUpOptionsToPrintJob(
+    const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
+{
     if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUp") && printJobInfoJson["numberUp"].isInt()) {
         printHistoryJob->SetNumberUp(printJobInfoJson["numberUp"].asInt());
     }
     if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUpLayout") && printJobInfoJson["numberUpLayout"].isInt()) {
         printHistoryJob->SetNumberUpLayout(printJobInfoJson["numberUpLayout"].asInt());
     }
-
-    ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
-    return true;
 }
 
 void PrintUserData::ParseOptionalJsonObjectToPrintJob(

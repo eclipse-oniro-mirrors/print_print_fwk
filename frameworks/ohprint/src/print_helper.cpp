@@ -611,17 +611,10 @@ bool SetPrintPageSizeInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &
 
 void SetNumberUpOptions(const Print_PrintJob &nativePrintJob, Json::Value &jsonOptions)
 {
-    uint32_t numberUp = nativePrintJob.numberUp;
-    if (numberUp < NUMBER_UP_MIN_VALUE || numberUp > NUMBER_UP_MAX_VALUE) {
-        numberUp = NUMBER_UP_DEFAULT_VALUE;
-    }
-    jsonOptions["numberUp"] = numberUp;
-
-    uint32_t numberUpLayout = nativePrintJob.numberUpLayout;
-    if (numberUpLayout > NUMBER_UP_LAYOUT_BTRL) {
-        numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
-    }
-    jsonOptions["numberUpLayout"] = numberUpLayout;
+    (void)nativePrintJob;
+    // Use default values since third-party apps have not adapted numberUp yet
+    jsonOptions["numberUp"] = NUMBER_UP_DEFAULT_VALUE;
+    jsonOptions["numberUpLayout"] = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
 }
 
 void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob)
