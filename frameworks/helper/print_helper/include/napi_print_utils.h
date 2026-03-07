@@ -75,6 +75,7 @@ public:
     static napi_value GetReference(napi_env env, napi_ref callbackRef);
     static void DeleteReference(napi_env env, napi_ref callbackRef);
     static bool GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName);
+    static bool GetBooleanFromValue(napi_env env, napi_value value);
     static void SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value);
 
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);

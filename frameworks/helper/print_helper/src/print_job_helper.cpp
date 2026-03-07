@@ -432,17 +432,19 @@ void PrintJobHelper::FillBoolParamIfExists(napi_env env, napi_value jsValue,
 {
     napi_value jsParam = NapiPrintUtils::GetNamedProperty(env, jsValue, paramName);
     if (jsParam != nullptr) {
-        paramValue = static_cast<int32_t>(NapiPrintUtils::GetBooleanProperty(env, jsValue, paramName));
+        paramValue = static_cast<int32_t>(NapiPrintUtils::GetBooleanFromValue(env, jsParam));
     }
 }
 
 void PrintJobHelper::FillNumberUpParams(napi_env env, napi_value jsValue, PrintJobParams &params)
 {
-    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP)) {
-        params.numberUp = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP);
+    napi_value jsNumberUp = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP);
+    if (jsNumberUp != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUp) == napi_number) {
+        params.numberUp = NapiPrintUtils::GetUint32FromValue(env, jsNumberUp);
     }
-    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT)) {
-        params.numberUpLayout = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
+    napi_value jsNumberUpLayout = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
+    if (jsNumberUpLayout != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUpLayout) == napi_number) {
+        params.numberUpLayout = NapiPrintUtils::GetUint32FromValue(env, jsNumberUpLayout);
     }
 }
 

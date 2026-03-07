@@ -1093,7 +1093,6 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
         num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     }
-    num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     if (!jobParams->mediaSize.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
     } else {
