@@ -113,7 +113,7 @@ HWTEST_F(EventListenerMgrTest, RegisterPrinterListener_ShouldReturnTrue_WhenList
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_STATE_CHANGE, listener));
     EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_STATE_CHANGE, listener));
 }
@@ -143,7 +143,7 @@ HWTEST_F(EventListenerMgrTest, RegisterPrintJobListener_ShouldReturnTrue_WhenVal
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINTER_JOB_STATE_CHANGE, TEST_JOB_ID, listener));
 }
 
@@ -157,7 +157,7 @@ HWTEST_F(EventListenerMgrTest, RegisterPrintJobListener_ShouldReturnTrue_WhenLis
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID, listener));
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID, listener));
 }
@@ -166,7 +166,7 @@ HWTEST_F(EventListenerMgrTest, RegisterPrintJobListener_ShouldSupportMultipleJob
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID, listener));
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID_2, listener));
 }
@@ -175,7 +175,7 @@ HWTEST_F(EventListenerMgrTest, UnRegisterPrinterListener_ShouldReturnTrue_WhenLi
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_STATE_CHANGE, listener));
     EXPECT_TRUE(eventListenerMgr.UnRegisterPrinterListener(PRINTER_STATE_CHANGE));
 }
@@ -190,7 +190,7 @@ HWTEST_F(EventListenerMgrTest, UnRegisterPrintJobListener_ShouldReturnTrue_WhenL
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID, listener));
     EXPECT_TRUE(eventListenerMgr.UnRegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID));
 }
@@ -205,7 +205,7 @@ HWTEST_F(EventListenerMgrTest, UnRegisterPrintJobListener_ShouldKeepOtherJobs, T
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID, listener));
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID_2, listener));
     EXPECT_TRUE(eventListenerMgr.UnRegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID));
@@ -216,7 +216,7 @@ HWTEST_F(EventListenerMgrTest, IsPrinterListenerEmpty_ShouldReturnFalse_WhenList
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_STATE_CHANGE, listener));
     EXPECT_FALSE(eventListenerMgr.IsPrinterListenerEmpty(PRINTER_STATE_CHANGE));
 }
@@ -245,7 +245,7 @@ HWTEST_F(EventListenerMgrTest, IsPrintJobListenerEmpty_ShouldReturnFalse_WhenLis
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrintJobListener(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID, listener));
     EXPECT_FALSE(eventListenerMgr.IsPrintJobListenerEmpty(PRINT_JOB_STATE_CALLBACK, TEST_JOB_ID));
 }
@@ -642,7 +642,7 @@ HWTEST_F(EventListenerMgrTest, OnRemoteListenerDied_ShouldDoNothing_WhenListener
 {
     EventListenerMgr eventListenerMgr;
     sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
-    ;
+
     EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_STATE_CHANGE, listener));
     eventListenerMgr.OnRemoteListenerDied(nullptr);
     EXPECT_FALSE(eventListenerMgr.IsPrinterListenerEmpty(PRINTER_STATE_CHANGE));
