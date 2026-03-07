@@ -717,9 +717,8 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
 
     printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintJob.duplexMode));
     printJob.SetColorMode(static_cast<uint32_t>(nativePrintJob.colorMode));
-
-    printJob.SetNumberUp(nativePrintJob.numberUp);
-    printJob.SetNumberUpLayout(nativePrintJob.numberUpLayout);
+    printJob.SetNumberUp(NUMBER_UP_DEFAULT_VALUE);
+    printJob.SetNumberUpLayout(NUMBER_UP_LAYOUT_DEFAULT_VALUE);
 
     SetPrintOrientationInPrintJob(nativePrintJob, printJob);
     SetPrintMarginInPrintJob(nativePrintJob, printJob);
