@@ -1522,18 +1522,24 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
  * Process watermark using cache files. Opens cache fds twice with different modes:
  * 1st open (O_RDWR): writable fds for MDM callback to embed watermark into cached files.
  * 2nd open (O_RDONLY): fresh fds with offset=0 containing watermarked content for HandleFiles.
- * Falls back to original fds if cache files are unavailable.
+ * Returns false if cache files are unavailable (no fallback to original fds).
  */
 bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
 {
+    /* Check if watermark is enabled first, avoid opening fd if not needed */
+    if (!WatermarkManager::GetInstance().IsWatermarkEnabled()) {
+        PRINT_HILOGD("Watermark is disabled, skip watermark processing");
+        return true;
+    }
+
     /* Open cache fds (O_RDWR) for watermark processing */
     std::vector<uint32_t> cacheFdList;
     if (jobParams->serviceAbility == nullptr ||
         !jobParams->serviceAbility->OpenCacheFileFd(jobParams->serviceJobId, cacheFdList, O_RDWR) ||
         cacheFdList.empty()) {
-        PRINT_HILOGW("cache fd not available, using original fds");
-        return WatermarkManager::GetInstance().ProcessWatermarkForFiles(
-            jobParams->serviceJobId, jobParams->fdList) == E_PRINT_NONE;
+        PRINT_HILOGE("Failed to open cache fd for watermark processing, jobId: %{public}s",
+            jobParams->serviceJobId.c_str());
+        return false;
     }
 
     /* Pass writable cache fds to MDM callback for watermark embedding, then close them */

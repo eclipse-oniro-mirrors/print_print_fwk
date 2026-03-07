@@ -34,6 +34,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     blocklist = "${print_path}/cfi_blocklist.txt"
   }
 
+  cflags_cc = [ "-DUNIT_TEST" ]
+
   sources = [
     "print_attributes_test.cpp",
     "print_callback_stub_test.cpp",

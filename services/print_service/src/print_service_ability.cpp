@@ -178,7 +178,9 @@ static const std::vector<std::string> BSUNI_CAPABILITY_ADVANCE_OPTIONS = {
 
 static bool g_publishState = false;
 
+#ifndef UNIT_TEST
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceAbility::GetInstance().GetRefPtr());
+#endif // UNIT_TEST
 const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 const std::string JOB_BANNED_VERSION = "1.0";
 const int32_t JOB_BANNED_POLICY_CODE = 1021;
