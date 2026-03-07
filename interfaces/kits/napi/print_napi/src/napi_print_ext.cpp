@@ -270,12 +270,6 @@ napi_value NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp(napi_env env, napi_
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            context->result = false;
-            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
-            return;
-        }
         int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
             context->printJobId, context->printJobState, context->jobSubState);
         context->result = ret == E_PRINT_NONE;
