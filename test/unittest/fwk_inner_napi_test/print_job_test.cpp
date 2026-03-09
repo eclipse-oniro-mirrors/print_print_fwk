@@ -487,5 +487,169 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028_NeedRename, TestSize.Level1)
     PrintJob getJob = job;
     EXPECT_EQ(getJob.GetIsSequential(), true);
 }
+
+/**
+ * @tc.name: PrintJobTest_NumberUp_001
+ * @tc.desc: Verify the SetNumberUp and GetNumberUp function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_001, TestSize.Level1)
+{
+    PrintJob job;
+    job.SetNumberUp(4);
+    EXPECT_EQ(job.GetNumberUp(), 4);
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUp_002
+ * @tc.desc: Verify the SetNumberUp with boundary values.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_002, TestSize.Level1)
+{
+    PrintJob job;
+    // Test valid number-up values: 1, 2, 4, 6, 9, 16
+    job.SetNumberUp(1);
+    EXPECT_EQ(job.GetNumberUp(), 1);
+    job.SetNumberUp(2);
+    EXPECT_EQ(job.GetNumberUp(), 2);
+    job.SetNumberUp(4);
+    EXPECT_EQ(job.GetNumberUp(), 4);
+    job.SetNumberUp(6);
+    EXPECT_EQ(job.GetNumberUp(), 6);
+    job.SetNumberUp(9);
+    EXPECT_EQ(job.GetNumberUp(), 9);
+    job.SetNumberUp(16);
+    EXPECT_EQ(job.GetNumberUp(), 16);
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpLayout_001
+ * @tc.desc: Verify the SetNumberUpLayout and GetNumberUpLayout function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpLayout_001, TestSize.Level1)
+{
+    PrintJob job;
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_LRTB);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_LRTB);
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpLayout_002
+ * @tc.desc: Verify the SetNumberUpLayout with all layout values.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpLayout_002, TestSize.Level1)
+{
+    PrintJob job;
+    // Test all layout values
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_LRTB);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_LRTB);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_RLTB);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_RLTB);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_TBLR);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBLR);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_TBRL);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBRL);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_LRBT);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_LRBT);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_RLBT);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_RLBT);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTLR);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTLR);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTRL);
+    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTRL);
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUp_Marshalling_001
+ * @tc.desc: Verify the Marshalling and Unmarshalling for numberUp.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_Marshalling_001, TestSize.Level1)
+{
+    PrintJob job;
+    Parcel parcel;
+    job.SetNumberUp(4);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_TBLR);
+    job.SetJobId("job-001");
+    job.SetPrinterId("printer-001");
+
+    EXPECT_TRUE(job.Marshalling(parcel));
+
+    auto unmarshalledJob = PrintJob::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalledJob, nullptr);
+    EXPECT_EQ(unmarshalledJob->GetNumberUp(), 4);
+    EXPECT_EQ(unmarshalledJob->GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBLR);
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUp_UpdateParams_001
+ * @tc.desc: Verify the UpdateParams for numberUp and numberUpLayout.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_UpdateParams_001, TestSize.Level1)
+{
+    PrintJob job;
+    PrintJob updateJob;
+
+    job.SetNumberUp(9);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTLR);
+    job.SetJobId("job-001");
+    job.SetPrinterId("printer-001");
+    job.SetCopyNumber(2);
+    job.SetColorMode(1);
+
+    updateJob.UpdateParams(job);
+    EXPECT_EQ(updateJob.GetNumberUp(), 9);
+    EXPECT_EQ(updateJob.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTLR);
+    EXPECT_EQ(updateJob.GetJobId(), "job-001");
+    EXPECT_EQ(updateJob.GetCopyNumber(), 2);
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUp_CopyConstructor_001
+ * @tc.desc: Verify the copy constructor for numberUp and numberUpLayout.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_CopyConstructor_001, TestSize.Level1)
+{
+    PrintJob job;
+    job.SetNumberUp(6);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_RLBT);
+    job.SetJobId("job-copy-test");
+
+    PrintJob copyJob(job);
+    EXPECT_EQ(copyJob.GetNumberUp(), 6);
+    EXPECT_EQ(copyJob.GetNumberUpLayout(), NUMBER_UP_LAYOUT_RLBT);
+    EXPECT_EQ(copyJob.GetJobId(), "job-copy-test");
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUp_AssignmentOperator_001
+ * @tc.desc: Verify the assignment operator for numberUp and numberUpLayout.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_AssignmentOperator_001, TestSize.Level1)
+{
+    PrintJob job;
+    job.SetNumberUp(16);
+    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTRL);
+    job.SetJobId("job-assign-test");
+
+    PrintJob assignJob = job;
+    EXPECT_EQ(assignJob.GetNumberUp(), 16);
+    EXPECT_EQ(assignJob.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTRL);
+    EXPECT_EQ(assignJob.GetJobId(), "job-assign-test");
+}
 }  // namespace Print
 }  // namespace OHOS

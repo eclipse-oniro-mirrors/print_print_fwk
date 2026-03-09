@@ -444,6 +444,10 @@ typedef struct {
     Print_DocumentFormat documentFormat;
     /** Advanced options in json format. */
     char *advancedOptions;
+    /** Number of pages per sheet (N-Up). */
+    uint32_t numberUp;
+    /** N-Up layout mode. */
+    uint32_t numberUpLayout;
 } Print_PrintJob;
 
 /**
