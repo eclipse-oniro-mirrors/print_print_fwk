@@ -21,43 +21,52 @@
 namespace OHOS {
 namespace Print {
 
-bool PrintJobEventCallback::Execute(const CallbackInfo &info)
+ExecuteResult PrintJobEventCallback::Execute(const CallbackInfo &info)
 {
     auto it = listeners_.find(info.jobId);
     if (it == listeners_.end()) {
         PRINT_HILOGW("listener not exist for jobId=%{public}s", info.jobId.c_str());
-        return true;
+        return ExecuteResult::SKIP;
     }
     auto listener = it->second;
-    PRINT_HILOGI("PrintJobEventCallback Execute, type=%{public}d, pid=%{public}d", info.cbEventType, GetPid());
-
+    if (listener == nullptr) {
+        PRINT_HILOGW("listener is null");
+        return ExecuteResult::FAIL;
+    }
+    bool ret = false;
     switch (info.cbEventType) {
         case PRINT_JOB_BLOCK:
         case PRINT_JOB_SUCCESS:
         case PRINT_JOB_FAIL:
         case PRINT_JOB_CANCEL: {
-            return listener->OnCallback();
+            ret = listener->OnCallback();
+            break;
         }
         case PRINT_JOB_STATE_CALLBACK: {
             if (!info.printJobInfo) {
-                return false;
+                return ExecuteResult::FAIL;
             }
-            return listener->OnCallback(info.printJobInfo->GetJobState(), *(info.printJobInfo));
+            ret = listener->OnCallback(info.printJobInfo->GetJobState(), *(info.printJobInfo));
+            break;
         }
         case PRINT_JOB_CALLBACK_ADAPTER: {
             if (info.fd == 0) {
-                return listener->OnCallbackAdapterJobStateChanged(info.jobId, info.jobState, info.adapterState);
+                ret = listener->OnCallbackAdapterJobStateChanged(info.jobId, info.jobState, info.adapterState);
             } else if (info.newAttrs && info.oldAttrs) {
-                return listener->OnCallbackAdapterLayout(info.jobId, *(info.oldAttrs), *(info.newAttrs), info.fd);
+                ret = listener->OnCallbackAdapterLayout(info.jobId, *(info.oldAttrs), *(info.newAttrs), info.fd);
+            } else {
+                return ExecuteResult::FAIL;
             }
-            return false;
+            break;
         }
         case PRINT_JOB_FILE_GET_ADAPTER: {
-            return listener->OnCallbackAdapterGetFile(info.fileCompletedState);
+            ret = listener->OnCallbackAdapterGetFile(info.fileCompletedState);
+            break;
         }
         default:
-            return false;
+            return ExecuteResult::FAIL;
     }
+    return ret ? ExecuteResult::SUCCESS : ExecuteResult::FAIL;
 }
 
 bool PrintJobEventCallback::IsRemoteDied(const sptr<IRemoteObject> &listener)

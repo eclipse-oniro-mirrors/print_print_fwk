@@ -21,51 +21,56 @@
 namespace OHOS {
 namespace Print {
 
-bool PrinterEventCallback::Execute(const CallbackInfo &info)
+ExecuteResult PrinterEventCallback::Execute(const CallbackInfo &info)
 {
     if (listener_ == nullptr) {
-        PRINT_HILOGW("listener is null");
-        return false;
+        PRINT_HILOGW("listener_ null");
+        return ExecuteResult::FAIL;
     }
-    PRINT_HILOGI("PrinterEventCallback Execute, type=%{public}d, pid=%{public}d", info.cbEventType, GetPid());
-
+    bool ret = false;
     switch (info.cbEventType) {
         case PRINTER_JOB_STATE_CHANGE: {
             auto jobInfo = info.printJobInfo;
             if (!jobInfo) {
                 PRINT_HILOGE("jobInfo is nullptr");
-                return false;
+                return ExecuteResult::FAIL;
             }
-            return listener_->OnCallback(jobInfo->GetJobState(), *jobInfo);
+            ret = listener_->OnCallback(jobInfo->GetJobState(), *jobInfo);
+            break;
         }
         case PRINTER_CHANGE:
         case PRINTER_DISCOVER: {
             if (!info.printerInfo) {
                 PRINT_HILOGE("printerInfo is nullptr");
-                return false;
+                return ExecuteResult::FAIL;
             }
-            return listener_->OnCallback(info.printerEvent, *info.printerInfo);
+            ret = listener_->OnCallback(info.printerEvent, *info.printerInfo);
+            break;
         }
         case PRINTER_STATE_CHANGE: {
             if (!info.printerInfo) {
                 PRINT_HILOGE("printerInfo is nullptr");
-                return false;
+                return ExecuteResult::FAIL;
             }
-            return listener_->OnCallback(info.printerInfo->GetPrinterState(), *info.printerInfo);
+            ret = listener_->OnCallback(info.printerInfo->GetPrinterState(), *info.printerInfo);
+            break;
         }
         case PRINTER_INFO_QUERY: {
             if (!info.printerInfo) {
                 PRINT_HILOGE("printerInfo is nullptr");
-                return false;
+                return ExecuteResult::FAIL;
             }
-            return listener_->OnCallback(*info.printerInfo, info.ppdInfos);
+            ret = listener_->OnCallback(*info.printerInfo, info.ppdInfos);
+            break;
         }
         case PRINTER_EXT_INFO_CHANGE: {
-            return listener_->OnCallback(info.extensionId, info.extInfo);
+            ret = listener_->OnCallback(info.extensionId, info.extInfo);
+            break;
         }
         default:
-            return false;
+            return ExecuteResult::FAIL;
     }
+    return ret ? ExecuteResult::SUCCESS : ExecuteResult::FAIL;
 }
 
 bool PrinterEventCallback::IsRemoteDied(const sptr<IRemoteObject> &listener)

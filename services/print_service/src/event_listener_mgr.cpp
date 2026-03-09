@@ -23,6 +23,7 @@ namespace OHOS {
 namespace Print {
 namespace {
 const int32_t MAX_LISTENERS_COUNT = 1000;
+const int32_t UID_TRANSFORM_DIVISOR = 200000;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
@@ -62,7 +63,7 @@ bool EventListenerMgr::RegisterPrinterListener(const CallbackEventType &eventTyp
         return false;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t userId = IPCSkeleton::GetCallingUid() / 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
     pid_t pid = IPCSkeleton::GetCallingPid();
 
     auto existingCallback = FindCallback(userId, pid, eventType);
@@ -100,7 +101,7 @@ bool EventListenerMgr::RegisterExtensionListener(
         return false;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t userId = IPCSkeleton::GetCallingUid() / 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
     pid_t pid = IPCSkeleton::GetCallingPid();
 
     auto existingCallback = FindCallback(userId, pid, eventType);
@@ -140,28 +141,35 @@ bool EventListenerMgr::RegisterPrintJobListener(
         return false;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t userId = IPCSkeleton::GetCallingUid() / 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
     pid_t pid = IPCSkeleton::GetCallingPid();
-
-    counter_++;
-    if (counter_ >= MAX_LISTENERS_COUNT) {
-        PRINT_HILOGE("Exceeded the maximum number of registration.");
-        return false;
-    }
 
     auto existingCallback = FindCallback(userId, pid, eventType);
     if (existingCallback) {
         auto jobCallback = std::static_pointer_cast<PrintJobEventCallback>(existingCallback);
-        if (jobCallback) {
-            counter_ -= jobCallback->SetListener(listener, jobId);
-            return true;
+        if (!jobCallback) {
+            return false;
         }
+        bool existed = jobCallback->HasJobId(jobId);
+        if (!existed && counter_ >= MAX_LISTENERS_COUNT) {
+            PRINT_HILOGE("Exceeded the maximum number of registration.");
+            return false;
+        }
+        jobCallback->SetListener(listener, jobId);
+        if (!existed) {
+            counter_++;
+        }
+        return true;
+    }
+    
+    if (counter_ >= MAX_LISTENERS_COUNT) {
+        PRINT_HILOGE("Exceeded the maximum number of registration.");
         return false;
     }
-
     auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType, eventListenerDeathRecipient_);
     callback->SetListener(listener, jobId);
     registeredListeners_[userId][eventType].emplace_back(callback);
+    counter_++;
     PRINT_HILOGI("RegisterPrintJobListener type=%{public}d, counter=%{public}d, pid=%{public}d, userId=%{public}d",
         eventType,
         counter_,
@@ -173,7 +181,7 @@ bool EventListenerMgr::RegisterPrintJobListener(
 bool EventListenerMgr::UnRegisterPrinterListener(const CallbackEventType &eventType)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t userId = IPCSkeleton::GetCallingUid() / 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
     pid_t pid = IPCSkeleton::GetCallingPid();
 
     auto callback = FindCallback(userId, pid, eventType);
@@ -227,7 +235,7 @@ bool EventListenerMgr::DeletePrintJobListener(CallbackEventType eventType, const
 bool EventListenerMgr::UnRegisterPrintJobListener(const CallbackEventType &eventType, const std::string &jobId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t userId = IPCSkeleton::GetCallingUid() / 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
     pid_t pid = IPCSkeleton::GetCallingPid();
 
     auto callback = FindCallback(userId, pid, eventType);
@@ -356,6 +364,19 @@ bool EventListenerMgr::Execute(const CallbackInfo &callbackInfo)
     return ExecuteForAllUsers(type, callbackInfo);
 }
 
+std::string EventListenerMgr::FormatPids(const std::vector<pid_t> &pids)
+{
+    std::string result = "[";
+    for (size_t i = 0; i < pids.size(); i++) {
+        result += std::to_string(pids[i]);
+        if (i < pids.size() - 1) {
+            result += ", ";
+        }
+    }
+    result += "]";
+    return result;
+}
+
 bool EventListenerMgr::ExecuteForUser(
     const std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap,
     CallbackEventType type, const CallbackInfo &callbackInfo)
@@ -366,29 +387,57 @@ bool EventListenerMgr::ExecuteForUser(
         return true;
     }
 
+    std::vector<pid_t> successPids;
+    std::vector<pid_t> failPids;
     bool result = true;
+    
     for (auto &callback : eventIt->second) {
-        if (callback && !callback->Execute(callbackInfo)) {
+        if (!callback) {
+            continue;
+        }
+        ExecuteResult execResult = callback->Execute(callbackInfo);
+        if (execResult == ExecuteResult::FAIL) {
             result = false;
+            failPids.push_back(callback->GetPid());
+        } else if (execResult == ExecuteResult::SUCCESS) {
+            successPids.push_back(callback->GetPid());
         }
     }
+
+    PRINT_HILOGI("Execute callback for eventType %{public}d: success pid %{public}s, fail pid %{public}s",
+        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
+    
     return result;
 }
 
 bool EventListenerMgr::ExecuteForAllUsers(CallbackEventType type, const CallbackInfo &callbackInfo)
 {
+    std::vector<pid_t> successPids;
+    std::vector<pid_t> failPids;
     bool result = true;
+    
     for (const auto &[_, eventMap] : registeredListeners_) {
         auto eventIt = eventMap.find(type);
         if (eventIt == eventMap.end()) {
             continue;
         }
         for (auto &callback : eventIt->second) {
-            if (callback && !callback->Execute(callbackInfo)) {
+            if (!callback) {
+                continue;
+            }
+            ExecuteResult execResult = callback->Execute(callbackInfo);
+            if (execResult == ExecuteResult::FAIL) {
                 result = false;
+                failPids.push_back(callback->GetPid());
+            } else if (execResult == ExecuteResult::SUCCESS) {
+                successPids.push_back(callback->GetPid());
             }
         }
     }
+    
+    PRINT_HILOGI("Execute callback for eventType %{public}d: success pids %{public}s, fail pids %{public}s",
+        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
+    
     return result;
 }
 }  // namespace Print

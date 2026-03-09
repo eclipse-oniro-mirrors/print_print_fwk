@@ -75,6 +75,12 @@ struct CallbackInfo {
     std::shared_ptr<PrintAttributes> newAttrs = nullptr;
 };
 
+enum class ExecuteResult {
+    SUCCESS,
+    FAIL,
+    SKIP
+};
+
 class BaseEventCallback {
 public:
     BaseEventCallback(
@@ -84,7 +90,7 @@ public:
 
     virtual ~BaseEventCallback() = default;
 
-    virtual bool Execute(const CallbackInfo &info) = 0;
+    virtual ExecuteResult Execute(const CallbackInfo &info) = 0;
     virtual bool IsRemoteDied(const sptr<IRemoteObject> &listener) = 0;
     virtual uint32_t Clear() = 0;
     virtual pid_t GetPid()

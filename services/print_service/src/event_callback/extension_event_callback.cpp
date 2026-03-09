@@ -21,39 +21,43 @@
 namespace OHOS {
 namespace Print {
 
-bool ExtensionEventCallback::Execute(const CallbackInfo &info)
+ExecuteResult ExtensionEventCallback::Execute(const CallbackInfo &info)
 {
     if (listener_ == nullptr) {
-        return false;
+        PRINT_HILOGW("listener is null");
+        return ExecuteResult::FAIL;
     }
     if (info.extensionId != extensionId_) {
-        return true;
+        return ExecuteResult::SKIP;
     }
-    PRINT_HILOGI("ExtensionEventCallback Execute, type=%{public}d, pid=%{public}d", info.cbEventType, GetPid());
-
+    bool ret = false;
     switch (info.cbEventType) {
         case EXTCB_START_DISCOVERY:
         case EXTCB_STOP_DISCOVERY:
         case EXTCB_DESTROY_EXTENSION: {
-            return listener_->OnCallback();
+            ret = listener_->OnCallback();
+            break;
         }
         case EXTCB_CONNECT_PRINTER:
         case EXTCB_DISCONNECT_PRINTER:
         case EXTCB_REQUEST_CAP: {
-            return listener_->OnCallback(info.printerId);
+            ret = listener_->OnCallback(info.printerId);
+            break;
         }
         case EXTCB_START_PRINT:
         case EXTCB_CANCEL_PRINT: {
             if (!info.printJobInfo) {
-                return false;
+                return ExecuteResult::FAIL;
             }
-            return listener_->OnCallback(*info.printJobInfo);
+            ret = listener_->OnCallback(*info.printJobInfo);
+            break;
         }
         case EXTCB_REQUEST_PREVIEW:
-            return true;
+            return ExecuteResult::SKIP;
         default:
-            return false;
+            return ExecuteResult::FAIL;
     }
+    return ret ? ExecuteResult::SUCCESS : ExecuteResult::FAIL;
 }
 
 bool ExtensionEventCallback::IsRemoteDied(const sptr<IRemoteObject> &listener)
