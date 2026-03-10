@@ -1965,7 +1965,7 @@ int32_t PrintServiceAbility::UpdatePrintJobStateOnlyForSystemApp(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) && !CheckPermission(PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -3502,7 +3502,7 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
 int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInfo)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) && !CheckPermission(PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
