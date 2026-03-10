@@ -3792,6 +3792,9 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             printSystemData_.UpdatePrinterUri(printerInfo);
             printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         }
+        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerInfo->GetPrinterId(), *printerInfo)) {
+            PRINT_HILOGW("cannot update printer info by added printer info");
+        }
         UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
     }
     return true;
