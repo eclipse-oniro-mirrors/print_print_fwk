@@ -715,7 +715,11 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
-    StartDiscoveryCallerMonitorThread();
+    if (!IsPcModeSupported()) {
+        StartDiscoveryCallerMonitorThread();
+    } else {
+        PRINT_HILOGW("Skip discovery caller monitor.");
+    }
 
     PrintCallerAppInfo appInfo(callerPid, userId, bundleName);
     discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
@@ -784,7 +788,11 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
     }
 
     PRINT_HILOGI("All discovery callers stopped, stopping discovery");
-    StopDiscoveryInternal();
+    if (!IsPcModeSupported()) {
+        StopDiscoveryInternal();
+    } else {
+        PRINT_HILOGW("Skip to stop discovery.");
+    }
 
     PRINT_HILOGI("StopDiscoverPrinter end.");
     return E_PRINT_NONE;
