@@ -64,6 +64,10 @@ public:
 
     void SetDuplexMode(uint32_t duplexmode);
 
+    void SetNumberUp(uint32_t numberUp);
+
+    void SetNumberUpLayout(uint32_t numberUpLayout);
+
     void SetMargin(const PrintMargin &margin);
 
     void SetOption(const std::string &option);
@@ -97,6 +101,10 @@ public:
     [[nodiscard]] uint32_t GetColorMode() const;
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
+
+    [[nodiscard]] uint32_t GetNumberUp() const;
+
+    [[nodiscard]] uint32_t GetNumberUpLayout() const;
 
     [[nodiscard]] bool HasMargin() const;
 
@@ -138,6 +146,8 @@ private:
     bool isLandscape_;
     uint32_t colorMode_;
     uint32_t duplexMode_;
+    uint32_t numberUp_;
+    uint32_t numberUpLayout_;
     bool hasMargin_;
     PrintMargin margin_;
     bool hasPreview_;

@@ -69,36 +69,6 @@ int32_t VendorDriverBase::OnPrinterDiscovered(const std::string &vendorName, con
     return 0;
 }
 
-void VendorDriverBase::UpdateAllPrinterStatus()
-{
-    std::lock_guard<std::mutex> lock(statusMapMutex);
-    uint64_t currentTime = GetNowTime();
-    for (auto const &pair : vendorStatusMap) {
-        auto vendorStatus = pair.second;
-        if (vendorStatus == nullptr) {
-            PRINT_HILOGW("status is null, %{private}s", pair.first.c_str());
-            continue;
-        }
-        if (currentTime < vendorStatus->lastCheckTime + MONITOR_CHECK_INTERVAL_MS) {
-            continue;
-        }
-        if (currentTime < vendorStatus->lastUpdateTime + MONITOR_CHECK_INTERVAL_MS) {
-            continue;
-        }
-        vendorStatus->lastCheckTime = currentTime;
-        std::vector<std::string> list;
-        list.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-        OnQueryProperties(pair.first, list);
-        if (currentTime < vendorStatus->lastUpdateTime + MONITOR_OFFLINE_TIMEOUT_MS) {
-            continue;
-        }
-        vendorStatus->state = PRINTER_UNAVAILABLE;
-        if (vendorManager != nullptr) {
-            vendorManager->OnPrinterStatusChanged(GetVendorName(), pair.first, *vendorStatus);
-        }
-    }
-}
-
 bool VendorDriverBase::MonitorPrinterStatus(const std::string &printerId, bool on)
 {
     std::lock_guard<std::mutex> lock(statusMapMutex);

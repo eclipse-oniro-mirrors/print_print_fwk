@@ -118,7 +118,6 @@ bool VendorManager::Init(sptr<PrintServiceAbility> sa, bool loadDefault)
 void VendorManager::UnInit()
 {
     PRINT_HILOGI("UnInit enter");
-    StopStatusMonitor();
     std::lock_guard<std::mutex> lock(vendorMapMutex);
     for (auto const &pair : vendorMap) {
         PRINT_HILOGD("UnInit %{public}s", pair.first.c_str());
@@ -410,96 +409,9 @@ std::shared_ptr<VendorDriverBase> VendorManager::FindDriverByVendorName(const st
     return iter->second;
 }
 
-void VendorManager::StartStatusMonitor()
-{
-    PRINT_HILOGI("StartStatusMonitor Enter");
-    std::lock_guard<std::mutex> lock(apiMutex);
-    {
-        std::unique_lock<std::mutex> lock(statusMonitorMutex);
-        if (statusMonitorOn) {
-            PRINT_HILOGW("already on");
-            return;
-        }
-        statusMonitorOn = true;
-    }
-    PRINT_HILOGI("StartStatusMonitor Now");
-    statusMonitorThread = std::thread(&VendorManager::StatusMonitorProcess, this);
-    PRINT_HILOGI("StartStatusMonitor Quit");
-}
-
-void VendorManager::StopStatusMonitor()
-{
-    PRINT_HILOGI("StopStatusMonitor Enter");
-    std::lock_guard<std::mutex> lock(apiMutex);
-    {
-        std::unique_lock<std::mutex> lock(statusMonitorMutex);
-        statusMonitorOn = false;
-    }
-    statusMonitorCondition.notify_one();
-    if (statusMonitorThread.joinable()) {
-        statusMonitorThread.join();
-    }
-    PRINT_HILOGI("StopStatusMonitor Quit");
-}
-
-void VendorManager::StatusMonitorProcess()
-{
-    PRINT_HILOGI("StatusMonitorProcess Enter");
-    while (WaitNext()) {
-        UpdateAllPrinterStatus();
-    }
-    PRINT_HILOGI("StatusMonitorProcess Quit");
-}
-
-void VendorManager::UpdateAllPrinterStatus()
-{
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->UpdateAllPrinterStatus();
-    }
-}
-
-bool VendorManager::WaitNext()
-{
-    std::unique_lock<std::mutex> lock(statusMonitorMutex);
-    if (!statusMonitorOn) {
-        return false;
-    }
-    statusMonitorCondition.wait_for(lock, std::chrono::milliseconds(MONITOR_CHECK_INTERVAL_MS));
-    if (!statusMonitorOn) {
-        return false;
-    }
-    return true;
-}
-
 bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName)
 {
     return vendorName == VENDOR_PPD_DRIVER;
-}
-
-bool VendorManager::MonitorPrinterStatus(const std::string &globalPrinterId, bool on)
-{
-    std::string globalVendorName = ExtractGlobalVendorName(globalPrinterId);
-    std::string printerId = ExtractPrinterId(globalPrinterId);
-    if (globalVendorName.empty() || printerId.empty()) {
-        PRINT_HILOGW("invalid printer id: %{private}s", globalPrinterId.c_str());
-        return false;
-    }
-    std::string vendorName = ExtractVendorName(globalVendorName);
-    if (vendorName.empty()) {
-        PRINT_HILOGW("vendor name empty");
-        return false;
-    }
-    auto vendorDriver = FindDriverByVendorName(vendorName);
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGW("vendor driver is null");
-        return false;
-    }
-    return vendorDriver->MonitorPrinterStatus(printerId, on);
 }
 
 bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri)

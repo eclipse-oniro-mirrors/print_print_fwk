@@ -226,6 +226,22 @@ enum PrintQualityCode {
     PRINT_QUALITY_HIGH = 5
 };
 
+enum PrintNumberUpLayout {
+    NUMBER_UP_LAYOUT_LRTB = 0,  // Left to Right, Top to Bottom
+    NUMBER_UP_LAYOUT_RLTB = 1,  // Right to Left, Top to Bottom
+    NUMBER_UP_LAYOUT_TBLR = 2,  // Top to Bottom, Left to Right
+    NUMBER_UP_LAYOUT_TBRL = 3,  // Top to Bottom, Right to Left
+    NUMBER_UP_LAYOUT_LRBT = 4,  // Left to Right, Bottom to Top
+    NUMBER_UP_LAYOUT_RLBT = 5,  // Right to Left, Bottom to Top
+    NUMBER_UP_LAYOUT_BTLR = 6,  // Bottom to Top, Left to Right
+    NUMBER_UP_LAYOUT_BTRL = 7,  // Bottom to Top, Right to Left
+};
+
+constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;   // Minimum value for numberUp (single page per sheet)
+constexpr uint32_t NUMBER_UP_MAX_VALUE = 16;  // Maximum value for numberUp
+constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp
+constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT_VALUE = NUMBER_UP_LAYOUT_LRTB;  // Default layout for numberUp
+
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,
     PRINT_DOCUMENT_FORMAT_JPEG = 1,

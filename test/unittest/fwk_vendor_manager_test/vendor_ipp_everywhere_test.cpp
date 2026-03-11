@@ -132,11 +132,8 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0004, TestSize.Level2)
     EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mock, OnPrinterStatusChanged(_, _, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
-    vendorDriver.MonitorPrinterStatus(PRINTER_TEST_IP, true);
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
     EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""));
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorDriver.MonitorPrinterStatus(PRINTER_TEST_IP, false);
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
     vendorDriver.UnInit();
@@ -196,28 +193,10 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
     std::string printerId = "test";
     Print_PrinterState state = Print_PrinterState::PRINTER_UNAVAILABLE;
     vendorDriver.OnPrinterStateQueried(printerId, state);
-    vendorDriver.UpdateAllPrinterStatus();
-    EXPECT_TRUE(vendorDriver.MonitorPrinterStatus(printerId, true));
-    vendorDriver.UpdateAllPrinterStatus();
     EXPECT_FALSE(vendorDriver.OnQueryCapability(printerId, 0));
     EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(printerId, "", ""));
     std::vector<std::string> propertyKeys;
     EXPECT_FALSE(vendorDriver.OnQueryProperties(printerId, propertyKeys));
-}
-
-HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0009, TestSize.Level2)
-{
-    MockVendorManager mock;
-    VendorDriverBaseTest vendorDriver;
-    std::string printerId = "test";
-    EXPECT_TRUE(vendorDriver.MonitorPrinterStatus(printerId, true));
-    EXPECT_TRUE(vendorDriver.Init(&mock));
-    EXPECT_CALL(mock, OnPrinterStatusChanged(_, _, _)).WillRepeatedly(Return(false));
-    EXPECT_FALSE(vendorDriver.MonitorPrinterStatus(printerId, true));
-    vendorDriver.UpdateAllPrinterStatus();
-    EXPECT_TRUE(vendorDriver.MonitorPrinterStatus(printerId, false));
-    EXPECT_FALSE(vendorDriver.MonitorPrinterStatus(printerId, false));
-    vendorDriver.UnInit();
 }
 }  // namespace Print
 }  // namespace OHOS

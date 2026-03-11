@@ -562,6 +562,8 @@ std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobPara
     if (params.isSequential != PARAM_NOT_SET) {
         nativeObj->SetIsSequential(static_cast<bool>(params.isSequential));
     }
+    nativeObj->SetNumberUp(params.numberUp);
+    nativeObj->SetNumberUpLayout(params.numberUpLayout);
     SetOptionInPrintJob(params, nativeObj);
     return nativeObj;
 }

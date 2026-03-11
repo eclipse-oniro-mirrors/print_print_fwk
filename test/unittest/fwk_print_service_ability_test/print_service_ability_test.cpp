@@ -1418,6 +1418,28 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081_NeedRename, TestS
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobStateOnlyForSystemApp_EnterpriseManagePrintPermission, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    service->helper_ = mockHelper;
+    
+    std::string jobId = "123";
+    uint32_t state = PRINT_JOB_COMPLETED;
+    uint32_t subState = PRINT_JOB_COMPLETED_SUCCESS;
+    
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly([](const std::string &permission) {
+            if (permission == PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT) {
+                return true;
+            }
+            return false;
+        });
+    
+    auto ret = service->UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
+    EXPECT_EQ(ret, E_PRINT_INVALID_USERID);
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2126,6 +2148,26 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
     info.SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_EnterpriseManagePrintPermission, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    service->helper_ = mockHelper;
+    
+    PrinterInfo info;
+    info.SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly([](const std::string &permission) {
+            if (permission == PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT) {
+                return true;
+            }
+            return false;
+        });
+    
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PRINTER);
 }
 
@@ -3704,6 +3746,39 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UpdateVendorPrinterToD
     EXPECT_EQ(printerInfo->GetAlias(), expectedAlias);
 }
 
+/**
+ * @tc.name: PrintServiceAbilityTest_AddVendorPrinterToDiscovery_QueryAddedPrinterInfoFailed_001
+ * @tc.desc: Test AddVendorPrinterToDiscovery when QueryAddedPrinterInfoByPrinterId fails
+ * @tc.type: FUNC
+ * @tc.require: When printer is added but QueryAddedPrinterInfoByPrinterId fails, should handle gracefully
+ */
+HWTEST_F(PrintServiceAbilityTest,
+    PrintServiceAbilityTest_AddVendorPrinterToDiscovery_QueryAddedPrinterInfoFailed_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string printerName = "TestPrinterName";
+    std::string printerUri = "ipp://192.168.1.1:631/ipp/print";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalId);
+    addedPrinter.SetPrinterName(printerName);
+    addedPrinter.SetUri(printerUri);
+    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+
+    PrinterInfo discoveredPrinter;
+    discoveredPrinter.SetPrinterId(printerId);
+    discoveredPrinter.SetPrinterName(printerName);
+    discoveredPrinter.SetUri(printerUri);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetPrinterId(), globalId);
+}
+
 HWTEST_F(PrintServiceAbilityTest, StopCupsd_EnterprisedEnable_EnterpriseSpace, TestSize.Level1)
 {
 #ifdef ENTERPRISE_ENABLE
@@ -3801,6 +3876,33 @@ HWTEST_F(PrintServiceAbilityTest, RegisterKiaInterceptorCallbackTest, TestSize.L
     EXPECT_EQ(service->RegisterKiaInterceptorCallback(nullptr), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->RegisterKiaInterceptorCallback(nullptr), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->RegisterKiaInterceptorCallback(callback), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RefreshIpPrinterToIdle, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string ip = "1.1.1.1";
+    std::string id = "printer";
+    PrinterInfo info, ipInfo;
+ 
+    info.SetPrinterId(id);
+    info.SetPrinterName(id);
+    info.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+ 
+    ipInfo.SetPrinterId(ip);
+    ipInfo.SetPrinterName(ip);
+    ipInfo.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+ 
+    service->printSystemData_.InsertAddedPrinter(id, info);
+    service->printSystemData_.InsertAddedPrinter(ip, ipInfo);
+ 
+    service->RefreshIpPrinter();
+ 
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, info);
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(ip, ipInfo);
+ 
+    EXPECT_EQ(info.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    EXPECT_EQ(ipInfo.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 }  // namespace Print
 }  // namespace OHOS

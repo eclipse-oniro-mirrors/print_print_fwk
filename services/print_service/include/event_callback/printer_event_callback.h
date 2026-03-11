@@ -30,7 +30,7 @@ public:
         : BaseEventCallback(userId, pid, eventType, deathRecipient), listener_(listener)
     {}
 
-    virtual bool Execute(const CallbackInfo &info) override;
+    virtual ExecuteResult Execute(const CallbackInfo &info) override;
     virtual bool IsRemoteDied(const sptr<IRemoteObject> &listener) override;
     virtual uint32_t Clear() override;
     void SetListener(const sptr<IPrintCallback> &listener);

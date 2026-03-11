@@ -25,6 +25,7 @@
 #include "print_cups_wrapper.h"
 #include "print_service_ability.h"
 #include "print_job.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 typedef std::function<void()> CallbackFunc;
@@ -47,6 +48,8 @@ struct JobParameters {
     std::string mediaType;
     std::string color;
     std::string serviceJobId;
+    uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
+    uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
@@ -189,8 +192,10 @@ private:
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
@@ -223,6 +228,7 @@ private:
     void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
     std::string GetColorString(uint32_t colorCode);
+    static std::string GetNumberUpLayoutString(uint32_t layoutCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);

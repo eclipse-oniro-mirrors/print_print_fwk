@@ -110,7 +110,6 @@ public:
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on);
     virtual bool IsStatusMonitoring(const std::string &printerId);
     virtual bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value);
-    virtual void UpdateAllPrinterStatus();
 #ifdef ENTERPRISE_ENABLE
     virtual void OnSwitchSpace();
 #endif // ENTERPRISE_ENABLE

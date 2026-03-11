@@ -420,6 +420,16 @@ void NapiPrintUtils::DeleteReference(napi_env env, napi_ref callbackRef)
 }
 
 /* boolean */
+bool NapiPrintUtils::GetBooleanFromValue(napi_env env, napi_value value)
+{
+    if (value == nullptr) {
+        return false;
+    }
+    bool ret = false;
+    PRINT_CALL_BASE(env, napi_get_value_bool(env, value, &ret), false);
+    return ret;
+}
+
 bool NapiPrintUtils::GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (object == nullptr) {
