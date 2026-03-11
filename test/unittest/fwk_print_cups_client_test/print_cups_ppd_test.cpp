@@ -19,9 +19,6 @@
 #include "print_cups_ppd.h"
 #include "printer_capability.h"
 #include "print_log.h"
-#include "print_json_util.h"
-#include <fstream>
-#include <sys/stat.h>
 
 using namespace testing;
 using namespace testing::ext;
@@ -29,27 +26,19 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 
-static const std::string TEST_PPD_DIR = "/data/service/el1/public/print_service/test_ppd";
-
 class PrintCupsPpdTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    std::string CreateTestPpdFile(const std::string &content);
-    void RemoveTestPpdFile(const std::string &filePath);
 };
 
 void PrintCupsPpdTest::SetUpTestCase(void)
-{
-    system(("mkdir -p " + TEST_PPD_DIR).c_str());
-}
+{}
 
 void PrintCupsPpdTest::TearDownTestCase(void)
-{
-    system(("rm -rf " + TEST_PPD_DIR).c_str());
-}
+{}
 
 void PrintCupsPpdTest::SetUp(void)
 {
@@ -59,25 +48,6 @@ void PrintCupsPpdTest::SetUp(void)
 
 void PrintCupsPpdTest::TearDown(void)
 {}
-
-std::string PrintCupsPpdTest::CreateTestPpdFile(const std::string &content)
-{
-    std::string filePath = TEST_PPD_DIR + "/test_" + std::to_string(std::rand()) + ".ppd";
-    std::ofstream file(filePath);
-    if (file.is_open()) {
-        file << content;
-        file.close();
-        return filePath;
-    }
-    return "";
-}
-
-void PrintCupsPpdTest::RemoveTestPpdFile(const std::string &filePath)
-{
-    if (!filePath.empty()) {
-        remove(filePath.c_str());
-    }
-}
 
 /**
  * @tc.name: QueryPrinterCapabilityFromPPDFile_001
