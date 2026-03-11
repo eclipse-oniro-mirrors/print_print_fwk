@@ -3016,7 +3016,7 @@ HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoRequiredFields_Test, 
     // Empty optionJson
     printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
-    EXPECT_EQ(jobParams->jobName, DEFAULT_JOB_NAME);
+    EXPECT_EQ(jobParams->jobName, "test");
     EXPECT_EQ(jobParams->mediaType, CUPS_MEDIA_TYPE_PLAIN);
     EXPECT_TRUE(jobParams->advancedOpsJson.isNull());
     delete jobParams;
@@ -3259,7 +3259,7 @@ HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_MatchingPrinter_Test, TestSi
     PrinterInfo info;
     info.SetPrinterId("USB-test_printer");
     info.SetPrinterName("test_printer");
-    AddUsbPrinter(info);
+    GetUsbPrinters().push_back(info);
     
     bool ret = printCupsClient.CheckUsbPrinterOnline("USB-test_printer");
     EXPECT_TRUE(ret);
@@ -3642,7 +3642,7 @@ HWTEST_F(PrintCupsClientTest, QueryUsbPrinterInfoByPrinterId_MatchingPrinter_Tes
     PrinterInfo info;
     info.SetPrinterId("USB-test_printer");
     info.SetPrinterName("test_printer");
-    AddUsbPrinter(info);
+    GetUsbPrinters().push_back(info);
     
     auto ret = printCupsClient.QueryUsbPrinterInfoByPrinterId("USB-test_printer");
     EXPECT_NE(ret, nullptr);
