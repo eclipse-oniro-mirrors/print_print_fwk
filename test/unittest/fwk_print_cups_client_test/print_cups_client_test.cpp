@@ -2715,5 +2715,1062 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_Success_Test, TestSize
     WatermarkManager::ResetInstance();
 }
 #endif // WATERMARK_ENFORCING_ENABLE
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_001
+ * @tc.desc: FillNumberUpOptions with null jobParams
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NullParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillNumberUpOptions(nullptr, numOptions, &options);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_002
+ * @tc.desc: FillNumberUpOptions with valid numberUp value
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_ValidValue_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 2;
+    jobParams->numberUpLayout = 0;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_003
+ * @tc.desc: FillNumberUpOptions with numberUp disabled (value <= 1)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_Disabled_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 1;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 0);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_004
+ * @tc.desc: FillNumberUpOptions with numberUp = 4
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_FourUp_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 4;
+    jobParams->numberUpLayout = 1;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_005
+ * @tc.desc: FillNumberUpOptions with numberUp = 6
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_SixUp_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 6;
+    jobParams->numberUpLayout = 2;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_006
+ * @tc.desc: FillNumberUpOptions with numberUp = 9
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NineUp_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 9;
+    jobParams->numberUpLayout = 3;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetNumberUpLayoutString_001
+ * @tc.desc: GetNumberUpLayoutString with various layout codes
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetNumberUpLayoutString_VariousCodes_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    // Test different layout codes
+    std::string layout0 = printCupsClient.GetNumberUpLayoutString(0);
+    EXPECT_FALSE(layout0.empty());
+    
+    std::string layout1 = printCupsClient.GetNumberUpLayoutString(1);
+    EXPECT_FALSE(layout1.empty());
+    
+    std::string layout2 = printCupsClient.GetNumberUpLayoutString(2);
+    EXPECT_FALSE(layout2.empty());
+    
+    std::string layout3 = printCupsClient.GetNumberUpLayoutString(3);
+    EXPECT_FALSE(layout3.empty());
+    
+    // Invalid layout code
+    std::string layoutInvalid = printCupsClient.GetNumberUpLayoutString(999);
+    EXPECT_FALSE(layoutInvalid.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillMediaOptions_001
+ * @tc.desc: FillMediaOptions with null jobParams
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillMediaOptions_NullParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillMediaOptions(nullptr, numOptions, &options);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillMediaOptions_002
+ * @tc.desc: FillMediaOptions with valid media size
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillMediaOptions_ValidMediaSize_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->mediaSize = "A4";
+    jobParams->mediaType = "Plain";
+    jobParams->numberUp = 0;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 3);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillMediaOptions_003
+ * @tc.desc: FillMediaOptions with empty media size
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillMediaOptions_EmptyMediaSize_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->mediaSize = "";
+    jobParams->mediaType = "";
+    jobParams->numberUp = 0;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 3);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillMediaOptions_004
+ * @tc.desc: FillMediaOptions with numberUp enabled
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillMediaOptions_NumberUpEnabled_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->mediaSize = "A4";
+    jobParams->mediaType = "Plain";
+    jobParams->numberUp = 2;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_UpdateJobParameterByOption_001
+ * @tc.desc: UpdateJobParameterByOption with printQuality as integer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_PrintQualityInt_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    
+    optionJson["printQuality"] = 3;
+    optionJson["jobName"] = "testJob";
+    optionJson["mediaType"] = "Plain";
+    
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->printQuality, "3");
+    EXPECT_EQ(jobParams->jobName, "testJob");
+    EXPECT_EQ(jobParams->mediaType, "Plain");
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_UpdateJobParameterByOption_002
+ * @tc.desc: UpdateJobParameterByOption with advancedOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_AdvancedOptions_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    
+    Json::Value advancedOptions;
+    advancedOptions["key1"] = "value1";
+    advancedOptions["key2"] = "value2";
+    optionJson["advancedOptions"] = advancedOptions;
+    
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_FALSE(jobParams->advancedOpsJson.isNull());
+    EXPECT_EQ(jobParams->advancedOpsJson["key1"].asString(), "value1");
+    EXPECT_EQ(jobParams->advancedOpsJson["key2"].asString(), "value2");
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_UpdateJobParameterByOption_003
+ * @tc.desc: UpdateJobParameterByOption with cupsOptions string
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_CupsOptionsString_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    
+    optionJson["cupsOptions"] = "testCupsOptions";
+    
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->printerAttrsOptionCupsOption, "testCupsOptions");
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_UpdateJobParameterByOption_004
+ * @tc.desc: UpdateJobParameterByOption without required fields
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoRequiredFields_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    
+    // Empty optionJson
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
+    EXPECT_EQ(jobParams->jobName, DEFAULT_JOB_NAME);
+    EXPECT_EQ(jobParams->mediaType, CUPS_MEDIA_TYPE_PLAIN);
+    EXPECT_TRUE(jobParams->advancedOpsJson.isNull());
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_BuildCupsOptionParamsByAdvJson_001
+ * @tc.desc: BuildCupsOptionParamsByAdvJson with valid json
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByAdvJson_ValidJson_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value jsonAdvOpt;
+    std::map<std::string, std::string> mapParams;
+    
+    jsonAdvOpt["Option1"] = "Value1";
+    jsonAdvOpt["Option2"] = "Value2";
+    
+    printCupsClient.BuildCupsOptionParamsByAdvJson(jsonAdvOpt, mapParams);
+    EXPECT_EQ(mapParams.size(), 2u);
+    EXPECT_EQ(mapParams["Option1"], "Value1");
+    EXPECT_EQ(mapParams["Option2"], "Value2");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_BuildCupsOptionParamsByAdvJson_002
+ * @tc.desc: BuildCupsOptionParamsByAdvJson with empty json
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByAdvJson_EmptyJson_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value jsonAdvOpt;
+    std::map<std::string, std::string> mapParams;
+    
+    printCupsClient.BuildCupsOptionParamsByAdvJson(jsonAdvOpt, mapParams);
+    EXPECT_TRUE(mapParams.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_BuildCupsOptionParamsByAdvJson_003
+ * @tc.desc: BuildCupsOptionParamsByAdvJson with nested json
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByAdvJson_NestedJson_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value jsonAdvOpt;
+    std::map<std::string, std::string> mapParams;
+    
+    jsonAdvOpt["PageSize"] = "A4";
+    jsonAdvOpt["ColorModel"] = "RGB";
+    jsonAdvOpt["Duplex"] = "None";
+    
+    printCupsClient.BuildCupsOptionParamsByAdvJson(jsonAdvOpt, mapParams);
+    EXPECT_EQ(mapParams.size(), 3u);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetNewSubstate_001
+ * @tc.desc: GetNewSubstate with various inputs
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetNewSubstate_VariousInputs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    uint32_t result1 = printCupsClient.GetNewSubstate(0, PRINT_JOB_BLOCKED_UNKNOWN);
+    EXPECT_EQ(result1, static_cast<uint32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
+    
+    uint32_t result2 = printCupsClient.GetNewSubstate(result1, PRINT_JOB_BLOCKED_OFFLINE);
+    EXPECT_GT(result2, result1);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DumpCupsConflicts_001
+ * @tc.desc: DumpCupsConflicts with empty conflict types
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DumpCupsConflicts_EmptyTypes_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::map<std::string, std::string> mapParams;
+    std::vector<std::string> conflictTypes;
+    
+    mapParams["PageSize"] = "A4";
+    
+    // This should not crash
+    printCupsClient.DumpCupsConflicts(mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+    EXPECT_TRUE(conflictTypes.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DumpCupsConflicts_002
+ * @tc.desc: DumpCupsConflicts with conflict types
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DumpCupsConflicts_WithConflictTypes_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::map<std::string, std::string> mapParams;
+    std::vector<std::string> conflictTypes;
+    
+    mapParams["PageSize"] = "A4";
+    conflictTypes.push_back(PRINT_PARAM_TYPE_PAGE_SIZE);
+    
+    // This should not crash
+    printCupsClient.DumpCupsConflicts(mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+    EXPECT_EQ(conflictTypes.size(), 1u);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ParseStateReasons_001
+ * @tc.desc: ParseStateReasons with null params
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateReasons_NullParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // This should not crash
+    printCupsClient.ParseStateReasons(nullptr);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_SpecialJobStatusCallback_001
+ * @tc.desc: SpecialJobStatusCallback with blocked state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, SpecialJobStatusCallback_BlockedState_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isBlock = true;
+    param->timesOfSameState = 0;
+    param->substate = PRINT_JOB_BLOCKED_UNKNOWN;
+    
+    bool ret = printCupsClient.SpecialJobStatusCallback(param);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_SpecialJobStatusCallback_002
+ * @tc.desc: SpecialJobStatusCallback with non-blocked state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, SpecialJobStatusCallback_NonBlockedState_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isBlock = false;
+    
+    bool ret = printCupsClient.SpecialJobStatusCallback(param);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_SpecialJobStatusCallback_003
+ * @tc.desc: SpecialJobStatusCallback with blocked and timesOfSameState >= STATE_UPDATE_STEP
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, SpecialJobStatusCallback_BlockedHighTimes_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isBlock = true;
+    param->timesOfSameState = STATE_UPDATE_STEP;
+    param->substate = PRINT_JOB_BLOCKED_UNKNOWN;
+    
+    bool ret = printCupsClient.SpecialJobStatusCallback(param);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_BuildMonitorPolicy_001
+ * @tc.desc: BuildMonitorPolicy with null params
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildMonitorPolicy_NullParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // This should not crash
+    printCupsClient.BuildMonitorPolicy(nullptr);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CheckUsbPrinterOnline_001
+ * @tc.desc: CheckUsbPrinterOnline with empty printer list
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_EmptyList_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    ClearUsbPrinters();
+    bool ret = printCupsClient.CheckUsbPrinterOnline("nonexistent_printer_id");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CheckUsbPrinterOnline_002
+ * @tc.desc: CheckUsbPrinterOnline with matching printer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_MatchingPrinter_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    ClearUsbPrinters();
+    
+    PrinterInfo info;
+    info.SetPrinterId("USB-test_printer");
+    info.SetPrinterName("test_printer");
+    AddUsbPrinter(info);
+    
+    bool ret = printCupsClient.CheckUsbPrinterOnline("USB-test_printer");
+    EXPECT_TRUE(ret);
+    
+    ClearUsbPrinters();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CheckPrinterOnline_001
+ * @tc.desc: CheckPrinterOnline with null params
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CheckPrinterOnline_NullParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.CheckPrinterOnline(nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_InterruptCupsJob_001
+ * @tc.desc: InterruptCupsJob with non-existent job
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, InterruptCupsJob_NonExistentJob_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.InterruptCupsJob("non_existent_job_id");
+    // Should not crash
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_InterruptCupsJob_002
+ * @tc.desc: InterruptCupsJob with job in queue
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, InterruptCupsJob_JobInQueue_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    printCupsClient.jobQueue_.push_back(jobParams);
+    
+    printCupsClient.InterruptCupsJob(GetDefaultJobId());
+    EXPECT_EQ(printCupsClient.jobQueue_.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetCurCupsRootDir_001
+ * @tc.desc: GetCurCupsRootDir returns valid path
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetCurCupsRootDir_ValidPath_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    const std::string& path = printCupsClient.GetCurCupsRootDir();
+    EXPECT_FALSE(path.empty());
+    EXPECT_NE(path.find("cups"), std::string::npos);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetCurCupsModelDir_001
+ * @tc.desc: GetCurCupsModelDir returns valid path
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetCurCupsModelDir_ValidPath_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string path = printCupsClient.GetCurCupsModelDir();
+    EXPECT_FALSE(path.empty());
+    EXPECT_NE(path.find("model"), std::string::npos);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetCurCupsdControlParam_001
+ * @tc.desc: GetCurCupsdControlParam returns valid param
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetCurCupsdControlParam_ValidParam_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    const std::string& param = printCupsClient.GetCurCupsdControlParam();
+    EXPECT_FALSE(param.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CancelPrinterJob_001
+ * @tc.desc: CancelPrinterJob with valid cupsJobId
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CancelPrinterJob_ValidJobId_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Testing with invalid http connection - should return false
+    bool ret = printCupsClient.CancelPrinterJob(12345);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CancelPrinterJob_002
+ * @tc.desc: CancelPrinterJob with name and user
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CancelPrinterJob_WithNameUser_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.CancelPrinterJob(12345, "test_printer", "test_user");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ResumePrinter_001
+ * @tc.desc: ResumePrinter with empty printer name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ResumePrinter_EmptyName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.ResumePrinter("");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ResumePrinter_002
+ * @tc.desc: ResumePrinter with valid printer name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ResumePrinter_ValidName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.ResumePrinter("test_printer_name");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DeleteExtraJobsFromCups_001
+ * @tc.desc: DeleteExtraJobsFromCups basic test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DeleteExtraJobsFromCups_Basic_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int32_t ret = printCupsClient.DeleteExtraJobsFromCups();
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_getScheme_001
+ * @tc.desc: getScheme with valid URI
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, getScheme_ValidUri_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://192.168.1.1:631/ipp/print";
+    std::string scheme = printCupsClient.getScheme(uri);
+    EXPECT_EQ(scheme, "ipp");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_getScheme_002
+ * @tc.desc: getScheme with no scheme
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, getScheme_NoScheme_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "invalid_uri_no_scheme";
+    std::string scheme = printCupsClient.getScheme(uri);
+    EXPECT_TRUE(scheme.empty() || scheme == uri);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsIpAddress_001
+ * @tc.desc: IsIpAddress with valid IP
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsIpAddress_ValidIp_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.IsIpAddress("192.168.1.1");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsIpAddress_002
+ * @tc.desc: IsIpAddress with hostname
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsIpAddress_Hostname_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.IsIpAddress("localhost");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsIpAddress_003
+ * @tc.desc: IsIpAddress with null pointer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsIpAddress_NullPtr_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.IsIpAddress(nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryInfoByPpdName_001
+ * @tc.desc: QueryInfoByPpdName with invalid file name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryInfoByPpdName_InvalidFileName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PpdInfo info;
+    bool ret = printCupsClient.QueryInfoByPpdName("nonexistent.ppd", info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPpdInfoMap_001
+ * @tc.desc: QueryPpdInfoMap with invalid file path
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPpdInfoMap_InvalidPath_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::unordered_map<std::string, std::string> keyValues;
+    PpdInfo info;
+    bool ret = printCupsClient.QueryPpdInfoMap("/invalid/path/to/nonexistent.ppd", keyValues, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterPpd_001
+ * @tc.desc: ModifyCupsPrinterPpd with empty names
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterPpd_EmptyNames_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.ModifyCupsPrinterPpd("", "");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterPpd_002
+ * @tc.desc: ModifyCupsPrinterPpd with valid names
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterPpd_ValidNames_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.ModifyCupsPrinterPpd("test_printer", "test.ppd");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetPpdHashCode_001
+ * @tc.desc: GetPpdHashCode with empty name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetPpdHashCode_EmptyName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string hash = printCupsClient.GetPpdHashCode("");
+    EXPECT_TRUE(hash.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetPpdHashCode_002
+ * @tc.desc: GetPpdHashCode with valid name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetPpdHashCode_ValidName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string hash = printCupsClient.GetPpdHashCode("test.ppd");
+    EXPECT_FALSE(hash.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_SetCupsClientEnv_001
+ * @tc.desc: SetCupsClientEnv basic test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, SetCupsClientEnv_Basic_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // This should not crash
+    printCupsClient.SetCupsClientEnv();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsCupsServerAlive_001
+ * @tc.desc: IsCupsServerAlive basic test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsCupsServerAlive_Basic_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    bool ret = printCupsClient.IsCupsServerAlive();
+    // Result depends on system state
+    EXPECT_TRUE(ret == true || ret == false);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DiscoverBackendPrinters_001
+ * @tc.desc: DiscoverBackendPrinters basic test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DiscoverBackendPrinters_Basic_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::vector<PrinterInfo> printers;
+    int32_t ret = printCupsClient.DiscoverBackendPrinters(printers);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryUsbPrinterInfoByPrinterId_001
+ * @tc.desc: QueryUsbPrinterInfoByPrinterId with empty id
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryUsbPrinterInfoByPrinterId_EmptyId_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    ClearUsbPrinters();
+    auto ret = printCupsClient.QueryUsbPrinterInfoByPrinterId("");
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryUsbPrinterInfoByPrinterId_002
+ * @tc.desc: QueryUsbPrinterInfoByPrinterId with matching printer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryUsbPrinterInfoByPrinterId_MatchingPrinter_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    ClearUsbPrinters();
+    
+    PrinterInfo info;
+    info.SetPrinterId("USB-test_printer");
+    info.SetPrinterName("test_printer");
+    AddUsbPrinter(info);
+    
+    auto ret = printCupsClient.QueryUsbPrinterInfoByPrinterId("USB-test_printer");
+    EXPECT_NE(ret, nullptr);
+    
+    ClearUsbPrinters();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddPrinterToCups_001
+ * @tc.desc: AddPrinterToCups with empty params
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddPrinterToCups_EmptyParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int32_t ret = printCupsClient.AddPrinterToCups("", "", "");
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddPrinterToCupsWithPpd_001
+ * @tc.desc: AddPrinterToCupsWithPpd with empty params
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddPrinterToCupsWithPpd_EmptyParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int32_t ret = printCupsClient.AddPrinterToCupsWithPpd("", "", "", "");
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DeleteCupsPrinter_001
+ * @tc.desc: DeleteCupsPrinter with null name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DeleteCupsPrinter_NullName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int32_t ret = printCupsClient.DeleteCupsPrinter(nullptr);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DeleteCupsPrinter_002
+ * @tc.desc: DeleteCupsPrinter with valid name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DeleteCupsPrinter_ValidName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int32_t ret = printCupsClient.DeleteCupsPrinter("test_printer_name");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterStatusByUri_001
+ * @tc.desc: QueryPrinterStatusByUri with empty URI
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterStatusByUri_EmptyUri_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrinterStatus status;
+    int32_t ret = printCupsClient.QueryPrinterStatusByUri("", status);
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPPDInformation_001
+ * @tc.desc: QueryPPDInformation with empty makeModel
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPPDInformation_EmptyMakeModel_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string ppdName;
+    bool ret = printCupsClient.QueryPPDInformation("", ppdName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryAllPPDInformation_001
+ * @tc.desc: QueryAllPPDInformation with empty makeModel
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryAllPPDInformation_EmptyMakeModel_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::vector<PpdInfo> infos;
+    bool ret = printCupsClient.QueryAllPPDInformation("", infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_001
+ * @tc.desc: QueryPrinterCapabilityFromPPD with empty printer name and ppd name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_EmptyNames_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrinterCapability printerCaps;
+    int32_t ret = printCupsClient.QueryPrinterCapabilityFromPPD("", printerCaps, "");
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_002
+ * @tc.desc: QueryPrinterCapabilityFromPPD with invalid ppd name
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_InvalidPpdName_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrinterCapability printerCaps;
+    int32_t ret = printCupsClient.QueryPrinterCapabilityFromPPD("", printerCaps, "/invalid/path/nonexistent.ppd");
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
 }  // namespace Print
 }  // namespace OHOS

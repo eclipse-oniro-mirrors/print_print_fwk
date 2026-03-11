@@ -79,6 +79,7 @@ ohos_unittest("fwk_print_cups_client_test") {
   if (cups_enable) {
     sources += [
       "print_cups_client_test.cpp",
+      "print_cups_ppd_test.cpp",
       "print_cups_wrapper_test.cpp",
     ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
