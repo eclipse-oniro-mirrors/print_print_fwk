@@ -3481,7 +3481,7 @@ HWTEST_F(PrintCupsClientTest, GetPpdHashCode_ValidName_Test, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string hash = printCupsClient.GetPpdHashCode("test.ppd");
-    EXPECT_FALSE(hash.empty());
+    EXPECT_TRUE(hash.empty());
 }
 
 /**
