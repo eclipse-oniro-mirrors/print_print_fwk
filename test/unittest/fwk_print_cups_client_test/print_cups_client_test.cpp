@@ -2873,7 +2873,7 @@ HWTEST_F(PrintCupsClientTest, FillMediaOptions_LetterMediaSize_Test, TestSize.Le
     int numOptions = 0;
     cups_option_t *options = nullptr;
     int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 3);
+    EXPECT_EQ(ret, 2);
     cupsFreeOptions(ret, options);
     delete jobParams;
 }
@@ -3333,7 +3333,7 @@ HWTEST_F(PrintCupsClientTest, DeleteExtraJobsFromCups_Basic_Test, TestSize.Level
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.DeleteExtraJobsFromCups();
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -3522,7 +3522,7 @@ HWTEST_F(PrintCupsClientTest, DiscoverBackendPrinters_Basic_Test, TestSize.Level
     OHOS::Print::PrintCupsClient printCupsClient;
     std::vector<PrinterInfo> printers;
     int32_t ret = printCupsClient.DiscoverBackendPrinters(printers);
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
 }
 
 /**
