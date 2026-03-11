@@ -116,20 +116,20 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_002, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_003, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*DefaultDuplex: None
-*Duplex None: "<</Duplex false>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *DefaultDuplex: None
+        *Duplex None: "<</Duplex false>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -149,18 +149,18 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_003, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_004, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Mono Printer"
-*NickName: "Test Mono Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: False
-*DefaultColorModel: Gray
-*DefaultPageSize: Letter
-*PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Mono Printer"
+        *NickName: "Test Mono Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: False
+        *DefaultColorModel: Gray
+        *DefaultPageSize: Letter
+        *PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -180,20 +180,20 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_004, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_005, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test MultiSize Printer"
-*NickName: "Test MultiSize Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
-*PageSize Legal/Legal: "<</PageSize[612 1008]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test MultiSize Printer"
+        *NickName: "Test MultiSize Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
+        *PageSize Legal/Legal: "<</PageSize[612 1008]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -213,22 +213,22 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_005, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_006, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Duplex Printer"
-*NickName: "Test Duplex Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*DefaultDuplex: DuplexNoTumble
-*Duplex None: "<</Duplex false>>setpagedevice"
-*Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*Duplex DuplexTumble: "<</Duplex true/Tumble true>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Duplex Printer"
+        *NickName: "Test Duplex Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *DefaultDuplex: DuplexNoTumble
+        *Duplex None: "<</Duplex false>>setpagedevice"
+        *Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *Duplex DuplexTumble: "<</Duplex true/Tumble true>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -248,24 +248,24 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_006, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_007, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Quality Printer"
-*NickName: "Test Quality Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *cupsPrintQuality: PickOne
-*DefaultcupsPrintQuality: Normal
-*cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
-*cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
-*cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
-*CloseUI: *cupsPrintQuality
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Quality Printer"
+        *NickName: "Test Quality Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *cupsPrintQuality: PickOne
+        *DefaultcupsPrintQuality: Normal
+        *cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
+        *cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
+        *cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
+        *CloseUI: *cupsPrintQuality
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -285,24 +285,24 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_007, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_008, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test MediaType Printer"
-*NickName: "Test MediaType Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *MediaType: PickOne
-*DefaultMediaType: Plain
-*MediaType Plain/Plain Paper: "<</MediaType(Plain)>>setpagedevice"
-*MediaType Glossy/Glossy Paper: "<</MediaType(Glossy)>>setpagedevice"
-*MediaType Transparency/Transparency: "<</MediaType(Transparency)>>setpagedevice"
-*CloseUI: *MediaType
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test MediaType Printer"
+        *NickName: "Test MediaType Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *MediaType: PickOne
+        *DefaultMediaType: Plain
+        *MediaType Plain/Plain Paper: "<</MediaType(Plain)>>setpagedevice"
+        *MediaType Glossy/Glossy Paper: "<</MediaType(Glossy)>>setpagedevice"
+        *MediaType Transparency/Transparency: "<</MediaType(Transparency)>>setpagedevice"
+        *CloseUI: *MediaType
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -322,26 +322,26 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_008, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_009, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test OutputMode Printer"
-*NickName: "Test OutputMode Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *OutputMode: PickOne
-*DefaultOutputMode: Normal
-*OutputMode draft/Draft: "<</OutputMode(draft)>>setpagedevice"
-*OutputMode fast/Fast: "<</OutputMode(fast)>>setpagedevice"
-*OutputMode normal/Normal: "<</OutputMode(normal)>>setpagedevice"
-*OutputMode high/High: "<</OutputMode(high)>>setpagedevice"
-*OutputMode best/Best: "<</OutputMode(best)>>setpagedevice"
-*CloseUI: *OutputMode
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test OutputMode Printer"
+        *NickName: "Test OutputMode Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *OutputMode: PickOne
+        *DefaultOutputMode: Normal
+        *OutputMode draft/Draft: "<</OutputMode(draft)>>setpagedevice"
+        *OutputMode fast/Fast: "<</OutputMode(fast)>>setpagedevice"
+        *OutputMode normal/Normal: "<</OutputMode(normal)>>setpagedevice"
+        *OutputMode high/High: "<</OutputMode(high)>>setpagedevice"
+        *OutputMode best/Best: "<</OutputMode(best)>>setpagedevice"
+        *CloseUI: *OutputMode
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -361,19 +361,19 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_009, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_010, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer With Manufacturer"
-*NickName: "Test Printer With Manufacturer"
-*Manufacturer: "Test Manufacturer Inc"
-*ShortNickName: "TestPrinter"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer With Manufacturer"
+        *NickName: "Test Printer With Manufacturer"
+        *Manufacturer: "Test Manufacturer Inc"
+        *ShortNickName: "TestPrinter"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -406,24 +406,24 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_001, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_002, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
-*OpenUI *Duplex: PickOne
-*DefaultDuplex: None
-*Duplex None: "<</Duplex false>>setpagedevice"
-*Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*CloseUI: *Duplex
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
+        *OpenUI *Duplex: PickOne
+        *DefaultDuplex: None
+        *Duplex None: "<</Duplex false>>setpagedevice"
+        *Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *CloseUI: *Duplex
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -446,24 +446,24 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_002, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_003, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *Duplex: PickOne
-*DefaultDuplex: None
-*Duplex None: "<</Duplex false>>setpagedevice"
-*Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*Duplex DuplexTumble: "<</Duplex true/Tumble true>>setpagedevice"
-*CloseUI: *Duplex
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *Duplex: PickOne
+        *DefaultDuplex: None
+        *Duplex None: "<</Duplex false>>setpagedevice"
+        *Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *Duplex DuplexTumble: "<</Duplex true/Tumble true>>setpagedevice"
+        *CloseUI: *Duplex
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -486,23 +486,23 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_003, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_004, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *ColorModel: PickOne
-*DefaultColorModel: RGB
-*ColorModel Gray/Grayscale: "<</cupsColorModel 0>>setpagedevice"
-*ColorModel RGB/Color: "<</cupsColorModel 1>>setpagedevice"
-*CloseUI: *ColorModel
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *ColorModel: PickOne
+        *DefaultColorModel: RGB
+        *ColorModel Gray/Grayscale: "<</cupsColorModel 0>>setpagedevice"
+        *ColorModel RGB/Color: "<</cupsColorModel 1>>setpagedevice"
+        *CloseUI: *ColorModel
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -525,24 +525,24 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_004, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_005, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *cupsPrintQuality: PickOne
-*DefaultcupsPrintQuality: Normal
-*cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
-*cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
-*cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
-*CloseUI: *cupsPrintQuality
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *cupsPrintQuality: PickOne
+        *DefaultcupsPrintQuality: Normal
+        *cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
+        *cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
+        *cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
+        *CloseUI: *cupsPrintQuality
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -580,19 +580,19 @@ HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_001, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_002, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -616,23 +616,23 @@ HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_002, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_003, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *Duplex: PickOne
-*DefaultDuplex: None
-*Duplex None: "<</Duplex false>>setpagedevice"
-*Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*CloseUI: *Duplex
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *Duplex: PickOne
+        *DefaultDuplex: None
+        *Duplex None: "<</Duplex false>>setpagedevice"
+        *Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *CloseUI: *Duplex
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -656,23 +656,23 @@ HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_003, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_011, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test JCLDuplex Printer"
-*NickName: "Test JCLDuplex Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *JCLDuplex: PickOne
-*DefaultJCLDuplex: None
-*JCLDuplex None: "<</Duplex false>>setpagedevice"
-*JCLDuplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*CloseUI: *JCLDuplex
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test JCLDuplex Printer"
+        *NickName: "Test JCLDuplex Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *JCLDuplex: PickOne
+        *DefaultJCLDuplex: None
+        *JCLDuplex None: "<</Duplex false>>setpagedevice"
+        *JCLDuplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *CloseUI: *JCLDuplex
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -692,23 +692,23 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_011, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_012, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test EFDuplex Printer"
-*NickName: "Test EFDuplex Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *EFDuplex: PickOne
-*DefaultEFDuplex: None
-*EFDuplex None: "<</Duplex false>>setpagedevice"
-*EFDuplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*CloseUI: *EFDuplex
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test EFDuplex Printer"
+        *NickName: "Test EFDuplex Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *EFDuplex: PickOne
+        *DefaultEFDuplex: None
+        *EFDuplex None: "<</Duplex false>>setpagedevice"
+        *EFDuplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *CloseUI: *EFDuplex
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -728,23 +728,23 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_012, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_013, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test KD03Duplex Printer"
-*NickName: "Test KD03Duplex Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *KD03Duplex: PickOne
-*DefaultKD03Duplex: None
-*KD03Duplex None: "<</Duplex false>>setpagedevice"
-*KD03Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*CloseUI: *KD03Duplex
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test KD03Duplex Printer"
+        *NickName: "Test KD03Duplex Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *KD03Duplex: PickOne
+        *DefaultKD03Duplex: None
+        *KD03Duplex None: "<</Duplex false>>setpagedevice"
+        *KD03Duplex DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *CloseUI: *KD03Duplex
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -764,23 +764,23 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_013, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_014, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Collate Printer"
-*NickName: "Test Collate Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *Collate: PickOne
-*DefaultCollate: True
-*Collate True: "<</Collate true>>setpagedevice"
-*Collate False: "<</Collate false>>setpagedevice"
-*CloseUI: *Collate
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Collate Printer"
+        *NickName: "Test Collate Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *Collate: PickOne
+        *DefaultCollate: True
+        *Collate True: "<</Collate true>>setpagedevice"
+        *Collate False: "<</Collate false>>setpagedevice"
+        *CloseUI: *Collate
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -800,23 +800,23 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_014, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_015, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test EFDuplexing Printer"
-*NickName: "Test EFDuplexing Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *EFDuplexing: PickOne
-*DefaultEFDuplexing: None
-*EFDuplexing None: "<</Duplex false>>setpagedevice"
-*EFDuplexing DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
-*CloseUI: *EFDuplexing
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test EFDuplexing Printer"
+        *NickName: "Test EFDuplexing Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *EFDuplexing: PickOne
+        *DefaultEFDuplexing: None
+        *EFDuplexing None: "<</Duplex false>>setpagedevice"
+        *EFDuplexing DuplexNoTumble: "<</Duplex true/Tumble false>>setpagedevice"
+        *CloseUI: *EFDuplexing
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -855,18 +855,18 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_016, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_006, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -889,18 +889,18 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_006, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_004, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -924,23 +924,23 @@ HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_004, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_007, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *MediaType: PickOne
-*DefaultMediaType: Plain
-*MediaType Plain/Plain Paper: "<</MediaType(Plain)>>setpagedevice"
-*MediaType Glossy/Glossy Paper: "<</MediaType(Glossy)>>setpagedevice"
-*CloseUI: *MediaType
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *MediaType: PickOne
+        *DefaultMediaType: Plain
+        *MediaType Plain/Plain Paper: "<</MediaType(Plain)>>setpagedevice"
+        *MediaType Glossy/Glossy Paper: "<</MediaType(Glossy)>>setpagedevice"
+        *CloseUI: *MediaType
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -963,23 +963,23 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_007, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_008, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *Collate: PickOne
-*DefaultCollate: True
-*Collate True: "<</Collate true>>setpagedevice"
-*Collate False: "<</Collate false>>setpagedevice"
-*CloseUI: *Collate
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *Collate: PickOne
+        *DefaultCollate: True
+        *Collate True: "<</Collate true>>setpagedevice"
+        *Collate False: "<</Collate false>>setpagedevice"
+        *CloseUI: *Collate
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -1002,23 +1002,23 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_008, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_017, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test AllSizes Printer"
-*NickName: "Test AllSizes Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*PageSize A3/A3: "<</PageSize[842 1191]/ImagingBBox null>>setpagedevice"
-*PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
-*PageSize Legal/Legal: "<</PageSize[612 1008]/ImagingBBox null>>setpagedevice"
-*PageSize B4/B4: "<</PageSize[709 1001]/ImagingBBox null>>setpagedevice"
-*PageSize B5/B5: "<</PageSize[499 709]/ImagingBBox null>>setpagedevice"
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test AllSizes Printer"
+        *NickName: "Test AllSizes Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *PageSize A3/A3: "<</PageSize[842 1191]/ImagingBBox null>>setpagedevice"
+        *PageSize Letter/Letter: "<</PageSize[612 792]/ImagingBBox null>>setpagedevice"
+        *PageSize Legal/Legal: "<</PageSize[612 1008]/ImagingBBox null>>setpagedevice"
+        *PageSize B4/B4: "<</PageSize[709 1001]/ImagingBBox null>>setpagedevice"
+        *PageSize B5/B5: "<</PageSize[499 709]/ImagingBBox null>>setpagedevice"
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -1038,23 +1038,23 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_017, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_018, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test PickMany Printer"
-*NickName: "Test PickMany Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *TestPickMany: PickMany
-*DefaultTestPickMany: Option1
-*TestPickMany Option1: "<</TestPickMany(Option1)>>setpagedevice"
-*TestPickMany Option2: "<</TestPickMany(Option2)>>setpagedevice"
-*CloseUI: *TestPickMany
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test PickMany Printer"
+        *NickName: "Test PickMany Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *TestPickMany: PickMany
+        *DefaultTestPickMany: Option1
+        *TestPickMany Option1: "<</TestPickMany(Option1)>>setpagedevice"
+        *TestPickMany Option2: "<</TestPickMany(Option2)>>setpagedevice"
+        *CloseUI: *TestPickMany
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -1074,24 +1074,24 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_018, TestSize.Level
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_009, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *cupsPrintQuality: PickOne
-*DefaultcupsPrintQuality: Normal
-*cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
-*cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
-*cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
-*CloseUI: *cupsPrintQuality
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *cupsPrintQuality: PickOne
+        *DefaultcupsPrintQuality: Normal
+        *cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
+        *cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
+        *cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
+        *CloseUI: *cupsPrintQuality
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
@@ -1114,24 +1114,24 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_009, TestSize.Level1)
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_010, TestSize.Level1)
 {
     std::string ppdContent = R"ppd(*PPD-Adobe: "4.3"
-*FormatVersion: "4.3"
-*FileVersion: "1.0"
-*LanguageEncoding: ISOLatin1
-*LanguageVersion: English
-*ModelName: "Test Printer"
-*NickName: "Test Printer Model"
-*Manufacturer: "Test Manufacturer"
-*ColorDevice: True
-*DefaultColorModel: RGB
-*DefaultPageSize: A4
-*PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
-*OpenUI *cupsPrintQuality: PickOne
-*DefaultcupsPrintQuality: Normal
-*cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
-*cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
-*cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
-*CloseUI: *cupsPrintQuality
-)ppd";
+        *FormatVersion: "4.3"
+        *FileVersion: "1.0"
+        *LanguageEncoding: ISOLatin1
+        *LanguageVersion: English
+        *ModelName: "Test Printer"
+        *NickName: "Test Printer Model"
+        *Manufacturer: "Test Manufacturer"
+        *ColorDevice: True
+        *DefaultColorModel: RGB
+        *DefaultPageSize: A4
+        *PageSize A4/A4: "<</PageSize[595 842]/ImagingBBox null>>setpagedevice"
+        *OpenUI *cupsPrintQuality: PickOne
+        *DefaultcupsPrintQuality: Normal
+        *cupsPrintQuality Draft/Draft: "<</cupsPrintQuality 3>>setpagedevice"
+        *cupsPrintQuality Normal/Normal: "<</cupsPrintQuality 4>>setpagedevice"
+        *cupsPrintQuality High/High: "<</cupsPrintQuality 5>>setpagedevice"
+        *CloseUI: *cupsPrintQuality
+    )ppd";
     std::string filePath = CreateTestPpdFile(ppdContent);
     ASSERT_FALSE(filePath.empty());
 
