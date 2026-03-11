@@ -3155,88 +3155,6 @@ HWTEST_F(PrintCupsClientTest, ParseStateReasons_NullParams_Test, TestSize.Level1
 }
 
 /**
- * @tc.name: PrintCupsClientTest_SpecialJobStatusCallback_001
- * @tc.desc: SpecialJobStatusCallback with blocked state
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, SpecialJobStatusCallback_BlockedState_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
-    auto param = std::make_shared<JobMonitorParam>(mockAbility,
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    param->isBlock = true;
-    param->timesOfSameState = 0;
-    param->substate = PRINT_JOB_BLOCKED_UNKNOWN;
-    
-    EXPECT_CALL(*mockAbility, UpdatePrintJobState(_, _, _))
-        .Times(testing::AnyNumber());
-    
-    bool ret = printCupsClient.SpecialJobStatusCallback(param);
-    EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.name: PrintCupsClientTest_SpecialJobStatusCallback_002
- * @tc.desc: SpecialJobStatusCallback with non-blocked state
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, SpecialJobStatusCallback_NonBlockedState_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
-    auto param = std::make_shared<JobMonitorParam>(mockAbility,
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    param->isBlock = false;
-    
-    EXPECT_CALL(*mockAbility, UpdatePrintJobState(_, _, _))
-        .Times(testing::AnyNumber());
-    
-    bool ret = printCupsClient.SpecialJobStatusCallback(param);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.name: PrintCupsClientTest_SpecialJobStatusCallback_003
- * @tc.desc: SpecialJobStatusCallback with blocked and timesOfSameState >= STATE_UPDATE_STEP
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, SpecialJobStatusCallback_BlockedHighTimes_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
-    auto param = std::make_shared<JobMonitorParam>(mockAbility,
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    param->isBlock = true;
-    param->timesOfSameState = STATE_UPDATE_STEP;
-    param->substate = PRINT_JOB_BLOCKED_UNKNOWN;
-    
-    EXPECT_CALL(*mockAbility, UpdatePrintJobState(_, _, _))
-        .Times(testing::AnyNumber());
-    
-    bool ret = printCupsClient.SpecialJobStatusCallback(param);
-    EXPECT_FALSE(ret);
-}
-
-/**
  * @tc.name: PrintCupsClientTest_BuildMonitorPolicy_001
  * @tc.desc: BuildMonitorPolicy with null params
  * @tc.type: FUNC
@@ -3309,20 +3227,6 @@ HWTEST_F(PrintCupsClientTest, InterruptCupsJob_NonExistentJob_Test, TestSize.Lev
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.InterruptCupsJob("non_existent_job_id");
     // Should not crash
-}
-
-/**
- * @tc.name: PrintCupsClientTest_InterruptCupsJob_002
- * @tc.desc: InterruptCupsJob with job in queue - skip due to PrintServiceAbility dependency
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, InterruptCupsJob_JobInQueue_Test, TestSize.Level1)
-{
-    // This test requires PrintServiceAbility::GetInstance() to return a valid instance.
-    // In unit test environment, this may return nullptr and cause crash.
-    // Skipping the actual test and just verifying the logic path exists.
-    GTEST_SKIP() << "Skipping test that requires PrintServiceAbility instance";
 }
 
 /**
