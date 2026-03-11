@@ -18,7 +18,6 @@
 #include <cups/ppd-private.h>
 #include "print_cups_ppd.h"
 #include "printer_capability.h"
-#include "print_log.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -26,28 +25,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 
-class PrintCupsPpdTest : public testing::Test {
-public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
-};
-
-void PrintCupsPpdTest::SetUpTestCase(void)
-{}
-
-void PrintCupsPpdTest::TearDownTestCase(void)
-{}
-
-void PrintCupsPpdTest::SetUp(void)
-{
-    static int32_t testNo = 0;
-    PRINT_HILOGI("PrintCupsPpdTest_%{public}d", ++testNo);
-}
-
-void PrintCupsPpdTest::TearDown(void)
-{}
+class PrintCupsPpdTest : public testing::Test {};
 
 /**
  * @tc.name: QueryPrinterCapabilityFromPPDFile_001
