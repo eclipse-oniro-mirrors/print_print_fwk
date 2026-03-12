@@ -5147,12 +5147,14 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
         PRINT_HILOGE("QueryPrinterInfo failed! Id=%{public}s", printerId.c_str());
         return ret;
     }
-
-    if (!QueryPPDInformation(printerInfo.GetPrinterMake(), ppdName)) {
+    PpdInfo ppdInfo;
+    printerInfo.GetSelectedDriver(ppdInfo);
+    std::string makeModel = ppdInfo.GetNickName() == "auto" ? printerInfo.GetPrinterMake() : ppdInfo.GetNickName();
+    PRINT_HILOGI("makeModel=%{public}s", makeModel.c_str());
+    if (!QueryPPDInformation(makeModel, ppdName)) {
         PRINT_HILOGE("Query printer ppd info failed! Id=%{public}s", printerId.c_str());
         return E_PRINT_INVALID_PRINTER;
     }
-
     return E_PRINT_NONE;
 }
 
