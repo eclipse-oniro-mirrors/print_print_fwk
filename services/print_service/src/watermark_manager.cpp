@@ -23,7 +23,7 @@
 namespace OHOS::Print {
 
 // System parameter key for watermark enable
-static const std::string WATERMARK_PARAM_KEY = "persist.pc_service_file_guard_watermarkprint";
+static const std::string WATERMARK_PARAM_KEY = "persist.pc_service.file_guard_watermarkprint";
 
 WatermarkManager& WatermarkManager::GetInstance()
 {
