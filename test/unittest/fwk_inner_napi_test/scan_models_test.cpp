@@ -620,7 +620,7 @@ HWTEST_F(ScanOptionDescriptorTest, ScanOptionDescriptorTest_0009_Unmarshalling, 
     auto result = ScanOptionDescriptor::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
     EXPECT_EQ("resolution", result->GetOptionName());
-    EXPECT_EQ(1, result->GetOptionIndex());
+    EXPECT_EQ(0, result->GetOptionIndex());
 }
 
 HWTEST_F(ScanOptionDescriptorTest, ScanOptionDescriptorTest_0010_Dump, TestSize.Level2)
