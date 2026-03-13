@@ -3786,7 +3786,15 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             PRINT_HILOGW("allocate printer info fail");
             return false;
         }
-        SyncAddedPrinterInfo(globalPrinterId, printerInfo);
+        OHOS::Print::PrinterInfo printer;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+            if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
+                printerInfo->SetPrinterName(printer.GetPrinterName());
+            }
+            if (printer.HasAlias()) {
+                printerInfo->SetAlias(printer.GetAlias());
+            }
+        }
         printerInfo->SetPrinterId(globalPrinterId);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
     }
@@ -3800,7 +3808,11 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             printSystemData_.UpdatePrinterUri(printerInfo);
             printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         }
-        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerInfo->GetPrinterId(), *printerInfo)) {
+        PrinterInfo printer;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
+            !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
+            *printerInfo = printer;
+        } else {
             PRINT_HILOGW("cannot update printer info by added printer info");
         }
         UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
