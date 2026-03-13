@@ -123,6 +123,9 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
         std::string host = PrintUtils::ExtractHostFromUri(info.GetUri());
         info.SetOriginId(VENDOR_MANAGER_PREFIX + VENDOR_BSUNI_DRIVER + GLOBAL_ID_DELIMITER + host);
     }
+    if (PrintJsonUtil::IsMember(object, "option") && object["option"].isString()) {
+        info.SetOption(object["option"].asString());
+    }
 }
 
 bool PrintSystemData::Init()
@@ -361,6 +364,9 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
         printerJson["originId"] = info->GetOriginId();
     } else {
         PRINT_HILOGD("no originId");
+    }
+    if (info->HasOption()) {
+        printerJson["option"] = info->GetOption();
     }
 }
 
