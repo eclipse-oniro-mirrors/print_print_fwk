@@ -4260,6 +4260,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NotUpdateIpPrinter
     std::string printerId = "testprinter";
     std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
     std::string printerName = "1.1.1.1";
+    std::string discoveryPrinterName = "testname";
 
     PrinterInfo info;
     info.SetPrinterId(globalId);
