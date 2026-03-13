@@ -3787,8 +3787,8 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             return false;
         }
         OHOS::Print::PrinterInfo printer;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
-            if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
+            !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
                 printerInfo->SetPrinterName(printer.GetPrinterName());
                 if (printer.HasAlias()) {
                     printerInfo->SetAlias(printer.GetAlias());
