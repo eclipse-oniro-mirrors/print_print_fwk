@@ -58,6 +58,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "ppd_info_test.cpp",
     "print_shared_host_test.cpp",
     "watermark_callback_stub_test.cpp",
+    "kia_interceptor_callback_stub_test.cpp",
   ]
 
   deps = [

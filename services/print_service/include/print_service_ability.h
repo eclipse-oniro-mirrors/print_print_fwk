@@ -153,6 +153,7 @@ public:
     int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
     int32_t UnregisterWatermarkCallback() override;
     int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
+    int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override;
     virtual bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     void StopCupsService();
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,

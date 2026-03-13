@@ -22,6 +22,7 @@
 #include "iprint_callback.h"
 #include "iprint_extension_callback.h"
 #include "iwatermark_callback.h"
+#include "ikia_interceptor_callback.h"
 #include "iremote_broker.h"
 #include "print_extension_info.h"
 #include "print_job.h"
@@ -114,6 +115,7 @@ public:
     virtual int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) = 0;
     virtual int32_t UnregisterWatermarkCallback() = 0;
     virtual int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) = 0;
+    virtual int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) = 0;
     virtual int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options) = 0;
 };

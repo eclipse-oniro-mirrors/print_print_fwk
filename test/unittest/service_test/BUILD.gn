@@ -25,6 +25,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
+    "${print_path}/services/print_service/enterprise/include",
     "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
@@ -51,6 +52,8 @@ ohos_unittest("print_service_test") {
     "print_system_data_test.cpp",
     "print_user_data_test.cpp",
     "watermark_callback_proxy_test.cpp",
+    "kia_interceptor_callback_proxy_test.cpp",
+    "kia_interceptor_manager_test.cpp",
   ]
 
   deps = [
@@ -66,7 +69,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service_test",
   ]
 
-  cflags_cc = []
+  cflags_cc = [ "-DUNIT_TEST" ]
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]

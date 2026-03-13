@@ -32,6 +32,7 @@
 #include "mock_print_callback_stub.h"
 #include "mock_print_manager_client.h"
 #include "mock_watermark_callback_stub.h"
+#include "mock_kia_interceptor_callback_stub.h"
 #include "print_shared_host.h"
 
 using namespace testing;
@@ -3180,6 +3181,27 @@ HWTEST_F(PrintManagerClientTest, AddPrinter_reload, TestSize.Level1)
     int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
+}
+
+HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, RegisterKiaInterceptorCallback(_))
+        .Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+
+    sptr<MockKiaInterceptorCallbackStub> callback = new MockKiaInterceptorCallbackStub();
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterKiaInterceptorCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+
     dr->OnRemoteDied(obj);
 }
 }  // namespace Print

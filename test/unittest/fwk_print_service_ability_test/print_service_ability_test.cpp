@@ -112,6 +112,17 @@ public:
     MOCK_METHOD0(IsSyncMode, bool());
 };
 
+class MockKiaInterceptorCallback final : public IRemoteStub<IKiaInterceptorCallback> {
+public:
+    MockKiaInterceptorCallback() = default;
+    virtual ~MockKiaInterceptorCallback() = default;
+    sptr<IRemoteObject> AsObject() override
+    {
+        return this;
+    }
+    MOCK_METHOD2(OnCheckPrintJobNeedReject, bool(const int32_t &pid, const std::string &callerAppId));
+};
+
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
 class PrintServiceAbilityTest : public testing::Test {
 public:
@@ -3853,6 +3864,21 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddPrinter_ConnectPrin
     service->vendorManager.wlanGroupDriver = nullptr;
 
     EXPECT_EQ(service->AddPrinter(printerName, uri, ppdName, options), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RegisterKiaInterceptorCallbackTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    auto callback = sptr<MockKiaInterceptorCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    service->SetHelper(mockHelper);
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillOnce(Return(false))
+        .WillRepeatedly(Return(true));
+    EXPECT_EQ(service->RegisterKiaInterceptorCallback(nullptr), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->RegisterKiaInterceptorCallback(nullptr), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->RegisterKiaInterceptorCallback(callback), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, RefreshIpPrinterToIdle, TestSize.Level1)
