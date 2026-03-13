@@ -465,8 +465,13 @@ bool VendorBsuniDriver::OnQueryCapabilityByIp(const std::string &printerIp, cons
         PRINT_HILOGW("OnQueryCapabilityByIp is null");
         return false;
     }
-    const char *bsuniQueue = printQueue.empty() ? nullptr : printQueue.c_str();
-    int32_t result = vendorExtension->onQueryCapabilityByIpAndQueue(printerIp.c_str(), protocol.c_str(), bsuniQueue);
+    int32_t result = -1;
+    if (printQueue.empty()) {
+        result = vendorExtension->onQueryCapabilityByIp(printerIp.c_str(), protocol.c_str());
+    } else if (vendorExtension->onQueryCapabilityByIpAndQueue) {
+        result = vendorExtension->onQueryCapabilityByIpAndQueue(printerIp.c_str(), protocol.c_str(),
+            printQueue.c_str());
+    }
     PRINT_HILOGI("OnQueryCapabilityByIp quit: %{public}d", result);
     return result == 0;
 }

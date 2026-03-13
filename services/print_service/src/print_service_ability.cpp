@@ -1105,18 +1105,20 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     
     char scheme[HTTP_MAX_URI] = {0};
     char username[HTTP_MAX_URI] = {0};
     char host[HTTP_MAX_URI] = {0};
     char resource[HTTP_MAX_URI] = {0};
     int port = 0;
-    httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+    http_uri_status_t ret = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
         username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
     
     std::string printerIp = host;
-    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
-        PRINT_HILOGW("invalid ip from uri");
+    if (ret != HTTP_URI_STATUS_OK ||
+        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid parameter from uri, ret = %{public}u", ret);
         return E_PRINT_INVALID_PRINTER;
     }
     
@@ -1125,7 +1127,7 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     std::string protocol = scheme;
     std::string printQueue = resource;
 
-    PRINT_HILOGI("[Printer: %{public}s] AddPrinter start, printerIp: %{public}s, protocol: %{public}s, \
+    PRINT_HILOGI("[Printer: %{public}s] AddPrinter start, printerIp: %{private}s, protocol: %{public}s, \
         ppdName: %{public}s, printQueue: %{public}s.",
         printerName.c_str(), printerIp.c_str(), protocol.c_str(), ppdName.c_str(), printQueue.c_str());
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, printQueue)) {
