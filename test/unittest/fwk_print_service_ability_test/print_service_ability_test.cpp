@@ -4271,7 +4271,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NotUpdateIpPrinter
 
     info.SetPrinterName(discoveryPrinterName);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_EQ(printerInfo->GetPrinterName(), discoveryPrinterName);
 }
 }  // namespace Print
