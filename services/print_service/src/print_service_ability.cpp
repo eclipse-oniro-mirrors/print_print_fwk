@@ -3789,10 +3789,10 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
         OHOS::Print::PrinterInfo printer;
         if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
             !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
-                printerInfo->SetPrinterName(printer.GetPrinterName());
-                if (printer.HasAlias()) {
-                    printerInfo->SetAlias(printer.GetAlias());
-                }
+            printerInfo->SetPrinterName(printer.GetPrinterName());
+            if (printer.HasAlias()) {
+                printerInfo->SetAlias(printer.GetAlias());
+            }
         }
         printerInfo->SetPrinterId(globalPrinterId);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
