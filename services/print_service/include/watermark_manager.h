@@ -100,7 +100,7 @@ public:
     /**
      * @brief Check if watermark is enabled via system parameter
      * @return true if watermark is enabled, false otherwise
-     * @note Checks system parameter: persist.pc_service_file_guard_watermarkprint
+     * @note Checks system parameter: persist.pc_service.file_guard_watermarkprint
      */
     virtual bool IsWatermarkEnabled();
 
