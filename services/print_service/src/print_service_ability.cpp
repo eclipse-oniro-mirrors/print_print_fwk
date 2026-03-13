@@ -3793,7 +3793,6 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
                 if (printer.HasAlias()) {
                     printerInfo->SetAlias(printer.GetAlias());
                 }
-            }
         }
         printerInfo->SetPrinterId(globalPrinterId);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
