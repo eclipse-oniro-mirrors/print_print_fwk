@@ -1316,10 +1316,12 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+#ifdef EDM_SERVICE_ENABLE
     if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(printJob.GetJobId())) {
-        PRINT_HILOGE("current print job has been rejected by kia interceptor");
+        ReportEventAndUpdateJobState(printJob.GetOption(), printJob.GetJobId());
         return E_PRINT_KIA_INTERCEPTED;
     }
+#endif
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!UpdatePrintJobOptionByPrinterId(printJob)) {
         PRINT_HILOGW("cannot update printer name/uri");
@@ -1389,10 +1391,12 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+#ifdef EDM_SERVICE_ENABLE
     if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobInfo.GetJobId())) {
-        PRINT_HILOGE("current print job has been rejected by kia interceptor");
+        ReportEventAndUpdateJobState(jobInfo.GetOption(), jobInfo.GetJobId());
         return E_PRINT_KIA_INTERCEPTED;
     }
+#endif // EDM_SERVICE_ENABLE
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
@@ -1418,10 +1422,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobId)) {
-        PRINT_HILOGE("current print job has been rejected by kia interceptor");
-        return E_PRINT_KIA_INTERCEPTED;
-    }
+
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     // is restratable printJob & get jobinfo
@@ -1439,6 +1440,10 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     if (IsDisablePrint()) {
         ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
         return E_PRINT_BANNED;
+    }
+    if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobId)) {
+        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
+        return E_PRINT_KIA_INTERCEPTED;
     }
 #endif // EDM_SERVICE_ENABLE
 
