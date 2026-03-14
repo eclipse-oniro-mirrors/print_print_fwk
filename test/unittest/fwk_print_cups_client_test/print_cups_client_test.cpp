@@ -811,12 +811,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_COMPLETED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -2427,16 +2421,8 @@ HWTEST_F(PrintCupsClientTest, TestHandleCompletedState, TestSize.Level1)
         PRINTER_PRINTER_NAME,
         PRINTER_PRINTER_ID,
         nullptr);
-    param->isBlock = false;
     PrintCupsClient printCupsClient;
     bool ret = printCupsClient.HandleCompletedState(param);
-    EXPECT_FALSE(ret);
-    param->isBlock = true;
-    param->timesOfSameState = 0;
-    ret = printCupsClient.HandleCompletedState(param);
-    EXPECT_TRUE(ret);
-    param->timesOfSameState = 10;
-    ret = printCupsClient.HandleCompletedState(param);
     EXPECT_FALSE(ret);
 }
 

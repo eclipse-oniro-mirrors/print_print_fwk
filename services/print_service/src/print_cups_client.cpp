@@ -1880,18 +1880,7 @@ bool PrintCupsClient::HandleStoppedState(std::shared_ptr<JobMonitorParam> monito
 
 bool PrintCupsClient::HandleCompletedState(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    if (!monitorParams->isBlock) {
-        PRINT_HILOGI("job complete success");
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
-        return false;
-    }
-    PRINT_HILOGI("job complete with error");
-    if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
-        return true;
-    }
+    PRINT_HILOGI("job complete success");
     monitorParams->serviceAbility->UpdatePrintJobState(
         monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
     return false;
