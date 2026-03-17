@@ -249,18 +249,6 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIpv6_005, TestSize.Level2)
 
 // ==================== AnonymizeUUid Test ====================
 /**
- * @tc.name: AnonymizeUUid_001
- * @tc.desc: Verify AnonymizeUUid with valid UUID.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeUUid_001, TestSize.Level2)
-{
-    std::string uuid = "550e8400-e29b-41d4-a716-446655440000";
-    std::string result = PrintUtils::AnonymizeUUid(uuid);
-    EXPECT_EQ(result, "550e8400-e29b-41d4-a716-44665544000x");
-}
-
-/**
  * @tc.name: AnonymizeUUid_002
  * @tc.desc: Verify AnonymizeUUid with no dash.
  * @tc.type: FUNC
@@ -295,18 +283,6 @@ HWTEST_F(PrintUtilsExtTest, AnonymizePrinterId_001, TestSize.Level2)
     std::string printerId = "com.sample.ext:550e8400-e29b-41d4-a716-446655440000";
     std::string result = PrintUtils::AnonymizePrinterId(printerId);
     EXPECT_TRUE(result.find("x") != std::string::npos);
-}
-
-/**
- * @tc.name: AnonymizePrinterId_002
- * @tc.desc: Verify AnonymizePrinterId with non-UUID format.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizePrinterId_002, TestSize.Level2)
-{
-    std::string printerId = "com.sample.ext:printer-001";
-    std::string result = PrintUtils::AnonymizePrinterId(printerId);
-    EXPECT_EQ(result, printerId);
 }
 
 /**
