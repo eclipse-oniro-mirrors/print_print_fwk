@@ -313,6 +313,7 @@ enum WatermarkHandleResult {
 const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
+static const std::string PERMISSION_NAME_PRINTER_DRIVER = "ohos.permission.PRINTER_DRIVER";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 static const std::string PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT = "ohos.permission.ENTERPRISE_MANAGE_PRINT";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";

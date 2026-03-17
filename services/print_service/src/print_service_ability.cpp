@@ -1101,7 +1101,7 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     const std::string &ppdName, const std::string &options)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) && !CheckPermission(PERMISSION_NAME_PRINTER_DRIVER)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
