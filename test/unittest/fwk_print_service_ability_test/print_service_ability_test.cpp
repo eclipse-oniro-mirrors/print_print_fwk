@@ -4278,5 +4278,27 @@ HWTEST_F(PrintServiceAbilityTest, UnloadSystemAbility_WhenJobQueueEmpty_ShouldRe
     bool result = service->UnloadSystemAbility();
     EXPECT_EQ(result, false);
 }
+
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NotUpdateIpPrinter, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    std::string printerName = "1.1.1.1";
+    std::string discoveryPrinterName = "testname";
+
+    PrinterInfo info;
+    info.SetPrinterId(globalId);
+    info.SetPrinterName(printerName);
+    info.SetPrinterStatus(PRINTER_STATUS_IDLE);
+
+    service->printSystemData_.InsertAddedPrinter(globalId, info);
+
+    info.SetPrinterName(discoveryPrinterName);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    EXPECT_EQ(printerInfo->GetPrinterName(), discoveryPrinterName);
+}
 }  // namespace Print
 }  // namespace OHOS
