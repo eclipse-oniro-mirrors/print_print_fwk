@@ -63,7 +63,7 @@ bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_obj
         return false;
     }
     ani_class clsCall = nullptr;
-    ani_status status = env->FindClass("@ohos.print.AsyncCallbackWrapper", &clsCall);
+    ani_status status = env->FindClass(ASYNC_CALLBACK_WRAPPER, &clsCall);
     if (status!= ANI_OK || clsCall == nullptr) {
         PRINT_HILOGE("FindClass status: %{public}d, or null clsCall", status);
         return false;
@@ -94,7 +94,7 @@ bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
 {
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
-    if ((status = env->FindClass("@ohos.print.CallbackWrapper", &clsCall)) != ANI_OK) {
+    if ((status = env->FindClass(CALLBACK_WRAPPER, &clsCall)) != ANI_OK) {
         PRINT_HILOGE("FindClass fail, status: %{public}d", status);
         return false;
     }
@@ -120,7 +120,7 @@ bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_obj
 {
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
-    if ((status = env->FindClass("@ohos.print.AsyncCallbackArrayWrapper", &clsCall)) != ANI_OK) {
+    if ((status = env->FindClass(ASYNC_CALLBACK_ARRAY_WRAPPER, &clsCall)) != ANI_OK) {
         PRINT_HILOGE("FindClass fail, status: %{public}d", status);
         return false;
     }
@@ -171,6 +171,35 @@ ani_object CreateStsError(ani_env *env, ani_int code, const std::string& msg)
         return nullptr;
     }
     return obj;
+}
+
+bool Callback(ani_env *env, ani_object call, ani_object data)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return false;
+    }
+    ani_class clsCall = nullptr;
+    ani_status status = env->FindClass(CALLBACK_WRAPPER, &clsCall);
+    if (status != ANI_OK || clsCall == nullptr) {
+        PRINT_HILOGE("FindClass status: %{public}d, or null clsCall", status);
+        return false;
+    }
+    ani_method method = nullptr;
+    if ((status = env->Class_FindMethod(clsCall, "invoke", nullptr, &method)) != ANI_OK || method == nullptr) {
+        PRINT_HILOGE("Class_FindMethod status: %{public}d, or null method", status);
+        return false;
+    }
+    if (data == nullptr) {
+        ani_ref undefinedRef = nullptr;
+        env->GetUndefined(&undefinedRef);
+        data = reinterpret_cast<ani_object>(undefinedRef);
+    }
+    if ((status = env->Object_CallMethod_Void(call, method, data)) != ANI_OK) {
+        PRINT_HILOGE("Object_CallMethod_Void status: %{public}d", status);
+        return false;
+    }
+    return true;
 }
 
 }  // namespace OHOS::Print

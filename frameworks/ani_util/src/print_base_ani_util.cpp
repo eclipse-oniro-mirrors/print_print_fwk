@@ -278,4 +278,44 @@ bool GetEnumValueInt(ani_env *env, ani_enum_item enumObj, uint32_t& enumValue)
     enumValue = static_cast<uint32_t>(result);
     return true;
 }
+
+ani_object CreateAniIntArray(ani_env *env, const std::vector<int32_t>& intArray)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return nullptr;
+    }
+    ani_class arrayCls = nullptr;
+    ani_method arrayCtor = nullptr;
+    ani_object arrayObj = nullptr;
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
+    if (status != ANI_OK) {
+        PRINT_HILOGE("FindClass status : %{public}d", status);
+        return nullptr;
+    }
+    status = env->Class_FindMethod(arrayCls, "<ctor>", "i:", &arrayCtor);
+    if (status != ANI_OK) {
+        PRINT_HILOGE("Class_FindMethod status : %{public}d", status);
+        return nullptr;
+    }
+    status = env->Object_New(arrayCls, arrayCtor, &arrayObj, intArray.size());
+    if (status != ANI_OK) {
+        PRINT_HILOGE("Object_New status : %{public}d", status);
+        return nullptr;
+    }
+    for (size_t i = 0; i < intArray.size(); i++) {
+        ani_object intObj = CreateInt(env, intArray[i]);
+        if (intObj == nullptr) {
+            PRINT_HILOGE("null intObj");
+            return nullptr;
+        }
+        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "iY:";
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", SET_OBJECT_VOID_SIGNATURE, i, intObj);
+        if (status != ANI_OK) {
+            PRINT_HILOGE("Object_CallMethodByName_Void status : %{public}d", status);
+            return nullptr;
+        }
+    }
+    return arrayObj;
+}
 }  // namespace OHOS::Print

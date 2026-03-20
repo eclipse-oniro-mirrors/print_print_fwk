@@ -12,16 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_PRINT_CALLBACK_ANI_UTIL_H
-#define OHOS_PRINT_CALLBACK_ANI_UTIL_H
+#ifndef OHOS_SCAN_ANI_CALLBACK_H
+#define OHOS_SCAN_ANI_CALLBACK_H
 
 #include <ani.h>
-#include <string>
-namespace OHOS::Print {
-    bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_object retObj);
-    bool StsCallback(ani_env *env, ani_object call, ani_object retObj);
-    bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result);
-    bool Callback(ani_env *env, ani_object call, ani_object data);
-    ani_object CreateStsError(ani_env *env, ani_int code, const std::string& msg = "");
-}  // namespace OHOS::Print
-#endif  // OHOS_PRINT_CALLBACK_ANI_UTIL_H
+#include "scan_callback.h"
+
+namespace OHOS::Scan {
+class ScanAniCallback : public ScanCallbackStub {
+public:
+    explicit ScanAniCallback(ani_env *env, ani_object callback);
+    ~ScanAniCallback() override = default;
+
+    bool OnCallback(uint32_t state, const ScanDeviceInfo &info) override;
+    bool OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info) override;
+    bool OnGetDevicesList(std::vector<ScanDeviceInfo> &info) override;
+
+private:
+    ani_env *env_;
+    ani_object callback_;
+};
+}
+#endif

@@ -37,6 +37,7 @@
 #include "ani_printer_capability_helper.h"
 #include "ani_printer_info_helper.h"
 #include "ani_print_task_helper.h"
+#include "watermark_callback.h"
 
 namespace {
     const char* JOB_NAME_STR = "jobName";
@@ -690,6 +691,63 @@ static void OnPrinterChangeNative(ani_env *env, ani_object callback)
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
+static void StartPrintNative(ani_env *env, ani_object job, ani_object callback)
+{
+    PRINT_HILOGI("enter StartPrintNative");
+    PrintJob printJob = AniPrintJobHelper::ParsePrintJob(env, job);
+    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(printJob);
+    ani_object stsErrCode = CreateStsError(env, ret);
+    AsyncCallback(env, callback, stsErrCode, nullptr);
+}
+
+static void RegisterWatermarkCallbackNative(ani_env *env, ani_object callback)
+{
+    PRINT_HILOGI("enter RegisterWatermarkCallbackNative");
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return;
+    }
+    OHOS::sptr<IWatermarkCallback> callbackWrapper = new (std::nothrow) WatermarkAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callbackWrapper);
+    PRINT_HILOGD("RegisterWatermarkCallback ret = %{public}d", ret);
+}
+
+static void UnregisterWatermarkCallbackNative(ani_env *env, ani_object callback)
+{
+    PRINT_HILOGI("enter UnregisterWatermarkCallbackNative");
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return;
+    }
+    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    PRINT_HILOGD("UnregisterWatermarkCallback ret = %{public}d", ret);
+}
+
+static void NotifyWatermarkCompleteNative(ani_env *env, ani_string jobId, ani_enum_item enumObj)
+{
+    PRINT_HILOGI("enter NotifyWatermarkCompleteNative");
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return;
+    }
+    std::string id;
+    if (!GetStdString(env, jobId, id)) {
+        PRINT_HILOGE("GetStdString fail");
+        return;
+    }
+    uint32_t result = 0;
+    if (!GetEnumValueInt(env, enumObj, result)) {
+        PRINT_HILOGE("GetEnumValueInt fail");
+        return;
+    }
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(id, result);
+    PRINT_HILOGD("NotifyWatermarkComplete ret = %{public}d", ret);
+}
+
 template<typename Func>
 static inline ani_native_function MakeNativeFunc(const char* etsFuncName, Func cFunc)
 {
@@ -736,6 +794,10 @@ static std::array methods = {
     MakeNativeFunc("offNative", OffNative),
     MakeNativeFunc("offPrinterChangeNative", OffPrinterChangeNative),
     MakeNativeFunc("onPrinterChangeNative", OnPrinterChangeNative),
+    MakeNativeFunc("startPrintNative", StartPrintNative),
+    MakeNativeFunc("RegisterWatermarkCallbackNative", RegisterWatermarkCallbackNative),
+    MakeNativeFunc("UnregisterWatermarkCallbackNative", UnregisterWatermarkCallbackNative),
+    MakeNativeFunc("NotifyWatermarkCompleteNative", NotifyWatermarkCompleteNative),
 };
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)

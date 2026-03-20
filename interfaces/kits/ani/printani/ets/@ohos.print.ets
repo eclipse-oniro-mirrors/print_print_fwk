@@ -91,6 +91,18 @@ export default namespace print {
         onJobStateChanged(jobId: string, state: PrintDocumentAdapterState): void;
     }
 
+    export interface SharedHost {
+        ip: string;
+        shareName: string;
+        workgroupName: string;
+    }
+
+    export interface PpdInfo {
+        manufacturer: string;
+        nickName: string;
+        ppdName: string;
+    }
+
     export enum PrintDuplexMode {
         DUPLEX_MODE_NONE = 0,
         DUPLEX_MODE_LONG_EDGE = 1,
@@ -106,6 +118,43 @@ export default namespace print {
         DIRECTION_MODE_AUTO = 0,
         DIRECTION_MODE_PORTRAIT = 1,
         DIRECTION_MODE_LANDSCAPE = 2,
+    }
+
+    export enum DocFlavor {
+        FILE_DESCRIPTOR = 0,
+        BYTES = 1
+    }
+
+    export enum PrintDocumentFormat {
+        DOCUMENT_FORMAT_AUTO = 0,
+        DOCUMENT_FORMAT_JPEG = 1,
+        DOCUMENT_FORMAT_PDF = 2,
+        DOCUMENT_FORMAT_POSTSCRIPT = 3,
+        DOCUMENT_FORMAT_TEXT = 4,
+        DOCUMENT_FORMAT_RAW = 5
+    }
+
+    export interface PrintJobData {
+        printerId: string;
+        jobName: string;
+        documentFormat: PrintDocumentFormat;
+        docFlavor: DocFlavor;
+        copyNumber: int;
+        isLandscape: boolean;
+        colorMode: PrintColorMode;
+        duplexMode: PrintDuplexMode;
+        pageSize: PrintPageSize;
+        jobId?: string;
+        fdList?: int[];
+        binaryData?: Uint8Array;
+        printQuality?: PrintQuality;
+        mediaType?: string;
+        isBorderless?: boolean;
+        isAutoRotate?: boolean;
+        isReverse?: boolean;
+        isCollate?: boolean;
+        isSequential?: boolean;
+        options?: string;
     }
 
     export interface PrintPageSize {
@@ -445,6 +494,11 @@ export default namespace print {
         DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
     }
 
+    export enum WatermarkHandleResult {
+        WATERMARK_HANDLE_SUCCESS = 0,
+        WATERMARK_HANDLE_FAILURE = 1,
+    }
+
     export interface PrintAttributesParameter {
         jobName: string;
         printAdapter : PrintDocumentAdapter;
@@ -459,6 +513,8 @@ export default namespace print {
     type extInfoChangeCallback = (extensionId: string, info: string) => void;
 
     type printerChangeCallback = (event: PrinterEvent, printerInformation: PrinterInformation) => void;
+
+    type WatermarkCallback = (jobId: string, fd: int) => void;
 
     native function printNative(files: Array<string>, callback: AsyncCallbackWrapper<PrintTask>): void;
 
@@ -543,6 +599,14 @@ export default namespace print {
     native function removePrinterFromDiscoveryNative(printerId: string, callback: AsyncCallbackWrapper<void>): void;
 
     native function getPrinterInformationByIdNative(printerId: string, callback: AsyncCallbackWrapper<PrinterInformation>): void;
+
+    native function startPrintNative(job: PrintJobData, callback: AsyncCallbackWrapper<void>): void;
+
+    native function RegisterWatermarkCallbackNative(callback: WatermarkCallbackWrapper) : void;
+
+    native function UnregisterWatermarkCallbackNative(callback: WatermarkCallbackWrapper): void;
+
+    native function NotifyWatermarkCompleteNative(jobId: string, result: WatermarkHandleResult): void;
 
     export interface PrintTask {
         onBlock(callback: Callback<void>): void;
@@ -934,6 +998,18 @@ export default namespace print {
 
         invoke(extensionId: string, info: string): void {
             this.myFun_(extensionId, info);
+        }
+    }
+
+    export class WatermarkCallbackWrapper {
+        private myFun_: (jobId: string, fd: int) => void;
+
+        constructor(myFun: (jobId: string, fd: int) => void) {
+            this.myFun_ = myFun;
+        }
+
+        invoke(jobId: string, fd: int): void {
+            this.myFun_(jobId, fd);
         }
     }
 
@@ -1387,4 +1463,43 @@ export default namespace print {
             offPrinterChangeNative(type, myCall);
         });
     }
+
+    export function startPrint(job: PrintJobData): Promise<void> {
+        return new Promise<void>((resolve: (data:undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<void>((err : BusinessError | null) => {
+                if (err == null || err.code == 0) {
+                    resolve(undefined);
+                } else {
+                    reject(err);
+                }
+            });
+            taskpool.execute((): void => {
+                startPrintNative(job, myCall);
+            });
+        });
+    }
+
+  export function registerWatermarkCallback(callback: WatermarkCallback): void {
+    const typedCallback = callback as (jobId: string, fd: int) => void;
+    const myCall = new WatermarkCallbackWrapper(typedCallback);
+    taskpool.execute((): void => {
+        RegisterWatermarkCallbackNative(myCall);
+    });
+  }
+
+  export function unregisterWatermarkCallback(callback?: WatermarkCallback): void {
+    if (callback !== undefined) {
+        const typedCallback = callback as (jobId: string, fd: int) => void;
+        const myCall = new WatermarkCallbackWrapper(typedCallback);
+        taskpool.execute((): void => {
+            UnregisterWatermarkCallbackNative(myCall);
+        });
+    }
+  }
+  
+  export function notifyWatermarkComplete(jobId: string, result: WatermarkHandleResult): void {
+    taskpool.execute((): void => {
+        NotifyWatermarkCompleteNative(jobId, result);
+    });
+  }
 }

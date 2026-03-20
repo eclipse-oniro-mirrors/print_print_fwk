@@ -23,6 +23,7 @@
 #include "print_callback_stub.h"
 #include "iprint_adapter.h"
 #include "print_manager_client.h"
+#include "watermark_callback_stub.h"
 
 namespace OHOS::Print {
 class PrintAniCallback : public PrintCallbackStub {
@@ -41,6 +42,19 @@ public:
         const uint32_t state, const uint32_t subState) override;
 
     bool OnCallbackAdapterGetFile(uint32_t state) override;
+
+private:
+    std::mutex mutex_;
+    ani_vm *aniVm_ = nullptr;
+    ani_ref aniCallback_ = nullptr;
+};
+
+class WatermarkAniCallback : public WatermarkCallbackStub {
+public:
+    WatermarkAniCallback(ani_env *env, ani_object callback);
+    WatermarkAniCallback(){};
+    ~WatermarkAniCallback();
+    void OnCallback(const std::string &jobId, uint32_t fd) override;
 
 private:
     std::mutex mutex_;
