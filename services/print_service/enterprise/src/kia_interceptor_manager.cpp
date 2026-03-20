@@ -109,10 +109,11 @@ bool KiaInterceptorManager::CheckPrintJobNeedReject(const std::string &jobId)
 
     std::lock_guard<std::mutex> lock(mutex_);
     if (callback_ == nullptr) {
-        PRINT_HILOGD("No KIA interceptor callback registered, allow print events");
+        PRINT_HILOGD("No KIA interceptor callback registered");
         return false;
     }
     bool shouldReject = callback_->OnCheckPrintJobNeedReject(pid, callerAppId);
+    PRINT_HILOGI("CheckPrintJobNeedReject result for jobId=%{private}s: %{public}d", jobId.c_str(), shouldReject);
     return shouldReject;
 }
 
