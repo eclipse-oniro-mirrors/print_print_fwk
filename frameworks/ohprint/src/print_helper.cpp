@@ -485,10 +485,6 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
 char *ParseDetailInfo(const PrinterInfo &info)
 {
     Json::Value detailInfoJson;
-    if (info.HasAlias()) {
-        detailInfoJson["alias"] = info.GetAlias();
-    }
-
     Json::Value opsJson;
     if (info.HasOption() && PrintJsonUtil::Parse(info.GetOption(), opsJson)) {
         if (PrintJsonUtil::IsMember(opsJson, "vendorId") && opsJson["vendorId"].isInt()) {
