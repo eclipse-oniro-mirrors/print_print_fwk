@@ -878,7 +878,7 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     }
 
     if (!CheckStartExtensionPermission()) {
-        return E_PRINT_NO_PERMISSION;
+        return E_PRINT_NONE;
     }
     PRINT_HILOGI("QueryAllExtension start.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
