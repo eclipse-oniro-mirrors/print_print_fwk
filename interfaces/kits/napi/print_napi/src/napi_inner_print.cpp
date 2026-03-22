@@ -1388,38 +1388,37 @@ napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc >= NapiPrintUtils::ARGC_THREE && argc <= NapiPrintUtils::ARGC_FOUR,
-            " should 3 or 4 parameter!", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, argc >= NapiPrintUtils::ARGC_TWO && argc <= NapiPrintUtils::ARGC_FOUR,
+            " should 2, 3 or 4 parameter!", napi_invalid_arg);
         napi_valuetype valueType;
-        
+
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valueType == napi_string, "printerName is not a string", napi_string_expected);
-        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        
+        context->printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valueType == napi_string, "uri is not a string", napi_string_expected);
-        std::string uri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
-        
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valueType == napi_string, "ppdName is not a string", napi_string_expected);
-        std::string ppdName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-        
-        std::string options = "";
+        context->fileUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+
+        context->type = "auto";
+        if (argc > NapiPrintUtils::ARGC_TWO) {
+            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
+            if (valueType == napi_string) {
+                context->type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+            } else if (valueType != napi_undefined && valueType != napi_null) {
+                PRINT_ASSERT_BASE(env, false, "ppdName is not a string", napi_string_expected);
+            }
+        }
+
         if (argc == NapiPrintUtils::ARGC_FOUR) {
             PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &valueType), napi_invalid_arg);
             PRINT_ASSERT_BASE(env, valueType == napi_string, "options is not a string", napi_string_expected);
-            options = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_THREE]);
+            context->changedType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_THREE]);
         }
-        
-        context->printerId = printerName;
-        context->fileUri = uri;
-        context->type = ppdName;
-        context->changedType = options;
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        return status;
+        return napi_get_boolean(env, context->result, result);
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(context->printerId,
