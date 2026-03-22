@@ -704,10 +704,6 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
         return E_PRINT_NO_PERMISSION;
     }
 
-    if (!CheckStartExtensionPermission()) {
-        return E_PRINT_NO_PERMISSION;
-    }
-
     PRINT_HILOGI("StartDiscoverPrinter start.");
 
     int32_t callerPid = IPCSkeleton::GetCallingPid();
@@ -882,7 +878,7 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     }
 
     if (!CheckStartExtensionPermission()) {
-        return E_PRINT_NO_PERMISSION;
+        return E_PRINT_NONE;
     }
     PRINT_HILOGI("QueryAllExtension start.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -4168,6 +4164,9 @@ bool PrintServiceAbility::QueryPrinterStatusByUri(const std::string &uri, Printe
 
 int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::string> &extensionIds)
 {
+    if (!CheckStartExtensionPermission()) {
+        return E_PRINT_NONE;
+    }
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto const &extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {
