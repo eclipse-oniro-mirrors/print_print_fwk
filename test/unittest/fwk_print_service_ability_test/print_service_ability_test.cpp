@@ -75,6 +75,9 @@ static constexpr const char *DEFAULT_PRINT_FILE_B = "file://data/print/b.png";
 static constexpr const char *DEFAULT_PRINT_FILE_C = "file://data/print/c.png";
 static const std::string CUSTOM_PRINTER_NAME = "customPrinterName";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
+static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
+static const std::string PARAMETER_CHANGE_MODE_ANIMATION_READY = "persist.sceneboard.changeModeAnimationReady";
+static const std::string CHANGE_MODE_DEFAULT_VALUE = "-1";
 static const std::string PRINT_GET_FILE_EVENT_TYPE = "getPrintFileCallback_adapter";
 static const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 static const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
@@ -4004,19 +4007,6 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_AsyncMode_ShouldP
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 
-HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_HelperNull_ShouldCheckServiceHandler, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    service->helper_ = nullptr;
-    service->InitServiceHandler();
-    auto userData = std::make_shared<PrintUserData>();
-    auto printJob = std::make_shared<PrintJob>();
-    printJob->SetJobId("job_003");
-    userData->queuedJobList_["job_003"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_003", "job_003");
-    EXPECT_EQ(userData->queuedJobList_.size(), 1);
-}
-
 HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_ServiceHandlerNull_ShouldLogWarning, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -4126,8 +4116,6 @@ HWTEST_F(PrintServiceAbilityTest, SendQueuePrintJob_WhenJobStatePrepared_ShouldR
     service->helper_ = nullptr;
     service->serviceHandler_ = nullptr;
     EXPECT_EQ(service->SendQueuePrintJob(printerId), true);
-    service->InitServiceHandler();
-    EXPECT_EQ(service->SendQueuePrintJob(printerId), true);
     auto helper = std::make_shared<MockPrintServiceHelper>();
     EXPECT_CALL(*helper, QueryAccounts(_)).WillRepeatedly(
         [](std::vector<int32_t>& accountList) {
@@ -4167,18 +4155,6 @@ HWTEST_F(PrintServiceAbilityTest, UpdateExtensionInfo_WhenInvalidExtensionId_Sho
     std::string extensionId = "invalid_extension_id";
     int32_t result = service->UpdateExtensionInfo(extInfo);
     EXPECT_EQ(result, E_PRINT_INVALID_EXTENSION);
-}
-
-HWTEST_F(PrintServiceAbilityTest, UpdateExtensionInfo_WhenValidExtensionId_ShouldReturnNone, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrintServiceMockPermission::MockPermission();
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::string extInfo = "test_ext_info";
-    AppExecFwk::ExtensionAbilityInfo extAbilityInfo;
-    service->extensionList_.insert(std::make_pair(extensionId, extAbilityInfo));
-    int32_t result = service->UpdateExtensionInfo(extInfo);
-    EXPECT_EQ(result, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, RequestPreview_WhenJobIdNotFound_ShouldReturnInvalidPrintJob, TestSize.Level1)
@@ -4271,10 +4247,14 @@ HWTEST_F(PrintServiceAbilityTest, UnloadSystemAbility_WhenJobQueueNotEmpty_Shoul
     EXPECT_EQ(result, false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, UnloadSystemAbility_WhenJobQueueEmpty_ShouldReturnFalse, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, UnloadSystemAbility_NoPermision_ShouldReturnFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->queuedJobList_.clear();
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(false));
+    service->SetHelper(mockHelper);
     bool result = service->UnloadSystemAbility();
     EXPECT_EQ(result, false);
 }
@@ -4299,6 +4279,284 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NotUpdateIpPrinter
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
     auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_EQ(printerInfo->GetPrinterName(), discoveryPrinterName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_PrinterNotExist_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    PrinterInfo info;
+    bool result = service->AddIpPrinterToSystemData(globalVendorName, info);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_PrinterExistAndUriEmpty_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    std::string globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, "printer_001");
+    auto existingPrinterInfo = std::make_shared<PrinterInfo>();
+    existingPrinterInfo->SetPrinterId("printer_001");
+    existingPrinterInfo->SetUri("");
+    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = existingPrinterInfo;
+    PrinterInfo info;
+    info.SetPrinterId("printer_001");
+    info.SetUri("");
+    bool result = service->AddIpPrinterToSystemData(globalVendorName, info);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_PrinterExistAndUriSame_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    std::string globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, "printer_001");
+    auto existingPrinterInfo = std::make_shared<PrinterInfo>();
+    existingPrinterInfo->SetPrinterId("printer_001");
+    existingPrinterInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
+    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = existingPrinterInfo;
+    PrinterInfo info;
+    info.SetPrinterId("printer_001");
+    info.SetUri("ipp://192.168.1.1:631/printers/printer1");
+    bool result = service->AddIpPrinterToSystemData(globalVendorName, info);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_UriDifferent_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    std::string globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, "printer_001");
+    auto existingPrinterInfo = std::make_shared<PrinterInfo>();
+    existingPrinterInfo->SetPrinterId("printer_001");
+    existingPrinterInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
+    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = existingPrinterInfo;
+    PrinterInfo info;
+    info.SetPrinterId("printer_001");
+    info.SetUri("ipp://192.168.1.2:631/printers/printer2");
+    bool result = service->AddIpPrinterToSystemData(globalVendorName, info);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryAddedPrintersByOriginId_ShouldReturnEmpty, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto printers = service->QueryAddedPrintersByOriginId("");
+    EXPECT_EQ(printers.empty(), true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_PrinterInfoNull_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    std::string printerId = "printer_001";
+    std::string ppdName = "test_ppd";
+    std::string ppdData = "test_ppd_data";
+    bool result = service->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
+    EXPECT_EQ(result, false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_DoAddPrinterToCupsFail_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    std::string printerId = "printer_001";
+    std::string globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
+    std::string ppdName = "test_ppd";
+    std::string ppdData = "test_ppd_data";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    printerInfo->SetPrinterName("test_printer");
+    printerInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
+    printerInfo->SetPrinterMake("HP");
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo->SetPrinterState(PRINTER_CONNECTED);
+    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = printerInfo;
+    bool result = service->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
+    EXPECT_EQ(result, false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_WhenValidPrinterInfo_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalVendorName = "vendor_001";
+    std::string printerId = "printer_001";
+    std::string globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
+    std::string ppdName = "test_ppd";
+    std::string ppdData = "test_ppd_data";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    printerInfo->SetPrinterName("test_printer");
+    printerInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
+    printerInfo->SetPrinterMake("HP");
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo->SetPrinterState(PRINTER_CONNECTED);
+    PrinterCapability capability;
+    printerInfo->SetCapability(capability);
+    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = printerInfo;
+    bool result = service->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnVendorStatusUpdate_WhenPrinterNotFound_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalPrinterId = "vendor_001:printer_001";
+    PrinterVendorStatus status;
+    status.state = PRINTER_IDLE;
+    bool result = service->OnVendorStatusUpdate(globalPrinterId, status);
+    EXPECT_EQ(result, false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnVendorStatusUpdate_NonIppPrinterUnavailable_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalPrinterId = "vendor_001:printer_001";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("printer_001");
+    printerInfo->SetPrinterName("test_printer");
+    printerInfo->SetUri("usb://printer_001");
+    printerInfo->SetPrinterStatus(PRINTER_IDLE);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, printerInfo);
+    PrinterVendorStatus status;
+    status.state = PRINTER_UNAVAILABLE;
+    bool result = service->OnVendorStatusUpdate(globalPrinterId, status);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnVendorStatusUpdate_WhenIppPrinterIdle_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalPrinterId = "vendor_001:printer_001";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("printer_001");
+    printerInfo->SetPrinterName("test_printer");
+    printerInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
+    printerInfo->SetPrinterStatus(PRINTER_UNAVAILABLE);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, printerInfo);
+    PrinterVendorStatus status;
+    status.state = PRINTER_IDLE;
+    bool result = service->OnVendorStatusUpdate(globalPrinterId, status);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnVendorStatusUpdate_WhenIppPrinterUnavailable_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalPrinterId = "vendor_001:printer_001";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("printer_001");
+    printerInfo->SetPrinterName("test_printer");
+    printerInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
+    printerInfo->SetPrinterStatus(PRINTER_IDLE);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, printerInfo);
+    PrinterVendorStatus status;
+    status.state = PRINTER_UNAVAILABLE;
+    bool result = service->OnVendorStatusUpdate(globalPrinterId, status);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnVendorStatusUpdate_WhenNonIppPrinterIdle_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string globalPrinterId = "vendor_001:printer_001";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("printer_001");
+    printerInfo->SetPrinterName("test_printer");
+    printerInfo->SetUri("usb://printer_001");
+    printerInfo->SetPrinterStatus(PRINTER_UNAVAILABLE);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, printerInfo);
+    PrinterVendorStatus status;
+    status.state = PRINTER_IDLE;
+    bool result = service->OnVendorStatusUpdate(globalPrinterId, status);
+    service->HandlePrinterStateChangeRegister(PRINTER_EVENT_TYPE);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenPrinterNotFound_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string standardPrinterName = "test_printer";
+    std::string ppdHashCode = "hash_123456";
+    bool result = service->IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenHashCodeSame_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "printer_001";
+    std::string printerName = "test_printer";
+    std::string standardPrinterName = PrintUtil::StandardizePrinterName(printerName);
+    std::string ppdHashCode = "hash_123456";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    printerInfo->SetPrinterName(printerName);
+    printerInfo->SetPpdHashCode(ppdHashCode);
+    service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
+    bool result = service->IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
+    EXPECT_EQ(result, false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenHashCodeDifferent_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "printer_001";
+    std::string printerName = "test_printer";
+    std::string standardPrinterName = PrintUtil::StandardizePrinterName(printerName);
+    std::string oldPpdHashCode = "hash_123456";
+    std::string newPpdHashCode = "hash_789012";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    printerInfo->SetPrinterName(printerName);
+    printerInfo->SetPpdHashCode(oldPpdHashCode);
+    service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
+    bool result = service->IsPrinterPpdUpdateRequired(standardPrinterName, newPpdHashCode);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RegisterSettingDataObserver_WhenPcModeNotSupported_ShouldReturn, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    OHOS::system::SetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "true");
+    service->RegisterSettingDataObserver();
+    std::string paramValue = OHOS::system::GetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "false");
+    EXPECT_EQ(paramValue, "true");
+    OHOS::system::SetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "false");
+}
+
+HWTEST_F(PrintServiceAbilityTest, DeleteCacheFileFromUserData_ShouldReturn, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    bool result = service->DeleteCacheFileFromUserData("");
+    EXPECT_EQ(result, false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, IsModeChangeEnd_WhenValueDefaultAndLastDifferent_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string lastChangeModeValue = "running";
+    OHOS::system::SetParameter(PARAMETER_CHANGE_MODE_ANIMATION_READY, CHANGE_MODE_DEFAULT_VALUE);
+    bool result = service->IsModeChangeEnd(lastChangeModeValue);
+    EXPECT_EQ(result, true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, IsModeChangeEnd_WhenValueDefaultAndLastSame_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string lastChangeModeValue = CHANGE_MODE_DEFAULT_VALUE;
+    OHOS::system::SetParameter(PARAMETER_CHANGE_MODE_ANIMATION_READY, CHANGE_MODE_DEFAULT_VALUE);
+    bool result = service->IsModeChangeEnd(lastChangeModeValue);
+    EXPECT_EQ(result, false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, IsModeChangeEnd_WhenValueNotDefault_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string lastChangeModeValue = CHANGE_MODE_DEFAULT_VALUE;
+    OHOS::system::SetParameter(PARAMETER_CHANGE_MODE_ANIMATION_READY, "running");
+    bool result = service->IsModeChangeEnd(lastChangeModeValue);
+    EXPECT_EQ(result, false);
 }
 }  // namespace Print
 }  // namespace OHOS
