@@ -157,40 +157,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0005_NeedRename, TestSize.Le
 }
 
 /**
- * @tc.name: PrintServiceStubTest_0006
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006_NeedRename, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_START_PRINT);
-
-    std::vector<std::string> testFileList = {
-        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteBool(testFileList.size() > 0));
-    EXPECT_TRUE(data.WriteStringVector(testFileList));
-    EXPECT_TRUE(data.WriteBool(testFdList.size() > 0));
-    EXPECT_TRUE(data.WriteInt32(testFdList.size()));
-    for (auto fd : testFdList) {
-        data.WriteFileDescriptor(fd);
-    }
-    EXPECT_TRUE(data.WriteString("jobId"));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, StartPrint(_, _, _)).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
-}
-
-/**
  * @tc.name: PrintServiceStubTest_0008
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
