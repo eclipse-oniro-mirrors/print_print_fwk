@@ -1189,15 +1189,12 @@ int PrintCupsClient::FillMirrorOptions(JobParameters *jobParams, int num_options
         return num_options;
     }
     // Mirror printing (CUPS mirror option)
+    // Only add option when mirror is enabled, avoid adding unsupported options for some printers
     if (jobParams->mirror == PRINT_MIRROR_ENABLED) {
         num_options = cupsAddOption("mirror", "true", num_options, options);
         PRINT_HILOGI("Added CUPS option: mirror=true");
-    } else if (jobParams->mirror == PRINT_MIRROR_DISABLED) {
-        num_options = cupsAddOption("mirror", "false", num_options, options);
-        PRINT_HILOGI("Added CUPS option: mirror=false");
     } else {
-        PRINT_HILOGW("Invalid mirror value: %{public}d, using default (disabled)", jobParams->mirror);
-        num_options = cupsAddOption("mirror", "false", num_options, options);
+        PRINT_HILOGI("mirror disabled (value=%{public}d)", jobParams->mirror);
     }
     return num_options;
 }
@@ -1209,6 +1206,7 @@ int PrintCupsClient::FillPageBorderOptions(JobParameters *jobParams, int num_opt
         return num_options;
     }
     // Page border (CUPS page-border option)
+    // Only add option when border is needed, avoid adding unsupported options for some printers
     std::string borderStr;
     switch (jobParams->pageBorder) {
         case PRINT_PAGE_BORDER_SINGLE:
@@ -1218,12 +1216,9 @@ int PrintCupsClient::FillPageBorderOptions(JobParameters *jobParams, int num_opt
             borderStr = "double";
             break;
         case PRINT_PAGE_BORDER_NONE:
-            borderStr = "none";
-            break;
         default:
-            PRINT_HILOGW("Invalid pageBorder value: %{public}d, using default (none)", jobParams->pageBorder);
-            borderStr = "none";
-            break;
+            PRINT_HILOGI("pageBorder disabled (value=%{public}d)", jobParams->pageBorder);
+            return num_options;
     }
     num_options = cupsAddOption("page-border", borderStr.c_str(), num_options, options);
     PRINT_HILOGI("Added CUPS option: page-border=%{public}s", borderStr.c_str());
