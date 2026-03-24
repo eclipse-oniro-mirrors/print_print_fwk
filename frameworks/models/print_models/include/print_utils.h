@@ -115,6 +115,9 @@ public:
     static std::string GenerateTempFilePath(const std::string &filesDir);
     static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
 
+    static bool SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+    static void SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
     {

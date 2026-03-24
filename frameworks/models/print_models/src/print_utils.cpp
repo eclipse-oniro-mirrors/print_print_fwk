@@ -517,23 +517,17 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     return uri.substr(startPos, endPos - startPos);
 }
 
-std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
+bool PrintUtils::SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
 {
-    auto nativeObj = std::make_shared<PrintJob>();
-    if (params.printerId.empty()) {
-        PRINT_HILOGE("printerId is empty.");
-        return nullptr;
-    }
-    nativeObj->SetPrinterId(params.printerId);
     if (params.docFlavor == PRINT_BYTES) {
         if (params.binaryData == nullptr || params.dataLength == 0) {
             PRINT_HILOGE("Invalid binary data: data is null or empty.");
-            return nullptr;
+            return false;
         }
         std::string tmpPath;
         int fd = CreateTempFileWithData(params.binaryData, params.dataLength, tmpPath);
         if (fd == -1) {
-            return nullptr;
+            return false;
         }
         std::vector<uint32_t> printFdList;
         printFdList.emplace_back(fd);
@@ -542,15 +536,19 @@ std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobPara
     } else {
         if (params.printFdList.empty()) {
             PRINT_HILOGE("Invalid fdList data: fdList is empty.");
-            return nullptr;
+            return false;
         }
         nativeObj->SetFdList(params.printFdList);
     }
+    return true;
+}
+
+void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
+{
     nativeObj->SetCopyNumber(params.copyNumber);
     nativeObj->SetColorMode(params.colorMode);
     nativeObj->SetDuplexMode(params.duplexMode);
     nativeObj->SetPageSize(params.pageSize);
-
     nativeObj->SetJobId(params.jobId);
     nativeObj->SetPageRange(params.pageRange);
     if (params.hasMargin) {
@@ -568,6 +566,20 @@ std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobPara
     args.mirror = params.mirror;
     args.pageBorder = params.pageBorder;
     nativeObj->SetNumberUpArgs(args);
+}
+
+std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
+{
+    if (params.printerId.empty()) {
+        PRINT_HILOGE("printerId is empty.");
+        return nullptr;
+    }
+    auto nativeObj = std::make_shared<PrintJob>();
+    nativeObj->SetPrinterId(params.printerId);
+    if (!SetFdListToPrintJob(params, nativeObj)) {
+        return nullptr;
+    }
+    SetAttributesToPrintJob(params, nativeObj);
     SetOptionInPrintJob(params, nativeObj);
     return nativeObj;
 }
