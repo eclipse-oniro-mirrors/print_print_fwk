@@ -32,6 +32,9 @@ config("print_ani_config") {
     "-flto",
     "--save-temps",
     "-Os",
+    "-DASYNC_CALLBACK_WRAPPER=\"@ohos.print.AsyncCallbackWrapper\"",
+    "-DASYNC_CALLBACK_ARRAY_WRAPPER=\"@ohos.print.AsyncCallbackArrayWrapper\"",
+    "-DCALLBACK_WRAPPER=\"@ohos.print.CallbackWrapper\"",
   ]
 }
 
@@ -165,7 +168,7 @@ ohos_prebuilt_etc("print_extension_context_abc_etc") {
   part_name = "print_fwk"
 }
 
-group("anipackage") {
+group("printAnipackage") {
   deps = [
     ":print_abc_etc",
     ":print_ani",

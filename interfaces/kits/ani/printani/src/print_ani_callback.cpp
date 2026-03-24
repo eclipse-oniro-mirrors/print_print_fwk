@@ -200,4 +200,42 @@ bool PrintAniCallback::OnCallbackAdapterGetFile(uint32_t state)
     return true;
 }
 
+WatermarkAniCallback::WatermarkAniCallback(ani_env *env, ani_object aniCallback)
+{
+    if (env == nullptr || aniCallback == nullptr) {
+        PRINT_HILOGE("nullptr error");
+        return;
+    }
+    ani_vm *vm = nullptr;
+    env->GetVM(&vm);
+    aniVm_ = vm;
+    env->GlobalReference_Create(reinterpret_cast<ani_ref>(aniCallback), &aniCallback_);
+}
+
+WatermarkAniCallback::~WatermarkAniCallback()
+{
+    aniVm_ = nullptr;
+    aniCallback_ = nullptr;
+}
+
+void WatermarkAniCallback::OnCallback(const std::string &jobId, uint32_t fd)
+{
+    PRINT_HILOGI("WatermarkAniCallback OnCallback in, jobId:%{public}s, fd:%{public}u", jobId.c_str(), fd);
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
+        PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
+        return;
+    }
+    ani_env *env;
+    ani_options aniArgs { 0, nullptr };
+    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    if (status != ANI_OK) {
+        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+            return;
+        }
+    }
+    aniVm_->DetachCurrentThread();
+}
+
 }  // namespace OHOS::Print

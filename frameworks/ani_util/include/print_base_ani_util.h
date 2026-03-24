@@ -26,6 +26,7 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
 ani_enum_item CreateEnumByIndex(ani_env *env, const std::string &enumDescriptor, ani_size enumIndex);
 ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std::vector<uint32_t> enumIndexArray);
 ani_object CreateObject(ani_env *env, const char *signature, const char* className);
+ani_object CreateAniIntArray(ani_env *env, const std::vector<int32_t>& intArray);
 
 bool GetStdString(ani_env *env, ani_string str, std::string &res);
 bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> &res);
