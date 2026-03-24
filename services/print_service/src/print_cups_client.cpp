@@ -1069,7 +1069,10 @@ void PrintCupsClient::StartNextJob()
     if (toCups_) {
         auto self = shared_from_this();
         CallbackFunc callback = [self]() { self->JobSentCallback(); };
-        std::thread StartPrintThread([self, callback] { self->StartCupsJob(self->currentJob_, callback); });
+        std::thread StartPrintThread([self, nextJob, callback] {
+            self->StartCupsJob(nextJob);
+            callback();
+        });
         StartPrintThread.detach();
     }
 }
@@ -1595,7 +1598,7 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
 }
 #endif // WATERMARK_ENFORCING_ENABLE
 
-void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
+void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
 {
     if (jobParams == nullptr) {
         PRINT_HILOGW("jobParams is null");
@@ -1608,7 +1611,6 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     uint32_t jobId = 0;
 
     if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
-        callback();
         PRINT_HILOGE("[Job Id: %{public}s] verify print job failed", jobParams->serviceJobId.c_str());
         return;
     }
@@ -1620,21 +1622,30 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
 #ifdef WATERMARK_ENFORCING_ENABLE
     if (!ProcessWatermarkWithCacheFd(jobParams)) {
         UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
-        callback();
         return;
     }
 #endif // WATERMARK_ENFORCING_ENABLE
 
+    HandleFilesAndStartMonitoring(jobParams, http, jobId);
+    PRINT_HILOGI("StartCupsJob end.");
+}
+
+void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, http_t *http, uint32_t jobId)
+{
+    if (!jobParams) {
+        PRINT_HILOGW("jobParams is null");
+        return;
+    }
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}u", num_files);
     if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {
-        callback();
         return;
     }
     http_t *monitorHttp = nullptr;
     monitorHttp = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1,
         LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
+        PRINT_HILOGW("monitorHttp is null");
         return;
     }
     jobParams->cupsJobId = jobId;
@@ -1655,8 +1666,6 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
             startMonitotThread.detach();
         }
     }
-    callback();
-    PRINT_HILOGI("StartCupsJob end.");
 }
 
 void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams)
