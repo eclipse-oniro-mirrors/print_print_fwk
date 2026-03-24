@@ -718,22 +718,21 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     NumberUpArgs args;
     args.numberUp = nativePrintJob.numberUpArgs.numberUp;
     args.numberUpLayout = nativePrintJob.numberUpArgs.numberUpLayout;
-    // Validate mirror value
-    if (nativePrintJob.numberUpArgs.mirror == PRINT_MIRROR_ENABLED ||
-        nativePrintJob.numberUpArgs.mirror == PRINT_MIRROR_DISABLED) {
-        args.mirror = nativePrintJob.numberUpArgs.mirror;
+    // Validate mirror value (compare using uint32_t to avoid enum type mismatch)
+    uint32_t mirrorValue = static_cast<uint32_t>(nativePrintJob.numberUpArgs.mirror);
+    if (mirrorValue <= static_cast<uint32_t>(PRINT_MIRROR_ENABLED)) {
+        args.mirror = mirrorValue;
     } else {
-        PRINT_HILOGW("Invalid mirror value: %{public}d, using default", nativePrintJob.numberUpArgs.mirror);
-        args.mirror = PRINT_MIRROR_DISABLED;
+        PRINT_HILOGW("Invalid mirror value: %{public}d, using default", mirrorValue);
+        args.mirror = MIRROR_DEFAULT_VALUE;
     }
-    // Validate pageBorder value
-    if (nativePrintJob.numberUpArgs.pageBorder == PRINT_PAGE_BORDER_NONE ||
-        nativePrintJob.numberUpArgs.pageBorder == PRINT_PAGE_BORDER_SINGLE ||
-        nativePrintJob.numberUpArgs.pageBorder == PRINT_PAGE_BORDER_DOUBLE) {
-        args.pageBorder = nativePrintJob.numberUpArgs.pageBorder;
+    // Validate pageBorder value (compare using uint32_t to avoid enum type mismatch)
+    uint32_t pageBorderValue = static_cast<uint32_t>(nativePrintJob.numberUpArgs.pageBorder);
+    if (pageBorderValue <= static_cast<uint32_t>(PRINT_PAGE_BORDER_DOUBLE)) {
+        args.pageBorder = pageBorderValue;
     } else {
-        PRINT_HILOGW("Invalid pageBorder value: %{public}d, using default", nativePrintJob.numberUpArgs.pageBorder);
-        args.pageBorder = PRINT_PAGE_BORDER_NONE;
+        PRINT_HILOGW("Invalid pageBorder value: %{public}d, using default", pageBorderValue);
+        args.pageBorder = PAGE_BORDER_DEFAULT_VALUE;
     }
     printJob.SetNumberUpArgs(args);
 
