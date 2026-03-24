@@ -926,12 +926,20 @@ void PrintUserData::ParsePrintModeOptionsToPrintJob(
 void PrintUserData::ParseNumberUpOptionsToPrintJob(
     const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
 {
+    NumberUpArgs args;
     if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUp") && printJobInfoJson["numberUp"].isInt()) {
-        printHistoryJob->SetNumberUp(printJobInfoJson["numberUp"].asInt());
+        args.numberUp = printJobInfoJson["numberUp"].asUInt();
     }
     if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUpLayout") && printJobInfoJson["numberUpLayout"].isInt()) {
-        printHistoryJob->SetNumberUpLayout(printJobInfoJson["numberUpLayout"].asInt());
+        args.numberUpLayout = printJobInfoJson["numberUpLayout"].asUInt();
     }
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "mirror") && printJobInfoJson["mirror"].isInt()) {
+        args.mirror = printJobInfoJson["mirror"].asUInt();
+    }
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "pageBorder") && printJobInfoJson["pageBorder"].isInt()) {
+        args.pageBorder = printJobInfoJson["pageBorder"].asUInt();
+    }
+    printHistoryJob->SetNumberUpArgs(args);
 }
 
 void PrintUserData::ParseOptionalJsonObjectToPrintJob(

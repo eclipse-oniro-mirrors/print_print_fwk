@@ -49,6 +49,8 @@ static constexpr const char *PARAM_JOB_ISREVERSE = "isReverse";
 static constexpr const char *PARAM_JOB_ISCOLLATE = "isCollate";
 static constexpr const char *PARAM_JOB_NUMBERUP = "numberUp";
 static constexpr const char *PARAM_JOB_NUMBERUPLAYOUT = "numberUpLayout";
+static constexpr const char *PARAM_JOB_MIRROR = "mirror";
+static constexpr const char *PARAM_JOB_PAGEBORDER = "pageBorder";
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
 {
@@ -173,13 +175,21 @@ void PrintJobHelper::FillBasicJobProperties(napi_env env, napi_value jsValue, st
 
 void PrintJobHelper::FillNumberUpProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
 {
-    // Read numberUp and numberUpLayout from JS
+    // Read numberUpArgs from JS
+    NumberUpArgs args;
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUP)) {
-        nativeObj->SetNumberUp(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP));
+        args.numberUp = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUP);
     }
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT)) {
-        nativeObj->SetNumberUpLayout(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT));
+        args.numberUpLayout = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
     }
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_MIRROR)) {
+        args.mirror = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_MIRROR);
+    }
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_PAGEBORDER)) {
+        args.pageBorder = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_PAGEBORDER);
+    }
+    nativeObj->SetNumberUpArgs(args);
 }
 
 std::shared_ptr<PrintJob> PrintJobHelper::BuildPrintJobFromJs(napi_env env, napi_value jsValue)
@@ -324,6 +334,8 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_JOB_NUMBERUP, PRINT_PARAM_OPT},
         {PARAM_JOB_NUMBERUPLAYOUT, PRINT_PARAM_OPT},
+        {PARAM_JOB_MIRROR, PRINT_PARAM_OPT},
+        {PARAM_JOB_PAGEBORDER, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
@@ -358,6 +370,8 @@ bool PrintJobHelper::ValidatePrintJobProperty(napi_env env, napi_value object)
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_JOB_NUMBERUP, PRINT_PARAM_OPT},
         {PARAM_JOB_NUMBERUPLAYOUT, PRINT_PARAM_OPT},
+        {PARAM_JOB_MIRROR, PRINT_PARAM_OPT},
+        {PARAM_JOB_PAGEBORDER, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
@@ -445,6 +459,14 @@ void PrintJobHelper::FillNumberUpParams(napi_env env, napi_value jsValue, PrintJ
     napi_value jsNumberUpLayout = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
     if (jsNumberUpLayout != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUpLayout) == napi_number) {
         params.numberUpLayout = NapiPrintUtils::GetUint32FromValue(env, jsNumberUpLayout);
+    }
+    napi_value jsMirror = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_MIRROR);
+    if (jsMirror != nullptr && NapiPrintUtils::GetValueType(env, jsMirror) == napi_number) {
+        params.mirror = NapiPrintUtils::GetUint32FromValue(env, jsMirror);
+    }
+    napi_value jsPageBorder = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGEBORDER);
+    if (jsPageBorder != nullptr && NapiPrintUtils::GetValueType(env, jsPageBorder) == napi_number) {
+        params.pageBorder = NapiPrintUtils::GetUint32FromValue(env, jsPageBorder);
     }
 }
 

@@ -239,8 +239,10 @@ enum PrintNumberUpLayout {
 
 constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;   // Minimum value for numberUp (single page per sheet)
 constexpr uint32_t NUMBER_UP_MAX_VALUE = 16;  // Maximum value for numberUp
-constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp
+constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp (PRINT_NUMBER_UP_1_PAGE)
 constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT_VALUE = NUMBER_UP_LAYOUT_LRTB;  // Default layout for numberUp
+constexpr uint32_t MIRROR_DEFAULT_VALUE = 0;  // Default value for mirror (PRINT_MIRROR_DISABLED)
+constexpr uint32_t PAGE_BORDER_DEFAULT_VALUE = 0;  // Default value for pageBorder (PRINT_PAGE_BORDER_NONE)
 
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,

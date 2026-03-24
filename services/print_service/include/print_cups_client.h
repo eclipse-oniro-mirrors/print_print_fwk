@@ -50,6 +50,8 @@ struct JobParameters {
     std::string serviceJobId;
     uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
     uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    uint32_t mirror = MIRROR_DEFAULT_VALUE;
+    uint32_t pageBorder = PAGE_BORDER_DEFAULT_VALUE;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;

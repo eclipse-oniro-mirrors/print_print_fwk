@@ -2494,8 +2494,11 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->printerUri = optionJson["printerUri"].asString();
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
-    params->numberUp = jobInfo.GetNumberUp();
-    params->numberUpLayout = jobInfo.GetNumberUpLayout();
+    NumberUpArgs numberUpArgs = jobInfo.GetNumberUpArgs();
+    params->numberUp = numberUpArgs.numberUp;
+    params->numberUpLayout = numberUpArgs.numberUpLayout;
+    params->mirror = numberUpArgs.mirror;
+    params->pageBorder = numberUpArgs.pageBorder;
     UpdateJobParameterByOption(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
@@ -2524,6 +2527,8 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
     PRINT_HILOGI("jobParams->numberUp: %{public}d", jobParams->numberUp);
     PRINT_HILOGI("jobParams->numberUpLayout: %{public}d", jobParams->numberUpLayout);
+    PRINT_HILOGI("jobParams->mirror: %{public}d", jobParams->mirror);
+    PRINT_HILOGI("jobParams->pageBorder: %{public}d", jobParams->pageBorder);
     PRINT_HILOGI("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
     PRINT_HILOGI("jobParams->isReverse: %{public}d", jobParams->isReverse);
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);
