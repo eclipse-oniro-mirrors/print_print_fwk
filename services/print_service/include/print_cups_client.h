@@ -198,6 +198,8 @@ private:
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);

@@ -244,6 +244,19 @@ constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT_VALUE = NUMBER_UP_LAYOUT_LRTB;  // D
 constexpr uint32_t MIRROR_DEFAULT_VALUE = 0;  // Default value for mirror (PRINT_MIRROR_DISABLED)
 constexpr uint32_t PAGE_BORDER_DEFAULT_VALUE = 0;  // Default value for pageBorder (PRINT_PAGE_BORDER_NONE)
 
+// Mirror printing mode (aligned with CUPS mirror-printing parameter)
+enum PrintMirrorMode {
+    PRINT_MIRROR_DISABLED = 0,  // Mirror printing disabled (normal mode)
+    PRINT_MIRROR_ENABLED = 1    // Mirror printing enabled (mirror mode)
+};
+
+// Page border style (supported by some printers)
+enum PrintPageBorderMode {
+    PRINT_PAGE_BORDER_NONE = 0,    // Page border none
+    PRINT_PAGE_BORDER_SINGLE = 1,  // Page border single
+    PRINT_PAGE_BORDER_DOUBLE = 2   // Page border double
+};
+
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,
     PRINT_DOCUMENT_FORMAT_JPEG = 1,

@@ -1182,6 +1182,48 @@ int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
+int PrintCupsClient::FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillMirrorOptions Params is nullptr");
+        return num_options;
+    }
+    // Mirror printing (CUPS mirror option)
+    if (jobParams->mirror == 1) {
+        num_options = cupsAddOption("mirror", "true", num_options, options);
+        PRINT_HILOGI("Added CUPS option: mirror=true");
+    } else {
+        num_options = cupsAddOption("mirror", "false", num_options, options);
+        PRINT_HILOGI("Added CUPS option: mirror=false");
+    }
+    return num_options;
+}
+
+int PrintCupsClient::FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillPageBorderOptions Params is nullptr");
+        return num_options;
+    }
+    // Page border (CUPS page-border option)
+    std::string borderStr;
+    switch (jobParams->pageBorder) {
+        case PRINT_PAGE_BORDER_SINGLE:
+            borderStr = "single";
+            break;
+        case PRINT_PAGE_BORDER_DOUBLE:
+            borderStr = "double";
+            break;
+        case PRINT_PAGE_BORDER_NONE:
+        default:
+            borderStr = "none";
+            break;
+    }
+    num_options = cupsAddOption("page-border", borderStr.c_str(), num_options, options);
+    PRINT_HILOGI("Added CUPS option: page-border=%{public}s", borderStr.c_str());
+    return num_options;
+}
+
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGI("FillJobOptions start.");
@@ -1213,6 +1255,8 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     num_options = FillNumberUpOptions(jobParams, num_options, options);
+    num_options = FillMirrorOptions(jobParams, num_options, options);
+    num_options = FillPageBorderOptions(jobParams, num_options, options);
 
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
