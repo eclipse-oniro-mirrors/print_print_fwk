@@ -169,6 +169,7 @@ public:
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
+    bool ExtractPpdKeyAndValue(const std::string &line, std::string &key, std::string &value);
 #ifdef VIRTUAL_PRINTER_ENABLE
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
 #endif
