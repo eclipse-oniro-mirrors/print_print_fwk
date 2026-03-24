@@ -718,8 +718,23 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     NumberUpArgs args;
     args.numberUp = nativePrintJob.numberUpArgs.numberUp;
     args.numberUpLayout = nativePrintJob.numberUpArgs.numberUpLayout;
-    args.mirror = nativePrintJob.numberUpArgs.mirror;
-    args.pageBorder = nativePrintJob.numberUpArgs.pageBorder;
+    // Validate mirror value
+    if (nativePrintJob.numberUpArgs.mirror == PRINT_MIRROR_ENABLED ||
+        nativePrintJob.numberUpArgs.mirror == PRINT_MIRROR_DISABLED) {
+        args.mirror = nativePrintJob.numberUpArgs.mirror;
+    } else {
+        PRINT_HILOGW("Invalid mirror value: %{public}d, using default", nativePrintJob.numberUpArgs.mirror);
+        args.mirror = PRINT_MIRROR_DISABLED;
+    }
+    // Validate pageBorder value
+    if (nativePrintJob.numberUpArgs.pageBorder == PRINT_PAGE_BORDER_NONE ||
+        nativePrintJob.numberUpArgs.pageBorder == PRINT_PAGE_BORDER_SINGLE ||
+        nativePrintJob.numberUpArgs.pageBorder == PRINT_PAGE_BORDER_DOUBLE) {
+        args.pageBorder = nativePrintJob.numberUpArgs.pageBorder;
+    } else {
+        PRINT_HILOGW("Invalid pageBorder value: %{public}d, using default", nativePrintJob.numberUpArgs.pageBorder);
+        args.pageBorder = PRINT_PAGE_BORDER_NONE;
+    }
     printJob.SetNumberUpArgs(args);
 
     SetPrintOrientationInPrintJob(nativePrintJob, printJob);

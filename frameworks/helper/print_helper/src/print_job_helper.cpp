@@ -184,10 +184,22 @@ void PrintJobHelper::FillNumberUpProperties(napi_env env, napi_value jsValue, st
         args.numberUpLayout = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_NUMBERUPLAYOUT);
     }
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_MIRROR)) {
-        args.mirror = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_MIRROR);
+        uint32_t mirrorValue = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_MIRROR);
+        if (mirrorValue == PRINT_MIRROR_ENABLED || mirrorValue == PRINT_MIRROR_DISABLED) {
+            args.mirror = mirrorValue;
+        } else {
+            PRINT_HILOGW("Invalid mirror value: %{public}d, using default", mirrorValue);
+            args.mirror = MIRROR_DEFAULT_VALUE;
+        }
     }
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_PAGEBORDER)) {
-        args.pageBorder = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_PAGEBORDER);
+        uint32_t pageBorderValue = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_PAGEBORDER);
+        if (pageBorderValue <= PRINT_PAGE_BORDER_DOUBLE) {
+            args.pageBorder = pageBorderValue;
+        } else {
+            PRINT_HILOGW("Invalid pageBorder value: %{public}d, using default", pageBorderValue);
+            args.pageBorder = PAGE_BORDER_DEFAULT_VALUE;
+        }
     }
     nativeObj->SetNumberUpArgs(args);
 }
