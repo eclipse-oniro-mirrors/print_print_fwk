@@ -309,6 +309,7 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
     std::string ip;
     if (!GetTcpDeviceIp(info.deviceId, ip)) {
         SCAN_HILOGE("cannot get device's ip");
+        info.SetDeviceAvailable(false);
         return;
     }
     info.uniqueId = ip;
