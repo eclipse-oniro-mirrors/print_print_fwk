@@ -4691,6 +4691,14 @@ int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
     printerInfo->SetCapability(printerCaps);
     std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
     printerInfo->SetPpdHashCode(ppdHashCode);
+
+    PpdInfo ppdInfo;
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryInfoByPpdName(ppdName, ppdInfo)) {
+        PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
+        ppdInfo.SetPpdInfo("auto", "auto", ppdName);
+    }
+    printerInfo->SetSelectedDriver(ppdInfo);
+    
     UpdatePrinterCapability(printerId, *printerInfo);
 
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
