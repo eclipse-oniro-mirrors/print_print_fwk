@@ -1180,7 +1180,10 @@ bool ScanServiceAbility::CreateAndOpenScanFile(ScanTask &scanTask)
         SCAN_HILOGI("ScanTask CreateAndOpenScanFile fail");
         return false;
     }
-    scanPictureData_.SetImageRealPath(filePath);
+    {
+        std::lock_guard<std::mutex> autoLock(lock_);
+        scanPictureData_.SetImageRealPath(filePath);
+    }
     return true;
 }
 

@@ -182,7 +182,7 @@ public:
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
-    void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
+    void StartCupsJob(JobParameters *jobParams);
     static void SymlinkFile(std::string &srcFilePath, std::string &destFilePath);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
@@ -261,6 +261,7 @@ private:
     void BuildCupsOptionParamsByAdvJson(const Json::Value &jsonAdvOpt, StdStringMap &mapParams);
     void DumpCupsConflicts(const StdStringMap &mapParams, const std::string& typeChanged,
         const std::vector<std::string>& conflictTypes);
+    void HandleFilesAndStartMonitoring(JobParameters *jobParams, http_t *http, uint32_t jobId);
 
 private:
     bool toCups_ = true;
