@@ -28,6 +28,7 @@ public:
     SmbLibrary();
     ~SmbLibrary();
     struct smb2_context* CreateContext() const;
+    void CloseContext(struct smb2_context* ctx) const;
     void DestroyContext(struct smb2_context* ctx) const;
     const char* GetSmbError(struct smb2_context* ctx) const;
     int32_t ConnectShare(struct smb2_context* ctx, const char* server,
@@ -49,6 +50,7 @@ private:
     void CleanupLibrary();
     void* smbLibHandle_;
     using smb2_init_context_t = struct smb2_context* (*)();
+    using smb2_close_context_t = void (*)(struct smb2_context*);
     using smb2_destroy_context_t = void (*)(struct smb2_context*);
     using smb2_connect_share_t = int (*)(struct smb2_context*, const char*, const char*, const char*);
     using smb2_disconnect_share_t = int (*)(struct smb2_context*);
@@ -66,6 +68,7 @@ private:
     using smb2_service_t = int (*)(struct smb2_context*, int);
 
     smb2_init_context_t smb2_init_context_;
+    smb2_close_context_t smb2_close_context_;
     smb2_destroy_context_t smb2_destroy_context_;
     smb2_connect_share_t smb2_connect_share_;
     smb2_disconnect_share_t smb2_disconnect_share_;
