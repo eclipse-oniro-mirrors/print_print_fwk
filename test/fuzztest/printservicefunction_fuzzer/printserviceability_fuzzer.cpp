@@ -17,12 +17,9 @@
 #include "printserviceability_fuzzer.h"
 #include "fuzzer/FuzzedDataProvider.h"
 #include "print_constant.h"
-#include "printer_capability.h"
 #include "print_log.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
-#include "print_callback.h"
-#include "iprint_adapter_inner.h"
 #include <functional>
 
 namespace OHOS {
@@ -74,65 +71,6 @@ void TestSendQueuePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider 
     PrintServiceAbility::GetInstance()->SendQueuePrintJob(printerId);
 }
 
-void TestAddPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    PrintServiceAbility::GetInstance()->AddPrinterToDiscovery(printerInfo);
-}
-
-void TestUpdatePrinterInDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    PrintServiceAbility::GetInstance()->UpdatePrinterInDiscovery(printerInfo);
-}
-
-void TestRemovePrinterFromDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->RemovePrinterFromDiscovery(printerId);
-}
-
-void TestUpdatePrinterInSystem(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    PrintServiceAbility::GetInstance()->UpdatePrinterInSystem(printerInfo);
-}
-
-void TestDeletePrinterFromUserData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->DeletePrinterFromUserData(printerId);
-}
-
-void TestNotifyAppDeletePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->NotifyAppDeletePrinter(printerId);
-}
-
-void TestAddVendorPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    PrintServiceAbility::GetInstance()->AddVendorPrinterToDiscovery(globalVendorName, printerInfo);
-}
-
 void TestAuthPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -143,22 +81,6 @@ void TestAuthPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *data
     PrintServiceAbility::GetInstance()->AuthPrintJob(jobId, userName, userPasswdCstr.data());
 }
 
-void TestAnalyzePrintEvents(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string detail;
-    PrintServiceAbility::GetInstance()->AnalyzePrintEvents(printerId, type, detail);
-}
-
-void TestAddPrintEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int32_t code = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    PrintServiceAbility::GetInstance()->AddPrintEvent(printerId, type, code);
-}
-
 void TestSavePdfFileJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -166,104 +88,10 @@ void TestSavePdfFileJob(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintServiceAbility::GetInstance()->SavePdfFileJob(jobId, fd);
 }
 
-void TestQueryAllPrinterPpds(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::vector<PpdInfo> ppdInfos;
-    PrintServiceAbility::GetInstance()->QueryAllPrinterPpds(ppdInfos);
-}
-
-
-void TestQueryPrinterInfoByIp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerIp = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->QueryPrinterInfoByIp(printerIp);
-}
-
-void TestConnectPrinterByIpAndPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerIp = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string protocol = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
-}
-
-void TestQueryRecommendDriversById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::vector<PpdInfo> ppds;
-    PrintServiceAbility::GetInstance()->QueryRecommendDriversById(printerId, ppds);
-}
-
-void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrinterCapability printerCaps;
-    PrintServiceAbility::GetInstance()->SetHelper(nullptr);
-    PrintServiceAbility::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
-}
-
-void TestUpdateBsuniPrinterAdvanceOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto printerInfo = std::make_shared<PrinterInfo>() ;
-    printerInfo->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo->SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo->SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-
-    PrinterCapability printerCaps;
-
-    Json::Value optionJson;
-    Json::Value cupsOptionJson;
-    Json::Value mediaSourceSupportJson;
-
-    mediaSourceSupportJson.append(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    cupsOptionJson["media-source-supported"] = mediaSourceSupportJson;
-    cupsOptionJson["media-source-default"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    optionJson["cupsOptions"] = cupsOptionJson;
-
-    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
-    printerInfo->SetCapability(printerCaps);
-    PrintServiceAbility::GetInstance()->UpdateBsuniPrinterAdvanceOptions(printerInfo);
-}
-
-void TestParseSingleAdvanceOptJson(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    Json::Value singleAdvanceOptJson;
-    Json::Value singleOptArray;
-    singleOptArray.append(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::string keyword = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->ParseSingleAdvanceOptJson(keyword, singleOptArray, singleAdvanceOptJson);
-}
- 
 void TestBlockPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->BlockPrintJob(jobId);
-}
-
-void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::vector<std::string> protocols = {"ipp", "ipps", "lpd", "socket"};
-    PrinterInfo printerInfo;
-    std::string uri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    printerInfo.SetUri(uri);
-    Json::Value optionJson;
- 
-    std::string optionProtocol = protocols[dataProvider->ConsumeIntegralInRange<uint32_t>(0, protocols.size() - 1)];
-    optionJson[optionProtocol] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string optionStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    printerInfo.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
-    std::string connectProtocol = protocols[dataProvider->ConsumeIntegralInRange<uint32_t>(0, protocols.size() - 1)];
-    std::string result = PrintServiceAbility::GetInstance()->GetConnectUri(printerInfo, connectProtocol);
-}
-
-void TestAddPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string options = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->AddPrinter(printerName, printerUri, ppdName, options);
 }
 
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -277,27 +105,9 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
         &TestNotifyCurrentUserChanged,
         &TestHandleExtensionConnectPrinter,
         &TestSendQueuePrintJob,
-        &TestAddPrinterToDiscovery,
-        &TestUpdatePrinterInDiscovery,
-        &TestRemovePrinterFromDiscovery,
-        &TestUpdatePrinterInSystem,
-        &TestDeletePrinterFromUserData,
-        &TestNotifyAppDeletePrinter,
-        &TestAddVendorPrinterToDiscovery,
         &TestAuthPrintJob,
-        &TestAnalyzePrintEvents,
-        &TestAddPrintEvent,
         &TestSavePdfFileJob,
-        &TestQueryAllPrinterPpds,
-        &TestQueryPrinterInfoByIp,
-        &TestConnectPrinterByIpAndPpd,
-        &TestQueryRecommendDriversById,
-        &TestQueryPrinterCapabilityByUri,
-        &TestUpdateBsuniPrinterAdvanceOptions,
-        &TestParseSingleAdvanceOptJson,
         &TestBlockPrintJob,
-        &TestGetConnectUri,
-        &TestAddPrinter
     };
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);
