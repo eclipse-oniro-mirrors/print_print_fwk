@@ -23,6 +23,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+ #include <functional>
 
 namespace OHOS {
 namespace Print {
@@ -331,34 +332,40 @@ void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider 
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    TestOn(data, size, dataProvider);
-    TestOff(data, size, dataProvider);
-    TestCallback(data, size, dataProvider);
-    TestLoadExtSuccess(data, size, dataProvider);
-    TestQueryAllActivePrintJob(data, size, dataProvider);
-    TestQueryAllPrintJob(data, size, dataProvider);
-    TestQueryPrintJobById(data, size, dataProvider);
-    TestQueryQueuedPrintJobById(data, size, dataProvider);
-    TestAddPrinterToCups(data, size, dataProvider);
-    TestQueryPrinterCapabilityByUri(data, size, dataProvider);
-    TestCancelUserPrintJobs(data, size, dataProvider);
-    TestBlockUserPrintJobs(data, size, dataProvider);
-    TestSendExtensionEvent(data, size, dataProvider);
-    TestQueryAllPrinterPpds(data, size, dataProvider);
-    TestQueryPrinterInfoByIp(data, size, dataProvider);
-    TestConnectPrinterByIpAndPpd(data, size, dataProvider);
-    TestIsDisablePrint(data, size, dataProvider);
-    TestReportBannedEvent(data, size, dataProvider);
-    TestOnQueryCallBackEvent(data, size, dataProvider);
-    TestQueryRecommendDriversById(data, size, dataProvider);
-    TestConnectPrinterByIdAndPpd(data, size, dataProvider);
-    TestGetPrinterDefaultPreferences(data, size, dataProvider);
-    TestCheckPreferencesConflicts(data, size, dataProvider);
-    TestCheckPrintJobConflicts(data, size, dataProvider);
-    TestGetPpdNameByPrinterId(data, size, dataProvider);
-    TestIsPrinterPpdUpdateRequired(data, size, dataProvider);
-    TestCheckPrintConstraint(data, size, dataProvider);
-    TestGetConnectUri(data, size, dataProvider);
+    PRINT_HILOGI("Multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestOn,
+        &TestOff,
+        &TestCallback,
+        &TestLoadExtSuccess,
+        &TestQueryAllActivePrintJob,
+        &TestQueryAllPrintJob,
+        &TestQueryPrintJobById,
+        &TestQueryQueuedPrintJobById,
+        &TestAddPrinterToCups,
+        &TestQueryPrinterCapabilityByUri,
+        &TestCancelUserPrintJobs,
+        &TestBlockUserPrintJobs,
+        &TestSendExtensionEvent,
+        &TestQueryAllPrinterPpds,
+        &TestQueryPrinterInfoByIp,
+        &TestConnectPrinterByIpAndPpd,
+        &TestIsDisablePrint,
+        &TestReportBannedEvent,
+        &TestOnQueryCallBackEvent,
+        &TestQueryRecommendDriversById,
+        &TestConnectPrinterByIdAndPpd,
+        &TestGetPrinterDefaultPreferences,
+        &TestCheckPreferencesConflicts,
+        &TestCheckPrintJobConflicts,
+        &TestGetPpdNameByPrinterId,
+        &TestIsPrinterPpdUpdateRequired,
+        &TestCheckPrintConstraint,
+        &TestGetConnectUri
+    };
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
 }
 
 }  // namespace Print
