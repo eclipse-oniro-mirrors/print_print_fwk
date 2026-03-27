@@ -373,6 +373,87 @@ Print_ErrorCode OH_Print_StartPrintWithJobStateCallback(const Print_PrintJob *pr
     return ConvertToNativeErrorCode(ret);
 }
 
+Print_ErrorCode OH_Print_StartPrintTask(const Print_PrintTask *printTask)
+{
+    if (printTask == nullptr) {
+        PRINT_HILOGI("printTask is null.");
+        return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    // Validate size field for version compatibility
+    uint32_t expectedSize = sizeof(Print_PrintTask);
+    // size must be at least the size of uint32_t (the size field itself)
+    // and should not exceed the current struct size (for forward compatibility)
+    if (printTask->size < sizeof(uint32_t) || printTask->size > expectedSize * 2) {
+        PRINT_HILOGE("Invalid printTask size: %{public}u, expected: %{public}u",
+            printTask->size, expectedSize);
+        return PRINT_ERROR_INVALID_PARAMETER;
+    }
+    PRINT_HILOGI("printTask size: %{public}u, expected: %{public}u", printTask->size, expectedSize);
+    
+    PrintJob curPrintJob;
+    int32_t ret = ConvertNativeTaskToPrintJob(*printTask, curPrintJob);
+    if (ret != 0) {
+        PRINT_HILOGW("ConvertNativeTaskToPrintJob fail.");
+        return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob);
+    PRINT_HILOGI("StartNativePrintJob ret = [%{public}d]", ret);
+    return ConvertToNativeErrorCode(ret);
+}
+
+Print_ErrorCode OH_Print_StartPrintTaskWithCallback(const Print_PrintTask *printTask,
+    OH_Print_OnJobStateChanged jobStateChangedCb)
+{
+    if (printTask == nullptr) {
+        PRINT_HILOGW("printTask is null.");
+        return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    if (jobStateChangedCb == nullptr) {
+        PRINT_HILOGW("jobStateChangedCb is null.");
+        return PRINT_ERROR_INVALID_PARAMETER;
+    }
+    // Validate size field for version compatibility
+    uint32_t expectedSize = sizeof(Print_PrintTask);
+    // size must be at least the size of uint32_t (the size field itself)
+    // and should not exceed the current struct size * 2 (for forward compatibility)
+    if (printTask->size < sizeof(uint32_t) || printTask->size > expectedSize * 2) {
+        PRINT_HILOGE("Invalid printTask size: %{public}u, expected: %{public}u",
+            printTask->size, expectedSize);
+        return PRINT_ERROR_INVALID_PARAMETER;
+    }
+    PRINT_HILOGI("printTask size: %{public}u, expected: %{public}u", printTask->size, expectedSize);
+    
+    PrintJob curPrintJob;
+    int32_t ret = ConvertNativeTaskToPrintJob(*printTask, curPrintJob);
+    if (ret != 0) {
+        PRINT_HILOGW("ConvertNativeTaskToPrintJob fail.");
+        return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    auto nativePrintJobChangedFunc = [jobStateChangedCb](const std::string &jobId, const PrintJob& jobInfo) -> bool {
+        if (jobStateChangedCb == nullptr) {
+            PRINT_HILOGE("OH_Print job state callback is null.");
+            return false;
+        }
+        uint32_t state = PRINT_PRINT_JOB_DEFAULT;
+        GetPrintJobState(jobInfo, state);
+        if (state == PRINT_PRINT_JOB_DEFAULT) {
+            PRINT_HILOGE("OH_Print job state don't need callback.");
+            return false;
+        }
+        jobStateChangedCb(jobId.c_str(), static_cast<OH_Print_JobState>(state));
+        return true;
+    };
+    OHOS::sptr<PrintCallback> callback = new (std::nothrow) PrintCallback;
+    if (callback == nullptr) {
+        PRINT_HILOGE("OH_Print start print callback is null.");
+        return PRINT_ERROR_GENERIC_FAILURE;
+    }
+    callback->SetNativePrintJobChangeCallback(nativePrintJobChangedFunc);
+    ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob, callback);
+    PRINT_HILOGI("StartNativePrintJob with callback, ret = [%{public}d]", ret);
+    return ConvertToNativeErrorCode(ret);
+}
+
 Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallback callback)
 {
     PRINT_HILOGI("OH_Print_RegisterPrinterChangeListener");

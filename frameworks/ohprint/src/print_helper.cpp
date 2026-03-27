@@ -631,10 +631,11 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
-    jsonOptions["numberUp"] = nativePrintJob.numberUpArgs.numberUp;
-    jsonOptions["numberUpLayout"] = nativePrintJob.numberUpArgs.numberUpLayout;
-    jsonOptions["mirror"] = nativePrintJob.numberUpArgs.mirror;
-    jsonOptions["pageBorder"] = nativePrintJob.numberUpArgs.pageBorder;
+    // Print_PrintJob does not have numberUpArgs, use default values
+    jsonOptions["numberUp"] = NUMBER_UP_DEFAULT_VALUE;
+    jsonOptions["numberUpLayout"] = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    jsonOptions["mirror"] = MIRROR_DEFAULT_VALUE;
+    jsonOptions["pageBorder"] = PAGE_BORDER_DEFAULT_VALUE;
 
     Json::Value jsonAdvanceOptions;
     if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
@@ -651,6 +652,50 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     PRINT_HILOGD("SetOptionInPrintJob %{public}s", option.c_str());
     printJob.SetOption(option);
     PRINT_HILOGI("SetOptionInPrintJob out.");
+}
+
+void SetOptionInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    PRINT_HILOGI("SetOptionInPrintTask in.");
+    Json::Value jsonOptions;
+    if (nativePrintTask.jobName != nullptr) {
+        std::string documentName = std::string(nativePrintTask.jobName);
+        jsonOptions["jobName"] = documentName;
+        Json::Value jobDesArr;
+        jobDesArr.append(documentName);
+        jobDesArr.append("0");
+        jobDesArr.append("1");
+        jsonOptions["jobDesArr"] = jobDesArr;
+        jsonOptions["isDocument"] = true;
+    }
+    if (nativePrintTask.mediaType != nullptr) {
+        jsonOptions["mediaType"] = std::string(nativePrintTask.mediaType);
+    }
+    jsonOptions["borderless"] = nativePrintTask.borderless ? "true" : "false";
+    Print_Quality quality = nativePrintTask.printQuality;
+    if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH) ||
+        quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
+        quality = static_cast<Print_Quality>(PRINT_QUALITY_NORMAL);
+    }
+    jsonOptions["printQuality"] = quality;
+    jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintTask.documentFormat);
+    jsonOptions["isAutoRotate"] = nativePrintTask.orientationMode == ORIENTATION_MODE_NONE ? true : false;
+
+    Json::Value jsonAdvanceOptions;
+    if (nativePrintTask.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintTask.advancedOptions),
+        jsonAdvanceOptions)) {
+        if (jsonAdvanceOptions.isMember("isReverse") && jsonAdvanceOptions["isReverse"].isBool()) {
+            jsonOptions["isReverse"] = jsonAdvanceOptions["isReverse"];
+        }
+        if (jsonAdvanceOptions.isMember("isCollate") && jsonAdvanceOptions["isCollate"].isBool()) {
+            jsonOptions["isCollate"] = jsonAdvanceOptions["isCollate"];
+        }
+        jsonOptions["cupsOptions"] = std::string(nativePrintTask.advancedOptions);
+    }
+    std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
+    PRINT_HILOGD("SetOptionInPrintTask %{public}s", option.c_str());
+    printJob.SetOption(option);
+    PRINT_HILOGI("SetOptionInPrintTask out.");
 }
 
 void ValidateAndSetNumberUpArgs(const Print_NumberUpArgs &nativeArgs, PrintJob &printJob)
@@ -755,12 +800,146 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
 
     printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintJob.duplexMode));
     printJob.SetColorMode(static_cast<uint32_t>(nativePrintJob.colorMode));
-    ValidateAndSetNumberUpArgs(nativePrintJob.numberUpArgs, printJob);
+    // Print_PrintJob does not have numberUpArgs, use default values
+    NumberUpArgs args;
+    args.numberUp = NUMBER_UP_DEFAULT_VALUE;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    args.mirror = MIRROR_DEFAULT_VALUE;
+    args.pageBorder = PAGE_BORDER_DEFAULT_VALUE;
+    printJob.SetNumberUpArgs(args);
 
     SetPrintOrientationInPrintJob(nativePrintJob, printJob);
     SetPrintMarginInPrintJob(nativePrintJob, printJob);
     SetPrintPageSizeInPrintJob(nativePrintJob, printJob);
     SetOptionInPrintJob(nativePrintJob, printJob);
+    return E_PRINT_NONE;
+}
+
+void SetPrintOrientationInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    uint32_t ori = static_cast<uint32_t>(nativePrintTask.orientationMode);
+    if (ori == ORIENTATION_MODE_PORTRAIT || ori == ORIENTATION_MODE_REVERSE_PORTRAIT) {
+        printJob.SetIsLandscape(false);
+        printJob.SetIsSequential(true);
+    } else if (ori == ORIENTATION_MODE_LANDSCAPE || ori == ORIENTATION_MODE_REVERSE_LANDSCAPE) {
+        printJob.SetIsLandscape(true);
+        printJob.SetIsSequential(false);
+    }
+}
+
+void SetPrintMarginInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    PrintMargin margin;
+    if (nativePrintTask.printMargin.topMargin > 0) {
+        margin.SetTop(nativePrintTask.printMargin.topMargin);
+    } else {
+        margin.SetTop(0);
+    }
+    if (nativePrintTask.printMargin.rightMargin > 0) {
+        margin.SetRight(nativePrintTask.printMargin.rightMargin);
+    } else {
+        margin.SetRight(0);
+    }
+    if (nativePrintTask.printMargin.bottomMargin > 0) {
+        margin.SetBottom(nativePrintTask.printMargin.bottomMargin);
+    } else {
+        margin.SetBottom(0);
+    }
+    if (nativePrintTask.printMargin.leftMargin > 0) {
+        margin.SetLeft(nativePrintTask.printMargin.leftMargin);
+    } else {
+        margin.SetLeft(0);
+    }
+    printJob.SetMargin(margin);
+}
+
+bool SetPrintPageSizeInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    PRINT_HILOGI("SetPrintPageSizeInPrintTask in.");
+    if (nativePrintTask.pageSizeId == nullptr) {
+        PRINT_HILOGW("page size is null.");
+        return false;
+    }
+    std::string pageSizeId(nativePrintTask.pageSizeId);
+    PrintPageSize pageSize;
+    if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+        PRINT_HILOGW("use custom native page size: %{public}s.", pageSizeId.c_str());
+        pageSize.SetId(pageSizeId);
+        pageSize.SetName(pageSizeId);
+    }
+    printJob.SetPageSize(pageSize);
+    PRINT_HILOGI("SetPrintPageSizeInPrintTask out.");
+    return true;
+}
+
+void SetDefaultCapabilityInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    if (nativePrintTask.duplexMode < DUPLEX_MODE_ONE_SIDED ||
+        nativePrintTask.duplexMode > DUPLEX_MODE_TWO_SIDED_SHORT_EDGE) {
+        printJob.SetDuplexMode(DUPLEX_MODE_ONE_SIDED);
+    } else {
+        printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintTask.duplexMode));
+    }
+    if (nativePrintTask.colorMode < COLOR_MODE_MONOCHROME || nativePrintTask.colorMode > COLOR_MODE_AUTO) {
+        printJob.SetColorMode(COLOR_MODE_MONOCHROME);
+    } else {
+        printJob.SetColorMode(static_cast<uint32_t>(nativePrintTask.colorMode));
+    }
+    if (nativePrintTask.orientationMode < ORIENTATION_MODE_PORTRAIT ||
+        nativePrintTask.orientationMode > ORIENTATION_MODE_NONE) {
+        printJob.SetIsLandscape(false);
+        printJob.SetIsSequential(true);
+    } else {
+        SetPrintOrientationInPrintTask(nativePrintTask, printJob);
+    }
+    if (nativePrintTask.pageSizeId == nullptr) {
+        std::string pageSizeId = "ISO_A4";
+        PrintPageSize pageSize;
+        if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+            PRINT_HILOGW("use custom native page size: %{public}s.", pageSizeId.c_str());
+            pageSize.SetId(pageSizeId);
+            pageSize.SetName(pageSizeId);
+        }
+        printJob.SetPageSize(pageSize);
+    } else {
+        SetPrintPageSizeInPrintTask(nativePrintTask, printJob);
+    }
+
+    SetPrintMarginInPrintTask(nativePrintTask, printJob);
+    SetOptionInPrintTask(nativePrintTask, printJob);
+}
+
+int32_t ConvertNativeTaskToPrintJob(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    if (nativePrintTask.fdList == nullptr || nativePrintTask.copyNumber <= 0) {
+        PRINT_HILOGW("ConvertNativeTaskToPrintJob invalid param error.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    if (!IsValidString(nativePrintTask.printerId)) {
+        PRINT_HILOGW("ConvertNativeTaskToPrintJob string empty error.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    std::vector<uint32_t> fdList;
+    for (uint32_t i = 0; i < nativePrintTask.fdListCount; i++) {
+        fdList.emplace_back(nativePrintTask.fdList[i]);
+    }
+    printJob.SetFdList(fdList);
+    printJob.SetPrinterId(std::string(nativePrintTask.printerId));
+    printJob.SetCopyNumber(nativePrintTask.copyNumber);
+    if (PrintUtil::startsWith(std::string(nativePrintTask.printerId), RAW_PPD_DRIVER)) {
+        PRINT_HILOGI("raw printer, SetDefaultCapabilityInPrintTask start.");
+        SetDefaultCapabilityInPrintTask(nativePrintTask, printJob);
+        return E_PRINT_NONE;
+    }
+
+    printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintTask.duplexMode));
+    printJob.SetColorMode(static_cast<uint32_t>(nativePrintTask.colorMode));
+    ValidateAndSetNumberUpArgs(nativePrintTask.numberUpArgs, printJob);
+
+    SetPrintOrientationInPrintTask(nativePrintTask, printJob);
+    SetPrintMarginInPrintTask(nativePrintTask, printJob);
+    SetPrintPageSizeInPrintTask(nativePrintTask, printJob);
+    SetOptionInPrintTask(nativePrintTask, printJob);
     return E_PRINT_NONE;
 }
 

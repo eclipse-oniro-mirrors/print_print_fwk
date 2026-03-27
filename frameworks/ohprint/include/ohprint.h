@@ -530,9 +530,72 @@ typedef struct {
     Print_DocumentFormat documentFormat;
     /** Advanced options in json format. */
     char *advancedOptions;
+} Print_PrintJob;
+
+/**
+ * @brief Base extension structure for print task extensions.
+ *        Used for future extensibility via linked list.
+ * @since 26
+ */
+typedef struct Print_BaseExt {
+    /** Extension type identifier. */
+    uint32_t type;
+    /** Size of this extension structure. */
+    uint32_t size;
+    /** Extension flags. */
+    uint32_t flags;
+    /** Pointer to next extension in chain. */
+    const struct Print_BaseExt *next;
+} Print_BaseExt;
+
+/**
+ * @brief Indicates PrintTask Structure.
+ *        Follows extensible struct pattern with size field for version compatibility.
+ *
+ * @since 26
+ */
+typedef struct {
+    /** Must be set to sizeof(Print_PrintTask) by caller. */
+    uint32_t size;
+    /** Job name. */
+    char *jobName;
+    /** Array of file descriptors to print. */
+    uint32_t *fdList;
+    /** Number of file descriptors to print. */
+    uint32_t fdListCount;
+    /** Printer id. */
+    char *printerId;
+    /** Number of copies printed. */
+    uint32_t copyNumber;
+    /** Paper source. */
+    char *paperSource;
+    /** Media type. */
+    char *mediaType;
+    /** Paper size id. */
+    char *pageSizeId;
+    /** Color mode. */
+    Print_ColorMode colorMode;
+    /** Duplex source. */
+    Print_DuplexMode duplexMode;
+    /** Print resolution in dpi. */
+    Print_Resolution resolution;
+    /** Print margin. */
+    Print_Margin printMargin;
+    /** Borderless. */
+    bool borderless;
+    /** Orientation mode. */
+    Print_OrientationMode orientationMode;
+    /** Print quality. */
+    Print_Quality printQuality;
+    /** Document format. */
+    Print_DocumentFormat documentFormat;
+    /** Advanced options in json format. */
+    char *advancedOptions;
     /** N-Up (multiple pages per sheet) arguments. */
     Print_NumberUpArgs numberUpArgs;
-} Print_PrintJob;
+    /** Extension chain for future extensibility. */
+    const Print_BaseExt *next;
+} Print_PrintTask;
 
 /**
  * @brief Indicates print range structure.
@@ -796,6 +859,44 @@ typedef void(*OH_Print_OnJobStateChanged)(const char *jobId, OH_Print_JobState s
  */
 Print_ErrorCode OH_Print_StartPrintWithJobStateCallback(const Print_PrintJob *printJob,
                                                         OH_Print_OnJobStateChanged jobStateChangedCb);
+
+/**
+ * @brief This API starts initiating a print task with Print_PrintTask structure.
+ *
+ * @permission ohos.permission.PRINT
+ * @param printTask A pointer to a {@link Print_PrintTask} instance that specifies the information for the print task.
+ *        Caller must memset the struct to 0, then set size = sizeof(Print_PrintTask).
+ * @return Returns {@link Print_ErrorCode#PRINT_ERROR_NONE} if the execution is successful.
+ *         {@link PRINT_ERROR_NO_PERMISSION} The permission {@code ohos.permission.PRINT} is needed.
+ *         {@link PRINT_ERROR_RPC_FAILURE} Unable to connect to the print service.
+ *         {@link PRINT_ERROR_INVALID_PRINTER} The printer should be in the list of connected printers.
+ *         {@link PRINT_ERROR_SERVER_FAILURE} Unable to create print job in the print service.
+ *         {@link PRINT_ERROR_INVALID_PRINT_JOB} Unable to find the job int the job queue.
+ *
+ * @since 26
+ */
+Print_ErrorCode OH_Print_StartPrintTask(const Print_PrintTask *printTask);
+
+/**
+ * @brief This API starts initiating a print task with job state change callback.
+ *
+ * @permission ohos.permission.PRINT
+ * @param printTask A pointer to a {@link Print_PrintTask} instance that specifies the information for the print task.
+ *        Caller must memset the struct to 0, then set size = sizeof(Print_PrintTask).
+ * @param jobStateChangedCb The {@link OH_Print_OnJobStateChanged} to be registered.
+ * @return Returns {@link Print_ErrorCode#PRINT_ERROR_NONE} if the execution is successful.
+ *         {@link PRINT_ERROR_NO_PERMISSION} The permission {@code ohos.permission.PRINT} is needed.
+ *         {@link PRINT_ERROR_RPC_FAILURE} Unable to connect to the print service.
+ *         {@link PRINT_ERROR_INVALID_PRINTER} The printer should be in the list of connected printers.
+ *         {@link PRINT_ERROR_SERVER_FAILURE} Unable to create print job in the print service.
+ *         {@link PRINT_ERROR_INVALID_PRINT_JOB} Unable to find the job in the job queue.
+ *         {@link PRINT_ERROR_GENERIC_FAILURE} Unable to copy the callback.
+ *         {@link PRINT_ERROR_INVALID_PARAMETER} callback is NULL.
+ *
+ * @since 26
+ */
+Print_ErrorCode OH_Print_StartPrintTaskWithCallback(const Print_PrintTask *printTask,
+                                                    OH_Print_OnJobStateChanged jobStateChangedCb);
 
 /**
  * @brief This API registers the callback for printer changes.
