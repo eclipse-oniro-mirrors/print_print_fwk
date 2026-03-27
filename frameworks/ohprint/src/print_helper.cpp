@@ -909,21 +909,14 @@ void SetDefaultCapabilityInPrintTask(const Print_PrintTask &nativePrintTask, Pri
     SetOptionInPrintTask(nativePrintTask, printJob);
 }
 
-// Helper function to safely get numberUpArgs with defaults if size is too small
-// Extensible struct pattern: older callers may have smaller struct without numberUpArgs
 static void SafeGetNumberUpArgs(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
 {
-    // Default values for numberUpArgs
     Print_NumberUpArgs defaultArgs = {
         .numberUp = static_cast<PrintNumberUp>(NUMBER_UP_DEFAULT_VALUE),
         .numberUpLayout = static_cast<PrintNumberUpLayout>(NUMBER_UP_LAYOUT_DEFAULT_VALUE),
         .mirror = static_cast<PrintMirrorMode>(MIRROR_DEFAULT_VALUE),
         .pageBorder = static_cast<PrintPageBorderMode>(PAGE_BORDER_DEFAULT_VALUE)
     };
-    
-    // Extensible struct pattern:
-    // - If size < sizeof(Print_PrintTask), caller is using older version without numberUpArgs
-    // - Use default values to avoid reading uninitialized/invalid memory
     if (nativePrintTask.size < sizeof(Print_PrintTask)) {
         PRINT_HILOGW("PrintTask size %{public}u < %{public}zu, using default numberUpArgs",
             nativePrintTask.size, sizeof(Print_PrintTask));
