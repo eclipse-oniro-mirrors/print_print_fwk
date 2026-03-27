@@ -873,6 +873,23 @@ bool SetPrintPageSizeInPrintTask(const Print_PrintTask &nativePrintTask, PrintJo
     return true;
 }
 
+static void SafeGetNumberUpArgs(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    Print_NumberUpArgs defaultArgs = {
+        .numberUp = static_cast<::PrintNumberUp>(NUMBER_UP_DEFAULT_VALUE),
+        .numberUpLayout = static_cast<::PrintNumberUpLayout>(NUMBER_UP_LAYOUT_DEFAULT_VALUE),
+        .mirror = static_cast<::PrintMirrorMode>(MIRROR_DEFAULT_VALUE),
+        .pageBorder = static_cast<::PrintPageBorderMode>(PAGE_BORDER_DEFAULT_VALUE)
+    };
+    if (nativePrintTask.size < sizeof(Print_PrintTask)) {
+        PRINT_HILOGW("PrintTask size %{public}u < %{public}zu, using default numberUpArgs",
+            nativePrintTask.size, sizeof(Print_PrintTask));
+        ValidateAndSetNumberUpArgs(defaultArgs, printJob);
+        return;
+    }
+    ValidateAndSetNumberUpArgs(nativePrintTask.numberUpArgs, printJob);
+}
+
 void SetDefaultCapabilityInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
 {
     if (nativePrintTask.duplexMode < DUPLEX_MODE_ONE_SIDED ||
@@ -909,23 +926,6 @@ void SetDefaultCapabilityInPrintTask(const Print_PrintTask &nativePrintTask, Pri
     SetPrintMarginInPrintTask(nativePrintTask, printJob);
     SafeGetNumberUpArgs(nativePrintTask, printJob);
     SetOptionInPrintTask(nativePrintTask, printJob);
-}
-
-static void SafeGetNumberUpArgs(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
-{
-    Print_NumberUpArgs defaultArgs = {
-        .numberUp = static_cast<PrintNumberUp>(NUMBER_UP_DEFAULT_VALUE),
-        .numberUpLayout = static_cast<PrintNumberUpLayout>(NUMBER_UP_LAYOUT_DEFAULT_VALUE),
-        .mirror = static_cast<PrintMirrorMode>(MIRROR_DEFAULT_VALUE),
-        .pageBorder = static_cast<PrintPageBorderMode>(PAGE_BORDER_DEFAULT_VALUE)
-    };
-    if (nativePrintTask.size < sizeof(Print_PrintTask)) {
-        PRINT_HILOGW("PrintTask size %{public}u < %{public}zu, using default numberUpArgs",
-            nativePrintTask.size, sizeof(Print_PrintTask));
-        ValidateAndSetNumberUpArgs(defaultArgs, printJob);
-        return;
-    }
-    ValidateAndSetNumberUpArgs(nativePrintTask.numberUpArgs, printJob);
 }
 
 int32_t ConvertNativeTaskToPrintJob(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
