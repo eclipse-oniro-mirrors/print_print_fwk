@@ -631,11 +631,6 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
-    // Print_PrintJob does not have numberUpArgs, use default values
-    jsonOptions["numberUp"] = NUMBER_UP_DEFAULT_VALUE;
-    jsonOptions["numberUpLayout"] = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
-    jsonOptions["mirror"] = MIRROR_DEFAULT_VALUE;
-    jsonOptions["pageBorder"] = PAGE_BORDER_DEFAULT_VALUE;
 
     Json::Value jsonAdvanceOptions;
     if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
@@ -772,6 +767,12 @@ void SetDefaultCapabilityInPrintJob(const Print_PrintJob &nativePrintJob, PrintJ
     }
 
     SetPrintMarginInPrintJob(nativePrintJob, printJob);
+    NumberUpArgs args;
+    args.numberUp = NUMBER_UP_DEFAULT_VALUE;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    args.mirror = MIRROR_DEFAULT_VALUE;
+    args.pageBorder = PAGE_BORDER_DEFAULT_VALUE;
+    printJob.SetNumberUpArgs(args);
     SetOptionInPrintJob(nativePrintJob, printJob);
 }
 
@@ -906,6 +907,7 @@ void SetDefaultCapabilityInPrintTask(const Print_PrintTask &nativePrintTask, Pri
     }
 
     SetPrintMarginInPrintTask(nativePrintTask, printJob);
+    SafeGetNumberUpArgs(nativePrintTask, printJob);
     SetOptionInPrintTask(nativePrintTask, printJob);
 }
 
