@@ -909,6 +909,30 @@ void SetDefaultCapabilityInPrintTask(const Print_PrintTask &nativePrintTask, Pri
     SetOptionInPrintTask(nativePrintTask, printJob);
 }
 
+// Helper function to safely get numberUpArgs with defaults if size is too small
+// Extensible struct pattern: older callers may have smaller struct without numberUpArgs
+static void SafeGetNumberUpArgs(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
+{
+    // Default values for numberUpArgs
+    Print_NumberUpArgs defaultArgs = {
+        .numberUp = static_cast<PrintNumberUp>(NUMBER_UP_DEFAULT_VALUE),
+        .numberUpLayout = static_cast<PrintNumberUpLayout>(NUMBER_UP_LAYOUT_DEFAULT_VALUE),
+        .mirror = static_cast<PrintMirrorMode>(MIRROR_DEFAULT_VALUE),
+        .pageBorder = static_cast<PrintPageBorderMode>(PAGE_BORDER_DEFAULT_VALUE)
+    };
+    
+    // Extensible struct pattern:
+    // - If size < sizeof(Print_PrintTask), caller is using older version without numberUpArgs
+    // - Use default values to avoid reading uninitialized/invalid memory
+    if (nativePrintTask.size < sizeof(Print_PrintTask)) {
+        PRINT_HILOGW("PrintTask size %{public}u < %{public}zu, using default numberUpArgs",
+            nativePrintTask.size, sizeof(Print_PrintTask));
+        ValidateAndSetNumberUpArgs(defaultArgs, printJob);
+        return;
+    }
+    ValidateAndSetNumberUpArgs(nativePrintTask.numberUpArgs, printJob);
+}
+
 int32_t ConvertNativeTaskToPrintJob(const Print_PrintTask &nativePrintTask, PrintJob &printJob)
 {
     if (nativePrintTask.fdList == nullptr || nativePrintTask.copyNumber <= 0) {
@@ -934,7 +958,7 @@ int32_t ConvertNativeTaskToPrintJob(const Print_PrintTask &nativePrintTask, Prin
 
     printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintTask.duplexMode));
     printJob.SetColorMode(static_cast<uint32_t>(nativePrintTask.colorMode));
-    ValidateAndSetNumberUpArgs(nativePrintTask.numberUpArgs, printJob);
+    SafeGetNumberUpArgs(nativePrintTask, printJob);
 
     SetPrintOrientationInPrintTask(nativePrintTask, printJob);
     SetPrintMarginInPrintTask(nativePrintTask, printJob);

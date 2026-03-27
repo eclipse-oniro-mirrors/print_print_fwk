@@ -379,13 +379,13 @@ Print_ErrorCode OH_Print_StartPrintTask(const Print_PrintTask *printTask)
         PRINT_HILOGI("printTask is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
     }
-    // Validate size field for version compatibility
-    uint32_t expectedSize = sizeof(Print_PrintTask);
-    // size must be at least the size of uint32_t (the size field itself)
-    // and should not exceed the current struct size (for forward compatibility)
-    if (printTask->size < sizeof(uint32_t) || printTask->size > expectedSize * 2) {
-        PRINT_HILOGE("Invalid printTask size: %{public}u, expected: %{public}u",
-            printTask->size, expectedSize);
+    // Validate size field for version compatibility (extensible struct pattern)
+    // size can be smaller than sizeof(Print_PrintTask) for older callers
+    // size can be larger for newer callers (we only read fields we know about)
+    // size must be at least sizeof(uint32_t) to contain the size field itself
+    if (printTask->size < sizeof(uint32_t)) {
+        PRINT_HILOGE("Invalid printTask size: %{public}u, minimum required: %{public}zu",
+            printTask->size, sizeof(uint32_t));
         return PRINT_ERROR_INVALID_PARAMETER;
     }
     PRINT_HILOGI("printTask size: %{public}u, expected: %{public}u", printTask->size, expectedSize);
@@ -412,13 +412,13 @@ Print_ErrorCode OH_Print_StartPrintTaskWithCallback(const Print_PrintTask *print
         PRINT_HILOGW("jobStateChangedCb is null.");
         return PRINT_ERROR_INVALID_PARAMETER;
     }
-    // Validate size field for version compatibility
-    uint32_t expectedSize = sizeof(Print_PrintTask);
-    // size must be at least the size of uint32_t (the size field itself)
-    // and should not exceed the current struct size * 2 (for forward compatibility)
-    if (printTask->size < sizeof(uint32_t) || printTask->size > expectedSize * 2) {
-        PRINT_HILOGE("Invalid printTask size: %{public}u, expected: %{public}u",
-            printTask->size, expectedSize);
+    // Validate size field for version compatibility (extensible struct pattern)
+    // size can be smaller than sizeof(Print_PrintTask) for older callers
+    // size can be larger for newer callers (we only read fields we know about)
+    // size must be at least sizeof(uint32_t) to contain the size field itself
+    if (printTask->size < sizeof(uint32_t)) {
+        PRINT_HILOGE("Invalid printTask size: %{public}u, minimum required: %{public}zu",
+            printTask->size, sizeof(uint32_t));
         return PRINT_ERROR_INVALID_PARAMETER;
     }
     PRINT_HILOGI("printTask size: %{public}u, expected: %{public}u", printTask->size, expectedSize);
