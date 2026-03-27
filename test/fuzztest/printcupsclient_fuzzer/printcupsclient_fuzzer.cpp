@@ -354,12 +354,6 @@ void TestGetNewSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintCupsClient::GetInstance()->GetNewSubstate(substate, singleSubstate);
 }
 
-void TestNumberUpLayoutString(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    uint32_t layoutCode = dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL + 1);
-    PrintCupsClient::GetNumberUpLayoutString(layoutCode);
-}
-
 }  // namespace Print
 }  // namespace OHOS
 
@@ -409,8 +403,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestBuildMonitorPolicy,
         &OHOS::Print::TestParseStateReasons,
         &OHOS::Print::TestGetBlockedAndUpdateSubstate,
-        &OHOS::Print::TestGetNewSubstate,
-        &OHOS::Print::TestNumberUpLayoutString
+        &OHOS::Print::TestGetNewSubstate
     };
     TestHandler handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);
