@@ -557,6 +557,10 @@ void SetPrintOrientationInPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     } else if (ori == ORIENTATION_MODE_LANDSCAPE || ori == ORIENTATION_MODE_REVERSE_LANDSCAPE) {
         printJob.SetIsLandscape(true);
         printJob.SetIsSequential(false);
+    } else {
+        // ORIENTATION_MODE_NONE or other invalid values: use default (PORTRAIT)
+        printJob.SetIsLandscape(false);
+        printJob.SetIsSequential(true);
     }
 }
 
@@ -825,6 +829,10 @@ void SetPrintOrientationInPrintTask(const Print_PrintTask &nativePrintTask, Prin
     } else if (ori == ORIENTATION_MODE_LANDSCAPE || ori == ORIENTATION_MODE_REVERSE_LANDSCAPE) {
         printJob.SetIsLandscape(true);
         printJob.SetIsSequential(false);
+    } else {
+        // ORIENTATION_MODE_NONE or other invalid values: use default (PORTRAIT)
+        printJob.SetIsLandscape(false);
+        printJob.SetIsSequential(true);
     }
 }
 
@@ -951,8 +959,17 @@ int32_t ConvertNativeTaskToPrintJob(const Print_PrintTask &nativePrintTask, Prin
         return E_PRINT_NONE;
     }
 
-    printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintTask.duplexMode));
-    printJob.SetColorMode(static_cast<uint32_t>(nativePrintTask.colorMode));
+    if (nativePrintTask.duplexMode < DUPLEX_MODE_ONE_SIDED ||
+        nativePrintTask.duplexMode > DUPLEX_MODE_TWO_SIDED_SHORT_EDGE) {
+        printJob.SetDuplexMode(DUPLEX_MODE_ONE_SIDED);
+    } else {
+        printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintTask.duplexMode));
+    }
+    if (nativePrintTask.colorMode < COLOR_MODE_MONOCHROME || nativePrintTask.colorMode > COLOR_MODE_AUTO) {
+        printJob.SetColorMode(COLOR_MODE_MONOCHROME);
+    } else {
+        printJob.SetColorMode(static_cast<uint32_t>(nativePrintTask.colorMode));
+    }
     SafeGetNumberUpArgs(nativePrintTask, printJob);
 
     SetPrintOrientationInPrintTask(nativePrintTask, printJob);

@@ -3444,5 +3444,321 @@ HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_InvalidPpdName_Test,
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_001
+ * @tc.desc: BuildJobParameters with NumberUpArgs
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    jobInfo.SetJobId("test-job-001");
+    jobInfo.SetPrinterId("printer-001");
+    
+    NumberUpArgs args;
+    args.numberUp = 4;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    args.mirror = 1;
+    args.pageBorder = 1;
+    jobInfo.SetNumberUpArgs(args);
+    
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    pageSize.SetName("A4");
+    jobInfo.SetPageSize(pageSize);
+    
+    std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+    jobInfo.SetOption(option);
+    
+    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+    ASSERT_NE(params, nullptr);
+    EXPECT_EQ(params->numberUp, 4);
+    EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
+    EXPECT_EQ(params->mirror, 1);
+    EXPECT_EQ(params->pageBorder, 1);
+    
+    delete params;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_002
+ * @tc.desc: BuildJobParameters with default NumberUpArgs values
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgsDefault_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    jobInfo.SetJobId("test-job-002");
+    jobInfo.SetPrinterId("printer-002");
+    
+    // Use default NumberUpArgs values (not explicitly set)
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    pageSize.SetName("A4");
+    jobInfo.SetPageSize(pageSize);
+    
+    std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+    jobInfo.SetOption(option);
+    
+    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+    ASSERT_NE(params, nullptr);
+    // Default values should be used
+    EXPECT_EQ(params->numberUp, NUMBER_UP_DEFAULT_VALUE);
+    EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_DEFAULT_VALUE);
+    EXPECT_EQ(params->mirror, MIRROR_DEFAULT_VALUE);
+    EXPECT_EQ(params->pageBorder, PAGE_BORDER_DEFAULT_VALUE);
+    
+    delete params;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_003
+ * @tc.desc: DumpJobParameters with NumberUpArgs values
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DumpJobParameters_NumberUpArgs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters* jobParams = new JobParameters();
+    jobParams->numberUp = 4;
+    jobParams->numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    jobParams->mirror = 1;
+    jobParams->pageBorder = 1;
+    
+    // This should not crash and should log the values
+    printCupsClient.DumpJobParameters(jobParams);
+    
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_004
+ * @tc.desc: BuildJobParameters with all valid numberUp values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpAllValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test all valid numberUp values
+    std::vector<uint32_t> validNumberUps = {1, 2, 4, 6, 9, 16};
+    
+    for (auto numberUp : validNumberUps) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-" + std::to_string(numberUp));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = numberUp;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = 0;
+        args.pageBorder = 0;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+        
+        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+        jobInfo.SetOption(option);
+        
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->numberUp, numberUp);
+        EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_LRTB);
+        delete params;
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_005
+ * @tc.desc: BuildJobParameters with all numberUpLayout values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpLayoutAllValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test all numberUpLayout values
+    std::vector<uint32_t> layouts = {
+        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_RLTB,
+        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
+        NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
+        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
+    };
+    
+    for (auto layout : layouts) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-layout-" + std::to_string(layout));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = layout;
+        args.mirror = 0;
+        args.pageBorder = 0;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+        
+        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+        jobInfo.SetOption(option);
+        
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->numberUpLayout, layout);
+        delete params;
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_006
+ * @tc.desc: BuildJobParameters with mirror values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_MirrorValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test mirror values
+    std::vector<uint32_t> mirrorValues = {PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED};
+    
+    for (auto mirror : mirrorValues) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-mirror-" + std::to_string(mirror));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = mirror;
+        args.pageBorder = 0;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+        
+        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+        jobInfo.SetOption(option);
+        
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->mirror, mirror);
+        delete params;
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_007
+ * @tc.desc: BuildJobParameters with pageBorder values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_PageBorderValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test pageBorder values
+    std::vector<uint32_t> borderValues = {
+        PRINT_PAGE_BORDER_NONE,
+        PRINT_PAGE_BORDER_SINGLE,
+        PRINT_PAGE_BORDER_DOUBLE
+    };
+    
+    for (auto border : borderValues) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-border-" + std::to_string(border));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = 0;
+        args.pageBorder = border;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+        
+        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+        jobInfo.SetOption(option);
+        
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->pageBorder, border);
+        delete params;
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_008
+ * @tc.desc: BuildJobParameters with combined NumberUpArgs values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: combined test cases
+    struct TestCase {
+        uint32_t numberUp;
+        uint32_t numberUpLayout;
+        uint32_t mirror;
+        uint32_t pageBorder;
+    };
+    
+    std::vector<TestCase> testCases = {
+        {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
+        {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
+        {4, NUMBER_UP_LAYOUT_TBLR, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_DOUBLE},
+        {6, NUMBER_UP_LAYOUT_TBRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_NONE},
+        {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
+        {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
+    };
+    
+    int index = 0;
+    for (const auto& tc : testCases) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-combined-" + std::to_string(index));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = tc.numberUp;
+        args.numberUpLayout = tc.numberUpLayout;
+        args.mirror = tc.mirror;
+        args.pageBorder = tc.pageBorder;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+        
+        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
+        jobInfo.SetOption(option);
+        
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        ASSERT_NE(params, nullptr) << "Failed at index " << index;
+        EXPECT_EQ(params->numberUp, tc.numberUp) << "Failed at index " << index;
+        EXPECT_EQ(params->numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
+        EXPECT_EQ(params->mirror, tc.mirror) << "Failed at index " << index;
+        EXPECT_EQ(params->pageBorder, tc.pageBorder) << "Failed at index " << index;
+        delete params;
+        index++;
+    }
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -376,17 +376,14 @@ Print_ErrorCode OH_Print_StartPrintWithJobStateCallback(const Print_PrintJob *pr
 Print_ErrorCode OH_Print_StartPrintTask(const Print_PrintTask *printTask)
 {
     if (printTask == nullptr) {
-        PRINT_HILOGI("printTask is null.");
+        PRINT_HILOGE("printTask is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
     }
-    if (printTask->size < sizeof(uint32_t)) {
+    if (printTask->size < sizeof(Print_PrintTask)) {
         PRINT_HILOGE("Invalid printTask size: %{public}u, minimum required: %{public}zu",
-            printTask->size, sizeof(uint32_t));
+            printTask->size, sizeof(Print_PrintTask));
         return PRINT_ERROR_INVALID_PARAMETER;
     }
-    PRINT_HILOGI("printTask size: %{public}u, current struct size: %{public}zu",
-        printTask->size, sizeof(Print_PrintTask));
-    
     PrintJob curPrintJob;
     int32_t ret = ConvertNativeTaskToPrintJob(*printTask, curPrintJob);
     if (ret != 0) {
@@ -402,16 +399,16 @@ Print_ErrorCode OH_Print_StartPrintTaskWithCallback(const Print_PrintTask *print
     OH_Print_OnJobStateChanged jobStateChangedCb)
 {
     if (printTask == nullptr) {
-        PRINT_HILOGW("printTask is null.");
+        PRINT_HILOGE("printTask is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
     }
     if (jobStateChangedCb == nullptr) {
         PRINT_HILOGW("jobStateChangedCb is null.");
         return PRINT_ERROR_INVALID_PARAMETER;
     }
-    if (printTask->size < sizeof(uint32_t)) {
+    if (printTask->size < sizeof(Print_PrintTask)) {
         PRINT_HILOGE("Invalid printTask size: %{public}u, minimum required: %{public}zu",
-            printTask->size, sizeof(uint32_t));
+            printTask->size, sizeof(Print_PrintTask));
         return PRINT_ERROR_INVALID_PARAMETER;
     }
     PRINT_HILOGI("printTask size: %{public}u, current struct size: %{public}zu",
