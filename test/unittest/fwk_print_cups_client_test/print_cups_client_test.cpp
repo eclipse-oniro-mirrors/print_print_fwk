@@ -41,6 +41,12 @@ static constexpr const char *JOB_OPTIONS =
     "\"printerName\":\"printer1\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\",\"borderless\":true,"
     "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"],\"isAutoRotate\":true}";
 
+static constexpr const char* TEST_JOB_OPTION = R"({
+    "printerName": "test_printer",
+    "printerUri": "ipp://localhost/printers/test",
+    "documentFormat": "application/pdf"
+})";
+
 const uint32_t DIR_MODE = 0771;
 const int32_t STATE_UPDATE_STEP = 5;
 const int TEST_CUPS_JOB_ID = 100;
@@ -3469,8 +3475,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgs_Test, TestSize.Lev
     pageSize.SetName("A4");
     jobInfo.SetPageSize(pageSize);
     
-    std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-    jobInfo.SetOption(option);
+    jobInfo.SetOption(TEST_JOB_OPTION);
     
     JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
     ASSERT_NE(params, nullptr);
@@ -3501,8 +3506,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgsDefault_Test, TestS
     pageSize.SetName("A4");
     jobInfo.SetPageSize(pageSize);
     
-    std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-    jobInfo.SetOption(option);
+    jobInfo.SetOption(TEST_JOB_OPTION);
     
     JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
     ASSERT_NE(params, nullptr);
@@ -3565,8 +3569,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpAllValues_Test, TestSiz
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
         
-        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-        jobInfo.SetOption(option);
+        jobInfo.SetOption(TEST_JOB_OPTION);
         
         JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
         ASSERT_NE(params, nullptr);
@@ -3610,8 +3613,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpLayoutAllValues_Test, T
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
         
-        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-        jobInfo.SetOption(option);
+        jobInfo.SetOption(TEST_JOB_OPTION);
         
         JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
         ASSERT_NE(params, nullptr);
@@ -3649,8 +3651,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_MirrorValues_Test, TestSize.Lev
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
         
-        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-        jobInfo.SetOption(option);
+        jobInfo.SetOption(TEST_JOB_OPTION);
         
         JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
         ASSERT_NE(params, nullptr);
@@ -3692,8 +3693,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_PageBorderValues_Test, TestSize
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
         
-        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-        jobInfo.SetOption(option);
+        jobInfo.SetOption(TEST_JOB_OPTION);
         
         JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
         ASSERT_NE(params, nullptr);
@@ -3746,8 +3746,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, Test
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
         
-        std::string option = R"({"printerName":"test_printer","printerUri":"ipp://localhost/printers/test","documentFormat":"application/pdf"})";
-        jobInfo.SetOption(option);
+        jobInfo.SetOption(TEST_JOB_OPTION);
         
         JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
         ASSERT_NE(params, nullptr) << "Failed at index " << index;
