@@ -695,6 +695,7 @@ napi_value NapiPrintExt::UpdatePrinterInSystem(napi_env env, napi_callback_info 
         if (context->printerInfos.empty()) {
             context->result = false;
             PRINT_HILOGE("UpdatePrinterInSystem printerInfos is empty!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return;
         }
         int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(context->printerInfos.front());
