@@ -77,6 +77,8 @@ public:
     static napi_value UnregisterWatermarkCallback(napi_env env, napi_callback_info info);
     static napi_value NotifyWatermarkComplete(napi_env env, napi_callback_info info);
     static napi_value AddPrinter(napi_env env, napi_callback_info info);
+    static napi_value OnPrinterInfoQuery(napi_env env, napi_callback_info info);
+    static napi_value OffPrinterInfoQuery(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);

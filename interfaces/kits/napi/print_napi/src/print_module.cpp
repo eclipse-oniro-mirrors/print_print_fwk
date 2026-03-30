@@ -86,6 +86,8 @@ static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWat
 static constexpr const char *FUNCTION_UNREGISTER_WATERMARK_CALLBACK = "unregisterWatermarkCallback";
 static constexpr const char *FUNCTION_NOTIFY_WATERMARK_COMPLETE = "notifyWatermarkComplete";
 static constexpr const char *FUNCTION_ADD_PRINTER_NEW = "addPrinter";
+static constexpr const char *FUNCTION_ON_PRINTER_INFO_QUERY = "onPrinterInfoQuery";
+static constexpr const char *FUNCTION_OFF_PRINTER_INFO_QUERY = "offPrinterInfoQuery";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_COMPLETED_SUCCESS", PRINT_JOB_COMPLETED_SUCCESS},
@@ -540,6 +542,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_WATERMARK_CALLBACK, NapiInnerPrint::UnregisterWatermarkCallback),
         PRINT_NAPI_METHOD(FUNCTION_NOTIFY_WATERMARK_COMPLETE, NapiInnerPrint::NotifyWatermarkComplete),
         PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER_NEW, NapiInnerPrint::AddPrinter),
+        PRINT_NAPI_METHOD(FUNCTION_ON_PRINTER_INFO_QUERY, NapiInnerPrint::OnPrinterInfoQuery),
+        PRINT_NAPI_METHOD(FUNCTION_OFF_PRINTER_INFO_QUERY, NapiInnerPrint::OffPrinterInfoQuery),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
