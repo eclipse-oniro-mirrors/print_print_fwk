@@ -15,34 +15,108 @@
 #include "eventlistenermgr_fuzzer.h"
 #include "fuzzer/FuzzedDataProvider.h"
 #include "event_listener_mgr.h"
+#include "print_callback.h"
 #include "print_log.h"
 #include <functional>
 
 namespace OHOS {
 namespace Print {
 constexpr uint8_t MAX_STRING_LENGTH = 255;
-constexpr int MAX_SET_USERID_NUMBER = 1000;
 constexpr int MAX_SET_NUMBER = 100;
 constexpr int POLICY_ENUM_MAX = 3;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 
-void TestFindCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(100, MAX_SET_USERID_NUMBER);
-    uint32_t pid = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    uint32_t eventType = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    DelayedSingleton<EventListenerMgr>::GetInstance()->FindCallback(userId, pid, eventType);
-}
-
 void TestRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    uint32_t eventType = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
     sptr<IPrintCallback> listener = nullptr;
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, listener);
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
     sptr<IPrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, callback);
+    if (callback != nullptr) {
+        DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, callback);
+    } else {
+        delete printerAdapterPtr;
+        printerAdapterPtr = nullptr;
+    }
+}
+
+void TestRegisterExtensionListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    sptr<IPrintExtensionCallback> listener = nullptr;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(eventType, extensionId, listener);
+}
+
+void TestRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    sptr<IPrintCallback> listener = nullptr;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(eventType, jobId, listener);
+    PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
+    sptr<IPrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
+    if (callback != nullptr) {
+        DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(eventType, jobId, callback);
+    } else {
+        delete printerAdapterPtr;
+        printerAdapterPtr = nullptr;
+    }
+}
+
+void TestUnRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterPrinterListener(eventType);
+}
+
+void TestUnRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterPrintJobListener(eventType, jobId);
+}
+
+void TestExecute(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackInfo callbackInfo;
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    int32_t userId = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    callbackInfo.cbEventType = eventType;
+    callbackInfo.userId = userId;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(callbackInfo);
+}
+
+void TestIsPrinterListenerEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    DelayedSingleton<EventListenerMgr>::GetInstance()->IsPrinterListenerEmpty(eventType);
+}
+
+void TestIsExtensionListenerEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t userId = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->IsExtensionListenerEmpty(eventType, extensionId, userId);
+}
+
+void TestIsPrintJobListenerEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    CallbackEventType eventType = static_cast<CallbackEventType>(
+        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->IsPrintJobListenerEmpty(eventType, jobId);
 }
 
 }  // namespace Print
@@ -63,8 +137,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
-        &OHOS::Print::TestFindCallback,
-        &OHOS::Print::TestRegisterPrinterListener
+        &OHOS::Print::TestRegisterPrinterListener,
+        &OHOS::Print::TestRegisterExtensionListener,
+        &OHOS::Print::TestRegisterPrintJobListener,
+        &OHOS::Print::TestUnRegisterPrinterListener,
+        &OHOS::Print::TestUnRegisterPrintJobListener,
+        &OHOS::Print::TestExecute,
+        &OHOS::Print::TestIsPrinterListenerEmpty,
+        &OHOS::Print::TestIsExtensionListenerEmpty,
+        &OHOS::Print::TestIsPrintJobListenerEmpty,
     };
     TestHandler handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);
