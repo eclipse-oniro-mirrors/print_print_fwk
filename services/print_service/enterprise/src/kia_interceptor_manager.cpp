@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 #include "../include/kia_interceptor_manager.h"
 #include "print_log.h"
 #include "print_constant.h"
@@ -147,3 +149,5 @@ std::string KiaInterceptorManager::GetCallerAppId(const std::string &jobId)
 }
 
 } // namespace OHOS::Print
+
+#endif // KIA_INTERCEPTOR_ENABLE

@@ -20,6 +20,9 @@
 #include "iremote_proxy.h"
 
 namespace OHOS::Print {
+
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 class KiaInterceptorCallbackProxy : public IRemoteProxy<IKiaInterceptorCallback> {
 public:
     explicit KiaInterceptorCallbackProxy(const sptr<IRemoteObject> &object);
@@ -30,5 +33,20 @@ public:
 private:
     static inline BrokerDelegator<KiaInterceptorCallbackProxy> delegator_;
 };
+
+#else
+
+class KiaInterceptorCallbackProxy : public IRemoteProxy<IKiaInterceptorCallback> {
+public:
+    explicit KiaInterceptorCallbackProxy(const sptr<IRemoteObject> &object) {}
+
+    bool OnCheckPrintJobNeedReject(const int32_t &pid, const std::string &callerAppId) override
+    {
+        return false;
+    }
+};
+
+#endif // KIA_INTERCEPTOR_ENABLE
+
 } // namespace OHOS::Print
 #endif // KIA_INTERCEPTOR_CALLBACK_PROXY_H

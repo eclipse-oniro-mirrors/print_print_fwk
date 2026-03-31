@@ -16,6 +16,8 @@
 #ifndef KIA_INTERCEPTOR_CALLBACK_STUB_H
 #define KIA_INTERCEPTOR_CALLBACK_STUB_H
 
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 #include <map>
 #include "ikia_interceptor_callback.h"
 #include "iremote_stub.h"
@@ -36,4 +38,7 @@ private:
     std::map<uint32_t, KIA_INTERCEPTOR_EVENT_HANDLER> cmdMap_;
 };
 }  // namespace OHOS::Print
+
+#endif // KIA_INTERCEPTOR_ENABLE
+
 #endif  // KIA_INTERCEPTOR_CALLBACK_STUB_H

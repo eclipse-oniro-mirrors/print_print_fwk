@@ -32,7 +32,9 @@
 #include "mock_print_callback_stub.h"
 #include "mock_print_manager_client.h"
 #include "mock_watermark_callback_stub.h"
+#ifdef KIA_INTERCEPTOR_ENABLE
 #include "mock_kia_interceptor_callback_stub.h"
+#endif // KIA_INTERCEPTOR_ENABLE
 #include "print_shared_host.h"
 
 using namespace testing;
@@ -3184,6 +3186,7 @@ HWTEST_F(PrintManagerClientTest, AddPrinter_reload, TestSize.Level1)
     dr->OnRemoteDied(obj);
 }
 
+#ifdef KIA_INTERCEPTOR_ENABLE
 HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Level1)
 {
     auto service = std::make_shared<MockPrintService>();
@@ -3204,5 +3207,7 @@ HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Le
 
     dr->OnRemoteDied(obj);
 }
+#endif // KIA_INTERCEPTOR_ENABLE
+
 }  // namespace Print
 }  // namespace OHOS

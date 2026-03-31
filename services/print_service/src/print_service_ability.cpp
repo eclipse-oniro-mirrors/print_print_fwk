@@ -1312,12 +1312,12 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-#ifdef EDM_SERVICE_ENABLE
     if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(printJob.GetJobId())) {
-        ReportEventAndUpdateJobState(printJob.GetOption(), printJob.GetJobId());
+#ifdef EDM_SERVICE_ENABLE
+        ReportBannedEvent(printJob.GetOption());
+#endif // EDM_SERVICE_ENABLE
         return E_PRINT_KIA_INTERCEPTED;
     }
-#endif
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!UpdatePrintJobOptionByPrinterId(printJob)) {
         PRINT_HILOGW("cannot update printer name/uri");
@@ -1387,12 +1387,12 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-#ifdef EDM_SERVICE_ENABLE
     if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobInfo.GetJobId())) {
-        ReportEventAndUpdateJobState(jobInfo.GetOption(), jobInfo.GetJobId());
+#ifdef EDM_SERVICE_ENABLE
+        ReportBannedEvent(jobInfo.GetOption());
+#endif // EDM_SERVICE_ENABLE
         return E_PRINT_KIA_INTERCEPTED;
     }
-#endif // EDM_SERVICE_ENABLE
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
@@ -1437,11 +1437,14 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
+
     if (KiaInterceptorManager::GetInstance().CheckPrintJobNeedReject(jobId)) {
-        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
+#ifdef EDM_SERVICE_ENABLE
+        ReportBannedEvent(printJob->GetOption());
+#endif // EDM_SERVICE_ENABLE
         return E_PRINT_KIA_INTERCEPTED;
     }
-#endif // EDM_SERVICE_ENABLE
 
     // reopen fd from cache
     std::vector<uint32_t> fdList;
@@ -5447,6 +5450,7 @@ int32_t PrintServiceAbility::NotifyWatermarkComplete(const std::string &jobId, i
 
 int32_t PrintServiceAbility::RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback)
 {
+#ifdef KIA_INTERCEPTOR_ENABLE
     PRINT_HILOGI("PrintServiceAbility::RegisterKiaInterceptorCallback start");
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
@@ -5457,7 +5461,7 @@ int32_t PrintServiceAbility::RegisterKiaInterceptorCallback(const sptr<IKiaInter
         PRINT_HILOGE("callback is null");
         return E_PRINT_INVALID_PARAMETER;
     }
-
+#endif // KIA_INTERCEPTOR_ENABLE
     return KiaInterceptorManager::GetInstance().RegisterCallback(callback);
 }
 

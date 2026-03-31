@@ -58,6 +58,10 @@ ohos_unittest("fwk_print_service_ability_test") {
     cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
 
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+  }
+
   deps = [
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",

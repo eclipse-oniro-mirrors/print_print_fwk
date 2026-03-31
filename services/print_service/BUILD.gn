@@ -53,8 +53,6 @@ _sources = [
   "src/vendor_ppd_driver.cpp",
   "src/vendor_wlan_group.cpp",
   "src/watermark_callback_proxy.cpp",
-  "enterprise/src/kia_interceptor_callback_proxy.cpp",
-  "enterprise/src/kia_interceptor_manager.cpp"
 ]
 
 _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
@@ -177,6 +175,14 @@ ohos_shared_library("print_service") {
     ]
   }
 
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+    sources += [
+      "enterprise/src/kia_interceptor_callback_proxy.cpp",
+      "enterprise/src/kia_interceptor_manager.cpp",
+    ]
+  }
+
   if (print_fwk_feature_virtual_printer) {
     cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
   }
@@ -249,6 +255,14 @@ ohos_static_library("print_service_test") {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
     external_deps += [
       "enterprise_device_management:edmservice_kits"
+    ]
+  }
+
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+    sources += [
+      "enterprise/src/kia_interceptor_callback_proxy.cpp",
+      "enterprise/src/kia_interceptor_manager.cpp",
     ]
   }
 

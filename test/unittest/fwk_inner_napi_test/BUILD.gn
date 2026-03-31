@@ -61,7 +61,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "print_shared_host_test.cpp",
     "scan_models_test.cpp",
     "watermark_callback_stub_test.cpp",
-    "kia_interceptor_callback_stub_test.cpp",
   ]
 
   deps = [
@@ -101,6 +100,13 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]
+
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+    sources += [
+      "kia_interceptor_callback_stub_test.cpp",
+    ]
+  }
 }
 
 group("unittest") {

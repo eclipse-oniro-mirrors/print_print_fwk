@@ -16,6 +16,8 @@
 #ifndef MOCK_KIA_INTERCEPTOR_CALLBACK_STUB_H
 #define MOCK_KIA_INTERCEPTOR_CALLBACK_STUB_H
 
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 #include <gmock/gmock.h>
 #include "kia_interceptor_callback_stub.h"
 
@@ -31,5 +33,7 @@ public:
 
 }  // namespace Print
 }  // namespace OHOS
+
+#endif // KIA_INTERCEPTOR_ENABLE
 
 #endif  // MOCK_KIA_INTERCEPTOR_CALLBACK_STUB_H
