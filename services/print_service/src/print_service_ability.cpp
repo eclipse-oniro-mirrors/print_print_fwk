@@ -67,7 +67,9 @@
 #include "smb_printer_discoverer.h"
 #include "smb_printer_state_monitor.h"
 #endif // HAVE_SMB_PRINTER
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
 #include "print_failure_ai_notifier.h"
+#endif // HAVE_PRINT_FAILURE_AI_NOTIFIER
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -2036,6 +2038,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
     AddPrintJobToHistoryList(printJob);
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     auto printerId = printJob->GetPrinterId();
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo) {
@@ -2043,6 +2046,7 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
     } else {
         PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
     }
+#endif // HAVE_PRINT_FAILURE_AI_NOTIFIER
 }
 
 void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,

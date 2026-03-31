@@ -34,4 +34,5 @@ declare_args() {
   print_fwk_feature_virtual_printer = false
   print_fwk_feature_smb_printer = false
   print_fwk_feature_watermark_enforcing = false
+  print_fwk_feature_print_failure_ai_notifier = false
 }
