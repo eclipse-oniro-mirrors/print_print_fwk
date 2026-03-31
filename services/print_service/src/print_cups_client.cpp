@@ -91,6 +91,7 @@ const uint32_t MONITOR_STEP_TIME_MS = 2000;
 const int32_t STATE_UPDATE_STEP = 5;
 const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
+const size_t MIN_QUOTED_LENGTH = 2;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -3054,23 +3055,11 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         if (line.length() < INDEX_TWO || line[0] != '*' || line[1] == '%') {
             continue;
         }
-        size_t colonPos = line.find(':');
-        if (colonPos == string::npos) {
+        std::string key;
+        std::string value;
+        if (!ExtractPpdKeyAndValue(line, key, value)) {
             continue;
         }
-        string key = line.substr(1, colonPos - 1);
-        string value = line.substr(colonPos + 1);
-        size_t keyFirst = key.find_first_not_of(" \t");
-        size_t valueFirst = value.find_first_not_of(" \t");
-        if (keyFirst != std::string::npos) {
-            key = key.substr(keyFirst);
-        }
-        if (valueFirst != std::string::npos) {
-            value = value.substr(valueFirst);
-        }
-        value.erase(remove_if(value.begin(), value.end(), [](char c) {
-            return c == '"';
-            }), value.end());
         if (find(begin(targetKeys), end(targetKeys), key) != end(targetKeys)) {
             keyValues[key] = value;
         }
@@ -3086,6 +3075,30 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         }
     }
     file.close();
+    return true;
+}
+
+bool PrintCupsClient::ExtractPpdKeyAndValue(const std::string &line, std::string &key, std::string &value)
+{
+    size_t colonPos = line.find(':');
+    if (colonPos == std::string::npos) {
+        return false;
+    }
+    // 定义字段解析函数
+    auto trim = [](const std::string &str, const std::string &whitespace = " \t") -> std::string {
+        size_t start = str.find_first_not_of(whitespace);
+        if (start == std::string::npos) {
+            return "";
+        }
+        size_t end = str.find_last_not_of(whitespace) + 1;
+        return str.substr(start, end - start);
+    };
+
+    key = trim(line.substr(1, colonPos - 1), " \t");
+    value = trim(line.substr(colonPos + 1), " \t\r\n");
+    if (value.length() >= MIN_QUOTED_LENGTH && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.length() - MIN_QUOTED_LENGTH);
+    }
     return true;
 }
 

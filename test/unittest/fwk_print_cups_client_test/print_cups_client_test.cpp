@@ -3403,6 +3403,75 @@ HWTEST_F(PrintCupsClientTest, QueryInfoByPpdName_InvalidFileName_Test, TestSize.
     EXPECT_FALSE(ret);
 }
 
+// ExtractPpdKeyAndValue parameterized test structure
+struct ExtractPpdKeyAndValueTestCase {
+    std::string testName;
+    std::string inputLine;
+    bool expectedSuccess;
+    std::string expectedKey;
+    std::string expectedValue;
+};
+
+class ExtractPpdKeyAndValueCommon {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
+};
+
+class ExtractPpdKeyAndValueTest : public ExtractPpdKeyAndValueCommon,
+                                   public testing::TestWithParam<ExtractPpdKeyAndValueTestCase> {
+public:
+    using ExtractPpdKeyAndValueCommon::SetUpTestCase;
+    using ExtractPpdKeyAndValueCommon::TearDownTestCase;
+};
+
+INSTANTIATE_TEST_SUITE_P(ExtractPpdKeyAndValueTest, ExtractPpdKeyAndValueTest,
+    testing::Values(
+        ExtractPpdKeyAndValueTestCase{
+            "NormalLine", "*NickName: \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyLeadingWhitespace", "*  NickName: \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyTrailingWhitespace", "*NickName : \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyMiddleWhitespace", "*Nick Name: \"HP LaserJet 1020\"", true, "Nick Name", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueLeadingWhitespace", "*NickName:   \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueTrailingWhitespace", "*NickName: \"HP LaserJet 1020\"   ", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueNewline", "*NickName: \"HP LaserJet 1020\"\r\n", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "NoQuotes", "*NickName: HP LaserJet 1020", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "EmptyKey", "*: HP LaserJet 1020", true, "", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "EmptyValue", "*NickName: ", true, "NickName", ""},
+        // Error cases
+        ExtractPpdKeyAndValueTestCase{
+            "NoColon", "*NickName \"HP LaserJet 1020\"", false, "", ""}));
+
+/**
+ * @tc.name: PrintCupsClientTest_ExtractPpdKeyAndValue_001
+ * @tc.desc: ExtractPpdKeyAndValue parameterized test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_P(ExtractPpdKeyAndValueTest, ExtractPpdKeyAndValue_Parameterized_Test, TestSize.Level1)
+{
+    const ExtractPpdKeyAndValueTestCase& testCase = GetParam();
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string key, value;
+    
+    bool ret = printCupsClient.ExtractPpdKeyAndValue(testCase.inputLine, key, value);
+    
+    EXPECT_EQ(ret, testCase.expectedSuccess);
+    if (ret) {
+        EXPECT_EQ(key, testCase.expectedKey);
+        EXPECT_EQ(value, testCase.expectedValue);
+    }
+}
+
 /**
  * @tc.name: PrintCupsClientTest_QueryPpdInfoMap_001
  * @tc.desc: QueryPpdInfoMap with invalid file path
