@@ -1461,7 +1461,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     printJob->SetJobState(PRINT_JOB_QUEUED);
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
-    printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
+    printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(printJob->GetJobId(), true));
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob success, oldJobId: %{public}s",
