@@ -680,6 +680,26 @@ void SetOptionInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &prin
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintTask.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintTask.orientationMode == ORIENTATION_MODE_NONE ? true : false;
 
+    // Add numberUpArgs to jsonOptions for CUPS backend processing
+    uint32_t numberUpValue = static_cast<uint32_t>(nativePrintTask.numberUpArgs.numberUp);
+    if (numberUpValue == PRINT_NUMBER_UP_1_PAGE || numberUpValue == PRINT_NUMBER_UP_2_PAGES ||
+        numberUpValue == PRINT_NUMBER_UP_4_PAGES || numberUpValue == PRINT_NUMBER_UP_6_PAGES ||
+        numberUpValue == PRINT_NUMBER_UP_9_PAGES || numberUpValue == PRINT_NUMBER_UP_16_PAGES) {
+        jsonOptions["numberUp"] = numberUpValue;
+    }
+    uint32_t numberUpLayoutValue = static_cast<uint32_t>(nativePrintTask.numberUpArgs.numberUpLayout);
+    if (numberUpLayoutValue <= static_cast<uint32_t>(NUMBER_UP_LAYOUT_BTRL)) {
+        jsonOptions["numberUpLayout"] = numberUpLayoutValue;
+    }
+    uint32_t mirrorValue = static_cast<uint32_t>(nativePrintTask.numberUpArgs.mirror);
+    if (mirrorValue <= static_cast<uint32_t>(PRINT_MIRROR_ENABLED)) {
+        jsonOptions["mirror"] = mirrorValue;
+    }
+    uint32_t pageBorderValue = static_cast<uint32_t>(nativePrintTask.numberUpArgs.pageBorder);
+    if (pageBorderValue <= static_cast<uint32_t>(PRINT_PAGE_BORDER_DOUBLE)) {
+        jsonOptions["pageBorder"] = pageBorderValue;
+    }
+
     Json::Value jsonAdvanceOptions;
     if (nativePrintTask.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintTask.advancedOptions),
         jsonAdvanceOptions)) {

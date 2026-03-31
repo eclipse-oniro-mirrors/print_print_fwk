@@ -3477,7 +3477,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgs_Test, TestSize.Lev
     
     jobInfo.SetOption(TEST_JOB_OPTION);
     
-    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
     ASSERT_NE(params, nullptr);
     EXPECT_EQ(params->numberUp, 4);
     EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
@@ -3508,7 +3508,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgsDefault_Test, TestS
     
     jobInfo.SetOption(TEST_JOB_OPTION);
     
-    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
     ASSERT_NE(params, nullptr);
     // Default values should be used
     EXPECT_EQ(params->numberUp, NUMBER_UP_DEFAULT_VALUE);
@@ -3571,7 +3571,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpAllValues_Test, TestSiz
         
         jobInfo.SetOption(TEST_JOB_OPTION);
         
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->numberUp, numberUp);
         EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_LRTB);
@@ -3615,7 +3615,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpLayoutAllValues_Test, T
         
         jobInfo.SetOption(TEST_JOB_OPTION);
         
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo,"");
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->numberUpLayout, layout);
         delete params;
@@ -3653,7 +3653,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_MirrorValues_Test, TestSize.Lev
         
         jobInfo.SetOption(TEST_JOB_OPTION);
         
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->mirror, mirror);
         delete params;
@@ -3695,7 +3695,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_PageBorderValues_Test, TestSize
         
         jobInfo.SetOption(TEST_JOB_OPTION);
         
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->pageBorder, border);
         delete params;
@@ -3748,7 +3748,7 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, Test
         
         jobInfo.SetOption(TEST_JOB_OPTION);
         
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo);
+        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo,"");
         ASSERT_NE(params, nullptr) << "Failed at index " << index;
         EXPECT_EQ(params->numberUp, tc.numberUp) << "Failed at index " << index;
         EXPECT_EQ(params->numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
