@@ -1909,6 +1909,73 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
     return retValue;
 }
 
+napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter ---->");
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!");
+
+    if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+        PRINT_HILOGE("Non-system applications use system APIS!");
+        NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+        return nullptr;
+    }
+
+    napi_valuetype valuetype = napi_undefined;
+    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+    PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
+
+    napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
+    if (callback == nullptr) {
+        NapiPrintUtils::DeleteReference(env, callbackRef);
+        PRINT_HILOGE("create print callback object fail");
+        return nullptr;
+    }
+    int32_t ret = PrintManagerClient::GetInstance()->On("", PRINT_QUERY_INFO_EVENT_TYPE, callback);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to register event");
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+    return nullptr;
+}
+
+napi_value NapiInnerPrint::OffPrinterInfoQuery(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter ---->");
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_ZERO || argc == NapiPrintUtils::ARGC_ONE, "need 0-1 parameter!");
+
+    if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+        PRINT_HILOGE("Non-system applications use system APIS!");
+        NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+        return nullptr;
+    }
+
+    if (argc == NapiPrintUtils::ARGC_ONE) {
+        napi_valuetype valuetype = napi_undefined;
+        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
+    }
+
+    int32_t ret = PrintManagerClient::GetInstance()->Off("", PRINT_QUERY_INFO_EVENT_TYPE);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to unregister event");
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+    return nullptr;
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
