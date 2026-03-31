@@ -31,8 +31,6 @@ _sources = [
   "src/print_event_container.cpp",
   "src/print_event_subscriber.cpp",
   "src/print_extension_callback_proxy.cpp",
-  "src/print_failure_ai_notifier.cpp",
-  "src/print_notification_builder.cpp",
   "src/print_resource_manager.cpp",
   "src/print_security_guard_info.cpp",
   "src/print_security_guard_manager.cpp",
@@ -203,6 +201,14 @@ ohos_shared_library("print_service") {
       cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
 
+  if (print_fwk_feature_print_failure_ai_notifier) {
+      sources += [
+        "src/print_failure_ai_notifier.cpp",
+        "src/print_notification_builder.cpp",
+      ]
+      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
@@ -272,6 +278,14 @@ ohos_static_library("print_service_test") {
         "src/watermark_death_recipient.cpp",
       ]
       cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
+  if (print_fwk_feature_print_failure_ai_notifier) {
+      sources += [
+        "src/print_failure_ai_notifier.cpp",
+        "src/print_notification_builder.cpp",
+      ]
+      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
   subsystem_name = "print"
   part_name = "print_fwk"

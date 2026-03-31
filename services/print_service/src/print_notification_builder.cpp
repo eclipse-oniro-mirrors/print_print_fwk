@@ -35,10 +35,12 @@ namespace {
     constexpr int32_t WANT_AGENT_REQUEST_CODE = 0;
 
     const std::string WANT_PARAM_PRINT_TRIGGER_TYPE = "trigger_type";
-    const std::string WANT_PARAM_PRINT_ASK_XIAOYI = "ask_xiaoyi";
+    const std::string WANT_PARAM_PRINT_ASK_AI = "ask_ai";
     const std::string WANT_PARAM_PRINT_IS_TEXTEDIT = "isTextEdit";
     const std::string WANT_PARAM_SMART_RIGHT_KEY = "smart_right_key";
-    const std::string WANT_PARAM_ASK_FOR_XIAO_YI_BUTTON = "ask_for_xiao_yi_button";
+    const std::string WANT_PARAM_ASK_FOR_AI_BUTTON = "ask_for_ai_button";
+    const std::string WANT_PARAM_PRINT_SRC = "src";
+    const std::string WANT_PARAM_PRINT_SRC_PC_SPOOLER = "pc_spooler";
 
     std::atomic<int32_t> g_nextNotificationId{NOTIFICATION_ID_BASE};
 }
@@ -151,7 +153,8 @@ std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder
     want->SetElementName("com.oh.vassistant", "VoicePcServiceExtAbility");
     want->SetParam(WANT_PARAM_PRINT_TRIGGER_TYPE, WANT_PARAM_SMART_RIGHT_KEY);
     want->SetParam(WANT_PARAM_PRINT_IS_TEXTEDIT, false);
-    want->SetParam(WANT_PARAM_PRINT_ASK_XIAOYI, wantStr);
+    want->SetParam(WANT_PARAM_PRINT_ASK_AI, wantStr);
+    want->SetParam(WANT_PARAM_PRINT_SRC, WANT_PARAM_PRINT_SRC_PC_SPOOLER);
     want->SetFlags(AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION | AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION);
 
     std::vector<std::shared_ptr<AAFwk::Want>> wants;
@@ -169,7 +172,7 @@ std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder
         return nullptr;
     }
 
-    std::string buttonTitle = PrintResourceManager::GetInstance().GetStringByName(WANT_PARAM_ASK_FOR_XIAO_YI_BUTTON);
+    std::string buttonTitle = PrintResourceManager::GetInstance().GetStringByName(WANT_PARAM_ASK_FOR_AI_BUTTON);
     std::shared_ptr<Notification::NotificationActionButton> actionButton =
         Notification::NotificationActionButton::Create(nullptr, buttonTitle, wantAgent);
     if (!actionButton) {

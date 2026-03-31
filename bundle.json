@@ -20,7 +20,8 @@
       "print_fwk_feature_edm_service",
       "print_fwk_feature_virtual_printer",
       "print_fwk_feature_smb_printer",
-      "print_fwk_feature_watermark_enforcing"
+      "print_fwk_feature_watermark_enforcing",
+      "print_fwk_feature_print_failure_ai_notifier"
     ],
     "adapted_system_type": [
       "standard"
