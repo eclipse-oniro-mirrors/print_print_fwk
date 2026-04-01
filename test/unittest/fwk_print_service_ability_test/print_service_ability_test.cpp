@@ -4558,5 +4558,111 @@ HWTEST_F(PrintServiceAbilityTest, IsModeChangeEnd_WhenValueNotDefault_ShouldRetu
     bool result = service->IsModeChangeEnd(lastChangeModeValue);
     EXPECT_EQ(result, false);
 }
+
+/**
+* @tc.name: UpdateSinglePrinterInfo_HasPrinterMake_PpdQuerySuccess
+* @tc.desc: Test UpdateSinglePrinterInfo when printer has make and PPD query succeeds
+* @tc.type: FUNC
+* @tc.require: Printer capability should be updated from PPD
+*/
+HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_PpdQuerySuccess, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    
+    EXPECT_CALL(*service, QueryPPDInformation(_, _))
+        .WillOnce([](const std::string &makeModel, std::string &ppdName) {
+            ppdName = "Test.ppd";
+            return true;
+        });
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterName("TestPrinter");
+    info->SetPrinterId(GetDefaultPrinterId());
+    info->SetPrinterMake("TestMake");
+    PrinterCapability caps;
+    Json::Value opsJson;
+    opsJson["key"] = "value";
+    caps.SetOption(PrintJsonUtil::WriteString(opsJson));
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    pageSizeList.push_back(pageSize);
+    caps.SetSupportedPageSize(pageSizeList);
+    info->SetCapability(caps);
+    service->printSystemData_.AddPrinterToDiscovery(info);
+    bool result = service->UpdateSinglePrinterInfo(*info, DEFAULT_EXTENSION_ID);
+    EXPECT_TRUE(result);
+}
+
+/**
+* @tc.name: UpdateSinglePrinterInfo_InvalidPrinterId
+* @tc.desc: Test UpdateSinglePrinterInfo with invalid printer id
+* @tc.type: FUNC
+* @tc.require: Should return false
+*/
+HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_InvalidPrinterId, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    
+    std::string extensionId = DEFAULT_EXTENSION_ID;
+    std::string printerId = "invalid printer id";
+
+    PrinterInfo info;
+    info.SetPrinterName("TestPrinter");
+    info.SetPrinterMake("TestMake");
+    info.SetPrinterId(printerId);
+    bool result = service->UpdateSinglePrinterInfo(info, extensionId);
+    
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name: UpdateSinglePrinterInfo_HasPrinterMake_QueryPPDInformationReturnsEmpty
+* @tc.desc: Test UpdateSinglePrinterInfo when printer does not have make
+* @tc.type: FUNC
+* @tc.require: Should skip PPD capability query
+*/
+HWTEST_F(PrintServiceAbilityTest,
+    UpdateSinglePrinterInfo_HasPrinterMake_QueryPPDInformationReturnsEmpty, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    std::string extensionId = DEFAULT_EXTENSION_ID;
+    std::string printerId = DEFAULT_EXT_PRINTER_ID;
+
+    auto info = std::make_shared<PrinterInfo>();
+    EXPECT_NE(info, nullptr);
+    info->SetPrinterId(printerId);
+
+    service->printSystemData_.AddPrinterToDiscovery(info);
+
+    bool result = service->UpdateSinglePrinterInfo(*info, extensionId);
+    
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name: UpdateSinglePrinterInfo_HasPrinterMake_PpdReturnEmpty
+* @tc.desc: Test UpdateSinglePrinterInfo when printer has make and PPD is empty
+* @tc.type: FUNC
+* @tc.require: Printer capability should be updated from PPD
+*/
+HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_PpdReturnEmpty, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    
+    EXPECT_CALL(*service, QueryPPDInformation(_, _))
+        .WillOnce([](const std::string &makeModel, std::string &ppdName) {
+            return true;
+        });
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterName("TestPrinter");
+    info->SetPrinterId(GetDefaultPrinterId());
+    info->SetPrinterMake("TestMake");
+    service->printSystemData_.AddPrinterToDiscovery(info);
+    bool result = service->UpdateSinglePrinterInfo(*info, DEFAULT_EXTENSION_ID);
+    EXPECT_FALSE(result);
+}
 }  // namespace Print
 }  // namespace OHOS
