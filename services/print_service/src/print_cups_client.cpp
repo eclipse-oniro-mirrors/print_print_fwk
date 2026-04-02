@@ -1186,6 +1186,49 @@ int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
+int PrintCupsClient::FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillMirrorOptions Params is nullptr");
+        return num_options;
+    }
+    // Mirror printing (CUPS mirror option)
+    // Only add option when mirror is enabled, avoid adding unsupported options for some printers
+    if (jobParams->mirror == PRINT_MIRROR_ENABLED) {
+        num_options = cupsAddOption("mirror", "true", num_options, options);
+        PRINT_HILOGI("Added CUPS option: mirror=true");
+    } else {
+        PRINT_HILOGI("mirror disabled (value=%{public}d)", jobParams->mirror);
+    }
+    return num_options;
+}
+
+int PrintCupsClient::FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillPageBorderOptions Params is nullptr");
+        return num_options;
+    }
+    // Page border (CUPS page-border option)
+    // Only add option when border is needed, avoid adding unsupported options for some printers
+    std::string borderStr;
+    switch (jobParams->pageBorder) {
+        case PRINT_PAGE_BORDER_SINGLE:
+            borderStr = "single";
+            break;
+        case PRINT_PAGE_BORDER_DOUBLE:
+            borderStr = "double";
+            break;
+        case PRINT_PAGE_BORDER_NONE:
+        default:
+            PRINT_HILOGI("pageBorder disabled (value=%{public}d)", jobParams->pageBorder);
+            return num_options;
+    }
+    num_options = cupsAddOption("page-border", borderStr.c_str(), num_options, options);
+    PRINT_HILOGI("Added CUPS option: page-border=%{public}s", borderStr.c_str());
+    return num_options;
+}
+
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGI("FillJobOptions start.");
@@ -1217,6 +1260,8 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     num_options = FillNumberUpOptions(jobParams, num_options, options);
+    num_options = FillMirrorOptions(jobParams, num_options, options);
+    num_options = FillPageBorderOptions(jobParams, num_options, options);
 
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
@@ -2504,8 +2549,11 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->printerUri = optionJson["printerUri"].asString();
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
-    params->numberUp = jobInfo.GetNumberUp();
-    params->numberUpLayout = jobInfo.GetNumberUpLayout();
+    NumberUpArgs numberUpArgs = jobInfo.GetNumberUpArgs();
+    params->numberUp = numberUpArgs.numberUp;
+    params->numberUpLayout = numberUpArgs.numberUpLayout;
+    params->mirror = numberUpArgs.mirror;
+    params->pageBorder = numberUpArgs.pageBorder;
     UpdateJobParameterByOption(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
@@ -2534,6 +2582,8 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
     PRINT_HILOGI("jobParams->numberUp: %{public}d", jobParams->numberUp);
     PRINT_HILOGI("jobParams->numberUpLayout: %{public}d", jobParams->numberUpLayout);
+    PRINT_HILOGI("jobParams->mirror: %{public}d", jobParams->mirror);
+    PRINT_HILOGI("jobParams->pageBorder: %{public}d", jobParams->pageBorder);
     PRINT_HILOGI("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
     PRINT_HILOGI("jobParams->isReverse: %{public}d", jobParams->isReverse);
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);

@@ -239,8 +239,23 @@ enum PrintNumberUpLayout {
 
 constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;   // Minimum value for numberUp (single page per sheet)
 constexpr uint32_t NUMBER_UP_MAX_VALUE = 16;  // Maximum value for numberUp
-constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp
+constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp (PRINT_NUMBER_UP_1_PAGE)
 constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT_VALUE = NUMBER_UP_LAYOUT_LRTB;  // Default layout for numberUp
+constexpr uint32_t MIRROR_DEFAULT_VALUE = 0;  // Default value for mirror (PRINT_MIRROR_DISABLED)
+constexpr uint32_t PAGE_BORDER_DEFAULT_VALUE = 0;  // Default value for pageBorder (PRINT_PAGE_BORDER_NONE)
+
+// Mirror printing mode (aligned with CUPS mirror-printing parameter)
+enum PrintMirrorMode {
+    PRINT_MIRROR_DISABLED = 0,  // Mirror printing disabled (normal mode)
+    PRINT_MIRROR_ENABLED = 1    // Mirror printing enabled (mirror mode)
+};
+
+// Page border style (supported by some printers)
+enum PrintPageBorderMode {
+    PRINT_PAGE_BORDER_NONE = 0,    // Page border none
+    PRINT_PAGE_BORDER_SINGLE = 1,  // Page border single
+    PRINT_PAGE_BORDER_DOUBLE = 2   // Page border double
+};
 
 enum PrintDocumentFormat {
     PRINT_DOCUMENT_FORMAT_AUTO = 0,
