@@ -3742,8 +3742,8 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, Test
         jobInfo.SetNumberUpArgs(args);
         
         PrintPageSize pageSize;
-        pageSize.SetId("ISO_A5");
-        pageSize.SetName("A5");
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
         
         jobInfo.SetOption(TEST_JOB_OPTION);
