@@ -14,6 +14,7 @@
  */
 
 #include <thread>
+#include <memory>
 #include <gtest/gtest.h>
 #define private public
 #include "print_cups_client.h"
@@ -3543,17 +3544,15 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgs_Test, TestSize.Lev
     pageSize.SetId("ISO_A4");
     pageSize.SetName("A4");
     jobInfo.SetPageSize(pageSize);
-    
+
     jobInfo.SetOption(TEST_JOB_OPTION);
-    
-    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+    std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
     ASSERT_NE(params, nullptr);
     EXPECT_EQ(params->numberUp, 4);
     EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
     EXPECT_EQ(params->mirror, 1);
     EXPECT_EQ(params->pageBorder, 1);
-    
-    delete params;
 }
 
 /**
@@ -3574,18 +3573,16 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgsDefault_Test, TestS
     pageSize.SetId("ISO_A4");
     pageSize.SetName("A4");
     jobInfo.SetPageSize(pageSize);
-    
+
     jobInfo.SetOption(TEST_JOB_OPTION);
-    
-    JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+    std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
     ASSERT_NE(params, nullptr);
     // Default values should be used
     EXPECT_EQ(params->numberUp, NUMBER_UP_DEFAULT_VALUE);
     EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_DEFAULT_VALUE);
     EXPECT_EQ(params->mirror, MIRROR_DEFAULT_VALUE);
     EXPECT_EQ(params->pageBorder, PAGE_BORDER_DEFAULT_VALUE);
-    
-    delete params;
 }
 
 /**
@@ -3632,19 +3629,18 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpAllValues_Test, TestSiz
         args.mirror = 0;
         args.pageBorder = 0;
         jobInfo.SetNumberUpArgs(args);
-        
+
         PrintPageSize pageSize;
         pageSize.SetId("ISO_A4");
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
-        
+
         jobInfo.SetOption(TEST_JOB_OPTION);
-        
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->numberUp, numberUp);
         EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_LRTB);
-        delete params;
     }
 }
 
@@ -3681,13 +3677,12 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpLayoutAllValues_Test, T
         pageSize.SetId("ISO_A4");
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
-        
+
         jobInfo.SetOption(TEST_JOB_OPTION);
-        
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->numberUpLayout, layout);
-        delete params;
     }
 }
 
@@ -3719,13 +3714,12 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_MirrorValues_Test, TestSize.Lev
         pageSize.SetId("ISO_A4");
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
-        
+
         jobInfo.SetOption(TEST_JOB_OPTION);
-        
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->mirror, mirror);
-        delete params;
     }
 }
 
@@ -3761,13 +3755,12 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_PageBorderValues_Test, TestSize
         pageSize.SetId("ISO_A4");
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
-        
+
         jobInfo.SetOption(TEST_JOB_OPTION);
-        
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
         ASSERT_NE(params, nullptr);
         EXPECT_EQ(params->pageBorder, border);
-        delete params;
     }
 }
 
@@ -3814,16 +3807,15 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, Test
         pageSize.SetId("ISO_A4");
         pageSize.SetName("A4");
         jobInfo.SetPageSize(pageSize);
-        
+
         jobInfo.SetOption(TEST_JOB_OPTION);
-        
-        JobParameters* params = printCupsClient.BuildJobParameters(jobInfo, "");
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
         ASSERT_NE(params, nullptr) << "Failed at index " << index;
         EXPECT_EQ(params->numberUp, tc.numberUp) << "Failed at index " << index;
         EXPECT_EQ(params->numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
         EXPECT_EQ(params->mirror, tc.mirror) << "Failed at index " << index;
         EXPECT_EQ(params->pageBorder, tc.pageBorder) << "Failed at index " << index;
-        delete params;
         index++;
     }
 }
