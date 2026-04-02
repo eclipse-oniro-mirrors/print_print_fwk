@@ -1126,6 +1126,7 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     PRINT_HILOGI("[Printer: %{public}s] AddPrinter start, printerIp: %{private}s, protocol: %{public}s, \
         ppdName: %{public}s, printQueue: %{public}s.",
         printerName.c_str(), printerIp.c_str(), protocol.c_str(), ppdName.c_str(), printQueue.c_str());
+    vendorManager.SetConnectingPrinterName(printerName);
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, printQueue)) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
         return E_PRINT_SERVER_FAILURE;
@@ -3931,6 +3932,10 @@ bool PrintServiceAbility::DoAddPrinterToCups(
     std::string connectProtocol = vendorManager.GetConnectingProtocol();
     if (!connectProtocol.empty() && connectProtocol != "auto") {
         printerUri = GetConnectUri(*printerInfo, connectProtocol);
+    }
+    std::string connectPrinterName = vendorManager.GetConnectingPrinterName();
+    if (!connectPrinterName.empty()) {
+        printerInfo->SetPrinterName(connectPrinterName);
     }
     std::string printerName = RenamePrinterWhenAdded(*printerInfo);
     PRINT_HILOGI(

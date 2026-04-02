@@ -557,5 +557,127 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0015, TestSize.Level2)
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver->opQueue.Stop();
 }
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_NonEmptyQueue_ShouldReturnEarly, TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI in printerInfo, queue is non-empty → new branch: return early
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("/ipp/print")));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(0);
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_EmptyProtocol_ShouldReturnEarly,
+    TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI, queue empty → pass queue check; empty protocol → return early
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, GetConnectingProtocol()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(0);
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_AutoProtocol_ShouldReturnEarly,
+    TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI, queue empty → pass queue check; "auto" protocol → return early
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, GetConnectingProtocol()).WillOnce(Return(std::string("auto")));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(0);
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_IppProtocol_IpMismatch_ShouldReturnEarly,
+    TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI, queue empty, valid protocol but IP mismatch → return early
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, GetConnectingProtocol()).WillOnce(Return(std::string("ipp")));
+            EXPECT_CALL(mockManager, GetConnectingPrinter()).WillOnce(Return(std::string("192.168.1.100")));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(0);
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_IppProtocol_EmptyIp_ShouldReturnEarly,
+    TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI, queue empty, valid protocol but connecting IP is empty → return early
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, GetConnectingProtocol()).WillOnce(Return(std::string("ipp")));
+            EXPECT_CALL(mockManager, GetConnectingPrinter()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(0);
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_IppProtocol_MatchingIp_ShouldSucceed,
+    TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI, queue empty, ipp protocol, IP matches → build URI and call downstream
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, GetConnectingProtocol()).WillOnce(Return(std::string("ipp")));
+            EXPECT_CALL(mockManager, GetConnectingPrinter()).WillOnce(Return(PRINTER_TEST_IP));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(1).WillOnce(Return(0));
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(1).WillOnce(Return(true));
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_UnknownProtocol_ShouldReturnEarly,
+    TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            // No URI, queue empty, unknown protocol → CreateUriByIpAndProtocol returns empty → return early
+            EXPECT_CALL(mockManager, GetConnectingQueue()).WillOnce(Return(std::string("")));
+            EXPECT_CALL(mockManager, GetConnectingProtocol()).WillOnce(Return(std::string("unknown")));
+            EXPECT_CALL(mockManager, GetConnectingPrinter()).WillOnce(Return(PRINTER_TEST_IP));
+            EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).Times(0);
+            EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
+            auto printerInfo = std::make_shared<PrinterInfo>();
+            printerInfo->SetPrinterId(PRINTER_TEST_IP);
+            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+        };
+    DoMockTest(testFunc);
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -67,6 +67,7 @@ public:
     virtual std::string GetConnectingPpdName() = 0;
     virtual std::string GetConnectingProtocol() = 0;
     virtual std::string GetConnectingPrinter() = 0;
+    virtual std::string GetConnectingQueue() = 0;
     virtual bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) = 0;
     virtual void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
     virtual bool OnQueryCallBackEvent(const PrinterInfo &info) = 0;

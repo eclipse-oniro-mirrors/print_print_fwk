@@ -433,5 +433,36 @@ HWTEST_F(VendorManagerTest, ConnectPrinterByIdAndPpd_test, TestSize.Level2)
     vendorManager.UnloadVendorDriver(vendorName);
     vendorManager.UnInit();
 }
+
+HWTEST_F(VendorManagerTest, SetAndGetConnectingPrinterName, TestSize.Level0)
+{
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.GetConnectingPrinterName().empty());
+    vendorManager.SetConnectingPrinterName("TestPrinter");
+    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "TestPrinter");
+    vendorManager.SetConnectingPrinterName("");
+    EXPECT_TRUE(vendorManager.GetConnectingPrinterName().empty());
+}
+
+HWTEST_F(VendorManagerTest, ClearConnectingPrinter_ClearsQueueAndName, TestSize.Level0)
+{
+    VendorManager vendorManager;
+    vendorManager.connectingQueue = "test_queue";
+    vendorManager.SetConnectingPrinterName("TestPrinter");
+    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "TestPrinter");
+    vendorManager.ClearConnectingPrinter();
+    EXPECT_TRUE(vendorManager.GetConnectingQueue().empty());
+    EXPECT_TRUE(vendorManager.GetConnectingPrinterName().empty());
+}
+
+HWTEST_F(VendorManagerTest, SetConnectingPrinter_ClearsQueue, TestSize.Level0)
+{
+    VendorManager vendorManager;
+    vendorManager.connectingQueue = "test_queue";
+    EXPECT_EQ(vendorManager.connectingQueue, "test_queue");
+    vendorManager.SetConnectingPrinter(ConnectMethod::IP_AUTO, PRINTER_TEST_IP);
+    EXPECT_TRUE(vendorManager.GetConnectingQueue().empty());
+}
+
 }  // namespace Print
 }  // namespace OHOS

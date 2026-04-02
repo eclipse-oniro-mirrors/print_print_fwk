@@ -626,6 +626,11 @@ void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> 
     }
     printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
     if (!printerInfo->HasUri()) {
+        std::string connectQueue = vendorManager->GetConnectingQueue();
+        if (!connectQueue.empty()) {
+            PRINT_HILOGW("Queue specified but no URI found, connect failed!");
+            return;
+        }
         PRINT_HILOGW("Building printerInfo!");
         std::string connectProtocol = vendorManager->GetConnectingProtocol();
         if (connectProtocol.empty() || connectProtocol == "auto") {
