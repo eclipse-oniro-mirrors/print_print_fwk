@@ -160,12 +160,12 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_ADDED_SCANNER, NapiInnerScan::GetAddedScanner),
         DECLARE_NAPI_FUNCTION(FUNCTION_REGISTER_EVENT, NapiInnerScan::On),
         DECLARE_NAPI_FUNCTION(FUNCTION_UNREGISTER_EVENT, NapiInnerScan::Off),
-        DECLARE_NAPI_PROPERTY("ScanErrorCode", NapiCreateScanErrorCodeEnum(env)),
-        DECLARE_NAPI_PROPERTY("ConstraintType", NapiCreateConstraintTypeEnum(env)),
-        DECLARE_NAPI_PROPERTY("PhysicalUnit", NapiCreatePhysicalUnitEnum(env)),
-        DECLARE_NAPI_PROPERTY("OptionValueType", NapiCreateOptionValueTypeEnum(env)),
-        DECLARE_NAPI_PROPERTY("ScannerDiscoveryMode", NapiCreateScannerDiscoveryModeEnum(env)),
-        DECLARE_NAPI_PROPERTY("ScannerSyncMode", NapiCreateScannerSyncModeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ScanErrorCode", NapiCreateScanErrorCodeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ConstraintType", NapiCreateConstraintTypeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("PhysicalUnit", NapiCreatePhysicalUnitEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("OptionValueType", NapiCreateOptionValueTypeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ScannerDiscoveryMode", NapiCreateScannerDiscoveryModeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ScannerSyncMode", NapiCreateScannerSyncModeEnum(env)),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
