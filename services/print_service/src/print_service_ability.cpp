@@ -3746,6 +3746,28 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     *printerInfo = info;
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
     printerInfo->SetPrinterId(printExtId);
+
+    // Query complete printer capability from PPD file to fix incomplete capability issue.
+    // External applications may provide incomplete printer capability information,
+    // so we need to query complete capability from PPD file to ensure all advanced options are included.
+    if (printerInfo->HasPrinterMake()) {
+        std::string make = printerInfo->GetPrinterMake();
+        std::string ppdName;
+        QueryPPDInformation(make, ppdName);
+        
+        if (!ppdName.empty()) {
+            PrinterCapability printerCaps;
+            auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+            int32_t ret = printCupsClient->QueryPrinterCapabilityFromPPD(
+                printerInfo->GetPrinterName(), printerCaps, ppdName);
+            if (ret == E_PRINT_NONE) {
+                printerInfo->SetCapability(printerCaps);
+            } else {
+                PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
+            }
+        }
+    }
+
     printerInfo->Dump();
 
     bool isCapabilityUpdated = false;
