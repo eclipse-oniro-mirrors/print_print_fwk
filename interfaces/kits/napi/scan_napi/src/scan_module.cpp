@@ -39,17 +39,6 @@ static constexpr const char *FUNCTION_GET_ADDED_SCANNER = "getAddedScanners";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
 
-
-#define SCAN_NAPI_METHOD(name, func)           \
-    {                                           \
-        name, 0, func, 0, 0, 0, napi_default, 0 \
-    }
-
-#define SCAN_NAPI_PROPERTY(name, val)                                          \
-    {                                                                           \
-        (name), nullptr, nullptr, nullptr, nullptr, val, napi_static, nullptr   \
-    }
-
 static napi_value NapiCreateScanErrorCodeEnum(napi_env env)
 {
     napi_value object = nullptr;
@@ -154,29 +143,29 @@ static napi_value NapiCreateScannerSyncModeEnum(napi_env env)
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        SCAN_NAPI_METHOD(FUNCTION_INIT_SCAN, NapiInnerScan::InitScan),
-        SCAN_NAPI_METHOD(FUNCTION_EXIT_SCAN, NapiInnerScan::ExitScan),
-        SCAN_NAPI_METHOD(FUNCTION_GET_SCANNER_LIST, NapiInnerScan::GetScannerList),
-        SCAN_NAPI_METHOD(FUNCTION_OPEN_SCANNER, NapiInnerScan::OpenScanner),
-        SCAN_NAPI_METHOD(FUNCTION_CLOSE_SCANNER, NapiInnerScan::CloseScanner),
-        SCAN_NAPI_METHOD(FUNCTION_SET_SCAN_OPTION, NapiInnerScan::SetScanOption),
-        SCAN_NAPI_METHOD(FUNCTION_SET_SCAN_AUTO_OPTION, NapiInnerScan::SetScanAutoOption),
-        SCAN_NAPI_METHOD(FUNCTION_GET_SCAN_OPTION, NapiInnerScan::GetScanOption),
-        SCAN_NAPI_METHOD(FUNCTION_GET_SCAN_PARAMETERS, NapiInnerScan::GetScanParameters),
-        SCAN_NAPI_METHOD(FUNCTION_START_SCAN, NapiInnerScan::StartScan),
-        SCAN_NAPI_METHOD(FUNCTION_CANCEL_SCAN, NapiInnerScan::CancelScan),
-        SCAN_NAPI_METHOD(FUNCTION_GET_SCAN_PROGRESS, NapiInnerScan::GetScanProgress),
-        SCAN_NAPI_METHOD(FUNCTION_ADD_SCANNER, NapiInnerScan::AddScanner),
-        SCAN_NAPI_METHOD(FUNCTION_DELETE_SCANNER, NapiInnerScan::DeleteScanner),
-        SCAN_NAPI_METHOD(FUNCTION_GET_ADDED_SCANNER, NapiInnerScan::GetAddedScanner),
-        SCAN_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerScan::On),
-        SCAN_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerScan::Off),
-        SCAN_NAPI_PROPERTY("ScanErrorCode", NapiCreateScanErrorCodeEnum(env)),
-        SCAN_NAPI_PROPERTY("ConstraintType", NapiCreateConstraintTypeEnum(env)),
-        SCAN_NAPI_PROPERTY("PhysicalUnit", NapiCreatePhysicalUnitEnum(env)),
-        SCAN_NAPI_PROPERTY("OptionValueType", NapiCreateOptionValueTypeEnum(env)),
-        SCAN_NAPI_PROPERTY("ScannerDiscoveryMode", NapiCreateScannerDiscoveryModeEnum(env)),
-        SCAN_NAPI_PROPERTY("ScannerSyncMode", NapiCreateScannerSyncModeEnum(env)),
+        DECLARE_NAPI_FUNCTION(FUNCTION_INIT_SCAN, NapiInnerScan::InitScan),
+        DECLARE_NAPI_FUNCTION(FUNCTION_EXIT_SCAN, NapiInnerScan::ExitScan),
+        DECLARE_NAPI_FUNCTION(FUNCTION_GET_SCANNER_LIST, NapiInnerScan::GetScannerList),
+        DECLARE_NAPI_FUNCTION(FUNCTION_OPEN_SCANNER, NapiInnerScan::OpenScanner),
+        DECLARE_NAPI_FUNCTION(FUNCTION_CLOSE_SCANNER, NapiInnerScan::CloseScanner),
+        DECLARE_NAPI_FUNCTION(FUNCTION_SET_SCAN_OPTION, NapiInnerScan::SetScanOption),
+        DECLARE_NAPI_FUNCTION(FUNCTION_SET_SCAN_AUTO_OPTION, NapiInnerScan::SetScanAutoOption),
+        DECLARE_NAPI_FUNCTION(FUNCTION_GET_SCAN_OPTION, NapiInnerScan::GetScanOption),
+        DECLARE_NAPI_FUNCTION(FUNCTION_GET_SCAN_PARAMETERS, NapiInnerScan::GetScanParameters),
+        DECLARE_NAPI_FUNCTION(FUNCTION_START_SCAN, NapiInnerScan::StartScan),
+        DECLARE_NAPI_FUNCTION(FUNCTION_CANCEL_SCAN, NapiInnerScan::CancelScan),
+        DECLARE_NAPI_FUNCTION(FUNCTION_GET_SCAN_PROGRESS, NapiInnerScan::GetScanProgress),
+        DECLARE_NAPI_FUNCTION(FUNCTION_ADD_SCANNER, NapiInnerScan::AddScanner),
+        DECLARE_NAPI_FUNCTION(FUNCTION_DELETE_SCANNER, NapiInnerScan::DeleteScanner),
+        DECLARE_NAPI_FUNCTION(FUNCTION_GET_ADDED_SCANNER, NapiInnerScan::GetAddedScanner),
+        DECLARE_NAPI_FUNCTION(FUNCTION_REGISTER_EVENT, NapiInnerScan::On),
+        DECLARE_NAPI_FUNCTION(FUNCTION_UNREGISTER_EVENT, NapiInnerScan::Off),
+        DECLARE_NAPI_STATIC_PROPERTY("ScanErrorCode", NapiCreateScanErrorCodeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ConstraintType", NapiCreateConstraintTypeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("PhysicalUnit", NapiCreatePhysicalUnitEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("OptionValueType", NapiCreateOptionValueTypeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ScannerDiscoveryMode", NapiCreateScannerDiscoveryModeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ScannerSyncMode", NapiCreateScannerSyncModeEnum(env)),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

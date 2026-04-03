@@ -229,8 +229,8 @@ napi_value NapiPrintTask::GetCtor(napi_env env)
     }
 
     napi_property_descriptor clzDes[] = {
-        {FUNCTION_ON, 0, PrintTask::On, 0, 0, 0, napi_default, 0},
-        {FUNCTION_OFF, 0, PrintTask::Off, 0, 0, 0, napi_default, 0},
+        DECLARE_NAPI_FUNCTION(FUNCTION_ON, PrintTask::On),
+        DECLARE_NAPI_FUNCTION(FUNCTION_OFF, PrintTask::Off)
     };
     PRINT_CALL(env,
         napi_define_class(env,
