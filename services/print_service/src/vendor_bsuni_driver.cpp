@@ -625,14 +625,15 @@ void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> 
         return;
     }
     printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
+    std::string connectQueue = vendorManager->GetConnectingQueue();
+    std::string connectProtocol = vendorManager->GetConnectingProtocol();
+    if (!connectQueue.empty() && (connectProtocol == "ipp" || connectProtocol == "ipps")
+        && !vendorManager->IsBsunidriverSupport(*printerInfo)) {
+        PRINT_HILOGW("Queue specified but no URI found, connect failed!");
+        return;
+    }
     if (!printerInfo->HasUri()) {
-        std::string connectQueue = vendorManager->GetConnectingQueue();
-        if (!connectQueue.empty()) {
-            PRINT_HILOGW("Queue specified but no URI found, connect failed!");
-            return;
-        }
         PRINT_HILOGW("Building printerInfo!");
-        std::string connectProtocol = vendorManager->GetConnectingProtocol();
         if (connectProtocol.empty() || connectProtocol == "auto") {
             PRINT_HILOGW("Require Protocol!");
             return;
