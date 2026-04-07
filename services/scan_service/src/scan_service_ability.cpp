@@ -1100,19 +1100,6 @@ int32_t ScanServiceAbility::StartScanOnce(const std::string scannerId)
         return E_SCAN_DEVICE_BUSY;
     }
 
-    if (EsclDriverManager::IsEsclScanner(scannerId)) {
-        std::string ipAddress;
-        int32_t portNumber = 0;
-        if (!EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
-            SCAN_HILOGE("Failed to extract IP and port from scannerId");
-            return E_SCAN_INVALID_PARAMETER;
-        }
-        if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(ipAddress, portNumber)) {
-            SCAN_HILOGI("ADF is empty, no paper available");
-            return E_SCAN_NO_DOCS;
-        }
-    }
-
     SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneStart(scannerId);
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneStart failed, status is %{public}u", saneStatus);
@@ -1134,7 +1121,25 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
+
+    // Check if ESCL scanner's ADF is empty before starting scan in external API call.
+    // If the scanner uses ESCL protocol and the scan source is ADF,
+    // return E_SCAN_NO_DOCS when ADF is empty.
+    if (EsclDriverManager::IsEsclScanner(scannerId)) {
+        std::string ipAddress;
+        int32_t portNumber = 0;
+        if (!EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
+            SCAN_HILOGE("Failed to extract IP and port from scannerId");
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(ipAddress, portNumber)) {
+            SCAN_HILOGI("ADF is empty, no paper available");
+            return E_SCAN_NO_DOCS;
+        }
+    }
+    
     scanPictureData_.CleanPictureData();
+
     int32_t status = StartScanOnce(scannerId);
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
