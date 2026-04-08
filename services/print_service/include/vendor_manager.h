@@ -89,11 +89,14 @@ public:
     std::string GetConnectingPrinter() override;
     std::string GetConnectingPpdName() override;
     std::string GetConnectingProtocol() override;
+    std::string GetConnectingQueue() override;
     bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
     void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnQueryCallBackEvent(const PrinterInfo &info) override;
     bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName, const std::string &printQueue) override;
+    void SetConnectingPrinterName(const std::string &printerName);
+    std::string GetConnectingPrinterName();
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) override;
@@ -132,6 +135,8 @@ private:
     std::string connectingPrinter;
     std::string connectingProtocol;
     std::string connectingPpdName;
+    std::string connectingQueue;
+    std::string connectingPrinterName;
     std::mutex simpleObjectMutex;
 #ifdef ENTERPRISE_ENABLE
     bool isEnterprise_ = false;

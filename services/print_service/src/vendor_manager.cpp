@@ -446,6 +446,7 @@ void VendorManager::SetConnectingPrinter(ConnectMethod method, const std::string
     connectingPrinter = globalPrinterIdOrIp;
     connectingProtocol = "auto";
     connectingPpdName = "auto";
+    connectingQueue.clear();
     connectingState = ConnectState::STATE_CONNECTING;
 }
 
@@ -457,6 +458,8 @@ void VendorManager::ClearConnectingPrinter()
     connectingPrinter.clear();
     connectingPpdName.clear();
     connectingProtocol.clear();
+    connectingQueue.clear();
+    connectingPrinterName.clear();
 }
 
 std::string VendorManager::GetConnectingPpdName()
@@ -469,6 +472,18 @@ std::string VendorManager::GetConnectingProtocol()
 {
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     return connectingProtocol;
+}
+
+std::string VendorManager::GetConnectingQueue()
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    return connectingQueue;
+}
+
+std::string VendorManager::GetConnectingPrinterName()
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    return connectingPrinterName;
 }
 
 std::string VendorManager::GetConnectingPrinter()
@@ -534,8 +549,15 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
             connectingProtocol = "auto";
         }
         connectingPpdName = ppdName;
+        connectingQueue = printQueue;
     }
     return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName, printQueue);
+}
+
+void VendorManager::SetConnectingPrinterName(const std::string &printerName)
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    connectingPrinterName = printerName;
 }
 
 bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap)
