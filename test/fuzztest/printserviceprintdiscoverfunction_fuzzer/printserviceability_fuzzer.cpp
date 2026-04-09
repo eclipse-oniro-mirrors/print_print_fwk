@@ -159,6 +159,23 @@ void TestRemoveVendorPrinterFromDiscovery(const uint8_t *data, size_t size, Fuzz
     PrintServiceAbility::GetInstance()->RemoveVendorPrinterFromDiscovery(globalVendorName, printerId);
 }
 
+void TestAuthSmbDevice(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintSharedHost sharedHost;
+    sharedHost.SetIp(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    sharedHost.SetShareName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    sharedHost.SetWorkgroupName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    
+    std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string password = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string userPasswd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<char> userPasswdCstr(userPasswd.begin(), userPasswd.end());
+    userPasswdCstr.emplace_back('\0');
+    
+    std::vector<PrinterInfo> printerInfos;
+    PrintServiceAbility::GetInstance()->AuthSmbDevice(sharedHost, userName, userPasswdCstr.data(), printerInfos);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("multithreading is running at function TestAllFunction.");
@@ -175,7 +192,8 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestAddVendorPrinterToCupsWithPpd,
         &TestDoAddPrinterToCupsEnable,
         &TestUpdateVendorPrinterToDiscovery,
-        &TestRemoveVendorPrinterFromDiscovery
+        &TestRemoveVendorPrinterFromDiscovery,
+        &TestAuthSmbDevice
     };
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);
