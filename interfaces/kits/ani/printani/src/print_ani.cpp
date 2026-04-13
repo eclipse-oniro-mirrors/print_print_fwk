@@ -359,7 +359,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
         return;
     }
     uint32_t jobState = 0;
-    if (!GetEnumValueInt(env, enumJobSubStateObj, jobState)) {
+    if (!GetEnumValueInt(env, enumJobStateObj, jobState)) {
         PRINT_HILOGE("GetEnumValueInt fail");
         ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -367,7 +367,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
     }
     PRINT_HILOGD("jobState = %{public}u", jobState);
     uint32_t jobSubState = 0;
-    if (!GetEnumValueInt(env, enumJobStateObj, jobSubState)) {
+    if (!GetEnumValueInt(env, enumJobSubStateObj, jobSubState)) {
         PRINT_HILOGE("GetEnumValueInt fail");
         ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
