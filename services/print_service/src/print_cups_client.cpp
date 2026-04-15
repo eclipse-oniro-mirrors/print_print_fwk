@@ -2056,19 +2056,7 @@ int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd
 
 bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    // IPP_JOB_CANCELED or IPP_JOB_ABORTED
-    if (!monitorParams->isBlock) {
-        PRINT_HILOGI("job is canceled");
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
-        return false;
-    }
-    PRINT_HILOGI("job cancel with error");
-    if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
-        return true;
-    }
+    PRINT_HILOGI("job is canceled");
     monitorParams->serviceAbility->UpdatePrintJobState(
         monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     return false;
