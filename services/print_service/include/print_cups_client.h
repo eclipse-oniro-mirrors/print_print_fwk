@@ -208,7 +208,7 @@ private:
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
     void StartMonitor();
     bool JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
-    bool SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    void SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     bool GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);

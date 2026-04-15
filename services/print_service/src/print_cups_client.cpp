@@ -1868,7 +1868,8 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         case IPP_JOB_COMPLETED:
             return HandleCompletedState(monitorParams);
         default:
-            return SpecialJobStatusCallback(monitorParams);
+            SpecialJobStatusCallback(monitorParams);
+            return false;
     }
 }
 
@@ -2054,12 +2055,11 @@ int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd
 }
 #endif
 
-bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
+void PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
     PRINT_HILOGI("job is canceled");
     monitorParams->serviceAbility->UpdatePrintJobState(
         monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
-    return false;
 }
 
 void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams)
