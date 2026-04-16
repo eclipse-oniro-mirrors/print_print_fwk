@@ -755,16 +755,14 @@ static void OnPrinterInfoQueryNative(ani_env *env, ani_object callback)
         PRINT_HILOGE("env is nullptr");
         return;
     }
-    std::string typeStr = "printerInfoQuery";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+    PrintManagerClient::GetInstance()->On("", PRINTER_INFO_QUERY_EVENT_TYPE, callbackWrapper);
 }
 
 static void OffPrinterInfoQueryNative(ani_env *env, ani_string type, ani_object callback)
 {
     PRINT_HILOGI("enter OffPrinterInfoQueryNative");
-    std::string typeStr = "printerInfoQuery";
-    PrintManagerClient::GetInstance()->Off("", typeStr);
+    PrintManagerClient::GetInstance()->Off("", PRINTER_INFO_QUERY_EVENT_TYPE);
 }
 
 static void UpdatePrinterInformationNative(ani_env *env, ani_object printerInfo, ani_object callback)
