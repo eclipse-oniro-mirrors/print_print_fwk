@@ -72,49 +72,71 @@ void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const Printer
         PRINT_HILOGE("notify is nullptr");
         return;
     }
-    SmbHostSearchHelper helper;
     do {
         std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> localCopy;
         {
             std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
             localCopy = monitorSmbPrinters_;
         }
-        std::unordered_set<std::string> uniqueIps;
-        for (const auto& [id, localSmbPrinterPair] : localCopy) {
-            std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(localSmbPrinterPair.first.GetPrinterId());
-            uniqueIps.insert(ip);
-        }
-        std::unordered_map<std::string, HostStatus> hostStatusMap;
-        for (const auto& ip : uniqueIps) {
-            hostStatusMap[ip] = helper.TestSmbHostAlive(ip) ? HostStatus::ALIVE : HostStatus::DEAD;
-        }
-        std::vector<std::pair<PrinterInfo, HostStatus>> notifyPrinters;
-        for (auto& [id, localSmbPrinterPair] : localCopy) {
-            std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(id);
-            auto testHostStatusResult = hostStatusMap.find(ip);
-            if (testHostStatusResult == hostStatusMap.end()) {
-                continue;
-            }
-            if (localSmbPrinterPair.second == testHostStatusResult->second) {
-                continue;
-            }
-            uint32_t newPrinterStatus = testHostStatusResult->second == HostStatus::ALIVE ?
-                PrinterStatus::PRINTER_STATUS_IDLE : PrinterStatus::PRINTER_STATUS_UNAVAILABLE;
-            localSmbPrinterPair.first.SetPrinterStatus(newPrinterStatus);
-            notifyPrinters.push_back({localSmbPrinterPair.first, testHostStatusResult->second});
-        }
-        {
-            std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
-            for (const auto& notifyPrinterPair : notifyPrinters) {
-                auto it = monitorSmbPrinters_.find(notifyPrinterPair.first.GetPrinterId());
-                if (it != monitorSmbPrinters_.end()) {
-                    it->second = notifyPrinterPair;
-                    notify(notifyPrinterPair.first);
-                }
-            }
-        }
+        auto hostStatusMap = GetHostStatusMap(localCopy);
+        auto notifyPrinters = BuildNotifyPrintersList(localCopy, hostStatusMap);
+        UpdateAndNotifyPrinters(notifyPrinters, notify);
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_HOST_ALIVE_INTERVAL));
     } while (isMonitoring_.load());
+}
+
+std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> SmbPrinterStateMonitor::GetHostStatusMap(
+    const std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>>& localCopy)
+{
+    std::unordered_set<std::string> uniqueIps;
+    for (const auto& [id, localSmbPrinterPair] : localCopy) {
+        std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(localSmbPrinterPair.first.GetPrinterId());
+        uniqueIps.insert(ip);
+    }
+    SmbHostSearchHelper helper;
+    std::unordered_map<std::string, HostStatus> hostStatusMap;
+    for (const auto& ip : uniqueIps) {
+        hostStatusMap[ip] = helper.TestSmbHostAlive(ip) ? HostStatus::ALIVE : HostStatus::DEAD;
+    }
+    return hostStatusMap;
+}
+
+std::vector<std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> SmbPrinterStateMonitor::BuildNotifyPrintersList(
+    const std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>>& localCopy,
+    const std::unordered_map<std::string, HostStatus>& hostStatusMap)
+{
+    std::vector<std::pair<PrinterInfo, HostStatus>> notifyPrinters;
+    for (const auto& [id, localSmbPrinterPair] : localCopy) {
+        std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(id);
+        auto testHostStatusResult = hostStatusMap.find(ip);
+        if (testHostStatusResult == hostStatusMap.end()) {
+            continue;
+        }
+        if (localSmbPrinterPair.second == testHostStatusResult->second) {
+            continue;
+        }
+        uint32_t newPrinterStatus = testHostStatusResult->second == HostStatus::ALIVE ?
+            PrinterStatus::PRINTER_STATUS_IDLE : PrinterStatus::PRINTER_STATUS_UNAVAILABLE;
+        PrinterInfo newInfo = localSmbPrinterPair.first;
+        newInfo.SetPrinterStatus(newPrinterStatus);
+        notifyPrinters.push_back({newInfo, testHostStatusResult->second});
+    }
+    return notifyPrinters;
+}
+
+void SmbPrinterStateMonitor::UpdateAndNotifyPrinters(
+    const std::vector<std::pair<PrinterInfo, HostStatus>>& notifyPrinters,
+    std::function<void(const PrinterInfo& printerInfo)> notify)
+{
+    {
+        std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
+        for (const auto& notifyPrinterPair : notifyPrinters) {
+            monitorSmbPrinters_[notifyPrinterPair.first.GetPrinterId()] = notifyPrinterPair;
+        }
+    }
+    for (const auto& notifyPrinterPair : notifyPrinters) {
+        notify(notifyPrinterPair.first);
+    }
 }
 
 void SmbPrinterStateMonitor::SetSmbPrinterInMonitorList(const PrinterInfo& info)
