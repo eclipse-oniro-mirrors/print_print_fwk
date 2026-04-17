@@ -112,5 +112,30 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0004, Test
     manager.ReceiveAuditInfo("jobId-notexist", printerInfo, printJob, fileInfos);
     EXPECT_EQ(manager.securityMap_.size(), num + 1);
 }
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_0005
+ * @tc.desc: ReceiveAuditInfo with file data, then ReceiveJobStateUpdate
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0005, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("TestPrinter");
+    PrintJob printJob;
+    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
+    std::vector<FileAuditInfo> fileInfos;
+    FileAuditInfo info;
+    info.fileName = "test.pdf";
+    info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
+    info.size = 1024;
+    fileInfos.push_back(info);
+    manager.ReceiveBaseInfo("jobId-1", "callerPkg-1", std::vector<std::string>{});
+    manager.ReceiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
+    manager.ReceiveJobStateUpdate("jobId-1", printerInfo, printJob);
+    EXPECT_EQ(manager.securityMap_.size(), 0);
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -1032,6 +1032,7 @@ void PrintManagerClient::LoadServerFail()
 {
     std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_ = false;
+    syncCon_.notify_one();
     PRINT_HILOGE("load print server fail");
 }
 void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)

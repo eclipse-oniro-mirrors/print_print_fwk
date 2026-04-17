@@ -804,5 +804,129 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_003, TestSize.Level
     }
 }
 
+/**
+ * @tc.name: PrintJobTest_SetFileList_001
+ * @tc.desc: Verify the SetFileList and GetFileList function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_SetFileList_001, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<std::string> fileList = {"a.pdf", "b.pdf", "c.pdf"};
+    job.SetFileList(fileList);
+    const auto &result = job.GetFileList();
+    EXPECT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0], "a.pdf");
+    EXPECT_EQ(result[1], "b.pdf");
+    EXPECT_EQ(result[2], "c.pdf");
+}
+
+/**
+ * @tc.name: PrintJobTest_SetFileList_002
+ * @tc.desc: Verify SetFileList with empty list.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_SetFileList_002, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<std::string> fileList;
+    job.SetFileList(fileList);
+    EXPECT_EQ(job.GetFileList().size(), 0);
+}
+
+/**
+ * @tc.name: PrintJobTest_SetFileAuditInfo_001
+ * @tc.desc: Verify the SetFileAuditInfo and GetFileAuditInfo function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_SetFileAuditInfo_001, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<FileAuditInfo> fileInfos;
+    FileAuditInfo info1;
+    info1.fileName = "test.pdf";
+    info1.md5 = "d41d8cd98f00b204e9800998ecf8427e";
+    info1.size = 1024;
+    FileAuditInfo info2;
+    info2.fileName = "doc.pdf";
+    info2.md5 = "098f6bcd4621d373cade4e832627b4f6";
+    info2.size = 2048;
+    fileInfos.push_back(info1);
+    fileInfos.push_back(info2);
+    job.SetFileAuditInfo(fileInfos);
+    const auto &result = job.GetFileAuditInfo();
+    EXPECT_EQ(result.size(), 2);
+    EXPECT_EQ(result[0].fileName, "test.pdf");
+    EXPECT_EQ(result[0].md5, "d41d8cd98f00b204e9800998ecf8427e");
+    EXPECT_EQ(result[0].size, 1024);
+    EXPECT_EQ(result[1].fileName, "doc.pdf");
+    EXPECT_EQ(result[1].md5, "098f6bcd4621d373cade4e832627b4f6");
+    EXPECT_EQ(result[1].size, 2048);
+}
+
+/**
+ * @tc.name: PrintJobTest_SetFileAuditInfo_002
+ * @tc.desc: Verify SetFileAuditInfo with empty list.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_SetFileAuditInfo_002, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<FileAuditInfo> fileInfos;
+    job.SetFileAuditInfo(fileInfos);
+    EXPECT_EQ(job.GetFileAuditInfo().size(), 0);
+}
+
+/**
+ * @tc.name: PrintJobTest_FileListAudit_CopyConstructor_001
+ * @tc.desc: Verify copy constructor copies fileList and fileAuditInfo.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_FileListAudit_CopyConstructor_001, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<std::string> fileList = {"a.pdf"};
+    job.SetFileList(fileList);
+    FileAuditInfo info;
+    info.fileName = "a.pdf";
+    info.md5 = "abc123";
+    info.size = 512;
+    job.SetFileAuditInfo({info});
+    PrintJob copyJob(job);
+    EXPECT_EQ(copyJob.GetFileList().size(), 1);
+    EXPECT_EQ(copyJob.GetFileList()[0], "a.pdf");
+    EXPECT_EQ(copyJob.GetFileAuditInfo().size(), 1);
+    EXPECT_EQ(copyJob.GetFileAuditInfo()[0].fileName, "a.pdf");
+}
+
+/**
+ * @tc.name: PrintJobTest_FileListAudit_AssignmentOperator_001
+ * @tc.desc: Verify assignment operator copies fileList and fileAuditInfo.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_FileListAudit_AssignmentOperator_001, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<std::string> fileList = {"b.pdf"};
+    job.SetFileList(fileList);
+    FileAuditInfo info;
+    info.fileName = "b.pdf";
+    info.md5 = "def456";
+    info.size = 256;
+    job.SetFileAuditInfo({info});
+    PrintJob assignJob;
+    assignJob = job;
+    EXPECT_EQ(assignJob.GetFileList().size(), 1);
+    EXPECT_EQ(assignJob.GetFileList()[0], "b.pdf");
+    EXPECT_EQ(assignJob.GetFileAuditInfo().size(), 1);
+    EXPECT_EQ(assignJob.GetFileAuditInfo()[0].fileName, "b.pdf");
+}
+
 }  // namespace Print
 }  // namespace OHOS

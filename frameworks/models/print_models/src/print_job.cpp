@@ -53,7 +53,8 @@ PrintJob::PrintJob(const PrintJob &right)
     hasVendorOptions_ = right.hasVendorOptions_;
     vendorOptions_ = right.vendorOptions_;
     blockedSubStates_ = right.blockedSubStates_;
-}
+    fileList_ = right.fileList_;
+    fileAuditInfo_ = right.fileAuditInfo_;
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
 {
@@ -82,6 +83,8 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         hasVendorOptions_ = right.hasVendorOptions_;
         vendorOptions_ = right.vendorOptions_;
         blockedSubStates_ = right.blockedSubStates_;
+        fileList_ = right.fileList_;
+        fileAuditInfo_ = right.fileAuditInfo_;
     }
     return *this;
 }
@@ -333,6 +336,26 @@ bool PrintJob::HasVendorOptions() const
 const std::string &PrintJob::GetVendorOptions() const
 {
     return vendorOptions_;
+}
+
+void PrintJob::SetFileList(const std::vector<std::string> &fileList)
+{
+    fileList_ = fileList;
+}
+
+const std::vector<std::string> &PrintJob::GetFileList() const
+{
+    return fileList_;
+}
+
+void PrintJob::SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos)
+{
+    fileAuditInfo_ = fileInfos;
+}
+
+const std::vector<FileAuditInfo> &PrintJob::GetFileAuditInfo() const
+{
+    return fileAuditInfo_;
 }
 
 void PrintJob::ReadParcelFD(Parcel &parcel)

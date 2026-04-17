@@ -129,5 +129,28 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0007, TestSize.L
     EXPECT_NE("", jsonStr);
     EXPECT_TRUE(jsonStr.find("file.pdf") != std::string::npos);
 }
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0008_MultiFile, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {"a.pdf", "b.pdf"};
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("HP Printer");
+    PrintJob printJob;
+    printJob.SetDuplexMode(1);
+    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
+    std::vector<FileAuditInfo> fileInfos;
+    FileAuditInfo fa;
+    fa.fileName = "a.pdf"; fa.md5 = "aaa"; fa.size = 100;
+    FileAuditInfo fb;
+    fb.fileName = "b.pdf"; fb.md5 = "bbb"; fb.size = 200;
+    fileInfos.push_back(fa);
+    fileInfos.push_back(fb);
+    printSecurityGuardInfo.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    std::string jsonStr = printSecurityGuardInfo.ToJsonStr();
+    EXPECT_NE("", jsonStr);
+    EXPECT_TRUE(jsonStr.find("a.pdf") != std::string::npos);
+    EXPECT_TRUE(jsonStr.find("b.pdf") != std::string::npos);
+}
 }  // namespace Print
 }  // namespace OHOS
