@@ -83,4 +83,10 @@ std::set<uint32_t> PrintFailureAiNotifier::SplitSubState(uint32_t subState)
     return uniqueStates;
 }
 
+void PrintFailureAiNotifier::ClearJobState(const std::string& jobId)
+{
+    std::lock_guard<std::mutex> lock(jobStateMutex_);
+    jobStateMap_.erase(jobId);
+}
+
 } // namespace OHOS::Print
