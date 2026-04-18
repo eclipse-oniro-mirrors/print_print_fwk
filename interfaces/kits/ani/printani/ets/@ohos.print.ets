@@ -283,6 +283,8 @@ export default namespace print {
         printerMake?: string;
         preferences?: PrinterPreferences;
         alias?: string;
+        selectedDriver?: PpdInfo;
+        selectedProtocol?: string;
         options?: string;
     }
 
@@ -296,6 +298,8 @@ export default namespace print {
         printerMake?: string = '';
         preferences?: PrinterPreferences = undefined;
         alias?: string = undefined;
+        selectedDriver?: PpdInfo = undefined;
+        selectedProtocol?: string = undefined;
         options?: string = undefined;
     }
 
@@ -447,6 +451,9 @@ export default namespace print {
         defaultPageSizeId?: string;
         defaultOrientation?: PrintOrientationMode;
         borderless?: boolean;
+        defaultColorMode?: PrintColorMode;
+        defaultCollate?: boolean;
+        defaultReverse?: boolean;
         options?: string;
     }
 
@@ -457,6 +464,9 @@ export default namespace print {
         defaultPageSizeId?: string;
         defaultOrientation?: PrintOrientationMode;
         borderless?: boolean;
+        defaultColorMode?: PrintColorMode;
+        defaultCollate?: boolean;
+        defaultReverse?: boolean;
         options?: string;
     }
 
