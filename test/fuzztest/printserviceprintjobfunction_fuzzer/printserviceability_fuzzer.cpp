@@ -46,9 +46,10 @@ void TestStartPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataPr
     std::string fileUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::vector<std::string> fileList;
     fileList.push_back(fileUri);
-    uint32_t fd = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     std::vector<uint32_t> fdList;
-    fdList.push_back(fd);
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        fdList.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId);
     PrintServiceAbility::GetInstance()->OnStop();
@@ -56,7 +57,7 @@ void TestStartPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataPr
 
 void TestConnectPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string printerId = size ? dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH) : DEFAULT_PRINTERID;
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -75,8 +76,7 @@ void TestDisconnectPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(printerId);
     // anyway add printer to discovery list.
-    PrintServiceAbility::GetInstance()->
-        printSystemData_.discoveredPrinterInfoList_[printerInfo->GetPrinterId()] = printerInfo;
+    PrintServiceAbility::GetInstance()->printSystemData_.AddPrinterToDiscovery(printerInfo);
     PrintServiceAbility::GetInstance()->DisconnectPrinter(printerId);
 }
 
@@ -118,7 +118,10 @@ void TestStartPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 
     PrintJob testJob;
     testJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector <uint32_t> files = {1};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     testJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));

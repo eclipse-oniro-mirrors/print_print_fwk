@@ -39,7 +39,7 @@ public:
     int32_t UnregisterCallback();
     bool CheckPrintJobNeedReject(const std::string &jobId);
     bool IsCallbackRegistered();
-    int32_t RegisterCallerAppId(const std::string &jobId, const std::string &callerAppId, const int32_t &userId);
+    int32_t RegisterCallerAppId(const std::string &jobId, const std::string &callerBundleName, const int32_t &userId);
     void RemoveCallerAppId(const std::string &jobId);
     std::string GetCallerAppId(const std::string &jobId);
 

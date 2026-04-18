@@ -200,24 +200,12 @@ void PrintJobHelper::FillNumberUpProperties(napi_env env, napi_value jsValue, st
     // Get mirror from numberUpArgs object
     napi_value jsMirror = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_MIRROR);
     if (jsMirror != nullptr && NapiPrintUtils::GetValueType(env, jsMirror) == napi_number) {
-        uint32_t mirrorValue = NapiPrintUtils::GetUint32FromValue(env, jsMirror);
-        if (mirrorValue == PRINT_MIRROR_ENABLED || mirrorValue == PRINT_MIRROR_DISABLED) {
-            args.mirror = mirrorValue;
-        } else {
-            PRINT_HILOGW("Invalid mirror value: %{public}d, using default", mirrorValue);
-            args.mirror = MIRROR_DEFAULT_VALUE;
-        }
+        args.mirror = NapiPrintUtils::GetUint32FromValue(env, jsMirror);
     }
     // Get pageBorder from numberUpArgs object
     napi_value jsPageBorder = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_PAGEBORDER);
     if (jsPageBorder != nullptr && NapiPrintUtils::GetValueType(env, jsPageBorder) == napi_number) {
-        uint32_t pageBorderValue = NapiPrintUtils::GetUint32FromValue(env, jsPageBorder);
-        if (pageBorderValue <= PRINT_PAGE_BORDER_DOUBLE) {
-            args.pageBorder = pageBorderValue;
-        } else {
-            PRINT_HILOGW("Invalid pageBorder value: %{public}d, using default", pageBorderValue);
-            args.pageBorder = PAGE_BORDER_DEFAULT_VALUE;
-        }
+        args.pageBorder = NapiPrintUtils::GetUint32FromValue(env, jsPageBorder);
     }
     nativeObj->SetNumberUpArgs(args);
 }
@@ -482,7 +470,7 @@ void PrintJobHelper::FillNumberUpParams(napi_env env, napi_value jsValue, PrintJ
         return;
     }
     if (NapiPrintUtils::GetValueType(env, jsNumberUpArgs) != napi_object) {
-        PRINT_HILOGW("numberUpArgs is not an object, using default values");
+        PRINT_HILOGW("numberUpArgs is not an object, ignoring");
         return;
     }
     // Get numberUp from numberUpArgs object

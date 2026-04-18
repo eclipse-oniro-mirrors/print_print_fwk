@@ -3204,5 +3204,58 @@ HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Le
 
     dr->OnRemoteDied(obj);
 }
+
+/**
+ * @tc.name: StartSharedHostDiscovery_RpcFailure
+ * @tc.desc: Test behavior when RPC send request fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_RpcFailure, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr;
+    
+    EXPECT_NE(obj, nullptr);
+    EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
+    EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly([&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
+        dr = recipient;
+        return true;
+    });
+    PrintManagerClient::GetInstance()->SetProxy(obj);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_RPC_FAILURE;
+        });
+    
+    EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: StartSharedHostDiscovery_Success
+ * @tc.desc: Test successful client call
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_Success, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr;
+    
+    CallRemoteObject(service, obj, dr);
+    
+    EXPECT_CALL(*service, StartSharedHostDiscovery())
+        .Times(Exactly(1))
+        .WillOnce(Return(E_PRINT_NONE));
+    
+    EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_NONE);
+}
 }  // namespace Print
 }  // namespace OHOS

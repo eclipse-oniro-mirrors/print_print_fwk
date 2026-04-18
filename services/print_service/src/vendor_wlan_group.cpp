@@ -17,6 +17,7 @@
 #include "print_log.h"
 #include "print_utils.h"
 #include "file_ex.h"
+#include "hisys_event_util.h"
 
 using namespace OHOS::Print;
 namespace {
@@ -40,14 +41,56 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
+
+    std::string printerModel = GetPrinterModel(printerId);
+
     if (ConnectByPpdDriver(printerId)) {
         return true;
-    } else if (IsBsunidriverSupport(printerId) && ConnectByBsuni(printerId)) {
-        return true;
-    } else if (ConnectByIppEverywhere(printerId)) {
+    }
+
+    if (TryConnectWithBsuni(printerId, printerModel)) {
         return true;
     }
+    
+    if (ConnectByIppEverywhere(printerId)) {
+        return true;
+    }
+
+    HisysEventUtil::ReportFailureEvent(HisysEventParams{
+        .eventType = HisysEventType::CONNECT_FAILURE,
+        .resourceKey = NO_VENDOR_SUPPORT,
+        .printerModel = printerModel
+    });
     PRINT_HILOGE("no vendor can query capability.");
+    return false;
+}
+
+std::string VendorWlanGroup::GetPrinterModel(const std::string &printerId)
+{
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("parentVendorManager is null");
+        return "";
+    }
+    auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (printerInfo != nullptr) {
+        return printerInfo->GetPrinterMake();
+    }
+    return "";
+}
+
+bool VendorWlanGroup::TryConnectWithBsuni(const std::string &printerId, const std::string &printerModel)
+{
+    if (!IsBsunidriverSupport(printerId)) {
+        return false;
+    }
+    if (ConnectByBsuni(printerId)) {
+        return true;
+    }
+    HisysEventUtil::ReportFailureEvent(HisysEventParams{
+        .eventType = HisysEventType::CONNECT_FAILURE,
+        .resourceKey = BSUNI_DRIVER_SUPPORT_CONNECT_FAIL,
+        .printerModel = printerModel
+    });
     return false;
 }
 
@@ -64,6 +107,10 @@ bool VendorWlanGroup::OnQueryCapabilityByIp(const std::string &printerIp, const 
     } else if (ConnectByIppEverywhere(printerIp, protocol, printQueue)) {
         return true;
     }
+    HisysEventUtil::ReportFailureEvent(HisysEventParams{
+        .eventType = HisysEventType::CONNECT_FAILURE,
+        .resourceKey = NO_VENDOR_SUPPORT
+    });
     PRINT_HILOGE("no vendor can query capability by ip.");
     return false;
 }

@@ -34,6 +34,7 @@ public:
     bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) override;
     bool OnCallbackAdapterGetFile(uint32_t state) override;
+    bool OnCallback(const std::vector<PrintSharedHost> &sharedHosts) override;
 
 private:
     static inline BrokerDelegator<PrintCallbackProxy> delegator_;

@@ -575,7 +575,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOption
     jobParams->isCollate = false;
     jobParams->isReverse = false;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 9);
+    EXPECT_EQ(ret, 11);
     delete jobParams;
     delete options;
 }
@@ -608,7 +608,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetTrueValue_ReturnCorrectNumOption
     jobParams->isCollate = true;
     jobParams->isReverse = true;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 8);
+    EXPECT_EQ(ret, 10);
     delete jobParams;
     delete options;
 }
@@ -3818,6 +3818,90 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, Test
         EXPECT_EQ(params->pageBorder, tc.pageBorder) << "Failed at index " << index;
         index++;
     }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_001
+ * @tc.desc: GetInputSlotFromAdvancedOps with null json
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_NullJson_Test, TestSize.Level1)
+{
+    Json::Value json;
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_002
+ * @tc.desc: GetInputSlotFromAdvancedOps with InputSlot key
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_InputSlotKey_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = "Tray1";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray1");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_003
+ * @tc.desc: GetInputSlotFromAdvancedOps with media-source key
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_MediaSourceKey_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray2");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_004
+ * @tc.desc: GetInputSlotFromAdvancedOps with both keys (InputSlot priority)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_BothKeysPriority_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = "Tray1";
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray1");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_005
+ * @tc.desc: GetInputSlotFromAdvancedOps with non-string value
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_NonStringValue_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = 123;
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray2");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_006
+ * @tc.desc: GetInputSlotFromAdvancedOps with empty json object
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_EmptyJson_Test, TestSize.Level1)
+{
+    Json::Value json(Json::objectValue);
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "");
 }
 
 }  // namespace Print

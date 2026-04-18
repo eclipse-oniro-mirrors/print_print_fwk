@@ -118,17 +118,16 @@ bool VendorManager::Init(sptr<PrintServiceAbility> sa, bool loadDefault)
 void VendorManager::UnInit()
 {
     PRINT_HILOGI("UnInit enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        PRINT_HILOGD("UnInit %{public}s", pair.first.c_str());
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnDestroy();
-        pair.second->UnInit();
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        PRINT_HILOGD("UnInit %{public}s", driver->GetVendorName().c_str());
+        driver->OnDestroy();
+        driver->UnInit();
+    });
+    // Clear vendorMap
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        vendorMap.clear();
     }
-    vendorMap.clear();
     if (wlanGroupDriver != nullptr) {
         wlanGroupDriver->OnDestroy();
         wlanGroupDriver->UnInit();
@@ -149,21 +148,26 @@ bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDri
         PRINT_HILOGW("vendorDriver init fail");
         return false;
     }
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    vendorMap.insert(std::make_pair(vendorDriver->GetVendorName(), vendorDriver));
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        vendorMap.insert(std::make_pair(vendorDriver->GetVendorName(), vendorDriver));
+    }
     vendorDriver->OnCreate();
     return true;
 }
 bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 {
-    PRINT_HILOGI("LoadVendorDriver enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    auto iter = vendorMap.find(vendorName);
-    if (iter == vendorMap.end()) {
-        return false;
+    PRINT_HILOGI("UnloadVendorDriver enter");
+    std::shared_ptr<VendorDriverBase> vendorDriver;
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        auto iter = vendorMap.find(vendorName);
+        if (iter == vendorMap.end()) {
+            return false;
+        }
+        vendorDriver = iter->second;
+        vendorMap.erase(iter);
     }
-    auto vendorDriver = iter->second;
-    vendorMap.erase(iter);
     if (vendorDriver != nullptr) {
         vendorDriver->OnDestroy();
         vendorDriver->UnInit();
@@ -203,28 +207,18 @@ bool VendorManager::QueryPrinterInfo(const std::string &globalPrinterId, int tim
 void VendorManager::StartDiscovery()
 {
     PRINT_HILOGI("StartDiscovery enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        PRINT_HILOGD("StartDiscovery %{public}s", pair.first.c_str());
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnStartDiscovery();
-    }
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        PRINT_HILOGD("StartDiscovery %{public}s", driver->GetVendorName().c_str());
+        driver->OnStartDiscovery();
+    });
     PRINT_HILOGI("StartDiscovery quit");
 }
 void VendorManager::StopDiscovery()
 {
     PRINT_HILOGI("StopDiscovery enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnStopDiscovery();
-    }
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        driver->OnStopDiscovery();
+    });
     PRINT_HILOGI("StopDiscovery quit");
 }
 
@@ -702,18 +696,29 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
     return vendorDriver->OnQueryCapability(printerId, 0);
 }
 
+void VendorManager::ForEachDriver(const DriverCallback& callback)
+{
+    std::vector<std::shared_ptr<VendorDriverBase>> drivers;
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        for (auto const &pair : vendorMap) {
+            if (pair.second != nullptr) {
+                drivers.push_back(pair.second);
+            }
+        }
+    }
+    for (auto &driver : drivers) {
+        callback(driver);
+    }
+}
+
 #ifdef ENTERPRISE_ENABLE
 void VendorManager::SwitchSpace()
 {
     PRINT_HILOGI("SwitchSpace enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnSwitchSpace();
-    }
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        driver->OnSwitchSpace();
+    });
     PRINT_HILOGI("SwitchSpace quit");
 }
 

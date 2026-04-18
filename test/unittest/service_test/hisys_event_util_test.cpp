@@ -48,5 +48,42 @@ HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001_NeedRename, TestSize.Level1
     util->reportBehaviorEvent("test", HisysEventUtil::SEND_TASK, param);
     EXPECT_CALL(util, reportBehaviorEvent(_, _, _)).Times(1);
 }
+
+/**
+ * @tc.name: HisysEventUtilTest_0002
+ * @tc.desc: ReportConnectFailure TEST
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0002, TestSize.Level1)
+{
+    HisysEventUtil util;
+    HisysEventParams params{
+        .eventType = HisysEventType::CONNECT_FAILURE,
+        .resourceKey = "test",
+        .printerModel = "printerModel"
+    };
+    util.ReportFailureEvent(params);
+    EXPECT_CALL(util, ReportFailureEvent(_)).Times(1);
+}
+
+/**
+ * @tc.name: HisysEventUtilTest_0003
+ * @tc.desc: ReportPrintFailure TEST
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0003, TestSize.Level1)
+{
+    HisysEventUtil util;
+    HisysEventParams params{
+        .eventType = HisysEventType::PRINT_FAILURE,
+        .resourceKey = "test",
+        .subState = 10
+    };
+    util.ReportFailureEvent(params);
+    EXPECT_CALL(util, ReportFailureEvent(_)).Times(1);
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -42,7 +42,7 @@ private:
 class PrintNotificationBuilder {
 public:
     static int32_t CreateNotification(uint32_t subState, const std::string& printerName);
-
+    static std::string GetFaultKey(uint32_t subState);
 private:
     PrintNotificationBuilder() = delete;
     ~PrintNotificationBuilder() = delete;

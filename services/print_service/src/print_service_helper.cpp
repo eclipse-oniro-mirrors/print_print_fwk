@@ -94,7 +94,8 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
     while (retry++ < MAX_RETRY_TIMES) {
-        if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
+        if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbilityWithExtensionType(
+            want, printAbilityConnection, nullptr, -1, AppExecFwk::ExtensionAbilityType::PRINT) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
             break;
         }

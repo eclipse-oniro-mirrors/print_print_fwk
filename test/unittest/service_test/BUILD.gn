@@ -52,6 +52,7 @@ ohos_unittest("print_service_test") {
     "watermark_callback_proxy_test.cpp",
     "kia_interceptor_callback_proxy_test.cpp",
     "kia_interceptor_manager_test.cpp",
+    "print_callback_proxy_test.cpp"
   ]
 
   deps = [

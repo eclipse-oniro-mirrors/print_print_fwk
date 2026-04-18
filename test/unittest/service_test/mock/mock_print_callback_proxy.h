@@ -29,6 +29,7 @@ public:
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
     MOCK_METHOD2(OnCallback, bool(const PrinterInfo &, const std::vector<PpdInfo> &));
+    MOCK_METHOD1(OnCallback, bool(const std::vector<PrintSharedHost> &));
     MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
     MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
     MOCK_METHOD4(OnCallbackAdapterLayout,

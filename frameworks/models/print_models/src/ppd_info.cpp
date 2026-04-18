@@ -51,6 +51,16 @@ PpdInfo &PpdInfo::operator=(const PpdInfo &right)
     }
     return *this;
 }
+
+bool PpdInfo::operator==(const PpdInfo &right) const
+{
+    return hasManufacturer_ == right.hasManufacturer_ &&
+           hasNickName_ == right.hasNickName_ &&
+           hasPpdName_ == right.hasPpdName_ &&
+           manufacturer_ == right.manufacturer_ &&
+           nickName_ == right.nickName_ &&
+           ppdName_ == right.ppdName_;
+}
  
 PpdInfo::~PpdInfo() {}
 

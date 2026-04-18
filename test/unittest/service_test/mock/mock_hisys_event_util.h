@@ -24,6 +24,7 @@ namespace Print {
 class MockHisysEventUtil {
 public:
     MOCK_METHOD3(reportBehaviorEvent, void(std::string name, int behaviorCode, const std::string &msg));
+    MOCK_METHOD1(ReportFailureEvent, void(const HisysEventParams &params));
 };
 }  // namespace Print
 }  // namespace OHOS

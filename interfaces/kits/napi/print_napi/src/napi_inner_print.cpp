@@ -1400,7 +1400,7 @@ napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
         PRINT_ASSERT_BASE(env, valueType == napi_string, "uri is not a string", napi_string_expected);
         context->fileUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
 
-        context->type = "auto";
+        context->type = "";
         if (argc > NapiPrintUtils::ARGC_TWO) {
             PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
             if (valueType == napi_string) {
@@ -1979,7 +1979,8 @@ napi_value NapiInnerPrint::OffPrinterInfoQuery(napi_env env, napi_callback_info 
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
-        type == PRINTER_CHANGE_EVENT_TYPE || type == PRINT_QUERY_INFO_EVENT_TYPE) {
+        type == PRINTER_CHANGE_EVENT_TYPE || type == PRINT_QUERY_INFO_EVENT_TYPE ||
+        type == SHARED_HOST_DISCOVER_EVENT_TYPE) {
         return true;
     }
     return false;
@@ -2024,5 +2025,39 @@ bool NapiInnerPrint::CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> c
         return false;
     }
     return true;
+}
+
+napi_value NapiInnerPrint::StartSharedHostDiscovery(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter StartSharedHostDiscovery---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->StartSharedHostDiscovery();
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to start shared host discovery");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
 }
 }  // namespace OHOS::Print

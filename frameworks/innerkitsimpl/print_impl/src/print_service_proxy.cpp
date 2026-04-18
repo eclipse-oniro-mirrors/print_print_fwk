@@ -1763,4 +1763,30 @@ int32_t PrintServiceProxy::RegisterKiaInterceptorCallback(const sptr<IKiaInterce
     PRINT_HILOGI("PrintServiceProxy RegisterKiaInterceptorCallback out. ret = [%{public}d]", ret);
     return ret;
 }
+
+int32_t PrintServiceProxy::StartSharedHostDiscovery()
+{
+    PRINT_HILOGI("PrintServiceProxy StartSharedHostDiscovery started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartSharedHostDiscovery remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_SHARED_HOST_DISCOVERY,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("StartSharedHostDiscovery, rpc error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy StartSharedHostDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Print

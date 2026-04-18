@@ -110,6 +110,7 @@ public:
     virtual int32_t GetPrinterDefaultPreferences(const std::string &printerId,
         PrinterPreferences &defaultPreferences) = 0;
     virtual int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) = 0;
+    virtual int32_t StartSharedHostDiscovery() = 0;
     virtual int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos) = 0;
     virtual int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) = 0;

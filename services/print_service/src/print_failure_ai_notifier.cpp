@@ -19,6 +19,7 @@
 #include "print_log.h"
 #include "print_constant.h"
 #include "print_notification_builder.h"
+#include "hisys_event_util.h"
 
 namespace OHOS::Print {
 static constexpr uint32_t PRINT_JOB_SUBSTATE_BASE = 100;
@@ -41,6 +42,12 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
         jobStateMap_[jobId] = newStates;
         for (uint32_t state : newStates) {
             PrintNotificationBuilder::CreateNotification(state, printerName);
+            const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
+            HisysEventUtil::ReportFailureEvent(HisysEventParams{
+                .eventType = HisysEventType::PRINT_FAILURE,
+                .resourceKey = resourceKey,
+                .subState = state
+            });
         }
     } else {
         std::set<uint32_t> oldStates = iter->second;
@@ -50,6 +57,12 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
             std::inserter(newStatesToNotify, newStatesToNotify.begin()));
         for (uint32_t state : newStatesToNotify) {
             PrintNotificationBuilder::CreateNotification(state, printerName);
+            const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
+            HisysEventUtil::ReportFailureEvent(HisysEventParams{
+                .eventType = HisysEventType::PRINT_FAILURE,
+                .resourceKey = resourceKey,
+                .subState = state
+            });
         }
         jobStateMap_[jobId] = newStates;
     }

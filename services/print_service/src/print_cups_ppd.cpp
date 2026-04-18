@@ -84,6 +84,7 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
     {PAGE_SIZE_ID_JIS_B3, "B3"},
     {PAGE_SIZE_ID_JIS_B4, "B4"},
     {PAGE_SIZE_ID_JIS_B5, "B5"},
+    {PAGE_SIZE_ID_JIS_B5, "JISB5"},
     {PAGE_SIZE_ID_JIS_B6, "B6"},
     {PAGE_SIZE_ID_JIS_B7, "B7"},
     {PAGE_SIZE_ID_JIS_B8, "B8"},

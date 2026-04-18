@@ -22,6 +22,7 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include "print_extension_callback_stub.h"
 #include <functional>
 
 namespace OHOS {
@@ -38,14 +39,9 @@ void TestOn(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
     sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-    if (callback != nullptr) {
-        std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        PrintServiceAbility::GetInstance()->On(taskId, type, callback);
-    } else {
-        delete printerAdapterPtr;
-        printerAdapterPtr = nullptr;
-    }
+    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->On(taskId, type, callback);
 }
 
 void TestOff(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -59,14 +55,10 @@ void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
 {
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
     sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-    if (callback != nullptr) {
-        std::string type = PRINTER_DISCOVER_EVENT_TYPE;
-        PrintServiceAbility::GetInstance()->RegisterPrinterCallback(type, callback);
-        PrintServiceAbility::GetInstance()->UnregisterPrinterCallback(type);
-    } else {
-        delete printerAdapterPtr;
-        printerAdapterPtr = nullptr;
-    }
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RegisterPrinterCallback(type, callback);
+    PrintServiceAbility::GetInstance()->UnregisterPrinterCallback(type);
+
     std::vector <PrintExtensionInfo> printExtensionInfos;
     PrintServiceAbility::GetInstance()->QueryAllExtension(printExtensionInfos);
     std::vector <std::string> extensionIds;
@@ -75,12 +67,13 @@ void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
     }
     PrintServiceAbility::GetInstance()->StartDiscoverPrinter(extensionIds);
 
+    sptr<PrintExtensionCallbackStub> extCallback = new(std::nothrow) PrintExtensionCallbackStub();
     for (auto &printExtensionInfo: printExtensionInfos) {
-        PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), nullptr);
+        PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), extCallback);
     }
-
+    
     std::string extensionCID = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->RegisterExtCallback(extensionCID, nullptr);
+    PrintServiceAbility::GetInstance()->RegisterExtCallback(extensionCID, extCallback);
 }
 
 void TestLoadExtSuccess(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

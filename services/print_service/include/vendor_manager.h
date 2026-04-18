@@ -121,6 +121,9 @@ public:
 private:
     bool IsPrivatePpdDriver(const std::string &vendorName);
     bool IsWlanGroupDriver(const std::string &bothPrinterId);
+    // ForEachDriver: Traverse all vendor drivers and execute callback outside of lock to avoid deadlock
+    using DriverCallback = std::function<void(std::shared_ptr<VendorDriverBase>)>;
+    void ForEachDriver(const DriverCallback& callback);
 
 private:
     std::atomic<bool> defaultLoaded{false};

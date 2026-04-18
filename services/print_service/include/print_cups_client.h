@@ -183,6 +183,7 @@ public:
     std::string getScheme(std::string &printerUri);
     bool IsIpAddress(const char* host);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
+    std::string GetCurCupsModelDir();
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams);
@@ -245,8 +246,8 @@ private:
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
     const std::string& GetCurCupsRootDir();
-    std::string GetCurCupsModelDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
     int32_t HandleSystemAuthInfo(const std::string &jobId);

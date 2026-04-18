@@ -80,6 +80,7 @@ static constexpr const char *FUNCTION_CHECK_PREFERENCES_CONFLICTS = "checkPrefer
 static constexpr const char *FUNCTION_CHECK_PRINTJOB_CONFLICTS = "checkPrintJobConflicts";
 static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrinterDefaultPreferences";
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
+static constexpr const char *FUNCTION_START_SHARED_HOST_DISCOVERY = "startSharedHostDiscovery";
 static constexpr const char *AUTH_SMB_DEVICE_AS_GUEST = "authSmbDeviceAsGuest";
 static constexpr const char *AUTH_SMB_DEVICE_AS_REGISTERED_USER = "authSmbDeviceAsRegisteredUser";
 static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWatermarkCallback";
@@ -526,6 +527,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_CHECK_PRINTJOB_CONFLICTS, NapiInnerPrint::CheckPrintJobConflicts),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES, NapiInnerPrint::GetPrinterDefaultPreferences),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
+        DECLARE_NAPI_FUNCTION(FUNCTION_START_SHARED_HOST_DISCOVERY, NapiInnerPrint::StartSharedHostDiscovery),
         DECLARE_NAPI_FUNCTION(AUTH_SMB_DEVICE_AS_GUEST, NapiInnerPrint::AuthSmbDeviceAsGuest),
         DECLARE_NAPI_FUNCTION(AUTH_SMB_DEVICE_AS_REGISTERED_USER, NapiInnerPrint::AuthSmbDeviceAsRegisteredUser),
         DECLARE_NAPI_FUNCTION(FUNCTION_REGISTER_WATERMARK_CALLBACK, NapiInnerPrint::RegisterWatermarkCallback),
