@@ -18,6 +18,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 #include <mutex>
 #include <functional>
 #include <future>
@@ -43,6 +45,14 @@ private:
     SmbPrinterStateMonitor() = default;
     ~SmbPrinterStateMonitor();
     void MonitorSmbPrinters(std::function<void(const PrinterInfo& printerInfo)> notify);
+    std::unordered_map<std::string, HostStatus> GetHostStatusMap(
+        const std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>>& localCopy);
+    std::vector<std::pair<PrinterInfo, HostStatus>> BuildNotifyPrintersList(
+        const std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>>& localCopy,
+        const std::unordered_map<std::string, HostStatus>& hostStatusMap);
+    void UpdateAndNotifyPrinters(
+        const std::vector<std::pair<PrinterInfo, HostStatus>>& notifyPrinters,
+        std::function<void(const PrinterInfo& printerInfo)> notify);
 
     std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> monitorSmbPrinters_;
     std::mutex monitorSmbPrintersLock_;

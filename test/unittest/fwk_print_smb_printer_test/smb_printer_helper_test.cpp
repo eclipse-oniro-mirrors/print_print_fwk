@@ -470,6 +470,134 @@ HWTEST_F(SmbPrinterHelperTest, ShareEnumCallback_001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetHostStatusMap_001
+ * @tc.desc: Test GetHostStatusMap with empty localCopy
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, GetHostStatusMap_001, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::unordered_map<std::string, std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> localCopy;
+    auto hostStatusMap = monitor.GetHostStatusMap(localCopy);
+    EXPECT_TRUE(hostStatusMap.empty());
+}
+
+/**
+ * @tc.name: GetHostStatusMap_002
+ * @tc.desc: Test GetHostStatusMap with valid localCopy
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, GetHostStatusMap_002, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::unordered_map<std::string, std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> localCopy;
+    PrinterInfo info;
+    info.SetPrinterId("smb-192.168.1.100-TestPrinter");
+    info.SetPrinterStatus(PrinterStatus::PRINTER_STATUS_IDLE);
+    localCopy["smb-192.168.1.100-TestPrinter"] = {info, SmbPrinterStateMonitor::HostStatus::ALIVE};
+    auto hostStatusMap = monitor.GetHostStatusMap(localCopy);
+    EXPECT_EQ(hostStatusMap.size(), 1);
+    EXPECT_EQ(hostStatusMap.find("192.168.1.100")->second, SmbPrinterStateMonitor::HostStatus::DEAD);
+}
+
+/**
+ * @tc.name: BuildNotifyPrintersList_001
+ * @tc.desc: Test BuildNotifyPrintersList with empty inputs
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, BuildNotifyPrintersList_001, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::unordered_map<std::string, std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> localCopy;
+    std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> hostStatusMap;
+    auto notifyPrinters = monitor.BuildNotifyPrintersList(localCopy, hostStatusMap);
+    EXPECT_TRUE(notifyPrinters.empty());
+}
+
+/**
+ * @tc.name: BuildNotifyPrintersList_002
+ * @tc.desc: Test BuildNotifyPrintersList when status unchanged
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, BuildNotifyPrintersList_002, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::unordered_map<std::string, std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> localCopy;
+    PrinterInfo info;
+    info.SetPrinterId("smb-192.168.1.100-TestPrinter");
+    info.SetPrinterStatus(PrinterStatus::PRINTER_STATUS_IDLE);
+    localCopy["smb-192.168.1.100-TestPrinter"] = {info, SmbPrinterStateMonitor::HostStatus::ALIVE};
+    
+    std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> hostStatusMap;
+    hostStatusMap["192.168.1.100"] = SmbPrinterStateMonitor::HostStatus::ALIVE;
+    
+    auto notifyPrinters = monitor.BuildNotifyPrintersList(localCopy, hostStatusMap);
+    EXPECT_TRUE(notifyPrinters.empty());
+}
+
+/**
+ * @tc.name: BuildNotifyPrintersList_003
+ * @tc.desc: Test BuildNotifyPrintersList when status changed
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, BuildNotifyPrintersList_003, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::unordered_map<std::string, std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> localCopy;
+    PrinterInfo info;
+    info.SetPrinterId("smb-192.168.1.100-TestPrinter");
+    info.SetPrinterStatus(PrinterStatus::PRINTER_STATUS_IDLE);
+    localCopy["smb-192.168.1.100-TestPrinter"] = {info, SmbPrinterStateMonitor::HostStatus::ALIVE};
+    
+    std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> hostStatusMap;
+    hostStatusMap["192.168.1.100"] = SmbPrinterStateMonitor::HostStatus::DEAD;
+    
+    auto notifyPrinters = monitor.BuildNotifyPrintersList(localCopy, hostStatusMap);
+    EXPECT_EQ(notifyPrinters.size(), 1);
+    EXPECT_EQ(notifyPrinters[0].first.GetPrinterStatus(), PrinterStatus::PRINTER_STATUS_UNAVAILABLE);
+}
+
+/**
+ * @tc.name: UpdateAndNotifyPrinters_001
+ * @tc.desc: Test UpdateAndNotifyPrinters with empty notifyPrinters
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, UpdateAndNotifyPrinters_001, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::vector<std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> notifyPrinters;
+    int32_t callbackCount = 0;
+    auto notify = [&callbackCount](const PrinterInfo& info) {
+        callbackCount++;
+    };
+    monitor.UpdateAndNotifyPrinters(notifyPrinters, notify);
+    EXPECT_EQ(callbackCount, 0);
+}
+
+/**
+ * @tc.name: UpdateAndNotifyPrinters_002
+ * @tc.desc: Test UpdateAndNotifyPrinters with valid notifyPrinters
+ * @tc.type: FUNC
+ */
+HWTEST_F(SmbPrinterHelperTest, UpdateAndNotifyPrinters_002, TestSize.Level1)
+{
+    SmbPrinterStateMonitor& monitor = SmbPrinterStateMonitor::GetInstance();
+    std::vector<std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> notifyPrinters;
+    PrinterInfo info;
+    info.SetPrinterId("smb-192.168.1.100-TestPrinter");
+    info.SetPrinterStatus(PrinterStatus::PRINTER_STATUS_UNAVAILABLE);
+    notifyPrinters.push_back({info, SmbPrinterStateMonitor::HostStatus::DEAD});
+    
+    int32_t callbackCount = 0;
+    auto notify = [&callbackCount](const PrinterInfo& info) {
+        callbackCount++;
+    };
+    monitor.UpdateAndNotifyPrinters(notifyPrinters, notify);
+    EXPECT_EQ(callbackCount, 1);
+    monitor.EraseSmbPrinterInMonitorListById(info.GetPrinterId());
+}
+
+/**
  * @tc.name: SmbPrinterStateMonitor_Integration
  * @tc.desc: Test integration of all smbPrintermonitor functions
  * @tc.type: FUNC
