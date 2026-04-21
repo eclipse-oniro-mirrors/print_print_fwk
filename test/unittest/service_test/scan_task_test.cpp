@@ -14,6 +14,8 @@
  */
 
 #include <gtest/gtest.h>
+#include <unistd.h>
+#include <cstdio>
 #include "scan_task.h"
 
 constexpr int32_t DEFAULT_USER_ID = 100;
@@ -35,6 +37,9 @@ public:
     void TearDown() override;
 
     void TestImageEncode(const ScanParameters& scanParam, ImageFormat imgFmt, std::string& imgPath);
+
+private:
+    std::vector<std::string> createdFiles_;
 };
 
 void ScanTaskTest::SetUp()
@@ -43,12 +48,19 @@ void ScanTaskTest::SetUp()
 
 void ScanTaskTest::TearDown()
 {
+    for (const auto& file : createdFiles_) {
+        if (access(file.c_str(), F_OK) == 0) {
+            remove(file.c_str());
+        }
+    }
+    createdFiles_.clear();
 }
 
 void ScanTaskTest::TestImageEncode(const ScanParameters& scanParam, ImageFormat imgFmt, std::string& imgPath)
 {
     ScanTask scanTask("", DEFAULT_USER_ID, false);
     ASSERT_TRUE(scanTask.CreateAndOpenScanFile(imgPath, imgFmt));
+    createdFiles_.push_back(imgPath);
     ASSERT_EQ(scanTask.WriteImageHeader(scanParam, DEFAULT_SCAN_DPI), E_SCAN_NONE);
 
     size_t dataLeft = scanParam.GetBytesPerLine() * scanParam.GetLines();
@@ -71,6 +83,7 @@ HWTEST_F(ScanTaskTest, CreateAndOpenScanFile_Normal, TestSize.Level1)
     ScanTask scanTask("", DEFAULT_USER_ID, false);
     ASSERT_TRUE(scanTask.CreateAndOpenScanFile(filePath));
     ASSERT_FALSE(filePath.empty());
+    createdFiles_.push_back(filePath);
 }
 
 HWTEST_F(ScanTaskTest, CreateAndOpenScanFile_InvalidUserId, TestSize.Level1)
@@ -85,6 +98,7 @@ HWTEST_F(ScanTaskTest, CreateAndOpenScanFile_OpenRepeatedly, TestSize.Level1)
     std::string filePath;
     ScanTask scanTask("", DEFAULT_USER_ID, false);
     ASSERT_TRUE(scanTask.CreateAndOpenScanFile(filePath));
+    createdFiles_.push_back(filePath);
     ASSERT_FALSE(scanTask.CreateAndOpenScanFile(filePath));
 }
 
@@ -93,6 +107,7 @@ HWTEST_F(ScanTaskTest, CreateAndOpenScanFile_ImageTypePng, TestSize.Level1)
     std::string filePath;
     ScanTask scanTask("", DEFAULT_USER_ID, false);
     ASSERT_TRUE(scanTask.CreateAndOpenScanFile(filePath, ImageFormat::IMAGE_TYPE_PNG));
+    createdFiles_.push_back(filePath);
 }
 
 HWTEST_F(ScanTaskTest, CreateAndOpenScanFile_ImageTypeNone, TestSize.Level1)
@@ -187,6 +202,7 @@ HWTEST_F(ScanTaskTest, ImageFinishCompress_EmptyData, TestSize.Level1)
     scanTask.ImageFinishCompress();
 
     ASSERT_TRUE(scanTask.CreateAndOpenScanFile(filePath));
+    createdFiles_.push_back(filePath);
     scanTask.ImageFinishCompress();
 
     ScanParameters scanParam;
