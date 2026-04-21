@@ -2057,7 +2057,8 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
     auto printerId = printJob->GetPrinterId();
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo) {
-        PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printerId, subState, printerInfo->GetPrinterName());
+        PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
+            printerInfo->GetPrinterName());
     } else {
         PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
     }
@@ -2068,6 +2069,10 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
     bool jobInQueue)
 {
     auto printerId = printJob->GetPrinterId();
+
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
+    PrintFailureAiNotifier::GetInstance().ClearJobState(jobId);
+#endif
 
     if (jobInQueue) {
         ClosePrintJobFd(printJob);
