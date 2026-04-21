@@ -103,6 +103,23 @@ void TestAddPrintEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     PrintServiceAbility::GetInstance()->AddPrintEvent(printerId, type, code);
 }
 
+void TestHandleNewPrinterDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo info;
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->HandleNewPrinterDiscovery(printerId, info);
+}
+
+void TestSyncAddedPrinterUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo info;
+    info.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    info.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->SyncAddedPrinterUri(std::make_shared<PrinterInfo>(info));
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("multithreading is running at function TestPrintFunction.");
@@ -117,6 +134,8 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
         &TestAddVendorPrinterToDiscovery,
         &TestAnalyzePrintEvents,
         &TestAddPrintEvent,
+        &TestHandleNewPrinterDiscovery,
+        &TestSyncAddedPrinterUri,
     };
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);
