@@ -30,6 +30,7 @@ namespace Print {
 constexpr uint8_t MAX_STRING_LENGTH = 20;
 constexpr int MAX_SET_NUMBER = 128;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr uint32_t HTTP_MAX_URI = 128;
 void TestTryConnectPrinterByIp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -123,6 +124,22 @@ void TestisEprint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
     PrintServiceAbility::GetInstance()->GetPrintJobOrderId();
 }
 
+void TestAddPrinterByPrinterDriver(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_DRIVER_PRINTER_NAME_LENGTH + 1);
+    std::string uri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string options = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string bundleName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddPrinterByPrinterDriver(printerName, uri, ppdName, options, bundleName);
+
+    printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddPrinterByPrinterDriver(printerName, uri, ppdName, options, bundleName);
+
+    uri = dataProvider->ConsumeRandomLengthString(HTTP_MAX_URI + 1);
+    PrintServiceAbility::GetInstance()->AddPrinterByPrinterDriver(printerName, uri, ppdName, options, bundleName);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("multithreading is running at function TestAllFunction.");
@@ -138,7 +155,8 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestAddIpPrinterToSystemData,
         &TestAddIpPrinterToCupsWithPpd,
         &TestNotifyAdapterJobChanged,
-        &TestisEprint
+        &TestisEprint,
+        &TestAddPrinterByPrinterDriver
     };
     TestHandler handler = dataProvider->PickValueInArray(tasks);
     handler(data, size, dataProvider);

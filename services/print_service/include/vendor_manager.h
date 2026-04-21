@@ -48,6 +48,12 @@ public:
                                            const std::string &ppdName, const std::string &ppdData) = 0;
     virtual int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) = 0;
     virtual void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode) = 0;
+    virtual std::string GetCallerBundleName() = 0;
+    virtual bool IsPpdNameValid(const std::string &ppdName) = 0;
+    virtual int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
+        const std::string &ppdName) = 0;
+    virtual bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
+        std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData) = 0;
 };
 
 class PrintServiceAbility;

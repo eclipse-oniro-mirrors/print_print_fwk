@@ -256,7 +256,7 @@ private:
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
-    std::string GetCallerBundleName();
+    std::string GetCallerBundleName() override;
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options, const std::string &bundleName);
@@ -292,9 +292,9 @@ private:
     bool CheckStartExtensionPermission();
     void RefreshIpPrinter();
     void RefreshThirdDriverPrinter();
-    bool IsPpdNameValid(const std::string &ppdName);
+    bool IsPpdNameValid(const std::string &ppdName) override;
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
-        const std::string &ppdName);
+        const std::string &ppdName) override;
     int32_t InitServiceHelper();
 
 public:
@@ -334,7 +334,7 @@ private:
     bool DoAddPrinterToCups(
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
-        std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
+        std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData) override;
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
     void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
