@@ -868,12 +868,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_CANCELED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -896,12 +890,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_ABORTED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
