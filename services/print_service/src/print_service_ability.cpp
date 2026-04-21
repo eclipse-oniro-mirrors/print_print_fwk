@@ -4813,6 +4813,10 @@ int32_t PrintServiceAbility::AddPrinterByPrinterDriver(const std::string &printe
         PRINT_HILOGW("printerName exceeds max length");
         return E_PRINT_INVALID_PARAMETER;
     }
+    if (uri.length() > HTTP_MAX_URI) {
+        PRINT_HILOGW("printerUri exceeds max length");
+        return E_PRINT_INVALID_PARAMETER;
+    }
 
     std::string customDriverPrefix = VENDOR_MANAGER_PREFIX + VENDOR_CUSTOM_DRIVER + RAW_GLOBAL_ID_DELIMITER;
     std::string standardizedName = PrintUtil::StandardizePrinterName(printerName);

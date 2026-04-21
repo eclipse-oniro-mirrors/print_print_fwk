@@ -4817,6 +4817,167 @@ HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_NameTooLong_InvalidP
 }
 
 /**
+ * @tc.name: AddPrinterByPrinterDriver_InvalidNameChar_InvalidParameter
+ * @tc.desc: Printer name with invalid characters returns E_PRINT_INVALID_PARAMETER
+ * @tc.type: FUNC
+ * @tc.require: Input validation: name must not contain /, \\, ?, etc.
+ */
+HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_InvalidNameChar_InvalidParameter, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    int32_t ret = service->AddPrinterByPrinterDriver(
+        "test/printer", "ipp://192.168.1.1:631/ipp/print", "", "", "com.example");
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: AddPrinterByPrinterDriver_UriTooLong_InvalidParameter
+ * @tc.desc: URI exceeding HTTP_MAX_URI returns E_PRINT_INVALID_PARAMETER
+ * @tc.type: FUNC
+ * @tc.require: Input validation: uri length must not exceed HTTP_MAX_URI
+ */
+HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_UriTooLong_InvalidParameter, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string longUri(1025, 'a');
+    int32_t ret = service->AddPrinterByPrinterDriver(
+        "TestPrinter", longUri, "", "", "com.example");
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: AddPrinterByPrinterDriver_EmptyPpdName_Success
+ * @tc.desc: Empty ppdName triggers default capability setup path
+ * @tc.type: FUNC
+ * @tc.require: Empty ppdName handling with capability initialization
+ */
+HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_EmptyPpdName_Success, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(true));
+    EXPECT_CALL(*service, QueryPrinterCapabilityFromPPD(_, _, _)).WillOnce(Return(E_PRINT_NONE));
+    int32_t ret = service->AddPrinterByPrinterDriver(
+        "TestPrinter", "ipp://192.168.1.1:631/ipp/print", "", "", "com.example");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: AddPrinterByPrinterDriver_DefaultPpdName_Success
+ * @tc.desc: ppdName equals DEFAULT_PPD_NAME triggers default capability setup
+ * @tc.type: FUNC
+ * @tc.require: DEFAULT_PPD_NAME handling with capability initialization
+ */
+HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_DefaultPpdName_Success, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(true));
+    EXPECT_CALL(*service, QueryPrinterCapabilityFromPPD(_, _, _)).WillOnce(Return(E_PRINT_NONE));
+    int32_t ret = service->AddPrinterByPrinterDriver(
+        "TestPrinter", "ipp://192.168.1.1:631/ipp/print", DEFAULT_PPD_NAME, "", "com.example");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: AddPrinterByPrinterDriver_InvalidPpdName_InvalidParameter
+ * @tc.desc: Invalid ppdName (IsPpdNameValid returns false) returns E_PRINT_INVALID_PARAMETER
+ * @tc.type: FUNC
+ * @tc.require: PPD name validation before adding printer
+ */
+HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_InvalidPpdName_InvalidParameter, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, IsPpdNameValid(_)).WillOnce(Return(false));
+    int32_t ret = service->AddPrinterByPrinterDriver(
+        "TestPrinter", "ipp://192.168.1.1:631/ipp/print", "invalid.ppd", "", "com.example");
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: AddPrinterByPrinterDriver_CupsFailed_GenericFailure
+ * @tc.desc: DoAddPrinterToCupsEnable returns false returns E_PRINT_GENERIC_FAILURE
+ * @tc.type: FUNC
+ * @tc.require: CUPS add printer failure handling
+ */
+HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_CupsFailed_GenericFailure, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, IsPpdNameValid(_)).WillOnce(Return(true));
+    EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(false));
+    int32_t ret = service->AddPrinterByPrinterDriver(
+        "TestPrinter", "ipp://192.168.1.1:631/ipp/print", "valid.ppd", "", "com.example");
+    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+}
+
+/**
+ * @tc.name: SetPrinterCapabilityAndRegister_QueryPPDFailed_Error
+ * @tc.desc: QueryPrinterCapabilityFromPPD returns error propagates error
+ * @tc.type: FUNC
+ * @tc.require: PPD capability query failure handling
+ */
+HWTEST_F(PrintServiceAbilityTest, SetPrinterCapabilityAndRegister_QueryPPDFailed_Error, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, QueryPrinterCapabilityFromPPD(_, _, _)).WillOnce(Return(E_PRINT_GENERIC_FAILURE));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("test_printer_id");
+    printerInfo->SetPrinterName("TestPrinter");
+    int32_t ret = service->SetPrinterCapabilityAndRegister(
+        "TestPrinter", "valid.ppd", "test_printer_id", printerInfo);
+    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+}
+
+/**
+ * @tc.name: SetPrinterCapabilityAndRegister_ParseJsonFailed_Error
+ * @tc.desc: Parse JSON option fails returns E_PRINT_GENERIC_FAILURE
+ * @tc.type: FUNC
+ * @tc.require: JSON parsing failure handling when extracting make from capability
+ */
+HWTEST_F(PrintServiceAbilityTest, SetPrinterCapabilityAndRegister_ParseJsonFailed_Error, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("invalid json");
+    EXPECT_CALL(*service, QueryPrinterCapabilityFromPPD(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerCaps), Return(E_PRINT_NONE)));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("test_printer_id");
+    printerInfo->SetPrinterName("TestPrinter");
+    printerInfo->SetPrinterMake("");
+    int32_t ret = service->SetPrinterCapabilityAndRegister(
+        "TestPrinter", "valid.ppd", "test_printer_id", printerInfo);
+    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+}
+
+/**
+ * @tc.name: SetPrinterCapabilityAndRegister_FindMakeFailed_Error
+ * @tc.desc: FindJsonStringMember fails to find make returns E_PRINT_GENERIC_FAILURE
+ * @tc.type: FUNC
+ * @tc.require: JSON member extraction failure handling
+ */
+HWTEST_F(PrintServiceAbilityTest, SetPrinterCapabilityAndRegister_FindMakeFailed_Error, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("{\"no_make\":\"value\"}");
+    EXPECT_CALL(*service, QueryPrinterCapabilityFromPPD(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerCaps), Return(E_PRINT_NONE)));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("test_printer_id");
+    printerInfo->SetPrinterName("TestPrinter");
+    printerInfo->SetPrinterMake("");
+    int32_t ret = service->SetPrinterCapabilityAndRegister(
+        "TestPrinter", "valid.ppd", "test_printer_id", printerInfo);
+    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+}
+
+/**
  * @tc.name: CheckNumberUpArgs_ValidValue_ReturnTrue
  * @tc.desc: Test CheckNumberUpArgs with valid numberUp values
  * @tc.type: FUNC
