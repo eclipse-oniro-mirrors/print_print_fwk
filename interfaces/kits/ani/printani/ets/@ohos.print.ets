@@ -283,6 +283,8 @@ export default namespace print {
         printerMake?: string;
         preferences?: PrinterPreferences;
         alias?: string;
+        selectedDriver?: PpdInfo;
+        selectedProtocol?: string;
         options?: string;
     }
 
@@ -296,6 +298,8 @@ export default namespace print {
         printerMake?: string = '';
         preferences?: PrinterPreferences = undefined;
         alias?: string = undefined;
+        selectedDriver?: PpdInfo = undefined;
+        selectedProtocol?: string = undefined;
         options?: string = undefined;
     }
 
@@ -447,6 +451,9 @@ export default namespace print {
         defaultPageSizeId?: string;
         defaultOrientation?: PrintOrientationMode;
         borderless?: boolean;
+        defaultColorMode?: PrintColorMode;
+        defaultCollate?: boolean;
+        defaultReverse?: boolean;
         options?: string;
     }
 
@@ -457,6 +464,9 @@ export default namespace print {
         defaultPageSizeId?: string;
         defaultOrientation?: PrintOrientationMode;
         borderless?: boolean;
+        defaultColorMode?: PrintColorMode;
+        defaultCollate?: boolean;
+        defaultReverse?: boolean;
         options?: string;
     }
 
@@ -515,6 +525,8 @@ export default namespace print {
     type printerChangeCallback = (event: PrinterEvent, printerInformation: PrinterInformation) => void;
 
     type WatermarkCallback = (jobId: string, fd: int) => void;
+
+    type PrinterInfoQueryCallback = (printerInfo: PrinterInformation, ppdInfo: PpdInfo[]) => void;
 
     native function printNative(files: Array<string>, callback: AsyncCallbackWrapper<PrintTask>): void;
 
@@ -607,6 +619,12 @@ export default namespace print {
     native function UnregisterWatermarkCallbackNative(callback: WatermarkCallbackWrapper): void;
 
     native function NotifyWatermarkCompleteNative(jobId: string, result: WatermarkHandleResult): void;
+
+    native function onPrinterInfoQueryNative(callback: PrinterInfoQueryCallbackWrapper) : int;
+
+    native function offPrinterInfoQueryNative(callback: PrinterInfoQueryCallbackWrapper) : int;
+
+    native function updatePrinterInformationNative(printerInformation: PrinterInformation, callback: AsyncCallbackWrapper<void>): void;
 
     export interface PrintTask {
         onBlock(callback: Callback<void>): void;
@@ -1010,6 +1028,18 @@ export default namespace print {
 
         invoke(jobId: string, fd: int): void {
             this.myFun_(jobId, fd);
+        }
+    }
+
+    export class PrinterInfoQueryCallbackWrapper {
+        private myFun_: (printerInfo: PrinterInformation, ppdInfo: PpdInfo[]) => void;
+
+        constructor(myFun: (printerInfo: PrinterInformation, ppdInfo: PpdInfo[]) => void) {
+            this.myFun_ = myFun;
+        }
+
+        invoke(printerInfo: PrinterInformation, ppdInfo: PpdInfo[]): void {
+            this.myFun_(printerInfo, ppdInfo);
         }
     }
 
@@ -1502,4 +1532,38 @@ export default namespace print {
         NotifyWatermarkCompleteNative(jobId, result);
     });
   }
+
+  export function onPrinterInfoQuery(callback: PrinterInfoQueryCallback): void {
+    const typedCallback = callback as (printerInfo: PrinterInformation, ppdInfo: PpdInfo[]) => void;
+    const myCall = new PrinterInfoQueryCallbackWrapper(typedCallback);
+    taskpool.execute((): void => {
+        onPrinterInfoQueryNative(myCall);
+    });
+  }
+
+  export function offPrinterInfoQuery(callback?: PrinterInfoQueryCallback): void {
+    if (callback !== undefined) {
+        const typedCallback = callback as (printerInfo: PrinterInformation, ppdInfo: PpdInfo[]) => void;
+        const myCall = new PrinterInfoQueryCallbackWrapper(typedCallback);
+        taskpool.execute((): void => {
+            offPrinterInfoQueryNative(myCall);
+        });
+    }
+  }
+
+  export function updatePrinterInformation(printerInformation: PrinterInformation): Promise<void> {
+        return new Promise<void>((resolve: (data:undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<void>((err : BusinessError | null) => {
+                if (err == null || err.code == 0) {
+                    resolve(undefined);
+                } else {
+                    reject(err);
+                }
+            });
+            taskpool.execute((): void => {
+                updatePrinterInformationNative(printerInformation, myCall);
+            });
+        });
+    }
+
 }
