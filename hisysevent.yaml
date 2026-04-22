@@ -116,3 +116,11 @@ START_PRINT:
 USAGETIME_STATISTIC:
   __BASE: {type: STATISTIC, level: MINOR, desc: The event is usagetime statistic }
   PRINT_INFO: {type: STRING, desc: print infomation }
+
+CONNECT_EXCEPTION:
+  __BASE: {type: FAULT, level: CRITICAL, desc: connect_exception, preserve: true}
+  PROCESS_NAME: {type: STRING, desc: process_name}
+  BEHAVIOR_CODE: {type: INT32, desc: behavior_code}
+  PACKAGE_NAME: {type: STRING, desc: package_name}
+  PVERSIONID: {type: STRING, desc: version}
+  MSG: {type: STRING, desc: msg}

@@ -32,7 +32,10 @@ void TestQueryAllActivePrintJob(const uint8_t *data, size_t size, FuzzedDataProv
 {
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<uint32_t> files = {0};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     printJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -47,7 +50,10 @@ void TestQueryAllPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *
 {
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<uint32_t> files = {0};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     printJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -62,7 +68,10 @@ void TestQueryPrintJobById(const uint8_t *data, size_t size, FuzzedDataProvider 
 {
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<uint32_t> files = {0};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     printJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -76,7 +85,10 @@ void TestQueryQueuedPrintJobById(const uint8_t *data, size_t size, FuzzedDataPro
 {
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<uint32_t> files = {0};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     printJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -128,7 +140,10 @@ void TestCheckPrintJobConflicts(const uint8_t *data, size_t size, FuzzedDataProv
     std::string changedType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<uint32_t> files = {0};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     printJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));

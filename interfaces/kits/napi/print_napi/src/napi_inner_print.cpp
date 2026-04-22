@@ -1400,7 +1400,7 @@ napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
         PRINT_ASSERT_BASE(env, valueType == napi_string, "uri is not a string", napi_string_expected);
         context->fileUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
 
-        context->type = "auto";
+        context->type = "";
         if (argc > NapiPrintUtils::ARGC_TWO) {
             PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
             if (valueType == napi_string) {
@@ -1909,10 +1909,78 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
     return retValue;
 }
 
+napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter ---->");
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!");
+
+    if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+        PRINT_HILOGE("Non-system applications use system APIS!");
+        NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+        return nullptr;
+    }
+
+    napi_valuetype valuetype = napi_undefined;
+    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+    PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
+
+    napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
+    if (callback == nullptr) {
+        NapiPrintUtils::DeleteReference(env, callbackRef);
+        PRINT_HILOGE("create print callback object fail");
+        return nullptr;
+    }
+    int32_t ret = PrintManagerClient::GetInstance()->On("", PRINT_QUERY_INFO_EVENT_TYPE, callback);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to register event");
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+    return nullptr;
+}
+
+napi_value NapiInnerPrint::OffPrinterInfoQuery(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter ---->");
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_ZERO || argc == NapiPrintUtils::ARGC_ONE, "need 0-1 parameter!");
+
+    if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+        PRINT_HILOGE("Non-system applications use system APIS!");
+        NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+        return nullptr;
+    }
+
+    if (argc == NapiPrintUtils::ARGC_ONE) {
+        napi_valuetype valuetype = napi_undefined;
+        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
+    }
+
+    int32_t ret = PrintManagerClient::GetInstance()->Off("", PRINT_QUERY_INFO_EVENT_TYPE);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to unregister event");
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+    return nullptr;
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
-        type == PRINTER_CHANGE_EVENT_TYPE || type == PRINT_QUERY_INFO_EVENT_TYPE) {
+        type == PRINTER_CHANGE_EVENT_TYPE || type == PRINT_QUERY_INFO_EVENT_TYPE ||
+        type == SHARED_HOST_DISCOVER_EVENT_TYPE) {
         return true;
     }
     return false;
@@ -1957,5 +2025,39 @@ bool NapiInnerPrint::CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> c
         return false;
     }
     return true;
+}
+
+napi_value NapiInnerPrint::StartSharedHostDiscovery(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter StartSharedHostDiscovery---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->StartSharedHostDiscovery();
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to start shared host discovery");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
 }
 }  // namespace OHOS::Print

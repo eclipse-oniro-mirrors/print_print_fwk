@@ -59,9 +59,10 @@ void TestAddRawPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 
 void TestRemovePrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::vector<std::string> printerIds;
-    printerIds.push_back(printerId);
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        printerIds.push_back(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    }
     PrintServiceAbility::GetInstance()->RemovePrinters(printerIds);
 }
 
@@ -118,7 +119,10 @@ void TestRequestPreview(const uint8_t *data, size_t size, FuzzedDataProvider *da
 {
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<uint32_t> files = {1};
+    std::vector<uint32_t> files;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        files.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     printJob.SetFdList(files);
     OHOS::Print::PrintPageSize pageSize;
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));

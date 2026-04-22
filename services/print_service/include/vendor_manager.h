@@ -48,6 +48,12 @@ public:
                                            const std::string &ppdName, const std::string &ppdData) = 0;
     virtual int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) = 0;
     virtual void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode) = 0;
+    virtual std::string GetCallerBundleName() = 0;
+    virtual bool IsPpdNameValid(const std::string &ppdName) = 0;
+    virtual int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
+        const std::string &ppdName) = 0;
+    virtual bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
+        std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData) = 0;
 };
 
 class PrintServiceAbility;
@@ -89,11 +95,14 @@ public:
     std::string GetConnectingPrinter() override;
     std::string GetConnectingPpdName() override;
     std::string GetConnectingProtocol() override;
+    std::string GetConnectingQueue() override;
     bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
     void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnQueryCallBackEvent(const PrinterInfo &info) override;
     bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName, const std::string &printQueue) override;
+    void SetConnectingPrinterName(const std::string &printerName);
+    std::string GetConnectingPrinterName();
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) override;
@@ -118,6 +127,9 @@ public:
 private:
     bool IsPrivatePpdDriver(const std::string &vendorName);
     bool IsWlanGroupDriver(const std::string &bothPrinterId);
+    // ForEachDriver: Traverse all vendor drivers and execute callback outside of lock to avoid deadlock
+    using DriverCallback = std::function<void(std::shared_ptr<VendorDriverBase>)>;
+    void ForEachDriver(const DriverCallback& callback);
 
 private:
     std::atomic<bool> defaultLoaded{false};
@@ -132,6 +144,8 @@ private:
     std::string connectingPrinter;
     std::string connectingProtocol;
     std::string connectingPpdName;
+    std::string connectingQueue;
+    std::string connectingPrinterName;
     std::mutex simpleObjectMutex;
 #ifdef ENTERPRISE_ENABLE
     bool isEnterprise_ = false;

@@ -18,6 +18,7 @@
 #include "print_job_helper.h"
 #include "printer_info_helper.h"
 #include "print_attributes_helper.h"
+#include "print_shared_host_helper.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -366,6 +367,21 @@ bool PrintCallback::OnCallbackAdapterGetFile(uint32_t state)
             PRINT_HILOGI("OnCallback start run PrinterInfoWorkCb");
             napi_value callbackValues[1] = { 0 };
             callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            NapiCallFunction(cbParam, NapiPrintUtils::ARGC_ONE, callbackValues);
+        });
+}
+
+bool PrintCallback::OnCallback(const std::vector<PrintSharedHost> &sharedHosts)
+{
+    PRINT_HILOGI("SharedHostDiscover Notification in, host count: %{public}zu", sharedHosts.size());
+    return OnBaseCallback(
+        [sharedHosts](CallbackParam* param) {
+            param->sharedHosts = sharedHosts;
+        },
+        [](CallbackParam *cbParam) {
+            PRINT_HILOGI("OnCallback start run SharedHostDiscoverWorkCb");
+            napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
+            callbackValues[0] = PrintSharedHostHelper::MakeJsObjectArray(cbParam->env, cbParam->sharedHosts);
             NapiCallFunction(cbParam, NapiPrintUtils::ARGC_ONE, callbackValues);
         });
 }

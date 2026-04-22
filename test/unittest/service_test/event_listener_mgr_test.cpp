@@ -757,5 +757,95 @@ HWTEST_F(EventListenerMgrTest, UnRegisterPrinterListener_ShouldKeepOtherEventTyp
     EXPECT_FALSE(eventListenerMgr.IsPrinterListenerEmpty(PRINTER_CHANGE));
 }
 
+HWTEST_F(EventListenerMgrTest, Execute_ShouldCallOnCallback_WhenSharedHostDiscoverEvent, TestSize.Level1)
+{
+    EventListenerMgr eventListenerMgr;
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+
+    EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(CallbackEventType::PRINTER_SHARED_HOST_DISCOVER, listener));
+
+    std::vector<PrintSharedHost> hosts;
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = CallbackEventType::PRINTER_SHARED_HOST_DISCOVER;
+    cbInfo.sharedHosts = hosts;
+    cbInfo.userId = 0;
+    EXPECT_CALL(*listener, OnCallback(testing::An<const std::vector<PrintSharedHost> &>()))
+        .WillOnce(Return(true));
+    EXPECT_TRUE(eventListenerMgr.Execute(cbInfo));
+}
+
+HWTEST_F(EventListenerMgrTest, Execute_ShouldReturnFalse_WhenPrinterJobStateChange_WithNullJobInfo, TestSize.Level1)
+{
+    EventListenerMgr eventListenerMgr;
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+
+    EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_JOB_STATE_CHANGE, listener));
+
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = PRINTER_JOB_STATE_CHANGE;
+    cbInfo.printJobInfo = nullptr;
+
+    EXPECT_FALSE(eventListenerMgr.Execute(cbInfo));
+}
+
+HWTEST_F(EventListenerMgrTest, Execute_ShouldReturnFalse_WhenPrinterDiscover_WithNullPrinterInfo, TestSize.Level1)
+{
+    EventListenerMgr eventListenerMgr;
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+
+    EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_DISCOVER, listener));
+
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = PRINTER_DISCOVER;
+    cbInfo.printerInfo = nullptr;
+    cbInfo.printerEvent = PRINTER_EVENT_STATE_CHANGED;
+
+    EXPECT_FALSE(eventListenerMgr.Execute(cbInfo));
+}
+
+HWTEST_F(EventListenerMgrTest, Execute_ShouldReturnFalse_WhenPrinterDiscover_WithInvalidEvent, TestSize.Level1)
+{
+    EventListenerMgr eventListenerMgr;
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+
+    EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_DISCOVER, listener));
+
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = PRINTER_DISCOVER;
+    cbInfo.printerInfo = nullptr;
+    cbInfo.printerEvent = PRINTER_EVENT_STATE_CHANGED;
+
+    EXPECT_FALSE(eventListenerMgr.Execute(cbInfo));
+}
+
+HWTEST_F(EventListenerMgrTest, Execute_ShouldReturnFalse_ForPrinterStateChange, TestSize.Level1)
+{
+    EventListenerMgr eventListenerMgr;
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+    EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_STATE_CHANGE, listener));
+
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = PRINTER_STATE_CHANGE;
+    cbInfo.printerInfo = nullptr;
+
+    EXPECT_FALSE(eventListenerMgr.Execute(cbInfo));
+}
+
+HWTEST_F(EventListenerMgrTest, Execute_ShouldReturnFalse_WhenPrinterInfoQuery_WithNullPrinterInfo, TestSize.Level1)
+{
+    EventListenerMgr eventListenerMgr;
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+    std::vector<PpdInfo> ppdInfos;
+
+    EXPECT_TRUE(eventListenerMgr.RegisterPrinterListener(PRINTER_INFO_QUERY, listener));
+
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = PRINTER_INFO_QUERY;
+    cbInfo.printerInfo = nullptr;
+    cbInfo.ppdInfos = ppdInfos;
+
+    EXPECT_FALSE(eventListenerMgr.Execute(cbInfo));
+}
+
 }  // namespace Print
 }  // namespace OHOS

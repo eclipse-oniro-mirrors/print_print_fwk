@@ -30,6 +30,7 @@ PrintCallbackStub::PrintCallbackStub()
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobChangedEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterGetFileEvent;
+    cmdMap_[PRINT_CALLBACK_SHARED_HOST_DISCOVER] = &PrintCallbackStub::HandleSharedHostDiscoverEvent;
 }
 
 int32_t PrintCallbackStub::OnRemoteRequest(
@@ -172,6 +173,32 @@ bool PrintCallbackStub::HandlePrintAdapterGetFileEvent(MessageParcel &data, Mess
     bool result = OnCallbackAdapterGetFile(state);
     reply.WriteBool(result);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent end");
+    return true;
+}
+
+bool PrintCallbackStub::HandleSharedHostDiscoverEvent(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintCallbackStub HandleSharedHostDiscoverEvent start");
+    std::vector<PrintSharedHost> sharedHosts;
+    uint32_t sharedHostsSize = data.ReadUint32();
+    if (sharedHostsSize == 0) {
+        PRINT_HILOGW("Cannot find sharedHosts");
+    }
+    if (sharedHostsSize > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("too much sharedHosts");
+        return false;
+    }
+    for (uint32_t i = 0; i < sharedHostsSize; ++i) {
+        auto host = PrintSharedHost::Unmarshalling(data);
+        if (host == nullptr) {
+            PRINT_HILOGW("Unmarshalling sharedHost failed");
+            return false;
+        }
+        sharedHosts.push_back(*host);
+    }
+    bool result = OnCallback(sharedHosts);
+    reply.WriteBool(result);
+    PRINT_HILOGI("PrintCallbackStub HandleSharedHostDiscoverEvent end");
     return true;
 }
 } // namespace OHOS::Print

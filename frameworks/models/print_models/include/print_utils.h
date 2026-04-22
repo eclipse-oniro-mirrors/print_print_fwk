@@ -70,6 +70,8 @@ struct PrintJobParams {
     std::string cupsOptions;
     uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
     uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    uint32_t mirror = MIRROR_DEFAULT_VALUE;
+    uint32_t pageBorder = PAGE_BORDER_DEFAULT_VALUE;
 };
 
 class PrintUtils {
@@ -112,6 +114,9 @@ public:
     static int CreateTempFileWithData(void* data, size_t length, std::string &tmpPath);
     static std::string GenerateTempFilePath(const std::string &filesDir);
     static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+
+    static bool SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+    static void SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
 
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)

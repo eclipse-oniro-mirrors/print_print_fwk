@@ -14,6 +14,7 @@
  */
 
 #include <thread>
+#include <memory>
 #include <gtest/gtest.h>
 #define private public
 #include "print_cups_client.h"
@@ -40,6 +41,12 @@ static constexpr const char *JOB_OPTIONS =
     "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
     "\"printerName\":\"printer1\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\",\"borderless\":true,"
     "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"],\"isAutoRotate\":true}";
+
+static constexpr const char* TEST_JOB_OPTION = R"({
+    "printerName": "test_printer",
+    "printerUri": "ipp://localhost/printers/test",
+    "documentFormat": "application/pdf"
+})";
 
 const uint32_t DIR_MODE = 0771;
 const int32_t STATE_UPDATE_STEP = 5;
@@ -568,7 +575,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOption
     jobParams->isCollate = false;
     jobParams->isReverse = false;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 9);
+    EXPECT_EQ(ret, 11);
     delete jobParams;
     delete options;
 }
@@ -601,7 +608,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetTrueValue_ReturnCorrectNumOption
     jobParams->isCollate = true;
     jobParams->isReverse = true;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 8);
+    EXPECT_EQ(ret, 10);
     delete jobParams;
     delete options;
 }
@@ -861,12 +868,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_CANCELED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -889,12 +890,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_ABORTED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -2703,231 +2698,6 @@ HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_Success_Test, TestSize
 #endif // WATERMARK_ENFORCING_ENABLE
 
 /**
- * @tc.name: PrintCupsClientTest_FillNumberUpOptions_001
- * @tc.desc: FillNumberUpOptions with null jobParams
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NullParams_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillNumberUpOptions(nullptr, numOptions, &options);
-    EXPECT_EQ(ret, 0);
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillNumberUpOptions_002
- * @tc.desc: FillNumberUpOptions with valid numberUp value
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_ValidValue_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->numberUp = 2;
-    jobParams->numberUpLayout = 0;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillNumberUpOptions_003
- * @tc.desc: FillNumberUpOptions with numberUp disabled (value <= 1)
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_Disabled_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->numberUp = 1;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 0);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillNumberUpOptions_004
- * @tc.desc: FillNumberUpOptions with numberUp = 4
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_FourUp_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->numberUp = 4;
-    jobParams->numberUpLayout = 1;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillNumberUpOptions_005
- * @tc.desc: FillNumberUpOptions with numberUp = 6
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_SixUp_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->numberUp = 6;
-    jobParams->numberUpLayout = 2;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillNumberUpOptions_006
- * @tc.desc: FillNumberUpOptions with numberUp = 9
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NineUp_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->numberUp = 9;
-    jobParams->numberUpLayout = 3;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_GetNumberUpLayoutString_001
- * @tc.desc: GetNumberUpLayoutString with various layout codes
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, GetNumberUpLayoutString_VariousCodes_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    
-    // Test different layout codes
-    std::string layout0 = printCupsClient.GetNumberUpLayoutString(0);
-    EXPECT_FALSE(layout0.empty());
-    
-    std::string layout1 = printCupsClient.GetNumberUpLayoutString(1);
-    EXPECT_FALSE(layout1.empty());
-    
-    std::string layout2 = printCupsClient.GetNumberUpLayoutString(2);
-    EXPECT_FALSE(layout2.empty());
-    
-    std::string layout3 = printCupsClient.GetNumberUpLayoutString(3);
-    EXPECT_FALSE(layout3.empty());
-    
-    // Invalid layout code
-    std::string layoutInvalid = printCupsClient.GetNumberUpLayoutString(999);
-    EXPECT_FALSE(layoutInvalid.empty());
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillMediaOptions_001
- * @tc.desc: FillMediaOptions with Letter media size
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillMediaOptions_LetterMediaSize_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->mediaSize = "Letter";
-    jobParams->mediaType = "Glossy";
-    jobParams->numberUp = 2;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillMediaOptions_002
- * @tc.desc: FillMediaOptions with valid media size
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillMediaOptions_ValidMediaSize_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->mediaSize = "A4";
-    jobParams->mediaType = "Plain";
-    jobParams->numberUp = 0;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 3);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillMediaOptions_003
- * @tc.desc: FillMediaOptions with empty media size
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillMediaOptions_EmptyMediaSize_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->mediaSize = "";
-    jobParams->mediaType = "";
-    jobParams->numberUp = 0;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 3);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_FillMediaOptions_004
- * @tc.desc: FillMediaOptions with numberUp enabled
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillMediaOptions_NumberUpEnabled_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = new JobParameters();
-    jobParams->mediaSize = "A4";
-    jobParams->mediaType = "Plain";
-    jobParams->numberUp = 2;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
-    cupsFreeOptions(ret, options);
-    delete jobParams;
-}
-
-/**
  * @tc.name: PrintCupsClientTest_UpdateJobParameterByOption_001
  * @tc.desc: UpdateJobParameterByOption with printQuality as integer
  * @tc.type: FUNC
@@ -3403,6 +3173,75 @@ HWTEST_F(PrintCupsClientTest, QueryInfoByPpdName_InvalidFileName_Test, TestSize.
     EXPECT_FALSE(ret);
 }
 
+// ExtractPpdKeyAndValue parameterized test structure
+struct ExtractPpdKeyAndValueTestCase {
+    std::string testName;
+    std::string inputLine;
+    bool expectedSuccess;
+    std::string expectedKey;
+    std::string expectedValue;
+};
+
+class ExtractPpdKeyAndValueCommon {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
+};
+
+class ExtractPpdKeyAndValueTest : public ExtractPpdKeyAndValueCommon,
+                                   public testing::TestWithParam<ExtractPpdKeyAndValueTestCase> {
+public:
+    using ExtractPpdKeyAndValueCommon::SetUpTestCase;
+    using ExtractPpdKeyAndValueCommon::TearDownTestCase;
+};
+
+INSTANTIATE_TEST_SUITE_P(ExtractPpdKeyAndValueTest, ExtractPpdKeyAndValueTest,
+    testing::Values(
+        ExtractPpdKeyAndValueTestCase{
+            "NormalLine", "*NickName: \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyLeadingWhitespace", "*  NickName: \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyTrailingWhitespace", "*NickName : \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyMiddleWhitespace", "*Nick Name: \"HP LaserJet 1020\"", true, "Nick Name", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueLeadingWhitespace", "*NickName:   \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueTrailingWhitespace", "*NickName: \"HP LaserJet 1020\"   ", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueNewline", "*NickName: \"HP LaserJet 1020\"\r\n", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "NoQuotes", "*NickName: HP LaserJet 1020", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "EmptyKey", "*: HP LaserJet 1020", true, "", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "EmptyValue", "*NickName: ", true, "NickName", ""},
+        // Error cases
+        ExtractPpdKeyAndValueTestCase{
+            "NoColon", "*NickName \"HP LaserJet 1020\"", false, "", ""}));
+
+/**
+ * @tc.name: PrintCupsClientTest_ExtractPpdKeyAndValue_001
+ * @tc.desc: ExtractPpdKeyAndValue parameterized test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_P(ExtractPpdKeyAndValueTest, ExtractPpdKeyAndValue_Parameterized_Test, TestSize.Level1)
+{
+    const ExtractPpdKeyAndValueTestCase& testCase = GetParam();
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string key, value;
+    
+    bool ret = printCupsClient.ExtractPpdKeyAndValue(testCase.inputLine, key, value);
+    
+    EXPECT_EQ(ret, testCase.expectedSuccess);
+    if (ret) {
+        EXPECT_EQ(key, testCase.expectedKey);
+        EXPECT_EQ(value, testCase.expectedValue);
+    }
+}
+
 /**
  * @tc.name: PrintCupsClientTest_QueryPpdInfoMap_001
  * @tc.desc: QueryPpdInfoMap with invalid file path
@@ -3667,6 +3506,390 @@ HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_InvalidPpdName_Test,
     PrinterCapability printerCaps;
     int32_t ret = printCupsClient.QueryPrinterCapabilityFromPPD("", printerCaps, "/invalid/path/nonexistent.ppd");
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_001
+ * @tc.desc: BuildJobParameters with NumberUpArgs
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    jobInfo.SetJobId("test-job-001");
+    jobInfo.SetPrinterId("printer-001");
+    
+    NumberUpArgs args;
+    args.numberUp = 4;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    args.mirror = 1;
+    args.pageBorder = 1;
+    jobInfo.SetNumberUpArgs(args);
+    
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    pageSize.SetName("A4");
+    jobInfo.SetPageSize(pageSize);
+
+    jobInfo.SetOption(TEST_JOB_OPTION);
+
+    std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+    ASSERT_NE(params, nullptr);
+    EXPECT_EQ(params->numberUp, 4);
+    EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
+    EXPECT_EQ(params->mirror, 1);
+    EXPECT_EQ(params->pageBorder, 1);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_002
+ * @tc.desc: BuildJobParameters with default NumberUpArgs values
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpArgsDefault_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    jobInfo.SetJobId("test-job-002");
+    jobInfo.SetPrinterId("printer-002");
+    
+    // Use default NumberUpArgs values (not explicitly set)
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    pageSize.SetName("A4");
+    jobInfo.SetPageSize(pageSize);
+
+    jobInfo.SetOption(TEST_JOB_OPTION);
+
+    std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+    ASSERT_NE(params, nullptr);
+    // Default values should be used
+    EXPECT_EQ(params->numberUp, NUMBER_UP_DEFAULT_VALUE);
+    EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_DEFAULT_VALUE);
+    EXPECT_EQ(params->mirror, MIRROR_DEFAULT_VALUE);
+    EXPECT_EQ(params->pageBorder, PAGE_BORDER_DEFAULT_VALUE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_003
+ * @tc.desc: DumpJobParameters with NumberUpArgs values
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DumpJobParameters_NumberUpArgs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters* jobParams = new JobParameters();
+    jobParams->numberUp = 4;
+    jobParams->numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    jobParams->mirror = 1;
+    jobParams->pageBorder = 1;
+    
+    // This should not crash and should log the values
+    printCupsClient.DumpJobParameters(jobParams);
+    
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_004
+ * @tc.desc: BuildJobParameters with all valid numberUp values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpAllValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test all valid numberUp values
+    std::vector<uint32_t> validNumberUps = {1, 2, 4, 6, 9, 16};
+    
+    for (auto numberUp : validNumberUps) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-" + std::to_string(numberUp));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = numberUp;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = 0;
+        args.pageBorder = 0;
+        jobInfo.SetNumberUpArgs(args);
+
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+
+        jobInfo.SetOption(TEST_JOB_OPTION);
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->numberUp, numberUp);
+        EXPECT_EQ(params->numberUpLayout, NUMBER_UP_LAYOUT_LRTB);
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_005
+ * @tc.desc: BuildJobParameters with all numberUpLayout values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_NumberUpLayoutAllValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test all numberUpLayout values
+    std::vector<uint32_t> layouts = {
+        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_RLTB,
+        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
+        NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
+        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
+    };
+    
+    for (auto layout : layouts) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-layout-" + std::to_string(layout));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = layout;
+        args.mirror = 0;
+        args.pageBorder = 0;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+
+        jobInfo.SetOption(TEST_JOB_OPTION);
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->numberUpLayout, layout);
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_006
+ * @tc.desc: BuildJobParameters with mirror values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_MirrorValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test mirror values
+    std::vector<uint32_t> mirrorValues = {PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED};
+    
+    for (auto mirror : mirrorValues) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-mirror-" + std::to_string(mirror));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = mirror;
+        args.pageBorder = 0;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+
+        jobInfo.SetOption(TEST_JOB_OPTION);
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->mirror, mirror);
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_007
+ * @tc.desc: BuildJobParameters with pageBorder values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_PageBorderValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: test pageBorder values
+    std::vector<uint32_t> borderValues = {
+        PRINT_PAGE_BORDER_NONE,
+        PRINT_PAGE_BORDER_SINGLE,
+        PRINT_PAGE_BORDER_DOUBLE
+    };
+    
+    for (auto border : borderValues) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-border-" + std::to_string(border));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = 0;
+        args.pageBorder = border;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+
+        jobInfo.SetOption(TEST_JOB_OPTION);
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+        ASSERT_NE(params, nullptr);
+        EXPECT_EQ(params->pageBorder, border);
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_NumberUpArgs_008
+ * @tc.desc: BuildJobParameters with combined NumberUpArgs values (data table)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Data table: combined test cases
+    struct TestCase {
+        uint32_t numberUp;
+        uint32_t numberUpLayout;
+        uint32_t mirror;
+        uint32_t pageBorder;
+    };
+    
+    std::vector<TestCase> testCases = {
+        {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
+        {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
+        {4, NUMBER_UP_LAYOUT_TBLR, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_DOUBLE},
+        {6, NUMBER_UP_LAYOUT_TBRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_NONE},
+        {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
+        {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
+    };
+    
+    int index = 0;
+    for (const auto& tc : testCases) {
+        PrintJob jobInfo;
+        jobInfo.SetJobId("test-job-combined-" + std::to_string(index));
+        jobInfo.SetPrinterId("printer-001");
+        
+        NumberUpArgs args;
+        args.numberUp = tc.numberUp;
+        args.numberUpLayout = tc.numberUpLayout;
+        args.mirror = tc.mirror;
+        args.pageBorder = tc.pageBorder;
+        jobInfo.SetNumberUpArgs(args);
+        
+        PrintPageSize pageSize;
+        pageSize.SetId("ISO_A4");
+        pageSize.SetName("A4");
+        jobInfo.SetPageSize(pageSize);
+
+        jobInfo.SetOption(TEST_JOB_OPTION);
+
+        std::unique_ptr<JobParameters> params(printCupsClient.BuildJobParameters(jobInfo, ""));
+        ASSERT_NE(params, nullptr) << "Failed at index " << index;
+        EXPECT_EQ(params->numberUp, tc.numberUp) << "Failed at index " << index;
+        EXPECT_EQ(params->numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
+        EXPECT_EQ(params->mirror, tc.mirror) << "Failed at index " << index;
+        EXPECT_EQ(params->pageBorder, tc.pageBorder) << "Failed at index " << index;
+        index++;
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_001
+ * @tc.desc: GetInputSlotFromAdvancedOps with null json
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_NullJson_Test, TestSize.Level1)
+{
+    Json::Value json;
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_002
+ * @tc.desc: GetInputSlotFromAdvancedOps with InputSlot key
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_InputSlotKey_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = "Tray1";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray1");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_003
+ * @tc.desc: GetInputSlotFromAdvancedOps with media-source key
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_MediaSourceKey_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray2");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_004
+ * @tc.desc: GetInputSlotFromAdvancedOps with both keys (InputSlot priority)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_BothKeysPriority_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = "Tray1";
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray1");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_005
+ * @tc.desc: GetInputSlotFromAdvancedOps with non-string value
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_NonStringValue_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = 123;
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray2");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_006
+ * @tc.desc: GetInputSlotFromAdvancedOps with empty json object
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_EmptyJson_Test, TestSize.Level1)
+{
+    Json::Value json(Json::objectValue);
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "");
 }
 
 }  // namespace Print

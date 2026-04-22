@@ -110,6 +110,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERDEFAULTPREFERENCES] =
         &PrintServiceStub::OnGetPrinterDefaultPreferences;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS] = &PrintServiceStub::OnGetSharedHosts;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_SHARED_HOST_DISCOVERY] =
+        &PrintServiceStub::OnStartSharedHostDiscovery;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTH_SMB_DEVICE] = &PrintServiceStub::OnAuthSmbDevice;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_WATERMARK_CB] =
         &PrintServiceStub::OnRegisterWatermarkCallback;
@@ -1247,6 +1249,15 @@ bool PrintServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
     int32_t ret = AddPrinter(printerName, uri, ppdName, options);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnAddPrinter out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnStartSharedHostDiscovery(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnStartSharedHostDiscovery in");
+    int32_t ret = StartSharedHostDiscovery();
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnStartSharedHostDiscovery out");
     return ret == E_PRINT_NONE;
 }
 

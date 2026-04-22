@@ -98,6 +98,7 @@ private:
     bool OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
     bool OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply);
     bool OnRegisterKiaInterceptorCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnStartSharedHostDiscovery(MessageParcel &data, MessageParcel &reply);
     bool OnAddPrinter(MessageParcel &data, MessageParcel &reply);
 
 private:

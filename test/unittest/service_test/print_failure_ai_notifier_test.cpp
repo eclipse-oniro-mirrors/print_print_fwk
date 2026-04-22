@@ -265,5 +265,65 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_OverwriteState_StateSetUpd
         printFailureAiNotifier.jobStateMap_[jobId].end());
 }
 
+HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_ExistingJob_JobRemovedFromMap, TestSize.Level1)
+{
+    std::string jobId = "test_job_011";
+    std::string printerName = "TestPrinter";
+    
+    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+    
+    printFailureAiNotifier.ClearJobState(jobId);
+    
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 0);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.find(jobId), printFailureAiNotifier.jobStateMap_.end());
+}
+
+HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_NonExistingJob_NoEffect, TestSize.Level1)
+{
+    std::string jobId = "test_job_012";
+    std::string existingJobId = "test_job_013";
+    std::string printerName = "TestPrinter";
+    
+    printFailureAiNotifier.HandleJobBlocked(existingJobId, 1, printerName);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+    
+    printFailureAiNotifier.ClearJobState(jobId);
+    
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+    EXPECT_NE(printFailureAiNotifier.jobStateMap_.find(existingJobId), printFailureAiNotifier.jobStateMap_.end());
+}
+
+HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_EmptyJobId_NoCrash, TestSize.Level1)
+{
+    std::string jobId = "";
+    std::string existingJobId = "test_job_014";
+    std::string printerName = "TestPrinter";
+    
+    printFailureAiNotifier.HandleJobBlocked(existingJobId, 1, printerName);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+    
+    printFailureAiNotifier.ClearJobState(jobId);
+    
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+}
+
+HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_MultipleJobs_ClearOne_OthersRemain, TestSize.Level1)
+{
+    std::string jobId1 = "test_job_015";
+    std::string jobId2 = "test_job_016";
+    std::string printerName = "TestPrinter";
+    
+    printFailureAiNotifier.HandleJobBlocked(jobId1, 1, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId2, 2, printerName);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 2);
+    
+    printFailureAiNotifier.ClearJobState(jobId1);
+    
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.find(jobId1), printFailureAiNotifier.jobStateMap_.end());
+    EXPECT_NE(printFailureAiNotifier.jobStateMap_.find(jobId2), printFailureAiNotifier.jobStateMap_.end());
+}
+
 }  // namespace Print
 }  // namespace OHOS

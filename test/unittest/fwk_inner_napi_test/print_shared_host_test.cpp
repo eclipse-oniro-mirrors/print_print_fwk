@@ -19,6 +19,7 @@
 #undef private
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_shared_host_helper.h"
 
 using namespace testing::ext;
 
@@ -64,5 +65,17 @@ HWTEST_F(PrintSharedHostTest, PrintJobTest_0002_NeedRename, TestSize.Level1)
     EXPECT_EQ(workgroupName, copyHost->GetWorkgroupName());
 }
 
+/**
+ * @tc.name: MakeJsObjectArray_NullEnvAndEmptyVector_ReturnsNull
+ * @tc.desc: Test that MakeJsObjectArray returns nullptr when napi_env is nullptr and the vector is empty.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSharedHostTest, MakeJsObjectArray_NullEnvAndEmptyVector_ReturnsNull, TestSize.Level1)
+{
+    napi_env env = nullptr;
+    std::vector<PrintSharedHost> sharedHosts;
+    EXPECT_EQ(PrintSharedHostHelper::MakeJsObjectArray(env, sharedHosts), nullptr);
+}
 }  // namespace Print
 }  // namespace OHOS

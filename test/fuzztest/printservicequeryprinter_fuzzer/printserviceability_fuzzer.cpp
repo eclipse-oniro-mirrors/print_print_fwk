@@ -108,6 +108,16 @@ void TestSetPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvid
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrinterPreferences printerPreference;
+    printerPreference.SetDefaultDuplexMode(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultPrintQuality(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultOrientation(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultColorMode(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultMediaType(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerPreference.SetDefaultPageSizeId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerPreference.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerPreference.SetBorderless(dataProvider->ConsumeBool());
+    printerPreference.SetDefaultCollate(dataProvider->ConsumeBool());
+    printerPreference.SetDefaultReverse(dataProvider->ConsumeBool());
     PrintServiceAbility::GetInstance()->SetPrinterPreference(printerId, printerPreference);
 }
 

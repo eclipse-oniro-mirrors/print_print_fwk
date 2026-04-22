@@ -41,6 +41,7 @@ public:
     MOCK_METHOD0(GetConnectingPpdName, std::string());
     MOCK_METHOD0(GetConnectingProtocol, std::string());
     MOCK_METHOD0(GetConnectingPrinter, std::string());
+    MOCK_METHOD0(GetConnectingQueue, std::string());
     MOCK_METHOD2(IsQueryingPrinter, bool(const std::string &, const std::string &));
     MOCK_METHOD2(SetQueryPrinter, void(ConnectMethod, const std::string &));
     MOCK_METHOD1(OnQueryCallBackEvent, bool(const PrinterInfo &));

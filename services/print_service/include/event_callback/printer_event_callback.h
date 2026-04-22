@@ -36,6 +36,13 @@ public:
     void SetListener(const sptr<IPrintCallback> &listener);
 
 private:
+    bool HandleJobStateChange(const CallbackInfo &info);
+    bool HandlePrinterChange(const CallbackInfo &info);
+    bool HandlePrinterStateChange(const CallbackInfo &info);
+    bool HandlePrinterInfoQuery(const CallbackInfo &info);
+    bool HandleExtInfoChange(const CallbackInfo &info);
+    bool HandleSharedHostDiscover(const CallbackInfo &info);
+    
     sptr<IPrintCallback> listener_ = nullptr;
 };
 }  // namespace Print

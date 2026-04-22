@@ -50,6 +50,8 @@ struct JobParameters {
     std::string serviceJobId;
     uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
     uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    uint32_t mirror = MIRROR_DEFAULT_VALUE;
+    uint32_t pageBorder = PAGE_BORDER_DEFAULT_VALUE;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
@@ -169,6 +171,7 @@ public:
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
+    bool ExtractPpdKeyAndValue(const std::string &line, std::string &key, std::string &value);
 #ifdef VIRTUAL_PRINTER_ENABLE
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
 #endif
@@ -180,6 +183,7 @@ public:
     std::string getScheme(std::string &printerUri);
     bool IsIpAddress(const char* host);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
+    std::string GetCurCupsModelDir();
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams);
@@ -196,13 +200,15 @@ private:
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
     void StartMonitor();
     bool JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
-    bool SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    void SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     bool GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
@@ -240,8 +246,8 @@ private:
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
     const std::string& GetCurCupsRootDir();
-    std::string GetCurCupsModelDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
     int32_t HandleSystemAuthInfo(const std::string &jobId);

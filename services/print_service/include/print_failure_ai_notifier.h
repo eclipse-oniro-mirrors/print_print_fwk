@@ -31,6 +31,8 @@ public:
     void HandleJobBlocked(const std::string& jobId, uint32_t subState,
         const std::string& printerName);
 
+    void ClearJobState(const std::string& jobId);
+
 private:
     PrintFailureAiNotifier();
     ~PrintFailureAiNotifier() = default;

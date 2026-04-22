@@ -27,9 +27,17 @@
 #include "print_preview_attribute.h"
 #include "print_range.h"
 #include "print_attributes.h"
+#include "print_constant.h"
 #include <json/json.h>
 
 namespace OHOS::Print {
+struct NumberUpArgs {
+    uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
+    uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    uint32_t mirror = MIRROR_DEFAULT_VALUE;
+    uint32_t pageBorder = PAGE_BORDER_DEFAULT_VALUE;
+};
+
 class PrintJob final : public Parcelable {
 public:
     explicit PrintJob();
@@ -64,9 +72,7 @@ public:
 
     void SetDuplexMode(uint32_t duplexmode);
 
-    void SetNumberUp(uint32_t numberUp);
-
-    void SetNumberUpLayout(uint32_t numberUpLayout);
+    void SetNumberUpArgs(const NumberUpArgs &numberUpArgs);
 
     void SetMargin(const PrintMargin &margin);
 
@@ -102,9 +108,7 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
-    [[nodiscard]] uint32_t GetNumberUp() const;
-
-    [[nodiscard]] uint32_t GetNumberUpLayout() const;
+    [[nodiscard]] NumberUpArgs GetNumberUpArgs() const;
 
     [[nodiscard]] bool HasMargin() const;
 
@@ -146,8 +150,7 @@ private:
     bool isLandscape_;
     uint32_t colorMode_;
     uint32_t duplexMode_;
-    uint32_t numberUp_;
-    uint32_t numberUpLayout_;
+    NumberUpArgs numberUpArgs_;
     bool hasMargin_;
     PrintMargin margin_;
     bool hasPreview_;

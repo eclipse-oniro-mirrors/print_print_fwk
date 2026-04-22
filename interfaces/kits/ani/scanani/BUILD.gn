@@ -30,7 +30,6 @@ config("scan_ani_config") {
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "--save-temps",
     "-Os",
     "-DASYNC_CALLBACK_WRAPPER=\"@ohos.scan.AsyncCallbackWrapper\"",
     "-DASYNC_CALLBACK_ARRAY_WRAPPER=\"@ohos.scan.AsyncCallbackArrayWrapper\"",

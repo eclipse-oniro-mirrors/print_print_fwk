@@ -354,32 +354,22 @@ void TestGetNewSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintCupsClient::GetInstance()->GetNewSubstate(substate, singleSubstate);
 }
 
-void TestNumberUpLayoutString(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    // Test GetNumberUpLayoutString with all valid layout codes (static function)
-    uint32_t layoutCode = dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL + 1);
-    PrintCupsClient::GetNumberUpLayoutString(layoutCode);
-}
-
-void TestPrintJobNumberUp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestPrintJobNumberUpArgs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintJob printJob;
-    // Set basic job info
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
 
-    // Set numberUp with valid values (1, 2, 4, 6, 9, 16)
-    uint32_t numberUpValues[] = {1, 2, 4, 6, 9, 16};
-    uint32_t numberUp = dataProvider->ConsumeIntegralInRange<uint32_t>(0, 5);
-    printJob.SetNumberUp(numberUpValues[numberUp]);
+    // Set NumberUpArgs with fuzzed values
+    NumberUpArgs args;
+    args.numberUp = dataProvider->ConsumeIntegralInRange<uint32_t>(NUMBER_UP_MIN_VALUE, NUMBER_UP_MAX_VALUE);
+    args.numberUpLayout = dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL);
+    args.mirror = dataProvider->ConsumeIntegralInRange<uint32_t>(PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED);
+    args.pageBorder = dataProvider->ConsumeIntegralInRange<uint32_t>(PRINT_PAGE_BORDER_NONE, PRINT_PAGE_BORDER_DOUBLE);
+    printJob.SetNumberUpArgs(args);
 
-    // Set numberUpLayout
-    uint32_t numberUpLayout = dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL);
-    printJob.SetNumberUpLayout(numberUpLayout);
-
-    // Verify getters
-    (void)printJob.GetNumberUp();
-    (void)printJob.GetNumberUpLayout();
+    // Verify getter works without crash
+    (void)printJob.GetNumberUpArgs();
 }
 
 }  // namespace Print
@@ -432,8 +422,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestParseStateReasons,
         &OHOS::Print::TestGetBlockedAndUpdateSubstate,
         &OHOS::Print::TestGetNewSubstate,
-        &OHOS::Print::TestNumberUpLayoutString,
-        &OHOS::Print::TestPrintJobNumberUp
+        &OHOS::Print::TestPrintJobNumberUpArgs
     };
     TestHandler handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);

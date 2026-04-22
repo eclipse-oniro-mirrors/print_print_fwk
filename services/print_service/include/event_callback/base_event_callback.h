@@ -20,6 +20,7 @@
 #include "print_job.h"
 #include "printer_info.h"
 #include "print_constant.h"
+#include "print_shared_host.h"
 
 namespace OHOS {
 namespace Print {
@@ -32,6 +33,7 @@ enum CallbackEventType {
     PRINTER_DISCOVER,
     PRINTER_CHANGE,
     PRINTER_EXT_INFO_CHANGE,
+    PRINTER_SHARED_HOST_DISCOVER,
     // extension
     EXTCB_START_DISCOVERY,
     EXTCB_STOP_DISCOVERY,
@@ -66,6 +68,7 @@ struct CallbackInfo {
     std::vector<PpdInfo> ppdInfos;
     std::shared_ptr<PrintJob> printJobInfo = nullptr;
     std::shared_ptr<PrinterInfo> printerInfo = nullptr;
+    std::vector<PrintSharedHost> sharedHosts;
     // adapter callback param
     uint32_t fd = 0;
     PrintJobState jobState;

@@ -16,19 +16,19 @@
 #ifndef KIA_INTERCEPTOR_CALLBACK_STUB_H
 #define KIA_INTERCEPTOR_CALLBACK_STUB_H
 
-#ifdef KIA_INTERCEPTOR_ENABLE
-
 #include <map>
 #include "ikia_interceptor_callback.h"
 #include "iremote_stub.h"
 
 namespace OHOS::Print {
+
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 class KiaInterceptorCallbackStub : public IRemoteStub<IKiaInterceptorCallback> {
 public:
     KiaInterceptorCallbackStub();
     virtual ~KiaInterceptorCallbackStub() = default;
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
-        MessageOption &option) override;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
     bool HandleCheckRejectEvent(MessageParcel &data, MessageParcel &reply);
@@ -37,8 +37,21 @@ private:
     using KIA_INTERCEPTOR_EVENT_HANDLER = bool (KiaInterceptorCallbackStub::*)(MessageParcel &, MessageParcel &);
     std::map<uint32_t, KIA_INTERCEPTOR_EVENT_HANDLER> cmdMap_;
 };
-}  // namespace OHOS::Print
+
+#else
+
+class KiaInterceptorCallbackStub : public IRemoteStub<IKiaInterceptorCallback> {
+public:
+    KiaInterceptorCallbackStub() {}
+    virtual ~KiaInterceptorCallbackStub() = default;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
+    {
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+};
 
 #endif // KIA_INTERCEPTOR_ENABLE
 
-#endif  // KIA_INTERCEPTOR_CALLBACK_STUB_H
+} // namespace OHOS::Print
+
+#endif // KIA_INTERCEPTOR_CALLBACK_STUB_H

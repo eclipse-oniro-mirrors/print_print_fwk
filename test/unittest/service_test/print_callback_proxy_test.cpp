@@ -23,6 +23,7 @@
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
 #include "print_log.h"
+#include "print_shared_host.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -359,8 +360,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, Te
     testVec.push_back(info);
 
     EXPECT_CALL(*service, OnCallback(Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo)), testVec))
-        .Times(1)
-        .WillOnce(Return(false));
+        .Times(0);
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(Exactly(1));
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -368,6 +368,99 @@ HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, Te
             return E_PRINT_RPC_FAILURE;
         });
     EXPECT_FALSE(proxy->OnCallback(testInfo, testVec));
+}
+
+MATCHER_P(SharedHostsMatcher, oParam, "Match Shared Hosts")
+{
+    const std::vector<PrintSharedHost> &hosts = (const std::vector<PrintSharedHost> &)arg;
+    if (hosts.size() != oParam.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < hosts.size(); i++) {
+        if (hosts[i].GetIp() != oParam[i].GetIp()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @tc.name: OnCallback_SharedHosts_Success
+ * @tc.desc: Test successful shared host callback
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackProxyTest, OnCallback_SharedHosts_Success, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintCallbackProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(service, nullptr);
+    
+    std::vector<PrintSharedHost> testHosts;
+    PrintSharedHost host1, host2;
+    host1.SetIp("192.168.1.1");
+    host1.SetShareName("Share1");
+    host2.SetIp("192.168.1.2");
+    host2.SetShareName("Share2");
+    testHosts.push_back(host1);
+    testHosts.push_back(host2);
+    
+    EXPECT_CALL(*service, OnCallback(Matcher<const std::vector<PrintSharedHost> &>(
+        SharedHostsMatcher(testHosts))))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    EXPECT_TRUE(proxy->OnCallback(testHosts));
+}
+
+/**
+ * @tc.name: OnCallback_SharedHosts_ExceedMaxCount
+ * @tc.desc: Test exceeding maximum count validation
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackProxyTest, OnCallback_SharedHosts_ExceedMaxCount, TestSize.Level0)
+{
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintCallbackProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    
+    std::vector<PrintSharedHost> testHosts;
+    for (uint32_t i = 0; i < PRINT_MAX_PRINT_COUNT + 1; i++) {
+        PrintSharedHost host;
+        host.SetIp("192.168.1." + std::to_string(i));
+        testHosts.push_back(host);
+    }
+    
+    EXPECT_FALSE(proxy->OnCallback(testHosts));
+}
+
+/**
+ * @tc.name: OnCallback_SharedHosts_RemoteNull
+ * @tc.desc: Test null remote object scenario
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackProxyTest, OnCallback_SharedHosts_RemoteNull, TestSize.Level0)
+{
+    auto proxy = std::make_shared<PrintCallbackProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+    
+    std::vector<PrintSharedHost> testHosts;
+    PrintSharedHost host;
+    host.SetIp("192.168.1.1");
+    testHosts.push_back(host);
+    
+    EXPECT_FALSE(proxy->OnCallback(testHosts));
 }
 }  // namespace Print
 }  // namespace OHOS

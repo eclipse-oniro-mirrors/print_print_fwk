@@ -359,7 +359,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
         return;
     }
     uint32_t jobState = 0;
-    if (!GetEnumValueInt(env, enumJobSubStateObj, jobState)) {
+    if (!GetEnumValueInt(env, enumJobStateObj, jobState)) {
         PRINT_HILOGE("GetEnumValueInt fail");
         ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -367,7 +367,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
     }
     PRINT_HILOGD("jobState = %{public}u", jobState);
     uint32_t jobSubState = 0;
-    if (!GetEnumValueInt(env, enumJobStateObj, jobSubState)) {
+    if (!GetEnumValueInt(env, enumJobSubStateObj, jobSubState)) {
         PRINT_HILOGE("GetEnumValueInt fail");
         ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -748,6 +748,32 @@ static void NotifyWatermarkCompleteNative(ani_env *env, ani_string jobId, ani_en
     PRINT_HILOGD("NotifyWatermarkComplete ret = %{public}d", ret);
 }
 
+static void OnPrinterInfoQueryNative(ani_env *env, ani_object callback)
+{
+    PRINT_HILOGI("enter OnPrinterInfoQueryNative");
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return;
+    }
+    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance()->On("", PRINTER_INFO_QUERY_EVENT_TYPE, callbackWrapper);
+}
+
+static void OffPrinterInfoQueryNative(ani_env *env, ani_string type, ani_object callback)
+{
+    PRINT_HILOGI("enter OffPrinterInfoQueryNative");
+    PrintManagerClient::GetInstance()->Off("", PRINTER_INFO_QUERY_EVENT_TYPE);
+}
+
+static void UpdatePrinterInformationNative(ani_env *env, ani_object printerInfo, ani_object callback)
+{
+    PRINT_HILOGI("enter UpdatePrinterInformationNative");
+    PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(info);
+    ani_object stsErrCode = CreateStsError(env, ret);
+    AsyncCallback(env, callback, stsErrCode, nullptr);
+}
+
 template<typename Func>
 static inline ani_native_function MakeNativeFunc(const char* etsFuncName, Func cFunc)
 {
@@ -798,6 +824,9 @@ static std::array methods = {
     MakeNativeFunc("RegisterWatermarkCallbackNative", RegisterWatermarkCallbackNative),
     MakeNativeFunc("UnregisterWatermarkCallbackNative", UnregisterWatermarkCallbackNative),
     MakeNativeFunc("NotifyWatermarkCompleteNative", NotifyWatermarkCompleteNative),
+    MakeNativeFunc("onPrinterInfoQueryNative", OnPrinterInfoQueryNative),
+    MakeNativeFunc("offPrinterInfoQueryNative", OffPrinterInfoQueryNative),
+    MakeNativeFunc("updatePrinterInformationNative", UpdatePrinterInformationNative),
 };
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)

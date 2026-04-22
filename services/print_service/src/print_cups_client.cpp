@@ -91,11 +91,13 @@ const uint32_t MONITOR_STEP_TIME_MS = 2000;
 const int32_t STATE_UPDATE_STEP = 5;
 const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
+const size_t MIN_QUOTED_LENGTH = 2;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
+static const std::string PPD_INPUT_SLOT = "InputSlot";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
 static const std::string PRINTER_STATE_MEDIA_LOW_WARNING = "media-low-warning";
@@ -1096,16 +1098,21 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
         num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     }
-    if (!jobParams->mediaSize.empty()) {
-        num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_MEDIA, CUPS_MEDIA_A4, num_options, options);
-    }
     if (!jobParams->mediaType.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
     }
+
+    // Extend media value to media=mediaSize,mediaType,inputSlot
+    std::string mediaValue = jobParams->mediaSize.empty() ? CUPS_MEDIA_A4 : jobParams->mediaSize;
+    mediaValue += "," + (jobParams->mediaType.empty() ? CUPS_MEDIA_TYPE_PLAIN : jobParams->mediaType);
+    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
+    if (!inputSlot.empty()) {
+        mediaValue += "," + inputSlot;
+    }
+    num_options = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), num_options, options);
+
     return num_options;
 }
 
@@ -1141,7 +1148,13 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         std::stringstream value;
         value << "{media-size={x-dimension=" << meidaWidth << " y-dimension=" << mediaHeight;
         value << "} media-bottom-margin=" << 0 << " media-left-margin=" << 0 << " media-right-margin=" << 0;
-        value << " media-top-margin=" << 0 << " media-type=\"" << jobParams->mediaType << "\"}";
+        value << " media-top-margin=" << 0 << " media-type=\"" << jobParams->mediaType << "\"";
+
+        std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
+        if (!inputSlot.empty()) {
+            value << " media-source=\"" << inputSlot << "\"";
+        }
+        value << "}";
         PRINT_HILOGD("value: %s", value.str().c_str());
         num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
     } else {
@@ -1171,17 +1184,54 @@ int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_optio
         PRINT_HILOGE("FillNumberUpOptions Params is nullptr");
         return num_options;
     }
-    // N-Up (multiple pages per sheet)
-    if (jobParams->numberUp > NUMBER_UP_MIN_VALUE) {
-        num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
-        std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
-        num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
-        PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
-            jobParams->numberUp, layoutStr.c_str());
-    } else {
-        PRINT_HILOGI("number-up disabled (value=%{public}d, need > %{public}d to enable)",
-            jobParams->numberUp, NUMBER_UP_MIN_VALUE);
+    num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
+    std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
+    num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
+    PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
+        jobParams->numberUp, layoutStr.c_str());
+    return num_options;
+}
+
+int PrintCupsClient::FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillMirrorOptions Params is nullptr");
+        return num_options;
     }
+    // Mirror printing (CUPS mirror option)
+    // Only add option when mirror is enabled, avoid adding unsupported options for some printers
+    if (jobParams->mirror == PRINT_MIRROR_ENABLED) {
+        num_options = cupsAddOption("mirror", "true", num_options, options);
+        PRINT_HILOGI("Added CUPS option: mirror=true");
+    } else {
+        PRINT_HILOGI("mirror disabled (value=%{public}d)", jobParams->mirror);
+    }
+    return num_options;
+}
+
+int PrintCupsClient::FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillPageBorderOptions Params is nullptr");
+        return num_options;
+    }
+    // Page border (CUPS page-border option)
+    // Only add option when border is needed, avoid adding unsupported options for some printers
+    std::string borderStr;
+    switch (jobParams->pageBorder) {
+        case PRINT_PAGE_BORDER_SINGLE:
+            borderStr = "single";
+            break;
+        case PRINT_PAGE_BORDER_DOUBLE:
+            borderStr = "double";
+            break;
+        case PRINT_PAGE_BORDER_NONE:
+        default:
+            PRINT_HILOGI("pageBorder disabled (value=%{public}d)", jobParams->pageBorder);
+            return num_options;
+    }
+    num_options = cupsAddOption("page-border", borderStr.c_str(), num_options, options);
+    PRINT_HILOGI("Added CUPS option: page-border=%{public}s", borderStr.c_str());
     return num_options;
 }
 
@@ -1216,6 +1266,8 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     num_options = FillNumberUpOptions(jobParams, num_options, options);
+    num_options = FillMirrorOptions(jobParams, num_options, options);
+    num_options = FillPageBorderOptions(jobParams, num_options, options);
 
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
@@ -1250,13 +1302,26 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
         if (jobParams->advancedOpsJson.isMember(keyStr) || jobParams->advancedOpsJson[keyStr].isString()) {
             std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
-                num_options = cupsAddOption("InputSlot", valueStr.c_str(), num_options, options);
+                num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(), num_options, options);
                 continue;
             }
             num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
         }
     }
     return num_options;
+}
+
+std::string PrintCupsClient::GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson)
+{
+    if (advancedOpsJson.isNull()) {
+        return "";
+    }
+    if (advancedOpsJson.isMember(PPD_INPUT_SLOT) && advancedOpsJson[PPD_INPUT_SLOT].isString()) {
+        return advancedOpsJson[PPD_INPUT_SLOT].asString();
+    } else if (advancedOpsJson.isMember(CUPS_MEDIA_SOURCE) && advancedOpsJson[CUPS_MEDIA_SOURCE].isString()) {
+        return advancedOpsJson[CUPS_MEDIA_SOURCE].asString();
+    }
+    return "";
 }
 
 int32_t PrintCupsClient::QueryAddedPrinterList(std::vector<std::string> &printerNameList)
@@ -1830,7 +1895,8 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         case IPP_JOB_COMPLETED:
             return HandleCompletedState(monitorParams);
         default:
-            return SpecialJobStatusCallback(monitorParams);
+            SpecialJobStatusCallback(monitorParams);
+            return false;
     }
 }
 
@@ -2016,24 +2082,11 @@ int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd
 }
 #endif
 
-bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
+void PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    // IPP_JOB_CANCELED or IPP_JOB_ABORTED
-    if (!monitorParams->isBlock) {
-        PRINT_HILOGI("job is canceled");
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
-        return false;
-    }
-    PRINT_HILOGI("job cancel with error");
-    if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
-        return true;
-    }
+    PRINT_HILOGI("job is canceled");
     monitorParams->serviceAbility->UpdatePrintJobState(
         monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
-    return false;
 }
 
 void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams)
@@ -2503,8 +2556,11 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->printerUri = optionJson["printerUri"].asString();
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
-    params->numberUp = jobInfo.GetNumberUp();
-    params->numberUpLayout = jobInfo.GetNumberUpLayout();
+    NumberUpArgs numberUpArgs = jobInfo.GetNumberUpArgs();
+    params->numberUp = numberUpArgs.numberUp;
+    params->numberUpLayout = numberUpArgs.numberUpLayout;
+    params->mirror = numberUpArgs.mirror;
+    params->pageBorder = numberUpArgs.pageBorder;
     UpdateJobParameterByOption(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
@@ -2533,6 +2589,8 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
     PRINT_HILOGI("jobParams->numberUp: %{public}d", jobParams->numberUp);
     PRINT_HILOGI("jobParams->numberUpLayout: %{public}d", jobParams->numberUpLayout);
+    PRINT_HILOGI("jobParams->mirror: %{public}d", jobParams->mirror);
+    PRINT_HILOGI("jobParams->pageBorder: %{public}d", jobParams->pageBorder);
     PRINT_HILOGI("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
     PRINT_HILOGI("jobParams->isReverse: %{public}d", jobParams->isReverse);
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);
@@ -3054,23 +3112,11 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         if (line.length() < INDEX_TWO || line[0] != '*' || line[1] == '%') {
             continue;
         }
-        size_t colonPos = line.find(':');
-        if (colonPos == string::npos) {
+        std::string key;
+        std::string value;
+        if (!ExtractPpdKeyAndValue(line, key, value)) {
             continue;
         }
-        string key = line.substr(1, colonPos - 1);
-        string value = line.substr(colonPos + 1);
-        size_t keyFirst = key.find_first_not_of(" \t");
-        size_t valueFirst = value.find_first_not_of(" \t");
-        if (keyFirst != std::string::npos) {
-            key = key.substr(keyFirst);
-        }
-        if (valueFirst != std::string::npos) {
-            value = value.substr(valueFirst);
-        }
-        value.erase(remove_if(value.begin(), value.end(), [](char c) {
-            return c == '"';
-            }), value.end());
         if (find(begin(targetKeys), end(targetKeys), key) != end(targetKeys)) {
             keyValues[key] = value;
         }
@@ -3086,6 +3132,30 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         }
     }
     file.close();
+    return true;
+}
+
+bool PrintCupsClient::ExtractPpdKeyAndValue(const std::string &line, std::string &key, std::string &value)
+{
+    size_t colonPos = line.find(':');
+    if (colonPos == std::string::npos) {
+        return false;
+    }
+    // 定义字段解析函数
+    auto trim = [](const std::string &str, const std::string &whitespace = " \t") -> std::string {
+        size_t start = str.find_first_not_of(whitespace);
+        if (start == std::string::npos) {
+            return "";
+        }
+        size_t end = str.find_last_not_of(whitespace) + 1;
+        return str.substr(start, end - start);
+    };
+
+    key = trim(line.substr(1, colonPos - 1), " \t");
+    value = trim(line.substr(colonPos + 1), " \t\r\n");
+    if (value.length() >= MIN_QUOTED_LENGTH && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.length() - MIN_QUOTED_LENGTH);
+    }
     return true;
 }
 

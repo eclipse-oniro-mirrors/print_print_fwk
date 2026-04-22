@@ -35,10 +35,12 @@ namespace {
     constexpr int32_t WANT_AGENT_REQUEST_CODE = 0;
 
     const std::string WANT_PARAM_PRINT_TRIGGER_TYPE = "trigger_type";
-    const std::string WANT_PARAM_PRINT_ASK_XIAOYI = "ask_xiaoyi";
+    const std::string WANT_PARAM_PRINT_ASK_AI = "ask_ai";
     const std::string WANT_PARAM_PRINT_IS_TEXTEDIT = "isTextEdit";
     const std::string WANT_PARAM_SMART_RIGHT_KEY = "smart_right_key";
-    const std::string WANT_PARAM_ASK_FOR_XIAO_YI_BUTTON = "ask_for_xiao_yi_button";
+    const std::string WANT_PARAM_ASK_FOR_AI_BUTTON = "ask_for_ai_button";
+    const std::string WANT_PARAM_PRINT_SRC = "src";
+    const std::string WANT_PARAM_PRINT_SRC_PC_SPOOLER = "pc_spooler";
 
     std::atomic<int32_t> g_nextNotificationId{NOTIFICATION_ID_BASE};
 }
@@ -151,7 +153,8 @@ std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder
     want->SetElementName("com.oh.vassistant", "VoicePcServiceExtAbility");
     want->SetParam(WANT_PARAM_PRINT_TRIGGER_TYPE, WANT_PARAM_SMART_RIGHT_KEY);
     want->SetParam(WANT_PARAM_PRINT_IS_TEXTEDIT, false);
-    want->SetParam(WANT_PARAM_PRINT_ASK_XIAOYI, wantStr);
+    want->SetParam(WANT_PARAM_PRINT_ASK_AI, wantStr);
+    want->SetParam(WANT_PARAM_PRINT_SRC, WANT_PARAM_PRINT_SRC_PC_SPOOLER);
     want->SetFlags(AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION | AAFwk::Want::FLAG_AUTH_WRITE_URI_PERMISSION);
 
     std::vector<std::shared_ptr<AAFwk::Want>> wants;
@@ -169,7 +172,7 @@ std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder
         return nullptr;
     }
 
-    std::string buttonTitle = PrintResourceManager::GetInstance().GetStringByName(WANT_PARAM_ASK_FOR_XIAO_YI_BUTTON);
+    std::string buttonTitle = PrintResourceManager::GetInstance().GetStringByName(WANT_PARAM_ASK_FOR_AI_BUTTON);
     std::shared_ptr<Notification::NotificationActionButton> actionButton =
         Notification::NotificationActionButton::Create(nullptr, buttonTitle, wantAgent);
     if (!actionButton) {
@@ -180,42 +183,59 @@ std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder
     return actionButton;
 }
 
-std::string PrintNotificationBuilder::SubStateToResourceKey(uint32_t subState)
+std::string PrintNotificationBuilder::GetFaultKey(uint32_t subState)
 {
     static const std::map<uint32_t, std::string> resourceKeyMap = {
         {PrintJobSubState::PRINT_JOB_BLOCKED_DOOR_OPEN, "printer_door_open"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_PAPER, "printer_out_of_paper"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_INK, "printer_out_of_ink"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_TONER, "printer_out_of_toner"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_JAMMED, "printer_jammed"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_INK, "printer_out_of_ink"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_OFFLINE, "printer_offline"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_BUSY, "printer_busy"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_LOW_ON_INK, "printer_low_on_ink"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_LOW_ON_TONER, "printer_low_on_toner"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK, "printer_really_low_on_ink"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_BAD_CERTIFICATE, "printer_bad_certificate"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_EXCEPTION, "printer_driver_exception"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_ACCOUNT_ERROR, "printer_account_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR, "printer_permission_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR, "printer_color_permission_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_NETWORK_ERROR, "printer_network_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR, "printer_server_connection_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_LARGE_FILE_ERROR, "printer_large_file_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_FILE_PARSING_ERROR, "printer_file_parsing_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION, "printer_slow_file_conversion"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_MISSING, "printer_driver_missing"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_INTERRUPT, "printer_interrupt"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_AUTHENTICATION, "printer_authentication"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_BANNED, "printer_banned"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_SMB_PRINTER, "printer_smb_error"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE, "printer_unavailable"}
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_TONER, "printer_out_of_toner"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_PAPER, "printer_out_of_paper"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_EXCEPTION, "printer_driver_exception"}
     };
 
     auto it = resourceKeyMap.find(subState);
     if (it != resourceKeyMap.end()) {
         return it->second;
     }
-    return "printer_check";
+    return "";
+}
+
+std::string PrintNotificationBuilder::SubStateToResourceKey(uint32_t subState)
+{
+    static const std::map<uint32_t, std::string> resourceKeyMap = {
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OFFLINE, "printer_offline"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_BUSY, "printer_busy"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_PAPER, "printer_out_of_paper"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_INK, "printer_out_of_ink"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_TONER, "printer_out_of_toner"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_JAMMED, "printer_jammed"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_DOOR_OPEN, "printer_door_open"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_SERVICE_REQUEST, "printer_check"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_LOW_ON_INK, "printer_low_on_ink"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_LOW_ON_TONER, "printer_low_on_toner"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK, "printer_out_of_ink"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_BAD_CERTIFICATE, "printer_bad_certificate"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_EXCEPTION, "driver_exception"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_NETWORK_ERROR, "print_block_reason_network_error"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_MISSING, "printer_driver_missing"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_INTERRUPT, "print_block_reason_interrupt"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_BANNED, "job_banned"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_SMB_PRINTER, "print_job_blocked_smb"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING, "paper_box_error"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED, "job_banned"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_AUTHENTICATION, "job_verify_prompt"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE, "print_job_error"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_UNKNOWN, "printer_check"}
+    };
+
+    auto it = resourceKeyMap.find(subState);
+    if (it != resourceKeyMap.end()) {
+        return it->second;
+    }
+    PRINT_HILOGE("SubState %{public}u is not supported by smart framework", subState);
+    return "";
 }
 
 int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const std::string &printerName)
@@ -228,6 +248,10 @@ int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const st
     }
 
     const std::string resourceKey = SubStateToResourceKey(subState);
+    if (resourceKey.empty()) {
+        PRINT_HILOGE("Smart framework does not support subState: %{public}u", subState);
+        return E_PRINT_SERVER_FAILURE;
+    }
     normalContent->SetText(PrintResourceManager::GetInstance().GetStringByName(resourceKey));
 
     const std::string app_name = "app_name";

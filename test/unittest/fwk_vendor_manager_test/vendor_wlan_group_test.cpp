@@ -20,6 +20,10 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "mock/mock_print_service_ability.h"
+#include "mock/mock_vendor_ppd_driver.h"
+#include "vendor_ppd_driver.h"
+#include "vendor_ipp_everywhere.h"
+#include "vendor_bsuni_driver.h"
 
 namespace {
 const int WAIT_TIME_MS = 100;
@@ -34,6 +38,16 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
+
+class MockVendorBsuniDriver : public VendorBsuniDriver {
+public:
+    bool Init(IPrinterVendorManager *manager) override
+    {
+        return VendorDriverBase::Init(manager);
+    }
+    MOCK_METHOD2(OnQueryCapability, bool(const std::string &, int));
+};
+
 class VendorWlanGroupTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -567,6 +581,82 @@ HWTEST_F(VendorWlanGroupTest, ConnectByPpdDriver_Connect_Failed, TestSize.Level1
     EXPECT_FALSE(vendorWlanGroup->ConnectByPpdDriver(id));
 }
 
+HWTEST_F(VendorWlanGroupTest, OnQueryCapability_PrinterInfoNotNull_ModelExtracted, TestSize.Level1)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterMake("HP LaserJet Pro");
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillRepeatedly(Return(printerInfo));
+    EXPECT_FALSE(vendorWlanGroup->OnQueryCapability(PRINTER_TEST_IP, 0));
+}
+
+HWTEST_F(VendorWlanGroupTest, OnQueryCapability_BsuniSupportedConnectFails_ReportBsuniFailure, TestSize.Level1)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterMake("HP LaserJet Pro");
+    printerInfo->SetOption("{\"bsunidriverSupport\": \"true\"}");
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillRepeatedly(Return(printerInfo));
+
+    EXPECT_FALSE(vendorWlanGroup->OnQueryCapability(PRINTER_TEST_IP, 0));
+}
+
+HWTEST_F(VendorWlanGroupTest, OnQueryCapability_ConnectByPpdDriverSuccess, TestSize.Level1)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterMake("HP LaserJet Pro");
+    printerInfo->SetPrinterId(PRINTER_TEST_IP);
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto mockPpdDriver = std::make_shared<MockVendorPpdDriver>();
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(mockPpdDriver));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    vendorManager.connectingPpdName = "auto";
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillRepeatedly(Return(printerInfo));
+    EXPECT_CALL(*mockPpdDriver, QueryProperty(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(std::string("matched.ppd")), Return(true)));
+    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _)).WillRepeatedly(Return(true));
+    EXPECT_TRUE(vendorWlanGroup->OnQueryCapability(PRINTER_TEST_IP, 0));
+}
+
+HWTEST_F(VendorWlanGroupTest, OnQueryCapability_ConnectByBsuniSuccess, TestSize.Level1)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterMake("HP LaserJet Pro");
+    printerInfo->SetOption("{\"bsunidriverSupport\": \"true\"}");
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto mockBsuniDriver = std::make_shared<MockVendorBsuniDriver>();
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(mockBsuniDriver));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillRepeatedly(Return(printerInfo));
+    EXPECT_CALL(*mockBsuniDriver, OnQueryCapability(_, _)).WillOnce(Return(true));
+    EXPECT_TRUE(vendorWlanGroup->OnQueryCapability(PRINTER_TEST_IP, 0));
+}
+
+HWTEST_F(VendorWlanGroupTest, OnQueryCapability_ConnectByIppEverywhereSuccess, TestSize.Level1)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterMake("HP LaserJet Pro");
+    printerInfo->SetUri(PRINTER_TEST_URI);
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillRepeatedly(Return(printerInfo));
+    EXPECT_TRUE(vendorWlanGroup->OnQueryCapability(PRINTER_TEST_IP, 0));
+}
+
 HWTEST_F(VendorWlanGroupTest, ExtractPrinterIdByPrinterInfo_ShouldReturnId_WhenOriginIdNotEmpty, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -577,6 +667,25 @@ HWTEST_F(VendorWlanGroupTest, ExtractPrinterIdByPrinterInfo_ShouldReturnId_WhenO
     info.SetUri(PRINTER_TEST_URI);
     info.SetOriginId("fwk.driver.bsuni:192.168.1.123");
     EXPECT_EQ(vendorWlanGroup->ExtractPrinterIdByPrinterInfo(info), "192.168.1.123");
+}
+
+HWTEST_F(VendorWlanGroupTest, GetPrinterModel_ShouldReturnEmpty_WhenParentVendorManagerIsNull, TestSize.Level1)
+{
+    VendorWlanGroup group(nullptr);
+    std::string printerId = PRINTER_TEST_IP;
+    EXPECT_EQ(group.GetPrinterModel(printerId), "");
+}
+
+HWTEST_F(VendorWlanGroupTest, GetPrinterModel_ShouldReturnModel_WhenPrinterInfoExists, TestSize.Level1)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterMake("HP LaserJet Pro");
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillOnce(Return(printerInfo));
+    EXPECT_EQ(vendorWlanGroup->GetPrinterModel(PRINTER_TEST_IP), "HP LaserJet Pro");
 }
 }  // namespace Print
 }  // namespace OHOS

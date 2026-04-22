@@ -23,54 +23,90 @@ namespace Print {
 
 ExecuteResult PrinterEventCallback::Execute(const CallbackInfo &info)
 {
-    if (listener_ == nullptr) {
-        PRINT_HILOGW("listener_ null");
-        return ExecuteResult::FAIL;
-    }
     bool ret = false;
     switch (info.cbEventType) {
-        case PRINTER_JOB_STATE_CHANGE: {
-            auto jobInfo = info.printJobInfo;
-            if (!jobInfo) {
-                PRINT_HILOGE("jobInfo is nullptr");
-                return ExecuteResult::FAIL;
-            }
-            ret = listener_->OnCallback(jobInfo->GetJobState(), *jobInfo);
+        case PRINTER_JOB_STATE_CHANGE:
+            ret = HandleJobStateChange(info);
             break;
-        }
         case PRINTER_CHANGE:
-        case PRINTER_DISCOVER: {
-            if (!info.printerInfo) {
-                PRINT_HILOGE("printerInfo is nullptr");
-                return ExecuteResult::FAIL;
-            }
-            ret = listener_->OnCallback(info.printerEvent, *info.printerInfo);
+        case PRINTER_DISCOVER:
+            ret = HandlePrinterChange(info);
             break;
-        }
-        case PRINTER_STATE_CHANGE: {
-            if (!info.printerInfo) {
-                PRINT_HILOGE("printerInfo is nullptr");
-                return ExecuteResult::FAIL;
-            }
-            ret = listener_->OnCallback(info.printerInfo->GetPrinterState(), *info.printerInfo);
+        case PRINTER_STATE_CHANGE:
+            ret = HandlePrinterStateChange(info);
             break;
-        }
-        case PRINTER_INFO_QUERY: {
-            if (!info.printerInfo) {
-                PRINT_HILOGE("printerInfo is nullptr");
-                return ExecuteResult::FAIL;
-            }
-            ret = listener_->OnCallback(*info.printerInfo, info.ppdInfos);
+        case PRINTER_INFO_QUERY:
+            ret = HandlePrinterInfoQuery(info);
             break;
-        }
-        case PRINTER_EXT_INFO_CHANGE: {
-            ret = listener_->OnCallback(info.extensionId, info.extInfo);
+        case PRINTER_EXT_INFO_CHANGE:
+            ret = HandleExtInfoChange(info);
             break;
-        }
+        case PRINTER_SHARED_HOST_DISCOVER:
+            ret = HandleSharedHostDiscover(info);
+            break;
         default:
             return ExecuteResult::FAIL;
     }
     return ret ? ExecuteResult::SUCCESS : ExecuteResult::FAIL;
+}
+
+bool PrinterEventCallback::HandleJobStateChange(const CallbackInfo &info)
+{
+    PRINT_CHECK_NULL_AND_RETURN(listener_, false)
+
+    auto jobInfo = info.printJobInfo;
+    if (!jobInfo) {
+        PRINT_HILOGE("jobInfo is nullptr");
+        return false;
+    }
+    return listener_->OnCallback(jobInfo->GetJobState(), *jobInfo);
+}
+
+bool PrinterEventCallback::HandlePrinterChange(const CallbackInfo &info)
+{
+    PRINT_CHECK_NULL_AND_RETURN(listener_, false)
+
+    if (!info.printerInfo) {
+        PRINT_HILOGE("printerInfo is nullptr");
+        return false;
+    }
+    return listener_->OnCallback(info.printerEvent, *info.printerInfo);
+}
+
+bool PrinterEventCallback::HandlePrinterStateChange(const CallbackInfo &info)
+{
+    PRINT_CHECK_NULL_AND_RETURN(listener_, false)
+    
+    if (!info.printerInfo) {
+        PRINT_HILOGE("printerInfo is nullptr");
+        return false;
+    }
+    return listener_->OnCallback(info.printerInfo->GetPrinterState(), *info.printerInfo);
+}
+
+bool PrinterEventCallback::HandlePrinterInfoQuery(const CallbackInfo &info)
+{
+    PRINT_CHECK_NULL_AND_RETURN(listener_, false)
+    
+    if (!info.printerInfo) {
+        PRINT_HILOGE("printerInfo is nullptr");
+        return false;
+    }
+    return listener_->OnCallback(*info.printerInfo, info.ppdInfos);
+}
+
+bool PrinterEventCallback::HandleExtInfoChange(const CallbackInfo &info)
+{
+    PRINT_CHECK_NULL_AND_RETURN(listener_, false)
+    
+    return listener_->OnCallback(info.extensionId, info.extInfo);
+}
+
+bool PrinterEventCallback::HandleSharedHostDiscover(const CallbackInfo &info)
+{
+    PRINT_CHECK_NULL_AND_RETURN(listener_, false)
+    
+    return listener_->OnCallback(info.sharedHosts);
 }
 
 bool PrinterEventCallback::IsRemoteDied(const sptr<IRemoteObject> &listener)

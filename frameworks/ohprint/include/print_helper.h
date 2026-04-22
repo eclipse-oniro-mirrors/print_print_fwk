@@ -26,6 +26,7 @@ char *CopyString(const std::string &source);
 void ReleasePrinterInfo(Print_PrinterInfo &printerInfo);
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info);
 int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob);
+int32_t ConvertNativeTaskToPrintJob(const Print_PrintTask &nativePrintTask, PrintJob &printJob);
 Print_ErrorCode ConvertStringVectorToPropertyList(const std::vector<std::string> &valueList,
     Print_PropertyList *propertyList);
 }  // namespace OHOS::Print

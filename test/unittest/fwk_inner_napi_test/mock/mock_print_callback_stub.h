@@ -56,6 +56,10 @@ public:
     {
         return true;
     }
+    bool OnCallback(const std::vector<PrintSharedHost> &sharedHosts) override
+    {
+        return true;
+    }
 };
 
 class MockPrintCallbackStub final : public DummyPrintCallbackStub {
@@ -64,6 +68,8 @@ public:
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
     MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
+    MOCK_METHOD1(OnCallback, bool(const std::vector<PrintSharedHost> &));
+    MOCK_METHOD2(OnCallback, bool(const PrinterInfo &, const std::vector<PpdInfo> &));
 };
 }  // namespace Print
 }  // namespace OHOS

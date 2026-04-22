@@ -459,7 +459,8 @@ void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterS
     auto info = GetAddedPrinterMap().Find(printerId);
     if (info != nullptr) {
         info->SetPrinterStatus(printerStatus);
-        PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", info->GetPrinterStatus());
+        PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterStatus success, printerName: %{public}s, status: %{public}d",
+            info->GetPrinterId().c_str(), info->GetPrinterName().c_str(), info->GetPrinterStatus());
     }
 }
 
@@ -486,6 +487,7 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
         std::string uri = printerInfo->GetUri();
         info->SetUri(uri);
         info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
+        info->SetOption(printerInfo->GetOption());
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }

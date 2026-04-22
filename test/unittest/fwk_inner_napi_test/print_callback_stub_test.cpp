@@ -18,6 +18,7 @@
 #include "print_constant.h"
 #include "print_job.h"
 #include "printer_info.h"
+#include "print_shared_host.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -284,6 +285,9 @@ HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_TRUE, TestSize.Level1)
     }
     auto callback = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::An<const PrinterInfo&>(), testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }
@@ -335,7 +339,117 @@ HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_EmptyPpds, TestSize.Level
         EXPECT_TRUE(ppd.Marshalling(data));
     }
     EXPECT_NE(callback, nullptr);
-    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
 }
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_EmptyHosts
+ * @tc.desc: Test handling empty shared host list
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_EmptyHosts, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(0));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_SingleHost
+ * @tc.desc: Test handling single shared host
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_SingleHost, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    PrintSharedHost testHost;
+    testHost.SetIp("192.168.1.1");
+    testHost.SetShareName("TestShare");
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(1));
+    EXPECT_TRUE(testHost.Marshalling(data));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_MultipleHosts
+ * @tc.desc: Test handling multiple shared hosts
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_MultipleHosts, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    PrintSharedHost host1, host2;
+    host1.SetIp("192.168.1.1");
+    host1.SetShareName("Share1");
+    host2.SetIp("192.168.1.2");
+    host2.SetShareName("Share2");
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(2));
+    EXPECT_TRUE(host1.Marshalling(data));
+    EXPECT_TRUE(host2.Marshalling(data));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_ExceedMaxCount
+ * @tc.desc: Test exceeding maximum count limit
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_ExceedMaxCount, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(PRINT_MAX_PRINT_COUNT + 1));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+}
+
 }  // namespace Print
 }  // namespace OHOS

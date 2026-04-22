@@ -30,7 +30,6 @@ config("print_ani_config") {
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "--save-temps",
     "-Os",
     "-DASYNC_CALLBACK_WRAPPER=\"@ohos.print.AsyncCallbackWrapper\"",
     "-DASYNC_CALLBACK_ARRAY_WRAPPER=\"@ohos.print.AsyncCallbackArrayWrapper\"",

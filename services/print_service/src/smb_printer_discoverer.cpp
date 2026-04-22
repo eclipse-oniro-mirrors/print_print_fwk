@@ -275,6 +275,8 @@ int32_t SmbPrinterDiscoverer::ParseSmbErrorCode(const std::string& errorReason)
 {
     if (errorReason.find("STATUS_LOGON_FAILURE") != std::string::npos) {
         return E_PRINT_INVALID_TOKEN;
+    } else if (errorReason.find("STATUS_ACCESS_DENIED") != std::string::npos) {
+        return E_PRINT_INVALID_TOKEN;
     } else if (errorReason.find("signature") != std::string::npos) {
         return E_PRINT_INVALID_TOKEN;
     } else if (errorReason.find("SMB2_STATUS_ACCOUNT_LOCKED_OUT") != std::string::npos) {

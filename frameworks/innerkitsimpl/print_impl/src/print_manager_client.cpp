@@ -1234,4 +1234,15 @@ int32_t PrintManagerClient::RegisterKiaInterceptorCallback(const sptr<IKiaInterc
     }
     return ret;
 }
+
+int32_t PrintManagerClient::StartSharedHostDiscovery()
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->StartSharedHostDiscovery();
+        PRINT_HILOGD("PrintManagerClient StartSharedHostDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

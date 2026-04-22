@@ -470,95 +470,63 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028_NeedRename, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_NumberUp_001
- * @tc.desc: Verify the SetNumberUp and GetNumberUp function.
+ * @tc.name: PrintJobTest_NumberUpArgs_001
+ * @tc.desc: Verify the SetNumberUpArgs and GetNumberUpArgs function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_001, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_001, TestSize.Level1)
 {
     PrintJob job;
-    job.SetNumberUp(4);
-    EXPECT_EQ(job.GetNumberUp(), 4);
+    NumberUpArgs args;
+    args.numberUp = 4;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    args.mirror = 1;
+    args.pageBorder = 1;
+
+    job.SetNumberUpArgs(args);
+    NumberUpArgs result = job.GetNumberUpArgs();
+    EXPECT_EQ(result.numberUp, 4);
+    EXPECT_EQ(result.numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
+    EXPECT_EQ(result.mirror, 1);
+    EXPECT_EQ(result.pageBorder, 1);
 }
 
 /**
- * @tc.name: PrintJobTest_NumberUp_002
- * @tc.desc: Verify the SetNumberUp with boundary values.
+ * @tc.name: PrintJobTest_NumberUpArgs_002
+ * @tc.desc: Verify the SetNumberUpArgs with valid numberUp values.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_002, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_002, TestSize.Level1)
 {
     PrintJob job;
+    NumberUpArgs args;
     // Test valid number-up values: 1, 2, 4, 6, 9, 16
-    job.SetNumberUp(1);
-    EXPECT_EQ(job.GetNumberUp(), 1);
-    job.SetNumberUp(2);
-    EXPECT_EQ(job.GetNumberUp(), 2);
-    job.SetNumberUp(4);
-    EXPECT_EQ(job.GetNumberUp(), 4);
-    job.SetNumberUp(6);
-    EXPECT_EQ(job.GetNumberUp(), 6);
-    job.SetNumberUp(9);
-    EXPECT_EQ(job.GetNumberUp(), 9);
-    job.SetNumberUp(16);
-    EXPECT_EQ(job.GetNumberUp(), 16);
+    uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
+    for (auto numberUp : validNumberUps) {
+        args.numberUp = numberUp;
+        job.SetNumberUpArgs(args);
+        EXPECT_EQ(job.GetNumberUpArgs().numberUp, numberUp);
+    }
 }
 
 /**
- * @tc.name: PrintJobTest_NumberUpLayout_001
- * @tc.desc: Verify the SetNumberUpLayout and GetNumberUpLayout function.
+ * @tc.name: PrintJobTest_NumberUpArgs_Marshalling_001
+ * @tc.desc: Verify the Marshalling and Unmarshalling for NumberUpArgs.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUpLayout_001, TestSize.Level1)
-{
-    PrintJob job;
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_LRTB);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_LRTB);
-}
-
-/**
- * @tc.name: PrintJobTest_NumberUpLayout_002
- * @tc.desc: Verify the SetNumberUpLayout with all layout values.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUpLayout_002, TestSize.Level1)
-{
-    PrintJob job;
-    // Test all layout values
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_LRTB);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_LRTB);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_RLTB);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_RLTB);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_TBLR);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBLR);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_TBRL);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBRL);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_LRBT);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_LRBT);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_RLBT);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_RLBT);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTLR);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTLR);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTRL);
-    EXPECT_EQ(job.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTRL);
-}
-
-/**
- * @tc.name: PrintJobTest_NumberUp_Marshalling_001
- * @tc.desc: Verify the Marshalling and Unmarshalling for numberUp.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_Marshalling_001, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_001, TestSize.Level1)
 {
     PrintJob job;
     Parcel parcel;
-    job.SetNumberUp(4);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_TBLR);
+    NumberUpArgs args;
+    args.numberUp = 4;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    args.mirror = 1;
+    args.pageBorder = 1;
+    job.SetNumberUpArgs(args);
     job.SetJobId("job-001");
     job.SetPrinterId("printer-001");
 
@@ -566,71 +534,275 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_Marshalling_001, TestSize.Level1)
 
     auto unmarshalledJob = PrintJob::Unmarshalling(parcel);
     ASSERT_NE(unmarshalledJob, nullptr);
-    EXPECT_EQ(unmarshalledJob->GetNumberUp(), 4);
-    EXPECT_EQ(unmarshalledJob->GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBLR);
+    NumberUpArgs result = unmarshalledJob->GetNumberUpArgs();
+    EXPECT_EQ(result.numberUp, 4);
+    EXPECT_EQ(result.numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
+    EXPECT_EQ(result.mirror, 1);
+    EXPECT_EQ(result.pageBorder, 1);
 }
 
 /**
- * @tc.name: PrintJobTest_NumberUp_UpdateParams_001
- * @tc.desc: Verify the UpdateParams for numberUp and numberUpLayout.
+ * @tc.name: PrintJobTest_NumberUpArgs_UpdateParams_001
+ * @tc.desc: Verify the UpdateParams for NumberUpArgs.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_UpdateParams_001, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_UpdateParams_001, TestSize.Level1)
 {
     PrintJob job;
     PrintJob updateJob;
 
-    job.SetNumberUp(9);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTLR);
+    NumberUpArgs args;
+    args.numberUp = 9;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_BTLR;
+    args.mirror = 1;
+    args.pageBorder = 1;
+    job.SetNumberUpArgs(args);
     job.SetJobId("job-001");
     job.SetPrinterId("printer-001");
     job.SetCopyNumber(2);
     job.SetColorMode(1);
 
     updateJob.UpdateParams(job);
-    EXPECT_EQ(updateJob.GetNumberUp(), 9);
-    EXPECT_EQ(updateJob.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTLR);
+    NumberUpArgs result = updateJob.GetNumberUpArgs();
+    EXPECT_EQ(result.numberUp, 9);
+    EXPECT_EQ(result.numberUpLayout, NUMBER_UP_LAYOUT_BTLR);
+    EXPECT_EQ(result.mirror, 1);
+    EXPECT_EQ(result.pageBorder, 1);
     EXPECT_EQ(updateJob.GetJobId(), "job-001");
     EXPECT_EQ(updateJob.GetCopyNumber(), 2);
 }
 
 /**
- * @tc.name: PrintJobTest_NumberUp_CopyConstructor_001
- * @tc.desc: Verify the copy constructor for numberUp and numberUpLayout.
+ * @tc.name: PrintJobTest_NumberUpArgs_CopyConstructor_001
+ * @tc.desc: Verify the copy constructor for NumberUpArgs.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_CopyConstructor_001, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_CopyConstructor_001, TestSize.Level1)
 {
     PrintJob job;
-    job.SetNumberUp(6);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_RLBT);
+    NumberUpArgs args;
+    args.numberUp = 6;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_RLBT;
+    args.mirror = 1;
+    args.pageBorder = 1;
+    job.SetNumberUpArgs(args);
     job.SetJobId("job-copy-test");
 
     PrintJob copyJob(job);
-    EXPECT_EQ(copyJob.GetNumberUp(), 6);
-    EXPECT_EQ(copyJob.GetNumberUpLayout(), NUMBER_UP_LAYOUT_RLBT);
+    NumberUpArgs result = copyJob.GetNumberUpArgs();
+    EXPECT_EQ(result.numberUp, 6);
+    EXPECT_EQ(result.numberUpLayout, NUMBER_UP_LAYOUT_RLBT);
+    EXPECT_EQ(result.mirror, 1);
+    EXPECT_EQ(result.pageBorder, 1);
     EXPECT_EQ(copyJob.GetJobId(), "job-copy-test");
 }
 
 /**
- * @tc.name: PrintJobTest_NumberUp_AssignmentOperator_001
- * @tc.desc: Verify the assignment operator for numberUp and numberUpLayout.
+ * @tc.name: PrintJobTest_NumberUpArgs_AssignmentOperator_001
+ * @tc.desc: Verify the assignment operator for NumberUpArgs.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_NumberUp_AssignmentOperator_001, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_AssignmentOperator_001, TestSize.Level1)
 {
     PrintJob job;
-    job.SetNumberUp(16);
-    job.SetNumberUpLayout(NUMBER_UP_LAYOUT_BTRL);
+    NumberUpArgs args;
+    args.numberUp = 16;
+    args.numberUpLayout = NUMBER_UP_LAYOUT_BTRL;
+    args.mirror = 1;
+    args.pageBorder = 1;
+    job.SetNumberUpArgs(args);
     job.SetJobId("job-assign-test");
 
     PrintJob assignJob = job;
-    EXPECT_EQ(assignJob.GetNumberUp(), 16);
-    EXPECT_EQ(assignJob.GetNumberUpLayout(), NUMBER_UP_LAYOUT_BTRL);
+    NumberUpArgs result = assignJob.GetNumberUpArgs();
+    EXPECT_EQ(result.numberUp, 16);
+    EXPECT_EQ(result.numberUpLayout, NUMBER_UP_LAYOUT_BTRL);
+    EXPECT_EQ(result.mirror, 1);
+    EXPECT_EQ(result.pageBorder, 1);
     EXPECT_EQ(assignJob.GetJobId(), "job-assign-test");
 }
+
+/**
+ * @tc.name: PrintJobTest_NumberUpArgs_003
+ * @tc.desc: Verify all valid numberUpLayout values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_003, TestSize.Level1)
+{
+    PrintJob job;
+    NumberUpArgs args;
+    // Data table: test all valid numberUpLayout values
+    uint32_t validLayouts[] = {
+        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_RLTB,
+        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
+        NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
+        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
+    };
+    for (auto layout : validLayouts) {
+        args.numberUpLayout = layout;
+        job.SetNumberUpArgs(args);
+        EXPECT_EQ(job.GetNumberUpArgs().numberUpLayout, layout);
+    }
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpArgs_004
+ * @tc.desc: Verify mirror values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_004, TestSize.Level1)
+{
+    PrintJob job;
+    NumberUpArgs args;
+    // Data table: test mirror values
+    uint32_t validMirrors[] = {PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED};
+    for (auto mirror : validMirrors) {
+        args.mirror = mirror;
+        job.SetNumberUpArgs(args);
+        EXPECT_EQ(job.GetNumberUpArgs().mirror, mirror);
+    }
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpArgs_005
+ * @tc.desc: Verify pageBorder values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_005, TestSize.Level1)
+{
+    PrintJob job;
+    NumberUpArgs args;
+    // Data table: test pageBorder values
+    uint32_t validBorders[] = {
+        PRINT_PAGE_BORDER_NONE,
+        PRINT_PAGE_BORDER_SINGLE,
+        PRINT_PAGE_BORDER_DOUBLE
+    };
+    for (auto border : validBorders) {
+        args.pageBorder = border;
+        job.SetNumberUpArgs(args);
+        EXPECT_EQ(job.GetNumberUpArgs().pageBorder, border);
+    }
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpArgs_006
+ * @tc.desc: Verify combined NumberUpArgs values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_006, TestSize.Level1)
+{
+    // Data table: combined test cases
+    struct TestCase {
+        uint32_t numberUp;
+        uint32_t numberUpLayout;
+        uint32_t mirror;
+        uint32_t pageBorder;
+    };
+    
+    std::vector<TestCase> testCases = {
+        {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
+        {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
+        {4, NUMBER_UP_LAYOUT_TBLR, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_DOUBLE},
+        {6, NUMBER_UP_LAYOUT_TBRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_NONE},
+        {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
+        {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
+    };
+    
+    int index = 0;
+    for (const auto& tc : testCases) {
+        PrintJob job;
+        NumberUpArgs args;
+        args.numberUp = tc.numberUp;
+        args.numberUpLayout = tc.numberUpLayout;
+        args.mirror = tc.mirror;
+        args.pageBorder = tc.pageBorder;
+        job.SetNumberUpArgs(args);
+        
+        NumberUpArgs result = job.GetNumberUpArgs();
+        EXPECT_EQ(result.numberUp, tc.numberUp) << "Failed at index " << index;
+        EXPECT_EQ(result.numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
+        EXPECT_EQ(result.mirror, tc.mirror) << "Failed at index " << index;
+        EXPECT_EQ(result.pageBorder, tc.pageBorder) << "Failed at index " << index;
+        index++;
+    }
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpArgs_Marshalling_002
+ * @tc.desc: Verify Marshalling with all valid numberUp values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_002, TestSize.Level1)
+{
+    // Data table: test marshalling with all valid numberUp values
+    uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
+    
+    for (auto numberUp : validNumberUps) {
+        PrintJob job;
+        Parcel parcel;
+        NumberUpArgs args;
+        args.numberUp = numberUp;
+        args.numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        args.mirror = 0;
+        args.pageBorder = 0;
+        job.SetNumberUpArgs(args);
+        job.SetJobId("job-" + std::to_string(numberUp));
+        job.SetPrinterId("printer-001");
+
+        EXPECT_TRUE(job.Marshalling(parcel));
+
+        auto unmarshalledJob = PrintJob::Unmarshalling(parcel);
+        ASSERT_NE(unmarshalledJob, nullptr);
+        NumberUpArgs result = unmarshalledJob->GetNumberUpArgs();
+        EXPECT_EQ(result.numberUp, numberUp);
+    }
+}
+
+/**
+ * @tc.name: PrintJobTest_NumberUpArgs_Marshalling_003
+ * @tc.desc: Verify Marshalling with all numberUpLayout values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_003, TestSize.Level1)
+{
+    // Data table: test marshalling with all numberUpLayout values
+    uint32_t layouts[] = {
+        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_RLTB,
+        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
+        NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
+        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
+    };
+    
+    for (auto layout : layouts) {
+        PrintJob job;
+        Parcel parcel;
+        NumberUpArgs args;
+        args.numberUp = 4;
+        args.numberUpLayout = layout;
+        args.mirror = 0;
+        args.pageBorder = 0;
+        job.SetNumberUpArgs(args);
+        job.SetJobId("job-layout-" + std::to_string(layout));
+        job.SetPrinterId("printer-001");
+
+        EXPECT_TRUE(job.Marshalling(parcel));
+
+        auto unmarshalledJob = PrintJob::Unmarshalling(parcel);
+        ASSERT_NE(unmarshalledJob, nullptr);
+        NumberUpArgs result = unmarshalledJob->GetNumberUpArgs();
+        EXPECT_EQ(result.numberUpLayout, layout);
+    }
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -102,7 +102,10 @@ void TestCheckUserIdInEventType(const uint8_t *data, size_t size, FuzzedDataProv
 void TestCallSpooler(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::vector<std::string> fileList = { dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH) };
-    std::vector<uint32_t> fdList = { dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER) };
+    std::vector<uint32_t> fdList;
+    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER); ++i) {
+        fdList.push_back(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    }
     std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->CallSpooler(fileList, fdList, taskId);
 }

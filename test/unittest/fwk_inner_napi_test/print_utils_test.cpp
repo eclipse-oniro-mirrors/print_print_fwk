@@ -657,35 +657,40 @@ HWTEST_F(PrintUtilsTest, SetOptionInPrintJob_Test, TestSize.Level2)
 }
 
 /**
- * @tc.name: ConvertParamsToPrintJob_NumberUp_001
- * @tc.desc: Verify the ConvertParamsToPrintJob function with numberUp.
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_001
+ * @tc.desc: Verify the ConvertParamsToPrintJob function with NumberUpArgs.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUp_001, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_001, TestSize.Level2)
 {
     PrintJobParams params;
     params.printerId = "printer-001";
     params.docFlavor = 0;
     params.printFdList.emplace_back(1);
 
-    // Set numberUp and numberUpLayout
+    // Set NumberUpArgs
     params.numberUp = 4;
     params.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    params.mirror = 1;
+    params.pageBorder = 1;
 
     auto result = PrintUtils::ConvertParamsToPrintJob(params);
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->GetNumberUp(), 4);
-    EXPECT_EQ(result->GetNumberUpLayout(), NUMBER_UP_LAYOUT_TBLR);
+    NumberUpArgs args = result->GetNumberUpArgs();
+    EXPECT_EQ(args.numberUp, 4);
+    EXPECT_EQ(args.numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
+    EXPECT_EQ(args.mirror, 1);
+    EXPECT_EQ(args.pageBorder, 1);
 }
 
 /**
- * @tc.name: ConvertParamsToPrintJob_NumberUp_002
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_002
  * @tc.desc: Verify the ConvertParamsToPrintJob function with all valid numberUp values.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUp_002, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_002, TestSize.Level2)
 {
     PrintJobParams params;
     params.printerId = "printer-001";
@@ -698,17 +703,17 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUp_002, TestSize.Level2)
         params.numberUp = numberUp;
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr);
-        EXPECT_EQ(result->GetNumberUp(), numberUp);
+        EXPECT_EQ(result->GetNumberUpArgs().numberUp, numberUp);
     }
 }
 
 /**
- * @tc.name: ConvertParamsToPrintJob_NumberUpLayout_001
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_003
  * @tc.desc: Verify the ConvertParamsToPrintJob function with all numberUpLayout values.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpLayout_001, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_003, TestSize.Level2)
 {
     PrintJobParams params;
     params.printerId = "printer-001";
@@ -728,7 +733,184 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpLayout_001, TestSize.Le
         params.numberUpLayout = layout;
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr);
-        EXPECT_EQ(result->GetNumberUpLayout(), layout);
+        EXPECT_EQ(result->GetNumberUpArgs().numberUpLayout, layout);
+    }
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_004
+ * @tc.desc: Verify the ConvertParamsToPrintJob function with mirror and pageBorder.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_004, TestSize.Level2)
+{
+    PrintJobParams params;
+    params.printerId = "printer-001";
+    params.docFlavor = 0;
+    params.printFdList.emplace_back(1);
+
+    // Test mirror values
+    params.mirror = 1;
+    params.pageBorder = 1;
+    auto result = PrintUtils::ConvertParamsToPrintJob(params);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->GetNumberUpArgs().mirror, 1);
+    EXPECT_EQ(result->GetNumberUpArgs().pageBorder, 1);
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_005
+ * @tc.desc: Verify the ConvertParamsToPrintJob with all valid numberUp values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_005, TestSize.Level2)
+{
+    // Data table: test all valid numberUp values
+    uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
+    
+    for (auto numberUp : validNumberUps) {
+        PrintJobParams params;
+        params.printerId = "printer-001";
+        params.docFlavor = 0;
+        params.printFdList.emplace_back(1);
+        params.numberUp = numberUp;
+        
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr) << "Failed for numberUp=" << numberUp;
+        EXPECT_EQ(result->GetNumberUpArgs().numberUp, numberUp);
+    }
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_006
+ * @tc.desc: Verify the ConvertParamsToPrintJob with all numberUpLayout values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_006, TestSize.Level2)
+{
+    // Data table: test all numberUpLayout values
+    uint32_t layouts[] = {
+        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_RLTB,
+        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
+        NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
+        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
+    };
+    
+    for (auto layout : layouts) {
+        PrintJobParams params;
+        params.printerId = "printer-001";
+        params.docFlavor = 0;
+        params.printFdList.emplace_back(1);
+        params.numberUp = 4;
+        params.numberUpLayout = layout;
+        
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr) << "Failed for layout=" << layout;
+        EXPECT_EQ(result->GetNumberUpArgs().numberUpLayout, layout);
+    }
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_007
+ * @tc.desc: Verify the ConvertParamsToPrintJob with mirror values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_007, TestSize.Level2)
+{
+    // Data table: test mirror values
+    uint32_t mirrorValues[] = {PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED};
+    
+    for (auto mirror : mirrorValues) {
+        PrintJobParams params;
+        params.printerId = "printer-001";
+        params.docFlavor = 0;
+        params.printFdList.emplace_back(1);
+        params.numberUp = 4;
+        params.mirror = mirror;
+        
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr) << "Failed for mirror=" << mirror;
+        EXPECT_EQ(result->GetNumberUpArgs().mirror, mirror);
+    }
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_008
+ * @tc.desc: Verify the ConvertParamsToPrintJob with pageBorder values (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_008, TestSize.Level2)
+{
+    // Data table: test pageBorder values
+    uint32_t borderValues[] = {
+        PRINT_PAGE_BORDER_NONE,
+        PRINT_PAGE_BORDER_SINGLE,
+        PRINT_PAGE_BORDER_DOUBLE
+    };
+    
+    for (auto border : borderValues) {
+        PrintJobParams params;
+        params.printerId = "printer-001";
+        params.docFlavor = 0;
+        params.printFdList.emplace_back(1);
+        params.numberUp = 4;
+        params.pageBorder = border;
+        
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr) << "Failed for pageBorder=" << border;
+        EXPECT_EQ(result->GetNumberUpArgs().pageBorder, border);
+    }
+}
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_009
+ * @tc.desc: Verify the ConvertParamsToPrintJob with combined NumberUpArgs (data table).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Level2)
+{
+    // Data table: combined test cases
+    struct TestCase {
+        uint32_t numberUp;
+        uint32_t numberUpLayout;
+        uint32_t mirror;
+        uint32_t pageBorder;
+    };
+    
+    std::vector<TestCase> testCases = {
+        {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
+        {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
+        {4, NUMBER_UP_LAYOUT_TBLR, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_DOUBLE},
+        {6, NUMBER_UP_LAYOUT_TBRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_NONE},
+        {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
+        {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
+    };
+    
+    int index = 0;
+    for (const auto& tc : testCases) {
+        PrintJobParams params;
+        params.printerId = "printer-001";
+        params.docFlavor = 0;
+        params.printFdList.emplace_back(1);
+        params.numberUp = tc.numberUp;
+        params.numberUpLayout = tc.numberUpLayout;
+        params.mirror = tc.mirror;
+        params.pageBorder = tc.pageBorder;
+        
+        auto result = PrintUtils::ConvertParamsToPrintJob(params);
+        ASSERT_NE(result, nullptr) << "Failed at index " << index;
+        NumberUpArgs args = result->GetNumberUpArgs();
+        EXPECT_EQ(args.numberUp, tc.numberUp) << "Failed at index " << index;
+        EXPECT_EQ(args.numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
+        EXPECT_EQ(args.mirror, tc.mirror) << "Failed at index " << index;
+        EXPECT_EQ(args.pageBorder, tc.pageBorder) << "Failed at index " << index;
+        index++;
     }
 }
 
