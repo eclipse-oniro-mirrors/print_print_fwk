@@ -485,7 +485,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
         DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
         DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
-        DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_PRINTJOB_LIST, NapiInnerPrint::QueryAllActivePrintJob),
+        DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_PRINTJOB_LIST, NapiInnerPrint::QueryAllPrintJob),
         DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_ALL_ACTIVE_PRINTJOB, NapiInnerPrint::QueryAllActivePrintJob),
         DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_PRINTJOB_BYID, NapiInnerPrint::QueryPrintJobById),
         DECLARE_NAPI_FUNCTION(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
