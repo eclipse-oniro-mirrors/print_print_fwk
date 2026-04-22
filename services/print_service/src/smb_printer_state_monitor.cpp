@@ -20,10 +20,17 @@
 
 namespace OHOS::Print {
 constexpr int32_t CHECK_HOST_ALIVE_INTERVAL = 2;
+constexpr int32_t THREAD_WAIT_INTERVAL_MS = 100;
+constexpr int32_t THREAD_WAIT_MAX_COUNT = 1800;
+
+// Wait for monitor thread to exit, maximum wait time is 3 minutes (1800 * 100ms)
 SmbPrinterStateMonitor::~SmbPrinterStateMonitor()
 {
-    if (isMonitoring_.load()) {
-        StopSmbPrinterStatusMonitor();
+    isMonitoring_.store(false);
+    int waitCount = 0;
+    while (threadRunning_.load() && waitCount < THREAD_WAIT_MAX_COUNT) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(THREAD_WAIT_INTERVAL_MS));
+        waitCount++;
     }
 }
 
@@ -35,47 +42,31 @@ SmbPrinterStateMonitor& SmbPrinterStateMonitor::GetInstance()
 
 void SmbPrinterStateMonitor::StartSmbPrinterStatusMonitor(std::function<void(const PrinterInfo& printerInfo)> notify)
 {
-    std::lock_guard<std::mutex> lock(threadMutex_);
-    if (isMonitoring_.load()) {
-        PRINT_HILOGI("The monitoring thread is running");
-        return;
-    }
-    PRINT_HILOGI("start monitor caller apps");
-    isMonitoring_.store(true);
-    monitorThread_ = std::thread(&SmbPrinterStateMonitor::MonitorSmbPrinters, this, notify);
-}
-
-void SmbPrinterStateMonitor::StopSmbPrinterStatusMonitor()
-{
-    {
-        std::lock_guard<std::mutex> lock(threadMutex_);
-        if (!isMonitoring_.load()) {
-            PRINT_HILOGI("Monitor is not running");
-            return;
-        }
-        isMonitoring_.store(false);
-    }
-    
-    if (monitorThread_.joinable()) {
-        PRINT_HILOGI("Waiting for smb printer monitor thread to finish");
-        monitorThread_.join();
-        PRINT_HILOGI("smb printer Monitor thread stopped successfully");
-    } else {
-        PRINT_HILOGW("Monitor thread is not joinable");
-    }
-}
-
-
-void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const PrinterInfo& printerInfo)> notify)
-{
     if (!notify) {
         PRINT_HILOGE("notify is nullptr");
         return;
     }
+    bool expected = false;
+    if (!isMonitoring_.compare_exchange_strong(expected, true)) {
+        PRINT_HILOGI("The monitoring thread is running");
+        return;
+    }
+    PRINT_HILOGI("start monitor caller apps");
+    std::thread(&SmbPrinterStateMonitor::MonitorSmbPrinters, this, notify).detach();
+}
+
+void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const PrinterInfo& printerInfo)> notify)
+{
+    threadRunning_.store(true);
     do {
         std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> localCopy;
         {
             std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
+            if (monitorSmbPrinters_.empty()) {
+                PRINT_HILOGI("monitorSmbPrinters_ is empty, stop monitoring");
+                isMonitoring_.store(false);
+                break;
+            }
             localCopy = monitorSmbPrinters_;
         }
         auto hostStatusMap = GetHostStatusMap(localCopy);
@@ -83,6 +74,7 @@ void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const Printer
         UpdateAndNotifyPrinters(notifyPrinters, notify);
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_HOST_ALIVE_INTERVAL));
     } while (isMonitoring_.load());
+    threadRunning_.store(false);
 }
 
 std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> SmbPrinterStateMonitor::GetHostStatusMap(
@@ -95,6 +87,7 @@ std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> SmbPrinterSt
     }
     SmbHostSearchHelper helper;
     std::unordered_map<std::string, HostStatus> hostStatusMap;
+    // TestSmbHostAlive has a default timeout of 1 second per IP
     for (const auto& ip : uniqueIps) {
         hostStatusMap[ip] = helper.TestSmbHostAlive(ip) ? HostStatus::ALIVE : HostStatus::DEAD;
     }

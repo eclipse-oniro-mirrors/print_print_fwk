@@ -2743,9 +2743,6 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterPrintJobListener(
             CB_EVENT_TYPE_MAP.at(type), taskId);
     }
-#ifdef HAVE_SMB_PRINTER
-    TryStopSmbPrinterStatusMonitor();
-#endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;
 }
 
@@ -3445,7 +3442,6 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
 #ifdef HAVE_SMB_PRINTER
     if (SmbPrinterDiscoverer::IsSmbPrinterId(printerId)) {
         SmbPrinterStateMonitor::GetInstance().EraseSmbPrinterInMonitorListById(printerId);
-        TryStopSmbPrinterStatusMonitor();
     }
 #endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;
@@ -5588,41 +5584,26 @@ int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const s
 void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
 {
     PRINT_HILOGI("begin TryStartSmbPrinterStatusMonitor");
-    bool isListenerEmpty = DelayedSingleton<EventListenerMgr>::GetInstance()->IsPrinterListenerEmpty(
-        CB_EVENT_TYPE_MAP.at(PRINTER_CHANGE_EVENT_TYPE));
     std::vector<PrinterInfo> printerInfoList;
     printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
-    if (!isListenerEmpty && !printerInfoList.empty()) {
-        std::vector<PrinterInfo> printerInfoList;
-        printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
-        if (printerInfoList.empty()) {
-            PRINT_HILOGI("No need to enable monitoring for SMB printers");
-            return;
-        }
-        for (const auto& info : printerInfoList) {
-            SmbPrinterStateMonitor::GetInstance().SetSmbPrinterInMonitorList(info);
-        }
-        auto notifyPrinterStateChanged = [this] (const PrinterInfo& printerInfo) {
-            PRINT_HILOGI("begin smbNotify printerStateChange");
-            printSystemData_.UpdatePrinterStatus(printerInfo.GetPrinterId(),
-                static_cast<PrinterStatus>(printerInfo.GetPrinterStatus()));
-            this->SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
-        };
-        SmbPrinterStateMonitor::GetInstance().StartSmbPrinterStatusMonitor(notifyPrinterStateChanged);
+    if (printerInfoList.empty()) {
+        PRINT_HILOGI("No need to enable monitoring for SMB printers");
+        return;
     }
+    for (const auto& info : printerInfoList) {
+        SmbPrinterStateMonitor::GetInstance().SetSmbPrinterInMonitorList(info);
+    }
+    auto notifyPrinterStateChanged = [this] (const PrinterInfo& printerInfo) {
+        PRINT_HILOGI("begin smbNotify printerStateChange");
+        printSystemData_.UpdatePrinterStatus(printerInfo.GetPrinterId(),
+            static_cast<PrinterStatus>(printerInfo.GetPrinterStatus()));
+        this->SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+        this->SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+    };
+    SmbPrinterStateMonitor::GetInstance().StartSmbPrinterStatusMonitor(notifyPrinterStateChanged);
     PRINT_HILOGI("end TryStartSmbPrinterStatusMonitor");
 }
 
-void PrintServiceAbility::TryStopSmbPrinterStatusMonitor()
-{
-    bool isListenerEmpty = DelayedSingleton<EventListenerMgr>::GetInstance()->IsPrinterListenerEmpty(
-        CB_EVENT_TYPE_MAP.at(PRINTER_CHANGE_EVENT_TYPE));
-    std::vector<PrinterInfo> printerInfoList;
-    printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
-    if (isListenerEmpty || printerInfoList.empty()) {
-        SmbPrinterStateMonitor::GetInstance().StopSmbPrinterStatusMonitor();
-    }
-}
 #endif // HAVE_SMB_PRINTER
 
 int32_t PrintServiceAbility::RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback)
