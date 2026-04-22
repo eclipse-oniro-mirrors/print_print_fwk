@@ -29,8 +29,8 @@ constexpr size_t U32_AT_SIZE = 4;
 
 void TestRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINTER_STATE_CHANGE, CallbackEventType::PRINTER_EXT_INFO_CHANGE));
     sptr<IPrintCallback> listener = nullptr;
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, listener);
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
@@ -45,8 +45,8 @@ void TestRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataPro
 
 void TestRegisterExtensionListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::EXTCB_START_DISCOVERY, CallbackEventType::EXTCB_DESTROY_EXTENSION));
     std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     sptr<IPrintExtensionCallback> listener = nullptr;
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(eventType, extensionId, listener);
@@ -54,8 +54,8 @@ void TestRegisterExtensionListener(const uint8_t *data, size_t size, FuzzedDataP
 
 void TestRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINT_JOB_BLOCK, CallbackEventType::PRINT_JOB_FILE_GET_ADAPTER));
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     sptr<IPrintCallback> listener = nullptr;
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(eventType, jobId, listener);
@@ -71,15 +71,15 @@ void TestRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedDataPr
 
 void TestUnRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINTER_STATE_CHANGE, CallbackEventType::PRINTER_EXT_INFO_CHANGE));
     DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterPrinterListener(eventType);
 }
 
 void TestUnRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINT_JOB_BLOCK, CallbackEventType::PRINT_JOB_FILE_GET_ADAPTER));
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterPrintJobListener(eventType, jobId);
 }
@@ -87,8 +87,8 @@ void TestUnRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedData
 void TestExecute(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     CallbackInfo callbackInfo;
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINTER_STATE_CHANGE, CallbackEventType::PRINT_JOB_FILE_GET_ADAPTER));
     int32_t userId = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     callbackInfo.cbEventType = eventType;
     callbackInfo.userId = userId;
@@ -97,15 +97,15 @@ void TestExecute(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvi
 
 void TestIsPrinterListenerEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINTER_STATE_CHANGE, CallbackEventType::PRINTER_EXT_INFO_CHANGE));
     DelayedSingleton<EventListenerMgr>::GetInstance()->IsPrinterListenerEmpty(eventType);
 }
 
 void TestIsExtensionListenerEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::EXTCB_START_DISCOVERY, CallbackEventType::EXTCB_DESTROY_EXTENSION));
     std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int32_t userId = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     DelayedSingleton<EventListenerMgr>::GetInstance()->IsExtensionListenerEmpty(eventType, extensionId, userId);
@@ -113,8 +113,8 @@ void TestIsExtensionListenerEmpty(const uint8_t *data, size_t size, FuzzedDataPr
 
 void TestIsPrintJobListenerEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    CallbackEventType eventType = static_cast<CallbackEventType>(
-        dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    CallbackEventType eventType = static_cast<CallbackEventType>(dataProvider->ConsumeIntegralInRange<uint32_t>(
+        CallbackEventType::PRINT_JOB_BLOCK, CallbackEventType::PRINT_JOB_FILE_GET_ADAPTER));
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     DelayedSingleton<EventListenerMgr>::GetInstance()->IsPrintJobListenerEmpty(eventType, jobId);
 }
