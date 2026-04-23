@@ -27,6 +27,8 @@
 
 namespace OHOS::Print {
 
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 class KiaInterceptorManager : public NoCopyable {
 public:
     static KiaInterceptorManager& GetInstance();
@@ -56,6 +58,55 @@ private:
     friend class KiaInterceptorManagerTest;
     friend class KiaInterceptorDeathRecipient;
 };
+
+#else
+
+class KiaInterceptorManager : public NoCopyable {
+public:
+    static KiaInterceptorManager& GetInstance()
+    {
+        static KiaInterceptorManager instance;
+        return instance;
+    }
+
+    int32_t RegisterCallback(const sptr<IKiaInterceptorCallback> &callback)
+    {
+        return E_PRINT_NONE;
+    }
+
+    int32_t UnregisterCallback()
+    {
+        return E_PRINT_NONE;
+    }
+
+    bool CheckPrintJobNeedReject(const std::string &jobId)
+    {
+        return false;
+    }
+
+    bool IsCallbackRegistered()
+    {
+        return false;
+    }
+
+    int32_t RegisterCallerAppId(const std::string &jobId, const std::string &callerAppId, const int32_t &userId)
+    {
+        return E_PRINT_NONE;
+    }
+
+    void RemoveCallerAppId(const std::string &jobId) {}
+
+    std::string GetCallerAppId(const std::string &jobId)
+    {
+        return "";
+    }
+
+private:
+    KiaInterceptorManager() = default;
+    ~KiaInterceptorManager() override = default;
+};
+
+#endif // KIA_INTERCEPTOR_ENABLE
 
 } // namespace OHOS::Print
 

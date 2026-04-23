@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 #include "../include/kia_interceptor_callback_proxy.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -54,3 +56,5 @@ bool KiaInterceptorCallbackProxy::OnCheckPrintJobNeedReject(const int32_t &pid, 
     return result;
 }
 } // namespace OHOS::Print
+
+#endif // KIA_INTERCEPTOR_ENABLE

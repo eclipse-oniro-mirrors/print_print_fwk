@@ -61,7 +61,6 @@ ohos_shared_library("print_client") {
     "src/watermark_callback.cpp",
     "src/watermark_callback_stub.cpp",
     "src/print_callback_native.cpp",
-    "src/kia_interceptor_callback_stub.cpp",
   ]
 
   deps = [
@@ -88,6 +87,13 @@ ohos_shared_library("print_client") {
 
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+    sources += [
+      "src/kia_interceptor_callback_stub.cpp",
+    ]
   }
 
   #relative_install_dir = "module"

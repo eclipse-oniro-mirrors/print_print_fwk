@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#ifdef KIA_INTERCEPTOR_ENABLE
+
 #include "kia_interceptor_callback_stub.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -57,3 +59,5 @@ bool KiaInterceptorCallbackStub::HandleCheckRejectEvent(MessageParcel &data, Mes
     return true;
 }
 } // namespace OHOS::Print
+
+#endif // KIA_INTERCEPTOR_ENABLE

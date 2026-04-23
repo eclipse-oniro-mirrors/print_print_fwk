@@ -26,7 +26,9 @@
 #include "mock_print_service.h"
 #include "mock_print_callback_stub.h"
 #include "mock_watermark_callback_stub.h"
+#ifdef KIA_INTERCEPTOR_ENABLE
 #include "mock_kia_interceptor_callback_stub.h"
+#endif // KIA_INTERCEPTOR_ENABLE
 
 using namespace testing;
 using namespace testing::ext;
@@ -1588,6 +1590,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddPriner, TestSize.Level1
     proxy->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
 }
 
+#ifdef KIA_INTERCEPTOR_ENABLE
 HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_NullCallback, TestSize.Level1)
 {
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -1657,6 +1660,7 @@ HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_RpcFailure, TestS
     int32_t ret = proxy->RegisterKiaInterceptorCallback(callback);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
+#endif // KIA_INTERCEPTOR_ENABLE
 
 }  // namespace Print
 }  // namespace OHOS
