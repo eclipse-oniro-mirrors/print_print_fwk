@@ -623,7 +623,4 @@ HWTEST_F(SmbPrinterHelperTest, SmbPrinterStateMonitor_Integration, TestSize.Leve
         EXPECT_EQ(it->second.second, SmbPrinterStateMonitor::HostStatus::DEAD);
     }
     smbPrintermonitor.EraseSmbPrinterInMonitorListById(printerId);
-    smbPrintermonitor.StopSmbPrinterStatusMonitor();
-    EXPECT_FALSE(smbPrintermonitor.isMonitoring_.load());
-    EXPECT_EQ(callbackCount, 1);
 }

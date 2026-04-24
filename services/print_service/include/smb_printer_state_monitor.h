@@ -31,7 +31,6 @@ class SmbPrinterStateMonitor {
 public:
     static SmbPrinterStateMonitor& GetInstance();
     void StartSmbPrinterStatusMonitor(std::function<void(const PrinterInfo& printerInfo)> notify);
-    void StopSmbPrinterStatusMonitor();
     void SetSmbPrinterInMonitorList(const PrinterInfo& info);
     void EraseSmbPrinterInMonitorListById(const std::string& printerId);
     bool IsSmbPrinterOnline(const std::string& printerId);
@@ -57,8 +56,7 @@ private:
     std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> monitorSmbPrinters_;
     std::mutex monitorSmbPrintersLock_;
     std::atomic<bool> isMonitoring_{false};
-    std::thread monitorThread_;
-    std::mutex threadMutex_;
+    std::atomic<bool> threadRunning_{false};
 };
 
 } // namespace OHOS::Print
