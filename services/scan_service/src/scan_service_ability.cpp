@@ -1117,10 +1117,6 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         return E_SCAN_NO_PERMISSION;
     }
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (scannerState_.load() == SCANNER_SCANING) {
-        SCAN_HILOGE("scan task is already running");
-        return E_SCAN_DEVICE_BUSY;
-    }
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;

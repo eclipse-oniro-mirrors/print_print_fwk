@@ -3809,6 +3809,217 @@ HWTEST_F(PrintCupsClientTest, BuildJobParameters_CombinedNumberUpArgs_Test, Test
 }
 
 /**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_001
+ * @tc.desc: FillNumberUpOptions with default values should not add to CUPS options
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_DefaultValues_Test, TestSize.Level1)
+{
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = NUMBER_UP_DEFAULT_VALUE;
+    jobParams->numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    
+    int result = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    
+    cups_option_t *opt = options;
+    bool hasNumberUp = false;
+    bool hasNumberUpLayout = false;
+    for (int i = 0; i < result; i++) {
+        if (strcmp(opt[i].name, "number-up") == 0) {
+            hasNumberUp = true;
+        }
+        if (strcmp(opt[i].name, "number-up-layout") == 0) {
+            hasNumberUpLayout = true;
+        }
+    }
+    
+    EXPECT_FALSE(hasNumberUp) << "number-up should not be added when using default value";
+    EXPECT_FALSE(hasNumberUpLayout) << "number-up-layout should not be added when using default value";
+    
+    delete jobParams;
+    cupsFreeOptions(result, options);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_002
+ * @tc.desc: FillNumberUpOptions with non-default numberUp should add to CUPS options
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NonDefaultNumberUp_Test, TestSize.Level1)
+{
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 4;
+    jobParams->numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
+    
+    int result = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    
+    cups_option_t *opt = options;
+    bool hasNumberUp = false;
+    bool hasNumberUpLayout = false;
+    std::string numberUpValue;
+    for (int i = 0; i < result; i++) {
+        if (strcmp(opt[i].name, "number-up") == 0) {
+            hasNumberUp = true;
+            numberUpValue = opt[i].value;
+        }
+        if (strcmp(opt[i].name, "number-up-layout") == 0) {
+            hasNumberUpLayout = true;
+        }
+    }
+    
+    EXPECT_TRUE(hasNumberUp) << "number-up should be added when using non-default value";
+    EXPECT_EQ(numberUpValue, "4");
+    EXPECT_FALSE(hasNumberUpLayout) << "number-up-layout should not be added when using default value";
+    
+    delete jobParams;
+    cupsFreeOptions(result, options);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_003
+ * @tc.desc: FillNumberUpOptions with non-default layout should add to CUPS options
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NonDefaultLayout_Test, TestSize.Level1)
+{
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = NUMBER_UP_DEFAULT_VALUE;
+    jobParams->numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
+    
+    int result = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    
+    cups_option_t *opt = options;
+    bool hasNumberUp = false;
+    bool hasNumberUpLayout = false;
+    std::string layoutValue;
+    for (int i = 0; i < result; i++) {
+        if (strcmp(opt[i].name, "number-up") == 0) {
+            hasNumberUp = true;
+        }
+        if (strcmp(opt[i].name, "number-up-layout") == 0) {
+            hasNumberUpLayout = true;
+            layoutValue = opt[i].value;
+        }
+    }
+    
+    EXPECT_FALSE(hasNumberUp) << "number-up should not be added when using default value";
+    EXPECT_TRUE(hasNumberUpLayout) << "number-up-layout should be added when using non-default value";
+    EXPECT_EQ(layoutValue, "tblr");
+    
+    delete jobParams;
+    cupsFreeOptions(result, options);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_004
+ * @tc.desc: FillNumberUpOptions with both non-default values should add both to CUPS options
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_BothNonDefault_Test, TestSize.Level1)
+{
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    JobParameters *jobParams = new JobParameters();
+    jobParams->numberUp = 4;
+    jobParams->numberUpLayout = NUMBER_UP_LAYOUT_RLTB;
+    
+    int result = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+    
+    EXPECT_EQ(result, 2) << "Should have 2 options added";
+    
+    cups_option_t *opt = options;
+    bool hasNumberUp = false;
+    bool hasNumberUpLayout = false;
+    std::string numberUpValue;
+    std::string layoutValue;
+    for (int i = 0; i < result; i++) {
+        if (strcmp(opt[i].name, "number-up") == 0) {
+            hasNumberUp = true;
+            numberUpValue = opt[i].value;
+        }
+        if (strcmp(opt[i].name, "number-up-layout") == 0) {
+            hasNumberUpLayout = true;
+            layoutValue = opt[i].value;
+        }
+    }
+    
+    EXPECT_TRUE(hasNumberUp);
+    EXPECT_EQ(numberUpValue, "4");
+    EXPECT_TRUE(hasNumberUpLayout);
+    EXPECT_EQ(layoutValue, "rltb");
+    
+    delete jobParams;
+    cupsFreeOptions(result, options);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_005
+ * @tc.desc: FillNumberUpOptions with nullptr should return original num_options
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_NullPtr_Test, TestSize.Level1)
+{
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    
+    int result = printCupsClient.FillNumberUpOptions(nullptr, numOptions, &options);
+    
+    EXPECT_EQ(result, 0) << "Should return original num_options when nullptr";
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillNumberUpOptions_006
+ * @tc.desc: FillNumberUpOptions with data table for all valid numberUp values
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillNumberUpOptions_AllNumberUpValues_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::vector<uint32_t> validNumberUps = {1, 2, 4, 6, 9, 16};
+    
+    for (auto numberUp : validNumberUps) {
+        int numOptions = 0;
+        cups_option_t *options = nullptr;
+        
+        JobParameters *jobParams = new JobParameters();
+        jobParams->numberUp = numberUp;
+        jobParams->numberUpLayout = NUMBER_UP_LAYOUT_LRTB;
+        
+        int result = printCupsClient.FillNumberUpOptions(jobParams, numOptions, &options);
+        
+        if (numberUp == NUMBER_UP_DEFAULT_VALUE) {
+            EXPECT_EQ(result, 0) << "number-up=1 should not add option";
+        } else {
+            EXPECT_EQ(result, 1) << "number-up=" << numberUp << " should add 1 option";
+        }
+        
+        delete jobParams;
+        cupsFreeOptions(result, options);
+    }
+}
+
+/**
  * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_001
  * @tc.desc: GetInputSlotFromAdvancedOps with null json
  * @tc.type: FUNC
