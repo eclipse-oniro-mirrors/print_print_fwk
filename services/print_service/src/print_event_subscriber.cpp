@@ -60,6 +60,12 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN) {
         PRINT_HILOGI("device shutdown, unload print system");
         PrintServiceAbility::GetInstance()->StopCupsService();
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
+        std::string bundleName = data.GetWant().GetElement().GetBundleName();
+        if (bundleName != WEBPRINTER_BUNDLE_NAME) {
+            return;
+        }
+        PrintServiceAbility::GetInstance()->HandleWebPrinterUninstall();
     }
 }
 

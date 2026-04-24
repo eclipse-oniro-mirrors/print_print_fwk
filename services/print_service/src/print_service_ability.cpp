@@ -5746,4 +5746,14 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityFromPPD(const std::string &na
         ppdName);
 }
 
+void PrintServiceAbility::HandleWebPrinterUninstall()
+{
+    PRINT_HILOGI("Start handling webprinter uninstallation.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::vector<std::string> printerIdList;
+    printSystemData_.GetWebPrinterListFromSystemData(printerIdList);
+    for (auto &printerId : printerIdList) {
+        RemoveSinglePrinterInfo(printerId);
+    }
+}
 }  // namespace OHOS::Print
