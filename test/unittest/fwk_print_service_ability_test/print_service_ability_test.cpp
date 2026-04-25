@@ -3847,6 +3847,7 @@ HWTEST_F(PrintServiceAbilityTest, StartDiscovery_NoClearConnect, TestSize.Level1
     EXPECT_FALSE(service->vendorManager.GetConnectingPrinter().empty());
 }
 
+#ifdef KIA_INTERCEPTOR_ENABLE
 HWTEST_F(PrintServiceAbilityTest, RegisterKiaInterceptorCallbackTest, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -3861,6 +3862,7 @@ HWTEST_F(PrintServiceAbilityTest, RegisterKiaInterceptorCallbackTest, TestSize.L
     EXPECT_EQ(service->RegisterKiaInterceptorCallback(nullptr), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->RegisterKiaInterceptorCallback(callback), E_PRINT_NONE);
 }
+#endif // KIA_INTERCEPTOR_ENABLE
 
 HWTEST_F(PrintServiceAbilityTest, RefreshIpPrinterToIdle, TestSize.Level1)
 {
