@@ -196,6 +196,7 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
             int fdTemp = data.ReadFileDescriptor();
             if (fdTemp >= 0) {
                 uint32_t fd = static_cast<uint32_t>(fdTemp);
+                fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
                 PRINT_HILOGD("fdList[%{public}u] = %{public}u", index, fd);
                 fdList.emplace_back(fd);
                 continue;
