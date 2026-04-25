@@ -16,7 +16,9 @@
 #define SAFE_SANE_API_H
 
 #include <mutex>
-#include <shared_mutex>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 #include "sane/sane.h"
 
 namespace OHOS {
@@ -25,7 +27,7 @@ namespace Scan {
 class SafeSANEAPI {
 public:
     static SafeSANEAPI& GetInstance();
-    
+
     SafeSANEAPI(const SafeSANEAPI&) = delete;
     SafeSANEAPI& operator=(const SafeSANEAPI&) = delete;
     
@@ -52,13 +54,20 @@ public:
     
     SANE_Status SaneRead(SANE_Handle handle, SANE_Byte* data,
         SANE_Int maxLength, SANE_Int* length);
+    
+    void SaneCloseAllHandles();
 
 private:
     SafeSANEAPI() = default;
     ~SafeSANEAPI() = default;
     
-    std::mutex initLock_;
-    std::shared_mutex handleLock_;
+    std::shared_ptr<std::mutex> GetHandleMutex(SANE_Handle handle);
+    void AddHandleMutex(SANE_Handle handle);
+    std::shared_ptr<std::mutex> RemoveHandleMutex(SANE_Handle handle);
+    
+    std::mutex globalLock_;
+    std::unordered_map<SANE_Handle, std::shared_ptr<std::mutex>> handleMutexes_;
+    std::mutex handleMutexesLock_;
 };
 
 } // namespace Scan
