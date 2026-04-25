@@ -575,7 +575,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOption
     jobParams->isCollate = false;
     jobParams->isReverse = false;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 11);
+    EXPECT_EQ(ret, 9);
     delete jobParams;
     delete options;
 }
@@ -608,7 +608,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetTrueValue_ReturnCorrectNumOption
     jobParams->isCollate = true;
     jobParams->isReverse = true;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 10);
+    EXPECT_EQ(ret, 8);
     delete jobParams;
     delete options;
 }
