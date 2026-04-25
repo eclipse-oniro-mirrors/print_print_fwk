@@ -1184,11 +1184,19 @@ int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_optio
         PRINT_HILOGE("FillNumberUpOptions Params is nullptr");
         return num_options;
     }
-    num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
-    std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
-    num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
-    PRINT_HILOGI("Added CUPS option: number-up=%{public}d, number-up-layout=%{public}s",
-        jobParams->numberUp, layoutStr.c_str());
+    if (jobParams->numberUp != NUMBER_UP_DEFAULT_VALUE) {
+        num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
+        PRINT_HILOGI("Added CUPS option: number-up=%{public}d", jobParams->numberUp);
+    } else {
+        PRINT_HILOGI("numberUp using default value, skip adding to CUPS options");
+    }
+    if (jobParams->numberUpLayout != NUMBER_UP_LAYOUT_DEFAULT_VALUE) {
+        std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
+        num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
+        PRINT_HILOGI("Added CUPS option: number-up-layout=%{public}s", layoutStr.c_str());
+    } else {
+        PRINT_HILOGI("numberUpLayout using default value, skip adding to CUPS options");
+    }
     return num_options;
 }
 
