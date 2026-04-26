@@ -489,11 +489,8 @@ ErrCode SaneServerManager::UnloadSystemAbility()
         return SANE_STATUS_NO_PERMISSION;
     }
     std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    for (const auto &scanner : scannerHandleList_) {
-        SafeSANEAPI::GetInstance().SaneCancel(scanner.second);
-        SafeSANEAPI::GetInstance().SaneClose(scanner.second);
-    }
     scannerHandleList_.clear();
+    SafeSANEAPI::GetInstance().SaneCloseAllHandles();
     SafeSANEAPI::GetInstance().SaneExit();
     const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;
     std::vector<std::string> files;
