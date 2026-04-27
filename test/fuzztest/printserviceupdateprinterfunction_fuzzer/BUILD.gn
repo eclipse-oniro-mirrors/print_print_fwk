@@ -18,8 +18,10 @@ import("//build/test.gni")
 
 if (print_fwk_feature_phone_isolation) {
   _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service"
 } else {
   _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services"
 }
 
 ##############################fuzztest##########################################
@@ -32,7 +34,7 @@ ohos_fuzztest("PrintServiceUpdatePrinterFunctionFuzzTest") {
     "mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
-    "${print_path}/services/print_service/include/event_callback",
+    "${_service_path}/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -55,7 +57,7 @@ ohos_fuzztest("PrintServiceUpdatePrinterFunctionFuzzTest") {
     "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service_test",
+    "${_service_path}/print_service:print_service_test",
   ]
 
   sources = [
