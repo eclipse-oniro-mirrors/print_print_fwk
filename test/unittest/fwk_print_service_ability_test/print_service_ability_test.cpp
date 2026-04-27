@@ -5262,6 +5262,97 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_UriSame_ShouldReturnF
     EXPECT_FALSE(result);
 }
 
+#ifdef PHONE_ISOLATION_ENABLE
+/**
+ * @tc.name: CheckPrinterUriDifferent_MacroEnabled_UriChanged_ShouldReturnTrue
+ * @tc.desc: Test CheckPrinterUriDifferent when PHONE_ISOLATION_ENABLE is enabled and URI changed
+ * @tc.type: FUNC
+ * @tc.require: Should return true when oldUri differs from info->GetUri()
+ */
+HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_MacroEnabled_UriChanged_ShouldReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string globalPrinterId = "com.test.ext:TestPrinter_001";
+    std::string oldUri = "ipp://test.local:631/printers/TestPrinter_001";
+
+    auto addedPrinterInfo = std::make_shared<PrinterInfo>();
+    addedPrinterInfo->SetPrinterId(globalPrinterId);
+    addedPrinterInfo->SetPrinterName("TestPrinter_001");
+    addedPrinterInfo->SetUri(oldUri);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(globalPrinterId);
+    printerInfo->SetPrinterName("TestPrinter_001");
+    printerInfo->SetUri("ipp://test2.local:631/printers/TestPrinter_001");
+
+    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name: CheckPrinterUriDifferent_MacroEnabled_UriSame_ShouldReturnFalse
+ * @tc.desc: Test CheckPrinterUriDifferent when PHONE_ISOLATION_ENABLE is enabled and URI same
+ * @tc.type: FUNC
+ * @tc.require: Should return false when oldUri equals info->GetUri()
+ */
+HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_MacroEnabled_UriSame_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string globalPrinterId = "com.test.ext:TestPrinter_001";
+    std::string sameUri = "ipp://test.local:631/printers/TestPrinter_001";
+
+    auto addedPrinterInfo = std::make_shared<PrinterInfo>();
+    addedPrinterInfo->SetPrinterId(globalPrinterId);
+    addedPrinterInfo->SetPrinterName("TestPrinter_001");
+    addedPrinterInfo->SetUri(sameUri);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(globalPrinterId);
+    printerInfo->SetPrinterName("TestPrinter_001");
+    printerInfo->SetUri(sameUri);
+
+    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: CheckPrinterUriDifferent_MacroEnabled_ShouldNotModifyInfoUri
+ * @tc.desc: Test CheckPrinterUriDifferent when PHONE_ISOLATION_ENABLE is enabled, verify no SetUri side effect
+ * @tc.type: FUNC
+ * @tc.require: Should not modify printerInfo->Uri when macro is enabled
+ */
+HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_MacroEnabled_ShouldNotModifyInfoUri, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string globalPrinterId = "com.test.ext:TestPrinter_001";
+    std::string oldUri = "ipp://test.local:631/printers/TestPrinter_001";
+    std::string originalUri = "ipp://test2.local:631/printers/TestPrinter_001";
+
+    auto addedPrinterInfo = std::make_shared<PrinterInfo>();
+    addedPrinterInfo->SetPrinterId(globalPrinterId);
+    addedPrinterInfo->SetPrinterName("TestPrinter_001");
+    addedPrinterInfo->SetUri(oldUri);
+    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(globalPrinterId);
+    printerInfo->SetPrinterName("TestPrinter_001");
+    printerInfo->SetUri(originalUri);
+
+    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(printerInfo->GetUri(), originalUri);
+}
+#endif
+
 /**
  * @tc.name: HandleNewPrinterDiscovery_PrinterNotAdded_ShouldAddToDiscovery
  * @tc.desc: Test HandleNewPrinterDiscovery when printer not in addedPrinterMap
