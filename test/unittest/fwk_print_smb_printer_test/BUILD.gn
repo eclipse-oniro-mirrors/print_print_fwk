@@ -83,7 +83,7 @@ ohos_unittest("fwk_print_smb_printer_test") {
 
   if (print_fwk_feature_smb_printer) {
     sources += [
-      "smb_printer_helper_test.cpp"
+      "${_test_path}/unittest/fwk_print_smb_printer_test/smb_printer_helper_test.cpp"
     ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
