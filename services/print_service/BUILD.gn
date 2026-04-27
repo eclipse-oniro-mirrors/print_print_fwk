@@ -215,6 +215,10 @@ ohos_shared_library("print_service") {
       cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
+  if (print_fwk_feature_phone_isolation) {
+      cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
