@@ -40,13 +40,13 @@ ohos_unittest("fwk_vendor_manager_test") {
   }
 
   sources = [
-    "operation_queue_test.cpp",
-    "vendor_bsuni_driver_test.cpp",
-    "vendor_helper_test.cpp",
-    "vendor_ipp_everywhere_test.cpp",
-    "vendor_manager_test.cpp",
-    "vendor_ppd_driver_test.cpp",
-    "vendor_wlan_group_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/operation_queue_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_bsuni_driver_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_helper_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_ipp_everywhere_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_manager_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_ppd_driver_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_wlan_group_test.cpp",
   ]
   cflags_cc = []
   if (print_fwk_feature_enterprise) {

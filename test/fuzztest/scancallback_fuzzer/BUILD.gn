@@ -78,7 +78,7 @@ ohos_fuzztest("ScanCallBackFuzzTest") {
     ]
   }
 
-  sources = [ "scancallback_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scancallback_fuzzer/scancallback_fuzzer.cpp" ]
 }
 
 ###############################################################################

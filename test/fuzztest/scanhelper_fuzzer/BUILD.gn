@@ -67,7 +67,7 @@ ohos_fuzztest("ScanHelperFuzzTest") {
     ]
   }
 
-  sources = [ "scanhelper_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scanhelper_fuzzer/scanhelper_fuzzer.cpp" ]
 }
 
 group("fuzztest") {

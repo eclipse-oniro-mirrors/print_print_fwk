@@ -59,8 +59,8 @@ ohos_fuzztest("PrintServicePrintDiscoverFunctionFuzzTest") {
   ]
 
   sources = [
-    "printserviceability_fuzzer.cpp",
-    "printserviceability_mock_permission.cpp",
+    "${_test_path}/fuzztest/printserviceprintdiscoverfunction_fuzzer/printserviceability_fuzzer.cpp",
+    "${_test_path}/fuzztest/printserviceprintdiscoverfunction_fuzzer/printserviceability_mock_permission.cpp",
   ]
 
   external_deps = [

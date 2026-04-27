@@ -59,8 +59,8 @@ ohos_fuzztest("PrintServicePpdQueryFunctionFuzzTest") {
   ]
 
   sources = [
-    "printserviceppdqueryfunction_fuzzer.cpp",
-    "printserviceppdqueryfunction_mock_permission.cpp",
+    "${_test_path}/fuzztest/printserviceppdqueryfunction_fuzzer/printserviceppdqueryfunction_fuzzer.cpp",
+    "${_test_path}/fuzztest/printserviceppdqueryfunction_fuzzer/printserviceppdqueryfunction_mock_permission.cpp",
   ]
 
   external_deps = [

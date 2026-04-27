@@ -59,8 +59,8 @@ ohos_fuzztest("PrintServiceAbilityPrintJobFuzzTest") {
   ]
 
   sources = [
-    "printserviceabilityprintjob_fuzzer.cpp",
-    "printserviceabilityprintjob_mock_permission.cpp",
+    "${_test_path}/fuzztest/printserviceabilityprintjob_fuzzer/printserviceabilityprintjob_fuzzer.cpp",
+    "${_test_path}/fuzztest/printserviceabilityprintjob_fuzzer/printserviceabilityprintjob_mock_permission.cpp",
   ]
 
   external_deps = [

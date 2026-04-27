@@ -39,7 +39,7 @@ ohos_unittest("fwk_print_helper_test") {
     blocklist = "${print_path}/cfi_blocklist.txt"
   }
 
-  sources = [ "print_bms_helper_test.cpp" ]
+  sources = [ "${_test_path}/unittest/fwk_print_helper_test/print_bms_helper_test.cpp" ]
 
   deps = [
     "${print_path}/etc/init:printservice.rc",

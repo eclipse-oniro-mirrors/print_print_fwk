@@ -79,7 +79,7 @@ ohos_fuzztest("ScanManagerClientFuzzTest") {
     ]
   }
 
-  sources = [ "scanmanagerclient_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scanmanagerclient_fuzzer/scanmanagerclient_fuzzer.cpp" ]
 }
 
 ###############################################################################

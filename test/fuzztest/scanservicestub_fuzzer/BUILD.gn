@@ -82,7 +82,7 @@ ohos_fuzztest("ScanServiceStubFuzzTest") {
     ]
   }
 
-  sources = [ "scanservicestub_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scanservicestub_fuzzer/scanservicestub_fuzzer.cpp" ]
 }
 
 ###############################################################################

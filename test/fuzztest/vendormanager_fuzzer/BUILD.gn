@@ -59,8 +59,8 @@ ohos_fuzztest("VendorManagerFuzzTest") {
   ]
 
   sources = [
-    "printserviceability_mock_permission.cpp",
-    "vendormanager_fuzzer.cpp",
+    "${_test_path}/fuzztest/vendormanager_fuzzer/vendormanager_fuzzer.cpp",
+    "${_test_path}/fuzztest/vendormanager_fuzzer/printserviceability_mock_permission.cpp",
   ]
 
   external_deps = [

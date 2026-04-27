@@ -82,7 +82,7 @@ ohos_fuzztest("ScanUsbManagerFuzzTest") {
     ]
   }
 
-  sources = [ "scanusbmanager_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scanusbmanager_fuzzer/scanusbmanager_fuzzer.cpp" ]
 }
 
 ###############################################################################

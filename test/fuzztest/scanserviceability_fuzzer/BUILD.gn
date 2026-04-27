@@ -88,8 +88,8 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
   }
 
   sources = [
-    "scanserviceability_fuzzer.cpp",
-    "scanserviceability_mock.cpp",
+    "${_test_path}/fuzztest/scanserviceability_fuzzer/scanserviceability_fuzzer.cpp",
+    "${_test_path}/fuzztest/scanserviceability_fuzzer/scanserviceability_mock.cpp",
   ]
 }
 
