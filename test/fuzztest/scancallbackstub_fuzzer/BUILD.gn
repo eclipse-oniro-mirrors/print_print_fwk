@@ -16,10 +16,16 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_phone_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+} else {
+  _test_path = "${print_path}/test"
+}
+
 ohos_fuzztest("ScanCallBackStubFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scancallbackstub_fuzzer"
+  fuzz_config_file = "${_test_path}/fuzztest/scancallbackstub_fuzzer"
 
   include_dirs = [   
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",

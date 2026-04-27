@@ -14,6 +14,12 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_phone_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+} else {
+  _test_path = "${print_path}/test"
+}
+
 module_output_path = unit_test_output_path
 
 ohos_unittest("print_fwk_inner_napi_test") {

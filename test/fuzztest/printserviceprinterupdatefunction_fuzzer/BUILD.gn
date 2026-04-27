@@ -16,11 +16,17 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_phone_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+} else {
+  _test_path = "${print_path}/test"
+}
+
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintServicePrinterUpdateFunctionFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${print_path}/test/fuzztest/printserviceprinterupdatefunction_fuzzer"
+  fuzz_config_file = "${_test_path}/fuzztest/printserviceprinterupdatefunction_fuzzer"
 
   include_dirs = [
     "mock",

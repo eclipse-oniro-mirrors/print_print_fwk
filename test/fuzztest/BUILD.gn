@@ -13,6 +13,12 @@
 
 import("//base/print/print_fwk/print.gni")
 
+if (print_fwk_feature_phone_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+} else {
+  _test_path = "${print_path}/test"
+}
+
 group("fuzztest") {
   testonly = true
   deps = [
