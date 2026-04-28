@@ -5201,7 +5201,11 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldR
     printerInfo->SetUri("ipp://test.local:631/printers/TestPrinter_001");
 
     bool result = service->CheckPrinterUriDifferent(printerInfo);
+#ifdef PHONE_ISOLATION_ENABLE
+    EXPECT_TRUE(result);
+#else
     EXPECT_FALSE(result);
+#endif
 }
 
 /**
