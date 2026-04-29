@@ -1848,6 +1848,9 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
         return false;
     }
     std::string oldUri = addedPrinter.GetUri();
+#ifdef PHONE_ISOLATION_ENABLE
+    std::string newUri = info->GetUri();
+#else
     std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(oldUri);
     if (protocol.empty()) {
         PRINT_HILOGW("Cannot parse uri");
@@ -1856,6 +1859,7 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     
     std::string newUri = GetConnectUri(*info, protocol);
     info->SetUri(newUri);
+#endif
 
     PRINT_HILOGD("CheckPrinterUriDifferent, old = %{public}s, new = %{public}s",
         oldUri.c_str(), newUri.c_str());
