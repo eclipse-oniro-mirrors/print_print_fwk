@@ -79,6 +79,7 @@ public:
     std::optional<PrinterInfo> FindInfoInSmbPrinterDiscoverList(const std::string &printerId);
     void GetSmbAddedPrinterListFromSystemData(std::vector<PrinterInfo> &printerInfoList);
 #endif // HAVE_SMB_PRINTER
+    void GetWebPrinterListFromSystemData(std::vector<std::string> &printerIdList);
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);

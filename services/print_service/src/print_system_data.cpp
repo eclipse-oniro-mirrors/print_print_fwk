@@ -1419,5 +1419,19 @@ void PrintSystemData::GetSmbAddedPrinterListFromSystemData(std::vector<PrinterIn
     return;
 }
 #endif // HAVE_SMB_PRINTER
+
+void PrintSystemData::GetWebPrinterListFromSystemData(std::vector<std::string> &printerIdList)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    for (const auto& pair : discoveredPrinterInfoList_) {
+        std::string printerId = pair.first;
+        std::string bundleName = PrintUtils::GetBundleName(printerId);
+        if (bundleName == WEBPRINTER_BUNDLE_NAME) {
+            PRINT_HILOGD("GetWebPrinterListFromSystemData: %{public}s.", printerId.c_str());
+            printerIdList.push_back(printerId);
+        }
+    }
+    return;
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -239,6 +239,7 @@ INSTANTIATE_TEST_SUITE_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest,
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP, 0},
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED, 0},
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED, 0},
         BuildSubscribeInfoParam{"unknown.event", 0},
         BuildSubscribeInfoParam{"", 0}
     ));

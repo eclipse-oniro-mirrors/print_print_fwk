@@ -379,6 +379,7 @@ const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 const std::string RAW_PPD_NAME = "raw";
 const std::string RAW_PPD_DRIVER = "driver.raw";
+const std::string WEBPRINTER_BUNDLE_NAME = "com.ohos.spooler";
 const std::string VENDOR_CUSTOM_DRIVER = "driver.printer.driver";
 
 const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";

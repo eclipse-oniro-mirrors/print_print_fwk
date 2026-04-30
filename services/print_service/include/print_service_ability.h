@@ -160,6 +160,7 @@ public:
     void StopCupsService();
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
+    void HandleWebPrinterUninstall();
 
 protected:
     void OnStart() override;

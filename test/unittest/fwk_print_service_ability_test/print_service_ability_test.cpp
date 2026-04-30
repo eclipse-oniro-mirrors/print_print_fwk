@@ -5596,5 +5596,19 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_CanSyncPrinterInfo
     bool result = service->AddVendorPrinterToDiscovery(vendorName, info);
     EXPECT_TRUE(result);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninstall, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    std::string printerId = "123";
+    info.SetPrinterId(printerId);
+    service->AddSinglePrinterInfo(info, WEBPRINTER_BUNDLE_NAME);
+    printerId = PrintUtils::GetGlobalId(WEBPRINTER_BUNDLE_NAME, printerId);
+    EXPECT_NE(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
+    info.SetPrinterId(printerId);
+    service->HandleWebPrinterUninstall();
+    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
+}
 }  // namespace Print
 }  // namespace OHOS

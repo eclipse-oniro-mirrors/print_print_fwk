@@ -1845,5 +1845,18 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfoTest, TestSize.Level1)
     EXPECT_TRUE(object["selectedDriver"].isObject());
     EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
 }
+
+HWTEST_F(PrintSystemDataTest, GetWebPrinterListFromSystemDataTest, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = PrintUtils::GetGlobalId(WEBPRINTER_BUNDLE_NAME, "123");
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    systemData->AddPrinterToDiscovery(printerInfo);
+    std::vector<std::string> printerIdList;
+    systemData->GetWebPrinterListFromSystemData(printerIdList);
+    EXPECT_EQ(printerIdList.size(), 1);
+}
 }  // namespace Print
 }  // namespace OHOS
