@@ -16,14 +16,22 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_phone_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service"
+} else {
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services"
+}
+
 ##############################fuzztest##########################################
 ohos_fuzztest("ScanCallbackProxyFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scancallbackproxy_fuzzer"
+  fuzz_config_file = "${_test_path}/fuzztest/scancallbackproxy_fuzzer"
 
   include_dirs = [
-    "${print_path}/services/scan_service/include",
+    "${_service_path}/scan_service/include",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_utils_path}/include",
   ]
@@ -75,7 +83,7 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
     ]
   }
 
-  sources = [ "scancallbackproxy_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scancallbackproxy_fuzzer/scancallbackproxy_fuzzer.cpp" ]
 }
 
 ###############################################################################

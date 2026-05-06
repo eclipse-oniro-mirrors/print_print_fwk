@@ -76,9 +76,15 @@ ohos_unittest("fwk_print_smb_printer_test") {
   ]
 
   if (print_fwk_feature_smb_printer) {
-    sources += [
-      "smb_printer_helper_test.cpp"
-    ]
+    if (print_fwk_feature_phone_isolation) {
+      sources += [
+        "${print_path}/test/phone_test/unittest/fwk_print_smb_printer_test/smb_printer_helper_test.cpp"
+      ]
+    } else {
+      sources += [
+        "${print_path}/test/unittest/fwk_print_smb_printer_test/smb_printer_helper_test.cpp"
+      ]
+    }
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cJSON:cjson",

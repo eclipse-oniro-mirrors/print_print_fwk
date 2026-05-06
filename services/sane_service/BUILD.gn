@@ -16,9 +16,15 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
+if (print_fwk_feature_phone_isolation) {
+  _service_path = "${print_path}/services/phone_service/sane_service"
+} else {
+  _service_path = "${print_path}/services/sane_service"
+}
+
 config("sane_service_config") {
   include_dirs = [
-    "include",
+    "${_service_path}/include",
     "${target_gen_dir}",
   ]
 
@@ -35,9 +41,9 @@ config("sane_service_config") {
 
 _include_dirs = [ "${print_utils_path}/include" ]
 
-_sources = [ 
-  "src/sane_service_ability.cpp",
-  "src/safe_sane_api.cpp"
+_sources = [
+  "${_service_path}/src/sane_service_ability.cpp",
+  "${_service_path}/src/safe_sane_api.cpp"
 ]
 
 _deps = [ "${print_path}/frameworks/ISaneBackends:sane_backends" ]

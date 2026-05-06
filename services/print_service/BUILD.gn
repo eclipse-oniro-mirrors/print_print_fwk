@@ -16,41 +16,64 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
+if (print_fwk_feature_phone_isolation) {
+  _service_path = "${print_path}/services/phone_service/print_service"
+} else {
+  _service_path = "${print_path}/services/print_service"
+}
+
+config("print_service_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "${_service_path}/include",
+    "${print_path}/frameworks/models/print_models/include",
+  ]
+  cflags_cc += [
+    "-fno-exceptions",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-flto",
+    "-Os",
+  ]
+}
+
 _sources = [
-  "src/event_callback/extension_event_callback.cpp",
-  "src/event_callback/printer_event_callback.cpp",
-  "src/event_callback/print_job_event_callback.cpp",
-  "src/event_listener_mgr.cpp",
-  "src/hisys_event_util.cpp",
-  "src/operation_queue.cpp",
-  "src/print_bms_death_recipient.cpp",
-  "src/print_bms_helper.cpp",
-  "src/print_callback_proxy.cpp",
-  "src/print_caller_app_monitor.cpp",
-  "src/print_common_death_recipient.cpp",
-  "src/print_event_container.cpp",
-  "src/print_event_subscriber.cpp",
-  "src/print_extension_callback_proxy.cpp",
-  "src/print_resource_manager.cpp",
-  "src/print_security_guard_info.cpp",
-  "src/print_security_guard_manager.cpp",
-  "src/print_service_ability.cpp",
-  "src/print_service_converter.cpp",
-  "src/print_service_helper.cpp",
-  "src/print_service_stub.cpp",
-  "src/print_setting_data_helper.cpp",
-  "src/print_system_data.cpp",
-  "src/print_user_data.cpp",
-  "src/thread_sync_wait.cpp",
-  "src/vendor_bsuni_driver.cpp",
-  "src/vendor_driver_base.cpp",
-  "src/vendor_driver_group.cpp",
-  "src/vendor_helper.cpp",
-  "src/vendor_ipp_everywhere.cpp",
-  "src/vendor_manager.cpp",
-  "src/vendor_ppd_driver.cpp",
-  "src/vendor_wlan_group.cpp",
-  "src/watermark_callback_proxy.cpp",
+  "${_service_path}/src/event_callback/extension_event_callback.cpp",
+  "${_service_path}/src/event_callback/printer_event_callback.cpp",
+  "${_service_path}/src/event_callback/print_job_event_callback.cpp",
+  "${_service_path}/src/event_listener_mgr.cpp",
+  "${_service_path}/src/hisys_event_util.cpp",
+  "${_service_path}/src/operation_queue.cpp",
+  "${_service_path}/src/print_bms_death_recipient.cpp",
+  "${_service_path}/src/print_bms_helper.cpp",
+  "${_service_path}/src/print_callback_proxy.cpp",
+  "${_service_path}/src/print_caller_app_monitor.cpp",
+  "${_service_path}/src/print_common_death_recipient.cpp",
+  "${_service_path}/src/print_event_container.cpp",
+  "${_service_path}/src/print_event_subscriber.cpp",
+  "${_service_path}/src/print_extension_callback_proxy.cpp",
+  "${_service_path}/src/print_resource_manager.cpp",
+  "${_service_path}/src/print_security_guard_info.cpp",
+  "${_service_path}/src/print_security_guard_manager.cpp",
+  "${_service_path}/src/print_service_ability.cpp",
+  "${_service_path}/src/print_service_converter.cpp",
+  "${_service_path}/src/print_service_helper.cpp",
+  "${_service_path}/src/print_service_stub.cpp",
+  "${_service_path}/src/print_setting_data_helper.cpp",
+  "${_service_path}/src/print_system_data.cpp",
+  "${_service_path}/src/print_user_data.cpp",
+  "${_service_path}/src/thread_sync_wait.cpp",
+  "${_service_path}/src/vendor_bsuni_driver.cpp",
+  "${_service_path}/src/vendor_driver_base.cpp",
+  "${_service_path}/src/vendor_driver_group.cpp",
+  "${_service_path}/src/vendor_helper.cpp",
+  "${_service_path}/src/vendor_ipp_everywhere.cpp",
+  "${_service_path}/src/vendor_manager.cpp",
+  "${_service_path}/src/vendor_ppd_driver.cpp",
+  "${_service_path}/src/vendor_wlan_group.cpp",
+  "${_service_path}/src/watermark_callback_proxy.cpp",
 ]
 
 _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
@@ -96,8 +119,8 @@ _public_configs = [ ":print_service_config" ]
 _include_dirs = [
   "${print_path}/frameworks/innerkitsimpl/print_impl/include",
   "${print_path}/frameworks/ohprint/include",
-  "${print_path}/services/print_service/include/event_callback",
-  "${print_path}/services/print_service/enterprise/include",
+  "${_service_path}/include/event_callback",
+  "${_service_path}/enterprise/include",
   "${print_utils_path}/include",
 ]
 
@@ -109,23 +132,6 @@ _sanitize = {
   debug = false
   integer_overflow = true
   ubsan = true
-}
-
-config("print_service_config") {
-  visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-    "${print_path}/frameworks/models/print_models/include",
-  ]
-  cflags_cc += [
-    "-fno-exceptions",
-    "-fdata-sections",
-    "-ffunction-sections",
-    "-fno-asynchronous-unwind-tables",
-    "-fno-unwind-tables",
-    "-flto",
-    "-Os",
-  ]
 }
 
 ohos_shared_library("print_service") {
@@ -140,10 +146,10 @@ ohos_shared_library("print_service") {
   cflags_cc += [ "-fvisibility=hidden" ]
   if (cups_enable) {
     sources += [
-      "src/print_cups_attribute.cpp",
-      "src/print_cups_ppd.cpp",
-      "src/print_cups_client.cpp",
-      "src/print_cups_wrapper.cpp",
+      "${_service_path}/src/print_cups_attribute.cpp",
+      "${_service_path}/src/print_cups_ppd.cpp",
+      "${_service_path}/src/print_cups_client.cpp",
+      "${_service_path}/src/print_cups_wrapper.cpp",
     ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
@@ -176,8 +182,8 @@ ohos_shared_library("print_service") {
   if (print_fwk_feature_kia_interceptor) {
     cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
     sources += [
-      "enterprise/src/kia_interceptor_callback_proxy.cpp",
-      "enterprise/src/kia_interceptor_manager.cpp",
+      "${_service_path}/enterprise/src/kia_interceptor_callback_proxy.cpp",
+      "${_service_path}/enterprise/src/kia_interceptor_manager.cpp",
     ]
   }
 
@@ -190,29 +196,29 @@ ohos_shared_library("print_service") {
   }
 
   if (print_fwk_feature_smb_printer) {
-      sources += [
-        "src/smb_host_search_helper.cpp",
-        "src/smb_printer_discoverer.cpp",
-        "src/smb_printer_state_monitor.cpp",
-        "src/smb_library.cpp"
-      ]
-      cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+    sources += [
+      "${_service_path}/src/smb_host_search_helper.cpp",
+      "${_service_path}/src/smb_printer_discoverer.cpp",
+      "${_service_path}/src/smb_printer_state_monitor.cpp",
+      "${_service_path}/src/smb_library.cpp"
+    ]
+    cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
   }
 
   if (print_fwk_feature_watermark_enforcing) {
-      sources += [
-        "src/watermark_manager.cpp",
-        "src/watermark_death_recipient.cpp",
-      ]
-      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+    sources += [
+      "${_service_path}/src/watermark_manager.cpp",
+      "${_service_path}/src/watermark_death_recipient.cpp",
+    ]
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
 
   if (print_fwk_feature_print_failure_ai_notifier) {
-      sources += [
-        "src/print_failure_ai_notifier.cpp",
-        "src/print_notification_builder.cpp",
-      ]
-      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+    sources += [
+      "${_service_path}/src/print_failure_ai_notifier.cpp",
+      "${_service_path}/src/print_notification_builder.cpp",
+    ]
+    cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
   if (print_fwk_feature_phone_isolation) {
@@ -234,12 +240,16 @@ ohos_static_library("print_service_test") {
 
   cflags_cc += [ "-DUNIT_TEST" ]
 
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+
   if (cups_enable) {
     sources += [
-      "src/print_cups_attribute.cpp",
-      "src/print_cups_ppd.cpp",
-      "src/print_cups_client.cpp",
-      "src/print_cups_wrapper.cpp",
+      "${_service_path}/src/print_cups_attribute.cpp",
+      "${_service_path}/src/print_cups_ppd.cpp",
+      "${_service_path}/src/print_cups_client.cpp",
+      "${_service_path}/src/print_cups_wrapper.cpp",
     ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
@@ -271,8 +281,8 @@ ohos_static_library("print_service_test") {
   if (print_fwk_feature_kia_interceptor) {
     cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
     sources += [
-      "enterprise/src/kia_interceptor_callback_proxy.cpp",
-      "enterprise/src/kia_interceptor_manager.cpp",
+      "${_service_path}/enterprise/src/kia_interceptor_callback_proxy.cpp",
+      "${_service_path}/enterprise/src/kia_interceptor_manager.cpp",
     ]
   }
 
@@ -281,29 +291,29 @@ ohos_static_library("print_service_test") {
   }
 
   if (print_fwk_feature_smb_printer) {
-      sources += [
-        "src/smb_host_search_helper.cpp",
-        "src/smb_printer_discoverer.cpp",
-        "src/smb_printer_state_monitor.cpp",
-        "src/smb_library.cpp"
-      ]
-      cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+    sources += [
+      "${_service_path}/src/smb_host_search_helper.cpp",
+      "${_service_path}/src/smb_printer_discoverer.cpp",
+      "${_service_path}/src/smb_printer_state_monitor.cpp",
+      "${_service_path}/src/smb_library.cpp"
+    ]
+    cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
   }
 
   if (print_fwk_feature_watermark_enforcing) {
-      sources += [
-        "src/watermark_manager.cpp",
-        "src/watermark_death_recipient.cpp",
-      ]
-      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+    sources += [
+      "${_service_path}/src/watermark_manager.cpp",
+      "${_service_path}/src/watermark_death_recipient.cpp",
+    ]
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
 
   if (print_fwk_feature_print_failure_ai_notifier) {
-      sources += [
-        "src/print_failure_ai_notifier.cpp",
-        "src/print_notification_builder.cpp",
-      ]
-      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+    sources += [
+      "${_service_path}/src/print_failure_ai_notifier.cpp",
+      "${_service_path}/src/print_notification_builder.cpp",
+    ]
+    cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
   if (print_fwk_feature_phone_isolation) {

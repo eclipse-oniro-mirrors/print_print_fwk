@@ -16,10 +16,16 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
+if (print_fwk_feature_phone_isolation) {
+  _service_path = "${print_path}/services/phone_service/scan_service"
+} else {
+  _service_path = "${print_path}/services/scan_service"
+}
+
 config("scan_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "include",
+    "${_service_path}/include",
     "${print_path}/frameworks/helper/scan_helper/include",
   ]
 
@@ -34,24 +40,24 @@ config("scan_service_config") {
 }
 
 _sources = [
-  "src/sane_manager_client.cpp",
-  "src/sane_sa_death_recipient.cpp",
-  "src/sane_service_load_callback.cpp",
-  "src/scan_callback_proxy.cpp",
-  "src/scan_event_subscriber.cpp",
-  "src/scan_mdns_service.cpp",
-  "src/scan_service_ability.cpp",
-  "src/scan_service_stub.cpp",
-  "src/scan_system_data.cpp",
-  "src/scan_usb_manager.cpp",
-  "src/scan_service_utils.cpp",
-  "src/scan_discover_data.cpp",
-  "src/scan_task.cpp",
-  "src/scan_picture_data.cpp",
-  "src/caller_app_monitor.cpp",
-  "src/escl_driver_manager.cpp",
-  "src/escl_scanner_status.cpp",
-  "src/curl_http_client.cpp",
+  "${_service_path}/src/sane_manager_client.cpp",
+  "${_service_path}/src/sane_sa_death_recipient.cpp",
+  "${_service_path}/src/sane_service_load_callback.cpp",
+  "${_service_path}/src/scan_callback_proxy.cpp",
+  "${_service_path}/src/scan_event_subscriber.cpp",
+  "${_service_path}/src/scan_mdns_service.cpp",
+  "${_service_path}/src/scan_service_ability.cpp",
+  "${_service_path}/src/scan_service_stub.cpp",
+  "${_service_path}/src/scan_system_data.cpp",
+  "${_service_path}/src/scan_usb_manager.cpp",
+  "${_service_path}/src/scan_service_utils.cpp",
+  "${_service_path}/src/scan_discover_data.cpp",
+  "${_service_path}/src/scan_task.cpp",
+  "${_service_path}/src/scan_picture_data.cpp",
+  "${_service_path}/src/caller_app_monitor.cpp",
+  "${_service_path}/src/escl_driver_manager.cpp",
+  "${_service_path}/src/escl_scanner_status.cpp",
+  "${_service_path}/src/curl_http_client.cpp",
 ]
 
 _branch_protector_ret = "pac_ret"
