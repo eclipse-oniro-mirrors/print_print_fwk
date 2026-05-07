@@ -944,6 +944,10 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
     std::string jobId = data.ReadString();
     std::string userName = data.ReadString();
     const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
+    if (outData == nullptr) {
+        PRINT_HILOGE("Read Password Buffer fail.");
+        return false;
+    }
 
     char* userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE];
     if (userPasswd == nullptr) {
@@ -957,6 +961,7 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
         PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
         return false;
     }
+    userPasswd[MAX_AUTH_LENGTH_SIZE - 1] = '\0';
 
     int32_t ret = AuthPrintJob(jobId, userName, userPasswd);
     reply.WriteInt32(ret);
@@ -1146,6 +1151,10 @@ bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply
     char* userPasswd = nullptr;
     if (!userName.empty()) {
         const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
+        if (outData == nullptr) {
+            PRINT_HILOGE("Read Password Buffer fail.");
+            return false;
+        }
         userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
         if (userPasswd == nullptr) {
             PRINT_HILOGE("Allocate Password fail.");
@@ -1157,6 +1166,7 @@ bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply
             PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
             return false;
         }
+        userPasswd[MAX_AUTH_LENGTH_SIZE - 1] = '\0';
     }
     std::vector<PrinterInfo> printerInfos;
     int32_t ret = AuthSmbDevice(*sharedHostPtr, userName, userPasswd, printerInfos);
