@@ -23,7 +23,7 @@
       "print_fwk_feature_watermark_enforcing",
       "print_fwk_feature_kia_interceptor",
       "print_fwk_feature_print_failure_ai_notifier",
-      "print_fwk_feature_phone_isolation"
+      "print_fwk_feature_device_isolation"
     ],
     "adapted_system_type": [
       "standard"

@@ -14,7 +14,7 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_phone_isolation) {
+if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
 } else {
   _test_path = "${print_path}/test"
