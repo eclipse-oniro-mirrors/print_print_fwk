@@ -19,6 +19,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_util.h"
+#include "print_utils.h"
 #include "ability_manager_client.h"
 #include "print_converter.h"
 #include "print_manager_client.h"
@@ -668,7 +669,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("SetOptionInPrintJob %{public}s", option.c_str());
+    PRINT_HILOGD("SetOptionInPrintJob %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     printJob.SetOption(option);
     PRINT_HILOGI("SetOptionInPrintJob out.");
 }
@@ -723,7 +724,7 @@ void SetOptionInPrintTask(const Print_PrintTask &nativePrintTask, PrintJob &prin
         jsonOptions["cupsOptions"] = std::string(nativePrintTask.advancedOptions);
     }
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("SetOptionInPrintTask %{public}s", option.c_str());
+    PRINT_HILOGD("SetOptionInPrintTask %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     printJob.SetOption(option);
     PRINT_HILOGI("SetOptionInPrintTask out.");
 }

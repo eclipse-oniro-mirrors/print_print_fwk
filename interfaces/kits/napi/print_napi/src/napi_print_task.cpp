@@ -311,7 +311,7 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
         }
         return true;
     }
-    PRINT_HILOGD("fileName: %{public}s", fileName.c_str());
+    PRINT_HILOGD("fileName: %{private}s", fileName.c_str());
     if (fileName.find("file://") == 0 || fileName.find("fd://") == 0 || fileName.find("content://") == 0) {
         return true;
     }

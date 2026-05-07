@@ -29,6 +29,7 @@
 #include "print_log.h"
 #include "print_constant.h"
 #include "print_json_util.h"
+#include "print_utils.h"
 
 namespace OHOS {
 namespace Print {
@@ -121,7 +122,7 @@ int32_t PrintUserData::QueryHistoryPrintJobById(const std::string &printJobId, P
                 PRINT_HILOGE("printJob object is null.");
                 return E_PRINT_INVALID_PRINTJOB;
             }
-            
+
             if (innerIt->first == printJobId) {
                 printJob = *(innerIt->second);
                 return E_PRINT_NONE;
@@ -202,7 +203,7 @@ int32_t PrintUserData::SetLastUsedPrinter(const std::string &printerId)
     }
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     lastUsedPrinterId_ = printerId;
-    
+
     DeletePrinterFromUsedPrinterList(printerId);
     usedPrinterList_.push_front(printerId);
     PRINT_HILOGI("put printer at the head of the queue, printerId: %{private}s", usedPrinterList_.front().c_str());
@@ -699,7 +700,7 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
         return false;
     }
     std::string oldOption = printJob->GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(oldOption).c_str());
     Json::Value infoJson;
     if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
@@ -707,7 +708,7 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
     }
     infoJson["isHistory"] = true;
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
-    PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
+    PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob->SetOption(updatedOption);
     auto it = printerHistroyJobList->begin();
     if ((printerHistroyJobList->insert(std::make_pair(jobId, printJob))).second) {
@@ -760,7 +761,7 @@ void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
         std::filesystem::remove(printHistoryJobFilePath);
         return;
     }
-    
+
     FILE *printHistoryJobFile = fopen(printHistoryJobFilePath.c_str(), "w+");
     if (printHistoryJobFile == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -789,7 +790,7 @@ std::string PrintUserData::ParsePrintHistoryJobListToJsonString(const std::strin
             if (it->second == nullptr) {
                 return "";
             }
-            
+
             Json::Value printJobJson;
             for (auto innerIt = (it->second)->begin(); innerIt != (it->second)->end(); innerIt++) {
                 printJobJson[innerIt->first] = (innerIt->second)->ConvertToJsonObject();
@@ -982,7 +983,7 @@ PrintPreviewAttribute PrintUserData::ParseJsonObjectToPrintPreviewAttribute(cons
 PrintPageSize PrintUserData::ParseJsonObjectToPrintPageSize(const Json::Value &jsonObject)
 {
     PrintPageSize pageSize;
-    
+
     if (PrintJsonUtil::IsMember(jsonObject, "id_") && jsonObject["id_"].isString()) {
         pageSize.SetId(jsonObject["id_"].asString());
     }

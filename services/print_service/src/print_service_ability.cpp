@@ -1120,16 +1120,16 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     int port = 0;
     http_uri_status_t ret = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
         username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    
+
     std::string printerIp = host;
     if (ret != HTTP_URI_STATUS_OK ||
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid parameter from uri, ret = %{public}u", ret);
         return E_PRINT_INVALID_PRINTER;
     }
-    
+
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
-    
+
     std::string protocol = scheme;
     std::string printQueue = resource;
 
@@ -1141,7 +1141,7 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
         return E_PRINT_SERVER_FAILURE;
     }
-    
+
     PRINT_HILOGI("AddPrinter end.");
     return E_PRINT_NONE;
 }
@@ -1265,7 +1265,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
         return false;
     }
     std::string oldOption = printJob.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
+    PRINT_HILOGD("Print job option: %{public}s",  PrintUtils::AnonymizeJobOption(oldOption).c_str());
     Json::Value infoJson;
     if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
@@ -1282,7 +1282,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
     printJob.SetPageSize(pageSize);
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
-    PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
+    PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob.SetOption(updatedOption);
     return true;
 }
@@ -1856,7 +1856,7 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
         PRINT_HILOGW("Cannot parse uri");
         return false;
     }
-    
+
     std::string newUri = GetConnectUri(*info, protocol);
     info->SetUri(newUri);
 #endif
@@ -3787,7 +3787,7 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
         std::string make = printerInfo->GetPrinterMake();
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
-        
+
         if (!ppdName.empty()) {
             PrinterCapability printerCaps;
             auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
@@ -3886,10 +3886,10 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
 {
     PRINT_HILOGD("HandleNewPrinterDiscovery start");
     info.DumpInfo();
-    
+
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>(info);
     PRINT_CHECK_NULL_AND_RETURN(printerInfo, nullptr);
-    
+
     PrinterInfo printer;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
@@ -3899,10 +3899,10 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
             printerInfo->SetAlias(printer.GetAlias());
         }
     }
-    
+
     printerInfo->SetPrinterId(globalPrinterId);
     printSystemData_.AddPrinterToDiscovery(printerInfo);
-    
+
     PRINT_HILOGD("HandleNewPrinterDiscovery completed");
     return printerInfo;
 }
@@ -4735,7 +4735,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value
 Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPreferences &preferences)
 {
     std::string option = preferences.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", option.c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     Json::Value opsJson;
     if (!PrintJsonUtil::Parse(option, opsJson)) {
         PRINT_HILOGW("parse preferences options error");
@@ -5487,7 +5487,7 @@ int32_t PrintServiceAbility::StartSharedHostDiscovery()
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    
+
     if (EventListenerMgr::GetInstance()->IsPrinterListenerEmpty(
         CallbackEventType::PRINTER_SHARED_HOST_DISCOVER)) {
         PRINT_HILOGE("No registration event");
@@ -5499,10 +5499,10 @@ int32_t PrintServiceAbility::StartSharedHostDiscovery()
         PRINT_HILOGW("Discovery already in progress");
         return E_PRINT_NONE;
     }
-    
+
     std::thread discoveryThread([this]() {
         PRINT_HILOGI("SMBPrinter Discovery thread started");
-        
+
         SmbHostSearchHelper helper;
         auto hosts = helper.GetSharedHosts();
         PRINT_HILOGI("Discovery completed, found %{public}zu hosts", hosts.size());
@@ -5513,7 +5513,7 @@ int32_t PrintServiceAbility::StartSharedHostDiscovery()
         EventListenerMgr::GetInstance()->Execute(cbInfo);
         isSmbHostDiscovering_.store(false);
     });
-    
+
     discoveryThread.detach();
 #endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;

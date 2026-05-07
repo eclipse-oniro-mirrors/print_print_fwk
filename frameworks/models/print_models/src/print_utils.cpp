@@ -334,6 +334,15 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
         optionJson["printerId"] = AnonymizePrinterId(optionJson["printerId"].asString());
     }
+    if (PrintJsonUtil::IsMember(optionJson, "files") && optionJson["files"].isArray()) {
+        Json::Value filesArr = optionJson["files"];
+        for (Json::Value::ArrayIndex i = 0; i < filesArr.size(); i++) {
+            if (filesArr[i].isString()) {
+                filesArr[i] = AnonymizeFilePath(filesArr[i].asString());
+            }
+        }
+        optionJson["files"] = filesArr;
+    }
     return PrintJsonUtil::WriteString(optionJson);
 }
 
@@ -345,6 +354,17 @@ std::string PrintUtils::AnonymizeJobName(const std::string &jobName)
         return "xxx" + extension;
     }
     return "xxx";
+}
+
+std::string PrintUtils::AnonymizeFilePath(const std::string &filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of('/');
+    if (lastSlashPos != std::string::npos) {
+        std::string fileName = filePath.substr(lastSlashPos + 1);
+        std::string anonymizedName = AnonymizeJobName(fileName);
+        return "/xxx/" + anonymizedName;
+    }
+    return AnonymizeJobName(filePath);
 }
 void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
 {
@@ -696,7 +716,7 @@ void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_p
         jsonOptions["cupsOptions"] = params.cupsOptions;
     }
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", option.c_str());
+    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", AnonymizeJobOption(option).c_str());
     nativeObj->SetOption(option);
 }
 }  // namespace OHOS::Print
