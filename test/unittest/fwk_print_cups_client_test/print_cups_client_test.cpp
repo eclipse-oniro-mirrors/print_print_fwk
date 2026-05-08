@@ -4111,9 +4111,9 @@ HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_EmptyJson_Test, TestSi
  */
 HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4Address_Test, TestSize.Level1)
 {
-    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "ipp://192.168.1.100:631/printers/TestPrinter";
-    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
 }
 
@@ -4125,9 +4125,9 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4Address_Test, TestSize
  */
 HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6Address_Test, TestSize.Level1)
 {
-    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "ipp://[2001:db8::1]:631/printers/TestPrinter";
-    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
 }
 
@@ -4139,9 +4139,9 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6Address_Test, TestSize
  */
 HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Hostname_Test, TestSize.Level1)
 {
-    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "ipp://test.local:631/printers/TestPrinter";
-    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
 }
 
@@ -4153,9 +4153,9 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Hostname_Test, TestSize.Le
  */
 HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_EmptyUri_Test, TestSize.Level1)
 {
-    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "";
-    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
 }
 
@@ -4167,9 +4167,9 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_EmptyUri_Test, TestSize.Le
  */
 HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_MalformedUri_Test, TestSize.Level1)
 {
-    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "ipp:///printers/TestPrinter";
-    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
 }
 
@@ -4181,9 +4181,9 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_MalformedUri_Test, TestSiz
  */
 HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4NoPort_Test, TestSize.Level1)
 {
-    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "ipp://10.0.0.1/printers/TestPrinter";
-    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
 }
 
