@@ -2927,15 +2927,21 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
         return IP_ADDRESS_TYPE_INVALID;
     }
     
+    std::string hostStr(host);
+    size_t scopePos = hostStr.find_last_of('+%');
+    if (scopePos != std::string::npos) {
+        hostStr = hostStr.substr(0, scopePos);
+    }
+    
     struct in_addr addr4;
     struct in6_addr addr6;
     
-    if (inet_pton(AF_INET, host, &addr4) == 1) {
+    if (inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) {
         PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
         return IP_ADDRESS_TYPE_IPV4;
     }
     
-    if (inet_pton(AF_INET6, host, &addr6) == 1) {
+    if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1) {
         PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address", printerUri.c_str());
         return IP_ADDRESS_TYPE_IPV6;
     }

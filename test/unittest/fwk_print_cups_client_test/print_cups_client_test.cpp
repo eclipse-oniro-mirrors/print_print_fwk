@@ -4187,5 +4187,47 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4NoPort_Test, TestSize.
     EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
 }
 
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_007
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address with scope ID (+wlan0)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithScopePlus_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "lpd://[v1.fe00:decd:2fff:febb:f5d5+wlan0]:515/auto";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_008
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address with scope ID (%eth0)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithScopePercent_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[fe80::1%eth0]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_009
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 link-local address with scope ID
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6LinkLocalWithScope_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[fe80::2001:db8:85a3::8a2e:370:7334+wlan0]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
 }  // namespace Print
 }  // namespace OHOS
