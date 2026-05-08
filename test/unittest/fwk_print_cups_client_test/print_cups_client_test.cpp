@@ -4103,5 +4103,89 @@ HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_EmptyJson_Test, TestSi
     EXPECT_EQ(result, "");
 }
 
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_001
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4Address_Test, TestSize.Level1)
+{
+    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    std::string uri = "ipp://192.168.1.100:631/printers/TestPrinter";
+    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_002
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6Address_Test, TestSize.Level1)
+{
+    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    std::string uri = "ipp://[2001:db8::1]:631/printers/TestPrinter";
+    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_003
+ * @tc.desc: GetIpAddressTypeFromUri with hostname (not IP address)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Hostname_Test, TestSize.Level1)
+{
+    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    std::string uri = "ipp://test.local:631/printers/TestPrinter";
+    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_004
+ * @tc.desc: GetIpAddressTypeFromUri with empty URI
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_EmptyUri_Test, TestSize.Level1)
+{
+    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    std::string uri = "";
+    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_005
+ * @tc.desc: GetIpAddressTypeFromUri with malformed URI (no host)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_MalformedUri_Test, TestSize.Level1)
+{
+    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    std::string uri = "ipp:///printers/TestPrinter";
+    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_006
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address without port
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4NoPort_Test, TestSize.Level1)
+{
+    auto client = OHOS::Print::DelayedSingleton<OHOS::Print::PrintCupsClient>::GetInstance();
+    std::string uri = "ipp://10.0.0.1/printers/TestPrinter";
+    IpAddressType result = client->GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
 }  // namespace Print
 }  // namespace OHOS

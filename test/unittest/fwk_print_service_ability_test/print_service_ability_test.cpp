@@ -5597,6 +5597,158 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_CanSyncPrinterInfo
     EXPECT_TRUE(result);
 }
 
+/**
+ * @tc.name: AddVendorPrinterToDiscovery_InvalidIpType_ShouldSkipUriUpdate
+ * @tc.desc: Test AddVendorPrinterToDiscovery when info IP type is invalid
+ * @tc.type: FUNC
+ * @tc.require: URI update should be skipped when IP type is invalid
+ */
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_InvalidIpType_ShouldSkipUriUpdate, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string vendorName = "com.test.ext";
+    std::string printerId = "TestPrinter_001";
+    std::string globalPrinterId = vendorName + ":" + printerId;
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName("TestPrinter_001");
+    info.SetUri("ipp://test.local:631/printers/TestPrinter_001");
+    info.SetOption("test-option");
+
+    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
+
+    PrinterInfo updatedInfo;
+    updatedInfo.SetPrinterId(printerId);
+    updatedInfo.SetPrinterName("TestPrinter_001");
+    updatedInfo.SetUri("ipp://another-host.local:631/printers/TestPrinter_001");
+    updatedInfo.SetOption("updated-option");
+
+    bool result = service->AddVendorPrinterToDiscovery(vendorName, updatedInfo);
+    EXPECT_TRUE(result);
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    ASSERT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetUri(), "ipp://test.local:631/printers/TestPrinter_001");
+    EXPECT_EQ(printerInfo->GetOption(), "test-option");
+}
+
+/**
+ * @tc.name: AddVendorPrinterToDiscovery_Ipv6ToIpv4_ShouldSkipUriUpdate
+ * @tc.desc: Test AddVendorPrinterToDiscovery when info is IPv6 and printerInfo is IPv4
+ * @tc.type: FUNC
+ * @tc.require: URI update should be skipped when IPv6 tries to downgrade to IPv4
+ */
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv6ToIpv4_ShouldSkipUriUpdate, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string vendorName = "com.test.ext";
+    std::string printerId = "TestPrinter_001";
+    std::string globalPrinterId = vendorName + ":" + printerId;
+
+    PrinterInfo existingInfo;
+    existingInfo.SetPrinterId(printerId);
+    existingInfo.SetPrinterName("TestPrinter_001");
+    existingInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
+    existingInfo.SetOption("ipv4-option");
+
+    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
+
+    PrinterInfo ipv6Info;
+    ipv6Info.SetPrinterId(printerId);
+    ipv6Info.SetPrinterName("TestPrinter_001");
+    ipv6Info.SetUri("ipp://[2001:db8::1]:631/printers/TestPrinter_001");
+    ipv6Info.SetOption("ipv6-option");
+
+    bool result = service->AddVendorPrinterToDiscovery(vendorName, ipv6Info);
+    EXPECT_TRUE(result);
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    ASSERT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
+    EXPECT_EQ(printerInfo->GetOption(), "ipv4-option");
+}
+
+/**
+ * @tc.name: AddVendorPrinterToDiscovery_Ipv4ToIpv4_ShouldUpdateUri
+ * @tc.desc: Test AddVendorPrinterToDiscovery when both info and printerInfo are IPv4
+ * @tc.type: FUNC
+ * @tc.require: URI should be updated when both are IPv4
+ */
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToIpv4_ShouldUpdateUri, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string vendorName = "com.test.ext";
+    std::string printerId = "TestPrinter_001";
+    std::string globalPrinterId = vendorName + ":" + printerId;
+
+    PrinterInfo existingInfo;
+    existingInfo.SetPrinterId(printerId);
+    existingInfo.SetPrinterName("TestPrinter_001");
+    existingInfo.SetUri("ipp://192.168.1.50:631/printers/TestPrinter_001");
+    existingInfo.SetOption("old-option");
+
+    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
+
+    PrinterInfo newInfo;
+    newInfo.SetPrinterId(printerId);
+    newInfo.SetPrinterName("TestPrinter_001");
+    newInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
+    newInfo.SetOption("new-option");
+
+    bool result = service->AddVendorPrinterToDiscovery(vendorName, newInfo);
+    EXPECT_TRUE(result);
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    ASSERT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
+    EXPECT_EQ(printerInfo->GetOption(), "new-option");
+}
+
+/**
+ * @tc.name: AddVendorPrinterToDiscovery_Ipv4ToInvalid_ShouldSkipUriUpdate
+ * @tc.desc: Test AddVendorPrinterToDiscovery when printerInfo is IPv4 and info is invalid (hostname)
+ * @tc.type: FUNC
+ * @tc.require: URI update should be skipped when info is invalid
+ */
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToInvalid_ShouldSkipUriUpdate, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    std::string vendorName = "com.test.ext";
+    std::string printerId = "TestPrinter_001";
+    std::string globalPrinterId = vendorName + ":" + printerId;
+
+    PrinterInfo existingInfo;
+    existingInfo.SetPrinterId(printerId);
+    existingInfo.SetPrinterName("TestPrinter_001");
+    existingInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
+    existingInfo.SetOption("ipv4-option");
+
+    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
+
+    PrinterInfo hostnameInfo;
+    hostnameInfo.SetPrinterId(printerId);
+    hostnameInfo.SetPrinterName("TestPrinter_001");
+    hostnameInfo.SetUri("ipp://hostname.local:631/printers/TestPrinter_001");
+    hostnameInfo.SetOption("hostname-option");
+
+    bool result = service->AddVendorPrinterToDiscovery(vendorName, hostnameInfo);
+    EXPECT_TRUE(result);
+
+    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    ASSERT_NE(printerInfo, nullptr);
+    EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
+    EXPECT_EQ(printerInfo->GetOption(), "ipv4-option");
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninstall, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);

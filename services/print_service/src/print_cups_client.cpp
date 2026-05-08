@@ -2912,6 +2912,38 @@ bool PrintCupsClient::IsIpAddress(const char *host)
     }
 }
 
+IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    
+    if (host[0] == '\0') {
+        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", printerUri.c_str());
+        return IP_ADDRESS_TYPE_INVALID;
+    }
+    
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    
+    if (inet_pton(AF_INET, host, &addr4) == 1) {
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
+        return IP_ADDRESS_TYPE_IPV4;
+    }
+    
+    if (inet_pton(AF_INET6, host, &addr6) == 1) {
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address", printerUri.c_str());
+        return IP_ADDRESS_TYPE_IPV6;
+    }
+    
+    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address", printerUri.c_str(), host);
+    return IP_ADDRESS_TYPE_INVALID;
+}
+
 std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;

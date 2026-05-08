@@ -26,6 +26,7 @@
 #include "print_service_ability.h"
 #include "print_job.h"
 #include "print_constant.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 typedef std::function<void()> CallbackFunc;
@@ -182,6 +183,7 @@ public:
     int32_t DeleteExtraJobsFromCups();
     std::string getScheme(std::string &printerUri);
     bool IsIpAddress(const char* host);
+    IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
     std::string GetCurCupsModelDir();
 private:

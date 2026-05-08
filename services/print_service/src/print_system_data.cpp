@@ -487,7 +487,6 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
         std::string uri = printerInfo->GetUri();
         info->SetUri(uri);
         info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
-        info->SetOption(printerInfo->GetOption());
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }
