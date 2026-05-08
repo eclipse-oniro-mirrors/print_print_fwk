@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
-if (print_fwk_feature_phone_isolation) {
+if (print_fwk_feature_device_isolation) {
   _service_path = "${print_path}/services/phone_service/print_service"
 } else {
   _service_path = "${print_path}/services/print_service"
@@ -221,7 +221,7 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
-  if (print_fwk_feature_phone_isolation) {
+  if (print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
   }
 
@@ -316,7 +316,7 @@ ohos_static_library("print_service_test") {
     cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
-  if (print_fwk_feature_phone_isolation) {
+  if (print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
   }
 
