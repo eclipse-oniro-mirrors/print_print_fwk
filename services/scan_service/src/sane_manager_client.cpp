@@ -126,19 +126,15 @@ void SaneManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &object)
 SaneStatus SaneManagerClient::SaneInit()
 {
     SCAN_HILOGI("SaneManagerClient SaneInit start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneInit(saneStatus);
+    int32_t ret = proxy->SaneInit(saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneInit error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneInit error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneInit end, saneStatus = [%{public}d].", saneStatus);
@@ -148,18 +144,14 @@ SaneStatus SaneManagerClient::SaneInit()
 SaneStatus SaneManagerClient::SaneExit()
 {
     SCAN_HILOGI("SaneManagerClient SaneExit start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
-    }
-    int32_t ret = proxy_->SaneExit();
+    int32_t ret = proxy->SaneExit();
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneExit error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneExit error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneExit end.");
@@ -169,19 +161,15 @@ SaneStatus SaneManagerClient::SaneExit()
 SaneStatus SaneManagerClient::SaneOpen(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneOpen start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneOpen(scannerId, saneStatus);
+    int32_t ret = proxy->SaneOpen(scannerId, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneOpen error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneOpen error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneOpen end, saneStatus = [%{public}d].", saneStatus);
@@ -191,18 +179,14 @@ SaneStatus SaneManagerClient::SaneOpen(const std::string &scannerId)
 SaneStatus SaneManagerClient::SaneClose(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneClose start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
-    }
-    int32_t ret = proxy_->SaneClose(scannerId);
+    int32_t ret = proxy->SaneClose(scannerId);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneClose error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneClose error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneClose end.");
@@ -212,19 +196,15 @@ SaneStatus SaneManagerClient::SaneClose(const std::string &scannerId)
 SaneStatus SaneManagerClient::SaneStart(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneStart start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneStart(scannerId, saneStatus);
+    int32_t ret = proxy->SaneStart(scannerId, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneStart error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneStart error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneStart end, saneStatus = [%{public}d].", saneStatus);
@@ -234,18 +214,14 @@ SaneStatus SaneManagerClient::SaneStart(const std::string &scannerId)
 SaneStatus SaneManagerClient::SaneCancel(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneCancel start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
-    }
-    int32_t ret = proxy_->SaneCancel(scannerId);
+    int32_t ret = proxy->SaneCancel(scannerId);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneCancel error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneCancel error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneCancel end.");
@@ -256,19 +232,15 @@ SaneStatus SaneManagerClient::SaneGetOptionDescriptor(
     const std::string &scannerId, const int32_t &option, SaneOptionDescriptor &desc)
 {
     SCAN_HILOGI("SaneManagerClient SaneGetOptionDescriptor start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneGetOptionDescriptor(scannerId, option, desc, saneStatus);
+    int32_t ret = proxy->SaneGetOptionDescriptor(scannerId, option, desc, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneGetOptionDescriptor error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneGetOptionDescriptor error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneGetOptionDescriptor end, saneStatus = [%{public}d].", saneStatus);
@@ -278,19 +250,15 @@ SaneStatus SaneManagerClient::SaneGetOptionDescriptor(
 SaneStatus SaneManagerClient::SaneGetParameters(const std::string &scannerId, SaneParameters &params)
 {
     SCAN_HILOGI("SaneManagerClient SaneGetParameters start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneGetParameters(scannerId, params, saneStatus);
+    int32_t ret = proxy->SaneGetParameters(scannerId, params, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneGetParameters error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneGetParameters error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneGetParameters end, saneStatus = [%{public}d].", saneStatus);
@@ -300,19 +268,15 @@ SaneStatus SaneManagerClient::SaneGetParameters(const std::string &scannerId, Sa
 SaneStatus SaneManagerClient::SaneGetDevices(std::vector<SaneDevice> &deviceInfos)
 {
     SCAN_HILOGI("SaneManagerClient SaneGetDevices start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneGetDevices(deviceInfos, saneStatus);
+    int32_t ret = proxy->SaneGetDevices(deviceInfos, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneGetDevices error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneGetDevices error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneGetDevices end, saneStatus = [%{public}d].", saneStatus);
@@ -323,19 +287,15 @@ SaneStatus SaneManagerClient::SaneControlOption(
     const std::string &scannerId, SaneControlParam &controlParam, SaneOutParam &outParam)
 {
     SCAN_HILOGI("SaneManagerClient SaneControlOption start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneControlOption(scannerId, controlParam, outParam, saneStatus);
+    int32_t ret = proxy->SaneControlOption(scannerId, controlParam, outParam, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneControlOption error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneControlOption error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneControlOption end, saneStatus = [%{public}d].", saneStatus);
@@ -345,19 +305,15 @@ SaneStatus SaneManagerClient::SaneControlOption(
 SaneStatus SaneManagerClient::SaneRead(const std::string &scannerId, const int32_t buflen, SanePictureData &pictureData)
 {
     SCAN_HILOGI("SaneManagerClient SaneRead start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
     int32_t saneStatus = SANE_STATUS_GOOD;
-    int32_t ret = proxy_->SaneRead(scannerId, buflen, pictureData, saneStatus);
+    int32_t ret = proxy->SaneRead(scannerId, buflen, pictureData, saneStatus);
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->SaneRead error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->SaneRead error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient SaneRead end, saneStatus = [%{public}d].", saneStatus);
@@ -367,18 +323,14 @@ SaneStatus SaneManagerClient::SaneRead(const std::string &scannerId, const int32
 SaneStatus SaneManagerClient::UnloadSystemAbility()
 {
     SCAN_HILOGI("SaneManagerClient UnloadSystemAbility start.");
-    if (proxy_ == nullptr) {
-        SCAN_HILOGW("do GetSaneServiceProxy");
-        proxy_ = GetSaneServiceProxy();
+    auto proxy = GetSaneServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetSaneServiceProxy failed.");
+        return SANE_STATUS_RPC_FAILURE;
     }
-    std::shared_lock<std::shared_mutex> lock(serviceLock_);
-    if (proxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetSaneServiceProxy failed..");
-        return SANE_STATUS_SERVER_FAILURE;
-    }
-    int32_t ret = proxy_->UnloadSystemAbility();
+    int32_t ret = proxy->UnloadSystemAbility();
     if (ret != ERR_NONE) {
-        SCAN_HILOGE("proxy_->UnloadSystemAbility error exit, ret = [%{public}d]", ret);
+        SCAN_HILOGE("proxy->UnloadSystemAbility error exit, ret = [%{public}d]", ret);
         return SANE_STATUS_RPC_FAILURE;
     }
     SCAN_HILOGI("SaneManagerClient UnloadSystemAbility end.");
