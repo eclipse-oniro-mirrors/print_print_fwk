@@ -2933,6 +2933,11 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
         hostStr = hostStr.substr(0, scopePos);
     }
     
+    size_t dotPos = hostStr.find('.');
+    if (dotPos != std::string::npos && dotPos < 3 && hostStr[0] == 'v') {
+        hostStr = hostStr.substr(dotPos + 1);
+    }
+    
     struct in_addr addr4;
     struct in6_addr addr6;
     
