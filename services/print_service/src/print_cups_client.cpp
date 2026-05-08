@@ -2927,7 +2927,10 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
         return IP_ADDRESS_TYPE_INVALID;
     }
     
+    // Pre-process IPv6 address for inet_pton validation compatibility
+    // Real-world printer URIs may contain scope ID (+wlan0/%eth0) and version prefix (v1.)
     std::string hostStr(host);
+    
     size_t scopePos = hostStr.find_last_of('+%');
     if (scopePos != std::string::npos) {
         hostStr = hostStr.substr(0, scopePos);
