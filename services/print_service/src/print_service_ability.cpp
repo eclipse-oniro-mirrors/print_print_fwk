@@ -2069,6 +2069,10 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
 {
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
+    if (isEprint(printJob->GetPrinterId())) {
+        PRINT_HILOGI("Skip AI notifier for eprint printer");
+        return;
+    }
     auto printerId = printJob->GetPrinterId();
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo) {
