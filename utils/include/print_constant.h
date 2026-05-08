@@ -100,6 +100,12 @@ enum PrintErrorCode {
 
 const uint32_t PRINT_INVALID_ID = 0xFFFFFFFF;   // -1
 
+enum IpAddressType {
+    IP_ADDRESS_TYPE_INVALID = 0,
+    IP_ADDRESS_TYPE_IPV4 = 1,
+    IP_ADDRESS_TYPE_IPV6 = 2,
+};
+
 enum PrinterState {
     PRINTER_ADDED = 0,          // new printers arrival
     PRINTER_REMOVED = 1,        // printers lost

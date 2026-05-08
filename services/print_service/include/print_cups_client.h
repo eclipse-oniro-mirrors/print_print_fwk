@@ -26,7 +26,6 @@
 #include "print_service_ability.h"
 #include "print_job.h"
 #include "print_constant.h"
-#include "print_util.h"
 
 namespace OHOS::Print {
 typedef std::function<void()> CallbackFunc;

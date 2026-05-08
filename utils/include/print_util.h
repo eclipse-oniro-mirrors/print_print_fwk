@@ -34,12 +34,6 @@ const uint32_t MAX_DRIVER_PRINTER_NAME_LENGTH = 124;
 const uint32_t DELETE_CHARACTER = 127;
 const uint32_t MIN_INT_LIST_STRLENGTH = 2;
 const uint32_t MAX_AUTH_LENGTH_SIZE = 64;
-
-enum IpAddressType {
-    IP_ADDRESS_TYPE_INVALID = 0,
-    IP_ADDRESS_TYPE_IPV4 = 1,
-    IP_ADDRESS_TYPE_IPV6 = 2,
-};
 class PrintUtil {
 public:
     static std::string ParseListToString(const std::vector<std::string> &list);
