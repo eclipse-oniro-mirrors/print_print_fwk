@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <dirent.h>
 #include <cstdlib>
-#include <limits.h>
 #include <iomanip>
 #include <json/json.h>
 

@@ -1316,8 +1316,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
 }
 
 void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
-                                                          const PrinterPreferences &preferences,
-                                                          PrintJob &printJob)
+    const PrinterPreferences &preferences, PrintJob &printJob)
 {
     // 1. 先读取厂商设置首选项（公共+用户）
     std::string printerVendorOptions = preferences.HasVendorOptions() ? preferences.GetVendorOptions() : "";
@@ -1331,18 +1330,14 @@ void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterInfo &print
             userVendorOptions = userPrefs.HasVendorOptions() ? userPrefs.GetVendorOptions() : "";
         }
     }
-
     // 合并公共首选项和用户首选项
     std::string prefVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
         printerVendorOptions, userVendorOptions);
-
     // 2. 如果打印任务有传入厂商设置，则同字段厂商设置覆盖首选项里读到的
     std::string jobVendorOptions = printJob.HasVendorOptions() ? printJob.GetVendorOptions() : "";
-
     // 打印任务厂商设置覆盖首选项厂商设置
     std::string finalVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
         prefVendorOptions, jobVendorOptions);
-
     if (!finalVendorOptions.empty()) {
         printJob.SetVendorOptions(finalVendorOptions);
         PRINT_HILOGI("MergeVendorOptionsForPrintJob: final vendorOptions=%{private}s", finalVendorOptions.c_str());

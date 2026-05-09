@@ -22,10 +22,8 @@ namespace OHOS::Print {
 PrinterUserPreferences::PrinterUserPreferences() {}
 
 PrinterUserPreferences::PrinterUserPreferences(const PrinterUserPreferences &other)
-    : userId_(other.userId_)
-    , printerId_(other.printerId_)
-    , hasVendorOptions_(other.hasVendorOptions_)
-    , vendorOptions_(other.vendorOptions_) {}
+    : userId_(other.userId_), printerId_(other.printerId_),
+      hasVendorOptions_(other.hasVendorOptions_), vendorOptions_(other.vendorOptions_) {}
 
 PrinterUserPreferences::~PrinterUserPreferences() {}
 

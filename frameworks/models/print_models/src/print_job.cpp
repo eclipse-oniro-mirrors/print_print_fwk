@@ -21,7 +21,7 @@ namespace OHOS::Print {
 PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED), subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
       isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
-      hasMargin_(false), hasPreview_(false), hasOption_(false), option_(""), hasVendorOptions_(false), vendorOptions_("")
+      hasMargin_(false), hasPreview_(false), hasOption_(false), option_(""), hasVendorOptions_(false)
 {
     margin_.Reset();
     preview_.Reset();

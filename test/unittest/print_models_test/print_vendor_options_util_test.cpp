@@ -285,7 +285,8 @@ HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_UserFieldOverridesGlobal
 
 HWTEST_F(PrintVendorOptionsUtilTest, SplitAndMergeRoundTrip_RestoresOriginal, TestSize.Level1)
 {
-    std::string original = "{\"paperSize\":\"A4\",\"colorMode\":\"color\",\"user_username\":\"admin\",\"user_password\":\"pass123\"}";
+    std::string original =
+        "{\"paperSize\":\"A4\",\"colorMode\":\"color\",\"user_username\":\"admin\",\"user_password\":\"pass123\"}";
 
     std::string printerVendorOptions;
     std::string userVendorOptions;

@@ -103,6 +103,7 @@ private:
     bool ConvertJsonToSupportedQuality(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToSupportedOrientation(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToVendorAbility(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertSupportedListsFromJson(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability);
     bool CheckPrinterInfoJson(Json::Value &object, std::string &printerId);
     bool GetPrinterCapabilityFromJson(

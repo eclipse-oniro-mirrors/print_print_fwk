@@ -1224,7 +1224,8 @@ HWTEST_F(PrintUserDataTest, PrinterUserPreferences_CopyConstructor_CopiesAllFiel
     EXPECT_EQ(copy.GetVendorOptions(), "{\"user_field\":\"value\"}");
 }
 
-HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithVendorOptions_JsonContainsAllFields, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithVendorOptions_JsonContainsAllFields,
+    TestSize.Level1)
 {
     PrinterUserPreferences userPrefs;
     userPrefs.SetUserId(100);
@@ -1241,7 +1242,8 @@ HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithVendorOptio
     EXPECT_EQ(json["vendorOptions"].asString(), "{\"user_data\":\"test\"}");
 }
 
-HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithoutVendorOptions_JsonOmitsVendorOptions, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithoutVendorOptions_JsonOmitsVendorOptions,
+    TestSize.Level1)
 {
     PrinterUserPreferences userPrefs;
     userPrefs.SetUserId(200);
@@ -1272,7 +1274,8 @@ HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertFromJson_WithVendorOpt
     EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"user_json\":\"json_value\"}");
 }
 
-HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertFromJson_WithoutVendorOptions_HasVendorOptionsFalse, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertFromJson_WithoutVendorOptions_HasVendorOptionsFalse,
+    TestSize.Level1)
 {
     Json::Value json;
     json["userId"] = 400;

@@ -294,7 +294,8 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertToJsonAndFromJson_RoundTrip_ValuesPr
     EXPECT_EQ(restored.HasVendorOptions(), original.HasVendorOptions());
 }
 
-HWTEST_F(PrinterUserPreferencesTest, ConvertToJsonAndFromJson_NoVendorOptionsRoundTrip_ValuesPreserved, TestSize.Level1)
+HWTEST_F(PrinterUserPreferencesTest, ConvertToJsonAndFromJson_NoVendorOptionsRoundTrip_ValuesPreserved,
+    TestSize.Level1)
 {
     PrinterUserPreferences original;
     original.SetUserId(700);
