@@ -21,7 +21,7 @@ namespace OHOS::Print {
 PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED), subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
       isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
-      hasMargin_(false), hasPreview_(false), hasOption_(false), option_("")
+      hasMargin_(false), hasPreview_(false), hasOption_(false), option_(""), hasVendorOptions_(false), vendorOptions_("")
 {
     margin_.Reset();
     preview_.Reset();
@@ -50,6 +50,8 @@ PrintJob::PrintJob(const PrintJob &right)
     preview_ = right.preview_;
     hasOption_ = right.hasOption_;
     option_ = right.option_;
+    hasVendorOptions_ = right.hasVendorOptions_;
+    vendorOptions_ = right.vendorOptions_;
 }
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
@@ -76,6 +78,8 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         preview_ = right.preview_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
+        hasVendorOptions_ = right.hasVendorOptions_;
+        vendorOptions_ = right.vendorOptions_;
     }
     return *this;
 }
@@ -190,6 +194,8 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     preview_ = jobInfo.preview_;
     hasOption_ = jobInfo.hasOption_;
     option_ = jobInfo.option_;
+    hasVendorOptions_ = jobInfo.hasVendorOptions_;
+    vendorOptions_ = jobInfo.vendorOptions_;
 }
 
 void PrintJob::GetFdList(std::vector<uint32_t> &fdList) const
@@ -301,6 +307,22 @@ const std::string &PrintJob::GetOption() const
     return option_;
 }
 
+void PrintJob::SetVendorOptions(const std::string &vendorOptions)
+{
+    hasVendorOptions_ = true;
+    vendorOptions_ = vendorOptions;
+}
+
+bool PrintJob::HasVendorOptions() const
+{
+    return hasVendorOptions_;
+}
+
+const std::string &PrintJob::GetVendorOptions() const
+{
+    return vendorOptions_;
+}
+
 void PrintJob::ReadParcelFD(Parcel &parcel)
 {
     uint32_t fdSize = parcel.ReadUint32();
@@ -363,6 +385,15 @@ void PrintJob::ReadFromParcel(Parcel &parcel)
     if (hasOption_) {
         SetOption(parcel.ReadString());
     }
+    ReadVendorOptionsFromParcel(parcel);
+}
+
+void PrintJob::ReadVendorOptionsFromParcel(Parcel &parcel)
+{
+    hasVendorOptions_ = parcel.ReadBool();
+    if (hasVendorOptions_) {
+        SetVendorOptions(parcel.ReadString());
+    }
 }
 
 bool PrintJob::Marshalling(Parcel &parcel) const
@@ -411,6 +442,11 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
         parcel.WriteString(GetOption());
     }
 
+    parcel.WriteBool(hasVendorOptions_);
+    if (hasVendorOptions_) {
+        parcel.WriteString(GetVendorOptions());
+    }
+
     return true;
 }
 
@@ -457,6 +493,9 @@ void PrintJob::Dump()
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
+    if (hasVendorOptions_) {
+        PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
+    }
 }
 
 std::string PrintJob::ConvertToJsonString() const
@@ -470,6 +509,9 @@ std::string PrintJob::ConvertToJsonString() const
     json["pageSize"] = pageSize_.GetName();
     if (hasOption_) {
         json["option"] = option_;
+    }
+    if (hasVendorOptions_) {
+        json["vendorOptions"] = vendorOptions_;
     }
     Json::StreamWriterBuilder wBuilder;
     std::string jsonString = Json::writeString(wBuilder, json);
@@ -505,6 +547,10 @@ Json::Value PrintJob::ConvertToJsonObject() const
     jsonObject["hasOption"] = hasOption_;
     if (hasOption_) {
         jsonObject["option"] = option_;
+    }
+    jsonObject["hasVendorOptions"] = hasVendorOptions_;
+    if (hasVendorOptions_) {
+        jsonObject["vendorOptions"] = vendorOptions_;
     }
     return jsonObject;
 }

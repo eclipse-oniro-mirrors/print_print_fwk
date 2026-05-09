@@ -566,6 +566,9 @@ void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shar
     args.mirror = params.mirror;
     args.pageBorder = params.pageBorder;
     nativeObj->SetNumberUpArgs(args);
+    if (!params.vendorOptions.empty()) {
+        nativeObj->SetVendorOptions(params.vendorOptions);
+    }
 }
 
 std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
@@ -580,6 +583,9 @@ std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobPara
         return nullptr;
     }
     SetAttributesToPrintJob(params, nativeObj);
+    if (!params.vendorOptions.empty()) {
+        nativeObj->SetVendorOptions(params.vendorOptions);
+    }
     SetOptionInPrintJob(params, nativeObj);
     return nativeObj;
 }

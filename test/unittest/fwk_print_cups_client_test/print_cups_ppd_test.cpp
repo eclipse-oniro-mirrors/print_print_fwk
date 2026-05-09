@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include <cups/ppd.h>
 #include <cups/ppd-private.h>
+#include <fstream>
+#include <unistd.h>
 #include "print_cups_ppd.h"
 #include "printer_capability.h"
 
@@ -25,7 +27,53 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 
-class PrintCupsPpdTest : public testing::Test {};
+class PrintCupsPpdTest : public testing::Test {
+protected:
+    std::string CreateTempPpdFile(const std::string &content)
+    {
+        std::string tempPath = "/tmp/test_vendor_" + std::to_string(getpid()) + ".ppd";
+        std::ofstream file(tempPath);
+        file << content;
+        file.close();
+        return tempPath;
+    }
+
+    void RemoveTempFile(const std::string &path)
+    {
+        if (!path.empty()) {
+            unlink(path.c_str());
+        }
+    }
+
+    std::string CreatePpdWithVendorAbility(
+        const std::string &prefAbility,
+        const std::string &jobAbility)
+    {
+        std::string content = "*PPD-Adobe: \"4.3\"\n"
+            "*FileVersion: \"1.0\"\n"
+            "*LanguageEncoding: ISOLatin1\n"
+            "*LanguageLevel: \"2\"\n"
+            "*Manufacturer: \"Test\"\n"
+            "*ModelName: \"Test Printer\"\n"
+            "*NickName: \"Test Printer\"\n";
+
+        if (!prefAbility.empty()) {
+            content += "*vendorPrinterPrefAbility: \"" + prefAbility + "\"\n";
+        }
+        if (!jobAbility.empty()) {
+            content += "*vendorJobAttrAbility: \"" + jobAbility + "\"\n";
+        }
+
+        content += "*ColorDevice: True\n"
+            "*DefaultColor: Color\n"
+            "*OpenUI PageSize: PickOne\n"
+            "*DefaultPageSize: A4\n"
+            "*PageSize A4/A4: \"<</PageSize>>\"\n"
+            "*CloseUI: PageSize\n";
+
+        return CreateTempPpdFile(content);
+    }
+};
 
 /**
  * @tc.name: QueryPrinterCapabilityFromPPDFile_001
@@ -81,6 +129,236 @@ HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_001, TestSize.Level1)
     int32_t ret = CheckPpdConflicts(ppd, PRINT_PARAM_TYPE_PAGE_SIZE, PAGE_SIZE_ID_ISO_A4, conflictTypes);
     EXPECT_EQ(ret, 0);
     EXPECT_TRUE(conflictTypes.empty());
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseVendorAbilityFromPPD_NullPpd_AbilityFieldsEmpty, TestSize.Level1)
+{
+    ppd_file_t *ppd = nullptr;
+    PrinterCapability printerCaps;
+
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseVendorAbilityFromPPD_BothAbilitiesPresent_AbilitiesSet, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithVendorAbility(
+        "com.vendor.driver.VendorPrinterSettingsAbility",
+        "com.vendor.driver.VendorJobAttrAbility");
+
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+
+    PrinterCapability printerCaps;
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseVendorAbilityFromPPD_NoVendorPrefAttr_OnlyJobAbilitySet, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithVendorAbility(
+        "",
+        "com.vendor.driver.VendorJobAttrAbility");
+
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+
+    PrinterCapability printerCaps;
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseVendorAbilityFromPPD_NoVendorJobAttr_OnlyPrefAbilitySet, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithVendorAbility(
+        "com.vendor.driver.VendorPrinterSettingsAbility",
+        "");
+
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+
+    PrinterCapability printerCaps;
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseVendorAbilityFromPPD_NoVendorAbilities_BothEmpty, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithVendorAbility("", "");
+
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+
+    PrinterCapability printerCaps;
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateAndClearVendorAbility_MatchingBundles_AbilitiesSet, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.vendor.driver.VendorPrinterSettingsAbility");
+    printerCaps.SetVendorJobAttrAbility("com.vendor.driver.VendorJobAttrAbility");
+    std::string ppdName = "com.vendor.driver_Test_Printer.ppd";
+
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateAndClearVendorAbility_MismatchedBundles_AbilitiesCleared, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.other.driver.VendorPrinterSettingsAbility");
+    printerCaps.SetVendorJobAttrAbility("com.other.driver.VendorJobAttrAbility");
+    std::string ppdName = "com.vendor.driver_Test_Printer.ppd";
+
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateAndClearVendorAbility_PrefMatchJobMismatch_OnlyPrefSet, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.vendor.driver.VendorPrinterSettingsAbility");
+    printerCaps.SetVendorJobAttrAbility("com.other.driver.VendorJobAttrAbility");
+    std::string ppdName = "com.vendor.driver_Test_Printer.ppd";
+
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateAndClearVendorAbility_PrefMismatchJobMatch_OnlyJobSet, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.other.driver.VendorPrinterSettingsAbility");
+    printerCaps.SetVendorJobAttrAbility("com.vendor.driver.VendorJobAttrAbility");
+    std::string ppdName = "com.vendor.driver_Test_Printer.ppd";
+
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateAndClearVendorAbility_EmptyPpdName_AbilitiesCleared, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.vendor.driver.VendorPrinterSettingsAbility");
+    printerCaps.SetVendorJobAttrAbility("com.vendor.driver.VendorJobAttrAbility");
+    std::string ppdName = "";
+
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateAndClearVendorAbility_InvalidAbilityFormat_AbilitiesCleared, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("no_dot_ability");
+    printerCaps.SetVendorJobAttrAbility("no_dot.job_ability");
+    std::string ppdName = "com.vendor.driver_Test_Printer.ppd";
+
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, PrinterCapability_SetAndGetVendorAbilities_Succeeds, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+
+    printerCaps.SetVendorPrinterPrefAbility("com.example.vendor.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.example.vendor.VendorPrinterSettingsAbility");
+
+    printerCaps.SetVendorJobAttrAbility("com.example.vendor.VendorJobAttrAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.example.vendor.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintCupsPpdTest, PrinterCapability_DefaultVendorAbilities_ReturnsEmpty, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, PrinterCapability_SetEmptyVendorAbilities_ReturnsEmpty, TestSize.Level1)
+{
+    PrinterCapability printerCaps;
+
+    printerCaps.SetVendorPrinterPrefAbility("");
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+
+    printerCaps.SetVendorJobAttrAbility("");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_BundlesMatch_ReturnsTrue, TestSize.Level1)
+{
+    EXPECT_TRUE(ValidateVendorAbilityBundle(
+        "com.vendor.driver.VendorPrinterSettingsAbility", "com.vendor.driver_Test_LaserJet.ppd"));
+    EXPECT_TRUE(ValidateVendorAbilityBundle(
+        "com.example.vendor.VendorJobAttrAbility", "com.example.vendor_CustomName.ppd"));
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_BundlesMismatch_ReturnsFalse, TestSize.Level1)
+{
+    EXPECT_FALSE(ValidateVendorAbilityBundle(
+        "com.vendor.driver.VendorPrinterSettingsAbility", "com.other.driver_Printer.ppd"));
+    EXPECT_FALSE(ValidateVendorAbilityBundle(
+        "com.example.vendor.VendorJobAttrAbility", "com.different.bundle_Printer.ppd"));
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_EmptyAbilityName_ReturnsFalse, TestSize.Level1)
+{
+    EXPECT_FALSE(ValidateVendorAbilityBundle("", "com.vendor.driver_Test_LaserJet.ppd"));
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_EmptyPpdName_ReturnsFalse, TestSize.Level1)
+{
+    EXPECT_FALSE(ValidateVendorAbilityBundle("com.vendor.driver.VendorPrinterSettingsAbility", ""));
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_InvalidAbilityFormat_ReturnsFalse, TestSize.Level1)
+{
+    EXPECT_FALSE(ValidateVendorAbilityBundle("no_dot_ability", "com.vendor.driver_Test_LaserJet.ppd"));
+}
+
+HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_InvalidPpdFormat_ReturnsFalse, TestSize.Level1)
+{
+    EXPECT_FALSE(ValidateVendorAbilityBundle(
+        "com.vendor.driver.VendorPrinterSettingsAbility", "no_underscore"));
 }
 
 }  // namespace Print

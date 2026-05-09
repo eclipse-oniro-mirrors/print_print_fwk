@@ -100,9 +100,17 @@ public:
 
     void SetSupportedOrientation(const std::vector<uint32_t>& supportedOrientationList);
 
-    virtual bool Marshalling(Parcel& parcel) const override;
+    void SetVendorPrinterPrefAbility(const std::string &ability);
+    void SetVendorJobAttrAbility(const std::string &ability);
 
-    static std::shared_ptr<PrinterCapability> Unmarshalling(Parcel& parcel);
+    [[nodiscard]] bool HasVendorPrinterPrefAbility() const;
+    [[nodiscard]] std::string GetVendorPrinterPrefAbility() const;
+    [[nodiscard]] bool HasVendorJobAttrAbility() const;
+    [[nodiscard]] std::string GetVendorJobAttrAbility() const;
+
+    virtual bool Marshalling(Parcel &parcel) const override;
+
+    static std::shared_ptr<PrinterCapability> Unmarshalling(Parcel &parcel);
 
     void Dump() const;
 
@@ -119,6 +127,8 @@ public:
 private:
     bool ReadFromParcel(Parcel &parcel);
     std::vector<PrintPageSize> RemoveDuplicatePageSize(const std::vector<PrintPageSize> &supportedPageSizeList);
+    void ReadVendorAbilityFromParcel(Parcel &parcel, PrinterCapability &right);
+    void ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right);
 
 private:
     uint32_t colorMode_; // Property in API 10, deprecated in API 12
@@ -153,6 +163,11 @@ private:
     std::string option_;
 
     std::map<std::string, std::string> printerAttr_group;
-};
-}  // namespace OHOS::Print
-#endif  // PRINTER_CAPABILITY_H
+
+    bool hasVendorPrinterPrefAbility_;
+    std::string vendorPrinterPrefAbility_;
+    bool hasVendorJobAttrAbility_;
+    std::string vendorJobAttrAbility_;
+ };
+ }  // namespace OHOS::Print
+ #endif  // PRINTER_CAPABILITY_H

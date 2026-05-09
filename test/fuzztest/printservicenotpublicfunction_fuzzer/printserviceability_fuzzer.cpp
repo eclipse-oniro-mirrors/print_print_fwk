@@ -18,6 +18,7 @@
 #include "fuzzer/FuzzedDataProvider.h"
 #include "print_constant.h"
 #include "printer_capability.h"
+#include "printer_preferences.h"
 #include "print_log.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
@@ -153,6 +154,8 @@ void TestUpdatePrintJobOptionWithPrinterPreferences(const uint8_t *data, size_t 
     Json::Value jobOptions;
     jobOptions[key] = value;
     PrinterInfo printerInfo;
+    PrinterPreferences preferences;
+    printerInfo.SetPreferences(preferences);
     PrintServiceAbility::GetInstance()->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, printerInfo);
 }
 
@@ -171,6 +174,22 @@ void TestClosePrintJobFd(const uint8_t *data, size_t size, FuzzedDataProvider *d
     PrintServiceAbility::GetInstance()->ClosePrintJobFd(printJob);
 }
 
+void TestMergeVendorOptionsForPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    
+    PrinterPreferences preferences;
+    std::string vendorOptions = "{\"colorMode\":\"color\",\"paperSize\":\"A4\"}";
+    preferences.SetVendorOptions(vendorOptions);
+    
+    PrintJob printJob;
+    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printJob.SetPrinterId(printerInfo.GetPrinterId());
+    
+    PrintServiceAbility::GetInstance()->MergeVendorOptionsForPrintJob(printerInfo, preferences, printJob);
+}
 
 void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
@@ -200,6 +219,7 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
         &TestUpdatePrintJobOptionWithPrinterPreferences,
         &TestConnectUsbPrinter,
         &TestClosePrintJobFd,
+        &TestMergeVendorOptionsForPrintJob,
         &TestNoParmFuncs,
     };
 

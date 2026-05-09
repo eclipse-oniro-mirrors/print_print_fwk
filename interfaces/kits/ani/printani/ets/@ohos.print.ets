@@ -385,6 +385,7 @@ export default namespace print {
         margin?: PrintMargin;
         preview?: PreviewAttribute;
         options?: Object;
+        vendorOptions?: string;
     }
 
     export class PrintJobImp implements PrintJob {
@@ -412,6 +413,7 @@ export default namespace print {
         margin?: PrintMargin;
         preview?: PreviewAttribute;
         options?: Object;
+        vendorOptions?: string;
     }
 
     export interface PrinterInfo {
@@ -432,6 +434,8 @@ export default namespace print {
         supportedQualities?: Array<PrintQuality>;
         supportedOrientations?: Array<PrintOrientationMode>;
         options?: string;
+        vendorPrinterPrefAbility?: string;
+        vendorJobAttrAbility?: string;
     }
 
     export class PrinterInfoImpl implements PrinterInfo {
@@ -455,6 +459,7 @@ export default namespace print {
         defaultCollate?: boolean;
         defaultReverse?: boolean;
         options?: string;
+        vendorOptions?: string;
     }
 
     class PrinterPreferencesImpl implements PrinterPreferences {
@@ -468,6 +473,7 @@ export default namespace print {
         defaultCollate?: boolean;
         defaultReverse?: boolean;
         options?: string;
+        vendorOptions?: string;
     }
 
     enum PrintQuality {

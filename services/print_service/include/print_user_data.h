@@ -26,6 +26,7 @@
 #include "printer_info.h"
 #include "print_util.h"
 #include "iprint_callback.h"
+#include "printer_user_preferences.h"
 
 namespace OHOS {
 namespace Print {
@@ -77,6 +78,12 @@ public:
     bool DeletePrintJobFromHistoryListByPrinterId(const std::string &printerId);
     bool ContainsHistoryPrintJob(const std::vector<std::string> &printerIds, const std::string &jobId);
 
+    bool SavePrinterUserPreferences(const std::string &printerId, const std::string &standardizedPrinterName,
+                                   const PrinterUserPreferences &userPrefs);
+    bool LoadPrinterUserPreferences(const std::string &printerId, const std::string &standardizedPrinterName,
+                                     PrinterUserPreferences &userPrefs);
+    void DeletePrinterUserPreferences(const std::string &printerId, const std::string &standardizedPrinterName);
+
 private:
     bool SetUserDataToFile();
     bool GetFileData(std::string &fileData);
@@ -108,6 +115,8 @@ private:
     void InitPrintHistoryJobList(const std::string &printerId);
     bool CheckOptionalParam(const Json::Value &jsonObject, const std::string &param);
     void DeleteOldestHistoryPrintJob();
+    
+    bool GetUserPreferencesFilePath(const std::string &standardizedPrinterName, std::string &safeFilePath);
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
@@ -126,6 +135,7 @@ private:
     const uint32_t MAX_HISTORY_JOB_NUM = 100;
     std::map<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>
         printHistoryJobList_;
+    std::map<std::string, std::shared_ptr<PrinterUserPreferences>> printerUserPreferences_;
 };
 
 }  // namespace Print

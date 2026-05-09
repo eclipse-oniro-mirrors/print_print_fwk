@@ -600,12 +600,25 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertSupportedQualityToJson(printerCapability, capsJson);
     }
 
+    ConvertVendorAbilityToJson(printerCapability, capsJson);
+
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
         if (!PrintJsonUtil::Parse(options, capsJson["options"])) {
             PRINT_HILOGE("json accept capability options fail");
             return;
         }
+    }
+}
+
+void PrintSystemData::ConvertVendorAbilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson)
+{
+    if (printerCapability.HasVendorPrinterPrefAbility()) {
+        capsJson["vendorPrinterPrefAbility"] = printerCapability.GetVendorPrinterPrefAbility();
+    }
+
+    if (printerCapability.HasVendorJobAttrAbility()) {
+        capsJson["vendorJobAttrAbility"] = printerCapability.GetVendorJobAttrAbility();
     }
 }
 
@@ -762,6 +775,28 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, Prin
     if (PrintJsonUtil::IsMember(capsJson, "options") && capsJson["options"].isObject()) {
         PRINT_HILOGD("find options");
         printerCapability.SetOption(PrintJsonUtil::WriteString(capsJson["options"]));
+    }
+
+    if (!ConvertJsonToVendorAbility(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to vendor ability failed.");
+    }
+    return true;
+}
+
+bool PrintSystemData::ConvertJsonToVendorAbility(Json::Value &capsJson, PrinterCapability &printerCapability)
+{
+    if (PrintJsonUtil::IsMember(capsJson, "vendorPrinterPrefAbility") &&
+        capsJson["vendorPrinterPrefAbility"].isString()) {
+        printerCapability.SetVendorPrinterPrefAbility(capsJson["vendorPrinterPrefAbility"].asString());
+        PRINT_HILOGI("vendorPrinterPrefAbility: %{public}s",
+            capsJson["vendorPrinterPrefAbility"].asString().c_str());
+    }
+
+    if (PrintJsonUtil::IsMember(capsJson, "vendorJobAttrAbility") &&
+        capsJson["vendorJobAttrAbility"].isString()) {
+        printerCapability.SetVendorJobAttrAbility(capsJson["vendorJobAttrAbility"].asString());
+        PRINT_HILOGI("vendorJobAttrAbility: %{public}s",
+            capsJson["vendorJobAttrAbility"].asString().c_str());
     }
     return true;
 }

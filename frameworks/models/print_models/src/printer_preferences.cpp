@@ -39,7 +39,8 @@ PrinterPreferences::PrinterPreferences()
       hasDefaultReverse_(false),
       defaultReverse_(false),
       hasOption_(false),
-      option_("")
+      option_(""),
+      hasVendorOptions_(false)
 {
 }
 
@@ -63,7 +64,9 @@ PrinterPreferences::PrinterPreferences(const PrinterPreferences &right)
       hasDefaultReverse_(right.hasDefaultReverse_),
       defaultReverse_(right.defaultReverse_),
       hasOption_(right.hasOption_),
-      option_(right.option_)
+      option_(right.option_),
+      hasVendorOptions_(right.hasVendorOptions_),
+      vendorOptions_(right.vendorOptions_)
 {
 }
 
@@ -90,6 +93,8 @@ PrinterPreferences &PrinterPreferences::operator=(const PrinterPreferences &righ
         defaultReverse_ = right.defaultReverse_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
+        hasVendorOptions_ = right.hasVendorOptions_;
+        vendorOptions_ = right.vendorOptions_;
     }
     return *this;
 }
@@ -118,6 +123,7 @@ void PrinterPreferences::Reset()
     defaultReverse_ = false;
     hasOption_ = false;
     option_ = "";
+    hasVendorOptions_ = false;
 }
 
 void PrinterPreferences::SetDefaultDuplexMode(uint32_t defaultDuplexMode)
@@ -280,6 +286,22 @@ std::string PrinterPreferences::GetOption() const
     return option_;
 }
 
+void PrinterPreferences::SetVendorOptions(const std::string &vendorOptions)
+{
+    hasVendorOptions_ = true;
+    vendorOptions_ = vendorOptions;
+}
+
+bool PrinterPreferences::HasVendorOptions() const
+{
+    return hasVendorOptions_;
+}
+
+std::string PrinterPreferences::GetVendorOptions() const
+{
+    return vendorOptions_;
+}
+
 bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
 {
     PrinterPreferences right;
@@ -317,6 +339,14 @@ bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
         right.SetDefaultColorMode(parcel.ReadUint32());
     }
 
+    ReadAdvancedSettingsFromParcel(parcel, right);
+
+    *this = right;
+    return true;
+}
+
+void PrinterPreferences::ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterPreferences &right)
+{
     right.hasBorderless_ = parcel.ReadBool();
     if (right.hasBorderless_) {
         right.SetBorderless(parcel.ReadBool());
@@ -337,8 +367,10 @@ bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
         right.SetOption(parcel.ReadString());
     }
 
-    *this = right;
-    return true;
+    right.hasVendorOptions_ = parcel.ReadBool();
+    if (right.hasVendorOptions_) {
+        right.SetVendorOptions(parcel.ReadString());
+    }
 }
 
 bool PrinterPreferences::Marshalling(Parcel &parcel) const
@@ -393,6 +425,11 @@ bool PrinterPreferences::Marshalling(Parcel &parcel) const
         parcel.WriteString(GetOption());
     }
 
+    parcel.WriteBool(hasVendorOptions_);
+    if (hasVendorOptions_) {
+        parcel.WriteString(GetVendorOptions());
+    }
+
     return true;
 }
 
@@ -435,6 +472,9 @@ void PrinterPreferences::Dump() const
     if (hasOption_) {
         PRINT_HILOGD("option: %{public}s", option_.c_str());
     }
+    if (hasVendorOptions_) {
+        PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
+    }
 }
 
 void PrinterPreferences::DumpInfo() const
@@ -468,6 +508,9 @@ void PrinterPreferences::DumpInfo() const
     }
     if (hasOption_) {
         PRINT_HILOGI("option: %{public}s", option_.c_str());
+    }
+    if (hasVendorOptions_) {
+        PRINT_HILOGI("vendorOptions: %{private}s", vendorOptions_.c_str());
     }
 }
 
@@ -506,6 +549,9 @@ Json::Value PrinterPreferences::ConvertToJson()
         if (!PrintJsonUtil::Parse(option_, preferencesJson["options"])) {
             PRINT_HILOGE("json accept preferences options fail");
         }
+    }
+    if (hasVendorOptions_) {
+        preferencesJson["vendorOptions"] = vendorOptions_;
     }
     return preferencesJson;
 }
@@ -560,6 +606,11 @@ void PrinterPreferences::ConvertJsonToPrinterPreferences(Json::Value &preference
     if (PrintJsonUtil::IsMember(preferencesJson, "options") && preferencesJson["options"].isObject()) {
         PRINT_HILOGD("find options");
         SetOption(PrintJsonUtil::WriteString(preferencesJson["options"]));
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "vendorOptions") &&
+        preferencesJson["vendorOptions"].isString()) {
+        SetVendorOptions(preferencesJson["vendorOptions"].asString());
     }
 
     ConvertBoolDefaultJsonToPrinterPreferences(preferencesJson);
