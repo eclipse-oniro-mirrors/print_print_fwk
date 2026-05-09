@@ -92,6 +92,7 @@ const int32_t STATE_UPDATE_STEP = 5;
 const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
+const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -2937,7 +2938,7 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
     }
     
     size_t dotPos = hostStr.find('.');
-    if (dotPos != std::string::npos && dotPos < 3 && hostStr[0] == 'v') {
+    if (dotPos != std::string::npos && dotPos < MAX_VERSION_PREFIX_DOT_POS && hostStr[0] == 'v') {
         hostStr = hostStr.substr(dotPos + 1);
     }
     
