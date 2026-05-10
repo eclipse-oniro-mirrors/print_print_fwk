@@ -52,6 +52,7 @@
 #include <streambuf>
 #include "print_json_util.h"
 #include "print_setting_data_helper.h"
+#include "print_vendor_options_util.h"
 #include "parameters.h"
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
@@ -1120,16 +1121,16 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     int port = 0;
     http_uri_status_t ret = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
         username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    
+
     std::string printerIp = host;
     if (ret != HTTP_URI_STATUS_OK ||
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid parameter from uri, ret = %{public}u", ret);
         return E_PRINT_INVALID_PRINTER;
     }
-    
+
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
-    
+
     std::string protocol = scheme;
     std::string printQueue = resource;
 
@@ -1141,7 +1142,7 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
         return E_PRINT_SERVER_FAILURE;
     }
-    
+
     PRINT_HILOGI("AddPrinter end.");
     return E_PRINT_NONE;
 }
@@ -1226,7 +1227,32 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("SetPrinterPreference start.");
     preferences.Dump();
-    printSystemData_.UpdatePrinterPreferences(printerId, preferences);
+    PrinterInfo printerInfoForName;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfoForName)) {
+        PRINT_HILOGW("cannot find printer info by printerId for preference");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfoForName.GetPrinterName());
+    std::string vendorOptions = preferences.GetVendorOptions();
+    std::string printerVendorOptions;
+    std::string userVendorOptions;
+    PrintVendorOptionsUtil::SplitVendorOptions(vendorOptions, printerVendorOptions, userVendorOptions);
+    PRINT_HILOGI("SetPrinterPreference: split vendorOptions, printerVendorOptions=%{private}s, "
+        "userVendorOptions=%{private}s",
+        printerVendorOptions.c_str(), userVendorOptions.c_str());
+    PrinterPreferences printerPrefs = preferences;
+    printerPrefs.SetVendorOptions(printerVendorOptions);
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData != nullptr) {
+        PrinterUserPreferences userPrefs;
+        userPrefs.SetUserId(userId);
+        userPrefs.SetPrinterId(printerId);
+        userPrefs.SetVendorOptions(userVendorOptions);
+        userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
+        PRINT_HILOGI("Saved user vendorOptions for user %{private}d", userId);
+    }
+    printSystemData_.UpdatePrinterPreferences(printerId, printerPrefs);
     printSystemData_.SavePrinterFile(printerId);
     PrinterInfo printerInfo;
     if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
@@ -1276,7 +1302,9 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
     UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
-
+    PrinterPreferences preferences;
+    printerInfo.GetPreferences(preferences);
+    MergeVendorOptionsForPrintJob(printerInfo, preferences, printJob);
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
@@ -1285,6 +1313,37 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
     printJob.SetOption(updatedOption);
     return true;
+}
+
+void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
+    const PrinterPreferences &preferences, PrintJob &printJob)
+{
+    // 1. 先读取厂商设置首选项（公共+用户）
+    std::string printerVendorOptions = preferences.HasVendorOptions() ? preferences.GetVendorOptions() : "";
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    std::string userVendorOptions = "";
+    if (userData != nullptr) {
+        PrinterUserPreferences userPrefs;
+        std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+        if (userData->LoadPrinterUserPreferences(printJob.GetPrinterId(), standardizedPrinterName, userPrefs)) {
+            userVendorOptions = userPrefs.HasVendorOptions() ? userPrefs.GetVendorOptions() : "";
+        }
+    }
+    // 合并公共首选项和用户首选项
+    std::string prefVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
+        printerVendorOptions, userVendorOptions);
+    // 2. 如果打印任务有传入厂商设置，则同字段厂商设置覆盖首选项里读到的
+    std::string jobVendorOptions = printJob.HasVendorOptions() ? printJob.GetVendorOptions() : "";
+    // 打印任务厂商设置覆盖首选项厂商设置
+    std::string finalVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
+        prefVendorOptions, jobVendorOptions);
+    if (!finalVendorOptions.empty()) {
+        printJob.SetVendorOptions(finalVendorOptions);
+        PRINT_HILOGI("MergeVendorOptionsForPrintJob: final vendorOptions=%{private}s", finalVendorOptions.c_str());
+    } else {
+        PRINT_HILOGD("MergeVendorOptionsForPrintJob: no vendorOptions to merge");
+    }
 }
 
 std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::string &jobId, PrintJob &printJob)
@@ -3686,6 +3745,7 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     std::string dafaultPrinterId = userData->GetDefaultPrinter();
     PrinterInfo printerInfo;
     printSystemData_.QueryPrinterInfoById(printerId, printerInfo);
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
     std::string ops = printerInfo.GetOption();
     Json::Value opsJson;
     if (!PrintJsonUtil::Parse(ops, opsJson)) {
@@ -3703,6 +3763,17 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
         if (printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo)) {
             PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{private}s", lastUsedPrinterId.c_str());
             SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
+        }
+    }
+    std::vector<int32_t> userIds;
+    if (helper_ != nullptr) {
+        helper_->QueryAccounts(userIds);
+    }
+    for (int32_t userId : userIds) {
+        auto userAccountData = GetUserDataByUserId(userId);
+        if (userAccountData != nullptr) {
+            userAccountData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+            PRINT_HILOGI("Deleted PrinterUserPreferences for user %{private}d", userId);
         }
     }
 }
@@ -4712,7 +4783,8 @@ void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printer
     }
 }
 
-void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions, PrinterInfo &printerInfo)
+void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
+    Json::Value &jobOptions, PrinterInfo &printerInfo)
 {
     PrinterPreferences preferences;
     printerInfo.GetPreferences(preferences);
@@ -4732,7 +4804,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value
     jobOptions["advancedOptions"] = preferencesJson;
 }
 
-Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPreferences &preferences)
+Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences)
 {
     std::string option = preferences.GetOption();
     PRINT_HILOGD("Print job option: %{public}s", option.c_str());
@@ -5365,11 +5437,12 @@ int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
     }
 
     PrinterCapability printerCaps;
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD("", printerCaps, ppdName);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(
+        "", printerCaps, ppdName);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryPrinterCapabilityFromPPD failed! ret=%{public}d", ret);
         return ret;
-    }
+}
     return printSystemData_.BuildPrinterPreference(printerCaps, defaultPreferences);
 #else
     return E_PRINT_NONE;

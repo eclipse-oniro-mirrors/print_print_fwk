@@ -47,6 +47,7 @@
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
+#include "print_json_util.h"
 #ifdef WATERMARK_ENFORCING_ENABLE
 #include "watermark_manager.h"
 #endif // WATERMARK_ENFORCING_ENABLE
@@ -988,7 +989,9 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
         if (!PrintUtils::IsPathValid(ppdFilePath)) {
             return E_PRINT_INVALID_PARAMETER;
         }
-        return QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
+        int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
+        ValidateAndClearVendorAbility(printerCaps, ppdName);
+        return ret;
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("[Printer: %{public}s] QueryPrinterCapabilityFromPPD", standardName.c_str());
@@ -1293,7 +1296,59 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     }
     num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
+    num_options = FillVendorOptions(jobParams, num_options, options);
     PRINT_HILOGI("FillJobOptions end.");
+    return num_options;
+}
+
+int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
+                                       int num_options,
+                                       cups_option_t **options)
+{
+    if (jobParams == nullptr || jobParams->vendorOptions.empty()) {
+        return num_options;
+    }
+
+    Json::Value vendorJson;
+    if (!PrintJsonUtil::Parse(jobParams->vendorOptions, vendorJson)) {
+        PRINT_HILOGW("vendorOptions parse failed, pass as raw string");
+        std::string rawValue = "[" + jobParams->vendorOptions + "]";
+        num_options = cupsAddOption("vendorOptions", rawValue.c_str(), num_options, options);
+        return num_options;
+    }
+
+    if (!vendorJson.isObject()) {
+        PRINT_HILOGW("vendorOptions is not object, pass as array string");
+        std::string rawValue = "[" + jobParams->vendorOptions + "]";
+        num_options = cupsAddOption("vendorOptions", rawValue.c_str(), num_options, options);
+        return num_options;
+    }
+
+    PRINT_HILOGI("vendorOptions expand first level to cups options");
+    Json::Value::Members keys = vendorJson.getMemberNames();
+    for (const auto &key : keys) {
+        const Json::Value &value = vendorJson[key];
+        std::string valueStr;
+        if (value.isString()) {
+            valueStr = value.asString();
+        } else if (value.isInt()) {
+            valueStr = std::to_string(value.asInt());
+        } else if (value.isUInt()) {
+            valueStr = std::to_string(value.asUInt());
+        } else if (value.isBool()) {
+            valueStr = value.asBool() ? "true" : "false";
+        } else if (value.isDouble()) {
+            valueStr = std::to_string(value.asDouble());
+        } else if (value.isObject() || value.isArray()) {
+            valueStr = "[" + PrintJsonUtil::WriteString(value) + "]";
+        } else {
+            valueStr = PrintJsonUtil::WriteString(value);
+        }
+        std::string optionKey = key;
+        num_options = cupsAddOption(optionKey.c_str(), valueStr.c_str(), num_options, options);
+        PRINT_HILOGD("vendor option: %{public}s=%{public}s", optionKey.c_str(), valueStr.c_str());
+    }
+
     return num_options;
 }
 
@@ -2570,6 +2625,9 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->mirror = numberUpArgs.mirror;
     params->pageBorder = numberUpArgs.pageBorder;
     UpdateJobParameterByOption(optionJson, params);
+    if (jobInfo.HasVendorOptions()) {
+        params->vendorOptions = jobInfo.GetVendorOptions();
+    }
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
 }
@@ -2604,6 +2662,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);
     PRINT_HILOGI(
         "jobParams->printerAttrsOptionCupsOption: %{public}s", jobParams->printerAttrsOptionCupsOption.c_str());
+    PRINT_HILOGI("jobParams->vendorOptions: %{private}s", jobParams->vendorOptions.c_str());
 }
 
 std::string PrintCupsClient::GetMedieSize(const PrintJob &jobInfo)

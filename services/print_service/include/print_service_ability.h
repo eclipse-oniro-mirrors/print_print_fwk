@@ -256,7 +256,10 @@ private:
         const std::string& extensionId, const std::string &jobId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
-    Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
+    void MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
+                                       const PrinterPreferences &preferences,
+                                       PrintJob &printJob);
+    Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences);
     std::string GetCallerBundleName() override;
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,

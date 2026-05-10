@@ -1,0 +1,85 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/test.gni")
+
+module_output_path = unit_test_output_path
+
+ohos_unittest("fwk_print_vendor_options_util_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_utils_path}/include",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${print_path}/cfi_blocklist.txt"
+  }
+
+  sources = [ "print_vendor_options_util_test.cpp" ]
+
+  deps = [
+    "${print_path}/frameworks/models/print_models:print_models",
+  ]
+
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("fwk_print_user_preferences_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_utils_path}/include",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${print_path}/cfi_blocklist.txt"
+  }
+
+  sources = [ "printer_user_preferences_test.cpp" ]
+
+  deps = [
+    "${print_path}/frameworks/models/print_models:print_models",
+  ]
+
+  external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "jsoncpp:jsoncpp",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+
+  deps = []
+
+  deps += [
+    ":fwk_print_vendor_options_util_test",
+    ":fwk_print_user_preferences_test",
+  ]
+}

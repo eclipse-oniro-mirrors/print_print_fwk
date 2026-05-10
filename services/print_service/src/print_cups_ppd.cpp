@@ -16,10 +16,95 @@
 #include "print_cups_ppd.h"
 #include "print_service_converter.h"
 #include "print_log.h"
-
+#include "bundle_mgr_client.h"
 
 namespace OHOS::Print {
 using namespace std;
+
+std::string ExtractBundleNameFromPpdName(const std::string &ppdName)
+{
+    if (ppdName.empty()) {
+        return "";
+    }
+
+    size_t underscorePos = ppdName.find('_');
+    if (underscorePos == std::string::npos) {
+        PRINT_HILOGW("Invalid ppdName format (no underscore): %{public}s", ppdName.c_str());
+        return "";
+    }
+
+    std::string bundleName = ppdName.substr(0, underscorePos);
+
+    return bundleName;
+}
+
+std::string ExtractBundleNameFromAbilityName(const std::string &abilityName)
+{
+    if (abilityName.empty()) {
+        return "";
+    }
+
+    size_t lastDotPos = abilityName.rfind('.');
+    if (lastDotPos == std::string::npos) {
+        PRINT_HILOGW("Invalid abilityName format (no dot): %{public}s", abilityName.c_str());
+        return "";
+    }
+
+    return abilityName.substr(0, lastDotPos);
+}
+
+bool ValidateVendorAbilityBundle(const std::string &abilityName, const std::string &ppdName)
+{
+    if (abilityName.empty()) {
+        return false;
+    }
+
+    if (ppdName.empty()) {
+        PRINT_HILOGI("No ppdName (driver not selected), cannot set vendor ability: %{public}s", abilityName.c_str());
+        return false;
+    }
+
+    std::string abilityBundle = ExtractBundleNameFromAbilityName(abilityName);
+    if (abilityBundle.empty()) {
+        PRINT_HILOGW("Failed to extract bundle from abilityName: %{public}s", abilityName.c_str());
+        return false;
+    }
+
+    std::string ppdBundle = ExtractBundleNameFromPpdName(ppdName);
+    if (ppdBundle.empty()) {
+        PRINT_HILOGW("Failed to extract bundle from ppdName: %{public}s", ppdName.c_str());
+        return false;
+    }
+
+    if (abilityBundle != ppdBundle) {
+        PRINT_HILOGW("Bundle mismatch: ability=%{public}s, ppd=%{public}s",
+            abilityBundle.c_str(), ppdBundle.c_str());
+        return false;
+    }
+
+    PRINT_HILOGI("Vendor ability bundle validated: ability=%{public}s matches ppd=%{public}s",
+        abilityBundle.c_str(), ppdBundle.c_str());
+    return true;
+}
+
+void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::string &ppdName)
+{
+    std::string prefAbility = printerCaps.GetVendorPrinterPrefAbility();
+    if (!prefAbility.empty()) {
+        if (!ValidateVendorAbilityBundle(prefAbility, ppdName)) {
+            printerCaps.SetVendorPrinterPrefAbility("");
+            PRINT_HILOGI("vendorPrinterPrefAbility validation failed, cleared");
+        }
+    }
+
+    std::string jobAbility = printerCaps.GetVendorJobAttrAbility();
+    if (!jobAbility.empty()) {
+        if (!ValidateVendorAbilityBundle(jobAbility, ppdName)) {
+            printerCaps.SetVendorJobAttrAbility("");
+            PRINT_HILOGI("vendorJobAttrAbility validation failed, cleared");
+        }
+    }
+}
 
 const std::vector<std::string> baseOptionStr = {
     "PageSize",
@@ -280,6 +365,23 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     printerCaps.SetPrinterAttrNameAndValue("advanceDefault", PrintJsonUtil::WriteString(advanceDefaultJs).c_str());
 }
 
+void ParseVendorAbilityFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
+{
+    ppd_attr_t *vendorPrefAttr = ppdFindAttr(ppd, "vendorPrinterPrefAbility", nullptr);
+    if (vendorPrefAttr != nullptr && vendorPrefAttr->value != nullptr) {
+        std::string abilityName = vendorPrefAttr->value;
+        printerCaps.SetVendorPrinterPrefAbility(abilityName);
+        PRINT_HILOGI("vendorPrinterPrefAbility found: %{public}s", abilityName.c_str());
+    }
+
+    ppd_attr_t *vendorJobAttr = ppdFindAttr(ppd, "vendorJobAttrAbility", nullptr);
+    if (vendorJobAttr != nullptr && vendorJobAttr->value != nullptr) {
+        std::string abilityName = vendorJobAttr->value;
+        printerCaps.SetVendorJobAttrAbility(abilityName);
+        PRINT_HILOGI("vendorJobAttrAbility found: %{public}s", abilityName.c_str());
+    }
+}
+
 void FindDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, PrinterCapability &printerCaps)
 {
     // find default media size
@@ -532,6 +634,7 @@ void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     ParseQualityAttributesFromPPD(ppd, printerCaps);
     ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
     SetOptionAttributeFromPPD(ppd, printerCaps);
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
 }
 
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath)

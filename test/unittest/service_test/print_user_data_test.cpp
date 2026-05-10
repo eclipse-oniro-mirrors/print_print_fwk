@@ -1184,5 +1184,185 @@ HWTEST_F(PrintUserDataTest, OpenCacheFileFd_WithDefaultOpenMode_ReturnsFalse, Te
     bool result = userData->OpenCacheFileFd(jobId, fdList, O_RDONLY);
     EXPECT_FALSE(result);
 }
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_SetAndGetFields_Succeeds, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+
+    userPrefs.SetUserId(100);
+    EXPECT_EQ(userPrefs.GetUserId(), 100);
+
+    userPrefs.SetPrinterId("printer_test");
+    EXPECT_EQ(userPrefs.GetPrinterId(), "printer_test");
+
+    userPrefs.SetVendorOptions("{\"user_key\":\"user_value\",\"global_key\":\"global_value\"}");
+    EXPECT_TRUE(userPrefs.HasVendorOptions());
+    EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"user_key\":\"user_value\",\"global_key\":\"global_value\"}");
+}
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_EmptyVendorOptions_HasVendorOptionsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+
+    userPrefs.SetVendorOptions("");
+    EXPECT_FALSE(userPrefs.HasVendorOptions());
+    EXPECT_EQ(userPrefs.GetVendorOptions(), "");
+}
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_CopyConstructor_CopiesAllFields, TestSize.Level1)
+{
+    PrinterUserPreferences original;
+    original.SetUserId(100);
+    original.SetPrinterId("printer_original");
+    original.SetVendorOptions("{\"user_field\":\"value\"}");
+
+    PrinterUserPreferences copy(original);
+
+    EXPECT_EQ(copy.GetUserId(), 100);
+    EXPECT_EQ(copy.GetPrinterId(), "printer_original");
+    EXPECT_TRUE(copy.HasVendorOptions());
+    EXPECT_EQ(copy.GetVendorOptions(), "{\"user_field\":\"value\"}");
+}
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithVendorOptions_JsonContainsAllFields,
+    TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(100);
+    userPrefs.SetPrinterId("printer_json_test");
+    userPrefs.SetVendorOptions("{\"user_data\":\"test\"}");
+
+    Json::Value json = userPrefs.ConvertToJson();
+
+    EXPECT_TRUE(json.isMember("userId"));
+    EXPECT_EQ(json["userId"].asInt(), 100);
+    EXPECT_TRUE(json.isMember("printerId"));
+    EXPECT_EQ(json["printerId"].asString(), "printer_json_test");
+    EXPECT_TRUE(json.isMember("vendorOptions"));
+    EXPECT_EQ(json["vendorOptions"].asString(), "{\"user_data\":\"test\"}");
+}
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertToJson_WithoutVendorOptions_JsonOmitsVendorOptions,
+    TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(200);
+    userPrefs.SetPrinterId("printer_no_vendor");
+    userPrefs.SetVendorOptions("");
+
+    Json::Value json = userPrefs.ConvertToJson();
+
+    EXPECT_TRUE(json.isMember("userId"));
+    EXPECT_EQ(json["userId"].asInt(), 200);
+    EXPECT_TRUE(json.isMember("printerId"));
+    EXPECT_FALSE(json.isMember("vendorOptions"));
+}
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertFromJson_WithVendorOptions_FillsAllFields, TestSize.Level1)
+{
+    Json::Value json;
+    json["userId"] = 300;
+    json["printerId"] = "printer_from_json";
+    json["vendorOptions"] = "{\"user_json\":\"json_value\"}";
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    EXPECT_EQ(userPrefs.GetUserId(), 300);
+    EXPECT_EQ(userPrefs.GetPrinterId(), "printer_from_json");
+    EXPECT_TRUE(userPrefs.HasVendorOptions());
+    EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"user_json\":\"json_value\"}");
+}
+
+HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertFromJson_WithoutVendorOptions_HasVendorOptionsFalse,
+    TestSize.Level1)
+{
+    Json::Value json;
+    json["userId"] = 400;
+    json["printerId"] = "printer_partial_json";
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    EXPECT_EQ(userPrefs.GetUserId(), 400);
+    EXPECT_EQ(userPrefs.GetPrinterId(), "printer_partial_json");
+    EXPECT_FALSE(userPrefs.HasVendorOptions());
+}
+
+HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_SaveNewPrefs_ReturnsFalseWithoutDir, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(100);
+    userPrefs.SetPrinterId("printer_001");
+    userPrefs.SetVendorOptions("{\"user_username\":\"admin\"}");
+
+    bool result = userData->SavePrinterUserPreferences("printer_001", "printer_001", userPrefs);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(PrintUserDataTest, LoadPrinterUserPreferences_FileNotExist_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+
+    PrinterUserPreferences userPrefs;
+    bool result = userData->LoadPrinterUserPreferences("printer_001", "printer_001", userPrefs);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(PrintUserDataTest, LoadPrinterUserPreferences_CachedPrefs_ReturnsTrue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+
+    PrinterUserPreferences savedPrefs;
+    savedPrefs.SetUserId(100);
+    savedPrefs.SetPrinterId("printer_cached");
+    savedPrefs.SetVendorOptions("{\"user_field\":\"cached_value\"}");
+
+    auto prefsPtr = std::make_shared<PrinterUserPreferences>(savedPrefs);
+    userData->printerUserPreferences_["printer_cached"] = prefsPtr;
+
+    PrinterUserPreferences loadedPrefs;
+    bool result = userData->LoadPrinterUserPreferences("printer_cached", "printer_cached", loadedPrefs);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(loadedPrefs.GetUserId(), 100);
+    EXPECT_EQ(loadedPrefs.GetPrinterId(), "printer_cached");
+    EXPECT_TRUE(loadedPrefs.HasVendorOptions());
+}
+
+HWTEST_F(PrintUserDataTest, DeletePrinterUserPreferences_ExistingPrefs_DeletesSuccessfully, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+
+    PrinterUserPreferences savedPrefs;
+    savedPrefs.SetUserId(100);
+    savedPrefs.SetPrinterId("printer_to_delete");
+    savedPrefs.SetVendorOptions("{\"user_data\":\"value\"}");
+
+    auto prefsPtr = std::make_shared<PrinterUserPreferences>(savedPrefs);
+    userData->printerUserPreferences_["printer_to_delete"] = prefsPtr;
+
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 1);
+
+    userData->DeletePrinterUserPreferences("printer_to_delete", "printer_to_delete");
+
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+    EXPECT_FALSE(userData->printerUserPreferences_.count("printer_to_delete"));
+}
+
+HWTEST_F(PrintUserDataTest, DeletePrinterUserPreferences_NonexistentPrefs_NoEffect, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+
+    userData->DeletePrinterUserPreferences("nonexistent_printer", "nonexistent_printer");
+
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+}
 }  // namespace Print
 }  // namespace OHOS
