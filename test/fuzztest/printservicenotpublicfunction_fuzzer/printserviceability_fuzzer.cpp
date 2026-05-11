@@ -240,7 +240,8 @@ void TestExtractCustomOptionsFromPreferenceJson(const uint8_t *data, size_t size
     preferences.SetOption(prefOption);
     
     PrinterUserPreferences userPrefs;
-    PrintServiceAbility::GetInstance()->ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
+    PrintServiceAbility::GetInstance()->
+        ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
 }
 
 void TestEncryptCustomOptionValue(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -323,7 +324,8 @@ void TestDecryptAndFillCustomOptions(const uint8_t *data, size_t size, FuzzedDat
     std::string standardizedPrinterName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     Json::Value opsJson;
     opsJson["testKey"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->DecryptAndFillCustomOptions(userData, printerId, standardizedPrinterName, opsJson);
+    PrintServiceAbility::GetInstance()->
+        DecryptAndFillCustomOptions(userData, printerId, standardizedPrinterName, opsJson);
 }
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

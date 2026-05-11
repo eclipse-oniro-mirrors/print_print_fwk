@@ -15,6 +15,8 @@
 
 #include "mock_hks_api.h"
 
+const size_t AUTH_TAG_SIZE = 16;
+
 MockHksApi& MockHksApi::Instance()
 {
     static MockHksApi instance;
@@ -41,12 +43,6 @@ int32_t MockHksApi::HksAddParams(HksParamSet *paramSet, const HksParam *params, 
         return HKS_FAILURE;
     }
     paramSet->paramsCnt = paramsCnt;
-    HksParam *paramArray = new HksParam[paramsCnt];
-    for (uint32_t i = 0; i < paramsCnt; i++) {
-        paramArray[i] = params[i];
-    }
-    (void)memcpy_s(paramSet->params, paramsCnt * sizeof(HksParam), paramArray, paramsCnt * sizeof(HksParam));
-    delete[] paramArray;
     return HKS_SUCCESS;
 }
 
@@ -88,7 +84,7 @@ int32_t MockHksApi::HksEncrypt(const HksBlob *keyAlias, const HksParamSet *param
     for (uint32_t i = 0; i < plainText->size && i < cipherText->size; i++) {
         cipherText->data[i] = plainText->data[i] ^ 0xAA;
     }
-    cipherText->size = plainText->size + 16;
+    cipherText->size = plainText->size + AUTH_TAG_SIZE;
     return HKS_SUCCESS;
 }
 
@@ -101,7 +97,7 @@ int32_t MockHksApi::HksDecrypt(const HksBlob *keyAlias, const HksParamSet *param
     if (cipherText == nullptr || plainText == nullptr || cipherText->data == nullptr || plainText->data == nullptr) {
         return HKS_FAILURE;
     }
-    uint32_t plainSize = cipherText->size > 16 ? cipherText->size - 16 : 0;
+    uint32_t plainSize = cipherText->size > AUTH_TAG_SIZE ? cipherText->size - AUTH_TAG_SIZE : 0;
     for (uint32_t i = 0; i < plainSize && i < plainText->size; i++) {
         plainText->data[i] = cipherText->data[i] ^ 0xAA;
     }

@@ -5651,7 +5651,8 @@ HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_NoCupsOption
     EXPECT_TRUE(result.empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_AdvanceOptionsNotString_ReturnsEmpty, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    GetCustomOptionKeysFromCapability_AdvanceOptionsNotString_ReturnsEmpty, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo printerInfo;
@@ -5757,7 +5758,8 @@ HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_NonCustomC
     EXPECT_FALSE(updatedJson.isMember("CustomPin"));
 }
 
-HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_CustomChoiceWithValue_ProcessesOption, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    ExtractCustomOptionsFromPreferences_CustomChoiceWithValue_ProcessesOption, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterPreferences preferences;
@@ -5819,7 +5821,8 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptions_ValidCustomOptions
     EXPECT_TRUE(opsJson.isMember("existingKey"));
 }
 
-HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_NoCapability_ReturnsWithoutModify, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    ExtractCustomOptionsFromPreferences_NoCapability_ReturnsWithoutModify, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo printerInfo;
@@ -5830,7 +5833,8 @@ HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_NoCapabili
     EXPECT_TRUE(userPrefs.GetAllCustomOptions().empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_AdvanceOptionsParseFail_ReturnsEmpty, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    GetCustomOptionKeysFromCapability_AdvanceOptionsParseFail_ReturnsEmpty, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo printerInfo;
@@ -5846,7 +5850,8 @@ HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_AdvanceOptio
     EXPECT_TRUE(result.empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_AdvanceOptionsNotArray_ReturnsEmpty, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    GetCustomOptionKeysFromCapability_AdvanceOptionsNotArray_ReturnsEmpty, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo printerInfo;
@@ -5903,7 +5908,8 @@ HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_NoCustomPara
     EXPECT_TRUE(result.empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_CustomChoiceEmptyValue_SetsUnset, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    ExtractCustomOptionsFromPreferenceJson_CustomChoiceEmptyValue_SetsUnset, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterPreferences preferences;
@@ -5992,7 +5998,8 @@ HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_KeyIsNo
     EXPECT_EQ(updatedJson["CustomPin"].asInt(), 123);
 }
 
-HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_HasModified_UpdatesPreferences, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    ExtractCustomOptionsFromPreferenceJson_HasModified_UpdatesPreferences, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterPreferences preferences;

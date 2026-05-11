@@ -95,6 +95,8 @@ const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
 const uint32_t SERIAL_LENGTH = 6;
 
+const size_t AUTH_TAG_SIZE = 16;
+
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
@@ -1374,10 +1376,10 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
 
 int32_t PrintServiceAbility::EncryptCustomOptionValue(const std::string &plainText, std::string &cipherText)
 {
-    static const std::string KEY_ALIAS = "print_custom_option_key";
+    static const std::string keyAliasStr = "print_custom_option_key";
     struct HksBlob keyAlias = {
-        .size = KEY_ALIAS.size(),
-        .data = (uint8_t *)KEY_ALIAS.data()
+        .size = keyAliasStr.size(),
+        .data = (uint8_t *)keyAliasStr.data()
     };
 
     struct HksParamSet *genParamSet = nullptr;
@@ -1408,10 +1410,10 @@ int32_t PrintServiceAbility::EncryptCustomOptionValue(const std::string &plainTe
 
 int32_t PrintServiceAbility::DecryptCustomOptionValue(const std::string &cipherText, std::string &plainText)
 {
-    static const std::string KEY_ALIAS = "print_custom_option_key";
+    static const std::string keyAliasStr = "print_custom_option_key";
     struct HksBlob keyAlias = {
-        .size = KEY_ALIAS.size(),
-        .data = (uint8_t *)KEY_ALIAS.data()
+        .size = keyAliasStr.size(),
+        .data = (uint8_t *)keyAliasStr.data()
     };
 
     struct HksParamSet *decryptParamSet = nullptr;
@@ -1500,7 +1502,7 @@ int32_t PrintServiceAbility::DoEncrypt(struct HksBlob *keyAlias, struct HksParam
         .data = (uint8_t *)plainText.data()
     };
 
-    std::vector<uint8_t> cipherBuffer(plainText.size() + 16);
+    std::vector<uint8_t> cipherBuffer(plainText.size() + AUTH_TAG_SIZE);
     struct HksBlob cipherBlob = {
         .size = cipherBuffer.size(),
         .data = cipherBuffer.data()

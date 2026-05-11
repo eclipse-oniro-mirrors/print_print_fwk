@@ -166,19 +166,20 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
     }
     if (PrintJsonUtil::IsMember(json, "customOptions") && json["customOptions"].isArray()) {
         for (const auto &optJson : json["customOptions"]) {
-            if (optJson.isObject()) {
-                CustomOption opt;
-                if (optJson["key"].isString()) {
-                    opt.key = optJson["key"].asString();
-                }
-                if (optJson["isSet"].isBool()) {
-                    opt.isSet = optJson["isSet"].asBool();
-                }
-                if (optJson["value"].isString()) {
-                    opt.value = optJson["value"].asString();
-                }
-                customOptions_.push_back(opt);
+            if (!optJson.isObject()) {
+                continue;
             }
+            CustomOption opt;
+            if (optJson["key"].isString()) {
+                opt.key = optJson["key"].asString();
+            }
+            if (optJson["isSet"].isBool()) {
+                opt.isSet = optJson["isSet"].asBool();
+            }
+            if (optJson["value"].isString()) {
+                opt.value = optJson["value"].asString();
+            }
+            customOptions_.push_back(opt);
         }
     }
 }
