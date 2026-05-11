@@ -3934,8 +3934,18 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
         PRINT_CHECK_NULL_AND_RETURN(printerInfo, false);
     }
 
-    printerInfo->SetUri(info.GetUri());
-    printerInfo->SetOption(info.GetOption());
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    IpAddressType infoIpType = printCupsClient->GetIpAddressTypeFromUri(info.GetUri());
+    IpAddressType printerInfoIpType = printCupsClient->GetIpAddressTypeFromUri(printerInfo->GetUri());
+    if (infoIpType == IP_ADDRESS_TYPE_INVALID ||
+        (infoIpType == IP_ADDRESS_TYPE_IPV6 && printerInfoIpType == IP_ADDRESS_TYPE_IPV4)) {
+        PRINT_HILOGD("[Printer: %{public}s] Skip SetUri and SetOption due to IP type mismatch or invalid IP",
+            globalPrinterId.c_str());
+    } else {
+        printerInfo->SetUri(info.GetUri());
+        printerInfo->SetOption(info.GetOption());
+    }
+
     printerInfo->SetPrinterState(PRINTER_ADDED);
     SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
     SendPrinterEvent(*printerInfo);

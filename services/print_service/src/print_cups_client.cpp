@@ -93,6 +93,7 @@ const int32_t STATE_UPDATE_STEP = 5;
 const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
+const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -2969,6 +2970,52 @@ bool PrintCupsClient::IsIpAddress(const char *host)
         PRINT_HILOGW("not ipv4 or ipv6");
         return false;
     }
+}
+
+IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    
+    if (host[0] == '\0') {
+        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", printerUri.c_str());
+        return IP_ADDRESS_TYPE_INVALID;
+    }
+    
+    // Pre-process IPv6 address for inet_pton validation compatibility
+    // Real-world printer URIs may contain scope ID (+wlan0/%eth0) and version prefix (v1.)
+    std::string hostStr(host);
+    
+    size_t scopePos = hostStr.find_last_of('+%');
+    if (scopePos != std::string::npos) {
+        hostStr = hostStr.substr(0, scopePos);
+    }
+    
+    size_t dotPos = hostStr.find('.');
+    if (dotPos != std::string::npos && dotPos < MAX_VERSION_PREFIX_DOT_POS && hostStr[0] == 'v') {
+        hostStr = hostStr.substr(dotPos + 1);
+    }
+    
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    
+    if (inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) {
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
+        return IP_ADDRESS_TYPE_IPV4;
+    }
+    
+    if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1) {
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address", printerUri.c_str());
+        return IP_ADDRESS_TYPE_IPV6;
+    }
+    
+    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address", printerUri.c_str(), host);
+    return IP_ADDRESS_TYPE_INVALID;
 }
 
 std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
