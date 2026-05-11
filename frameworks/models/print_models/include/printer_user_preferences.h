@@ -21,6 +21,12 @@
 
 namespace OHOS::Print {
 
+struct CustomOption {
+    std::string key;
+    bool isSet = false;
+    std::string value;
+};
+
 class PrinterUserPreferences {
 public:
     PrinterUserPreferences();
@@ -37,6 +43,13 @@ public:
     bool HasVendorOptions() const;
     std::string GetVendorOptions() const;
 
+    void SetCustomOption(const std::string &key, const std::string &value);
+    void SetCustomOptionUnset(const std::string &key);
+    bool GetCustomOption(const std::string &key, std::string &value) const;
+    bool IsCustomOptionSet(const std::string &key) const;
+    void RemoveCustomOption(const std::string &key);
+    const std::vector<CustomOption>& GetAllCustomOptions() const;
+
     Json::Value ConvertToJson() const;
     void ConvertFromJson(Json::Value &json);
 
@@ -47,6 +60,7 @@ private:
     std::string printerId_ = "";
     bool hasVendorOptions_ = false;
     std::string vendorOptions_ = "";
+    std::vector<CustomOption> customOptions_;
 };
 
 } // namespace OHOS::Print

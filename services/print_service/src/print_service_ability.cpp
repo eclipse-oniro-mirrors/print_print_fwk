@@ -1249,6 +1249,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         userPrefs.SetUserId(userId);
         userPrefs.SetPrinterId(printerId);
         userPrefs.SetVendorOptions(userVendorOptions);
+        ExtractCustomOptionsFromPreferences(printerInfoForName, printerPrefs, userPrefs);
         userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
         PRINT_HILOGI("Saved user vendorOptions for user %{private}d", userId);
     }
@@ -1264,6 +1265,279 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     SendPrinterChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, printerInfo);
     PRINT_HILOGI("SetPrinterPreference end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo,
+    PrinterPreferences &preferences, PrinterUserPreferences &userPrefs)
+{
+    std::set<std::string> customOptionKeys = GetCustomOptionKeysFromCapability(printerInfo);
+    if (customOptionKeys.empty()) {
+        PRINT_HILOGW("no custom options found");
+        return;
+    }
+    PRINT_HILOGI("customOptionKeys size: %{public}lu", customOptionKeys.size());
+    ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
+}
+
+std::set<std::string> PrintServiceAbility::GetCustomOptionKeysFromCapability(const PrinterInfo &printerInfo)
+{
+    std::set<std::string> customOptionKeys;
+    PrinterCapability capability;
+    printerInfo.GetCapability(capability);
+    std::string capOption = capability.GetOption();
+
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(capOption, capJson)) {
+        PRINT_HILOGE("failed to parse capability option json");
+        return customOptionKeys;
+    }
+
+    if (!capJson.isObject() || !capJson["cupsOptions"].isObject()) {
+        PRINT_HILOGE("capability option is not valid cupsOptions json");
+        return customOptionKeys;
+    }
+
+    Json::Value cupsOptions = capJson["cupsOptions"];
+    if (!cupsOptions["advanceOptions"].isString()) {
+        PRINT_HILOGE("advanceOptions is not a string");
+        return customOptionKeys;
+    }
+
+    std::string advanceOptionsStr = cupsOptions["advanceOptions"].asString();
+    Json::Value advanceOptionsJson;
+    if (!PrintJsonUtil::Parse(advanceOptionsStr, advanceOptionsJson) || !advanceOptionsJson.isArray()) {
+        PRINT_HILOGE("failed to parse advanceOptions json or not an array");
+        return customOptionKeys;
+    }
+
+    for (const auto &opt : advanceOptionsJson) {
+        if (opt.isObject() && opt["customParamType"].isInt()) {
+            std::string keyword = opt["keyword"].asString();
+            customOptionKeys.insert(keyword);
+        }
+    }
+    return customOptionKeys;
+}
+
+void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
+    PrinterPreferences &preferences, PrinterUserPreferences &userPrefs)
+{
+    std::string prefOptionStr = preferences.GetOption();
+    if (prefOptionStr.empty()) {
+        PRINT_HILOGW("preferences option is empty");
+        return;
+    }
+
+    Json::Value prefOptionsJson;
+    if (!PrintJsonUtil::Parse(prefOptionStr, prefOptionsJson) || !prefOptionsJson.isObject()) {
+        PRINT_HILOGE("failed to parse preferences option json or not an object");
+        return;
+    }
+
+    bool hasModified = false;
+    for (const auto &key : customOptionKeys) {
+        if (!prefOptionsJson[key].isString()) {
+            continue;
+        }
+        std::string optionJsonStr = prefOptionsJson[key].asString();
+        Json::Value optionJson;
+        if (!PrintJsonUtil::Parse(optionJsonStr, optionJson) || !optionJson.isObject()) {
+            userPrefs.SetCustomOptionUnset(key);
+            prefOptionsJson.removeMember(key);
+            hasModified = true;
+            continue;
+        }
+        std::string choice = optionJson["choice"].asString();
+        if (choice != "Custom") {
+            userPrefs.SetCustomOptionUnset(key);
+            prefOptionsJson.removeMember(key);
+            hasModified = true;
+            continue;
+        }
+        std::string value = optionJson["value"].asString();
+        std::string encryptedValue;
+        if (!value.empty() && EncryptCustomOptionValue(value, encryptedValue) == HKS_SUCCESS) {
+            userPrefs.SetCustomOption(key, encryptedValue);
+            PRINT_HILOGI("extracted and encrypted custom option: %{public}s", key.c_str());
+        } else {
+            userPrefs.SetCustomOptionUnset(key);
+            PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
+        }
+        prefOptionsJson.removeMember(key);
+        hasModified = true;
+    }
+
+    if (hasModified) {
+        preferences.SetOption(PrintJsonUtil::WriteString(prefOptionsJson));
+    }
+}
+
+int32_t PrintServiceAbility::EncryptCustomOptionValue(const std::string &plainText, std::string &cipherText)
+{
+    static const std::string KEY_ALIAS = "print_custom_option_key";
+    struct HksBlob keyAlias = {
+        .size = KEY_ALIAS.size(),
+        .data = (uint8_t *)KEY_ALIAS.data()
+    };
+
+    struct HksParamSet *genParamSet = nullptr;
+    int32_t ret = InitGenParamSet(&genParamSet);
+    if (ret != HKS_SUCCESS) {
+        return ret;
+    }
+
+    ret = HksGenerateKey(&keyAlias, genParamSet, nullptr);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksGenerateKey failed, ret: %{public}d", ret);
+        HksFreeParamSet(&genParamSet);
+        return ret;
+    }
+
+    struct HksParamSet *encryptParamSet = nullptr;
+    ret = InitCipherParamSet(&encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT);
+    if (ret != HKS_SUCCESS) {
+        HksFreeParamSet(&genParamSet);
+        return ret;
+    }
+
+    ret = DoEncrypt(&keyAlias, encryptParamSet, plainText, cipherText);
+    HksFreeParamSet(&genParamSet);
+    HksFreeParamSet(&encryptParamSet);
+    return ret;
+}
+
+int32_t PrintServiceAbility::DecryptCustomOptionValue(const std::string &cipherText, std::string &plainText)
+{
+    static const std::string KEY_ALIAS = "print_custom_option_key";
+    struct HksBlob keyAlias = {
+        .size = KEY_ALIAS.size(),
+        .data = (uint8_t *)KEY_ALIAS.data()
+    };
+
+    struct HksParamSet *decryptParamSet = nullptr;
+    int32_t ret = InitCipherParamSet(&decryptParamSet, HKS_KEY_PURPOSE_DECRYPT);
+    if (ret != HKS_SUCCESS) {
+        return ret;
+    }
+
+    ret = DoDecrypt(&keyAlias, decryptParamSet, cipherText, plainText);
+    HksFreeParamSet(&decryptParamSet);
+    return ret;
+}
+
+int32_t PrintServiceAbility::InitGenParamSet(struct HksParamSet **paramSet)
+{
+    int32_t ret = HksInitParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksInitParamSet failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    struct HksParam genParams[] = {
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT | HKS_KEY_PURPOSE_DECRYPT },
+        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .uint32Param = GetCurrentUserId() }
+    };
+
+    ret = HksAddParams(*paramSet, genParams, sizeof(genParams) / sizeof(genParams[0]));
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksAddParams failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+        return ret;
+    }
+
+    ret = HksBuildParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksBuildParamSet failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+    }
+    return ret;
+}
+
+int32_t PrintServiceAbility::InitCipherParamSet(struct HksParamSet **paramSet, uint32_t purpose)
+{
+    int32_t ret = HksInitParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksInitParamSet failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    uint8_t nonceData[12] = {0};
+    struct HksBlob nonce = { .size = sizeof(nonceData), .data = nonceData };
+    struct HksParam cipherParams[] = {
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = purpose },
+        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .uint32Param = GetCurrentUserId() },
+        { .tag = HKS_TAG_NONCE, .blob = nonce }
+    };
+
+    ret = HksAddParams(*paramSet, cipherParams, sizeof(cipherParams) / sizeof(cipherParams[0]));
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksAddParams failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+        return ret;
+    }
+
+    ret = HksBuildParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksBuildParamSet failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+    }
+    return ret;
+}
+
+int32_t PrintServiceAbility::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
+    const std::string &plainText, std::string &cipherText)
+{
+    struct HksBlob plainBlob = {
+        .size = plainText.size(),
+        .data = (uint8_t *)plainText.data()
+    };
+
+    std::vector<uint8_t> cipherBuffer(plainText.size() + 16);
+    struct HksBlob cipherBlob = {
+        .size = cipherBuffer.size(),
+        .data = cipherBuffer.data()
+    };
+
+    int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherBlob);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksEncrypt failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    cipherText.assign(reinterpret_cast<char *>(cipherBlob.data), cipherBlob.size);
+    return HKS_SUCCESS;
+}
+
+int32_t PrintServiceAbility::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
+    const std::string &cipherText, std::string &plainText)
+{
+    struct HksBlob cipherBlob = {
+        .size = cipherText.size(),
+        .data = (uint8_t *)cipherText.data()
+    };
+
+    std::vector<uint8_t> plainBuffer(cipherText.size());
+    struct HksBlob plainBlob = {
+        .size = plainBuffer.size(),
+        .data = plainBuffer.data()
+    };
+
+    int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherBlob, &plainBlob);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksDecrypt failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    plainText.assign(reinterpret_cast<char *>(plainBlob.data), plainBlob.size);
+    return HKS_SUCCESS;
 }
 
 bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
@@ -4796,7 +5070,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
         jobOptions["isCollate"] = preferences.GetDefaultCollate();
     }
 
-    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences);
+    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences, printerInfo);
     if (preferencesJson.isNull()) {
         PRINT_HILOGW("cannot find any modified preferences");
         return;
@@ -4804,7 +5078,8 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
     jobOptions["advancedOptions"] = preferencesJson;
 }
 
-Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences)
+Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
+    const PrinterPreferences &preferences, const PrinterInfo &printerInfo)
 {
     std::string option = preferences.GetOption();
     PRINT_HILOGD("Print job option: %{public}s", option.c_str());
@@ -4813,7 +5088,39 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(const PrinterP
         PRINT_HILOGW("parse preferences options error");
         return Json::nullValue;
     }
+
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData == nullptr) {
+        return opsJson;
+    }
+
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    DecryptAndFillCustomOptions(userData, printerInfo.GetPrinterId(), standardizedPrinterName, opsJson);
     return opsJson;
+}
+
+void PrintServiceAbility::DecryptAndFillCustomOptions(const std::shared_ptr<PrintUserData> &userData,
+    const std::string &printerId, const std::string &standardizedPrinterName, Json::Value &opsJson)
+{
+    PrinterUserPreferences userPrefs;
+    if (!userData->LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        return;
+    }
+
+    std::string plainValue;
+    for (const auto &opt : userPrefs.GetAllCustomOptions()) {
+        if (!opt.isSet) {
+            continue;
+        }
+        int32_t ret = DecryptCustomOptionValue(opt.value, plainValue);
+        if (ret == HKS_SUCCESS) {
+            opsJson[opt.key] = "Custom." + plainValue;
+            PRINT_HILOGI("decrypted custom option: %{public}s", opt.key.c_str());
+        } else {
+            PRINT_HILOGW("failed to decrypt custom option: %{public}s", opt.key.c_str());
+        }
+    }
 }
 
 void PrintServiceAbility::RefreshPrinterInfoByPpd()

@@ -97,6 +97,7 @@ _external_deps = [
   "eventhandler:libeventhandler",
   "hilog:libhilog",
   "hisysevent:libhisysevent",
+  "huks:libhukssdk",
   "init:libbegetutil",
   "i18n:intl_util",
   "ipc:ipc_core",

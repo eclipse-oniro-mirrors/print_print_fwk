@@ -198,6 +198,134 @@ void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     PrintServiceAbility::GetInstance()->UnloadSystemAbility();
 }
 
+void TestExtractCustomOptionsFromPreferences(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrinterCapability capability;
+    std::string capOption = "{\"cupsOptions\":{\"advanceOptions\":\"[]\"}}";
+    capability.SetOption(capOption);
+    printerInfo.SetCapability(capability);
+    
+    PrinterPreferences preferences;
+    std::string prefOption = "{\"testKey\":\"testValue\"}";
+    preferences.SetOption(prefOption);
+    
+    PrinterUserPreferences userPrefs;
+    PrintServiceAbility::GetInstance()->ExtractCustomOptionsFromPreferences(printerInfo, preferences, userPrefs);
+}
+
+void TestGetCustomOptionKeysFromCapability(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrinterCapability capability;
+    std::string capOption = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    capability.SetOption(capOption);
+    printerInfo.SetCapability(capability);
+    
+    PrintServiceAbility::GetInstance()->GetCustomOptionKeysFromCapability(printerInfo);
+}
+
+void TestExtractCustomOptionsFromPreferenceJson(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::set<std::string> customOptionKeys;
+    customOptionKeys.insert(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    customOptionKeys.insert(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    
+    PrinterPreferences preferences;
+    std::string prefOption = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    preferences.SetOption(prefOption);
+    
+    PrinterUserPreferences userPrefs;
+    PrintServiceAbility::GetInstance()->ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
+}
+
+void TestEncryptCustomOptionValue(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string plainText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string cipherText;
+    PrintServiceAbility::GetInstance()->EncryptCustomOptionValue(plainText, cipherText);
+}
+
+void TestDecryptCustomOptionValue(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string cipherText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string plainText;
+    PrintServiceAbility::GetInstance()->DecryptCustomOptionValue(cipherText, plainText);
+}
+
+void TestInitGenParamSet(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    struct HksParamSet *paramSet = nullptr;
+    PrintServiceAbility::GetInstance()->InitGenParamSet(&paramSet);
+    if (paramSet != nullptr) {
+        HksFreeParamSet(&paramSet);
+    }
+}
+
+void TestInitCipherParamSet(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    struct HksParamSet *paramSet = nullptr;
+    uint32_t purpose = dataProvider->ConsumeIntegralInRange<uint32_t>(0, 1);
+    PrintServiceAbility::GetInstance()->InitCipherParamSet(&paramSet, purpose);
+    if (paramSet != nullptr) {
+        HksFreeParamSet(&paramSet);
+    }
+}
+
+void TestDoEncrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    static const std::string KEY_ALIAS = "print_custom_option_key_test";
+    struct HksBlob keyAlias = {
+        .size = KEY_ALIAS.size(),
+        .data = (uint8_t *)KEY_ALIAS.data()
+    };
+    
+    struct HksParamSet *encryptParamSet = nullptr;
+    int32_t ret = PrintServiceAbility::GetInstance()->InitCipherParamSet(&encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT);
+    if (ret != HKS_SUCCESS || encryptParamSet == nullptr) {
+        return;
+    }
+    
+    std::string plainText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string cipherText;
+    PrintServiceAbility::GetInstance()->DoEncrypt(&keyAlias, encryptParamSet, plainText, cipherText);
+    HksFreeParamSet(&encryptParamSet);
+}
+
+void TestDoDecrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    static const std::string KEY_ALIAS = "print_custom_option_key_test";
+    struct HksBlob keyAlias = {
+        .size = KEY_ALIAS.size(),
+        .data = (uint8_t *)KEY_ALIAS.data()
+    };
+    
+    struct HksParamSet *decryptParamSet = nullptr;
+    int32_t ret = PrintServiceAbility::GetInstance()->InitCipherParamSet(&decryptParamSet, HKS_KEY_PURPOSE_DECRYPT);
+    if (ret != HKS_SUCCESS || decryptParamSet == nullptr) {
+        return;
+    }
+    
+    std::string cipherText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string plainText;
+    PrintServiceAbility::GetInstance()->DoDecrypt(&keyAlias, decryptParamSet, cipherText, plainText);
+    HksFreeParamSet(&decryptParamSet);
+}
+
+void TestDecryptAndFillCustomOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    auto userData = std::make_shared<PrintUserData>();
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string standardizedPrinterName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    Json::Value opsJson;
+    opsJson["testKey"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->DecryptAndFillCustomOptions(userData, printerId, standardizedPrinterName, opsJson);
+}
+
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("multithreading is running at function TestNotPublicFunction.");
@@ -221,6 +349,16 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
         &TestClosePrintJobFd,
         &TestMergeVendorOptionsForPrintJob,
         &TestNoParmFuncs,
+        &TestExtractCustomOptionsFromPreferences,
+        &TestGetCustomOptionKeysFromCapability,
+        &TestExtractCustomOptionsFromPreferenceJson,
+        &TestEncryptCustomOptionValue,
+        &TestDecryptCustomOptionValue,
+        &TestInitGenParamSet,
+        &TestInitCipherParamSet,
+        &TestDoEncrypt,
+        &TestDoDecrypt,
+        &TestDecryptAndFillCustomOptions,
     };
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);
