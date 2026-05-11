@@ -4646,6 +4646,49 @@ HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_PpdRetu
 }
 
 /**
+* @tc.name: UpdateSinglePrinterInfo_HasPrinterMake_IsEprint
+* @tc.desc: Test UpdateSinglePrinterInfo when printer is eprint, should skip PPd query
+* @tc.type: FUNC
+* @tc.require: should skip PPd query for eprint printer
+*/
+HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_IsEprint, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, QueryPPDInformation(_, _)).Times(0);
+
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterName("TestPrinter");
+    std::string eprintPrinterId = PrintUtils::GetGlobalId(PRINT_EXTENSION_BUNDLE_NAME, EPRINTID);
+    info->SetPrinterId(eprintPrinterId);
+    info->SetPrinterMake("TestMake");
+    service->printSystemData_.AddPrinterToDiscovery(info);
+    bool result = service->UpdateSinglePrinterInfo(*info, PRINT_EXTENSION_BUNDLE_NAME);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name: UpdateSinglePrinterInfo_NoPrinterMake_IsEprint
+* @tc.desc: Test UpdateSinglePrinterInfo when printer has no make and is eprint
+* @tc.type: FUNC
+* @tc.require: should skip PPd query
+*/
+HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_NoPrinterMake_IsEprint, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, QueryPPDInformation(_, _)).Times(0);
+
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterName("TestPrinter");
+    std::string eprintPrinterId = PrintUtils::GetGlobalId(PRINT_EXTENSION_BUNDLE_NAME, EPRINTID);
+    info->SetPrinterId(eprintPrinterId);
+    service->printSystemData_.AddPrinterToDiscovery(info);
+    bool result = service->UpdateSinglePrinterInfo(*info, PRINT_EXTENSION_BUNDLE_NAME);
+    EXPECT_FALSE(result);
+}
+
+/**
 * @tc.name: RenamePrinterWhenAdded_ExistingPrinterId_ReturnStoredName
 * @tc.desc: When printerId already exists in addedPrinterMap, return the previously stored printer name
 * @tc.type: FUNC

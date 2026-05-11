@@ -3854,7 +3854,8 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     // Query complete printer capability from PPD file to fix incomplete capability issue.
     // External applications may provide incomplete printer capability information,
     // so we need to query complete capability from PPD file to ensure all advanced options are included.
-    if (printerInfo->HasPrinterMake()) {
+    // Note: Eprint printers do not have a PPD file.
+    if (printerInfo->HasPrinterMake() && !isEprint(printExtId)) {
         std::string make = printerInfo->GetPrinterMake();
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
