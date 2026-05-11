@@ -279,10 +279,10 @@ void TestInitCipherParamSet(const uint8_t *data, size_t size, FuzzedDataProvider
 
 void TestDoEncrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    static const std::string KEY_ALIAS = "print_custom_option_key_test";
+    static const std::string keyAliasStr = "print_custom_option_key_test";
     struct HksBlob keyAlias = {
-        .size = KEY_ALIAS.size(),
-        .data = (uint8_t *)KEY_ALIAS.data()
+        .size = keyAliasStr.size(),
+        .data = (uint8_t *)keyAliasStr.data()
     };
     
     struct HksParamSet *encryptParamSet = nullptr;
@@ -299,10 +299,10 @@ void TestDoEncrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataPro
 
 void TestDoDecrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    static const std::string KEY_ALIAS = "print_custom_option_key_test";
+    static const std::string keyAliasStr = "print_custom_option_key_test";
     struct HksBlob keyAlias = {
-        .size = KEY_ALIAS.size(),
-        .data = (uint8_t *)KEY_ALIAS.data()
+        .size = keyAliasStr.size(),
+        .data = (uint8_t *)keyAliasStr.data()
     };
     
     struct HksParamSet *decryptParamSet = nullptr;

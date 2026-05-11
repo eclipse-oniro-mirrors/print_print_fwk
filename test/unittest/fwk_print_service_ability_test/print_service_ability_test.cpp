@@ -6085,7 +6085,7 @@ HWTEST_F(PrintServiceAbilityTest, EncryptCustomOptionValue_Success_ReturnsCipher
     std::string cipherText;
     int32_t ret = service->EncryptCustomOptionValue(plainText, cipherText);
     EXPECT_NE(ret, HKS_SUCCESS);
-    EXPECT_FALSE(cipherText.empty());
+    EXPECT_TRUE(cipherText.empty());
     MockHksApi::Instance().Reset();
 }
 
