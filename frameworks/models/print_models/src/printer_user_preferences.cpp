@@ -17,6 +17,7 @@
 #include "print_log.h"
 #include "print_json_util.h"
 #include <cstring>
+#include "securec.h"
 
 namespace OHOS::Print {
 
