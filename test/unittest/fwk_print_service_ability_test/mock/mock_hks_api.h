@@ -16,6 +16,11 @@
 #ifndef MOCK_HKS_API_H
 #define MOCK_HKS_API_H
 
+#include <cstdint>
+#include <cstring>
+#include "hks_api.h"
+#include "hks_param.h"
+
 class MockHksApi {
 public:
     static MockHksApi& Instance();
