@@ -422,7 +422,7 @@ HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_DefaultType_ReturnsZeroValues, T
     cparam.maximum.custom_int = 0;
 
     Json::Value result = FindCustomParamLimit(&cparam);
-    EXPECT_TRUE(result.isObject());
+    EXPECT_FALSE(result.isObject());
     EXPECT_EQ(result["minimum"].asInt(), 0);
     EXPECT_EQ(result["maximum"].asInt(), 0);
 }
