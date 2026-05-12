@@ -608,11 +608,24 @@ std::string PrintServiceAbility::CalculateFileMd5ByPath(const std::string &fileP
         return "";
     }
     std::vector<char> buffer(fileSize);
-    ssize_t bytesRead = read(fd, buffer.data(), fileSize);
+    size_t totalRead = 0;
+    while (totalRead < fileSize) {
+        ssize_t bytesRead = read(fd, buffer.data() + totalRead, fileSize - totalRead);
+        if (bytesRead < 0) {
+            PRINT_HILOGE("CalculateFileMd5ByPath read failed, path: %{public}s, errno: %{public}d",
+                filePath.c_str(), errno);
+            close(fd);
+            return "";
+        }
+        if (bytesRead == 0) {
+            break;
+        }
+        totalRead += static_cast<size_t>(bytesRead);
+    }
     close(fd);
-    if (bytesRead != static_cast<ssize_t>(fileSize)) {
-        PRINT_HILOGE("CalculateFileMd5ByPath read failed, path: %{public}s, read: %{public}zd, expect: %{public}zu",
-            filePath.c_str(), bytesRead, fileSize);
+    if (totalRead != fileSize) {
+        PRINT_HILOGE("CalculateFileMd5ByPath read failed, path: %{public}s, read: %{public}zu, expect: %{public}zu",
+            filePath.c_str(), totalRead, fileSize);
         return "";
     }
     unsigned char hash[16];
@@ -669,11 +682,23 @@ std::string PrintServiceAbility::CalculateFileMd5(uint32_t fd)
     }
     lseek(dupFd, 0, SEEK_SET);
     std::vector<char> buffer(fileSize);
-    ssize_t bytesRead = read(dupFd, buffer.data(), fileSize);
+    size_t totalRead = 0;
+    while (totalRead < static_cast<size_t>(fileSize)) {
+        ssize_t bytesRead = read(dupFd, buffer.data() + totalRead, fileSize - totalRead);
+        if (bytesRead < 0) {
+            PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+            close(dupFd);
+            return "";
+        }
+        if (bytesRead == 0) {
+            break;
+        }
+        totalRead += static_cast<size_t>(bytesRead);
+    }
     close(dupFd);
-    if (bytesRead != static_cast<ssize_t>(fileSize)) {
-        PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, read: %{public}zd, expect: %{public}ld",
-            fdInt, bytesRead, fileSize);
+    if (totalRead != static_cast<size_t>(fileSize)) {
+        PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, read: %{public}zu, expect: %{public}ld",
+            fdInt, totalRead, fileSize);
         return "";
     }
     unsigned char hash[16];
