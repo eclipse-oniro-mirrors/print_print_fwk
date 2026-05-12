@@ -16,8 +16,104 @@
 #include "printer_user_preferences.h"
 #include "print_log.h"
 #include "print_json_util.h"
+#include <cstring>
 
 namespace OHOS::Print {
+
+SecureBlob::SecureBlob(const SecureBlob &other) : size(0), data(nullptr)
+{
+    if (other.data != nullptr && other.size > 0) {
+        data = new (std::nothrow) uint8_t[other.size];
+        if (data != nullptr) {
+            if (memcpy_s(data, other.size, other.data, other.size) == EOK) {
+                size = other.size;
+            } else {
+                delete[] data;
+                data = nullptr;
+            }
+        }
+    }
+}
+
+SecureBlob& SecureBlob::operator=(const SecureBlob &other)
+{
+    if (this == &other) {
+        return *this;
+    }
+    Clear();
+    if (other.data != nullptr && other.size > 0) {
+        data = new (std::nothrow) uint8_t[other.size];
+        if (data != nullptr) {
+            if (memcpy_s(data, other.size, other.data, other.size) == EOK) {
+                size = other.size;
+            } else {
+                delete[] data;
+                data = nullptr;
+            }
+        }
+    }
+    return *this;
+}
+
+SecureBlob::SecureBlob(SecureBlob &&other) noexcept : size(other.size), data(other.data)
+{
+    other.size = 0;
+    other.data = nullptr;
+}
+
+SecureBlob& SecureBlob::operator=(SecureBlob &&other) noexcept
+{
+    if (this == &other) {
+        return *this;
+    }
+    Clear();
+    size = other.size;
+    data = other.data;
+    other.size = 0;
+    other.data = nullptr;
+    return *this;
+}
+
+SecureBlob::~SecureBlob()
+{
+    Clear();
+}
+
+void SecureBlob::Clear()
+{
+    if (data != nullptr) {
+        if (size > 0) {
+            (void)memset_s(data, size, 0, size);
+        }
+        delete[] data;
+        data = nullptr;
+    }
+    size = 0;
+}
+
+void SecureBlob::SetData(const uint8_t *src, uint32_t srcSize)
+{
+    Clear();
+    if (src != nullptr && srcSize > 0) {
+        data = new (std::nothrow) uint8_t[srcSize];
+        if (data != nullptr) {
+            if (memcpy_s(data, srcSize, src, srcSize) == EOK) {
+                size = srcSize;
+            } else {
+                delete[] data;
+                data = nullptr;
+            }
+        }
+    }
+}
+
+std::string SecureBlob::ToString() const
+{
+    if (data == nullptr || size == 0) {
+        return "";
+    }
+    return std::string(reinterpret_cast<const char *>(data), size);
+}
 
 PrinterUserPreferences::PrinterUserPreferences() {}
 
@@ -64,7 +160,7 @@ std::string PrinterUserPreferences::GetVendorOptions() const
     return vendorOptions_;
 }
 
-void PrinterUserPreferences::SetCustomOption(const std::string &key, const std::string &value)
+void PrinterUserPreferences::SetCustomOption(const std::string &key, const SecureBlob &value)
 {
     for (auto &option : customOptions_) {
         if (option.key == key) {
@@ -85,17 +181,17 @@ void PrinterUserPreferences::SetCustomOptionUnset(const std::string &key)
     for (auto &option : customOptions_) {
         if (option.key == key) {
             option.isSet = false;
+            option.value.Clear();
             return;
         }
     }
     CustomOption option;
     option.key = key;
     option.isSet = false;
-    option.value = "";
     customOptions_.push_back(option);
 }
 
-bool PrinterUserPreferences::GetCustomOption(const std::string &key, std::string &value) const
+bool PrinterUserPreferences::GetCustomOption(const std::string &key, SecureBlob &value) const
 {
     for (const auto &option : customOptions_) {
         if (option.key == key) {
@@ -145,7 +241,7 @@ Json::Value PrinterUserPreferences::ConvertToJson() const
             Json::Value optJson;
             optJson["key"] = opt.key;
             optJson["isSet"] = opt.isSet;
-            optJson["value"] = opt.value;
+            optJson["value"] = opt.value.ToString();
             customArr.append(optJson);
         }
         userPrefsJson["customOptions"] = customArr;
@@ -177,7 +273,8 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
                 opt.isSet = optJson["isSet"].asBool();
             }
             if (optJson["value"].isString()) {
-                opt.value = optJson["value"].asString();
+                std::string valueStr = optJson["value"].asString();
+                opt.value.SetData(reinterpret_cast<const uint8_t *>(valueStr.c_str()), valueStr.size());
             }
             customOptions_.push_back(opt);
         }

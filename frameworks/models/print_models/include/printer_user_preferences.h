@@ -17,14 +17,33 @@
 #define PRINTER_USER_PREFERENCES_H
 
 #include <string>
+#include <cstdint>
 #include "json/json.h"
 
 namespace OHOS::Print {
 
+struct SecureBlob {
+    uint32_t size = 0;
+    uint8_t *data = nullptr;
+
+    SecureBlob() : size(0), data(nullptr) {}
+    SecureBlob(uint32_t s, uint8_t *d) : size(s), data(d) {}
+    SecureBlob(const SecureBlob &other);
+    SecureBlob& operator=(const SecureBlob &other);
+    SecureBlob(SecureBlob &&other) noexcept;
+    SecureBlob& operator=(SecureBlob &&other) noexcept;
+    ~SecureBlob();
+
+    void Clear();
+    bool IsEmpty() const { return data == nullptr || size == 0; }
+    void SetData(const uint8_t *src, uint32_t srcSize);
+    std::string ToString() const;
+};
+
 struct CustomOption {
     std::string key;
     bool isSet = false;
-    std::string value;
+    SecureBlob value;
 };
 
 class PrinterUserPreferences {
@@ -43,9 +62,9 @@ public:
     bool HasVendorOptions() const;
     std::string GetVendorOptions() const;
 
-    void SetCustomOption(const std::string &key, const std::string &value);
+    void SetCustomOption(const std::string &key, const SecureBlob &value);
     void SetCustomOptionUnset(const std::string &key);
-    bool GetCustomOption(const std::string &key, std::string &value) const;
+    bool GetCustomOption(const std::string &key, SecureBlob &value) const;
     bool IsCustomOptionSet(const std::string &key) const;
     void RemoveCustomOption(const std::string &key);
     const std::vector<CustomOption>& GetAllCustomOptions() const;

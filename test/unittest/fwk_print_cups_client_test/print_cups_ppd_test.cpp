@@ -368,6 +368,13 @@ HWTEST_F(PrintCupsPpdTest, FindCustomParam_NullCoption_ReturnsNullptr, TestSize.
     EXPECT_EQ(result, nullptr);
 }
 
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_NullCparam_ReturnsEmptyObject, TestSize.Level1)
+{
+    Json::Value result = FindCustomParamLimit(nullptr);
+    EXPECT_TRUE(result.isObject());
+    EXPECT_TRUE(result.empty());
+}
+
 HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_ValidParam_ReturnsCorrectJson, TestSize.Level1)
 {
     ppd_cparam_t cparam;

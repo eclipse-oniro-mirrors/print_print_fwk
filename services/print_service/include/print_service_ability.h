@@ -262,21 +262,22 @@ private:
                                        const PrinterPreferences &preferences,
                                        PrintJob &printJob);
     Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences, const PrinterInfo &printerInfo);
-    void DecryptAndFillCustomOptions(const std::shared_ptr<PrintUserData> &userData,
-        const std::string &printerId, const std::string &standardizedPrinterName, Json::Value &opsJson);
+    void DecryptAndFillCustomOptions(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);
     void ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo, PrinterPreferences &preferences,
         PrinterUserPreferences &userPrefs);
     std::set<std::string> GetCustomOptionKeysFromCapability(const PrinterInfo &printerInfo);
     void ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
         PrinterPreferences &preferences, PrinterUserPreferences &userPrefs);
-    int32_t EncryptCustomOptionValue(const std::string &plainText, std::string &cipherText);
-    int32_t DecryptCustomOptionValue(const std::string &cipherText, std::string &plainText);
+    void ProcessSingleCustomOption(const std::string &key,
+        const std::string &optionJsonStr, PrinterUserPreferences &userPrefs);
+    int32_t EncryptCustomOptionValue(struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
+    int32_t DecryptCustomOptionValue(struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
     int32_t InitGenParamSet(struct HksParamSet **paramSet);
     int32_t InitCipherParamSet(struct HksParamSet **paramSet, uint32_t purpose);
     int32_t DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-        const std::string &plainText, std::string &cipherText);
+        struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
     int32_t DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-        const std::string &cipherText, std::string &plainText);
+        struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
     std::string GetCallerBundleName() override;
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,

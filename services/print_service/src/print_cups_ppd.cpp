@@ -315,45 +315,40 @@ ppd_cparam_t *FindCustomParam(ppd_coption_t *coption)
     ppd_cparam_t *cparam = nullptr;
     for (cparam = (ppd_cparam_t *)cupsArrayFirst(coption->params);
         cparam != nullptr; cparam = (ppd_cparam_t *)cupsArrayNext(coption->params)) {
-        PRINT_HILOGI("name=%{public}s order=%{public}d type=%{public}d minimum=%{public}d maximum=%{public}d",
+        PRINT_HILOGD("name=%{public}s order=%{public}d type=%{public}d minimum=%{public}d maximum=%{public}d",
             cparam->name, cparam->order, cparam->type, cparam->minimum.custom_int, cparam->maximum.custom_int);
-        if (cparam->type != PPD_CUSTOM_PASSCODE && cparam->type != PPD_CUSTOM_PASSWORD &&
-            cparam->type != PPD_CUSTOM_STRING) {
-            PRINT_HILOGW("Unsupported custom param type");
-            continue;
+        if (cparam->type == PPD_CUSTOM_PASSCODE || cparam->type == PPD_CUSTOM_PASSWORD ||
+            cparam->type == PPD_CUSTOM_STRING) {
+            break;
         }
-        return cparam;
     }
-    return nullptr;
+    return cparam;
 }
 
 Json::Value FindCustomParamLimit(ppd_cparam_t *cparam)
 {
-    Json::Value customParamLimitJs;
     if (cparam == nullptr) {
         PRINT_HILOGE("cparam is null");
-        return customParamLimitJs;
+        return Json::Value(Json::objectValue);
     }
-    int minimum = 0;
-    int maximum = 0;
+    Json::Value customParamLimitJs;
     switch (cparam->type) {
         case PPD_CUSTOM_PASSCODE:
-            minimum = cparam->minimum.custom_passcode;
-            maximum = cparam->maximum.custom_passcode;
+            customParamLimitJs["minimum"] = cparam->minimum.custom_passcode;
+            customParamLimitJs["maximum"] = cparam->maximum.custom_passcode;
             break;
         case PPD_CUSTOM_PASSWORD:
-            minimum = cparam->minimum.custom_password;
-            maximum = cparam->maximum.custom_password;
+            customParamLimitJs["minimum"] = cparam->minimum.custom_password;
+            customParamLimitJs["maximum"] = cparam->maximum.custom_password;
             break;
         case PPD_CUSTOM_STRING:
-            minimum = cparam->minimum.custom_string;
-            maximum = cparam->maximum.custom_string;
+            customParamLimitJs["minimum"] = cparam->minimum.custom_string;
+            customParamLimitJs["maximum"] = cparam->maximum.custom_string;
             break;
         default:
+            PRINT_HILOGW("Unsupported custom param type.");
             break;
     }
-    customParamLimitJs["minimum"] = minimum;
-    customParamLimitJs["maximum"] = maximum;
     return customParamLimitJs;
 }
 

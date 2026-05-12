@@ -1294,7 +1294,12 @@ std::set<std::string> PrintServiceAbility::GetCustomOptionKeysFromCapability(con
         return customOptionKeys;
     }
 
-    if (!capJson.isObject() || !capJson["cupsOptions"].isObject()) {
+    if (!capJson.isObject()) {
+        PRINT_HILOGE("capability option json is not an object");
+        return customOptionKeys;
+    }
+
+    if (!capJson["cupsOptions"].isObject()) {
         PRINT_HILOGE("capability option is not valid cupsOptions json");
         return customOptionKeys;
     }
@@ -1342,29 +1347,7 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
             continue;
         }
         std::string optionJsonStr = prefOptionsJson[key].asString();
-        Json::Value optionJson;
-        if (!PrintJsonUtil::Parse(optionJsonStr, optionJson) || !optionJson.isObject()) {
-            userPrefs.SetCustomOptionUnset(key);
-            prefOptionsJson.removeMember(key);
-            hasModified = true;
-            continue;
-        }
-        std::string choice = optionJson["choice"].asString();
-        if (choice != "Custom") {
-            userPrefs.SetCustomOptionUnset(key);
-            prefOptionsJson.removeMember(key);
-            hasModified = true;
-            continue;
-        }
-        std::string value = optionJson["value"].asString();
-        std::string encryptedValue;
-        if (!value.empty() && EncryptCustomOptionValue(value, encryptedValue) == HKS_SUCCESS) {
-            userPrefs.SetCustomOption(key, encryptedValue);
-            PRINT_HILOGI("extracted and encrypted custom option: %{public}s", key.c_str());
-        } else {
-            userPrefs.SetCustomOptionUnset(key);
-            PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
-        }
+        ProcessSingleCustomOption(key, optionJsonStr, userPrefs);
         prefOptionsJson.removeMember(key);
         hasModified = true;
     }
@@ -1374,7 +1357,60 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
     }
 }
 
-int32_t PrintServiceAbility::EncryptCustomOptionValue(const std::string &plainText, std::string &cipherText)
+void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
+    const std::string &optionJsonStr, PrinterUserPreferences &userPrefs)
+{
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(optionJsonStr, optionJson) || !optionJson.isObject()) {
+        userPrefs.SetCustomOptionUnset(key);
+        PRINT_HILOGW("failed to parse option json for key: %{public}s", key.c_str());
+        return;
+    }
+
+    std::string choice = optionJson["choice"].asString();
+    if (choice != "Custom" && optionJson["value"].asString().empty()) {
+        userPrefs.SetCustomOptionUnset(key);
+        PRINT_HILOGW("non-custom option without value for key: %{public}s", key.c_str());
+        return;
+    }
+
+    size_t valueSize = optionJson["value"].asString().size();
+    struct HksBlob plainBlob = { 0, nullptr };
+    if (valueSize > 0) {
+        plainBlob.data = new (std::nothrow) uint8_t[valueSize + 1];
+        if (plainBlob.data != nullptr) {
+            if (memcpy_s(plainBlob.data, valueSize + 1, optionJson["value"].asString().c_str(), valueSize) == EOK) {
+                plainBlob.data[valueSize] = '\0';
+                plainBlob.size = valueSize;
+            } else {
+                delete[] plainBlob.data;
+                plainBlob.data = nullptr;
+            }
+        }
+    }
+
+    struct HksBlob cipherBlob = { 0, nullptr };
+    if (plainBlob.data != nullptr && EncryptCustomOptionValue(plainBlob, cipherBlob) == HKS_SUCCESS) {
+        SecureBlob secureValue;
+        secureValue.SetData(cipherBlob.data, cipherBlob.size);
+        userPrefs.SetCustomOption(key, secureValue);
+        PRINT_HILOGI("extracted and encrypted custom option: %{public}s", key.c_str());
+    } else {
+        userPrefs.SetCustomOptionUnset(key);
+        PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
+    }
+
+    if (cipherBlob.data != nullptr) {
+        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
+        delete[] cipherBlob.data;
+    }
+    if (plainBlob.data != nullptr) {
+        (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
+        delete[] plainBlob.data;
+    }
+}
+
+int32_t PrintServiceAbility::EncryptCustomOptionValue(struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
 {
     static const std::string keyAliasStr = "print_custom_option_key";
     struct HksBlob keyAlias = {
@@ -1402,13 +1438,13 @@ int32_t PrintServiceAbility::EncryptCustomOptionValue(const std::string &plainTe
         return ret;
     }
 
-    ret = DoEncrypt(&keyAlias, encryptParamSet, plainText, cipherText);
+    ret = DoEncrypt(&keyAlias, encryptParamSet, plainBlob, cipherBlob);
     HksFreeParamSet(&genParamSet);
     HksFreeParamSet(&encryptParamSet);
     return ret;
 }
 
-int32_t PrintServiceAbility::DecryptCustomOptionValue(const std::string &cipherText, std::string &plainText)
+int32_t PrintServiceAbility::DecryptCustomOptionValue(struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
 {
     static const std::string keyAliasStr = "print_custom_option_key";
     struct HksBlob keyAlias = {
@@ -1422,7 +1458,7 @@ int32_t PrintServiceAbility::DecryptCustomOptionValue(const std::string &cipherT
         return ret;
     }
 
-    ret = DoDecrypt(&keyAlias, decryptParamSet, cipherText, plainText);
+    ret = DoDecrypt(&keyAlias, decryptParamSet, cipherBlob, plainBlob);
     HksFreeParamSet(&decryptParamSet);
     return ret;
 }
@@ -1495,50 +1531,50 @@ int32_t PrintServiceAbility::InitCipherParamSet(struct HksParamSet **paramSet, u
 }
 
 int32_t PrintServiceAbility::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-    const std::string &plainText, std::string &cipherText)
+    struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
 {
-    struct HksBlob plainBlob = {
-        .size = plainText.size(),
-        .data = (uint8_t *)plainText.data()
-    };
+    size_t bufferSize = plainBlob.size + AUTH_TAG_SIZE;
+    cipherBlob.data = new (std::nothrow) uint8_t[bufferSize];
+    if (cipherBlob.data == nullptr) {
+        PRINT_HILOGE("failed to allocate cipher buffer");
+        return HKS_ERROR_MALLOC_FAIL;
+    }
 
-    std::vector<uint8_t> cipherBuffer(plainText.size() + AUTH_TAG_SIZE);
-    struct HksBlob cipherBlob = {
-        .size = cipherBuffer.size(),
-        .data = cipherBuffer.data()
-    };
-
+    cipherBlob.size = bufferSize;
     int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherBlob);
     if (ret != HKS_SUCCESS) {
         PRINT_HILOGE("HksEncrypt failed, ret: %{public}d", ret);
+        (void)memset_s(cipherBlob.data, bufferSize, 0, bufferSize);
+        delete[] cipherBlob.data;
+        cipherBlob.data = nullptr;
+        cipherBlob.size = 0;
         return ret;
     }
 
-    cipherText.assign(reinterpret_cast<char *>(cipherBlob.data), cipherBlob.size);
     return HKS_SUCCESS;
 }
 
 int32_t PrintServiceAbility::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-    const std::string &cipherText, std::string &plainText)
+    struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
 {
-    struct HksBlob cipherBlob = {
-        .size = cipherText.size(),
-        .data = (uint8_t *)cipherText.data()
-    };
+    size_t bufferSize = cipherBlob.size;
+    plainBlob.data = new (std::nothrow) uint8_t[bufferSize];
+    if (plainBlob.data == nullptr) {
+        PRINT_HILOGE("failed to allocate plain buffer");
+        return HKS_ERROR_MALLOC_FAIL;
+    }
 
-    std::vector<uint8_t> plainBuffer(cipherText.size());
-    struct HksBlob plainBlob = {
-        .size = plainBuffer.size(),
-        .data = plainBuffer.data()
-    };
-
+    plainBlob.size = bufferSize;
     int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherBlob, &plainBlob);
     if (ret != HKS_SUCCESS) {
         PRINT_HILOGE("HksDecrypt failed, ret: %{public}d", ret);
+        (void)memset_s(plainBlob.data, bufferSize, 0, bufferSize);
+        delete[] plainBlob.data;
+        plainBlob.data = nullptr;
+        plainBlob.size = 0;
         return ret;
     }
 
-    plainText.assign(reinterpret_cast<char *>(plainBlob.data), plainBlob.size);
     return HKS_SUCCESS;
 }
 
@@ -5098,29 +5134,37 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
     }
 
     std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
-    DecryptAndFillCustomOptions(userData, printerInfo.GetPrinterId(), standardizedPrinterName, opsJson);
+    PrinterUserPreferences userPrefs;
+    if (!userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs)) {
+        return opsJson;
+    }
+    DecryptAndFillCustomOptions(userPrefs, opsJson);
     return opsJson;
 }
 
-void PrintServiceAbility::DecryptAndFillCustomOptions(const std::shared_ptr<PrintUserData> &userData,
-    const std::string &printerId, const std::string &standardizedPrinterName, Json::Value &opsJson)
+void PrintServiceAbility::DecryptAndFillCustomOptions(const PrinterUserPreferences &userPrefs, Json::Value &opsJson)
 {
-    PrinterUserPreferences userPrefs;
-    if (!userData->LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
-        return;
-    }
-
-    std::string plainValue;
     for (const auto &opt : userPrefs.GetAllCustomOptions()) {
         if (!opt.isSet) {
             continue;
         }
-        int32_t ret = DecryptCustomOptionValue(opt.value, plainValue);
-        if (ret == HKS_SUCCESS) {
-            opsJson[opt.key] = "Custom." + plainValue;
+        struct HksBlob cipherBlob = {
+            .size = opt.value.size,
+            .data = opt.value.data
+        };
+        struct HksBlob plainBlob = { 0, nullptr };
+        int32_t ret = DecryptCustomOptionValue(cipherBlob, plainBlob);
+        if (ret == HKS_SUCCESS && plainBlob.data != nullptr) {
+            opsJson[opt.key] = "Custom." + std::string((char *)plainBlob.data, plainBlob.size);
             PRINT_HILOGI("decrypted custom option: %{public}s", opt.key.c_str());
         } else {
-            PRINT_HILOGW("failed to decrypt custom option: %{public}s", opt.key.c_str());
+            PRINT_HILOGW("failed to decrypt custom option: %{public}s, ret: %{public}d", opt.key.c_str(), ret);
+        }
+        if (plainBlob.data != nullptr) {
+            (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
+            delete[] plainBlob.data;
+            plainBlob.data = nullptr;
+            plainBlob.size = 0;
         }
     }
 }
