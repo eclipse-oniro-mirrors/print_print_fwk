@@ -45,6 +45,7 @@ ohos_unittest("fwk_print_service_ability_test") {
   sources = [
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_ability_test.cpp",
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_mock_permission.cpp",
+    "${_test_path}/unittest/fwk_print_service_ability_test/print_security_guard_util_test.cpp",
   ]
 
   cflags_cc = []

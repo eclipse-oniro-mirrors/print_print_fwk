@@ -16,6 +16,12 @@
 #ifndef PRINT_SECURITY_GUARD_UTIL_H
 #define PRINT_SECURITY_GUARD_UTIL_H
 
+#include <cstdint>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
 #include "print_util.h"
 
 namespace OHOS::Print {
@@ -26,10 +32,19 @@ enum PrinterFoundType {
     FROM_USB = 3
 };
 
+struct FileAuditInfo {
+    std::string fileName;
+    std::string md5;
+    uint64_t size;
+};
+
 class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);
 };
+
+std::string SubStateToErrorCodeStr(uint32_t subState);
+std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);
 
 inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
 {

@@ -23,6 +23,7 @@
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
 #include "print_extension_callback_stub.h"
+#include "print_security_guard_util.h"
 #include <functional>
 
 namespace OHOS {
@@ -128,6 +129,41 @@ void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider 
 #endif // EDM_SERVICE_ENABLE
 }
 
+void TestCalculateFileMd5(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    uint32_t fd = dataProvider->ConsumeIntegral<uint32_t>();
+    PrintServiceAbility::GetInstance()->CalculateFileMd5(fd);
+}
+
+void TestCacheFileList(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<std::string> fileList;
+    int32_t fileCount = dataProvider->ConsumeIntegralInRange<int32_t>(0, 5);
+    for (int32_t i = 0; i < fileCount; i++) {
+        fileList.push_back(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    }
+    PrintServiceAbility::GetInstance()->CacheFileList(jobId, fileList);
+    PrintServiceAbility::GetInstance()->GetCachedFileList(jobId);
+    PrintServiceAbility::GetInstance()->ClearCachedFileList(jobId);
+}
+
+void TestSubStateToErrorCodeStr(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    uint32_t subState = dataProvider->ConsumeIntegral<uint32_t>();
+    SubStateToErrorCodeStr(subState);
+}
+
+void TestGenerateErrorCodes(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::set<uint32_t> blockedSubStates;
+    int32_t count = dataProvider->ConsumeIntegralInRange<int32_t>(0, 10);
+    for (int32_t i = 0; i < count; i++) {
+        blockedSubStates.insert(dataProvider->ConsumeIntegral<uint32_t>());
+    }
+    GenerateErrorCodes(blockedSubStates);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("Multithreading is running at function TestAllFunction.");
@@ -142,6 +178,10 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestBlockUserPrintJobs,
         &TestIsDisablePrint,
         &TestReportBannedEvent,
+        &TestCalculateFileMd5,
+        &TestCacheFileList,
+        &TestSubStateToErrorCodeStr,
+        &TestGenerateErrorCodes,
     };
     TestHandler handler = dataProvider->PickValueInArray(tasks);
     handler(data, size, dataProvider);

@@ -28,6 +28,8 @@ public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
     void receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void receiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
+        const PrintJob &printJob, const std::vector<FileAuditInfo> &fileInfos);
 
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);

@@ -21,7 +21,14 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
+#include <sstream>
+#include <iomanip>
 #include <json/json.h>
+
+#include <openssl/md5.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
@@ -193,6 +200,15 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
+    void CacheFileList(const std::string &jobId, const std::vector<std::string> &fileList);
+    std::vector<std::string> GetCachedFileList(const std::string &jobId);
+    void ClearCachedFileList(const std::string &jobId);
+    std::string CalculateFileMd5ByPath(const std::string &filePath);
+    uint64_t GetFileSizeByPath(const std::string &filePath);
+    std::string CalculateFileMd5(uint32_t fd);
+    uint64_t GetFileSize(uint32_t fd);
+    void CalculateAndSendAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
+        const PrinterInfo &printerInfo);
 
 private:
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
@@ -361,6 +377,10 @@ private:
     std::map<std::string, std::shared_ptr<PrintJob>> queuedJobList_;
     std::map<std::string, std::string, JobIdCmp> jobOrderList_;
     std::map<std::string, std::shared_ptr<PrintAttributes>> printAttributesList_;
+    std::map<std::string, std::vector<std::string>> fileListCache_;
+    std::map<std::string, std::vector<FileAuditInfo>> fileAuditCache_;
+
+    void CacheFileAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 

@@ -24,6 +24,7 @@
 
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
+#include <cups/cups.h>
 #endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
@@ -45,6 +46,9 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "print_security_guard_manager.h"
+#include <sys/stat.h>
+#include <sstream>
+#include <iomanip>
 #include "hisys_event_util.h"
 #include "uri.h"
 #include "kia_interceptor_manager.h"
@@ -559,6 +563,187 @@ int32_t PrintServiceAbility::StartPrint(
     return CallSpooler(fileList, fdList, taskId);
 }
 
+void PrintServiceAbility::CacheFileList(const std::string &jobId, const std::vector<std::string> &fileList)
+{
+    fileListCache_[jobId] = fileList;
+}
+
+std::vector<std::string> PrintServiceAbility::GetCachedFileList(const std::string &jobId)
+{
+    auto it = fileListCache_.find(jobId);
+    if (it != fileListCache_.end()) {
+        return it->second;
+    }
+    return std::vector<std::string>();
+}
+
+void PrintServiceAbility::ClearCachedFileList(const std::string &jobId)
+{
+    fileListCache_.erase(jobId);
+}
+
+static constexpr int32_t HEX_STRING_WIDTH = 2;
+
+std::string PrintServiceAbility::CalculateFileMd5ByPath(const std::string &filePath)
+{
+    if (filePath.empty()) {
+        PRINT_HILOGE("CalculateFileMd5ByPath empty path");
+        return "";
+    }
+    struct stat fileStat;
+    if (stat(filePath.c_str(), &fileStat) != 0) {
+        PRINT_HILOGE("CalculateFileMd5ByPath stat failed, path: %{public}s, errno: %{public}d",
+            filePath.c_str(), errno);
+        return "";
+    }
+    size_t fileSize = static_cast<size_t>(fileStat.st_size);
+    if (fileSize == 0) {
+        PRINT_HILOGE("CalculateFileMd5ByPath file size is 0, path: %{public}s", filePath.c_str());
+        return "";
+    }
+    int fd = open(filePath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        PRINT_HILOGE("CalculateFileMd5ByPath open failed, path: %{public}s, errno: %{public}d",
+            filePath.c_str(), errno);
+        return "";
+    }
+    std::vector<char> buffer(fileSize);
+    ssize_t bytesRead = read(fd, buffer.data(), fileSize);
+    close(fd);
+    if (bytesRead != static_cast<ssize_t>(fileSize)) {
+        PRINT_HILOGE("CalculateFileMd5ByPath read failed, path: %{public}s, read: %{public}zd, expect: %{public}zu",
+            filePath.c_str(), bytesRead, fileSize);
+        return "";
+    }
+    unsigned char hash[16];
+    ssize_t result = cupsHashData("md5", buffer.data(), fileSize, hash, sizeof(hash));
+    if (result <= 0) {
+        PRINT_HILOGE("CalculateFileMd5ByPath cupsHashData failed, path: %{public}s, result: %{public}zd",
+            filePath.c_str(), result);
+        return "";
+    }
+    std::stringstream ss;
+    for (ssize_t i = 0; i < result; i++) {
+        ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
+    }
+    return ss.str();
+}
+
+uint64_t PrintServiceAbility::GetFileSizeByPath(const std::string &filePath)
+{
+    if (filePath.empty()) {
+        PRINT_HILOGE("GetFileSizeByPath empty path");
+        return 0;
+    }
+    struct stat fileStat;
+    if (stat(filePath.c_str(), &fileStat) == 0) {
+        return static_cast<uint64_t>(fileStat.st_size);
+    }
+    PRINT_HILOGE("GetFileSizeByPath stat failed, path: %{public}s, errno: %{public}d",
+        filePath.c_str(), errno);
+    return 0;
+}
+
+std::string PrintServiceAbility::CalculateFileMd5(uint32_t fd)
+{
+    int32_t fdInt = static_cast<int32_t>(fd);
+    if (fdInt < 0) {
+        PRINT_HILOGE("CalculateFileMd5 invalid fd");
+        return "";
+    }
+    int32_t dupFd = dup(fdInt);
+    if (dupFd < 0) {
+        PRINT_HILOGE("CalculateFileMd5 dup failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+        return "";
+    }
+    off_t fileSize = lseek(dupFd, 0, SEEK_END);
+    if (fileSize == static_cast<off_t>(-1)) {
+        PRINT_HILOGE("CalculateFileMd5 lseek to end failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+        close(dupFd);
+        return "";
+    }
+    if (fileSize == 0) {
+        PRINT_HILOGE("CalculateFileMd5 file size is 0, fd: %{public}d", fdInt);
+        close(dupFd);
+        return "";
+    }
+    lseek(dupFd, 0, SEEK_SET);
+    std::vector<char> buffer(fileSize);
+    ssize_t bytesRead = read(dupFd, buffer.data(), fileSize);
+    close(dupFd);
+    if (bytesRead != static_cast<ssize_t>(fileSize)) {
+        PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, read: %{public}zd, expect: %{public}ld",
+            fdInt, bytesRead, fileSize);
+        return "";
+    }
+    unsigned char hash[16];
+    ssize_t result = cupsHashData("md5", buffer.data(), fileSize, hash, sizeof(hash));
+    if (result <= 0) {
+        PRINT_HILOGE("CalculateFileMd5 cupsHashData failed, fd: %{public}d, result: %{public}zd",
+            fdInt, result);
+        return "";
+    }
+    std::stringstream ss;
+    for (ssize_t i = 0; i < result; i++) {
+        ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
+    }
+    return ss.str();
+}
+
+uint64_t PrintServiceAbility::GetFileSize(uint32_t fd)
+{
+    int32_t fdInt = static_cast<int32_t>(fd);
+    if (fdInt < 0) {
+        PRINT_HILOGE("GetFileSize invalid fd");
+        return 0;
+    }
+    int32_t dupFd = dup(fdInt);
+    if (dupFd < 0) {
+        PRINT_HILOGE("GetFileSize dup failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+        return 0;
+    }
+    off_t fileSize = lseek(dupFd, 0, SEEK_END);
+    close(dupFd);
+    if (fileSize == static_cast<off_t>(-1)) {
+        PRINT_HILOGE("GetFileSize lseek to end failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+        return 0;
+    }
+    return static_cast<uint64_t>(fileSize);
+}
+
+void PrintServiceAbility::CacheFileAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+{
+    PRINT_HILOGI("CacheFileAuditInfo start, jobId: %{public}s", jobId.c_str());
+    std::vector<std::string> fileList = GetCachedFileList(jobId);
+    PRINT_HILOGI("CacheFileAuditInfo fileList size: %{public}zu", fileList.size());
+    if (fileList.empty()) {
+        PRINT_HILOGW("CacheFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
+        return;
+    }
+    std::vector<uint32_t> fdList;
+    printJob->GetFdList(fdList);
+    PRINT_HILOGI("CacheFileAuditInfo fdList size: %{public}zu", fdList.size());
+    size_t fileCount = std::min(fileList.size(), fdList.size());
+    std::vector<FileAuditInfo> fileInfos;
+    for (size_t i = 0; i < fileCount; i++) {
+        FileAuditInfo info;
+        info.fileName = fileList[i];
+        info.md5 = CalculateFileMd5(fdList[i]);
+        info.size = GetFileSize(fdList[i]);
+        PRINT_HILOGI("CacheFileAuditInfo file[%{public}zu] name: %{public}s, md5: %{public}s, size: %{public}llu",
+            i, fileList[i].c_str(), info.md5.c_str(), (unsigned long long)info.size);
+        fileInfos.push_back(info);
+    }
+    if (!fileInfos.empty()) {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        fileAuditCache_[jobId] = fileInfos;
+        PRINT_HILOGI("Cached file audit info for jobId: %{public}s, count: %{public}zu",
+            jobId.c_str(), fileInfos.size());
+    } else {
+        PRINT_HILOGW("CacheFileAuditInfo empty, jobId: %{public}s", jobId.c_str());
+    }
+}
+
 int32_t PrintServiceAbility::CallSpooler(
     const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId)
 {
@@ -587,6 +772,7 @@ int32_t PrintServiceAbility::CallSpooler(
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
     SendPrintJobEvent(*printJob);
+    CacheFileList(taskId, fileList);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
     PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
@@ -2126,6 +2312,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
+    printJob->AddBlockedSubState(subState);
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     auto printerId = printJob->GetPrinterId();
@@ -2170,6 +2357,42 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
     PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
 }
 
+void PrintServiceAbility::CalculateAndSendAuditInfo(const std::string &jobId,
+    const std::shared_ptr<PrintJob> &printJob, const PrinterInfo &printerInfo)
+{
+    PRINT_HILOGI("CalculateAndSendAuditInfo start, jobId: %{public}s", jobId.c_str());
+    std::vector<FileAuditInfo> fileInfos;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        auto it = fileAuditCache_.find(jobId);
+        if (it != fileAuditCache_.end()) {
+            fileInfos = it->second;
+            PRINT_HILOGI("Using cached file audit info for jobId: %{public}s, count: %{public}zu",
+                jobId.c_str(), fileInfos.size());
+        } else {
+            PRINT_HILOGW("Cache miss for jobId: %{public}s, cache size: %{public}zu",
+                jobId.c_str(), fileAuditCache_.size());
+        }
+    }
+    if (fileInfos.empty()) {
+        PRINT_HILOGW("Fallback to real-time calculation for jobId: %{public}s", jobId.c_str());
+        std::vector<std::string> fileList = GetCachedFileList(jobId);
+        std::vector<uint32_t> fdList;
+        printJob->GetFdList(fdList);
+        size_t fileCount = std::min(fileList.size(), fdList.size());
+        PRINT_HILOGW("Fallback fileList size: %{public}zu, fdList size: %{public}zu",
+            fileList.size(), fdList.size());
+        for (size_t i = 0; i < fileCount; i++) {
+            FileAuditInfo info;
+            info.fileName = fileList[i];
+            info.md5 = CalculateFileMd5(fdList[i]);
+            info.size = GetFileSize(fdList[i]);
+            fileInfos.push_back(info);
+        }
+    }
+    securityGuardManager_.receiveAuditInfo(jobId, printerInfo, *printJob, fileInfos);
+}
+
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
@@ -2199,10 +2422,23 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     printJob->SetJobState(state);
     printJob->SetSubState(subState);
 
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
+    if (printerInfo != nullptr) {
+        CalculateAndSendAuditInfo(jobId, printJob, *printerInfo);
+    }
+
     if (state == PRINT_JOB_BLOCKED) {
         HandleJobBlockedState(printJob, subState);
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            auto it = fileAuditCache_.find(jobId);
+            if (it != fileAuditCache_.end()) {
+                fileAuditCache_.erase(it);
+                PRINT_HILOGI("Clear file audit cache for COMPLETED jobId: %{public}s", jobId.c_str());
+            }
+        }
     }
 
     SendPrintJobEvent(*printJob);
@@ -2640,6 +2876,8 @@ int32_t PrintServiceAbility::Release()
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     UnregisterPrinterCallback(PRINTER_DISCOVER_EVENT_TYPE);
     UnregisterPrinterCallback(PRINTER_CHANGE_EVENT_TYPE);
+    fileListCache_.clear();
+    fileAuditCache_.clear();
     return E_PRINT_NONE;
 }
 
@@ -2939,10 +3177,14 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     // notify securityGuard
-    if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+    uint32_t jobState = jobInfo.GetJobState();
+    if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
             securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
+            if (jobState == PRINT_JOB_COMPLETED) {
+                ClearCachedFileList(jobId);
+            }
         } else {
             PRINT_HILOGD("receiveJobStateUpdate printer is empty");
         }
@@ -4398,6 +4640,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
         PRINT_HILOGW("Flush cache file failed");
     }
+    CacheFileAuditInfo(printJob->GetJobId(), printJob);
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }

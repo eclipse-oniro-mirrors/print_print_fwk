@@ -49,6 +49,8 @@ public:
     PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList);
     std::string ToJsonStr();
     void SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void SetPrintAuditInfo(const PrinterInfo &printerInfo, const PrintJob &printJob,
+        const std::vector<FileAuditInfo> &fileInfos);
 
 private:
     int32_t subType_{};
@@ -60,8 +62,11 @@ private:
     std::string targetInfo_{};
     std::string sourceInfo_{};
     std::string extra_{};
-    std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
+    std::vector<FileAuditInfo> files_;
+    uint32_t duplexMode_ = 0;
+    std::vector<std::string> errorCode_;
+    std::string printerName_;
 
     Json::Value ToJson();
 };
