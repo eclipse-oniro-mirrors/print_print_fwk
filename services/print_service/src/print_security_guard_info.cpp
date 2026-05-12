@@ -112,7 +112,9 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     Json::Value filesArray(Json::arrayValue);
     for (const auto &file : files_) {
         Json::Value fileObj;
-        fileObj["fileName"] = file.fileName;
+        std::string name = file.fileName;
+        size_t pos = name.rfind('/');
+        fileObj["fileName"] = (pos != std::string::npos) ? name.substr(pos + 1) : name;
         fileObj["md5"] = file.md5;
         fileObj["size"] = static_cast<Json::UInt64>(file.size);
         filesArray.append(fileObj);
