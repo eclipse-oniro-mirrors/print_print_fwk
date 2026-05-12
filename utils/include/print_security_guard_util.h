@@ -25,6 +25,10 @@
 #include "print_util.h"
 
 namespace OHOS::Print {
+
+constexpr int subStateCodeDigits = 2;
+constexpr int maxSingleSubStateCode = 99;
+
 enum PrinterFoundType {
     FROM_P2P = 0,
     FROM_EPRINT = 1,
