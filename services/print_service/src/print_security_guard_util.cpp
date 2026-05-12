@@ -81,14 +81,17 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
         }
     };
     
+    constexpr int SUB_STATE_CODE_DIGITS = 2;
+    constexpr int MAX_SINGLE_SUB_STATE_CODE = 99;
+
     for (uint32_t subState : blockedSubStates) {
-        if (subState > 99) {
+        if (subState > MAX_SINGLE_SUB_STATE_CODE) {
             std::string codeStr = std::to_string(subState);
-            if (codeStr.length() % 2 != 0) {
+            if (codeStr.length() % SUB_STATE_CODE_DIGITS != 0) {
                 codeStr = "0" + codeStr;
             }
-            for (size_t i = 0; i < codeStr.length(); i += 2) {
-                uint32_t singleState = std::stoul(codeStr.substr(i, 2));
+            for (size_t i = 0; i < codeStr.length(); i += SUB_STATE_CODE_DIGITS) {
+                uint32_t singleState = std::stoul(codeStr.substr(i, SUB_STATE_CODE_DIGITS));
                 addErrorCode(singleState);
             }
         } else {
