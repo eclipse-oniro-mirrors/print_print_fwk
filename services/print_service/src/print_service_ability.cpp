@@ -5500,7 +5500,6 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
             this->helper_->DisconnectAbility(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
-            return;
         }
         if (isMonitoring_.load()) {
             PRINT_HILOGW("The monitoring thread is running");
