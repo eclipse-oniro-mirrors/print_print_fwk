@@ -52,6 +52,7 @@ PrintJob::PrintJob(const PrintJob &right)
     option_ = right.option_;
     hasVendorOptions_ = right.hasVendorOptions_;
     vendorOptions_ = right.vendorOptions_;
+    blockedSubStates_ = right.blockedSubStates_;
 }
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
@@ -80,6 +81,7 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         option_ = right.option_;
         hasVendorOptions_ = right.hasVendorOptions_;
         vendorOptions_ = right.vendorOptions_;
+        blockedSubStates_ = right.blockedSubStates_;
     }
     return *this;
 }
