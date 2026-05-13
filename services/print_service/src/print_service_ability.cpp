@@ -1872,6 +1872,21 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
+
+    std::vector<std::string> fileList;
+    Json::Value optionJson;
+    if (PrintJsonUtil::Parse(nativePrintJob->GetOption(), optionJson)) {
+        if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
+            fileList.push_back(optionJson["jobName"].asString());
+        }
+    }
+    std::vector<uint32_t> fdList;
+    nativePrintJob->GetFdList(fdList);
+    PRINT_HILOGI("StartNativePrintJob jobName as fileName: %{public}s, fdCount: %{public}zu",
+        fileList.empty() ? "none" : fileList[0].c_str(), fdList.size());
+    CacheFileList(jobId, fileList);
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+
     return StartPrintJobInternal(nativePrintJob);
 }
 
