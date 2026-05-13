@@ -73,7 +73,8 @@
         "image_framework",
         "data_share",
         "enterprise_device_management",
-        "security_guard"
+        "security_guard",
+        "huks"
       ],
       "third_party": [
         "zlib"

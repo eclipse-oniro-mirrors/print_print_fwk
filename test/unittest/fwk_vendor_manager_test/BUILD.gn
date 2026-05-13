@@ -82,6 +82,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "googletest:gmock_main",
     "hilog:libhilog",
+    "huks:libhukssdk",
     "ipc:ipc_core",
     "napi:ace_napi",
     "os_account:os_account_innerkits",

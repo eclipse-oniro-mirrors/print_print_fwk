@@ -306,6 +306,52 @@ const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char* c
     return locattrCN->text;
 }
 
+ppd_cparam_t *FindCustomParam(ppd_coption_t *coption)
+{
+    if (coption == nullptr) {
+        PRINT_HILOGE("coption is null");
+        return nullptr;
+    }
+    ppd_cparam_t *cparam = nullptr;
+    for (cparam = (ppd_cparam_t *)cupsArrayFirst(coption->params);
+        cparam != nullptr; cparam = (ppd_cparam_t *)cupsArrayNext(coption->params)) {
+        PRINT_HILOGD("name=%{public}s order=%{public}d type=%{public}d minimum=%{public}d maximum=%{public}d",
+            cparam->name, cparam->order, cparam->type, cparam->minimum.custom_int, cparam->maximum.custom_int);
+        if (cparam->type == PPD_CUSTOM_PASSCODE || cparam->type == PPD_CUSTOM_PASSWORD ||
+            cparam->type == PPD_CUSTOM_STRING) {
+            break;
+        }
+    }
+    return cparam;
+}
+
+Json::Value FindCustomParamLimit(ppd_cparam_t *cparam)
+{
+    if (cparam == nullptr) {
+        PRINT_HILOGE("cparam is null");
+        return Json::Value(Json::objectValue);
+    }
+    Json::Value customParamLimitJs;
+    switch (cparam->type) {
+        case PPD_CUSTOM_PASSCODE:
+            customParamLimitJs["minimum"] = cparam->minimum.custom_passcode;
+            customParamLimitJs["maximum"] = cparam->maximum.custom_passcode;
+            break;
+        case PPD_CUSTOM_PASSWORD:
+            customParamLimitJs["minimum"] = cparam->minimum.custom_password;
+            customParamLimitJs["maximum"] = cparam->maximum.custom_password;
+            break;
+        case PPD_CUSTOM_STRING:
+            customParamLimitJs["minimum"] = cparam->minimum.custom_string;
+            customParamLimitJs["maximum"] = cparam->maximum.custom_string;
+            break;
+        default:
+            PRINT_HILOGW("Unsupported custom param type.");
+            break;
+    }
+    return customParamLimitJs;
+}
+
 void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json::Value& advanceOptJsSingle)
 {
     Json::Value advanceChoiceJs;
@@ -320,9 +366,12 @@ void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json:
             PRINT_HILOGE("PPD choice found error: %{public}s", opt->keyword);
             break;
         }
-        if (!strcmp(choices[k].choice, "Custom") && ppdFindCustomOption(ppd, opt->keyword)) {
-            PRINT_HILOGI("Ignore Custom PPD Choice: %{public}s", opt->keyword);
-            continue;
+        ppd_coption_t *coption = nullptr;
+        ppd_cparam_t *cparam = nullptr;
+        if (!strcmp(choices[k].choice, "Custom") && (coption = ppdFindCustomOption(ppd, opt->keyword)) &&
+            (cparam = FindCustomParam(coption))) {
+            advanceOptJsSingle["customParamType"] = cparam->type;
+            advanceOptJsSingle["customParamLimit"] = FindCustomParamLimit(cparam);
         }
         advanceChoiceJsDefaultLanguage[choices[k].choice] = choices[k].text;
         advanceChoiceJsCNLanguage[choices[k].choice] = GetCNFromPpdAttr(ppd, opt->keyword, choices[k].choice,

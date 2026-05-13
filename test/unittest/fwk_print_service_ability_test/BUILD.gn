@@ -25,6 +25,7 @@ module_output_path = unit_test_output_path
 ohos_unittest("fwk_print_service_ability_test") {
   module_out_path = module_output_path
   include_dirs = [
+    "mock",
     "../fwk_inner_napi_test/mock",
     "../service_test/mock",
     "${print_path}/frameworks/models/print_models/include",
@@ -46,6 +47,10 @@ ohos_unittest("fwk_print_service_ability_test") {
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_ability_test.cpp",
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_mock_permission.cpp",
   ]
+
+  if (!print_fwk_feature_device_isolation) {
+    sources += [ "${_test_path}/unittest/fwk_print_service_ability_test/mock/mock_hks_api.cpp" ]
+  }
 
   cflags_cc = []
   if (print_fwk_feature_enterprise) {
@@ -98,6 +103,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "googletest:gmock_main",
     "hilog:libhilog",
+    "huks:libhukssdk",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",

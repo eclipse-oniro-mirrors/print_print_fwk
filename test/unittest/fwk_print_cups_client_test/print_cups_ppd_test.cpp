@@ -361,5 +361,71 @@ HWTEST_F(PrintCupsPpdTest, ValidateVendorAbilityBundle_InvalidPpdFormat_ReturnsF
         "com.vendor.driver.VendorPrinterSettingsAbility", "no_underscore"));
 }
 
+HWTEST_F(PrintCupsPpdTest, FindCustomParam_NullCoption_ReturnsNullptr, TestSize.Level1)
+{
+    ppd_coption_t *coption = nullptr;
+    ppd_cparam_t *result = FindCustomParam(coption);
+    EXPECT_EQ(result, nullptr);
+}
+
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_NullCparam_ReturnsEmptyObject, TestSize.Level1)
+{
+    Json::Value result = FindCustomParamLimit(nullptr);
+    EXPECT_TRUE(result.isObject());
+    EXPECT_TRUE(result.empty());
+}
+
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_ValidParam_ReturnsCorrectJson, TestSize.Level1)
+{
+    ppd_cparam_t cparam;
+    cparam.type = PPD_CUSTOM_STRING;
+    cparam.minimum.custom_string = 1;
+    cparam.maximum.custom_string = 100;
+
+    Json::Value result = FindCustomParamLimit(&cparam);
+    EXPECT_TRUE(result.isObject());
+    EXPECT_EQ(result["minimum"].asInt(), 1);
+    EXPECT_EQ(result["maximum"].asInt(), 100);
+}
+
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_PasscodeType_ReturnsCorrectJson, TestSize.Level1)
+{
+    ppd_cparam_t cparam;
+    cparam.type = PPD_CUSTOM_PASSCODE;
+    cparam.minimum.custom_passcode = 4;
+    cparam.maximum.custom_passcode = 8;
+
+    Json::Value result = FindCustomParamLimit(&cparam);
+    EXPECT_TRUE(result.isObject());
+    EXPECT_EQ(result["minimum"].asInt(), 4);
+    EXPECT_EQ(result["maximum"].asInt(), 8);
+}
+
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_PasswordType_ReturnsCorrectJson, TestSize.Level1)
+{
+    ppd_cparam_t cparam;
+    cparam.type = PPD_CUSTOM_PASSWORD;
+    cparam.minimum.custom_password = 6;
+    cparam.maximum.custom_password = 20;
+
+    Json::Value result = FindCustomParamLimit(&cparam);
+    EXPECT_TRUE(result.isObject());
+    EXPECT_EQ(result["minimum"].asInt(), 6);
+    EXPECT_EQ(result["maximum"].asInt(), 20);
+}
+
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_DefaultType_ReturnsZeroValues, TestSize.Level1)
+{
+    ppd_cparam_t cparam;
+    cparam.type = PPD_CUSTOM_INT;
+    cparam.minimum.custom_int = 0;
+    cparam.maximum.custom_int = 0;
+
+    Json::Value result = FindCustomParamLimit(&cparam);
+    EXPECT_FALSE(result.isObject());
+    EXPECT_EQ(result["minimum"].asInt(), 0);
+    EXPECT_EQ(result["maximum"].asInt(), 0);
+}
+
 }  // namespace Print
 }  // namespace OHOS

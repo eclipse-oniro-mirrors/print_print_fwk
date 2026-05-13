@@ -84,6 +84,7 @@ ohos_fuzztest("PrintServiceUpdatePrinterFunctionFuzzTest") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "huks:libhukssdk",
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",

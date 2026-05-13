@@ -33,6 +33,8 @@ std::string ExtractBundleNameFromAbilityName(const std::string &abilityName);
 bool ValidateVendorAbilityBundle(const std::string &abilityName, const std::string &ppdName);
 void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::string &ppdName);
 void ParseVendorAbilityFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
+Json::Value FindCustomParamLimit(ppd_cparam_t *cparam);
+ppd_cparam_t *FindCustomParam(ppd_coption_t *coption);
 
 const int ADVANCE_OPTION_MAXLENGTH = 100;
 }
