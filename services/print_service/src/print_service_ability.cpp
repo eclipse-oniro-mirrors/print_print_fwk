@@ -566,11 +566,13 @@ int32_t PrintServiceAbility::StartPrint(
 
 void PrintServiceAbility::CacheFileList(const std::string &jobId, const std::vector<std::string> &fileList)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     fileListCache_[jobId] = fileList;
 }
 
 std::vector<std::string> PrintServiceAbility::GetCachedFileList(const std::string &jobId)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto it = fileListCache_.find(jobId);
     if (it != fileListCache_.end()) {
         return it->second;
@@ -580,6 +582,7 @@ std::vector<std::string> PrintServiceAbility::GetCachedFileList(const std::strin
 
 void PrintServiceAbility::ClearCachedFileList(const std::string &jobId)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     fileListCache_.erase(jobId);
 }
 
@@ -593,8 +596,9 @@ std::string PrintServiceAbility::Md5HashBuffer(const char* data, size_t size)
     }
     unsigned char hash[16];
     ssize_t result = cupsHashData("md5", data, size, hash, sizeof(hash));
-    if (result <= 0) {
-        PRINT_HILOGE("Md5HashBuffer cupsHashData failed, result: %{public}zd", result);
+    if (result != sizeof(hash)) {
+        PRINT_HILOGE("Md5HashBuffer cupsHashData failed, result: %{public}zd, expected: %{public}zu",
+            result, sizeof(hash));
         return "";
     }
     std::stringstream ss;
