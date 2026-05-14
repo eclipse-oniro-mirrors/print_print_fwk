@@ -684,17 +684,16 @@ uint64_t PrintServiceAbility::GetFileSize(uint32_t fd)
 
 void PrintServiceAbility::CacheFileAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
 {
-    PRINT_HILOGI("CacheFileAuditInfo start, jobId: %{public}s", jobId.c_str());
     std::vector<std::string> fileList = GetCachedFileList(jobId);
-    PRINT_HILOGI("CacheFileAuditInfo fileList size: %{public}zu", fileList.size());
     if (fileList.empty()) {
         PRINT_HILOGW("CacheFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
         return;
     }
     std::vector<uint32_t> fdList;
     printJob->GetFdList(fdList);
-    PRINT_HILOGI("CacheFileAuditInfo fdList size: %{public}zu", fdList.size());
     size_t fileCount = std::min(fileList.size(), fdList.size());
+    PRINT_HILOGI("CacheFileAuditInfo jobId: %{public}s, fileList: %{public}zu, fdList: %{public}zu",
+        jobId.c_str(), fileList.size(), fdList.size());
     std::vector<FileAuditInfo> fileInfos;
     for (size_t i = 0; i < fileCount; i++) {
         FileAuditInfo info;
@@ -744,7 +743,7 @@ int32_t PrintServiceAbility::CallSpooler(
     AddToPrintJobList(taskId, printJob);
     SendPrintJobEvent(*printJob);
     CacheFileList(taskId, fileList);
-    securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
+    securityGuardManager_.ReceiveBaseInfo(taskId, callerPkg, fileList);
     PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
 }
@@ -2645,28 +2644,21 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
 void PrintServiceAbility::CalculateAndSendAuditInfo(const std::string &jobId,
     const std::shared_ptr<PrintJob> &printJob, const PrinterInfo &printerInfo)
 {
-    PRINT_HILOGI("CalculateAndSendAuditInfo start, jobId: %{public}s", jobId.c_str());
     std::vector<FileAuditInfo> fileInfos;
     {
         std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         auto it = fileAuditCache_.find(jobId);
         if (it != fileAuditCache_.end()) {
             fileInfos = it->second;
-            PRINT_HILOGI("Using cached file audit info for jobId: %{public}s, count: %{public}zu",
-                jobId.c_str(), fileInfos.size());
-        } else {
-            PRINT_HILOGW("Cache miss for jobId: %{public}s, cache size: %{public}zu",
-                jobId.c_str(), fileAuditCache_.size());
         }
     }
     if (fileInfos.empty()) {
-        PRINT_HILOGW("Fallback to real-time calculation for jobId: %{public}s", jobId.c_str());
         std::vector<std::string> fileList = GetCachedFileList(jobId);
         std::vector<uint32_t> fdList;
         printJob->GetFdList(fdList);
         size_t fileCount = std::min(fileList.size(), fdList.size());
-        PRINT_HILOGW("Fallback fileList size: %{public}zu, fdList size: %{public}zu",
-            fileList.size(), fdList.size());
+        PRINT_HILOGW("Fallback for jobId: %{public}s, fileList: %{public}zu, fdList: %{public}zu",
+            jobId.c_str(), fileList.size(), fdList.size());
         for (size_t i = 0; i < fileCount; i++) {
             FileAuditInfo info;
             info.fileName = fileList[i];
@@ -2674,8 +2666,11 @@ void PrintServiceAbility::CalculateAndSendAuditInfo(const std::string &jobId,
             info.size = GetFileSize(fdList[i]);
             fileInfos.push_back(info);
         }
+    } else {
+        PRINT_HILOGI("Using cached audit info for jobId: %{public}s, count: %{public}zu",
+            jobId.c_str(), fileInfos.size());
     }
-    securityGuardManager_.receiveAuditInfo(jobId, printerInfo, *printJob, fileInfos);
+    securityGuardManager_.ReceiveAuditInfo(jobId, printerInfo, *printJob, fileInfos);
 }
 
 void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
@@ -3475,7 +3470,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
-            securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
+            securityGuardManager_.ReceiveJobStateUpdate(jobId, *printerInfo, jobInfo);
             if (jobState == PRINT_JOB_COMPLETED) {
                 ClearCachedFileList(jobId);
             }

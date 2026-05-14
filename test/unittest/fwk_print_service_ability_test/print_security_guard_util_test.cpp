@@ -104,5 +104,14 @@ HWTEST_F(PrintSecurityGuardUtilTest, GenerateErrorCodes_005, TestSize.Level1)
     EXPECT_EQ(result[0], "out_of_paper");
 }
 
+HWTEST_F(PrintSecurityGuardUtilTest, ExtractFileName_001, TestSize.Level1)
+{
+    EXPECT_EQ(PrintSecurityGuardUtil::ExtractFileName("/data/test/file.pdf"), "file.pdf");
+    EXPECT_EQ(PrintSecurityGuardUtil::ExtractFileName("file.pdf"), "file.pdf");
+    EXPECT_EQ(PrintSecurityGuardUtil::ExtractFileName("/file.pdf"), "file.pdf");
+    EXPECT_EQ(PrintSecurityGuardUtil::ExtractFileName(""), "");
+    EXPECT_EQ(PrintSecurityGuardUtil::ExtractFileName("/a/b/c/d.doc"), "d.doc");
+}
+
 } // namespace Print
 } // namespace OHOS

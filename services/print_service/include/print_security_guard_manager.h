@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define BASE_PRINT_SECURITY_GUARD_H
 
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include "print_security_guard_info.h"
@@ -25,17 +26,18 @@ namespace OHOS::Print {
 class PrintSecurityGuardManager {
 
 public:
-    void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
+    void ReceiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
-    void receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
-    void receiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
+    void ReceiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void ReceiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
         const PrintJob &printJob, const std::vector<FileAuditInfo> &fileInfos);
 
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);
-    void clearSecurityMap(const std::string jobId);
+    void ClearSecurityMap(const std::string jobId);
 
 private:
+    std::mutex securityMapMutex_;
     std::map<std::string, std::shared_ptr<PrintSecurityGuardInfo>> securityMap_;
 };
 } // namespace OHOS::Print

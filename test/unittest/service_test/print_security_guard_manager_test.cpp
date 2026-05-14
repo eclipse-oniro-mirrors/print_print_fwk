@@ -49,9 +49,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001_NeedR
     PrinterInfo printerInfo;
     PrintJob printJob;
     int num = printSerPrintSecurityGuardManager.securityMap_.size();
-    printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    printSerPrintSecurityGuardManager.ReceiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
-    printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-2", printerInfo, printJob);
+    printSerPrintSecurityGuardManager.ReceiveJobStateUpdate("jobId-2", printerInfo, printJob);
 }
 
 /**
@@ -67,9 +67,50 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002_NeedR
     PrinterInfo printerInfo;
     PrintJob printJob;
     int num = printSerPrintSecurityGuardManager.securityMap_.size();
-    printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    printSerPrintSecurityGuardManager.ReceiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
-    printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
+    printSerPrintSecurityGuardManager.ReceiveJobStateUpdate("jobId-1", printerInfo, printJob);
+}
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_0003
+ * @tc.desc: ReceiveAuditInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0003, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    std::vector<std::string> fileList;
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+    std::vector<FileAuditInfo> fileInfos;
+    FileAuditInfo info;
+    info.fileName = "test.pdf";
+    info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
+    info.size = 1024;
+    fileInfos.push_back(info);
+    manager.ReceiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    int num = manager.securityMap_.size();
+    manager.ReceiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
+    EXPECT_EQ(manager.securityMap_.size(), num);
+}
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_0004
+ * @tc.desc: ReceiveAuditInfo not found in map
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0004, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+    std::vector<FileAuditInfo> fileInfos;
+    int num = manager.securityMap_.size();
+    manager.ReceiveAuditInfo("jobId-notexist", printerInfo, printJob, fileInfos);
+    EXPECT_EQ(manager.securityMap_.size(), num + 1);
 }
 }  // namespace Print
 }  // namespace OHOS

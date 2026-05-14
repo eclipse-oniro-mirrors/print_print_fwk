@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,9 @@ namespace OHOS::Print {
 constexpr int subStateCodeDigits = 2;
 constexpr int maxSingleSubStateCode = 99;
 
+constexpr const char* ERROR_CODE_UNKNOWN = "unknown";
+constexpr const char* ERROR_CODE_OTHER_ERROR = "other_error";
+
 enum PrinterFoundType {
     FROM_P2P = 0,
     FROM_EPRINT = 1,
@@ -45,6 +48,7 @@ struct FileAuditInfo {
 class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);
+    static std::string ExtractFileName(const std::string& filePath);
 };
 
 std::string SubStateToErrorCodeStr(uint32_t subState);
@@ -65,6 +69,12 @@ inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
         }
     }
     return FROM_LOCAL_NET;
+}
+
+inline std::string PrintSecurityGuardUtil::ExtractFileName(const std::string& filePath)
+{
+    size_t pos = filePath.rfind('/');
+    return (pos != std::string::npos) ? filePath.substr(pos + 1) : filePath;
 }
 } // namespace OHOS::Print
 

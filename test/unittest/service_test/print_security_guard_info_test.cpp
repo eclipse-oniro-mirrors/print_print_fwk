@@ -110,5 +110,24 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006_NeedRename,
     printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0007, TestSize.Level1)
+{
+    std::vector<std::string> fileList;
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("TestPrinter");
+    PrintJob printJob;
+    std::vector<FileAuditInfo> fileInfos;
+    FileAuditInfo info;
+    info.fileName = "/data/test/file.pdf";
+    info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
+    info.size = 1024;
+    fileInfos.push_back(info);
+    printSecurityGuardInfo.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    std::string jsonStr = printSecurityGuardInfo.ToJsonStr();
+    EXPECT_NE("", jsonStr);
+    EXPECT_TRUE(jsonStr.find("file.pdf") != std::string::npos);
+}
 }  // namespace Print
 }  // namespace OHOS

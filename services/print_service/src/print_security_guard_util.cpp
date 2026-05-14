@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,7 +56,7 @@ static const std::map<uint32_t, std::string> SUBSTATE_ERROR_MAP = {
     {PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED, "security_policy_restricted"},
     {PRINT_JOB_BLOCKED_INVALID_NUMBER_UP, "invalid_number_up"},
     {PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE, "printer_unavailable"},
-    {PRINT_JOB_BLOCKED_UNKNOWN, "unknown"}
+    {PRINT_JOB_BLOCKED_UNKNOWN, ERROR_CODE_UNKNOWN}
 };
 
 std::string SubStateToErrorCodeStr(uint32_t subState)
@@ -65,7 +65,7 @@ std::string SubStateToErrorCodeStr(uint32_t subState)
     if (it != SUBSTATE_ERROR_MAP.end()) {
         return it->second;
     }
-    return "other_error";
+    return ERROR_CODE_OTHER_ERROR;
 }
 
 std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates)
@@ -74,8 +74,8 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
     
     auto addErrorCode = [&errorSet](uint32_t subState) {
         std::string code = SubStateToErrorCodeStr(subState);
-        if (code == "unknown" || code == "other_error") {
-            errorSet.insert("unknown");
+        if (code == ERROR_CODE_UNKNOWN || code == ERROR_CODE_OTHER_ERROR) {
+            errorSet.insert(ERROR_CODE_UNKNOWN);
         } else {
             errorSet.insert(code);
         }

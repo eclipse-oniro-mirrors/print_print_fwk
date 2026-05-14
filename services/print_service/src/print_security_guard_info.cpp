@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -118,9 +118,7 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     Json::Value filesArray(Json::arrayValue);
     for (const auto &file : files_) {
         Json::Value fileObj;
-        std::string name = file.fileName;
-        size_t pos = name.rfind('/');
-        fileObj["fileName"] = (pos != std::string::npos) ? name.substr(pos + 1) : name;
+        fileObj["fileName"] = PrintSecurityGuardUtil::ExtractFileName(file.fileName);
         fileObj["md5"] = file.md5;
         fileObj["size"] = static_cast<Json::UInt64>(file.size);
         filesArray.append(fileObj);
