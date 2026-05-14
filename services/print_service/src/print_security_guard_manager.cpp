@@ -49,6 +49,23 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
     clearSecurityMap(jobId);
 }
 
+void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
+    const PrinterInfo &printerInfo, const PrintJob &printJob,
+    const std::vector<FileAuditInfo> &fileInfos)
+{
+    PRINT_HILOGI("receiveAuditInfo jobId:%{public}s, fileCount:%{public}zu",
+        jobId.c_str(), fileInfos.size());
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        it->second->SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    } else {
+        std::vector<std::string> fileList;
+        auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", fileList);
+        securityGuard->SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+        securityMap_.insert(std::make_pair(jobId, securityGuard));
+    }
+}
+
 void PrintSecurityGuardManager::clearSecurityMap(const std::string jobId)
 {
     securityMap_.erase(jobId);

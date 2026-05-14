@@ -115,6 +115,16 @@ void PrintJob::SetSubState(uint32_t subState)
     subState_ = subState;
 }
 
+void PrintJob::AddBlockedSubState(uint32_t subState)
+{
+    blockedSubStates_.insert(subState);
+}
+
+const std::set<uint32_t>& PrintJob::GetBlockedSubStates() const
+{
+    return blockedSubStates_;
+}
+
 void PrintJob::SetCopyNumber(uint32_t copyNumber)
 {
     copyNumber_ = copyNumber;

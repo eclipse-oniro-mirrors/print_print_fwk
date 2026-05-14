@@ -24,15 +24,6 @@ PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const 
 {
     caller_ = callPkg;
     objectInfo_ = PrintUtil::ParseListToString(fileList);
-#ifdef SECURITY_GUARDE_ENABLE
-    OHOS::MiscServices::TimeServiceClient *tsc = OHOS::MiscServices::TimeServiceClient::GetInstance();
-    if (tsc != nullptr) {
-        wallTime_ = std::to_string(tsc->GetWallTimeNs());
-        bootTime_ = std::to_string(tsc->GetBootTimeNs());
-        PRINT_HILOGI("PrintSecurityGuardInfo wallTime_:%{public}s bootTime_:%{public}s", wallTime_.c_str(),
-            bootTime_.c_str());
-    }
-#endif
 }
 
 void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
@@ -61,10 +52,6 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
             printJob.GetFdList(fdList);
             printTypeInfo_.printPages = (int32_t)fdList.size();
         }
-
-        if (PrintJsonUtil::IsMember(jobOptionJson, "jobName") && jobOptionJson["jobName"].isString()) {
-            jobName_ = jobOptionJson["jobName"].asString();
-        }
     }
     uint32_t subState = printJob.GetSubState();
     switch (subState) {
@@ -81,6 +68,16 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
             PRINT_HILOGD("PrintSecurityGuardInfo SetPrintTypeInfo unknown subState:%{public}u", subState);
             break;
     }
+}
+
+void PrintSecurityGuardInfo::SetPrintAuditInfo(
+    const PrinterInfo &printerInfo, const PrintJob &printJob,
+    const std::vector<FileAuditInfo> &fileInfos)
+{
+    files_ = fileInfos;
+    duplexMode_ = printJob.GetDuplexMode();
+    errorCode_ = GenerateErrorCodes(printJob.GetBlockedSubStates());
+    printerName_ = printerInfo.GetPrinterName();
 }
 
 Json::Value PrintSecurityGuardInfo::ToJson()
@@ -100,13 +97,37 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     securityGuardInfoJson["subType"] = subType_;
     securityGuardInfoJson["caller"] = caller_;
     securityGuardInfoJson["objectInfo"] = objectInfo_;
-    securityGuardInfoJson["bootTime"] = bootTime_;
-    securityGuardInfoJson["wallTime"] = wallTime_;
+#ifdef SECURITY_GUARDE_ENABLE
+    OHOS::MiscServices::TimeServiceClient *tsc = OHOS::MiscServices::TimeServiceClient::GetInstance();
+    if (tsc != nullptr) {
+        securityGuardInfoJson["bootTime"] = std::to_string(tsc->GetBootTimeNs());
+        securityGuardInfoJson["wallTime"] = std::to_string(tsc->GetWallTimeNs());
+    }
+#endif
     securityGuardInfoJson["outcome"] = outcome_;
     securityGuardInfoJson["sourceInfo"] = sourceInfo_;
     securityGuardInfoJson["targetInfo"] = targetInfo_;
     securityGuardInfoJson["extra"] = extra_;
-    securityGuardInfoJson["jobName"] = jobName_;
+
+    Json::Value filesArray(Json::arrayValue);
+    for (const auto &file : files_) {
+        Json::Value fileObj;
+        std::string name = file.fileName;
+        size_t pos = name.rfind('/');
+        fileObj["fileName"] = (pos != std::string::npos) ? name.substr(pos + 1) : name;
+        fileObj["md5"] = file.md5;
+        fileObj["size"] = static_cast<Json::UInt64>(file.size);
+        filesArray.append(fileObj);
+    }
+    securityGuardInfoJson["files"] = filesArray;
+    securityGuardInfoJson["duplexMode"] = duplexMode_;
+    Json::Value errorCodeArray(Json::arrayValue);
+    for (const auto &code : errorCode_) {
+        errorCodeArray.append(code);
+    }
+    securityGuardInfoJson["errorCode"] = errorCodeArray;
+    securityGuardInfoJson["printerName"] = printerName_;
+
     return securityGuardInfoJson;
 }
 
@@ -116,4 +137,3 @@ std::string PrintSecurityGuardInfo::ToJsonStr()
     return PrintJsonUtil::WriteString(jsonObject);
 }
 } // namespace OHOS::Print
-
