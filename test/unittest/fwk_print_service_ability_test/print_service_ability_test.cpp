@@ -5804,7 +5804,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninst
     printerId = PrintUtils::GetGlobalId(WEBPRINTER_BUNDLE_NAME, printerId);
     EXPECT_NE(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
     info.SetPrinterId(printerId);
-    service->HandleWebPrinterUninstall(info);
+    service->HandleWebPrinterUninstall();
     EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
 }
 
