@@ -746,12 +746,14 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
 {
     PRINT_HILOGI("DelayStartDiscovery start, extensionId: %{public}s", extensionId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
+    int32_t userId = GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    if (extensionStateList_.find(stateKey) == extensionStateList_.end()) {
         PRINT_HILOGE("invalid extension id");
         return false;
     }
 
-    if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADED) {
+    if (extensionStateList_[stateKey] != PRINT_EXTENSION_LOADED) {
         PRINT_HILOGE("invalid extension state");
         return false;
     }
@@ -759,7 +761,7 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CallbackEventType::EXTCB_START_DISCOVERY;
     cbInfo.extensionId = extensionId;
-    cbInfo.userId = GetCurrentUserId();
+    cbInfo.userId = userId;
     if (DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo)) {
         ret = E_PRINT_NONE;
     }
@@ -823,7 +825,7 @@ int32_t PrintServiceAbility::DestroyExtension()
         extension.second = PRINT_EXTENSION_UNLOAD;
         CallbackInfo cbInfo;
         cbInfo.cbEventType = CallbackEventType::EXTCB_DESTROY_EXTENSION;
-        cbInfo.extensionId = extension.first;
+        cbInfo.extensionId = PrintUtils::GetBundleNameFromKey(extension.first);
         DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     }
 
@@ -905,8 +907,10 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
         PrintExtensionInfo printExtInfo = ConvertToPrintExtensionInfo(extInfo);
         extensionInfos.emplace_back(printExtInfo);
         extensionList_.insert(std::make_pair(printExtInfo.GetExtensionId(), extInfo));
-        if (extensionStateList_.find(printExtInfo.GetExtensionId()) == extensionStateList_.end()) {
-            extensionStateList_.insert(std::make_pair(printExtInfo.GetExtensionId(), PRINT_EXTENSION_UNLOAD));
+        int32_t userId = GetCurrentUserId();
+        std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, printExtInfo.GetExtensionId());
+        if (extensionStateList_.find(stateKey) == extensionStateList_.end()) {
+            extensionStateList_.insert(std::make_pair(stateKey, PRINT_EXTENSION_UNLOAD));
         }
     }
     PRINT_HILOGI("QueryAllExtension end.");
@@ -2836,7 +2840,7 @@ void PrintServiceAbility::StopDiscoveryInternal()
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
         }
-        cbInfo.extensionId = extension.first;
+        cbInfo.extensionId = PrintUtils::GetBundleNameFromKey(extension.first);
 
         auto callback = [cbInfo]() { DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo); };
         if (helper_ != nullptr && helper_->IsSyncMode()) {
@@ -2999,7 +3003,9 @@ int32_t PrintServiceAbility::RegisterExtCallback(
     PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto extensionStateIt = extensionStateList_.find(extensionId);
+    int32_t userId = GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    auto extensionStateIt = extensionStateList_.find(stateKey);
     if (extensionStateIt == extensionStateList_.end()) {
         PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
@@ -3034,7 +3040,9 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
     }
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto it = extensionStateList_.find(extensionId);
+    int32_t userId = GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    auto it = extensionStateList_.find(stateKey);
     if (it == extensionStateList_.end()) {
         PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
@@ -3562,14 +3570,16 @@ bool PrintServiceAbility::StartExtensionAbility(const AAFwk::Want &want)
     }
     AppExecFwk::ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
+    int32_t userId = GetCurrentUserId();
     PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
-    return helper_->StartExtensionAbility(want, [=]() { ResetExtensionState(bundleName); });
+    return helper_->StartExtensionAbility(want, [=]() { ResetExtensionState(userId, bundleName); });
 }
 
-void PrintServiceAbility::ResetExtensionState(const std::string& bundleName)
+void PrintServiceAbility::ResetExtensionState(int32_t userId, const std::string& bundleName)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    extensionStateList_[bundleName] = PRINT_EXTENSION_UNLOAD;
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, bundleName);
+    extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
 }
 
 bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
@@ -4653,6 +4663,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     if (!CheckStartExtensionPermission()) {
         return E_PRINT_NONE;
     }
+    int32_t userId = GetCurrentUserId();
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto const &extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {
@@ -4674,7 +4685,8 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     }
     for (auto ability : abilityList) {
         std::string extId = ability.second.bundleName;
-        auto extState = extensionStateList_.find(extId);
+        std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extId);
+        auto extState = extensionStateList_.find(stateKey);
         if (extState != extensionStateList_.end() && extState->second == PRINT_EXTENSION_LOADED) {
             PostDiscoveryTask(extId);
             continue;
@@ -4685,7 +4697,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
             PRINT_HILOGE("Failed to load extension %{public}s", ability.second.name.c_str());
             continue;
         }
-        extensionStateList_[ability.second.bundleName] = PRINT_EXTENSION_LOADING;
+        extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     }
     PRINT_HILOGI("StartDiscoverPrinter end.");
     return E_PRINT_NONE;
