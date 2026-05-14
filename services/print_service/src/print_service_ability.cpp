@@ -646,6 +646,9 @@ std::string PrintServiceAbility::CalculateFileMd5(uint32_t fd)
         }
         totalRead += static_cast<size_t>(bytesRead);
     }
+    if (lseek(dupFd, 0, SEEK_SET) != 0) {
+        PRINT_HILOGW("CalculateFileMd5 lseek back to begin failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+    }
     close(dupFd);
     if (totalRead != static_cast<size_t>(fileSize)) {
         PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, read: %{public}zu, expect: %{public}ld",
@@ -668,6 +671,9 @@ uint64_t PrintServiceAbility::GetFileSize(uint32_t fd)
         return 0;
     }
     off_t fileSize = lseek(dupFd, 0, SEEK_END);
+    if (lseek(dupFd, 0, SEEK_SET) != 0) {
+        PRINT_HILOGW("GetFileSize lseek back to begin failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
+    }
     close(dupFd);
     if (fileSize == static_cast<off_t>(-1)) {
         PRINT_HILOGE("GetFileSize lseek to end failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
