@@ -209,6 +209,9 @@ private:
     uint64_t GetFileSize(uint32_t fd);
     void CalculateAndSendAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
         const PrinterInfo &printerInfo);
+    std::string Md5HashBuffer(const char* data, size_t size);
+    void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+    void ClearFileAuditCache(const std::string &jobId);
 
 private:
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);

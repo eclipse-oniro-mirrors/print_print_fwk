@@ -584,6 +584,25 @@ void PrintServiceAbility::ClearCachedFileList(const std::string &jobId)
 
 static constexpr int32_t HEX_STRING_WIDTH = 2;
 
+std::string PrintServiceAbility::Md5HashBuffer(const char* data, size_t size)
+{
+    if (data == nullptr || size == 0) {
+        PRINT_HILOGE("Md5HashBuffer invalid input");
+        return "";
+    }
+    unsigned char hash[16];
+    ssize_t result = cupsHashData("md5", data, size, hash, sizeof(hash));
+    if (result <= 0) {
+        PRINT_HILOGE("Md5HashBuffer cupsHashData failed, result: %{public}zd", result);
+        return "";
+    }
+    std::stringstream ss;
+    for (ssize_t i = 0; i < result; i++) {
+        ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
+    }
+    return ss.str();
+}
+
 std::string PrintServiceAbility::CalculateFileMd5ByPath(const std::string &filePath)
 {
     if (filePath.empty()) {
@@ -628,18 +647,7 @@ std::string PrintServiceAbility::CalculateFileMd5ByPath(const std::string &fileP
             filePath.c_str(), totalRead, fileSize);
         return "";
     }
-    unsigned char hash[16];
-    ssize_t result = cupsHashData("md5", buffer.data(), fileSize, hash, sizeof(hash));
-    if (result <= 0) {
-        PRINT_HILOGE("CalculateFileMd5ByPath cupsHashData failed, path: %{public}s, result: %{public}zd",
-            filePath.c_str(), result);
-        return "";
-    }
-    std::stringstream ss;
-    for (ssize_t i = 0; i < result; i++) {
-        ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
-    }
-    return ss.str();
+    return Md5HashBuffer(buffer.data(), fileSize);
 }
 
 uint64_t PrintServiceAbility::GetFileSizeByPath(const std::string &filePath)
@@ -701,18 +709,7 @@ std::string PrintServiceAbility::CalculateFileMd5(uint32_t fd)
             fdInt, totalRead, fileSize);
         return "";
     }
-    unsigned char hash[16];
-    ssize_t result = cupsHashData("md5", buffer.data(), fileSize, hash, sizeof(hash));
-    if (result <= 0) {
-        PRINT_HILOGE("CalculateFileMd5 cupsHashData failed, fd: %{public}d, result: %{public}zd",
-            fdInt, result);
-        return "";
-    }
-    std::stringstream ss;
-    for (ssize_t i = 0; i < result; i++) {
-        ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
-    }
-    return ss.str();
+    return Md5HashBuffer(buffer.data(), static_cast<size_t>(fileSize));
 }
 
 uint64_t PrintServiceAbility::GetFileSize(uint32_t fd)
@@ -2418,6 +2415,24 @@ void PrintServiceAbility::CalculateAndSendAuditInfo(const std::string &jobId,
     securityGuardManager_.receiveAuditInfo(jobId, printerInfo, *printJob, fileInfos);
 }
 
+void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+{
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
+    if (printerInfo != nullptr) {
+        CalculateAndSendAuditInfo(jobId, printJob, *printerInfo);
+    }
+}
+
+void PrintServiceAbility::ClearFileAuditCache(const std::string &jobId)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto it = fileAuditCache_.find(jobId);
+    if (it != fileAuditCache_.end()) {
+        fileAuditCache_.erase(it);
+        PRINT_HILOGI("Clear file audit cache for COMPLETED jobId: %{public}s", jobId.c_str());
+    }
+}
+
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
@@ -2447,23 +2462,13 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     printJob->SetJobState(state);
     printJob->SetSubState(subState);
 
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
-    if (printerInfo != nullptr) {
-        CalculateAndSendAuditInfo(jobId, printJob, *printerInfo);
-    }
+    SendJobAuditInfo(jobId, printJob);
 
     if (state == PRINT_JOB_BLOCKED) {
         HandleJobBlockedState(printJob, subState);
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
-        {
-            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-            auto it = fileAuditCache_.find(jobId);
-            if (it != fileAuditCache_.end()) {
-                fileAuditCache_.erase(it);
-                PRINT_HILOGI("Clear file audit cache for COMPLETED jobId: %{public}s", jobId.c_str());
-            }
-        }
+        ClearFileAuditCache(jobId);
     }
 
     SendPrintJobEvent(*printJob);

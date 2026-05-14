@@ -5800,8 +5800,5 @@ HWTEST_F(PrintServiceAbilityTest, GetFileSize_001, TestSize.Level1)
     uint64_t size = service->GetFileSize(-1);
     EXPECT_EQ(size, 0);
 }
-    service->HandleWebPrinterUninstall();
-    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
-}
 }  // namespace Print
 }  // namespace OHOS
