@@ -3647,7 +3647,6 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for started", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
         ClearCachedFileList(jobId);
-        ClearFileAuditCache(jobId);
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
@@ -3656,7 +3655,6 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for canceled", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
         ClearCachedFileList(jobId);
-        ClearFileAuditCache(jobId);
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
