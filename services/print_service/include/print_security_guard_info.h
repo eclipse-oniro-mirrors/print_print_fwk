@@ -62,6 +62,7 @@ private:
     std::string targetInfo_{};
     std::string sourceInfo_{};
     std::string extra_{};
+    std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
     std::vector<FileAuditInfo> files_;
     uint32_t duplexMode_ = 0;
