@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef KIA_INTERCEPTOR_ENABLE
-
 #include "../include/kia_interceptor_manager.h"
 #include "print_log.h"
 #include "print_constant.h"
@@ -55,7 +53,7 @@ int32_t KiaInterceptorManager::RegisterCallback(const sptr<IKiaInterceptorCallba
     }
 
     callback_ = callback;
-    
+
     auto remoteObject = callback_->AsObject();
     if (remoteObject != nullptr) {
         deathRecipient_ = sptr<IRemoteObject::DeathRecipient>(
@@ -65,7 +63,7 @@ int32_t KiaInterceptorManager::RegisterCallback(const sptr<IKiaInterceptorCallba
             }));
         remoteObject->AddDeathRecipient(deathRecipient_);
     }
-    
+
     PRINT_HILOGI("RegisterCallback success");
     return E_PRINT_NONE;
 }
@@ -73,7 +71,7 @@ int32_t KiaInterceptorManager::RegisterCallback(const sptr<IKiaInterceptorCallba
 int32_t KiaInterceptorManager::UnregisterCallback()
 {
     PRINT_HILOGI("KiaInterceptorManager::UnregisterCallback start");
-    
+
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     PRINT_HILOGD("UnregisterCallback from PID: %{public}d", callerPid);
 
@@ -91,7 +89,7 @@ int32_t KiaInterceptorManager::UnregisterCallback()
 
     callback_ = nullptr;
     deathRecipient_ = nullptr;
-    
+
     PRINT_HILOGI("UnregisterCallback success");
     return E_PRINT_NONE;
 }
@@ -149,5 +147,3 @@ std::string KiaInterceptorManager::GetCallerAppId(const std::string &jobId)
 }
 
 } // namespace OHOS::Print
-
-#endif // KIA_INTERCEPTOR_ENABLE
