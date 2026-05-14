@@ -1424,9 +1424,18 @@ int32_t PrintServiceAbility::EncryptCustomOptionValue(struct HksBlob &plainBlob,
         return ret;
     }
 
-    ret = HksGenerateKey(&keyAlias, genParamSet, nullptr);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksGenerateKey failed, ret: %{public}d", ret);
+    ret = HksKeyExist(&keyAlias, genParamSet);
+    if (ret == HKS_SUCCESS) {
+        PRINT_HILOGI("key already exists, skip generate");
+    } else if (ret == HKS_ERROR_NOT_EXIST) {
+        ret = HksGenerateKey(&keyAlias, genParamSet, nullptr);
+        if (ret != HKS_SUCCESS) {
+            PRINT_HILOGE("HksGenerateKey failed, ret: %{public}d", ret);
+            HksFreeParamSet(&genParamSet);
+            return ret;
+        }
+    } else {
+        PRINT_HILOGE("HksKeyExist failed, ret: %{public}d", ret);
         HksFreeParamSet(&genParamSet);
         return ret;
     }
