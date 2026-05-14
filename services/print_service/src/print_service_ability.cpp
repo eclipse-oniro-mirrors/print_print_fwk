@@ -46,7 +46,6 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "print_security_guard_manager.h"
-#include <sys/stat.h>
 #include <sstream>
 #include <iomanip>
 #include "hisys_event_util.h"
@@ -603,68 +602,6 @@ std::string PrintServiceAbility::Md5HashBuffer(const char* data, size_t size)
         ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
     }
     return ss.str();
-}
-
-std::string PrintServiceAbility::CalculateFileMd5ByPath(const std::string &filePath)
-{
-    if (filePath.empty()) {
-        PRINT_HILOGE("CalculateFileMd5ByPath empty path");
-        return "";
-    }
-    struct stat fileStat;
-    if (stat(filePath.c_str(), &fileStat) != 0) {
-        PRINT_HILOGE("CalculateFileMd5ByPath stat failed, path: %{public}s, errno: %{public}d",
-            filePath.c_str(), errno);
-        return "";
-    }
-    size_t fileSize = static_cast<size_t>(fileStat.st_size);
-    if (fileSize == 0) {
-        PRINT_HILOGE("CalculateFileMd5ByPath file size is 0, path: %{public}s", filePath.c_str());
-        return "";
-    }
-    int fd = open(filePath.c_str(), O_RDONLY);
-    if (fd < 0) {
-        PRINT_HILOGE("CalculateFileMd5ByPath open failed, path: %{public}s, errno: %{public}d",
-            filePath.c_str(), errno);
-        return "";
-    }
-    std::vector<char> buffer(fileSize);
-    size_t totalRead = 0;
-    while (totalRead < fileSize) {
-        ssize_t bytesRead = read(fd, buffer.data() + totalRead, fileSize - totalRead);
-        if (bytesRead < 0) {
-            PRINT_HILOGE("CalculateFileMd5ByPath read failed, path: %{public}s, errno: %{public}d",
-                filePath.c_str(), errno);
-            close(fd);
-            return "";
-        }
-        if (bytesRead == 0) {
-            break;
-        }
-        totalRead += static_cast<size_t>(bytesRead);
-    }
-    close(fd);
-    if (totalRead != fileSize) {
-        PRINT_HILOGE("CalculateFileMd5ByPath read failed, path: %{public}s, read: %{public}zu, expect: %{public}zu",
-            filePath.c_str(), totalRead, fileSize);
-        return "";
-    }
-    return Md5HashBuffer(buffer.data(), fileSize);
-}
-
-uint64_t PrintServiceAbility::GetFileSizeByPath(const std::string &filePath)
-{
-    if (filePath.empty()) {
-        PRINT_HILOGE("GetFileSizeByPath empty path");
-        return 0;
-    }
-    struct stat fileStat;
-    if (stat(filePath.c_str(), &fileStat) == 0) {
-        return static_cast<uint64_t>(fileStat.st_size);
-    }
-    PRINT_HILOGE("GetFileSizeByPath stat failed, path: %{public}s, errno: %{public}d",
-        filePath.c_str(), errno);
-    return 0;
 }
 
 std::string PrintServiceAbility::CalculateFileMd5(uint32_t fd)

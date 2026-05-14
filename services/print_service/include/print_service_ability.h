@@ -22,13 +22,7 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
-#include <sstream>
-#include <iomanip>
 #include <json/json.h>
-
-#include <openssl/md5.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
@@ -205,8 +199,6 @@ private:
     void CacheFileList(const std::string &jobId, const std::vector<std::string> &fileList);
     std::vector<std::string> GetCachedFileList(const std::string &jobId);
     void ClearCachedFileList(const std::string &jobId);
-    std::string CalculateFileMd5ByPath(const std::string &filePath);
-    uint64_t GetFileSizeByPath(const std::string &filePath);
     std::string CalculateFileMd5(uint32_t fd);
     uint64_t GetFileSize(uint32_t fd);
     void CalculateAndSendAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
