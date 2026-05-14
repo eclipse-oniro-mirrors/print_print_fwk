@@ -79,7 +79,9 @@ void PrintSecurityGuardInfo::SetPrintAuditInfo(
 {
     files_ = fileInfos;
     duplexMode_ = printJob.GetDuplexMode();
-    errorCode_ = GenerateErrorCodes(printJob.GetBlockedSubStates());
+    std::set<uint32_t> allStates = printJob.GetBlockedSubStates();
+    allStates.insert(printJob.GetSubState());
+    errorCode_ = GenerateErrorCodes(allStates);
     printerName_ = printerInfo.GetPrinterName();
 }
 

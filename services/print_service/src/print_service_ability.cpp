@@ -2715,11 +2715,12 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     printJob->SetJobState(state);
     printJob->SetSubState(subState);
 
-    SendJobAuditInfo(jobId, printJob);
-
     if (state == PRINT_JOB_BLOCKED) {
         HandleJobBlockedState(printJob, subState);
-    } else if (state == PRINT_JOB_COMPLETED) {
+    }
+    SendJobAuditInfo(jobId, printJob);
+
+    if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
         ClearFileAuditCache(jobId);
     }
@@ -3645,6 +3646,8 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
     if (type == "0" || type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED) {
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for started", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
+        ClearCachedFileList(jobId);
+        ClearFileAuditCache(jobId);
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
@@ -3652,6 +3655,8 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
     if (type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED) {
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for canceled", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
+        ClearCachedFileList(jobId);
+        ClearFileAuditCache(jobId);
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
