@@ -88,7 +88,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, GenerateErrorCodes_004, TestSize.Level1)
 {
     std::set<uint32_t> blockedSubStates;
     blockedSubStates.insert(PRINT_JOB_BLOCKED_UNKNOWN);
-    blockedSubStates.insert(999);
+    blockedSubStates.insert(9999);
     auto result = GenerateErrorCodes(blockedSubStates);
     ASSERT_EQ(result.size(), 1);
     EXPECT_EQ(result[0], "unknown");
