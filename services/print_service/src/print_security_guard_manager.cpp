@@ -22,9 +22,8 @@ static std::string VERSION = "1.0";
 void PrintSecurityGuardManager::receiveBaseInfo(const std::string jobId, const std::string callPkg,
     const std::vector<std::string> &fileList)
 {
-    PRINT_HILOGI("receiveBaseInfo jobId:%{public}s, callPkg:%{public}s", jobId.c_str(), callPkg.c_str());
+    PRINT_HILOGI("receiveBaseInfo start jobId:%{public}s, callPkg:%{public}s", jobId.c_str(), callPkg.c_str());
     auto securityGuard = std::make_shared<PrintSecurityGuardInfo>(callPkg, fileList);
-    std::lock_guard<std::mutex> lock(securityMapMutex_);
     securityMap_.insert(std::make_pair(jobId, securityGuard));
 }
 
@@ -50,7 +49,7 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
         }
     }
     ReportSecurityInfo(EVENT_ID, VERSION, securityInfo);
-    ClearSecurityMap(jobId);
+    clearSecurityMap(jobId);
 }
 
 void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
@@ -64,14 +63,14 @@ void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
     if (it != securityMap_.end() && it->second != nullptr) {
         it->second->SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     } else {
-        PRINT_HILOGW("ReceiveAuditInfo jobId:%{public}s not found in securityMap", jobId.c_str());
+        PRINT_HILOGW("receiveAuditInfo jobId:%{public}s not found in securityMap", jobId.c_str());
         auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", std::vector<std::string>{});
         securityGuard->SetPrintAuditInfo(printerInfo, printJob, fileInfos);
         securityMap_[jobId] = securityGuard;
     }
 }
 
-void PrintSecurityGuardManager::ClearSecurityMap(const std::string jobId)
+void PrintSecurityGuardManager::clearSecurityMap(const std::string jobId)
 {
     std::lock_guard<std::mutex> lock(securityMapMutex_);
     securityMap_.erase(jobId);

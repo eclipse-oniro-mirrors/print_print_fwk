@@ -52,6 +52,7 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
             printJob.GetFdList(fdList);
             printTypeInfo_.printPages = (int32_t)fdList.size();
         }
+
         if (PrintJsonUtil::IsMember(jobOptionJson, "jobName") && jobOptionJson["jobName"].isString()) {
             jobName_ = jobOptionJson["jobName"].asString();
         }

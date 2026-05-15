@@ -382,6 +382,7 @@ private:
     std::map<std::string, std::shared_ptr<PrintJob>> queuedJobList_;
     std::map<std::string, std::string, JobIdCmp> jobOrderList_;
     std::map<std::string, std::shared_ptr<PrintAttributes>> printAttributesList_;
+
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
     uint64_t currentJobOrderId_;

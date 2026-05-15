@@ -34,7 +34,7 @@ public:
 
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);
-    void ClearSecurityMap(const std::string jobId);
+    void clearSecurityMap(const std::string jobId);
 
 private:
     std::mutex securityMapMutex_;
