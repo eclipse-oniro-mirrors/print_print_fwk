@@ -24,7 +24,6 @@
 
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
-#include <cups/cups.h>
 #endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
@@ -46,8 +45,6 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "print_security_guard_manager.h"
-#include <sstream>
-#include <iomanip>
 #include "hisys_event_util.h"
 #include "uri.h"
 #include "kia_interceptor_manager.h"

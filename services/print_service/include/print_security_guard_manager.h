@@ -37,7 +37,6 @@ private:
     void clearSecurityMap(const std::string jobId);
 
 private:
-    std::mutex securityMapMutex_;
     std::map<std::string, std::shared_ptr<PrintSecurityGuardInfo>> securityMap_;
 };
 } // namespace OHOS::Print

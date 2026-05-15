@@ -55,6 +55,7 @@ PrintJob::PrintJob(const PrintJob &right)
     blockedSubStates_ = right.blockedSubStates_;
     fileList_ = right.fileList_;
     fileAuditInfo_ = right.fileAuditInfo_;
+}
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
 {
