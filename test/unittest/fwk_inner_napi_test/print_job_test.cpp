@@ -848,23 +848,23 @@ HWTEST_F(PrintJobTest, PrintJobTest_SetFileAuditInfo_001, TestSize.Level1)
     std::vector<FileAuditInfo> fileInfos;
     FileAuditInfo info1;
     info1.fileName = "test.pdf";
-    info1.md5 = "d41d8cd98f00b204e9800998ecf8427e";
-    info1.size = 1024;
+    info1.md5 = "";
+    info1.size = 0;
     FileAuditInfo info2;
     info2.fileName = "doc.pdf";
-    info2.md5 = "098f6bcd4621d373cade4e832627b4f6";
-    info2.size = 2048;
+    info2.md5 = "";
+    info2.size = 0;
     fileInfos.push_back(info1);
     fileInfos.push_back(info2);
     job.SetFileAuditInfo(fileInfos);
     const auto &result = job.GetFileAuditInfo();
     EXPECT_EQ(result.size(), 2);
     EXPECT_EQ(result[0].fileName, "test.pdf");
-    EXPECT_EQ(result[0].md5, "d41d8cd98f00b204e9800998ecf8427e");
-    EXPECT_EQ(result[0].size, 1024);
+    EXPECT_EQ(result[0].md5, "");
+    EXPECT_EQ(result[0].size, 0);
     EXPECT_EQ(result[1].fileName, "doc.pdf");
-    EXPECT_EQ(result[1].md5, "098f6bcd4621d373cade4e832627b4f6");
-    EXPECT_EQ(result[1].size, 2048);
+    EXPECT_EQ(result[1].md5, "");
+    EXPECT_EQ(result[1].size, 0);
 }
 
 /**
@@ -894,8 +894,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_FileListAudit_CopyConstructor_001, TestSize.
     job.SetFileList(fileList);
     FileAuditInfo info;
     info.fileName = "a.pdf";
-    info.md5 = "abc123";
-    info.size = 512;
+    info.md5 = "";
+    info.size = 0;
     job.SetFileAuditInfo({info});
     PrintJob copyJob(job);
     EXPECT_EQ(copyJob.GetFileList().size(), 1);
@@ -917,8 +917,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_FileListAudit_AssignmentOperator_001, TestSi
     job.SetFileList(fileList);
     FileAuditInfo info;
     info.fileName = "b.pdf";
-    info.md5 = "def456";
-    info.size = 256;
+    info.md5 = "";
+    info.size = 0;
     job.SetFileAuditInfo({info});
     PrintJob assignJob;
     assignJob = job;

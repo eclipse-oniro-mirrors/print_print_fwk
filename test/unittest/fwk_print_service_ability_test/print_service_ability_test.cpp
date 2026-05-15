@@ -5832,18 +5832,6 @@ HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_InvalidJson_
     EXPECT_TRUE(result.empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, CalculateFileMd5_001, TestSize.Level1)
-{
-    std::string md5 = PrintSecurityGuardUtil::CalculateFileMd5(static_cast<uint32_t>(-1));
-    EXPECT_TRUE(md5.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest, GetFileSize_001, TestSize.Level1)
-{
-    uint64_t size = PrintSecurityGuardUtil::GetFileSize(static_cast<uint32_t>(-1));
-    EXPECT_EQ(size, 0);
-}
-
 HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_NoCupsOptions_ReturnsEmpty, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);

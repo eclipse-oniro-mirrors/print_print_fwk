@@ -129,18 +129,6 @@ void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider 
 #endif // EDM_SERVICE_ENABLE
 }
 
-void TestCalculateFileMd5(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    uint32_t fd = dataProvider->ConsumeIntegral<uint32_t>();
-    PrintSecurityGuardUtil::CalculateFileMd5(fd);
-}
-
-void TestGetFileSize(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    uint32_t fd = dataProvider->ConsumeIntegral<uint32_t>();
-    PrintSecurityGuardUtil::GetFileSize(fd);
-}
-
 void TestSubStateToErrorCodeStr(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     uint32_t subState = dataProvider->ConsumeIntegral<uint32_t>();
@@ -171,8 +159,6 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestBlockUserPrintJobs,
         &TestIsDisablePrint,
         &TestReportBannedEvent,
-        &TestCalculateFileMd5,
-        &TestGetFileSize,
         &TestSubStateToErrorCodeStr,
         &TestGenerateErrorCodes,
     };

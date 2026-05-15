@@ -87,8 +87,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0003, Test
     std::vector<FileAuditInfo> fileInfos;
     FileAuditInfo info;
     info.fileName = "test.pdf";
-    info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
-    info.size = 1024;
+    info.md5 = "";
+    info.size = 0;
     fileInfos.push_back(info);
     manager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     int num = manager.securityMap_.size();
@@ -129,8 +129,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0005, Test
     std::vector<FileAuditInfo> fileInfos;
     FileAuditInfo info;
     info.fileName = "test.pdf";
-    info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
-    info.size = 1024;
+    info.md5 = "";
+    info.size = 0;
     fileInfos.push_back(info);
     manager.receiveBaseInfo("jobId-1", "callerPkg-1", std::vector<std::string>{});
     manager.receiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);

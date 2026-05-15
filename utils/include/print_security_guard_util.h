@@ -49,11 +49,6 @@ class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);
     static std::string ExtractFileName(const std::string& filePath);
-    static std::string CalculateFileMd5(uint32_t fd);
-    static uint64_t GetFileSize(uint32_t fd);
-    static std::string Md5HashBuffer(const char* data, size_t size);
-    static std::vector<FileAuditInfo> CalculateFileAuditInfo(
-        const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList);
 };
 
 std::string SubStateToErrorCodeStr(uint32_t subState);

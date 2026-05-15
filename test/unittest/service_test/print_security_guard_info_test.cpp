@@ -121,8 +121,8 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0007, TestSize.L
     std::vector<FileAuditInfo> fileInfos;
     FileAuditInfo info;
     info.fileName = "/data/test/file.pdf";
-    info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
-    info.size = 1024;
+    info.md5 = "";
+    info.size = 0;
     fileInfos.push_back(info);
     printSecurityGuardInfo.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     std::string jsonStr = printSecurityGuardInfo.ToJsonStr();
@@ -141,9 +141,9 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0008_MultiFile, 
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
     std::vector<FileAuditInfo> fileInfos;
     FileAuditInfo fa;
-    fa.fileName = "a.pdf"; fa.md5 = "aaa"; fa.size = 100;
+    fa.fileName = "a.pdf"; fa.md5 = ""; fa.size = 0;
     FileAuditInfo fb;
-    fb.fileName = "b.pdf"; fb.md5 = "bbb"; fb.size = 200;
+    fb.fileName = "b.pdf"; fb.md5 = ""; fb.size = 0;
     fileInfos.push_back(fa);
     fileInfos.push_back(fb);
     printSecurityGuardInfo.SetPrintAuditInfo(printerInfo, printJob, fileInfos);

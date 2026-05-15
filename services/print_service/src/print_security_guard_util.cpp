@@ -16,12 +16,6 @@
 #include "print_security_guard_util.h"
 #include "print_constant.h"
 #include "print_log.h"
-#include <cups/cups.h>
-#include <fcntl.h>
-#include <map>
-#include <sstream>
-#include <iomanip>
-#include <unistd.h>
 
 namespace OHOS::Print {
 
@@ -102,121 +96,6 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
         }
     }
     return std::vector<std::string>(errorSet.begin(), errorSet.end());
-}
-
-static constexpr int32_t HEX_STRING_WIDTH = 2;
-
-std::string PrintSecurityGuardUtil::Md5HashBuffer(const char* data, size_t size)
-{
-    if (data == nullptr || size == 0) {
-        PRINT_HILOGE("Md5HashBuffer invalid input");
-        return "";
-    }
-    unsigned char hash[16];
-    ssize_t result = cupsHashData("md5", data, size, hash, sizeof(hash));
-    if (result != sizeof(hash)) {
-        PRINT_HILOGE("Md5HashBuffer cupsHashData failed, result: %{public}zd, expected: %{public}zu",
-            result, sizeof(hash));
-        return "";
-    }
-    std::stringstream ss;
-    for (ssize_t i = 0; i < result; i++) {
-        ss << std::hex << std::setw(HEX_STRING_WIDTH) << std::setfill('0') << (int)hash[i];
-    }
-    return ss.str();
-}
-
-std::string PrintSecurityGuardUtil::CalculateFileMd5(uint32_t fd)
-{
-    int32_t fdInt = static_cast<int32_t>(fd);
-    if (fdInt < 0) {
-        PRINT_HILOGE("CalculateFileMd5 invalid fd");
-        return "";
-    }
-    int32_t dupFd = dup(fdInt);
-    if (dupFd < 0) {
-        PRINT_HILOGE("CalculateFileMd5 dup failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-        return "";
-    }
-    off_t fileSize = lseek(dupFd, 0, SEEK_END);
-    if (fileSize == static_cast<off_t>(-1)) {
-        PRINT_HILOGE("CalculateFileMd5 lseek to end failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-        close(dupFd);
-        return "";
-    }
-    if (fileSize == 0) {
-        PRINT_HILOGE("CalculateFileMd5 file size is 0, fd: %{public}d", fdInt);
-        close(dupFd);
-        return "";
-    }
-    lseek(dupFd, 0, SEEK_SET);
-    std::vector<char> buffer(fileSize);
-    size_t totalRead = 0;
-    while (totalRead < static_cast<size_t>(fileSize)) {
-        ssize_t bytesRead = read(dupFd, buffer.data() + totalRead, fileSize - totalRead);
-        if (bytesRead < 0) {
-            PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-            close(dupFd);
-            return "";
-        }
-        if (bytesRead == 0) {
-            break;
-        }
-        totalRead += static_cast<size_t>(bytesRead);
-    }
-    if (lseek(dupFd, 0, SEEK_SET) != 0) {
-        PRINT_HILOGW("CalculateFileMd5 lseek back to begin failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-    }
-    close(dupFd);
-    if (totalRead != static_cast<size_t>(fileSize)) {
-        PRINT_HILOGE("CalculateFileMd5 read failed, fd: %{public}d, read: %{public}zu, expect: %{public}ld",
-            fdInt, totalRead, fileSize);
-        return "";
-    }
-    return Md5HashBuffer(buffer.data(), static_cast<size_t>(fileSize));
-}
-
-uint64_t PrintSecurityGuardUtil::GetFileSize(uint32_t fd)
-{
-    int32_t fdInt = static_cast<int32_t>(fd);
-    if (fdInt < 0) {
-        PRINT_HILOGE("GetFileSize invalid fd");
-        return 0;
-    }
-    int32_t dupFd = dup(fdInt);
-    if (dupFd < 0) {
-        PRINT_HILOGE("GetFileSize dup failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-        return 0;
-    }
-    off_t fileSize = lseek(dupFd, 0, SEEK_END);
-    if (lseek(dupFd, 0, SEEK_SET) != 0) {
-        PRINT_HILOGW("GetFileSize lseek back to begin failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-    }
-    close(dupFd);
-    if (fileSize == static_cast<off_t>(-1)) {
-        PRINT_HILOGE("GetFileSize lseek to end failed, fd: %{public}d, errno: %{public}d", fdInt, errno);
-        return 0;
-    }
-    return static_cast<uint64_t>(fileSize);
-}
-
-std::vector<FileAuditInfo> PrintSecurityGuardUtil::CalculateFileAuditInfo(
-    const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList)
-{
-    std::vector<FileAuditInfo> fileInfos;
-    size_t fileCount = std::min(fileList.size(), fdList.size());
-    PRINT_HILOGI("CalculateFileAuditInfo fileList: %{public}zu, fdList: %{public}zu",
-        fileList.size(), fdList.size());
-    for (size_t i = 0; i < fileCount; i++) {
-        FileAuditInfo info;
-        info.fileName = fileList[i];
-        info.md5 = CalculateFileMd5(fdList[i]);
-        info.size = GetFileSize(fdList[i]);
-        PRINT_HILOGI("CalculateFileAuditInfo file[%{public}zu] name: %{public}s, md5: %{public}s, size: %{public}llu",
-            i, fileList[i].c_str(), info.md5.c_str(), (unsigned long long)info.size);
-        fileInfos.push_back(info);
-    }
-    return fileInfos;
 }
 
 } // namespace OHOS::Print

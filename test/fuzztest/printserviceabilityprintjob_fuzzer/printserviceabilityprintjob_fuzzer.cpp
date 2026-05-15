@@ -28,7 +28,6 @@ constexpr uint8_t MAX_STRING_LENGTH = 20;
 constexpr int MAX_SET_NUMBER = 128;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr int MAX_AUDIT_LIST_SIZE = 5;
-constexpr uint64_t MAX_FILE_SIZE = 1024 * 1024;
 
 void TestQueryAllActivePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
@@ -53,8 +52,8 @@ void TestQueryAllActivePrintJob(const uint8_t *data, size_t size, FuzzedDataProv
     for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, MAX_AUDIT_LIST_SIZE); ++i) {
         FileAuditInfo info;
         info.fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.md5 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.size = dataProvider->ConsumeIntegralInRange<uint64_t>(0, MAX_FILE_SIZE);
+        info.md5 = "";
+        info.size = 0;
         auditInfos.push_back(info);
     }
     printJob.SetFileAuditInfo(auditInfos);
