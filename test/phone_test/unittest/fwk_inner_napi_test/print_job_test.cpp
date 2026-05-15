@@ -803,5 +803,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_003, TestSize.Level
         EXPECT_EQ(result.numberUpLayout, layout);
     }
 }
+
 }  // namespace Print
 }  // namespace OHOS
