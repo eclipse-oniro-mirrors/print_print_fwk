@@ -6,7 +6,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -46,35 +46,35 @@ void PrintVendorOptionsUtil::SplitVendorOptions(const std::string &vendorOptions
     if (!userFields.empty()) {
         userVendorOptions = PrintJsonUtil::WriteString(userFields);
     }
-    PRINT_HILOGI("SplitVendorOptions: printerVendorOptions=%{private}s, userVendorOptions=%{private}s",
+    PRINT_HILOGD("SplitVendorOptions: printerVendorOptions=%{private}s, userVendorOptions=%{private}s",
         printerVendorOptions.c_str(), userVendorOptions.c_str());
 }
 
-std::string PrintVendorOptionsUtil::MergeVendorOptions(const std::string &printerVendorOptions,
-                                                       const std::string &userVendorOptions)
+std::string PrintVendorOptionsUtil::MergeVendorOptions(const std::string &defaultVendorOptions,
+                                                       const std::string &overrideVendorOptions)
 {
     Json::Value mergedJson;
-    Json::Value printerJson;
-    if (!printerVendorOptions.empty() && PrintJsonUtil::Parse(printerVendorOptions, printerJson)) {
-        if (printerJson.isObject()) {
-            mergedJson = printerJson;
+    Json::Value defaultJson;
+    if (!defaultVendorOptions.empty() && PrintJsonUtil::Parse(defaultVendorOptions, defaultJson)) {
+        if (defaultJson.isObject()) {
+            mergedJson = defaultJson;
         }
     }
-    Json::Value userJson;
-    if (!userVendorOptions.empty() && PrintJsonUtil::Parse(userVendorOptions, userJson)) {
-        if (userJson.isObject()) {
-            Json::Value::Members keys = userJson.getMemberNames();
+    Json::Value overrideJson;
+    if (!overrideVendorOptions.empty() && PrintJsonUtil::Parse(overrideVendorOptions, overrideJson)) {
+        if (overrideJson.isObject()) {
+            Json::Value::Members keys = overrideJson.getMemberNames();
             for (const auto &key : keys) {
-                mergedJson[key] = userJson[key];
+                mergedJson[key] = overrideJson[key];
             }
         }
     }
     if (mergedJson.empty()) {
-        PRINT_HILOGI("MergeVendorOptions: result is empty");
+        PRINT_HILOGD("MergeVendorOptions: result is empty");
         return "";
     }
     std::string result = PrintJsonUtil::WriteString(mergedJson);
-    PRINT_HILOGI("MergeVendorOptions: result=%{private}s", result.c_str());
+    PRINT_HILOGD("MergeVendorOptions: result=%{private}s", result.c_str());
     return result;
 }
 

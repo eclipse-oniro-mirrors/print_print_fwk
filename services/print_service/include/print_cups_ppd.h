@@ -31,6 +31,7 @@ int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type, const std::s
 std::string ExtractBundleNameFromPpdName(const std::string &ppdName);
 std::string ExtractBundleNameFromAbilityName(const std::string &abilityName);
 bool ValidateVendorAbilityBundle(const std::string &abilityName, const std::string &ppdName);
+
 void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::string &ppdName);
 void ParseVendorAbilityFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 Json::Value FindCustomParamLimit(ppd_cparam_t *cparam);

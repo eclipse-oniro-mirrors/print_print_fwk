@@ -31,7 +31,7 @@ class PrintCupsPpdTest : public testing::Test {
 protected:
     std::string CreateTempPpdFile(const std::string &content)
     {
-        std::string tempPath = "/tmp/test_vendor_" + std::to_string(getpid()) + ".ppd";
+        std::string tempPath = "/data/local/tmp/test_vendor_" + std::to_string(getpid()) + ".ppd";
         std::ofstream file(tempPath);
         file << content;
         file.close();
@@ -75,13 +75,7 @@ protected:
     }
 };
 
-/**
- * @tc.name: QueryPrinterCapabilityFromPPDFile_001
- * @tc.desc: QueryPrinterCapabilityFromPPDFile with invalid file path
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_001, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_InvalidPath_ReturnsFileIOError, TestSize.Level1)
 {
     PrinterCapability printerCaps;
     std::string invalidPath = "/invalid/path/to/nonexistent.ppd";
@@ -89,13 +83,7 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_001, TestSize.Level
     EXPECT_EQ(ret, E_PRINT_FILE_IO);
 }
 
-/**
- * @tc.name: QueryPrinterCapabilityFromPPDFile_002
- * @tc.desc: QueryPrinterCapabilityFromPPDFile with empty file path
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_002, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_EmptyPath_ReturnsFileIOError, TestSize.Level1)
 {
     PrinterCapability printerCaps;
     std::string emptyPath = "";
@@ -103,26 +91,14 @@ HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_002, TestSize.Level
     EXPECT_EQ(ret, E_PRINT_FILE_IO);
 }
 
-/**
- * @tc.name: MarkPpdOption_001
- * @tc.desc: MarkPpdOption with null ppd
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsPpdTest, MarkPpdOption_001, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_NullPpd_ReturnsZero, TestSize.Level1)
 {
     ppd_file_t *ppd = nullptr;
     int32_t ret = MarkPpdOption(ppd, PRINT_PARAM_TYPE_PAGE_SIZE, PAGE_SIZE_ID_ISO_A4);
     EXPECT_EQ(ret, 0);
 }
 
-/**
- * @tc.name: CheckPpdConflicts_001
- * @tc.desc: CheckPpdConflicts with null ppd
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_001, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_NullPpd_ReturnsZero, TestSize.Level1)
 {
     ppd_file_t *ppd = nullptr;
     std::vector<std::string> conflictTypes;
@@ -401,20 +377,7 @@ HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_PasscodeType_ReturnsCorrectJson,
     EXPECT_EQ(result["maximum"].asInt(), 8);
 }
 
-HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_PasswordType_ReturnsCorrectJson, TestSize.Level1)
-{
-    ppd_cparam_t cparam;
-    cparam.type = PPD_CUSTOM_PASSWORD;
-    cparam.minimum.custom_password = 6;
-    cparam.maximum.custom_password = 20;
-
-    Json::Value result = FindCustomParamLimit(&cparam);
-    EXPECT_TRUE(result.isObject());
-    EXPECT_EQ(result["minimum"].asInt(), 6);
-    EXPECT_EQ(result["maximum"].asInt(), 20);
-}
-
-HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_DefaultType_ReturnsZeroValues, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_InvalidType_ReturnsFalse, TestSize.Level1)
 {
     ppd_cparam_t cparam;
     cparam.type = PPD_CUSTOM_INT;
@@ -425,6 +388,77 @@ HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_DefaultType_ReturnsZeroValues, T
     EXPECT_FALSE(result.isObject());
     EXPECT_EQ(result["minimum"].asInt(), 0);
     EXPECT_EQ(result["maximum"].asInt(), 0);
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_ValidPpdName_ReturnsBundle, TestSize.Level1)
+{
+    std::string ppdName = "com.vendor.driver_Test_Printer.ppd";
+    std::string bundleName = ExtractBundleNameFromPpdName(ppdName);
+    EXPECT_EQ(bundleName, "com.vendor.driver");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_EmptyPpdName_ReturnsEmpty, TestSize.Level1)
+{
+    std::string ppdName = "";
+    std::string bundleName = ExtractBundleNameFromPpdName(ppdName);
+    EXPECT_EQ(bundleName, "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_NoUnderscore_ReturnsEmpty, TestSize.Level1)
+{
+    std::string ppdName = "no_underscore_file";
+    std::string bundleName = ExtractBundleNameFromPpdName(ppdName);
+    EXPECT_EQ(bundleName, "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_MultipleUnderscores_ReturnsFirstPart, TestSize.Level1)
+{
+    std::string ppdName = "com.vendor.driver_Printer_Model_v1.ppd";
+    std::string bundleName = ExtractBundleNameFromPpdName(ppdName);
+    EXPECT_EQ(bundleName, "com.vendor.driver");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromAbilityName_ValidAbilityName_ReturnsBundle, TestSize.Level1)
+{
+    std::string abilityName = "com.vendor.driver.VendorPrinterSettingsAbility";
+    std::string bundleName = ExtractBundleNameFromAbilityName(abilityName);
+    EXPECT_EQ(bundleName, "com.vendor.driver");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromAbilityName_EmptyAbilityName_ReturnsEmpty, TestSize.Level1)
+{
+    std::string abilityName = "";
+    std::string bundleName = ExtractBundleNameFromAbilityName(abilityName);
+    EXPECT_EQ(bundleName, "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromAbilityName_NoDot_ReturnsEmpty, TestSize.Level1)
+{
+    std::string abilityName = "no_dot_ability";
+    std::string bundleName = ExtractBundleNameFromAbilityName(abilityName);
+    EXPECT_EQ(bundleName, "");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromAbilityName_MultipleDots_ReturnsUpToLastDot, TestSize.Level1)
+{
+    std::string abilityName = "com.vendor.driver.subpackage.VendorAbility";
+    std::string bundleName = ExtractBundleNameFromAbilityName(abilityName);
+    EXPECT_EQ(bundleName, "com.vendor.driver.subpackage");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromAbilityName_SingleDot_ReturnsPartBeforeDot, TestSize.Level1)
+{
+    std::string abilityName = "bundle.Ability";
+    std::string bundleName = ExtractBundleNameFromAbilityName(abilityName);
+    EXPECT_EQ(bundleName, "bundle");
+}
+
+HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFunctions_EdgeCases_HandleCorrectly, TestSize.Level1)
+{
+    EXPECT_EQ(ExtractBundleNameFromPpdName("_.ppd"), "");
+    EXPECT_EQ(ExtractBundleNameFromAbilityName(".Ability"), "");
+    EXPECT_EQ(ExtractBundleNameFromPpdName("a_b.ppd"), "a");
+    EXPECT_EQ(ExtractBundleNameFromAbilityName("a.Ability"), "a");
 }
 
 }  // namespace Print

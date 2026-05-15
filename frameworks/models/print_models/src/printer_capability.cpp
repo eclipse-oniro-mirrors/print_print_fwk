@@ -100,7 +100,9 @@ void PrinterCapability::Reset()
     supportedQualityList_.clear();
     supportedOrientationList_.clear();
     hasVendorPrinterPrefAbility_ = false;
+    vendorPrinterPrefAbility_.clear();
     hasVendorJobAttrAbility_ = false;
+    vendorJobAttrAbility_.clear();
 }
 
 void PrinterCapability::SetMinMargin(const PrintMargin &minMargin)

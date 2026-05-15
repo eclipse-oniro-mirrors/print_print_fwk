@@ -1807,21 +1807,71 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestS
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111_NeedRename, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, DeletePrinterFromUserData_DeletesUserPreferences, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "printerId";
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    std::string printerId = "printer_001";
     int32_t userId1 = 100;
     int32_t userId2 = 101;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName("TestPrinter");
+    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+
     std::shared_ptr<PrintUserData> userData1 = std::make_shared<PrintUserData>();
-    auto ret = userData1->SetDefaultPrinter("test", 0);
-    EXPECT_EQ(ret, E_PRINT_NONE);
-    std::shared_ptr<PrintUserData> userData2 = std::make_shared<PrintUserData>();
-    ret = userData1->SetDefaultPrinter(printerId, 0);
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    userData1->SetUserId(userId1);
+    PrinterUserPreferences userPrefs1;
+    userPrefs1.SetUserId(userId1);
+    userPrefs1.SetPrinterId(printerId);
+    userPrefs1.SetVendorOptions(R"({"user_field":"value1"})");
+    userData1->SavePrinterUserPreferences(printerId, "TestPrinter", userPrefs1);
+    userData1->SetDefaultPrinter(printerId, 0);
     service->printUserMap_[userId1] = userData1;
+
+    std::shared_ptr<PrintUserData> userData2 = std::make_shared<PrintUserData>();
+    userData2->SetUserId(userId2);
+    PrinterUserPreferences userPrefs2;
+    userPrefs2.SetUserId(userId2);
+    userPrefs2.SetPrinterId(printerId);
+    userPrefs2.SetVendorOptions(R"({"user_field":"value2"})");
+    userData2->SavePrinterUserPreferences(printerId, "TestPrinter", userPrefs2);
     service->printUserMap_[userId2] = userData2;
+
+    EXPECT_TRUE(userData1->printerUserPreferences_.count(printerId) > 0);
+    EXPECT_TRUE(userData2->printerUserPreferences_.count(printerId) > 0);
+
     service->DeletePrinterFromUserData(printerId);
+
+    EXPECT_FALSE(userData1->printerUserPreferences_.count(printerId) > 0);
+    EXPECT_FALSE(userData2->printerUserPreferences_.count(printerId) > 0);
+}
+
+HWTEST_F(PrintServiceAbilityTest, DeletePrinterFromUserData_InvalidPrinterId_ReturnsEarly, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    std::string invalidPrinterId = "invalid_printer_id";
+
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(100);
+    userPrefs.SetPrinterId("other_printer");
+    userPrefs.SetVendorOptions(R"({"user_field":"value"})");
+    userData->SavePrinterUserPreferences("other_printer", "OtherPrinter", userPrefs);
+    service->printUserMap_[100] = userData;
+
+    EXPECT_TRUE(userData->printerUserPreferences_.count("other_printer") > 0);
+
+    service->DeletePrinterFromUserData(invalidPrinterId);
+
+    EXPECT_TRUE(userData->printerUserPreferences_.count("other_printer") > 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112_NeedRename, TestSize.Level1)
@@ -5808,6 +5858,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninst
     EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
 }
 
+
 HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_EmptyOption_ReturnsEmpty, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -6515,5 +6566,156 @@ HWTEST_F(PrintServiceAbilityTest, DoDecrypt_Success_ReturnsPlainText, TestSize.L
     MockHksApi::Instance().Reset();
 }
 
+HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_ValidVendorOptions_SplitsCorrectly, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    userData->printerUserPreferences_.clear();
+    service->printUserMap_[100] = userData;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("test_printer");
+    printerInfo.SetPrinterName("test_printer");
+    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+
+    PrinterPreferences preferences;
+    preferences.SetVendorOptions(R"({"printer_field":"printer_value","user_field":"user_value"})");
+
+    PrinterPreferences printerPrefs;
+    bool result = service->ProcessVendorOptionsForPreference("test_printer", preferences, printerPrefs);
+    EXPECT_TRUE(result);
+
+    std::string resultVendorOptions = printerPrefs.GetVendorOptions();
+    EXPECT_FALSE(resultVendorOptions.empty());
+    Json::Value resultJson;
+    PrintJsonUtil::Parse(resultVendorOptions, resultJson);
+    EXPECT_TRUE(resultJson.isMember("printer_field"));
+    EXPECT_FALSE(resultJson.isMember("user_field"));
+
+    auto savedUserPrefs = userData->printerUserPreferences_["test_printer"];
+    EXPECT_NE(savedUserPrefs, nullptr);
+    EXPECT_TRUE(savedUserPrefs->HasVendorOptions());
+    Json::Value userJson;
+    PrintJsonUtil::Parse(savedUserPrefs->GetVendorOptions(), userJson);
+    EXPECT_TRUE(userJson.isMember("user_field"));
+    EXPECT_FALSE(userJson.isMember("printer_field"));
+}
+
+HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_EmptyVendorOptions_ClearsUserPrefs, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    PrinterUserPreferences existingPrefs;
+    existingPrefs.SetUserId(100);
+    existingPrefs.SetPrinterId("test_printer");
+    existingPrefs.SetVendorOptions(R"({"old_user_field":"old_value"})");
+    userData->printerUserPreferences_["test_printer"] = std::make_shared<PrinterUserPreferences>(existingPrefs);
+    service->printUserMap_[100] = userData;
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 1);
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("test_printer");
+    printerInfo.SetPrinterName("test_printer");
+    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+
+    PrinterPreferences preferences;
+    preferences.SetVendorOptions("");
+
+    PrinterPreferences printerPrefs;
+    bool result = service->ProcessVendorOptionsForPreference("test_printer", preferences, printerPrefs);
+    EXPECT_TRUE(result);
+
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_OnlyPrinterOptions_NoUserPrefsSaved,
+    TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    userData->printerUserPreferences_.clear();
+    service->printUserMap_[100] = userData;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("test_printer");
+    printerInfo.SetPrinterName("test_printer");
+    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+
+    PrinterPreferences preferences;
+    preferences.SetVendorOptions(R"({"printer_field":"value"})");
+
+    PrinterPreferences printerPrefs;
+    bool result = service->ProcessVendorOptionsForPreference("test_printer", preferences, printerPrefs);
+    EXPECT_TRUE(result);
+
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+    EXPECT_EQ(printerPrefs.GetVendorOptions(), R"({"printer_field":"value"})");
+}
+
+HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_OnlyUserOptions_SavesUserPrefs, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    userData->printerUserPreferences_.clear();
+    service->printUserMap_[100] = userData;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("test_printer");
+    printerInfo.SetPrinterName("test_printer");
+    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+
+    PrinterPreferences preferences;
+    preferences.SetVendorOptions(R"({"user_field":"user_value"})");
+
+    PrinterPreferences printerPrefs;
+    bool result = service->ProcessVendorOptionsForPreference("test_printer", preferences, printerPrefs);
+    EXPECT_TRUE(result);
+
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 1);
+    auto savedPrefs = userData->printerUserPreferences_["test_printer"];
+    EXPECT_NE(savedPrefs, nullptr);
+    EXPECT_EQ(savedPrefs->GetVendorOptions(), R"({"user_field":"user_value"})");
+    EXPECT_TRUE(printerPrefs.GetVendorOptions().empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_InvalidPrinterId_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    PrinterPreferences preferences;
+    preferences.SetVendorOptions(R"({"field":"value"})");
+
+    PrinterPreferences printerPrefs;
+    bool result = service->ProcessVendorOptionsForPreference("invalid_printer_id", preferences, printerPrefs);
+    EXPECT_FALSE(result);
+}
 }  // namespace Print
 }  // namespace OHOS

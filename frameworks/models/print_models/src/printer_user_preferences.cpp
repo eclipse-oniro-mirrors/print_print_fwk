@@ -6,7 +6,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -228,6 +228,19 @@ const std::vector<CustomOption>& PrinterUserPreferences::GetAllCustomOptions() c
     return customOptions_;
 }
 
+bool PrinterUserPreferences::IsEmpty() const
+{
+    if (hasVendorOptions_) {
+        return false;
+    }
+    for (const auto &option : customOptions_) {
+        if (option.isSet) {
+            return false;
+        }
+    }
+    return true;
+}
+
 Json::Value PrinterUserPreferences::ConvertToJson() const
 {
     Json::Value userPrefsJson;
@@ -285,8 +298,8 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
 void PrinterUserPreferences::Dump() const
 {
     PRINT_HILOGD("userId: %{private}d", userId_);
-    PRINT_HILOGD("printerId: %{public}s", printerId_.c_str());
-    PRINT_HILOGD("vendorOptions: %{public}s", vendorOptions_.c_str());
+    PRINT_HILOGD("printerId: %{private}s", printerId_.c_str());
+    PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
     for (const auto &opt : customOptions_) {
         PRINT_HILOGD("customOption: key=%{public}s, isSet=%{public}d",
             opt.key.c_str(), opt.isSet);

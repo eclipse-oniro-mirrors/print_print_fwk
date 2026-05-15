@@ -29,6 +29,7 @@
 #include "print_log.h"
 #include "print_constant.h"
 #include "print_json_util.h"
+#include "print_utils.h"
 
 namespace OHOS {
 namespace Print {
@@ -964,6 +965,10 @@ void PrintUserData::ParseOptionalJsonObjectToPrintJob(
         PrintJsonUtil::IsMember(printJobInfoJson, "option") && printJobInfoJson["option"].isString()) {
         printHistoryJob->SetOption(printJobInfoJson["option"].asString());
     }
+    if (CheckOptionalParam(printJobInfoJson, "hasVendorOptions") &&
+        PrintJsonUtil::IsMember(printJobInfoJson, "vendorOptions") && printJobInfoJson["vendorOptions"].isString()) {
+        printHistoryJob->SetVendorOptions(printJobInfoJson["vendorOptions"].asString());
+    }
 }
 
 PrintPreviewAttribute PrintUserData::ParseJsonObjectToPrintPreviewAttribute(const Json::Value &jsonObject)
@@ -1128,38 +1133,27 @@ bool PrintUserData::ContainsHistoryPrintJob(const std::vector<std::string> &prin
     return false;
 }
 
-bool PrintUserData::GetUserPreferencesFilePath(const std::string &standardizedPrinterName,
-                                               std::string &safeFilePath)
+std::string PrintUserData::GetUserPreferencesFilePath(const std::string &standardizedPrinterName)
 {
     std::string baseDir = ObtainUserCacheDirectory();
+    if (!PrintUtils::IsPathValid(baseDir)) {
+        PRINT_HILOGE("Invalid base directory");
+        return "";
+    }
 
     char realBaseDir[PATH_MAX] = {0};
     if (realpath(baseDir.c_str(), realBaseDir) == nullptr) {
         PRINT_HILOGE("Failed to canonicalize base directory, errno=%{public}d", errno);
-        return false;
+        return "";
     }
 
     std::string filePath = std::string(realBaseDir) + "/printer_user_prefs/" + standardizedPrinterName + ".json";
-
-    char realFilePath[PATH_MAX] = {0};
-    if (realpath(filePath.c_str(), realFilePath) == nullptr) {
-        if (filePath.find("..") != std::string::npos) {
-            PRINT_HILOGE("Path injection detected: path contains '..'");
-            return false;
-        }
-        safeFilePath = filePath;
-        return true;
+    if (!PrintUtils::IsPathValid(filePath)) {
+        PRINT_HILOGE("Invalid file path: potential path injection");
+        return "";
     }
 
-    std::string normalizedPath(realFilePath);
-    std::string expectedPrefix = std::string(realBaseDir) + "/printer_user_prefs/";
-    if (normalizedPath.find(expectedPrefix) != 0) {
-        PRINT_HILOGE("Path injection detected: file path outside expected directory");
-        return false;
-    }
-
-    safeFilePath = normalizedPath;
-    return true;
+    return filePath;
 }
 
 bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
@@ -1171,6 +1165,11 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
     printerUserPreferences_[printerId] = userPrefsPtr;
 
     std::string baseDir = ObtainUserCacheDirectory();
+    if (!PrintUtils::IsPathValid(baseDir)) {
+        PRINT_HILOGE("Invalid base directory");
+        return false;
+    }
+
     char realBaseDir[PATH_MAX] = {0};
     if (realpath(baseDir.c_str(), realBaseDir) == nullptr) {
         PRINT_HILOGE("Failed to canonicalize base directory, errno=%{public}d", errno);
@@ -1186,6 +1185,10 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
     }
 
     std::string filePath = dirPath + "/" + standardizedPrinterName + ".json";
+    if (!PrintUtils::IsPathValid(filePath)) {
+        PRINT_HILOGE("Invalid file path: potential path injection");
+        return false;
+    }
 
     Json::Value json = userPrefs.ConvertToJson();
     std::string jsonString = PrintJsonUtil::WriteString(json);
@@ -1225,8 +1228,8 @@ bool PrintUserData::LoadPrinterUserPreferences(const std::string &printerId,
         return true;
     }
 
-    std::string filePath;
-    if (!GetUserPreferencesFilePath(standardizedPrinterName, filePath)) {
+    std::string filePath = GetUserPreferencesFilePath(standardizedPrinterName);
+    if (filePath.empty()) {
         PRINT_HILOGE("Failed to get safe file path");
         return false;
     }
@@ -1259,8 +1262,8 @@ void PrintUserData::DeletePrinterUserPreferences(const std::string &printerId,
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     printerUserPreferences_.erase(printerId);
 
-    std::string filePath;
-    if (!GetUserPreferencesFilePath(standardizedPrinterName, filePath)) {
+    std::string filePath = GetUserPreferencesFilePath(standardizedPrinterName);
+    if (filePath.empty()) {
         PRINT_HILOGE("Failed to get safe file path");
         return;
     }
