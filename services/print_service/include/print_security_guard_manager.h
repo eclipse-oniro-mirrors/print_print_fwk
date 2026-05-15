@@ -26,10 +26,10 @@ namespace OHOS::Print {
 class PrintSecurityGuardManager {
 
 public:
-    void ReceiveBaseInfo(const std::string jobId, const std::string callerPkg,
+    void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
-    void ReceiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
-    void ReceiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
+    void receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void receiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
         const PrintJob &printJob, const std::vector<FileAuditInfo> &fileInfos);
 
 private:

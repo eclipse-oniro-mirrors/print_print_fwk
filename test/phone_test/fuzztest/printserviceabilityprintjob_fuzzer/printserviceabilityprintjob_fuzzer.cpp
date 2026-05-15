@@ -41,21 +41,6 @@ void TestQueryAllActivePrintJob(const uint8_t *data, size_t size, FuzzedDataProv
     pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetPageSize(pageSize);
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    // Fuzz audit-related fields
-    std::vector<std::string> fileList;
-    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, 5); ++i) {
-        fileList.push_back(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    }
-    printJob.SetFileList(fileList);
-    std::vector<FileAuditInfo> auditInfos;
-    for (size_t i = 0; i < dataProvider->ConsumeIntegralInRange<int>(0, 5); ++i) {
-        FileAuditInfo info;
-        info.fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.md5 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.size = dataProvider->ConsumeIntegralInRange<uint64_t>(0, 1024 * 1024);
-        auditInfos.push_back(info);
-    }
-    printJob.SetFileAuditInfo(auditInfos);
     std::vector<PrintJob> printJobs;
     printJobs.push_back(printJob);
     PrintServiceAbility::GetInstance()->QueryAllActivePrintJob(printJobs);

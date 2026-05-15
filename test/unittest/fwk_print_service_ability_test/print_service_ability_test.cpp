@@ -5832,41 +5832,15 @@ HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_InvalidJson_
     EXPECT_TRUE(result.empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, CacheFileList_001, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::vector<std::string> fileList = {"a.pdf", "b.pdf", "c.pdf"};
-    service->CacheFileList("job-123", fileList);
-
-    std::vector<std::string> cached = service->GetCachedFileList("job-123");
-    EXPECT_EQ(cached.size(), 3);
-    EXPECT_EQ(cached[0], "a.pdf");
-    EXPECT_EQ(cached[1], "b.pdf");
-    EXPECT_EQ(cached[2], "c.pdf");
-
-    service->ClearCachedFileList("job-123");
-    cached = service->GetCachedFileList("job-123");
-    EXPECT_EQ(cached.size(), 0);
-}
-
-HWTEST_F(PrintServiceAbilityTest, CacheFileList_002, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::vector<std::string> cached = service->GetCachedFileList("non-existent-job");
-    EXPECT_EQ(cached.size(), 0);
-}
-
 HWTEST_F(PrintServiceAbilityTest, CalculateFileMd5_001, TestSize.Level1)
 {
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string md5 = service->CalculateFileMd5(-1);
+    std::string md5 = PrintSecurityGuardUtil::CalculateFileMd5(static_cast<uint32_t>(-1));
     EXPECT_TRUE(md5.empty());
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetFileSize_001, TestSize.Level1)
 {
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    uint64_t size = service->GetFileSize(-1);
+    uint64_t size = PrintSecurityGuardUtil::GetFileSize(static_cast<uint32_t>(-1));
     EXPECT_EQ(size, 0);
 }
 

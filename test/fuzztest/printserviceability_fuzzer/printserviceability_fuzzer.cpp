@@ -132,20 +132,13 @@ void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider 
 void TestCalculateFileMd5(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     uint32_t fd = dataProvider->ConsumeIntegral<uint32_t>();
-    PrintServiceAbility::GetInstance()->CalculateFileMd5(fd);
+    PrintSecurityGuardUtil::CalculateFileMd5(fd);
 }
 
-void TestCacheFileList(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestGetFileSize(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::vector<std::string> fileList;
-    int32_t fileCount = dataProvider->ConsumeIntegralInRange<int32_t>(0, 5);
-    for (int32_t i = 0; i < fileCount; i++) {
-        fileList.push_back(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    }
-    PrintServiceAbility::GetInstance()->CacheFileList(jobId, fileList);
-    PrintServiceAbility::GetInstance()->GetCachedFileList(jobId);
-    PrintServiceAbility::GetInstance()->ClearCachedFileList(jobId);
+    uint32_t fd = dataProvider->ConsumeIntegral<uint32_t>();
+    PrintSecurityGuardUtil::GetFileSize(fd);
 }
 
 void TestSubStateToErrorCodeStr(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -179,7 +172,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestIsDisablePrint,
         &TestReportBannedEvent,
         &TestCalculateFileMd5,
-        &TestCacheFileList,
+        &TestGetFileSize,
         &TestSubStateToErrorCodeStr,
         &TestGenerateErrorCodes,
     };

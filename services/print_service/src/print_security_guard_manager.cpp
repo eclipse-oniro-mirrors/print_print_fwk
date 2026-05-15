@@ -19,19 +19,19 @@ namespace OHOS::Print {
 static int64_t EVENT_ID = 1011015004;
 static std::string VERSION = "1.0";
 
-void PrintSecurityGuardManager::ReceiveBaseInfo(const std::string jobId, const std::string callPkg,
+void PrintSecurityGuardManager::receiveBaseInfo(const std::string jobId, const std::string callPkg,
     const std::vector<std::string> &fileList)
 {
-    PRINT_HILOGI("ReceiveBaseInfo jobId:%{public}s, callPkg:%{public}s", jobId.c_str(), callPkg.c_str());
+    PRINT_HILOGI("receiveBaseInfo jobId:%{public}s, callPkg:%{public}s", jobId.c_str(), callPkg.c_str());
     auto securityGuard = std::make_shared<PrintSecurityGuardInfo>(callPkg, fileList);
     std::lock_guard<std::mutex> lock(securityMapMutex_);
     securityMap_.insert(std::make_pair(jobId, securityGuard));
 }
 
-void PrintSecurityGuardManager::ReceiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo,
+void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo,
     const PrintJob &printJob)
 {
-    PRINT_HILOGI("ReceiveJobStateUpdate jobId:%{public}s, state:%{public}d", jobId.c_str(), printJob.GetJobState());
+    PRINT_HILOGI("receiveJobStateUpdate jobId:%{public}s, state:%{public}d", jobId.c_str(), printJob.GetJobState());
     std::string securityInfo = "";
     {
         std::lock_guard<std::mutex> lock(securityMapMutex_);
@@ -53,11 +53,11 @@ void PrintSecurityGuardManager::ReceiveJobStateUpdate(const std::string jobId, c
     ClearSecurityMap(jobId);
 }
 
-void PrintSecurityGuardManager::ReceiveAuditInfo(const std::string jobId,
+void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
     const PrinterInfo &printerInfo, const PrintJob &printJob,
     const std::vector<FileAuditInfo> &fileInfos)
 {
-    PRINT_HILOGI("ReceiveAuditInfo jobId:%{public}s, fileCount:%{public}zu",
+    PRINT_HILOGI("receiveAuditInfo jobId:%{public}s, fileCount:%{public}zu",
         jobId.c_str(), fileInfos.size());
     std::lock_guard<std::mutex> lock(securityMapMutex_);
     auto it = securityMap_.find(jobId);

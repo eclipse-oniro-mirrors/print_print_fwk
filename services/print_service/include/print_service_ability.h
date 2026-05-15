@@ -197,9 +197,6 @@ private:
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
     void CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob);
-    std::string CalculateFileMd5(uint32_t fd);
-    uint64_t GetFileSize(uint32_t fd);
-    std::string Md5HashBuffer(const char* data, size_t size);
     void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:

@@ -49,9 +49,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001_NeedR
     PrinterInfo printerInfo;
     PrintJob printJob;
     int num = printSerPrintSecurityGuardManager.securityMap_.size();
-    printSerPrintSecurityGuardManager.ReceiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
-    printSerPrintSecurityGuardManager.ReceiveJobStateUpdate("jobId-2", printerInfo, printJob);
+    printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-2", printerInfo, printJob);
 }
 
 /**
@@ -67,9 +67,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002_NeedR
     PrinterInfo printerInfo;
     PrintJob printJob;
     int num = printSerPrintSecurityGuardManager.securityMap_.size();
-    printSerPrintSecurityGuardManager.ReceiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
-    printSerPrintSecurityGuardManager.ReceiveJobStateUpdate("jobId-1", printerInfo, printJob);
+    printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
 }
 
 /**
@@ -90,9 +90,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0003, Test
     info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
     info.size = 1024;
     fileInfos.push_back(info);
-    manager.ReceiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    manager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     int num = manager.securityMap_.size();
-    manager.ReceiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
+    manager.receiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
     EXPECT_EQ(manager.securityMap_.size(), num);
 }
 
@@ -109,7 +109,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0004, Test
     PrintJob printJob;
     std::vector<FileAuditInfo> fileInfos;
     int num = manager.securityMap_.size();
-    manager.ReceiveAuditInfo("jobId-notexist", printerInfo, printJob, fileInfos);
+    manager.receiveAuditInfo("jobId-notexist", printerInfo, printJob, fileInfos);
     EXPECT_EQ(manager.securityMap_.size(), num + 1);
 }
 
@@ -132,9 +132,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0005, Test
     info.md5 = "d41d8cd98f00b204e9800998ecf8427e";
     info.size = 1024;
     fileInfos.push_back(info);
-    manager.ReceiveBaseInfo("jobId-1", "callerPkg-1", std::vector<std::string>{});
-    manager.ReceiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
-    manager.ReceiveJobStateUpdate("jobId-1", printerInfo, printJob);
+    manager.receiveBaseInfo("jobId-1", "callerPkg-1", std::vector<std::string>{});
+    manager.receiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
+    manager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
     EXPECT_EQ(manager.securityMap_.size(), 0);
 }
 }  // namespace Print
