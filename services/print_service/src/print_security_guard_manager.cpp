@@ -23,6 +23,7 @@ void PrintSecurityGuardManager::receiveBaseInfo(const std::string jobId, const s
     const std::vector<std::string> &fileList)
 {
     PRINT_HILOGI("receiveBaseInfo start jobId:%{public}s, callPkg:%{public}s", jobId.c_str(), callPkg.c_str());
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
     auto securityGuard = std::make_shared<PrintSecurityGuardInfo>(callPkg, fileList);
     securityMap_.insert(std::make_pair(jobId, securityGuard));
 }
