@@ -41,6 +41,7 @@ group("fuzztest") {
     "scanmanagerclient_fuzzer:fuzztest",
     "scanserviceability_fuzzer:fuzztest",
     "scanservicestub_fuzzer:fuzztest",
+    "scanpicturedata_fuzzer:fuzztest",
     "scanusbmanager_fuzzer:fuzztest",
     "vendormanager_fuzzer:fuzztest",
   ]
