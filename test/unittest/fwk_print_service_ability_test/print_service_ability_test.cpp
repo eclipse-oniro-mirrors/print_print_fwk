@@ -40,6 +40,7 @@
 #include "print_log.h"
 #include "printer_info.h"
 #include "print_utils.h"
+#include "print_util.h"
 #include "string_wrapper.h"
 #include "system_ability_definition.h"
 #include "want_params_wrapper.h"
@@ -702,8 +703,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0025_NeedRename, TestS
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "com.ohos.spooler:0";
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
     EXPECT_EQ(service->DelayStartDiscovery(extensionId), false);
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_UNLOAD;
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
     EXPECT_EQ(service->DelayStartDiscovery(extensionId), false);
 }
 
@@ -722,9 +725,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestS
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "com.ohos.spooler:0";
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_UNLOAD;
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_LOADED;
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADED;
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
     std::string jobId = "job123";
     auto printJob = std::make_shared<PrintJob>();
@@ -1275,9 +1280,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0063_NeedRename, TestS
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::string extensionId = "com.ohos.spooler:0";
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_UNLOAD;
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_LOADED;
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADED;
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
 }
 
@@ -1547,10 +1554,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088_NeedRename, TestS
     ret = service->RegisterExtCallback(extensionCid2, listener);
     EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
     std::string extensionId = "123";
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_UNLOAD;
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
     ret = service->RegisterExtCallback(extensionCid2, listener);
     EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_LOADING;
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     ret = service->RegisterExtCallback(extensionCid2, listener);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
     std::string extensionCid3 = "123:2";
@@ -1563,10 +1572,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0090_NeedRename, TestS
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "123";
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_UNLOAD;
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
     auto ret = service->LoadExtSuccess(extensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-    service->extensionStateList_[extensionId] = PRINT_EXTENSION_LOADING;
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     ret = service->LoadExtSuccess(extensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }

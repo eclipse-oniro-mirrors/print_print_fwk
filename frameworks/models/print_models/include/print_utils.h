@@ -116,6 +116,10 @@ public:
     static std::string GenerateTempFilePath(const std::string &filesDir);
     static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
 
+    static std::string MakeExtensionStateKey(int32_t userId, const std::string& bundleName);
+    static int32_t GetUserIdFromKey(const std::string& key);
+    static std::string GetBundleNameFromKey(const std::string& key);
+
     static bool SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
     static void SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
 
