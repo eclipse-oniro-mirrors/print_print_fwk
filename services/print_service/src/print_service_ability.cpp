@@ -1816,14 +1816,24 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         return E_PRINT_KIA_INTERCEPTED;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto jobId = jobInfo.GetJobId();
+    // Save fileList_ before CheckPrintJob erases the entry from printJobList_
+    // fileList_ is transient and lost after IPC/UpdateParams
+    std::vector<std::string> savedFileList;
+    auto origJobIt = printJobList_.find(jobId);
+    if (origJobIt != printJobList_.end() && origJobIt->second != nullptr) {
+        savedFileList = origJobIt->second->GetFileList();
+    }
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
         return E_PRINT_INVALID_PRINTJOB;
     }
-    auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
+    if (!savedFileList.empty()) {
+        printJob->SetFileList(savedFileList);
+    }
     PRINT_HILOGI("[Job Id: %{public}s] set job state to PRINT_JOB_QUEUED, [Printer: %{public}s]",
         jobId.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
     printJob->SetJobState(PRINT_JOB_QUEUED);
