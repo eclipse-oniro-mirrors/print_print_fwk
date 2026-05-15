@@ -17,7 +17,6 @@
 #define BASE_PRINT_SECURITY_GUARD_H
 
 #include <map>
-#include <mutex>
 #include <vector>
 
 #include "print_security_guard_info.h"
