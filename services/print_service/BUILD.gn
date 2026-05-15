@@ -57,7 +57,7 @@ _sources = [
   "${_service_path}/src/print_resource_manager.cpp",
   "${_service_path}/src/print_security_guard_info.cpp",
   "${_service_path}/src/print_security_guard_manager.cpp",
-  "${_service_path}/src/print_security_guard_util.cpp",
+  "${print_path}/services/print_service/src/print_security_guard_util.cpp",
   "${_service_path}/src/print_service_ability.cpp",
   "${_service_path}/src/print_service_converter.cpp",
   "${_service_path}/src/print_service_helper.cpp",
