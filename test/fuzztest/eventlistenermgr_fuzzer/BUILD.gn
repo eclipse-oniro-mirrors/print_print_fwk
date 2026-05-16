@@ -15,15 +15,6 @@ import("//base/print/print_fwk/print.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
-
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service"
-} else {
-  _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services"
-}
-
 ##############################fuzztest##########################################
 ohos_fuzztest("EventListenerMgrFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
@@ -33,7 +24,7 @@ ohos_fuzztest("EventListenerMgrFuzzTest") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
-    "${_service_path}/include/event_callback",
+    "${print_path}/include/event_callback",
     "${print_utils_path}/include",
   ]
 
