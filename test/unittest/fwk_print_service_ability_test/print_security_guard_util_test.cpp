@@ -131,7 +131,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, GenerateErrorCodes_011, TestSize.Level1)
 HWTEST_F(PrintSecurityGuardUtilTest, GenerateErrorCodes_012, TestSize.Level1)
 {
     std::set<uint32_t> blockedSubStates;
-    blockedSubStates.insert(999);
+    blockedSubStates.insert(9999);
     auto result = GenerateErrorCodes(blockedSubStates);
     ASSERT_EQ(result.size(), 1);
     EXPECT_EQ(result[0], "unknown");
