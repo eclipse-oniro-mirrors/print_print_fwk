@@ -563,10 +563,6 @@ int32_t PrintServiceAbility::StartPrint(
 
 void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob)
 {
-    if (printJob == nullptr) {
-        PRINT_HILOGE("CalculateFileAuditInfo printJob is null");
-        return;
-    }
     std::string jobId = printJob->GetJobId();
     std::vector<std::string> fileList = printJob->GetFileList();
     if (fileList.empty()) {
@@ -617,8 +613,8 @@ int32_t PrintServiceAbility::CallSpooler(
     KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
-    SendPrintJobEvent(*printJob);
     printJob->SetFileList(fileList);
+    SendPrintJobEvent(*printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
     PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
@@ -1749,17 +1745,10 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
 
-    std::vector<std::string> fileList;
-    Json::Value optionJson;
-    if (PrintJsonUtil::Parse(nativePrintJob->GetOption(), optionJson)) {
-        if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
-            fileList.push_back(optionJson["jobName"].asString());
-        }
-    }
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(nativePrintJob->GetOption());
     std::vector<uint32_t> fdList;
     nativePrintJob->GetFdList(fdList);
-    PRINT_HILOGI("StartNativePrintJob jobName as fileName: %{public}s, fdCount: %{public}zu",
-        fileList.empty() ? "none" : fileList[0].c_str(), fdList.size());
+    PRINT_HILOGI("StartNativePrintJob jobName as fileName");
     nativePrintJob->SetFileList(fileList);
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
 
@@ -2582,12 +2571,10 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
 
     if (state == PRINT_JOB_BLOCKED) {
         HandleJobBlockedState(printJob, subState);
-    }
-    SendJobAuditInfo(jobId, printJob);
-
-    if (state == PRINT_JOB_COMPLETED) {
+    } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
+    SendJobAuditInfo(jobId, printJob);
 
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
@@ -3024,6 +3011,7 @@ int32_t PrintServiceAbility::Release()
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     UnregisterPrinterCallback(PRINTER_DISCOVER_EVENT_TYPE);
     UnregisterPrinterCallback(PRINTER_CHANGE_EVENT_TYPE);
+    securityGuardManager_.clearAll();
     return E_PRINT_NONE;
 }
 

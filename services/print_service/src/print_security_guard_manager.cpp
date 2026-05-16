@@ -73,6 +73,12 @@ void PrintSecurityGuardManager::clearSecurityMap(const std::string jobId)
     securityMap_.erase(jobId);
 }
 
+void PrintSecurityGuardManager::clearAll()
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    securityMap_.clear();
+}
+
 void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const std::string version,
     const std::string content)
 {

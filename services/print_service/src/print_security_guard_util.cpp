@@ -15,9 +15,12 @@
 
 #include "print_security_guard_util.h"
 #include "print_constant.h"
+#include "print_json_util.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
+
+namespace {
 
 static const std::map<uint32_t, std::string> SUBSTATE_ERROR_MAP = {
     {PRINT_JOB_COMPLETED_SUCCESS, "success"},
@@ -68,6 +71,8 @@ std::string SubStateToErrorCodeStr(uint32_t subState)
     return ERROR_CODE_OTHER_ERROR;
 }
 
+} // namespace
+
 std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates)
 {
     std::set<std::string> errorSet;
@@ -96,6 +101,18 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
         }
     }
     return std::vector<std::string>(errorSet.begin(), errorSet.end());
+}
+
+std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const std::string &option)
+{
+    std::vector<std::string> fileList;
+    Json::Value optionJson;
+    if (PrintJsonUtil::Parse(option, optionJson)) {
+        if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
+            fileList.push_back(optionJson["jobName"].asString());
+        }
+    }
+    return fileList;
 }
 
 } // namespace OHOS::Print

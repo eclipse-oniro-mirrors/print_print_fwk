@@ -42,17 +42,15 @@ enum PrinterFoundType {
 struct FileAuditInfo {
     std::string fileName;
     std::string md5;
-    uint64_t size;
+    uint64_t size = 0;
 };
 
 class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);
     static std::string ExtractFileName(const std::string& filePath);
+    static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
 };
-
-std::string SubStateToErrorCodeStr(uint32_t subState);
-std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);
 
 inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
 {
