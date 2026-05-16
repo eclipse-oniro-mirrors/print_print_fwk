@@ -18,6 +18,7 @@
 #include "fuzzer/FuzzedDataProvider.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "print_security_guard_util.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"

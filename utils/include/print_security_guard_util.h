@@ -52,6 +52,8 @@ public:
     static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
 };
 
+std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);
+
 inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
 {
     std::string upper = PrintUtil::ToUpper(des);
