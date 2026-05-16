@@ -46,11 +46,11 @@ ohos_unittest("fwk_print_service_ability_test") {
   sources = [
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_ability_test.cpp",
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_mock_permission.cpp",
-    "${print_path}/test/unittest/fwk_print_service_ability_test/print_security_guard_util_test.cpp",
   ]
 
   if (!print_fwk_feature_device_isolation) {
     sources += [ "${_test_path}/unittest/fwk_print_service_ability_test/mock/mock_hks_api.cpp" ]
+    sources += [ "${print_path}/test/unittest/fwk_print_service_ability_test/print_security_guard_util_test.cpp" ]
   }
 
   cflags_cc = []
