@@ -24,7 +24,7 @@ ohos_fuzztest("EventListenerMgrFuzzTest") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
-    "${print_path}/include/event_callback",
+    "${print_path}/service/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
