@@ -17,9 +17,11 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 if (print_fwk_feature_device_isolation) {
-  _service_path = "${print_path}/services/phone_service/print_service"
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service"
 } else {
-  _service_path = "${print_path}/services/print_service"
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services"
 }
 
 ##############################fuzztest##########################################
