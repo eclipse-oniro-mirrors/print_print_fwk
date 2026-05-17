@@ -26,128 +26,128 @@
 #include <functional>
 
 namespace OHOS {
-    namespace Print {
-        constexpr uint8_t MAX_STRING_LENGTH = 20;
-        constexpr int MAX_SET_NUMBER = 128;
-        constexpr size_t U32_AT_SIZE = 4;
-        static constexpr const char *JOB_OPTIONS =
-                "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
-                "\"printerName\":\"testId\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\","
-                "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"]}";
+namespace Print {
+constexpr uint8_t MAX_STRING_LENGTH = 20;
+constexpr int MAX_SET_NUMBER = 128;
+constexpr size_t U32_AT_SIZE = 4;
+static constexpr const char *JOB_OPTIONS =
+    "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
+    "\"printerName\":\"testId\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\","
+    "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"]}";
 
-        void TestOn(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
-            sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-            std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->On(taskId, type, callback);
-        }
+void TestOn(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
+    sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
+    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->On(taskId, type, callback);
+}
 
-        void TestOff(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->Off(taskId, type);
-        }
+void TestOff(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->Off(taskId, type);
+}
 
-        void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
-            sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-            std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->RegisterPrinterCallback(type, callback);
-            PrintServiceAbility::GetInstance()->UnregisterPrinterCallback(type);
+void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
+    sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RegisterPrinterCallback(type, callback);
+    PrintServiceAbility::GetInstance()->UnregisterPrinterCallback(type);
 
-            std::vector <PrintExtensionInfo> printExtensionInfos;
-            PrintServiceAbility::GetInstance()->QueryAllExtension(printExtensionInfos);
-            std::vector <std::string> extensionIds;
-            for (auto &printExtensionInfo: printExtensionInfos) {
-                extensionIds.push_back(printExtensionInfo.GetExtensionId());
-            }
-            PrintServiceAbility::GetInstance()->StartDiscoverPrinter(extensionIds);
+    std::vector <PrintExtensionInfo> printExtensionInfos;
+    PrintServiceAbility::GetInstance()->QueryAllExtension(printExtensionInfos);
+    std::vector <std::string> extensionIds;
+    for (auto &printExtensionInfo: printExtensionInfos) {
+        extensionIds.push_back(printExtensionInfo.GetExtensionId());
+    }
+    PrintServiceAbility::GetInstance()->StartDiscoverPrinter(extensionIds);
 
-            sptr<PrintExtensionCallbackStub> extCallback = new(std::nothrow) PrintExtensionCallbackStub();
-            for (auto &printExtensionInfo: printExtensionInfos) {
-                PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), extCallback);
-            }
+    sptr<PrintExtensionCallbackStub> extCallback = new(std::nothrow) PrintExtensionCallbackStub();
+    for (auto &printExtensionInfo: printExtensionInfos) {
+        PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), extCallback);
+    }
 
-            std::string extensionCID = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->RegisterExtCallback(extensionCID, extCallback);
-        }
+    std::string extensionCID = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RegisterExtCallback(extensionCID, extCallback);
+}
 
-        void TestLoadExtSuccess(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->LoadExtSuccess(extensionId);
-        }
+void TestLoadExtSuccess(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->LoadExtSuccess(extensionId);
+}
 
-        void TestSendExtensionEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            std::string extInfo = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->SendExtensionEvent(extensionId, extInfo);
-            PrintServiceAbility::GetInstance()->UpdatePrintUserMap();
-        }
+void TestSendExtensionEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string extInfo = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->SendExtensionEvent(extensionId, extInfo);
+    PrintServiceAbility::GetInstance()->UpdatePrintUserMap();
+}
 
-        void TestCancelUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-            PrintServiceAbility::GetInstance()->CancelUserPrintJobs(userId);
-            PrintServiceAbility::GetInstance()->CallStatusBar();
-            AAFwk::Want want;
-            want.SetElementName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH),
-                                dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-            PrintServiceAbility::GetInstance()->StartExtensionAbility(want);
-        }
+void TestCancelUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->CancelUserPrintJobs(userId);
+    PrintServiceAbility::GetInstance()->CallStatusBar();
+    AAFwk::Want want;
+    want.SetElementName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH),
+        dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->StartExtensionAbility(want);
+}
 
-        void TestBlockUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-            PrintServiceAbility::GetInstance()->BlockUserPrintJobs(userId);
-            std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-            PrintServiceAbility::GetInstance()->RestartPrintJob(jobId);
-        }
+void TestBlockUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->BlockUserPrintJobs(userId);
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RestartPrintJob(jobId);
+}
 
-        void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
+void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
 #ifdef EDM_SERVICE_ENABLE
-            PrintServiceAbility::GetInstance()->IsDisablePrint();
+    PrintServiceAbility::GetInstance()->IsDisablePrint();
 #endif // EDM_SERVICE_ENABLE
-        }
+}
 
-        void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
+void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
 #ifdef EDM_SERVICE_ENABLE
-            std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
     Json::Value optionJson;
     optionJson["jobName"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     option = PrintJsonUtil::WriteStringUTF8(optionJson);
     PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
 #endif // EDM_SERVICE_ENABLE
-        }
+}
 
-        void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-        {
-            PRINT_HILOGI("Multithreading is running at function TestAllFunction.");
-            using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
-            TestHandler tasks[] = {
-                    &TestOn,
-                    &TestOff,
-                    &TestCallback,
-                    &TestLoadExtSuccess,
-                    &TestSendExtensionEvent,
-                    &TestCancelUserPrintJobs,
-                    &TestBlockUserPrintJobs,
-                    &TestIsDisablePrint,
-                    &TestReportBannedEvent,
-            };
-            TestHandler handler = dataProvider->PickValueInArray(tasks);
-            handler(data, size, dataProvider);
-        }
+void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PRINT_HILOGI("Multithreading is running at function TestAllFunction.");
+    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    TestHandler tasks[] = {
+        &TestOn,
+        &TestOff,
+        &TestCallback,
+        &TestLoadExtSuccess,
+        &TestSendExtensionEvent,
+        &TestCancelUserPrintJobs,
+        &TestBlockUserPrintJobs,
+        &TestIsDisablePrint,
+        &TestReportBannedEvent,
+    };
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
+}
 
-    }  // namespace Print
+}  // namespace Print
 }  // namespace OHOS
 
 /* Fuzzer entry point */
