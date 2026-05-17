@@ -79,6 +79,36 @@ void PrintSecurityGuardManager::clearAll()
     securityMap_.clear();
 }
 
+std::vector<std::string> PrintSecurityGuardManager::GetFileList(const std::string &jobId) const
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        return it->second->GetFileList();
+    }
+    return {};
+}
+
+void PrintSecurityGuardManager::SetFileAuditInfo(const std::string &jobId,
+    const std::vector<FileAuditInfo> &fileInfos)
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        it->second->SetFileAuditInfo(fileInfos);
+    }
+}
+
+std::vector<FileAuditInfo> PrintSecurityGuardManager::GetFileAuditInfo(const std::string &jobId) const
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        return it->second->GetFileAuditInfo();
+    }
+    return {};
+}
+
 void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const std::string version,
     const std::string content)
 {

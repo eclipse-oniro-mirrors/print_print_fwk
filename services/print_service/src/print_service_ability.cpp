@@ -563,8 +563,11 @@ int32_t PrintServiceAbility::StartPrint(
 
 void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob)
 {
+    if (printJob == nullptr) {
+        return;
+    }
     std::string jobId = printJob->GetJobId();
-    std::vector<std::string> fileList = printJob->GetFileList();
+    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
     if (fileList.empty()) {
         PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
         return;
@@ -578,7 +581,7 @@ void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob>
         fileInfos.push_back(info);
     }
     if (!fileInfos.empty()) {
-        printJob->SetFileAuditInfo(fileInfos);
+        securityGuardManager_.SetFileAuditInfo(jobId, fileInfos);
         PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
             jobId.c_str(), fileInfos.size());
     } else {
@@ -613,9 +616,8 @@ int32_t PrintServiceAbility::CallSpooler(
     KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
-    printJob->SetFileList(fileList);
-    SendPrintJobEvent(*printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
+    SendPrintJobEvent(*printJob);
     PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
 }
@@ -1749,7 +1751,6 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     std::vector<uint32_t> fdList;
     nativePrintJob->GetFdList(fdList);
     PRINT_HILOGI("StartNativePrintJob jobName as fileName");
-    nativePrintJob->SetFileList(fileList);
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
 
     return StartPrintJobInternal(nativePrintJob);
@@ -1811,13 +1812,11 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto jobId = jobInfo.GetJobId();
-    // Save fileList_ before CheckPrintJob erases the entry from printJobList_
-    // fileList_ is transient and lost after IPC/UpdateParams
-    std::vector<std::string> savedFileList;
-    auto origJobIt = printJobList_.find(jobId);
-    if (origJobIt != printJobList_.end() && origJobIt->second != nullptr) {
-        savedFileList = origJobIt->second->GetFileList();
-    }
+
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(jobInfo.GetOption());
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
         return E_PRINT_INVALID_PRINTJOB;
@@ -1825,9 +1824,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
-    if (!savedFileList.empty()) {
-        printJob->SetFileList(savedFileList);
-    }
     PRINT_HILOGI("[Job Id: %{public}s] set job state to PRINT_JOB_QUEUED, [Printer: %{public}s]",
         jobId.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
     printJob->SetJobState(PRINT_JOB_QUEUED);
@@ -2535,7 +2531,7 @@ void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::
 {
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
     if (printerInfo != nullptr) {
-        auto fileInfos = printJob->GetFileAuditInfo();
+        auto fileInfos = securityGuardManager_.GetFileAuditInfo(jobId);
         securityGuardManager_.receiveAuditInfo(jobId, *printerInfo, *printJob, fileInfos);
     }
 }

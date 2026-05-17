@@ -29,7 +29,6 @@
 #include "print_range.h"
 #include "print_attributes.h"
 #include "print_constant.h"
-#include "print_security_guard_util.h"
 #include <json/json.h>
 
 namespace OHOS::Print {
@@ -134,15 +133,6 @@ public:
 
     [[nodiscard]] const std::string &GetVendorOptions() const;
 
-    // ===== Audit-related methods (transient: not serialized via Parcel) =====
-    void SetFileList(const std::vector<std::string> &fileList);
-
-    [[nodiscard]] const std::vector<std::string> &GetFileList() const;
-
-    void SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos);
-
-    [[nodiscard]] const std::vector<FileAuditInfo> &GetFileAuditInfo() const;
-
     virtual bool Marshalling(Parcel &parcel) const override;
 
     virtual bool MarshallingParam(Parcel &parcel) const;
@@ -182,9 +172,6 @@ private:
     std::string option_;
     bool hasVendorOptions_;
     std::string vendorOptions_;
-    // ===== Audit-related fields (transient: not serialized via Parcel) =====
-    std::vector<std::string> fileList_;           // File path list for audit
-    std::vector<FileAuditInfo> fileAuditInfo_;    // Audit info (md5/size)
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_JOB_H

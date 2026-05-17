@@ -33,6 +33,11 @@ public:
         const PrintJob &printJob, const std::vector<FileAuditInfo> &fileInfos);
     void clearAll();
 
+    // Orchestration methods for ServiceAbility
+    std::vector<std::string> GetFileList(const std::string &jobId) const;
+    void SetFileAuditInfo(const std::string &jobId, const std::vector<FileAuditInfo> &fileInfos);
+    std::vector<FileAuditInfo> GetFileAuditInfo(const std::string &jobId) const;
+
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);
     void clearSecurityMap(const std::string jobId);

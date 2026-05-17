@@ -51,6 +51,9 @@ public:
     void SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
     void SetPrintAuditInfo(const PrinterInfo &printerInfo, const PrintJob &printJob,
         const std::vector<FileAuditInfo> &fileInfos);
+    const std::vector<std::string> &GetFileList() const;
+    void SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos);
+    std::vector<FileAuditInfo> GetFileAuditInfo() const;
 
 private:
     int32_t subType_{};
@@ -64,6 +67,7 @@ private:
     std::string extra_{};
     std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
+    std::vector<std::string> fileList_;
     std::vector<FileAuditInfo> files_;
     uint32_t duplexMode_ = 0;
     std::vector<std::string> errorCode_;

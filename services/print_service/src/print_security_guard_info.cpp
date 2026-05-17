@@ -23,7 +23,23 @@ static const int32_t SPLIT_INDEX = 2;
 PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList)
 {
     caller_ = callPkg;
+    fileList_ = fileList;
     objectInfo_ = PrintUtil::ParseListToString(fileList);
+}
+
+const std::vector<std::string> &PrintSecurityGuardInfo::GetFileList() const
+{
+    return fileList_;
+}
+
+void PrintSecurityGuardInfo::SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos)
+{
+    files_ = fileInfos;
+}
+
+std::vector<FileAuditInfo> PrintSecurityGuardInfo::GetFileAuditInfo() const
+{
+    return files_;
 }
 
 void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
