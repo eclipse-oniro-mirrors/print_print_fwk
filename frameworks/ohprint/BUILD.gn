@@ -15,12 +15,6 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
-if (print_fwk_feature_device_isolation) {
-  _service_path = "${print_path}/services/phone_service/print_service"
-} else {
-  _service_path = "${print_path}/services/print_service"
-}
-
 config("print_ndk_config") {
   visibility = [ ":*" ]
   include_dirs = []
@@ -41,7 +35,7 @@ ohos_shared_library("ohprint") {
     "${print_utils_path}/include",
     "${print_path}/frameworks/helper/print_helper/include",
     "${print_path}/frameworks/models/print_models/include",
-    "${_service_path}/include",
+    "${print_path}/services/print_service/include",
   ]
   public_configs = [ ":print_ndk_config" ]
 
