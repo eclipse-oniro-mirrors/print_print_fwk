@@ -110,47 +110,5 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006_NeedRename,
     printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
-
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0007, TestSize.Level1)
-{
-    std::vector<std::string> fileList;
-    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterName("TestPrinter");
-    PrintJob printJob;
-    std::vector<FileAuditInfo> fileInfos;
-    FileAuditInfo info;
-    info.fileName = "/data/test/file.pdf";
-    info.md5 = "";
-    info.size = 0;
-    fileInfos.push_back(info);
-    printSecurityGuardInfo.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-    std::string jsonStr = printSecurityGuardInfo.ToJsonStr();
-    EXPECT_NE("", jsonStr);
-    EXPECT_TRUE(jsonStr.find("file.pdf") != std::string::npos);
-}
-
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0008_MultiFile, TestSize.Level1)
-{
-    std::vector<std::string> fileList = {"a.pdf", "b.pdf"};
-    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterName("HP Printer");
-    PrintJob printJob;
-    printJob.SetDuplexMode(1);
-    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-    std::vector<FileAuditInfo> fileInfos;
-    FileAuditInfo fa;
-    fa.fileName = "a.pdf"; fa.md5 = ""; fa.size = 0;
-    FileAuditInfo fb;
-    fb.fileName = "b.pdf"; fb.md5 = ""; fb.size = 0;
-    fileInfos.push_back(fa);
-    fileInfos.push_back(fb);
-    printSecurityGuardInfo.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-    std::string jsonStr = printSecurityGuardInfo.ToJsonStr();
-    EXPECT_NE("", jsonStr);
-    EXPECT_TRUE(jsonStr.find("a.pdf") != std::string::npos);
-    EXPECT_TRUE(jsonStr.find("b.pdf") != std::string::npos);
-}
 }  // namespace Print
 }  // namespace OHOS

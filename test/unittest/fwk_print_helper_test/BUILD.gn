@@ -16,10 +16,8 @@ import("//build/test.gni")
 
 if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service/print_service"
 } else {
   _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services/print_service"
 }
 
 module_output_path = unit_test_output_path
@@ -30,7 +28,7 @@ ohos_unittest("fwk_print_helper_test") {
     "../fwk_inner_napi_test/mock",
     "../service_test/mock",
     "${print_path}/frameworks/models/print_models/include",
-    "${_service_path}/include",
+    "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
   ]
 

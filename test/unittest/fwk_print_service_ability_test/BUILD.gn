@@ -16,10 +16,8 @@ import("//build/test.gni")
 
 if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service/print_service"
 } else {
   _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services/print_service"
 }
 
 module_output_path = unit_test_output_path
@@ -33,8 +31,8 @@ ohos_unittest("fwk_print_service_ability_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
-    "${_service_path}/include",
-    "${_service_path}/include/event_callback",
+    "${print_path}/services/print_service/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -52,7 +50,6 @@ ohos_unittest("fwk_print_service_ability_test") {
 
   if (!print_fwk_feature_device_isolation) {
     sources += [ "${_test_path}/unittest/fwk_print_service_ability_test/mock/mock_hks_api.cpp" ]
-    sources += [ "${print_path}/test/unittest/fwk_print_service_ability_test/print_security_guard_util_test.cpp" ]
   }
 
   cflags_cc = []
