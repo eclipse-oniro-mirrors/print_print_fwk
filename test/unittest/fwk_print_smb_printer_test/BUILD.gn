@@ -14,14 +14,6 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service/print_service"
-} else {
-  _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services/print_service"
-}
-
 module_output_path = unit_test_output_path
 
 ohos_unittest("fwk_print_smb_printer_test") {
@@ -31,7 +23,7 @@ ohos_unittest("fwk_print_smb_printer_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
-    "${_service_path}/include",
+    "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
   ]
 
@@ -84,7 +76,15 @@ ohos_unittest("fwk_print_smb_printer_test") {
   ]
 
   if (print_fwk_feature_smb_printer) {
-    sources += [ "${_test_path}/unittest/fwk_print_smb_printer_test/smb_printer_helper_test.cpp" ]
+    if (print_fwk_feature_device_isolation) {
+      sources += [
+        "${print_path}/test/phone_test/unittest/fwk_print_smb_printer_test/smb_printer_helper_test.cpp"
+      ]
+    } else {
+      sources += [
+        "${print_path}/test/unittest/fwk_print_smb_printer_test/smb_printer_helper_test.cpp"
+      ]
+    }
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cJSON:cjson",
