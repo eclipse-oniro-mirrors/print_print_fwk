@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define private public
-#define protected public
 #include "printsecurityguardmanager_fuzzer.h"
 #include "fuzzer/FuzzedDataProvider.h"
 #include "print_security_guard_manager.h"
@@ -26,6 +24,9 @@ namespace OHOS {
 namespace Print {
 constexpr uint8_t MAX_STRING_LENGTH = 50;
 constexpr int MAX_SET_NUMBER = 10;
+constexpr uint32_t MAX_DUPLEX_MODE = 5;
+constexpr uint32_t MAX_SUB_STATE = 100;
+constexpr int MAX_JOB_COUNT = 5;
 constexpr size_t U32_AT_SIZE = 4;
 
 void TestReceiveBaseInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -53,8 +54,8 @@ void TestReceiveAuditInfo(const uint8_t *data, size_t size, FuzzedDataProvider *
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
 
     PrintJob printJob;
-    printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 5));
-    printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 100));
+    printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_DUPLEX_MODE));
+    printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SUB_STATE));
 
     std::vector<FileAuditInfo> fileInfos;
     int fileCount = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
@@ -80,7 +81,7 @@ void TestReceiveJobStateUpdate(const uint8_t *data, size_t size, FuzzedDataProvi
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
 
     PrintJob printJob;
-    printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 100));
+    printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SUB_STATE));
 
     manager.receiveJobStateUpdate(jobId, printerInfo, printJob);
 }
@@ -102,8 +103,8 @@ void TestFullAuditFlow(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
 
     PrintJob printJob;
-    printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 5));
-    printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 100));
+    printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_DUPLEX_MODE));
+    printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SUB_STATE));
 
     std::vector<FileAuditInfo> fileInfos;
     int fileCount = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
@@ -122,7 +123,7 @@ void TestClearAll(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
 {
     PrintSecurityGuardManager manager;
     std::vector<std::string> fileList;
-    int jobCount = dataProvider->ConsumeIntegralInRange<int>(1, 5);
+    int jobCount = dataProvider->ConsumeIntegralInRange<int>(1, MAX_JOB_COUNT);
     for (int i = 0; i < jobCount; ++i) {
         manager.receiveBaseInfo(
             "job-" + std::to_string(i),

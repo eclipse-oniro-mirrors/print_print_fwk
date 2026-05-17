@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define private public
-#define protected public
 #include "printsecurityguardutil_fuzzer.h"
 #include "fuzzer/FuzzedDataProvider.h"
 #include "print_security_guard_util.h"
@@ -25,14 +23,16 @@
 namespace OHOS {
 namespace Print {
 constexpr uint8_t MAX_STRING_LENGTH = 100;
+constexpr int MAX_SUB_STATE_COUNT = 10;
+constexpr uint32_t MAX_SUB_STATE_CODE = 200;
 constexpr size_t U32_AT_SIZE = 4;
 
 void TestGenerateErrorCodes(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::set<uint32_t> subStates;
-    int count = dataProvider->ConsumeIntegralInRange<int>(0, 10);
+    int count = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SUB_STATE_COUNT);
     for (int i = 0; i < count; ++i) {
-        subStates.insert(dataProvider->ConsumeIntegralInRange<uint32_t>(0, 200));
+        subStates.insert(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SUB_STATE_CODE));
     }
     auto result = GenerateErrorCodes(subStates);
     // Just verify no crash

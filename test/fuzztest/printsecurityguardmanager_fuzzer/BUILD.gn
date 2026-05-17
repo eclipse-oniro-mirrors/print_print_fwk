@@ -42,6 +42,8 @@ ohos_fuzztest("PrintSecurityGuardManagerFuzzTest") {
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
 
   cflags_cc = []
