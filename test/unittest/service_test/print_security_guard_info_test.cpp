@@ -14,9 +14,7 @@
  */
 
 #include <gtest/gtest.h>
-#define private public
 #include "print_security_guard_info.h"
-#undef private
 #include "print_constant.h"
 #include "print_log.h"
 

@@ -76,7 +76,11 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service_test",
   ]
 
-  cflags_cc = [ "-DUNIT_TEST" ]
+  cflags_cc = [
+    "-DUNIT_TEST",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
