@@ -71,7 +71,7 @@ void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
     for (auto &printExtensionInfo: printExtensionInfos) {
         PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), extCallback);
     }
-
+    
     std::string extensionCID = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->RegisterExtCallback(extensionCID, extCallback);
 }

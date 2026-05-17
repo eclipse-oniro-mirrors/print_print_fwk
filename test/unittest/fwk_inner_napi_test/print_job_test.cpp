@@ -706,7 +706,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_006, TestSize.Level1)
         uint32_t mirror;
         uint32_t pageBorder;
     };
-
+    
     std::vector<TestCase> testCases = {
         {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
         {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
@@ -715,7 +715,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_006, TestSize.Level1)
         {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
         {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
     };
-
+    
     int index = 0;
     for (const auto& tc : testCases) {
         PrintJob job;
@@ -725,7 +725,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_006, TestSize.Level1)
         args.mirror = tc.mirror;
         args.pageBorder = tc.pageBorder;
         job.SetNumberUpArgs(args);
-
+        
         NumberUpArgs result = job.GetNumberUpArgs();
         EXPECT_EQ(result.numberUp, tc.numberUp) << "Failed at index " << index;
         EXPECT_EQ(result.numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
@@ -745,7 +745,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_002, TestSize.Level
 {
     // Data table: test marshalling with all valid numberUp values
     uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
-
+    
     for (auto numberUp : validNumberUps) {
         PrintJob job;
         Parcel parcel;
@@ -782,7 +782,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_Marshalling_003, TestSize.Level
         NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
         NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
     };
-
+    
     for (auto layout : layouts) {
         PrintJob job;
         Parcel parcel;
