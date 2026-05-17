@@ -143,6 +143,10 @@ ohos_unittest("print_service_test") {
     cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
+  if (!print_fwk_feature_device_isolation) {
+    sources += [ "${print_path}/test/unittest/service_test/print_security_guard_util_test.cpp" ]
+  }
+
 }
 
 ohos_unittest("scan_service_test") {

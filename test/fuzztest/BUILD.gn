@@ -44,4 +44,11 @@ group("fuzztest") {
     "scanusbmanager_fuzzer:fuzztest",
     "vendormanager_fuzzer:fuzztest",
   ]
+
+  if (!print_fwk_feature_device_isolation) {
+    deps += [
+      "printsecurityguardmanager_fuzzer:fuzztest",
+      "printsecurityguardutil_fuzzer:fuzztest",
+    ]
+  }
 }
