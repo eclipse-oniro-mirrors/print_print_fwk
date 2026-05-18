@@ -42,6 +42,15 @@ const std::vector<FileAuditInfo> &PrintSecurityGuardInfo::GetFileAuditInfo() con
     return files_;
 }
 
+void PrintSecurityGuardInfo::AddBlockedSubState(uint32_t subState)
+{
+    blockedSubStates_.insert(subState);
+}
+
+const std::set<uint32_t>& PrintSecurityGuardInfo::GetBlockedSubStates() const
+{
+    return blockedSubStates_;
+}
 void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
 {
     std::string printerId = printerInfo.GetPrinterId();
@@ -96,7 +105,7 @@ void PrintSecurityGuardInfo::SetPrintAuditInfo(
 {
     files_ = fileInfos;
     duplexMode_ = printJob.GetDuplexMode();
-    std::set<uint32_t> allStates = printJob.GetBlockedSubStates();
+    std::set<uint32_t> allStates = blockedSubStates_;
     allStates.insert(printJob.GetSubState());
     errorCode_ = GenerateErrorCodes(allStates);
     printerName_ = printerInfo.GetPrinterName();

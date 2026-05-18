@@ -52,7 +52,6 @@ PrintJob::PrintJob(const PrintJob &right)
     option_ = right.option_;
     hasVendorOptions_ = right.hasVendorOptions_;
     vendorOptions_ = right.vendorOptions_;
-    blockedSubStates_ = right.blockedSubStates_;
 }
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
@@ -81,7 +80,6 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         option_ = right.option_;
         hasVendorOptions_ = right.hasVendorOptions_;
         vendorOptions_ = right.vendorOptions_;
-        blockedSubStates_ = right.blockedSubStates_;
     }
     return *this;
 }
@@ -115,16 +113,6 @@ void PrintJob::SetJobState(uint32_t jobState)
 void PrintJob::SetSubState(uint32_t subState)
 {
     subState_ = subState;
-}
-
-void PrintJob::AddBlockedSubState(uint32_t subState)
-{
-    blockedSubStates_.insert(subState);
-}
-
-const std::set<uint32_t>& PrintJob::GetBlockedSubStates() const
-{
-    return blockedSubStates_;
 }
 
 void PrintJob::SetCopyNumber(uint32_t copyNumber)

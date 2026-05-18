@@ -2478,7 +2478,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
-    printJob->AddBlockedSubState(subState);
+    securityGuardManager_.AddBlockedSubState(printJob->GetJobId(), subState);
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     if (isEprint(printJob->GetPrinterId())) {

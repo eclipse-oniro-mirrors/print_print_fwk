@@ -197,7 +197,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_FullFlow_0
     PrintJob printJob;
     printJob.SetDuplexMode(0);
     printJob.SetSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    printJob.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
+    manager.AddBlockedSubState("jobId-blocked", PRINT_JOB_BLOCKED_OUT_OF_PAPER);
 
     std::vector<FileAuditInfo> fileInfos = {
         {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}

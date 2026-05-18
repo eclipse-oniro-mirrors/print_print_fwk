@@ -181,7 +181,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     printerInfo.SetPrinterName("HP LaserJet Pro");
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    printJob.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
+    info.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
 
     std::vector<FileAuditInfo> fileInfos = {
         {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
@@ -227,8 +227,8 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrintSecurityGuardInfo info("callPkg", fileList);
     PrinterInfo printerInfo;
     PrintJob printJob;
-    printJob.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    printJob.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_INK);
+    info.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
+    info.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_INK);
     printJob.SetSubState(PRINT_JOB_BLOCKED_JAMMED);
 
     std::vector<FileAuditInfo> fileInfos;

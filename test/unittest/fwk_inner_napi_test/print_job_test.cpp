@@ -625,23 +625,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_AssignmentOperator_001, TestSiz
     EXPECT_EQ(assignJob.GetJobId(), "job-assign-test");
 }
 
-/**
- * @tc.name: PrintJobTest_AuditBlockedSubStates_001
- * @tc.desc: Verify AddBlockedSubState and GetBlockedSubStates.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintJobTest, PrintJobTest_AuditBlockedSubStates_001, TestSize.Level1)
-{
-    PrintJob job;
-    job.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    job.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_INK);
-
-    const auto &subStates = job.GetBlockedSubStates();
-    EXPECT_EQ(subStates.size(), 2U);
-    EXPECT_NE(subStates.find(PRINT_JOB_BLOCKED_OUT_OF_PAPER), subStates.end());
-    EXPECT_NE(subStates.find(PRINT_JOB_BLOCKED_OUT_OF_INK), subStates.end());
-}
 
 /**
  * @tc.name: PrintJobTest_NumberUpArgs_003

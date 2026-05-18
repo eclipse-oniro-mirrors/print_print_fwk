@@ -16,7 +16,6 @@
 #ifndef PRINT_JOB_H
 #define PRINT_JOB_H
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -58,10 +57,6 @@ public:
     void SetJobState(uint32_t jobState);
 
     void SetSubState(uint32_t jobSubState);
-
-    void AddBlockedSubState(uint32_t subState);
-
-    [[nodiscard]] const std::set<uint32_t>& GetBlockedSubStates() const;
 
     void SetCopyNumber(uint32_t copyNumber);
 
@@ -155,7 +150,6 @@ private:
     std::string printerId_;
     uint32_t jobState_;
     uint32_t subState_;
-    std::set<uint32_t> blockedSubStates_;
     uint32_t copyNumber_;
     PrintRange pageRange_;
     bool isSequential_;

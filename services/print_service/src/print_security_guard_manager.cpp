@@ -32,22 +32,27 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
     const PrintJob &printJob)
 {
     PRINT_HILOGI("receiveJobStateUpdate jobId:%{public}s, state:%{public}d", jobId.c_str(), printJob.GetJobState());
-    std::string securityInfo = "";
-    auto it = securityMap_.find(jobId);
-    if (it != securityMap_.end() && it->second != nullptr) {
-        PRINT_HILOGI("find PrintSecurityGuardInfo");
-        auto securityGuard = it->second;
-        securityGuard->SetPrintTypeInfo(printerInfo, printJob);
-        securityInfo = securityGuard->ToJsonStr();
-    } else {
-        PRINT_HILOGI("find PrintSecurityGuardInfo empty");
-        std::vector<std::string> fileList;
-        auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", fileList);
-        securityGuard->SetPrintTypeInfo(printerInfo, printJob);
-        securityInfo = securityGuard->ToJsonStr();
+    std::string securityInfo;
+    {
+        std::lock_guard<std::mutex> lock(securityMapMutex_);
+        auto it = securityMap_.find(jobId);
+        if (it != securityMap_.end() && it->second != nullptr) {
+            PRINT_HILOGI("find PrintSecurityGuardInfo");
+            auto securityGuard = it->second;
+            securityGuard->SetPrintTypeInfo(printerInfo, printJob);
+            securityInfo = securityGuard->ToJsonStr();
+        } else {
+            PRINT_HILOGI("find PrintSecurityGuardInfo empty");
+            std::vector<std::string> fileList;
+            auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", fileList);
+            securityGuard->SetPrintTypeInfo(printerInfo, printJob);
+            securityInfo = securityGuard->ToJsonStr();
+        }
+        if (printJob.GetJobState() == PRINT_JOB_COMPLETED) {
+            securityMap_.erase(jobId);
+        }
     }
     ReportSecurityInfo(EVENT_ID, VERSION, securityInfo);
-    clearSecurityMap(jobId);
 }
 
 void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
@@ -70,6 +75,7 @@ void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
 
 void PrintSecurityGuardManager::clearSecurityMap(const std::string jobId)
 {
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
     securityMap_.erase(jobId);
 }
 
@@ -107,6 +113,14 @@ std::vector<FileAuditInfo> PrintSecurityGuardManager::GetFileAuditInfo(const std
         return it->second->GetFileAuditInfo();
     }
     return {};
+}
+void PrintSecurityGuardManager::AddBlockedSubState(const std::string &jobId, uint32_t subState)
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        it->second->AddBlockedSubState(subState);
+    }
 }
 
 void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const std::string version,
