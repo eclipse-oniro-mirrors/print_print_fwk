@@ -328,7 +328,8 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     info.SetPrintTypeInfo(printerInfo, printJob);
 
     std::string json = info.ToJsonStr();
-    EXPECT_NE(json.find("files"), std::string::npos);
+    EXPECT_TRUE(info.files_.empty());
+    EXPECT_NE(json.find("\"files\":[]"), std::string::npos);
     EXPECT_NE(json.find("duplexMode"), std::string::npos);
     EXPECT_NE(json.find("errorCode"), std::string::npos);
     EXPECT_NE(json.find("printerName"), std::string::npos);

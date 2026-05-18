@@ -53,7 +53,7 @@ public:
         const std::vector<FileAuditInfo> &fileInfos);
     const std::vector<std::string> &GetFileList() const;
     void SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos);
-    std::vector<FileAuditInfo> GetFileAuditInfo() const;
+    const std::vector<FileAuditInfo> &GetFileAuditInfo() const;
 
 private:
     int32_t subType_{};

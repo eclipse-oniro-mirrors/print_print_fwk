@@ -37,7 +37,7 @@ void PrintSecurityGuardInfo::SetFileAuditInfo(const std::vector<FileAuditInfo> &
     files_ = fileInfos;
 }
 
-std::vector<FileAuditInfo> PrintSecurityGuardInfo::GetFileAuditInfo() const
+const std::vector<FileAuditInfo> &PrintSecurityGuardInfo::GetFileAuditInfo() const
 {
     return files_;
 }

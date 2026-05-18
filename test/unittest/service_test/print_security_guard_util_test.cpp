@@ -152,7 +152,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCod
     // 708 => "0708" => 07(out_of_paper) + 08(out_of_ink)
     std::set<uint32_t> subStates = {708};
     auto result = GenerateErrorCodes(subStates);
-    EXPECT_GE(result.size(), 1U);
+    ASSERT_EQ(result.size(), 2U);
     bool hasOutOfPaper = false;
     bool hasOutOfInk = false;
     for (const auto &code : result) {
@@ -192,7 +192,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCod
     std::set<uint32_t> subStates = {PRINT_JOB_BLOCKED_OUT_OF_PAPER};
     auto result1 = GenerateErrorCodes(subStates);
     auto result2 = GenerateErrorCodes(subStates);
-    EXPECT_EQ(result1.size(), result2.size());
+    EXPECT_EQ(result1, result2);
 }
 
 // ===== ExtractFileName Tests =====

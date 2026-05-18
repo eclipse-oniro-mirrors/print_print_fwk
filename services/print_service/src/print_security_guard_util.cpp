@@ -89,7 +89,7 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
     for (uint32_t subState : blockedSubStates) {
         if (subState > maxSingleSubStateCode) {
             std::string codeStr = std::to_string(subState);
-            if (codeStr.length() % subStateCodeDigits != 0) {
+            while (codeStr.length() % subStateCodeDigits != 0) {
                 codeStr = "0" + codeStr;
             }
             for (size_t i = 0; i < codeStr.length(); i += subStateCodeDigits) {

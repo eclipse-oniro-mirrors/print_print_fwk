@@ -44,7 +44,7 @@ private:
 
 private:
     std::map<std::string, std::shared_ptr<PrintSecurityGuardInfo>> securityMap_;
-    std::mutex securityMapMutex_;
+    mutable std::mutex securityMapMutex_;
 };
 } // namespace OHOS::Print
 
