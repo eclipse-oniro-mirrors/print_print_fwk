@@ -1185,8 +1185,8 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
     }
 
     std::string filePath = dirPath + "/" + standardizedPrinterName + ".json";
-    if (!PrintUtils::IsPathValid(filePath)) {
-        PRINT_HILOGE("Invalid file path: potential path injection");
+    if (standardizedPrinterName.empty() || standardizedPrinterName.find("..") != std::string::npos) {
+        PRINT_HILOGE("Invalid file path: potential path traversal");
         return false;
     }
 
