@@ -625,7 +625,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_NumberUpArgs_AssignmentOperator_001, TestSiz
     EXPECT_EQ(assignJob.GetJobId(), "job-assign-test");
 }
 
-
 /**
  * @tc.name: PrintJobTest_NumberUpArgs_003
  * @tc.desc: Verify all valid numberUpLayout values (data table).
