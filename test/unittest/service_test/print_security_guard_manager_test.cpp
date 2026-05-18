@@ -175,6 +175,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_FullFlow_0
     manager.receiveAuditInfo("jobId-flow1", printerInfo, printJob, fileInfos);
 
     // Step 3: receiveJobStateUpdate (should clear the map entry)
+我说呢    printJob.SetJobState(PRINT_JOB_COMPLETED);
     manager.receiveJobStateUpdate("jobId-flow1", printerInfo, printJob);
     EXPECT_EQ(manager.securityMap_.find("jobId-flow1"), manager.securityMap_.end());
 }
@@ -203,6 +204,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_FullFlow_0
         {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
     };
     manager.receiveAuditInfo("jobId-blocked", printerInfo, printJob, fileInfos);
+    printJob.SetJobState(PRINT_JOB_COMPLETED);
     manager.receiveJobStateUpdate("jobId-blocked", printerInfo, printJob);
 
     EXPECT_EQ(manager.securityMap_.find("jobId-blocked"), manager.securityMap_.end());

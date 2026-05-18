@@ -108,10 +108,10 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCod
  */
 HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCodes_005, TestSize.Level1)
 {
-    std::set<uint32_t> subStates = {999};
+    std::set<uint32_t> subStates = {50};
     auto result = GenerateErrorCodes(subStates);
     ASSERT_EQ(result.size(), 1U);
-    EXPECT_EQ(result[0], "other_error");
+    EXPECT_EQ(result[0], "unknown");
 }
 
 /**
