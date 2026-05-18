@@ -175,7 +175,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_FullFlow_0
     manager.receiveAuditInfo("jobId-flow1", printerInfo, printJob, fileInfos);
 
     // Step 3: receiveJobStateUpdate (should clear the map entry)
-我说呢    printJob.SetJobState(PRINT_JOB_COMPLETED);
+    printJob.SetJobState(PRINT_JOB_COMPLETED);
     manager.receiveJobStateUpdate("jobId-flow1", printerInfo, printJob);
     EXPECT_EQ(manager.securityMap_.find("jobId-flow1"), manager.securityMap_.end());
 }
