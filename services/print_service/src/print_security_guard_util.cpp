@@ -14,7 +14,6 @@
  */
 
 #include "print_security_guard_util.h"
-
 #include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
@@ -115,4 +114,5 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     }
     return fileList;
 }
+
 } // namespace OHOS::Print

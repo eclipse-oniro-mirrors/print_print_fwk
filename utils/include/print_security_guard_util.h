@@ -50,7 +50,6 @@ public:
     static int32_t GetPrinterType(const std::string& des);
     static std::string ExtractFileName(const std::string& filePath);
     static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
-
 };
 
 std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);

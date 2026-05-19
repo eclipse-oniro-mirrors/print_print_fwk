@@ -574,9 +574,11 @@ void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob>
     }
 
     std::vector<FileAuditInfo> fileInfos;
-    for (const auto &file : fileList) {
+    for (const auto &fileName : fileList) {
         FileAuditInfo info;
-        info.fileName = file;
+        info.fileName = fileName;
+        info.md5 = "";
+        info.size = 0;
         fileInfos.push_back(info);
     }
     if (!fileInfos.empty()) {
