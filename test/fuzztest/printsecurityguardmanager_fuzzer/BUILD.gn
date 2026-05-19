@@ -24,54 +24,94 @@ if (print_fwk_feature_device_isolation) {
   _service_path = "${print_path}/services"
 }
 
-##############################fuzztest##########################################
-ohos_fuzztest("PrintSecurityGuardManagerFuzzTest") {
-  module_out_path = "${fuzz_test_output_path}/concurrent"
+if (!print_fwk_feature_device_isolation) {
+  ##############################fuzztest##########################################
+  ohos_fuzztest("PrintSecurityGuardManagerFuzzTest") {
+    module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${_test_path}/fuzztest/printsecurityguardmanager_fuzzer"
+    fuzz_config_file = "${_test_path}/fuzztest/printsecurityguardmanager_fuzzer"
 
-  include_dirs = [
-    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
-    "${print_path}/frameworks/ohprint/include",
-    "${_service_path}/print_service/include",
-    "${print_utils_path}/include",
-  ]
-
-  cflags = [
-    "-g",
-    "-O0",
-    "-Wno-unused-variable",
-    "-fno-omit-frame-pointer",
-    "-Dprivate=public",
-    "-Dprotected=public",
-  ]
-
-  cflags_cc = []
-
-  deps = [
-    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
-    "${print_path}/frameworks/kits/extension:print_extension_framework",
-    "${print_path}/frameworks/models/print_models:print_models",
-    "${print_path}/interfaces/kits/napi/print_napi:print_napi",
-    "${print_path}/services/print_service:print_service_test",
-  ]
-
-  sources = [
-    "${_test_path}/fuzztest/printsecurityguardmanager_fuzzer/printsecurityguardmanager_fuzzer.cpp",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "jsoncpp:jsoncpp",
-  ]
-
-  if (security_guard_enabled) {
-    external_deps += [
-      "security_guard:libsg_collect_sdk",
-      "time_service:time_client",
+    include_dirs = [
+      "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+      "${print_path}/frameworks/ohprint/include",
+      "${_service_path}/print_service/include",
+      "${print_utils_path}/include",
     ]
+
+    cflags = [
+      "-g",
+      "-O0",
+      "-Wno-unused-variable",
+      "-fno-omit-frame-pointer",
+      "-Dprivate=public",
+      "-Dprotected=public",
+    ]
+
+    cflags_cc = []
+
+    deps = [
+      "${print_path}/etc/init:printservice.rc",
+      "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+      "${print_path}/frameworks/kits/extension:print_extension_framework",
+      "${print_path}/frameworks/kits/extension:print_extension_module",
+      "${print_path}/frameworks/models/print_models:print_models",
+      "${print_path}/interfaces/kits/jsnapi/print_extension:printextensionability_napi",
+      "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
+      "${print_path}/interfaces/kits/napi/print_napi:print_napi",
+      "${print_path}/profile:print_sa_profiles",
+      "${print_path}/services/print_service:print_service_test",
+    ]
+
+    sources = [
+      "${_test_path}/fuzztest/printsecurityguardmanager_fuzzer/printsecurityguardmanager_fuzzer.cpp",
+    ]
+
+    external_deps = [
+      "ability_base:base",
+      "ability_base:want",
+      "ability_base:zuri",
+      "ability_runtime:ability_manager",
+      "ability_runtime:abilitykit_native",
+      "access_token:libaccesstoken_sdk",
+      "access_token:libaccesstoken_sdk",
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+      "bounds_checking_function:libsec_shared",
+      "bundle_framework:appexecfwk_base",
+      "bundle_framework:appexecfwk_core",
+      "c_utils:utils",
+      "common_event_service:cesfwk_innerkits",
+      "drivers_interface_usb:libusb_proxy_1.0",
+      "eventhandler:libeventhandler",
+      "hilog:libhilog",
+      "hisysevent:libhisysevent",
+      "huks:libhukssdk",
+      "init:libbegetutil",
+      "ipc:ipc_core",
+      "napi:ace_napi",
+      "os_account:os_account_innerkits",
+      "safwk:system_ability_fwk",
+      "samgr:samgr_proxy",
+      "selinux_adapter:librestorecon",
+      "usb_manager:usbsrv_client",
+      "wifi:wifi_sdk",
+    ]
+
+    if (cups_enable) {
+      cflags_cc += [ "-DCUPS_ENABLE" ]
+      external_deps += [
+        "cJSON:cjson",
+        "cups:cups",
+        "cups-filters:cupsfilters",
+      ]
+    }
+
+    if (security_guard_enabled) {
+      external_deps += [
+        "security_guard:libsg_collect_sdk",
+        "time_service:time_client",
+      ]
+    }
   }
 }
 
@@ -79,9 +119,11 @@ ohos_fuzztest("PrintSecurityGuardManagerFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [
-    # deps file
-    ":PrintSecurityGuardManagerFuzzTest",
-  ]
+  if (!print_fwk_feature_device_isolation) {
+    deps += [
+      # deps file
+      ":PrintSecurityGuardManagerFuzzTest",
+    ]
+  }
 }
 ###############################################################################
