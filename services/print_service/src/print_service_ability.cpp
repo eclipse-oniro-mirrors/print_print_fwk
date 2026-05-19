@@ -572,7 +572,6 @@ void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob>
         PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
         return;
     }
-
     std::vector<FileAuditInfo> fileInfos;
     for (const auto &fileName : fileList) {
         FileAuditInfo info;
