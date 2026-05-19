@@ -16,8 +16,10 @@
 #include "print_security_guard_util.h"
 
 #include <cstdio>
-#include <openssl/md5.h>
 #include <unistd.h>
+#include <vector>
+
+#include <cups/cups-private.h>
 
 #include "print_constant.h"
 #include "print_json_util.h"
@@ -128,25 +130,26 @@ std::string PrintSecurityGuardUtil::CalculateFileMd5(uint32_t fd)
     }
     lseek(dupFd, 0, SEEK_SET);
 
-    MD5_CTX ctx;
-    MD5_Init(&ctx);
-
+    std::vector<unsigned char> buffer;
     unsigned char buf[4096];
     ssize_t n;
     while ((n = read(dupFd, buf, sizeof(buf))) > 0) {
-        MD5_Update(&ctx, buf, n);
+        buffer.insert(buffer.end(), buf, buf + n);
     }
     close(dupFd);
 
-    if (n < 0) {
+    if (n < 0 || buffer.empty()) {
         return "";
     }
 
-    unsigned char digest[MD5_DIGEST_LENGTH];
-    MD5_Final(digest, &ctx);
+    unsigned char digest[16];
+    ssize_t hashLen = cupsHashData("md5", buffer.data(), buffer.size(), digest, sizeof(digest));
+    if (hashLen <= 0) {
+        return "";
+    }
 
-    char hex[MD5_DIGEST_LENGTH * 2 + 1];
-    for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+    char hex[33];
+    for (int i = 0; i < hashLen; ++i) {
         snprintf(hex + i * 2, 3, "%02x", static_cast<unsigned>(digest[i]));
     }
     return std::string(hex);
