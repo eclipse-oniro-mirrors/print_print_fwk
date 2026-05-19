@@ -172,6 +172,28 @@ void TestGetAddedScanner(const uint8_t* data, size_t size, FuzzedDataProvider* d
     scanManagerPtr->GetAddedScanner(allAddedScanner);
 }
 
+void TestExportScanPicture(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+{
+    auto scanManagerPtr = ScanManagerClient::GetInstance();
+    if (scanManagerPtr == nullptr) {
+        return;
+    }
+    scanManagerPtr->InitScan();
+    std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t fdCount = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    std::vector<int32_t> pictureFdList;
+    for (int32_t i = 0; i < fdCount; i++) {
+        int32_t fd = dataProvider->ConsumeIntegralInRange<int32_t>(-1, MAX_SET_NUMBER);
+        pictureFdList.push_back(fd);
+    }
+    int32_t format = dataProvider->ConsumeIntegralInRange<int32_t>(-1, 10);
+    std::vector<int32_t> exportedFdList;
+    scanManagerPtr->OpenScanner(scannerId);
+    scanManagerPtr->ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
+    scanManagerPtr->CloseScanner(scannerId);
+    scanManagerPtr->ExitScan();
+}
+
 }
 
 /* Fuzzer entry point */
@@ -198,7 +220,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         &OHOS::Scan::TestGetScanProgress,
         &OHOS::Scan::TestAddScanner,
         &OHOS::Scan::TestDeleteScanner,
-        &OHOS::Scan::TestGetAddedScanner
+        &OHOS::Scan::TestGetAddedScanner,
+        &OHOS::Scan::TestExportScanPicture
     };
 
     TestHandler handler = dataProvider.PickValueInArray(tasks);

@@ -37,7 +37,7 @@ void TestSetScanProgr(const uint8_t* data, size_t size, FuzzedDataProvider* data
     int64_t hundredPercent = dataProvider->ConsumeIntegralInRange<int64_t>(0, MAX_SET_NUMBER);
     int32_t curReadSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     instance.SetScanProgr(totalBytes, hundredPercent, curReadSize);
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestSetScanTaskCode(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -46,7 +46,7 @@ void TestSetScanTaskCode(const uint8_t* data, size_t size, FuzzedDataProvider* d
     instance.PushScanPictureProgress();
     int32_t taskCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     instance.SetScanTaskCode(taskCode);
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestSetNowScanProgressFinished(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -55,7 +55,7 @@ void TestSetNowScanProgressFinished(const uint8_t* data, size_t size, FuzzedData
     instance.PushScanPictureProgress();
     bool isFinal = dataProvider->ConsumeBool();
     instance.SetNowScanProgressFinished(isFinal);
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestSetLastScanProgressFinished(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -64,7 +64,7 @@ void TestSetLastScanProgressFinished(const uint8_t* data, size_t size, FuzzedDat
     instance.PushScanPictureProgress();
     instance.PushScanPictureProgress();
     instance.SetLastScanProgressFinished();
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestSetImageRealPath(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -72,8 +72,8 @@ void TestSetImageRealPath(const uint8_t* data, size_t size, FuzzedDataProvider* 
     auto& instance = ScanPictureData::GetInstance();
     instance.PushScanPictureProgress();
     std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    instance.SetImageRealPath(filePath);
-    instance.CleanPictureData();
+    instance.RegisterCacheFiles(filePath);
+    instance.CleanAllCache();
 }
 
 void TestSetCallerPid(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -81,7 +81,7 @@ void TestSetCallerPid(const uint8_t* data, size_t size, FuzzedDataProvider* data
     auto& instance = ScanPictureData::GetInstance();
     int32_t callerPid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     instance.SetCallerPid(callerPid);
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestGetPictureProgressInQueue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -92,14 +92,14 @@ void TestGetPictureProgressInQueue(const uint8_t* data, size_t size, FuzzedDataP
     instance.PushScanPictureProgress();
     ScanProgress scanProgress;
     instance.GetPictureProgressInQueue(scanProgress, callerPid);
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestCleanPictureData(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     auto& instance = ScanPictureData::GetInstance();
     instance.PushScanPictureProgress();
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestPushScanPictureProgress(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -107,7 +107,7 @@ void TestPushScanPictureProgress(const uint8_t* data, size_t size, FuzzedDataPro
     auto& instance = ScanPictureData::GetInstance();
     instance.PushScanPictureProgress();
     instance.PushScanPictureProgress();
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 
 void TestFullWorkflow(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -117,7 +117,7 @@ void TestFullWorkflow(const uint8_t* data, size_t size, FuzzedDataProvider* data
     instance.SetCallerPid(callerPid);
     instance.PushScanPictureProgress();
     std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    instance.SetImageRealPath(filePath);
+    instance.RegisterCacheFiles(filePath);
     int32_t taskCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     instance.SetScanTaskCode(taskCode);
     int64_t totalBytes = dataProvider->ConsumeIntegralInRange<int64_t>(0, MAX_SET_NUMBER);
@@ -128,7 +128,7 @@ void TestFullWorkflow(const uint8_t* data, size_t size, FuzzedDataProvider* data
     instance.SetNowScanProgressFinished(isFinal);
     ScanProgress scanProgress;
     instance.GetPictureProgressInQueue(scanProgress, callerPid);
-    instance.CleanPictureData();
+    instance.CleanAllCache();
 }
 }
 

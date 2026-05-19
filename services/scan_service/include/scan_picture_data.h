@@ -31,11 +31,13 @@ public:
     void SetScanTaskCode(int32_t taskCode);
     void SetNowScanProgressFinished(bool isFinal);
     void SetLastScanProgressFinished();
-    bool SetImageRealPath(const std::string& filePath);
+    bool RegisterCacheFiles(const std::string& baseName);
     void SetCallerPid(int32_t callerPid);
     int32_t GetPictureProgressInQueue(ScanProgress& scanProgress, int32_t callerPid);
-    void CleanPictureData();
+    void CleanAllCache();
+    void CleanDiskCache();
     void PushScanPictureProgress();
+    void RegisterExportedResult(const std::string& baseName, int32_t fd, int32_t format);
 
 private:
     ScanPictureData() = default;
@@ -43,7 +45,7 @@ private:
     int32_t GetElapsedSeconds(const SteadyTimePoint &preTime);
     mutable std::mutex mutex_;
     std::queue<int32_t> scanQueue_;
-    std::map<std::string, int32_t> imageFdMap_;
+    std::map<std::string, int32_t> scanCacheFdMap_;
     std::map<int32_t, ScanProgress> scanTaskMap_;
     int32_t picId_ = 0;
     int32_t callerPid_ = 0;

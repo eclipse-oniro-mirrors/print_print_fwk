@@ -219,6 +219,28 @@ namespace Scan {
         return true;
     }
 
+    bool TestOnExportScanPicture(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        MessageOption option;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(scannerId);
+        int32_t fdCount = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        datas.WriteInt32(fdCount);
+        for (int32_t i = 0; i < fdCount; i++) {
+            int32_t fd = dataProvider->ConsumeIntegralInRange<int32_t>(-1, MAX_SET_NUMBER);
+            datas.WriteInt32(fd);
+        }
+        int32_t format = dataProvider->ConsumeIntegralInRange<int32_t>(-1, 10);
+        datas.WriteInt32(format);
+        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_EXPORT_SCAN_PICTURE, datas, reply, option);
+        return true;
+    }
+
     bool TestNoParmFuncs(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MessageParcel datas;
@@ -274,6 +296,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         &OHOS::Scan::TestOnEventOff,
         &OHOS::Scan::TestOnConnectScanner,
         &OHOS::Scan::TestOnDisConnectScanner,
+        &OHOS::Scan::TestOnExportScanPicture,
         &OHOS::Scan::TestNoParmFuncs
     };
 

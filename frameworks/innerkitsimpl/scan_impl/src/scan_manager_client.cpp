@@ -330,4 +330,19 @@ int32_t ScanManagerClient::GetAddedScanner(std::vector<ScanDeviceInfo>& allAdded
     return ret;
 }
 
+int32_t ScanManagerClient::ExportScanPicture(const std::string scannerId,
+    const std::vector<int32_t>& pictureFdList, int32_t format,
+    std::vector<int32_t>& exportedFdList)
+{
+    SCAN_HILOGI("ScanManagerClient ExportScanPicture start.");
+    auto proxy = GetScanServiceProxy();
+    if (proxy == nullptr) {
+        SCAN_HILOGE("GetScanServiceProxy failed.");
+        return E_SCAN_RPC_FAILURE;
+    }
+    int32_t ret = proxy->ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
+    SCAN_HILOGI("ScanManagerClient ExportScanPicture end ret = [%{public}d].", ret);
+    return ret;
+}
+
 }  // namespace OHOS::Scan

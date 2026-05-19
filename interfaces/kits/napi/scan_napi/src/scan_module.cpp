@@ -38,6 +38,7 @@ static constexpr const char *FUNCTION_DELETE_SCANNER = "deleteScanner";
 static constexpr const char *FUNCTION_GET_ADDED_SCANNER = "getAddedScanners";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
+static constexpr const char *FUNCTION_EXPORT_SCAN_PICTURE = "exportScanPicture";
 
 static napi_value NapiCreateScanErrorCodeEnum(napi_env env)
 {
@@ -140,6 +141,19 @@ static napi_value NapiCreateScannerSyncModeEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreateExportImageFormatEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        SCAN_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    NapiScanUtils::SetUint32Property(env, object, "EXPORT_FORMAT_PNG", EXPORT_FORMAT_PNG);
+    NapiScanUtils::SetUint32Property(env, object, "EXPORT_FORMAT_TIFF", EXPORT_FORMAT_TIFF);
+    return object;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
@@ -160,12 +174,14 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_ADDED_SCANNER, NapiInnerScan::GetAddedScanner),
         DECLARE_NAPI_FUNCTION(FUNCTION_REGISTER_EVENT, NapiInnerScan::On),
         DECLARE_NAPI_FUNCTION(FUNCTION_UNREGISTER_EVENT, NapiInnerScan::Off),
+        DECLARE_NAPI_FUNCTION(FUNCTION_EXPORT_SCAN_PICTURE, NapiInnerScan::ExportScanPicture),
         DECLARE_NAPI_STATIC_PROPERTY("ScanErrorCode", NapiCreateScanErrorCodeEnum(env)),
         DECLARE_NAPI_STATIC_PROPERTY("ConstraintType", NapiCreateConstraintTypeEnum(env)),
         DECLARE_NAPI_STATIC_PROPERTY("PhysicalUnit", NapiCreatePhysicalUnitEnum(env)),
         DECLARE_NAPI_STATIC_PROPERTY("OptionValueType", NapiCreateOptionValueTypeEnum(env)),
         DECLARE_NAPI_STATIC_PROPERTY("ScannerDiscoveryMode", NapiCreateScannerDiscoveryModeEnum(env)),
         DECLARE_NAPI_STATIC_PROPERTY("ScannerSyncMode", NapiCreateScannerSyncModeEnum(env)),
+        DECLARE_NAPI_STATIC_PROPERTY("ExportImageFormat", NapiCreateExportImageFormatEnum(env)),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

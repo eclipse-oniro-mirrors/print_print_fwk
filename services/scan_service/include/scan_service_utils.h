@@ -31,6 +31,8 @@ public:
     static ScanErrorCode ConvertErro(const SaneStatus status);
     static std::vector<std::string> ExtractIpOrPortFromUrl(const std::string& url,
         const char delimiter, const int32_t minTokenLength);
+    static std::string ExtractBaseName(const std::string& filePath);
+    static std::string GetPathFromFd(int32_t fd);
 private:
     static std::unordered_map<SaneStatus, ScanErrorCode> saneStatusToScanErrorCodeMap_;
 };

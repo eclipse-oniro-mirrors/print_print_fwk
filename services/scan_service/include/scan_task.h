@@ -50,6 +50,9 @@ public:
     ImageFormat GetImageFormat() const;
 
 private:
+    void SaveRawData();
+    void SaveImageMetadata();
+    std::string GetBaseName() const;
     ScanTask(const ScanTask&) = delete;
     ScanTask& operator=(const ScanTask&) = delete;
 

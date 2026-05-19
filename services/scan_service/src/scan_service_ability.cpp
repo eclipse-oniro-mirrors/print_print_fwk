@@ -18,6 +18,7 @@
 #include <ctime>
 #include <string>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
 #include <fstream>
@@ -29,6 +30,8 @@
 #include <condition_variable>
 #include <regex>
 
+#include "print_json_util.h"
+#include "image_exporter.h"
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
 #include "file_ex.h"
@@ -48,6 +51,7 @@
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "media_errors.h"
 #include "scan_system_data.h"
 #include "sane_manager_client.h"
 #include "sane_option_descriptor.h"
@@ -142,6 +146,9 @@ void ScanServiceAbility::OnStart()
 
     InitServiceHandler();
     InitializeScanService();
+    
+    scanPictureData_.CleanDiskCache();
+    
     CallerAppMonitor::GetInstance().StartCallerAppMonitor([this]() {
         this->UnloadSystemAbility();
     });
@@ -242,7 +249,7 @@ void ScanServiceAbility::CleanupScanService()
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
     scannerState_.store(SCANNER_READY);
-    scanPictureData_.CleanPictureData();
+    scanPictureData_.CleanAllCache();
 }
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
@@ -515,7 +522,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
-    scanPictureData_.CleanPictureData();
+    scanPictureData_.CleanAllCache();
     SaneStatus status = SaneManagerClient::GetInstance()->SaneClose(scannerId);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
@@ -733,7 +740,6 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         SCAN_HILOGE("SaneCancel failed, status: [%{public}u]", saneStatus);
         return ScanServiceUtils::ConvertErro(saneStatus);
     }
-    scanPictureData_.CleanPictureData();
     if (scannerState_.load() == SCANNER_SCANING) {
         SCAN_HILOGW("ScannerState change to SCANNER_CANCELING");
         scannerState_.store(SCANNER_CANCELING);
@@ -1138,8 +1144,6 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         }
     }
     
-    scanPictureData_.CleanPictureData();
-
     int32_t status = StartScanOnce(scannerId);
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
@@ -1182,9 +1186,12 @@ bool ScanServiceAbility::CreateAndOpenScanFile(ScanTask &scanTask)
         SCAN_HILOGI("ScanTask CreateAndOpenScanFile fail");
         return false;
     }
+    
+    std::string baseName = ScanServiceUtils::ExtractBaseName(filePath);
+    
     {
         std::lock_guard<std::mutex> autoLock(lock_);
-        scanPictureData_.SetImageRealPath(filePath);
+        scanPictureData_.RegisterCacheFiles(baseName);
     }
     return true;
 }
@@ -1399,6 +1406,60 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
         return ScanServiceUtils::ConvertErro(status);
     }
     dpi = outParam.valueNumber_;
+    return E_SCAN_NONE;
+}
+
+int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
+    const std::vector<int32_t>& pictureFdList, const int32_t format,
+    std::vector<int32_t>& exportedFdList)
+{
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        SCAN_HILOGE("no permission to access scan service");
+        return E_SCAN_NO_PERMISSION;
+    }
+
+    if (pictureFdList.empty()) {
+        SCAN_HILOGE("pictureFdList is empty");
+        return E_SCAN_INVALID_PARAMETER;
+    }
+
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
+
+    for (int32_t jpegFd : pictureFdList) {
+        std::string jpegPath = ScanServiceUtils::GetPathFromFd(jpegFd);
+        if (jpegPath.empty()) {
+            SCAN_HILOGE("Invalid fd %{public}d, cannot get file path", jpegFd);
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        
+        std::string cachePrefix = "/data/service/el2/" + std::to_string(GetCurrentUserId()) + "/print_service/";
+        if (jpegPath.find(cachePrefix) != 0) {
+            SCAN_HILOGE("Invalid jpegPath %{private}s, not in cache directory", jpegPath.c_str());
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        
+        std::string baseName = ScanServiceUtils::ExtractBaseName(jpegPath);
+        if (baseName.empty() || baseName == jpegPath) {
+            SCAN_HILOGE("ExtractBaseName failed for %{private}s", jpegPath.c_str());
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        
+        int32_t exportedFd = INVALID_FD;
+        int32_t ret = ImageExporter::ExportToFormat(baseName, format, exportedFd, scanPictureData_);
+        if (ret != E_SCAN_NONE) {
+            SCAN_HILOGE("ExportToFormat failed, jpegFd=%{public}d, format=%{public}d, ret=%{public}d",
+                        jpegFd, format, ret);
+            return ret;
+        }
+
+        exportedFdList.push_back(exportedFd);
+    }
+
     return E_SCAN_NONE;
 }
 }  // namespace OHOS::Scan
