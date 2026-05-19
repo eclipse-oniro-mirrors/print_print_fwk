@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <json/json.h>
 
 #include "ability_manager_client.h"
@@ -195,6 +196,8 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
+    void CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob);
+    void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);

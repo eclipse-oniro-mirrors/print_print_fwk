@@ -561,6 +561,34 @@ int32_t PrintServiceAbility::StartPrint(
     return CallSpooler(fileList, fdList, taskId);
 }
 
+void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob)
+{
+    if (printJob == nullptr) {
+        return;
+    }
+    std::string jobId = printJob->GetJobId();
+    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
+    if (fileList.empty()) {
+        PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
+        return;
+    }
+    std::vector<FileAuditInfo> fileInfos;
+    for (const auto &fileName : fileList) {
+        FileAuditInfo info;
+        info.fileName = fileName;
+        info.md5 = "";
+        info.size = 0;
+        fileInfos.push_back(info);
+    }
+    if (!fileInfos.empty()) {
+        securityGuardManager_.SetFileAuditInfo(jobId, fileInfos);
+        PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
+            jobId.c_str(), fileInfos.size());
+    } else {
+        PRINT_HILOGW("CalculateFileAuditInfo empty result, jobId: %{public}s", jobId.c_str());
+    }
+}
+
 int32_t PrintServiceAbility::CallSpooler(
     const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId)
 {
@@ -588,8 +616,8 @@ int32_t PrintServiceAbility::CallSpooler(
     KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
-    SendPrintJobEvent(*printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
+    SendPrintJobEvent(*printJob);
     PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
 }
@@ -1735,6 +1763,13 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
+
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(nativePrintJob->GetOption());
+    std::vector<uint32_t> fdList;
+    nativePrintJob->GetFdList(fdList);
+    PRINT_HILOGI("StartNativePrintJob jobName as fileName");
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+
     return StartPrintJobInternal(nativePrintJob);
 }
 
@@ -1793,11 +1828,16 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         return E_PRINT_KIA_INTERCEPTED;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto jobId = jobInfo.GetJobId();
+
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(jobInfo.GetOption());
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
         return E_PRINT_INVALID_PRINTJOB;
     }
-    auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
@@ -2455,6 +2495,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
+    securityGuardManager_.AddBlockedSubState(printJob->GetJobId(), subState);
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     if (isEprint(printJob->GetPrinterId())) {
@@ -2503,6 +2544,15 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
     PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
 }
 
+void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+{
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
+    if (printerInfo != nullptr) {
+        auto fileInfos = securityGuardManager_.GetFileAuditInfo(jobId);
+        securityGuardManager_.receiveAuditInfo(jobId, *printerInfo, *printJob, fileInfos);
+    }
+}
+
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
@@ -2537,6 +2587,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
+    SendJobAuditInfo(jobId, printJob);
 
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
@@ -2973,6 +3024,7 @@ int32_t PrintServiceAbility::Release()
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     UnregisterPrinterCallback(PRINTER_DISCOVER_EVENT_TYPE);
     UnregisterPrinterCallback(PRINTER_CHANGE_EVENT_TYPE);
+    securityGuardManager_.clearAll();
     return E_PRINT_NONE;
 }
 
@@ -3276,7 +3328,8 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     // notify securityGuard
-    if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+    uint32_t jobState = jobInfo.GetJobState();
+    if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
             securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
@@ -4740,6 +4793,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
         PRINT_HILOGW("Flush cache file failed");
     }
+    CalculateFileAuditInfo(printJob);
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }

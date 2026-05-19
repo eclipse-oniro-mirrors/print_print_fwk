@@ -76,6 +76,12 @@ _sources = [
   "${_service_path}/src/watermark_callback_proxy.cpp",
 ]
 
+if (!print_fwk_feature_device_isolation) {
+  _sources += [
+    "${print_path}/services/print_service/src/print_security_guard_util.cpp",
+  ]
+}
+
 _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
 
 _external_deps = [

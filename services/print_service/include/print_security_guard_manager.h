@@ -17,6 +17,7 @@
 #define BASE_PRINT_SECURITY_GUARD_H
 
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include "print_security_guard_info.h"
@@ -28,6 +29,15 @@ public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
     void receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void receiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
+        const PrintJob &printJob, const std::vector<FileAuditInfo> &fileInfos);
+    void clearAll();
+
+    // Orchestration methods for ServiceAbility
+    std::vector<std::string> GetFileList(const std::string &jobId) const;
+    void SetFileAuditInfo(const std::string &jobId, const std::vector<FileAuditInfo> &fileInfos);
+    std::vector<FileAuditInfo> GetFileAuditInfo(const std::string &jobId) const;
+    void AddBlockedSubState(const std::string &jobId, uint32_t subState);
 
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);
@@ -35,6 +45,7 @@ private:
 
 private:
     std::map<std::string, std::shared_ptr<PrintSecurityGuardInfo>> securityMap_;
+    mutable std::mutex securityMapMutex_;
 };
 } // namespace OHOS::Print
 
