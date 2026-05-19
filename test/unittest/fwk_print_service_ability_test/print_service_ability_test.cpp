@@ -6526,5 +6526,123 @@ HWTEST_F(PrintServiceAbilityTest, DoDecrypt_Success_ReturnsPlainText, TestSize.L
     MockHksApi::Instance().Reset();
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdateAddedUsbPrinterInfoWithoutOption_NonUsbPrinterId_NoOp, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto infoPtr = std::make_shared<PrinterInfo>();
+    infoPtr->SetPrinterId("com.example.ext:normal-printer-123");
+    infoPtr->SetOption("some_option");
+
+    service->UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
+
+    EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("com.example.ext:normal-printer-123"), nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateAddedUsbPrinterInfoWithoutOption_UsbPrinterWithoutOption_NoOp, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto infoPtr = std::make_shared<PrinterInfo>();
+    infoPtr->SetPrinterId("com.ohos.spooler:USB-test123");
+
+    service->UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
+
+    EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("com.ohos.spooler:USB-test123"), nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateAddedUsbPrinterInfoWithoutOption_NotInAddedMap_NoOp, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto infoPtr = std::make_shared<PrinterInfo>();
+    infoPtr->SetPrinterId("com.ohos.spooler:USB-test456");
+    infoPtr->SetOption("test_option_string");
+
+    service->UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
+
+    EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("com.ohos.spooler:USB-test456"), nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateAddedUsbPrinterInfoWithoutOption_AlreadyHasOption_NoOp, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:USB-test789";
+
+    auto existingPrinter = std::make_shared<PrinterInfo>();
+    existingPrinter->SetPrinterId(printerId);
+    existingPrinter->SetPrinterName("existing");
+    existingPrinter->SetOption("existing_option");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, existingPrinter);
+
+    auto infoPtr = std::make_shared<PrinterInfo>();
+    infoPtr->SetPrinterId(printerId);
+    infoPtr->SetOption("newly_discovered_option");
+
+    service->UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
+
+    auto stored = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    ASSERT_NE(stored, nullptr);
+    EXPECT_TRUE(stored->HasOption());
+    EXPECT_EQ(stored->GetOption(), "existing_option");
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateAddedUsbPrinterInfoWithoutOption_UsbPrinterEmptyOption_UpdatesOption,
+    TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:USB-testA";
+
+    auto existingPrinter = std::make_shared<PrinterInfo>();
+    existingPrinter->SetPrinterId(printerId);
+    existingPrinter->SetPrinterName("PrinterA");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, existingPrinter);
+
+    auto infoPtr = std::make_shared<PrinterInfo>();
+    infoPtr->SetPrinterId(printerId);
+    infoPtr->SetOption("{\"copies\":\"2\"}");
+
+    service->UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
+
+    auto stored = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    ASSERT_NE(stored, nullptr);
+    EXPECT_TRUE(stored->HasOption());
+    EXPECT_EQ(stored->GetOption(), "{\"copies\":\"2\"}");
+
+    PrinterInfo retrieved;
+    EXPECT_TRUE(service->QueryAddedPrinterInfoByPrinterId(printerId, retrieved));
+    EXPECT_TRUE(retrieved.HasOption());
+    EXPECT_EQ(retrieved.GetOption(), "{\"copies\":\"2\"}");
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateAddedUsbPrinterInfoWithoutOption_IppOverUsbPrinterEmptyOption_UpdatesOption,
+    TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:IPP-testB";
+
+    auto existingPrinter = std::make_shared<PrinterInfo>();
+    existingPrinter->SetPrinterId(printerId);
+    existingPrinter->SetPrinterName("PrinterB");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, existingPrinter);
+
+    auto infoPtr = std::make_shared<PrinterInfo>();
+    infoPtr->SetPrinterId(printerId);
+    infoPtr->SetOption("{\"media_size\":\"A4\"}");
+
+    service->UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
+
+    auto stored = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    ASSERT_NE(stored, nullptr);
+    EXPECT_TRUE(stored->HasOption());
+    EXPECT_EQ(stored->GetOption(), "{\"media_size\":\"A4\"}");
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterOption_PrinterNotFound_NoOp, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    service->printSystemData_.UpdatePrinterOption("non_existent_printer_id", "some_option");
+
+    EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("non_existent_printer_id"), nullptr);
+}
+
 }  // namespace Print
 }  // namespace OHOS

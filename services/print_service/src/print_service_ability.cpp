@@ -193,6 +193,8 @@ const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 const std::string JOB_BANNED_VERSION = "1.0";
 const int32_t JOB_BANNED_POLICY_CODE = 1021;
 static const std::string EMD_QUERY_VERSION = "version_12";
+static const std::string IPPOVERUSB_PREFIX = ":IPP-";
+static const std::string PRINTER_ID_USB_DELIMITER = "USB";
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -4203,6 +4205,24 @@ int32_t PrintServiceAbility::DiscoverBackendPrinters(std::vector<PrinterInfo> &p
     return E_PRINT_NONE;
 }
 
+void PrintServiceAbility::UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr)
+{
+    if (!PrintUtil::startsWith(infoPtr->GetPrinterId(), SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX) &&
+        !PrintUtil::startsWith(infoPtr->GetPrinterId(), SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER +
+        PRINTER_ID_USB_DELIMITER)) {
+        return;
+    }
+
+    PrinterInfo addedInfo;
+    if (infoPtr->HasOption() &&
+        QueryAddedPrinterInfoByPrinterId(infoPtr->GetPrinterId(), addedInfo) &&
+        !addedInfo.HasOption()) {
+        PRINT_HILOGI("empty info option found, update it");
+        printSystemData_.UpdatePrinterOption(infoPtr->GetPrinterId(), infoPtr->GetOption());
+        printSystemData_.SavePrinterFile(infoPtr->GetPrinterId());
+    }
+}
+
 int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
     auto infoPtr = std::make_shared<PrinterInfo>(info);
@@ -4224,6 +4244,9 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
         SyncAddedPrinterUri(infoPtr);
         UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
     }
+    
+    // Background: spooler cannot associate the inserted USB device through VID and PID after OTA
+    UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
 
     return E_PRINT_NONE;
 }

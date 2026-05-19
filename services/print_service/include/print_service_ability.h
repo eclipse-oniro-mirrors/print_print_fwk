@@ -366,6 +366,7 @@ private:
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
+    void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
