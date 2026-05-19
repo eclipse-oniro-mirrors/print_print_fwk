@@ -572,12 +572,21 @@ void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob>
         PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
         return;
     }
+
+    std::vector<uint32_t> fdList;
+    printJob->GetFdList(fdList);
+
     std::vector<FileAuditInfo> fileInfos;
-    for (const auto &fileName : fileList) {
+    for (size_t i = 0; i < fileList.size(); ++i) {
         FileAuditInfo info;
-        info.fileName = fileName;
-        info.md5 = "";
-        info.size = 0;
+        info.fileName = fileList[i];
+        if (i < fdList.size()) {
+            info.md5 = PrintSecurityGuardUtil::CalculateFileMd5(fdList[i]);
+            info.size = PrintSecurityGuardUtil::GetFileSize(fdList[i]);
+        } else {
+            info.md5 = "";
+            info.size = 0;
+        }
         fileInfos.push_back(info);
     }
     if (!fileInfos.empty()) {

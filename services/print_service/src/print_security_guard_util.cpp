@@ -14,6 +14,11 @@
  */
 
 #include "print_security_guard_util.h"
+
+#include <cstdio>
+#include <openssl/md5.h>
+#include <unistd.h>
+
 #include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
@@ -113,6 +118,49 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
         }
     }
     return fileList;
+}
+
+std::string PrintSecurityGuardUtil::CalculateFileMd5(uint32_t fd)
+{
+    int dupFd = dup(static_cast<int>(fd));
+    if (dupFd < 0) {
+        return "";
+    }
+    lseek(dupFd, 0, SEEK_SET);
+
+    MD5_CTX ctx;
+    MD5_Init(&ctx);
+
+    unsigned char buf[4096];
+    ssize_t n;
+    while ((n = read(dupFd, buf, sizeof(buf))) > 0) {
+        MD5_Update(&ctx, buf, n);
+    }
+    close(dupFd);
+
+    if (n < 0) {
+        return "";
+    }
+
+    unsigned char digest[MD5_DIGEST_LENGTH];
+    MD5_Final(digest, &ctx);
+
+    char hex[MD5_DIGEST_LENGTH * 2 + 1];
+    for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+        snprintf(hex + i * 2, 3, "%02x", static_cast<unsigned>(digest[i]));
+    }
+    return std::string(hex);
+}
+
+uint64_t PrintSecurityGuardUtil::GetFileSize(uint32_t fd)
+{
+    int dupFd = dup(static_cast<int>(fd));
+    if (dupFd < 0) {
+        return 0;
+    }
+    off_t size = lseek(dupFd, 0, SEEK_END);
+    close(dupFd);
+    return (size >= 0) ? static_cast<uint64_t>(size) : 0;
 }
 
 } // namespace OHOS::Print
