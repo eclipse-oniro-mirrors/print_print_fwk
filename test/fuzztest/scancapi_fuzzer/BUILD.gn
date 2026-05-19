@@ -16,10 +16,16 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+} else {
+  _test_path = "${print_path}/test"
+}
+
 ohos_fuzztest("ScanCapiFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scancapi_fuzzer"
+  fuzz_config_file = "${_test_path}/fuzztest/scancapi_fuzzer"
 
   include_dirs = [
     "${print_path}/frameworks/ohscan/include",
@@ -68,7 +74,7 @@ ohos_fuzztest("ScanCapiFuzzTest") {
     ]
   }
 
-  sources = [ "scancapi_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/scancapi_fuzzer/scancapi_fuzzer.cpp" ]
 }
 
 group("fuzztest") {

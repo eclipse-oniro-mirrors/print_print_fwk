@@ -57,6 +57,7 @@ struct JobParameters {
     std::string printerAttrsOptionCupsOption;
     bool isCanceled = false;
     Json::Value advancedOpsJson;
+    std::string vendorOptions;
     bool isReverse = false;
     bool isCollate = true;
 };
@@ -182,6 +183,7 @@ public:
     int32_t DeleteExtraJobsFromCups();
     std::string getScheme(std::string &printerUri);
     bool IsIpAddress(const char* host);
+    IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
     std::string GetCurCupsModelDir();
 private:
@@ -202,6 +204,7 @@ private:
     static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);

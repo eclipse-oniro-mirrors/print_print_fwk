@@ -14,6 +14,14 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service/print_service"
+} else {
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services/print_service"
+}
+
 module_output_path = unit_test_output_path
 
 ohos_unittest("fwk_vendor_manager_test") {
@@ -21,8 +29,8 @@ ohos_unittest("fwk_vendor_manager_test") {
   include_dirs = [
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
-    "${print_path}/services/print_service/include",
-    "${print_path}/services/print_service/include/event_callback",
+    "${_service_path}/include",
+    "${_service_path}/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -34,13 +42,13 @@ ohos_unittest("fwk_vendor_manager_test") {
   }
 
   sources = [
-    "operation_queue_test.cpp",
-    "vendor_bsuni_driver_test.cpp",
-    "vendor_helper_test.cpp",
-    "vendor_ipp_everywhere_test.cpp",
-    "vendor_manager_test.cpp",
-    "vendor_ppd_driver_test.cpp",
-    "vendor_wlan_group_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/operation_queue_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_bsuni_driver_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_helper_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_ipp_everywhere_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_manager_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_ppd_driver_test.cpp",
+    "${_test_path}/unittest/fwk_vendor_manager_test/vendor_wlan_group_test.cpp",
   ]
   cflags_cc = []
   if (print_fwk_feature_enterprise) {
@@ -76,6 +84,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "googletest:gmock_main",
     "hilog:libhilog",
+    "huks:libhukssdk",
     "ipc:ipc_core",
     "napi:ace_napi",
     "os_account:os_account_innerkits",

@@ -29,6 +29,7 @@ static constexpr const char *PARAM_PREFERENCES_BORDERLESS = "borderless";
 static constexpr const char *PARAM_PREFERENCES_COLLATE = "defaultCollate";
 static constexpr const char *PARAM_PREFERENCES_REVERSE = "defaultReverse";
 static constexpr const char *PARAM_PREFERENCES_OPTION = "options";
+static constexpr const char *PARAM_PREFERENCES_VENDOR_OPTIONS = "vendorOptions";
 
 napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPreferences &preferences)
 {
@@ -78,6 +79,11 @@ napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPre
 
     if (preferences.HasOption()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PREFERENCES_OPTION, preferences.GetOption());
+    }
+
+    if (preferences.HasVendorOptions()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PREFERENCES_VENDOR_OPTIONS,
+            preferences.GetVendorOptions().c_str());
     }
 
     return jsObj;
@@ -152,6 +158,12 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_OPTION));
     }
 
+    auto jsVendorOptions = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_VENDOR_OPTIONS);
+    if (jsVendorOptions != nullptr) {
+        nativeObj->SetVendorOptions(
+            NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_VENDOR_OPTIONS));
+    }
+
     BuildFromBoolOptionJs(env, jsValue, nativeObj);
     return nativeObj;
 }
@@ -169,6 +181,7 @@ bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_PREFERENCES_COLLATE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_REVERSE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_OPTION, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_VENDOR_OPTIONS, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

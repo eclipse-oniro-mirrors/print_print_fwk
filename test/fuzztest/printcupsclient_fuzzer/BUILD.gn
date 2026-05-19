@@ -16,16 +16,24 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service"
+} else {
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services"
+}
+
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintCupsClientFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${print_path}/test/fuzztest/printcupsclient_fuzzer"
+  fuzz_config_file = "${_test_path}/fuzztest/printcupsclient_fuzzer"
 
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
-    "${print_path}/services/print_service/include/event_callback",
+    "${_service_path}/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -51,7 +59,7 @@ ohos_fuzztest("PrintCupsClientFuzzTest") {
     "${print_path}/services/print_service:print_service_test",
   ]
 
-  sources = [ "printcupsclient_fuzzer.cpp" ]
+  sources = [ "${_test_path}/fuzztest/printcupsclient_fuzzer/printcupsclient_fuzzer.cpp" ]
 
   external_deps = [
     "ability_base:base",
@@ -71,6 +79,7 @@ ohos_fuzztest("PrintCupsClientFuzzTest") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "huks:libhukssdk",
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",

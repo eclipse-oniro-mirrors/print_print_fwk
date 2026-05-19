@@ -56,9 +56,11 @@ ohos_shared_library("print_models") {
     "src/print_range.cpp",
     "src/print_resolution.cpp",
     "src/print_utils.cpp",
+    "src/print_vendor_options_util.cpp",
     "src/printer_capability.cpp",
     "src/printer_info.cpp",
     "src/printer_preferences.cpp",
+    "src/printer_user_preferences.cpp",
     "src/ppd_info.cpp",
     "src/print_shared_host.cpp",
   ]

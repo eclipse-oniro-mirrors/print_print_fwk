@@ -14,6 +14,16 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service/print_service"
+  _scan_service_path = "${print_path}/services/phone_service/scan_service"
+} else {
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services/print_service"
+  _scan_service_path = "${print_path}/services/scan_service"
+}
+
 module_output_path = unit_test_output_path
 
 ohos_unittest("print_fwk_inner_napi_test") {
@@ -25,8 +35,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/models/scan_models/include",
-    "${print_path}/services/print_service/include",
-    "${print_path}/services/scan_service/include",
+    "${_service_path}/include",
+    "${_scan_service_path}/include",
     "${print_utils_path}/include",
   ]
 
@@ -40,30 +50,30 @@ ohos_unittest("print_fwk_inner_napi_test") {
   cflags_cc = [ "-DUNIT_TEST" ]
 
   sources = [
-    "print_attributes_test.cpp",
-    "print_callback_stub_test.cpp",
-    "print_extension_callback_stub_test.cpp",
-    "print_extension_info_test.cpp",
-    "print_job_test.cpp",
-    "print_manager_client_test.cpp",
-    "print_margin_test.cpp",
-    "print_page_size_test.cpp",
-    "print_preview_attribute_test.cpp",
-    "print_range_test.cpp",
-    "print_resolution_test.cpp",
-    "print_sa_death_recipient_test.cpp",
-    "print_service_proxy_test.cpp",
-    "print_sync_load_callback_test.cpp",
-    "print_utils_ext_test.cpp",
-    "print_utils_test.cpp",
-    "printer_capability_test.cpp",
-    "printer_info_test.cpp",
-    "printer_preferences_test.cpp",
-    "ppd_info_test.cpp",
-    "print_shared_host_test.cpp",
-    "scan_manager_client_test.cpp",
-    "scan_models_test.cpp",
-    "watermark_callback_stub_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_attributes_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_callback_stub_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_extension_callback_stub_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_extension_info_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_job_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_manager_client_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_margin_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_page_size_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_preview_attribute_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_range_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_resolution_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_sa_death_recipient_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_service_proxy_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_sync_load_callback_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_utils_ext_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_utils_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/printer_capability_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/printer_info_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/printer_preferences_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/ppd_info_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/print_shared_host_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/scan_manager_client_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/scan_models_test.cpp",
+    "${_test_path}/unittest/fwk_inner_napi_test/watermark_callback_stub_test.cpp",
   ]
 
   deps = [
@@ -109,7 +119,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
   if (print_fwk_feature_kia_interceptor) {
     cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
     sources += [
-      "kia_interceptor_callback_stub_test.cpp",
+      "${_test_path}/unittest/fwk_inner_napi_test/kia_interceptor_callback_stub_test.cpp",
     ]
   }
 }

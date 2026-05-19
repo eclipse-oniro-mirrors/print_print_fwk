@@ -1,0 +1,455 @@
+/*
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <gtest/gtest.h>
+#include "mock_print_callback_stub.h"
+#include "iremote_broker.h"
+#include "print_constant.h"
+#include "print_job.h"
+#include "printer_info.h"
+#include "print_shared_host.h"
+
+using namespace testing;
+using namespace testing::ext;
+
+namespace OHOS {
+namespace Print {
+class PrintCallbackStubTest : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+};
+
+void PrintCallbackStubTest::SetUpTestCase(void)
+{}
+
+void PrintCallbackStubTest::TearDownTestCase(void)
+{}
+
+/**
+ * @tc.name: PrintCallbackStubTest_0001
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0001, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_TASK);
+
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0002
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0002, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_TASK + 100);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), OHOS::IPC_STUB_UNKNOW_TRANS_ERR);
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0003
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0003, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_TASK);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback()).Times(1);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+}
+
+MATCHER_P(PrinterInfoMatcher, oParam, "Match Printer Info")
+{
+    const PrinterInfo &op = (const PrinterInfo &)arg;
+    return op.GetPrinterId() == oParam.GetPrinterId();
+}
+
+MATCHER_P(PrintJobMatcher, oParam, "Match Print Job")
+{
+    const PrintJob &op = (const PrintJob &)arg;
+    return op.GetJobId() == oParam.GetJobId();
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0004
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0004, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINTER);
+
+    auto testState = static_cast<uint32_t>(PRINTER_ADDED);
+    PrinterInfo testInfo;
+    std::string testPrinterId = "com.sample.ext:1";
+    testInfo.SetPrinterId(testPrinterId);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(testState));
+    EXPECT_TRUE(testInfo.Marshalling(data));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testState, Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo))))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0005
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0005, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_JOB);
+
+    auto testState = static_cast<uint32_t>(PRINT_JOB_RUNNING);
+    PrintJob testJob;
+    std::string jobId = "job:1234";
+    testJob.SetJobId(jobId);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(testState));
+    EXPECT_TRUE(testJob.Marshalling(data));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testState, Matcher<const PrintJob &>(PrintJobMatcher(testJob))))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: PrintCallbackStubTest_0006
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0006, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_EXTINFO);
+
+    std::string extensionId = "com.sample.ext";
+    std::string extInfo = "custom extension info";
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(extensionId));
+    EXPECT_TRUE(data.WriteString(extInfo));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(extensionId, extInfo)).Times(1).WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0008
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0008, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_JOB_ADAPTER);
+
+    std::string jobId = "job:1234";
+    PrintAttributes oldAttrs;
+    PrintAttributes newAttrs;
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+    EXPECT_FALSE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0009
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0009, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER);
+
+    auto testState = static_cast<uint32_t>(PRINT_JOB_RUNNING);
+    auto testSubState = static_cast<uint32_t>(PRINTER_ADDED);
+    std::string jobId = "job:1234";
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(testState));
+    EXPECT_TRUE(data.WriteUint32(testSubState));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: PrintCallbackStubTest_0010
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0010, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER);
+
+    auto testState = static_cast<uint32_t>(PRINT_JOB_RUNNING);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(testState));
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_TRUE, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_QUERY_INFO);
+
+    PrinterInfo info;
+    info.SetPrinterId("192.168.1.1");
+    std::vector<PpdInfo> ppds;
+    PpdInfo testInfo;
+    testInfo.SetPpdInfo("testManu", "testNick", "test.ppd");
+    ppds.push_back(testInfo);
+    EXPECT_NE(ppds.size(), 0);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(info.Marshalling(data));
+    EXPECT_TRUE(data.WriteInt32(ppds.size()));
+    for (const auto &ppd : ppds) {
+        EXPECT_TRUE(ppd.Marshalling(data));
+    }
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::An<const PrinterInfo&>(), testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_FALSE, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_QUERY_INFO);
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+
+    PrinterInfo info;
+    info.SetPrinterId("192.168.1.1");
+    std::vector<PpdInfo> ppds;
+    PpdInfo testInfo;
+    testInfo.SetPpdInfo("testManu", "testNick", "test.ppd");
+    ppds.push_back(testInfo);
+    testInfo.SetPpdInfo("testManu", "", "");
+    ppds.push_back(testInfo);
+    EXPECT_NE(ppds.size(), 0);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(info.Marshalling(data));
+    EXPECT_TRUE(data.WriteInt32(ppds.size()));
+    for (const auto &ppd : ppds) {
+        EXPECT_TRUE(ppd.Marshalling(data));
+    }
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_EmptyPpds, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_QUERY_INFO);
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+
+    PrinterInfo info;
+    info.SetPrinterId("192.168.1.1");
+    std::vector<PpdInfo> ppds;
+    PpdInfo testInfo;
+    EXPECT_EQ(ppds.size(), 0);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(info.Marshalling(data));
+    EXPECT_TRUE(data.WriteInt32(ppds.size()));
+    for (const auto &ppd : ppds) {
+        EXPECT_TRUE(ppd.Marshalling(data));
+    }
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_EmptyHosts
+ * @tc.desc: Test handling empty shared host list
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_EmptyHosts, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(0));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_SingleHost
+ * @tc.desc: Test handling single shared host
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_SingleHost, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    PrintSharedHost testHost;
+    testHost.SetIp("192.168.1.1");
+    testHost.SetShareName("TestShare");
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(1));
+    EXPECT_TRUE(testHost.Marshalling(data));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_MultipleHosts
+ * @tc.desc: Test handling multiple shared hosts
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_MultipleHosts, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    PrintSharedHost host1, host2;
+    host1.SetIp("192.168.1.1");
+    host1.SetShareName("Share1");
+    host2.SetIp("192.168.1.2");
+    host2.SetShareName("Share2");
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(2));
+    EXPECT_TRUE(host1.Marshalling(data));
+    EXPECT_TRUE(host2.Marshalling(data));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_CALL(*callback, OnCallback(testing::_))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+/**
+ * @tc.name: HandleSharedHostDiscoverEvent_ExceedMaxCount
+ * @tc.desc: Test exceeding maximum count limit
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackStubTest, HandleSharedHostDiscoverEvent_ExceedMaxCount, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_SHARED_HOST_DISCOVER);
+    
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteUint32(PRINT_MAX_PRINT_COUNT + 1));
+    
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+}
+
+}  // namespace Print
+}  // namespace OHOS

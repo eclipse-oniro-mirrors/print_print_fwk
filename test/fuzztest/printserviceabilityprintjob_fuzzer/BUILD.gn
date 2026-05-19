@@ -16,17 +16,25 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service"
+} else {
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services"
+}
+
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintServiceAbilityPrintJobFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
-  fuzz_config_file = "${print_path}/test/fuzztest/printserviceabilityprintjob_fuzzer"
+  fuzz_config_file = "${_test_path}/fuzztest/printserviceabilityprintjob_fuzzer"
 
   include_dirs = [
     "mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
-    "${print_path}/services/print_service/include/event_callback",
+    "${_service_path}/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -53,8 +61,8 @@ ohos_fuzztest("PrintServiceAbilityPrintJobFuzzTest") {
   ]
 
   sources = [
-    "printserviceabilityprintjob_fuzzer.cpp",
-    "printserviceabilityprintjob_mock_permission.cpp",
+    "${_test_path}/fuzztest/printserviceabilityprintjob_fuzzer/printserviceabilityprintjob_fuzzer.cpp",
+    "${_test_path}/fuzztest/printserviceabilityprintjob_fuzzer/printserviceabilityprintjob_mock_permission.cpp",
   ]
 
   external_deps = [
@@ -76,6 +84,7 @@ ohos_fuzztest("PrintServiceAbilityPrintJobFuzzTest") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "huks:libhukssdk",
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",

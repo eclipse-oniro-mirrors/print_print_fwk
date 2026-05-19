@@ -25,6 +25,7 @@
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
 #include "print_json_util.h"
+#include "print_util.h"
 
 using namespace testing::ext;
 
@@ -915,6 +916,131 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Leve
         EXPECT_EQ(args.pageBorder, tc.pageBorder) << "Failed at index " << index;
         index++;
     }
+}
+
+/**
+ * @tc.name: MakeExtensionStateKey_001
+ * @tc.desc: Verify MakeExtensionStateKey with valid userId and bundleName.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, MakeExtensionStateKey_001, TestSize.Level1)
+{
+    int32_t userId = 100;
+    std::string bundleName = "com.example.print";
+    std::string result = PrintUtils::MakeExtensionStateKey(userId, bundleName);
+    EXPECT_EQ(result, "100_com.example.print");
+}
+
+/**
+ * @tc.name: MakeExtensionStateKey_002
+ * @tc.desc: Verify MakeExtensionStateKey with different userId.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, MakeExtensionStateKey_002, TestSize.Level1)
+{
+    int32_t userId = 0;
+    std::string bundleName = "com.test.extension";
+    std::string result = PrintUtils::MakeExtensionStateKey(userId, bundleName);
+    EXPECT_EQ(result, "0_com.test.extension");
+}
+
+/**
+ * @tc.name: GetUserIdFromKey_001
+ * @tc.desc: Verify GetUserIdFromKey with valid key.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetUserIdFromKey_001, TestSize.Level1)
+{
+    std::string key = "100_com.example.print";
+    int32_t result = PrintUtils::GetUserIdFromKey(key);
+    EXPECT_EQ(result, 100);
+}
+
+/**
+ * @tc.name: GetUserIdFromKey_002
+ * @tc.desc: Verify GetUserIdFromKey with invalid key (no underscore).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetUserIdFromKey_002, TestSize.Level1)
+{
+    std::string key = "com.example.print";
+    int32_t result = PrintUtils::GetUserIdFromKey(key);
+    EXPECT_EQ(result, -1);
+}
+
+/**
+ * @tc.name: GetUserIdFromKey_003
+ * @tc.desc: Verify GetUserIdFromKey with empty key.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetUserIdFromKey_003, TestSize.Level1)
+{
+    std::string key = "";
+    int32_t result = PrintUtils::GetUserIdFromKey(key);
+    EXPECT_EQ(result, -1);
+}
+
+/**
+ * @tc.name: GetBundleNameFromKey_001
+ * @tc.desc: Verify GetBundleNameFromKey with valid key.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetBundleNameFromKey_001, TestSize.Level1)
+{
+    std::string key = "100_com.example.print";
+    std::string result = PrintUtils::GetBundleNameFromKey(key);
+    EXPECT_EQ(result, "com.example.print");
+}
+
+/**
+ * @tc.name: GetBundleNameFromKey_002
+ * @tc.desc: Verify GetBundleNameFromKey with invalid key (no underscore).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetBundleNameFromKey_002, TestSize.Level1)
+{
+    std::string key = "com.example.print";
+    std::string result = PrintUtils::GetBundleNameFromKey(key);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: GetBundleNameFromKey_003
+ * @tc.desc: Verify GetBundleNameFromKey with empty key.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetBundleNameFromKey_003, TestSize.Level1)
+{
+    std::string key = "";
+    std::string result = PrintUtils::GetBundleNameFromKey(key);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: ExtensionStateKey_RoundTrip_001
+ * @tc.desc: Verify key creation and parsing round trip.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ExtensionStateKey_RoundTrip_001, TestSize.Level1)
+{
+    int32_t originalUserId = 100;
+    std::string originalBundleName = "com.ohos.printservice";
+
+    std::string key = PrintUtils::MakeExtensionStateKey(originalUserId, originalBundleName);
+    int32_t parsedUserId = PrintUtils::GetUserIdFromKey(key);
+    std::string parsedBundleName = PrintUtils::GetBundleNameFromKey(key);
+
+    EXPECT_EQ(parsedUserId, originalUserId);
+    EXPECT_EQ(parsedBundleName, originalBundleName);
 }
 
 // IsPathValidForCreate parameterized test structure

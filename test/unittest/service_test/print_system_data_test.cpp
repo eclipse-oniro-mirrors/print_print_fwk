@@ -1845,5 +1845,141 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfoTest, TestSize.Level1)
     EXPECT_TRUE(object["selectedDriver"].isObject());
     EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
 }
+
+HWTEST_F(PrintSystemDataTest, GetWebPrinterListFromSystemDataTest, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = PrintUtils::GetGlobalId(WEBPRINTER_BUNDLE_NAME, "123");
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    systemData->AddPrinterToDiscovery(printerInfo);
+    std::vector<std::string> printerIdList;
+    systemData->GetWebPrinterListFromSystemData(printerIdList);
+    EXPECT_EQ(printerIdList.size(), 1);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertVendorAbilityToJson_BothAbilities_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.vendor.driver.VendorPrinterSettingsAbility");
+    printerCaps.SetVendorJobAttrAbility("com.vendor.driver.VendorJobAttrAbility");
+
+    Json::Value json;
+    systemData->ConvertVendorAbilityToJson(printerCaps, json);
+
+    EXPECT_TRUE(json.isMember("vendorPrinterPrefAbility"));
+    EXPECT_TRUE(json.isMember("vendorJobAttrAbility"));
+    EXPECT_EQ(json["vendorPrinterPrefAbility"].asString(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(json["vendorJobAttrAbility"].asString(), "com.vendor.driver.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertVendorAbilityToJson_OnlyPrefAbility_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorPrinterPrefAbility("com.vendor.driver.VendorPrinterSettingsAbility");
+
+    Json::Value json;
+    systemData->ConvertVendorAbilityToJson(printerCaps, json);
+
+    EXPECT_TRUE(json.isMember("vendorPrinterPrefAbility"));
+    EXPECT_FALSE(json.isMember("vendorJobAttrAbility"));
+    EXPECT_EQ(json["vendorPrinterPrefAbility"].asString(), "com.vendor.driver.VendorPrinterSettingsAbility");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertVendorAbilityToJson_OnlyJobAbility_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    PrinterCapability printerCaps;
+    printerCaps.SetVendorJobAttrAbility("com.vendor.driver.VendorJobAttrAbility");
+
+    Json::Value json;
+    systemData->ConvertVendorAbilityToJson(printerCaps, json);
+
+    EXPECT_FALSE(json.isMember("vendorPrinterPrefAbility"));
+    EXPECT_TRUE(json.isMember("vendorJobAttrAbility"));
+    EXPECT_EQ(json["vendorJobAttrAbility"].asString(), "com.vendor.driver.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertVendorAbilityToJson_EmptyAbilities_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    PrinterCapability printerCaps;
+
+    Json::Value json;
+    systemData->ConvertVendorAbilityToJson(printerCaps, json);
+
+    EXPECT_FALSE(json.isMember("vendorPrinterPrefAbility"));
+    EXPECT_FALSE(json.isMember("vendorJobAttrAbility"));
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_BothAbilities_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    Json::Value json;
+    json["vendorPrinterPrefAbility"] = "com.vendor.driver.VendorPrinterSettingsAbility";
+    json["vendorJobAttrAbility"] = "com.vendor.driver.VendorJobAttrAbility";
+
+    PrinterCapability printerCaps;
+    systemData->ConvertJsonToVendorAbility(json, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_OnlyPrefAbility_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    Json::Value json;
+    json["vendorPrinterPrefAbility"] = "com.vendor.driver.VendorPrinterSettingsAbility";
+
+    PrinterCapability printerCaps;
+    systemData->ConvertJsonToVendorAbility(json, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_OnlyJobAbility_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    Json::Value json;
+    json["vendorJobAttrAbility"] = "com.vendor.driver.VendorJobAttrAbility";
+
+    PrinterCapability printerCaps;
+    systemData->ConvertJsonToVendorAbility(json, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_EmptyJson_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    Json::Value json;
+
+    PrinterCapability printerCaps;
+    systemData->ConvertJsonToVendorAbility(json, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_InvalidFormat_Test, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    Json::Value json;
+    json["vendorPrinterPrefAbility"] = 123;
+    json["vendorJobAttrAbility"] = true;
+
+    PrinterCapability printerCaps;
+    systemData->ConvertJsonToVendorAbility(json, printerCaps);
+
+    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
+    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+}
+
 }  // namespace Print
 }  // namespace OHOS

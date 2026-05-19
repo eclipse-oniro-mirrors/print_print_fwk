@@ -92,6 +92,12 @@ public:
 
     [[nodiscard]] std::string GetOption() const;
 
+    void SetVendorOptions(const std::string &vendorOptions);
+
+    [[nodiscard]] bool HasVendorOptions() const;
+
+    [[nodiscard]] std::string GetVendorOptions() const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrinterPreferences> Unmarshalling(Parcel &parcel);
@@ -107,6 +113,7 @@ public:
 private:
     bool ReadFromParcel(Parcel &parcel);
     void ConvertBoolDefaultJsonToPrinterPreferences(Json::Value &preferencesJson);
+    void ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterPreferences &right);
 
 private:
     bool hasDefaultDuplexMode_;
@@ -148,6 +155,10 @@ private:
     bool hasOption_;
 
     std::string option_;
+
+    bool hasVendorOptions_;
+
+    std::string vendorOptions_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_PREFERENCES_H

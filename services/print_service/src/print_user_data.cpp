@@ -16,6 +16,7 @@
 #include "print_user_data.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <iostream>
 #include <fstream>
 #include <streambuf>
@@ -24,7 +25,6 @@
 #include <cstdlib>
 #include <iomanip>
 #include <json/json.h>
-#include <filesystem>
 
 #include "print_log.h"
 #include "print_constant.h"
@@ -35,6 +35,7 @@ namespace OHOS {
 namespace Print {
 const uint32_t DEFAULT_BUFFER_SIZE_4K = 4096;
 const uint32_t FD_INDEX_LEN = 4;
+const uint32_t DIR_MODE = 0771;
 
 static const std::string FILE_INDEX_DELIMITER = "_";
 
@@ -1136,6 +1137,155 @@ bool PrintUserData::ContainsHistoryPrintJob(const std::vector<std::string> &prin
         }
     }
     return false;
+}
+
+bool PrintUserData::GetUserPreferencesFilePath(const std::string &standardizedPrinterName,
+                                               std::string &safeFilePath)
+{
+    std::string baseDir = ObtainUserCacheDirectory();
+
+    char realBaseDir[PATH_MAX] = {0};
+    if (realpath(baseDir.c_str(), realBaseDir) == nullptr) {
+        PRINT_HILOGE("Failed to canonicalize base directory, errno=%{public}d", errno);
+        return false;
+    }
+
+    std::string filePath = std::string(realBaseDir) + "/printer_user_prefs/" + standardizedPrinterName + ".json";
+
+    char realFilePath[PATH_MAX] = {0};
+    if (realpath(filePath.c_str(), realFilePath) == nullptr) {
+        if (filePath.find("..") != std::string::npos) {
+            PRINT_HILOGE("Path injection detected: path contains '..'");
+            return false;
+        }
+        safeFilePath = filePath;
+        return true;
+    }
+
+    std::string normalizedPath(realFilePath);
+    std::string expectedPrefix = std::string(realBaseDir) + "/printer_user_prefs/";
+    if (normalizedPath.find(expectedPrefix) != 0) {
+        PRINT_HILOGE("Path injection detected: file path outside expected directory");
+        return false;
+    }
+
+    safeFilePath = normalizedPath;
+    return true;
+}
+
+bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
+                                               const std::string &standardizedPrinterName,
+                                               const PrinterUserPreferences &userPrefs)
+{
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    auto userPrefsPtr = std::make_shared<PrinterUserPreferences>(userPrefs);
+    printerUserPreferences_[printerId] = userPrefsPtr;
+
+    std::string baseDir = ObtainUserCacheDirectory();
+    char realBaseDir[PATH_MAX] = {0};
+    if (realpath(baseDir.c_str(), realBaseDir) == nullptr) {
+        PRINT_HILOGE("Failed to canonicalize base directory, errno=%{public}d", errno);
+        return false;
+    }
+
+    std::string dirPath = std::string(realBaseDir) + "/printer_user_prefs";
+    if (access(dirPath.c_str(), F_OK) != 0) {
+        if (mkdir(dirPath.c_str(), DIR_MODE) != 0) {
+            PRINT_HILOGE("Failed to create user preferences directory, errno=%{public}d", errno);
+            return false;
+        }
+    }
+
+    std::string filePath = dirPath + "/" + standardizedPrinterName + ".json";
+
+    Json::Value json = userPrefs.ConvertToJson();
+    std::string jsonString = PrintJsonUtil::WriteString(json);
+
+    FILE *file = fopen(filePath.c_str(), "w+");
+    if (file == nullptr) {
+        PRINT_HILOGE("Failed to open user preferences file, errno=%{public}d", errno);
+        return false;
+    }
+
+    size_t jsonLength = jsonString.length();
+    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
+    if (writeLength != jsonLength) {
+        PRINT_HILOGE("Failed to write user preferences file, writeLength=%{public}zu, jsonLength=%{public}zu",
+            writeLength, jsonLength);
+        fclose(file);
+        return false;
+    }
+
+    if (fclose(file) != 0) {
+        PRINT_HILOGE("Failed to close user preferences file, errno=%{public}d", errno);
+        return false;
+    }
+
+    PRINT_HILOGI("Saved PrinterUserPreferences to %{private}s", filePath.c_str());
+    return true;
+}
+
+bool PrintUserData::LoadPrinterUserPreferences(const std::string &printerId,
+                                               const std::string &standardizedPrinterName,
+                                               PrinterUserPreferences &userPrefs)
+{
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    auto iter = printerUserPreferences_.find(printerId);
+    if (iter != printerUserPreferences_.end() && iter->second != nullptr) {
+        userPrefs = *iter->second;
+        return true;
+    }
+
+    std::string filePath;
+    if (!GetUserPreferencesFilePath(standardizedPrinterName, filePath)) {
+        PRINT_HILOGE("Failed to get safe file path");
+        return false;
+    }
+
+    std::ifstream ifs(filePath);
+    if (!ifs.is_open()) {
+        PRINT_HILOGD("User preferences file not found: %{private}s", filePath.c_str());
+        return false;
+    }
+
+    std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    ifs.close();
+
+    Json::Value json;
+    if (!PrintJsonUtil::Parse(content, json)) {
+        PRINT_HILOGE("Failed to parse user preferences file, content length=%{public}zu", content.length());
+        return false;
+    }
+
+    userPrefs.ConvertFromJson(json);
+    userPrefs.SetUserId(userId_);
+    printerUserPreferences_[printerId] = std::make_shared<PrinterUserPreferences>(userPrefs);
+    PRINT_HILOGI("Loaded PrinterUserPreferences from %{private}s", filePath.c_str());
+    return true;
+}
+
+void PrintUserData::DeletePrinterUserPreferences(const std::string &printerId,
+                                                 const std::string &standardizedPrinterName)
+{
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    printerUserPreferences_.erase(printerId);
+
+    std::string filePath;
+    if (!GetUserPreferencesFilePath(standardizedPrinterName, filePath)) {
+        PRINT_HILOGE("Failed to get safe file path");
+        return;
+    }
+
+    if (access(filePath.c_str(), F_OK) != 0) {
+        PRINT_HILOGD("User preferences file not found: %{private}s", filePath.c_str());
+        return;
+    }
+
+    if (unlink(filePath.c_str()) != 0) {
+        PRINT_HILOGE("Failed to delete user preferences file, errno=%{public}d", errno);
+        return;
+    }
+    PRINT_HILOGI("Deleted PrinterUserPreferences file %{private}s", filePath.c_str());
 }
 
 }  // namespace Print

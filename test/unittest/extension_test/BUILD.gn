@@ -14,6 +14,12 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+} else {
+  _test_path = "${print_path}/test"
+}
+
 module_output_path = unit_test_output_path
 
 ohos_unittest("print_ext_test") {
@@ -28,8 +34,8 @@ ohos_unittest("print_ext_test") {
   ]
 
   sources = [
-    "print_extension_context_test.cpp",
-    "print_extension_test.cpp",
+    "${_test_path}/unittest/extension_test/print_extension_context_test.cpp",
+    "${_test_path}/unittest/extension_test/print_extension_test.cpp",
   ]
 
   deps = [
