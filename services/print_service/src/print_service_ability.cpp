@@ -573,20 +573,10 @@ void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob>
         return;
     }
 
-    std::vector<uint32_t> fdList;
-    printJob->GetFdList(fdList);
-
     std::vector<FileAuditInfo> fileInfos;
-    for (size_t i = 0; i < fileList.size(); ++i) {
+    for (const auto &file : fileList) {
         FileAuditInfo info;
-        info.fileName = fileList[i];
-        if (i < fdList.size()) {
-            info.md5 = PrintSecurityGuardUtil::CalculateFileMd5(fdList[i]);
-            info.size = PrintSecurityGuardUtil::GetFileSize(fdList[i]);
-        } else {
-            info.md5 = "";
-            info.size = 0;
-        }
+        info.fileName = file;
         fileInfos.push_back(info);
     }
     if (!fileInfos.empty()) {

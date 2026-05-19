@@ -15,12 +15,6 @@
 
 #include "print_security_guard_util.h"
 
-#include <cstdio>
-#include <unistd.h>
-#include <vector>
-
-#include <cups/cups-private.h>
-
 #include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
@@ -121,49 +115,4 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     }
     return fileList;
 }
-
-std::string PrintSecurityGuardUtil::CalculateFileMd5(uint32_t fd)
-{
-    int dupFd = dup(static_cast<int>(fd));
-    if (dupFd < 0) {
-        return "";
-    }
-    lseek(dupFd, 0, SEEK_SET);
-
-    std::vector<unsigned char> buffer;
-    unsigned char buf[4096];
-    ssize_t n;
-    while ((n = read(dupFd, buf, sizeof(buf))) > 0) {
-        buffer.insert(buffer.end(), buf, buf + n);
-    }
-    close(dupFd);
-
-    if (n < 0 || buffer.empty()) {
-        return "";
-    }
-
-    unsigned char digest[16];
-    ssize_t hashLen = cupsHashData("md5", buffer.data(), buffer.size(), digest, sizeof(digest));
-    if (hashLen <= 0) {
-        return "";
-    }
-
-    char hex[33];
-    for (int i = 0; i < hashLen; ++i) {
-        snprintf(hex + i * 2, 3, "%02x", static_cast<unsigned>(digest[i]));
-    }
-    return std::string(hex);
-}
-
-uint64_t PrintSecurityGuardUtil::GetFileSize(uint32_t fd)
-{
-    int dupFd = dup(static_cast<int>(fd));
-    if (dupFd < 0) {
-        return 0;
-    }
-    off_t size = lseek(dupFd, 0, SEEK_END);
-    close(dupFd);
-    return (size >= 0) ? static_cast<uint64_t>(size) : 0;
-}
-
 } // namespace OHOS::Print

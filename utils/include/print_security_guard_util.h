@@ -50,8 +50,7 @@ public:
     static int32_t GetPrinterType(const std::string& des);
     static std::string ExtractFileName(const std::string& filePath);
     static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
-    static std::string CalculateFileMd5(uint32_t fd);
-    static uint64_t GetFileSize(uint32_t fd);
+
 };
 
 std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);
