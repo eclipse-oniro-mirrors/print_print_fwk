@@ -31,6 +31,7 @@ namespace Scan {
 namespace {
 const int32_t VALUE_BUFFER_LEN = 1024;
 constexpr int32_t SANE_SERVICE_ID = 3709;
+static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 } //namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(SaneServerManager, SANE_SERVICE_ID, true);
@@ -70,8 +71,7 @@ bool SaneServerManager::CheckPermission()
         SCAN_HILOGE("invalid tokenType, type = [%{public}u]", tokenType);
         return false;
     }
-    static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
-    int result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT);
+    int result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT_JOB);
     if (result != PERMISSION_GRANTED) {
         SCAN_HILOGE("Current tokenId permission is denied.");
         return false;
@@ -390,11 +390,17 @@ SaneStatus SaneServerManager::GetControlOption(
             &value, nullptr);
         outParam.valueNumber_ = value;
     } else if (valueType == SCAN_VALUE_STR) {
-        if (controlParam.valueSize_ > VALUE_BUFFER_LEN || controlParam.valueSize_ < 0) {
-            SCAN_HILOGE("invalid valueSize");
+        const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
+        if (saneDesc == nullptr) {
+            SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
             return SANE_STATUS_INVAL;
         }
-        std::vector<char> value(controlParam.valueSize_ + 1, 0);
+        int32_t actualSize = saneDesc->size;
+        if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
+            SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
+            return SANE_STATUS_INVAL;
+        }
+        std::vector<char> value(actualSize, 0);
         saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
             value.data(), nullptr);
         outParam.valueStr_ = std::string(value.data());
@@ -425,7 +431,16 @@ SaneStatus SaneServerManager::SetControlOption(
     SCAN_HILOGI("valueType = [%{public}d], option = [%{public}d], action = [%{public}u]", valueType, option, action);
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     if (valueType == SCAN_VALUE_STR) {
+        const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
+        if (saneDesc == nullptr) {
+            SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
+            return SANE_STATUS_INVAL;
+        }
         std::string value = controlParam.valueStr_;
+        if (value.size() >= saneDesc->size) {
+            SCAN_HILOGE("String value too long for option %{public}d", option);
+            return SANE_STATUS_INVAL;
+        }
         saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, value.data(), &info);
         SCAN_HILOGI("SetControlOption, value = [%{public}s]", value.c_str());
     } else {
