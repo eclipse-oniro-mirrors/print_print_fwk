@@ -265,6 +265,9 @@ export default namespace print {
         E_PRINT_INVALID_PRINT_JOB = 13100006,
         E_PRINT_FILE_IO = 13100007,
         E_PRINT_TOO_MANY_FILES = 13100010,
+        E_PRINT_SMB_LOGIN_LOCKOUT = 13100012,
+        E_PRINT_SMB_CONNECTION_FAILURE = 13100013,
+        E_PRINT_SMB_INVALID_CREDENTIALS = 13100014,
     }
 
     export enum ApplicationEvent {
@@ -581,6 +584,8 @@ export default namespace print {
     native function requestPrintPreviewAsyncCallbackNative(jobInfo: PrintJob, callback: AsyncCallbackWrapper<int>): void;
 
     native function addPrintersNative(printers: Array<PrinterInfo>, callback: AsyncCallbackWrapper<void>): void;
+
+    native function addPrinterNative(printerName: string, uri: string, ppdName: string, options: string, callback: AsyncCallbackWrapper<void>): void;
 
     native function removePrintersNative(printerIds: Array<string>, callback: AsyncCallbackWrapper<void>): void;
 
@@ -1130,6 +1135,21 @@ export default namespace print {
             });
             taskpool.execute((): void => {
                 addPrintersNative(printers, myCall);
+            });
+        });
+    }
+
+    export function addPrinter(printerName: string, uri: string, ppdName?: string, options?: string): Promise<void> {
+        return new Promise<void>((resolve: (data:undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<void>((err : BusinessError<void> | null) => {
+                if (err === null || err.code == 0) {
+                    resolve(undefined);
+                } else {
+                    reject(err);
+                }
+            });
+            taskpool.execute((): void => {
+                addPrinterNative(printerName, uri, ppdName ?? "", options ?? "", myCall);
             });
         });
     }
