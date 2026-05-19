@@ -29,7 +29,7 @@ bool EsclScannerStatus::ValidateParameters(const std::string& ipAddress, int32_t
     struct sockaddr_in sa;
     int result = inet_pton(AF_INET, ipAddress.c_str(), &(sa.sin_addr));
     if (result != 1) {
-        SCAN_HILOGE("Invalid IP address format: %{public}s", ipAddress.c_str());
+        SCAN_HILOGE("Invalid IP address format: %{private}s", ipAddress.c_str());
         return false;
     }
     return true;
