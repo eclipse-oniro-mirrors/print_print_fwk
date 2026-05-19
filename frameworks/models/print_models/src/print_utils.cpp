@@ -218,12 +218,18 @@ bool PrintUtils::IsPathValidForCreate(const std::string &parentDir, const std::s
     }
 
     if (fileName.find('/') != std::string::npos ||
-        fileName.find("..") != std::string::npos) {
-        PRINT_HILOGE("file name contains path separator!");
+        fileName.find('\0') != std::string::npos ||
+        fileName == "." || fileName == "..") {
+        PRINT_HILOGE("invalid file name!");
         return false;
     }
 
     std::string originalPath = parentDir + "/" + fileName;
+    if (originalPath.length() >= PATH_MAX) {
+        PRINT_HILOGE("combined path is too long!");
+        return false;
+    }
+
     std::filesystem::path fullPath(originalPath);
     fullPath = fullPath.lexically_normal();
     std::string completePath = fullPath.generic_string();
