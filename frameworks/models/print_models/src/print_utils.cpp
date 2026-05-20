@@ -101,6 +101,31 @@ bool PrintUtils::DecodeExtensionCid(const std::string &cid, std::string &extensi
     return true;
 }
 
+std::string PrintUtils::MakeExtensionStateKey(int32_t userId, const std::string& bundleName)
+{
+    return std::to_string(userId) + "_" + bundleName;
+}
+
+int32_t PrintUtils::GetUserIdFromKey(const std::string& key)
+{
+    auto pos = key.find('_');
+    if (pos == std::string::npos) {
+        return -1;
+    }
+    int32_t userId = -1;
+    PrintUtil::ConvertToInt(key.substr(0, pos), userId);
+    return userId;
+}
+
+std::string PrintUtils::GetBundleNameFromKey(const std::string& key)
+{
+    auto pos = key.find('_');
+    if (pos == std::string::npos) {
+        return "";
+    }
+    return key.substr(pos + 1);
+}
+
 std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::string &type)
 {
     return type + TASK_EVENT_DELIMITER + taskId;

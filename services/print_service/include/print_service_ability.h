@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <json/json.h>
 
 #include "ability_manager_client.h"
@@ -195,6 +196,8 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
+    void CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob);
+    void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
@@ -207,7 +210,7 @@ private:
     std::shared_ptr<PrintJob> AddNativePrintJob(const std::string &jobId, PrintJob &printJob);
     int32_t CallStatusBar();
     bool StartExtensionAbility(const AAFwk::Want &want);
-    void ResetExtensionState(const std::string& bundleName);
+    void ResetExtensionState(int32_t userId, const std::string& bundleName);
     bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     bool IsPrinterJobMapEmpty();
     int32_t GetCurrentUserId();
@@ -366,6 +369,7 @@ private:
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
+    void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

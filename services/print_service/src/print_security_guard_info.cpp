@@ -23,18 +23,34 @@ static const int32_t SPLIT_INDEX = 2;
 PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList)
 {
     caller_ = callPkg;
+    fileList_ = fileList;
     objectInfo_ = PrintUtil::ParseListToString(fileList);
-#ifdef SECURITY_GUARDE_ENABLE
-    OHOS::MiscServices::TimeServiceClient *tsc = OHOS::MiscServices::TimeServiceClient::GetInstance();
-    if (tsc != nullptr) {
-        wallTime_ = std::to_string(tsc->GetWallTimeNs());
-        bootTime_ = std::to_string(tsc->GetBootTimeNs());
-        PRINT_HILOGI("PrintSecurityGuardInfo wallTime_:%{public}s bootTime_:%{public}s", wallTime_.c_str(),
-            bootTime_.c_str());
-    }
-#endif
 }
 
+const std::vector<std::string> &PrintSecurityGuardInfo::GetFileList() const
+{
+    return fileList_;
+}
+
+void PrintSecurityGuardInfo::SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos)
+{
+    files_ = fileInfos;
+}
+
+const std::vector<FileAuditInfo> &PrintSecurityGuardInfo::GetFileAuditInfo() const
+{
+    return files_;
+}
+
+void PrintSecurityGuardInfo::AddBlockedSubState(uint32_t subState)
+{
+    blockedSubStates_.insert(subState);
+}
+
+const std::set<uint32_t>& PrintSecurityGuardInfo::GetBlockedSubStates() const
+{
+    return blockedSubStates_;
+}
 void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
 {
     std::string printerId = printerInfo.GetPrinterId();
@@ -83,6 +99,18 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
     }
 }
 
+void PrintSecurityGuardInfo::SetPrintAuditInfo(
+    const PrinterInfo &printerInfo, const PrintJob &printJob,
+    const std::vector<FileAuditInfo> &fileInfos)
+{
+    files_ = fileInfos;
+    duplexMode_ = printJob.GetDuplexMode();
+    std::set<uint32_t> allStates = blockedSubStates_;
+    allStates.insert(printJob.GetSubState());
+    errorCode_ = GenerateErrorCodes(allStates);
+    printerName_ = printerInfo.GetPrinterName();
+}
+
 Json::Value PrintSecurityGuardInfo::ToJson()
 {
     Json::Value printTypeInfoJson;
@@ -100,13 +128,36 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     securityGuardInfoJson["subType"] = subType_;
     securityGuardInfoJson["caller"] = caller_;
     securityGuardInfoJson["objectInfo"] = objectInfo_;
-    securityGuardInfoJson["bootTime"] = bootTime_;
-    securityGuardInfoJson["wallTime"] = wallTime_;
+#ifdef SECURITY_GUARDE_ENABLE
+    OHOS::MiscServices::TimeServiceClient *tsc = OHOS::MiscServices::TimeServiceClient::GetInstance();
+    if (tsc != nullptr) {
+        securityGuardInfoJson["bootTime"] = std::to_string(tsc->GetBootTimeNs());
+        securityGuardInfoJson["wallTime"] = std::to_string(tsc->GetWallTimeNs());
+    }
+#endif
     securityGuardInfoJson["outcome"] = outcome_;
     securityGuardInfoJson["sourceInfo"] = sourceInfo_;
     securityGuardInfoJson["targetInfo"] = targetInfo_;
     securityGuardInfoJson["extra"] = extra_;
     securityGuardInfoJson["jobName"] = jobName_;
+
+    Json::Value filesArray(Json::arrayValue);
+    for (const auto &file : files_) {
+        Json::Value fileObj;
+        fileObj["fileName"] = PrintSecurityGuardUtil::ExtractFileName(file.fileName);
+        fileObj["md5"] = file.md5;
+        fileObj["size"] = static_cast<Json::UInt64>(file.size);
+        filesArray.append(fileObj);
+    }
+    securityGuardInfoJson["files"] = filesArray;
+    securityGuardInfoJson["duplexMode"] = duplexMode_;
+    Json::Value errorCodeArray(Json::arrayValue);
+    for (const auto &code : errorCode_) {
+        errorCodeArray.append(code);
+    }
+    securityGuardInfoJson["errorCode"] = errorCodeArray;
+    securityGuardInfoJson["printerName"] = printerName_;
+
     return securityGuardInfoJson;
 }
 
@@ -116,4 +167,3 @@ std::string PrintSecurityGuardInfo::ToJsonStr()
     return PrintJsonUtil::WriteString(jsonObject);
 }
 } // namespace OHOS::Print
-

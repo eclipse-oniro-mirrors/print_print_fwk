@@ -23,6 +23,7 @@ void PrintSecurityGuardManager::receiveBaseInfo(const std::string jobId, const s
     const std::vector<std::string> &fileList)
 {
     PRINT_HILOGI("receiveBaseInfo start jobId:%{public}s, callPkg:%{public}s", jobId.c_str(), callPkg.c_str());
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
     auto securityGuard = std::make_shared<PrintSecurityGuardInfo>(callPkg, fileList);
     securityMap_.insert(std::make_pair(jobId, securityGuard));
 }
@@ -31,27 +32,95 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
     const PrintJob &printJob)
 {
     PRINT_HILOGI("receiveJobStateUpdate jobId:%{public}s, state:%{public}d", jobId.c_str(), printJob.GetJobState());
-    std::string securityInfo = "";
-    auto it = securityMap_.find(jobId);
-    if (it != securityMap_.end() && it->second != nullptr) {
-        PRINT_HILOGI("find PrintSecurityGuardInfo");
-        auto securityGuard = it->second;
-        securityGuard->SetPrintTypeInfo(printerInfo, printJob);
-        securityInfo = securityGuard->ToJsonStr();
-    } else {
-        PRINT_HILOGI("find PrintSecurityGuardInfo empty");
-        std::vector<std::string> fileList;
-        auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", fileList);
-        securityGuard->SetPrintTypeInfo(printerInfo, printJob);
-        securityInfo = securityGuard->ToJsonStr();
+    std::string securityInfo;
+    {
+        std::lock_guard<std::mutex> lock(securityMapMutex_);
+        auto it = securityMap_.find(jobId);
+        if (it != securityMap_.end() && it->second != nullptr) {
+            PRINT_HILOGI("find PrintSecurityGuardInfo");
+            auto securityGuard = it->second;
+            securityGuard->SetPrintTypeInfo(printerInfo, printJob);
+            securityInfo = securityGuard->ToJsonStr();
+        } else {
+            PRINT_HILOGI("find PrintSecurityGuardInfo empty");
+            std::vector<std::string> fileList;
+            auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", fileList);
+            securityGuard->SetPrintTypeInfo(printerInfo, printJob);
+            securityInfo = securityGuard->ToJsonStr();
+        }
+        if (printJob.GetJobState() == PRINT_JOB_COMPLETED) {
+            securityMap_.erase(jobId);
+        }
     }
     ReportSecurityInfo(EVENT_ID, VERSION, securityInfo);
-    clearSecurityMap(jobId);
+}
+
+void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
+    const PrinterInfo &printerInfo, const PrintJob &printJob,
+    const std::vector<FileAuditInfo> &fileInfos)
+{
+    PRINT_HILOGI("receiveAuditInfo jobId:%{public}s, fileCount:%{public}zu",
+        jobId.c_str(), fileInfos.size());
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        it->second->SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    } else {
+        PRINT_HILOGW("receiveAuditInfo jobId:%{public}s not found in securityMap", jobId.c_str());
+        auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", std::vector<std::string>{});
+        securityGuard->SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+        securityMap_[jobId] = securityGuard;
+    }
 }
 
 void PrintSecurityGuardManager::clearSecurityMap(const std::string jobId)
 {
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
     securityMap_.erase(jobId);
+}
+
+void PrintSecurityGuardManager::clearAll()
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    securityMap_.clear();
+}
+
+std::vector<std::string> PrintSecurityGuardManager::GetFileList(const std::string &jobId) const
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        return it->second->GetFileList();
+    }
+    return {};
+}
+
+void PrintSecurityGuardManager::SetFileAuditInfo(const std::string &jobId,
+    const std::vector<FileAuditInfo> &fileInfos)
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        it->second->SetFileAuditInfo(fileInfos);
+    }
+}
+
+std::vector<FileAuditInfo> PrintSecurityGuardManager::GetFileAuditInfo(const std::string &jobId) const
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        return it->second->GetFileAuditInfo();
+    }
+    return {};
+}
+void PrintSecurityGuardManager::AddBlockedSubState(const std::string &jobId, uint32_t subState)
+{
+    std::lock_guard<std::mutex> lock(securityMapMutex_);
+    auto it = securityMap_.find(jobId);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        it->second->AddBlockedSubState(subState);
+    }
 }
 
 void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const std::string version,

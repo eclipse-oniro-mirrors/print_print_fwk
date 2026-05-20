@@ -16,9 +16,22 @@
 #ifndef PRINT_SECURITY_GUARD_UTIL_H
 #define PRINT_SECURITY_GUARD_UTIL_H
 
+#include <cstdint>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
 #include "print_util.h"
 
 namespace OHOS::Print {
+
+constexpr int subStateCodeDigits = 2;
+constexpr int maxSingleSubStateCode = 99;
+
+constexpr const char* ERROR_CODE_UNKNOWN = "unknown";
+constexpr const char* ERROR_CODE_OTHER_ERROR = "other_error";
+
 enum PrinterFoundType {
     FROM_P2P = 0,
     FROM_EPRINT = 1,
@@ -26,10 +39,20 @@ enum PrinterFoundType {
     FROM_USB = 3
 };
 
+struct FileAuditInfo {
+    std::string fileName;
+    std::string md5;
+    uint64_t size = 0;
+};
+
 class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);
+    static std::string ExtractFileName(const std::string& filePath);
+    static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
 };
+
+std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);
 
 inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
 {
@@ -46,6 +69,12 @@ inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
         }
     }
     return FROM_LOCAL_NET;
+}
+
+inline std::string PrintSecurityGuardUtil::ExtractFileName(const std::string& filePath)
+{
+    size_t pos = filePath.rfind('/');
+    return (pos != std::string::npos) ? filePath.substr(pos + 1) : filePath;
 }
 } // namespace OHOS::Print
 
