@@ -434,13 +434,9 @@ void TestSecureBlobOperations(const uint8_t *data, size_t size, FuzzedDataProvid
     blob1.IsEmpty();
     blob1.ToString();
     SecureBlob blob2(blob1);
-    // blob3先声明再赋值是为了测试operator=，若声明时初始化会调用拷贝构造而非赋值运算符
-    SecureBlob blob3;
-    blob3 = blob1;
+    SecureBlob blob3 = blob1;
     SecureBlob blob4(std::move(blob1));
-    // blob5先声明再赋值是为了测试移动赋值运算符，若声明时初始化会调用移动构造而非移动赋值
-    SecureBlob blob5;
-    blob5 = std::move(blob2);
+    SecureBlob blob5 = std::move(blob2);
     blob3.Clear();
 }
 
