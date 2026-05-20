@@ -24,6 +24,8 @@
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
+#include "printer_user_preferences.h"
+#include "print_vendor_options_util.h"
 #include <functional>
 
 namespace OHOS {
@@ -179,16 +181,29 @@ void TestMergeVendorOptionsForPrintJob(const uint8_t *data, size_t size, FuzzedD
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    
+
     PrinterPreferences preferences;
-    std::string vendorOptions = "{\"colorMode\":\"color\",\"paperSize\":\"A4\"}";
+    std::string vendorOptions = R"({"colorMode":"color","paperSize":"A4"})";
     preferences.SetVendorOptions(vendorOptions);
-    
+
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetPrinterId(printerInfo.GetPrinterId());
     
     PrintServiceAbility::GetInstance()->MergeVendorOptionsForPrintJob(printerInfo, preferences, printJob);
+}
+
+void TestProcessVendorOptionsForPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+
+    PrinterPreferences preferences;
+    std::string vendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    preferences.SetVendorOptions(vendorOptions);
+
+    PrinterPreferences printerPrefs;
+    PrintServiceAbility::GetInstance()->ProcessVendorOptionsForPreference(
+        printerId, preferences, printerPrefs);
 }
 
 void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -348,6 +363,118 @@ void TestDecryptAndFillCustomOptions(const uint8_t *data, size_t size, FuzzedDat
     PrintServiceAbility::GetInstance()->DecryptAndFillCustomOptions(userPrefs, opsJson);
 }
 
+void TestPrinterUserPreferencesSetGetUserId(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterUserPreferences userPrefs;
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    userPrefs.SetUserId(userId);
+    userPrefs.GetUserId();
+}
+
+void TestPrinterUserPreferencesSetGetPrinterId(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterUserPreferences userPrefs;
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    userPrefs.SetPrinterId(printerId);
+    userPrefs.GetPrinterId();
+}
+
+void TestPrinterUserPreferencesVendorOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterUserPreferences userPrefs;
+    std::string vendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    userPrefs.SetVendorOptions(vendorOptions);
+    userPrefs.GetVendorOptions();
+    userPrefs.HasVendorOptions();
+}
+
+void TestPrinterUserPreferencesCustomOption(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterUserPreferences userPrefs;
+    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string valueStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    SecureBlob value;
+    value.SetData((const uint8_t *)valueStr.c_str(), valueStr.size());
+    userPrefs.SetCustomOption(key, value);
+    userPrefs.SetCustomOptionUnset(key);
+    SecureBlob retrievedValue;
+    userPrefs.GetCustomOption(key, retrievedValue);
+    userPrefs.IsCustomOptionSet(key);
+    userPrefs.RemoveCustomOption(key);
+    userPrefs.GetAllCustomOptions();
+}
+
+void TestPrinterUserPreferencesJsonRoundtrip(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER));
+    userPrefs.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    userPrefs.SetVendorOptions(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    Json::Value json = userPrefs.ConvertToJson();
+    PrinterUserPreferences restored;
+    restored.ConvertFromJson(json);
+}
+
+void TestPrinterUserPreferencesIsEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER));
+    userPrefs.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string vendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    userPrefs.SetVendorOptions(vendorOptions);
+    userPrefs.IsEmpty();
+    userPrefs.Dump();
+}
+
+void TestSecureBlobOperations(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string dataStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    SecureBlob blob1;
+    blob1.SetData((const uint8_t *)dataStr.c_str(), dataStr.size());
+    blob1.IsEmpty();
+    blob1.ToString();
+    SecureBlob blob2(blob1);
+    SecureBlob blob3 = blob1;
+    SecureBlob blob4(std::move(blob1));
+    SecureBlob blob5 = std::move(blob2);
+    blob3.Clear();
+}
+
+void TestSplitVendorOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string vendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerVendorOptions;
+    std::string userVendorOptions;
+    PrintVendorOptionsUtil::SplitVendorOptions(vendorOptions, printerVendorOptions, userVendorOptions);
+}
+
+void TestMergeVendorOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string defaultVendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string overrideVendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string merged = PrintVendorOptionsUtil::MergeVendorOptions(defaultVendorOptions, overrideVendorOptions);
+}
+
+void TestIsUserField(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintVendorOptionsUtil::IsUserField(key);
+}
+
+void TestClassifyFields(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    Json::Value vendorJson;
+    std::string key1 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string value1 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    vendorJson[key1] = value1;
+    std::string key2 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string value2 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    vendorJson[key2] = value2;
+    Json::Value printerFields;
+    Json::Value userFields;
+    PrintVendorOptionsUtil::ClassifyFields(vendorJson, printerFields, userFields);
+}
+
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("multithreading is running at function TestNotPublicFunction.");
@@ -370,6 +497,7 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
         &TestConnectUsbPrinter,
         &TestClosePrintJobFd,
         &TestMergeVendorOptionsForPrintJob,
+        &TestProcessVendorOptionsForPreference,
         &TestNoParmFuncs,
         &TestExtractCustomOptionsFromPreferences,
         &TestGetCustomOptionKeysFromCapability,
@@ -381,6 +509,17 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
         &TestDoEncrypt,
         &TestDoDecrypt,
         &TestDecryptAndFillCustomOptions,
+        &TestPrinterUserPreferencesSetGetUserId,
+        &TestPrinterUserPreferencesSetGetPrinterId,
+        &TestPrinterUserPreferencesVendorOptions,
+        &TestPrinterUserPreferencesCustomOption,
+        &TestPrinterUserPreferencesJsonRoundtrip,
+        &TestPrinterUserPreferencesIsEmpty,
+        &TestSecureBlobOperations,
+        &TestSplitVendorOptions,
+        &TestMergeVendorOptions,
+        &TestIsUserField,
+        &TestClassifyFields,
     };
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);

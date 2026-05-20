@@ -261,6 +261,9 @@ private:
         const std::string& extensionId, const std::string &jobId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
+    bool ProcessVendorOptionsForPreference(const std::string &printerId,
+                                           const PrinterPreferences &preferences,
+                                           PrinterPreferences &printerPrefs);
     void MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
                                        const PrinterPreferences &preferences,
                                        PrintJob &printJob);

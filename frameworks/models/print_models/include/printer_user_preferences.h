@@ -6,7 +6,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -68,6 +68,7 @@ public:
     bool IsCustomOptionSet(const std::string &key) const;
     void RemoveCustomOption(const std::string &key);
     const std::vector<CustomOption>& GetAllCustomOptions() const;
+    bool IsEmpty() const;
 
     Json::Value ConvertToJson() const;
     void ConvertFromJson(Json::Value &json);

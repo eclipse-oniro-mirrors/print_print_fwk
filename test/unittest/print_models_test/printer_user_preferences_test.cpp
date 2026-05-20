@@ -56,13 +56,13 @@ HWTEST_F(PrinterUserPreferencesTest, CopyConstructor_AllFieldsCopied, TestSize.L
     PrinterUserPreferences original;
     original.SetUserId(100);
     original.SetPrinterId("printer_001");
-    original.SetVendorOptions("{\"user_username\":\"admin\"}");
+    original.SetVendorOptions(R"({"user_username":"admin"})");
 
     PrinterUserPreferences copy(original);
 
     EXPECT_EQ(copy.GetUserId(), 100);
     EXPECT_EQ(copy.GetPrinterId(), "printer_001");
-    EXPECT_EQ(copy.GetVendorOptions(), "{\"user_username\":\"admin\"}");
+    EXPECT_EQ(copy.GetVendorOptions(), R"({"user_username":"admin"})");
     EXPECT_TRUE(copy.HasVendorOptions());
 }
 
@@ -116,16 +116,16 @@ HWTEST_F(PrinterUserPreferencesTest, SetVendorOptions_NonEmptyString_HasVendorOp
 {
     PrinterUserPreferences userPrefs;
 
-    userPrefs.SetVendorOptions("{\"user_username\":\"admin\",\"user_password\":\"123456\"}");
+    userPrefs.SetVendorOptions(R"({"user_username":"admin","user_password":"123456"})");
 
     EXPECT_TRUE(userPrefs.HasVendorOptions());
-    EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"user_username\":\"admin\",\"user_password\":\"123456\"}");
+    EXPECT_EQ(userPrefs.GetVendorOptions(), R"({"user_username":"admin","user_password":"123456"})");
 }
 
 HWTEST_F(PrinterUserPreferencesTest, SetVendorOptions_EmptyString_HasVendorOptionsFalse, TestSize.Level1)
 {
     PrinterUserPreferences userPrefs;
-    userPrefs.SetVendorOptions("{\"user_field\":\"value\"}");
+    userPrefs.SetVendorOptions(R"({"user_field":"value"})");
 
     userPrefs.SetVendorOptions("");
 
@@ -137,12 +137,12 @@ HWTEST_F(PrinterUserPreferencesTest, SetVendorOptions_OverridePreviousValue_Succ
 {
     PrinterUserPreferences userPrefs;
 
-    userPrefs.SetVendorOptions("{\"old_field\":\"old_value\"}");
+    userPrefs.SetVendorOptions(R"({"old_field":"old_value"})");
     EXPECT_TRUE(userPrefs.HasVendorOptions());
 
-    userPrefs.SetVendorOptions("{\"new_field\":\"new_value\"}");
+    userPrefs.SetVendorOptions(R"({"new_field":"new_value"})");
     EXPECT_TRUE(userPrefs.HasVendorOptions());
-    EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"new_field\":\"new_value\"}");
+    EXPECT_EQ(userPrefs.GetVendorOptions(), R"({"new_field":"new_value"})");
 }
 
 HWTEST_F(PrinterUserPreferencesTest, ConvertToJson_AllFieldsSet_JsonComplete, TestSize.Level1)
@@ -150,7 +150,7 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertToJson_AllFieldsSet_JsonComplete, Te
     PrinterUserPreferences userPrefs;
     userPrefs.SetUserId(100);
     userPrefs.SetPrinterId("printer_001");
-    userPrefs.SetVendorOptions("{\"user_username\":\"admin\"}");
+    userPrefs.SetVendorOptions(R"({"user_username":"admin"})");
 
     Json::Value json = userPrefs.ConvertToJson();
 
@@ -159,7 +159,7 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertToJson_AllFieldsSet_JsonComplete, Te
     EXPECT_TRUE(json.isMember("vendorOptions"));
     EXPECT_EQ(json["userId"].asInt(), 100);
     EXPECT_EQ(json["printerId"].asString(), "printer_001");
-    EXPECT_EQ(json["vendorOptions"].asString(), "{\"user_username\":\"admin\"}");
+    EXPECT_EQ(json["vendorOptions"].asString(), R"({"user_username":"admin"})");
 }
 
 HWTEST_F(PrinterUserPreferencesTest, ConvertToJson_NoVendorOptions_JsonWithoutVendorOptions, TestSize.Level1)
@@ -195,14 +195,14 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CompleteJson_AllFieldsSet, 
     Json::Value json;
     json["userId"] = 200;
     json["printerId"] = "printer_002";
-    json["vendorOptions"] = "{\"user_token\":\"abc123\"}";
+    json["vendorOptions"] = R"({"user_token":"abc123"})";
 
     PrinterUserPreferences userPrefs;
     userPrefs.ConvertFromJson(json);
 
     EXPECT_EQ(userPrefs.GetUserId(), 200);
     EXPECT_EQ(userPrefs.GetPrinterId(), "printer_002");
-    EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"user_token\":\"abc123\"}");
+    EXPECT_EQ(userPrefs.GetVendorOptions(), R"({"user_token":"abc123"})");
     EXPECT_TRUE(userPrefs.HasVendorOptions());
 }
 
@@ -281,7 +281,7 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertToJsonAndFromJson_RoundTrip_ValuesPr
     PrinterUserPreferences original;
     original.SetUserId(600);
     original.SetPrinterId("printer_006");
-    original.SetVendorOptions("{\"user_session\":\"xyz789\"}");
+    original.SetVendorOptions(R"({"user_session":"xyz789"})");
 
     Json::Value json = original.ConvertToJson();
 
@@ -318,7 +318,7 @@ HWTEST_F(PrinterUserPreferencesTest, MultipleSetOperations_AllFieldsUpdated, Tes
 
     userPrefs.SetUserId(100);
     userPrefs.SetPrinterId("printer_100");
-    userPrefs.SetVendorOptions("{\"field1\":\"value1\"}");
+    userPrefs.SetVendorOptions(R"({"field1":"value1"})");
 
     EXPECT_EQ(userPrefs.GetUserId(), 100);
     EXPECT_EQ(userPrefs.GetPrinterId(), "printer_100");
@@ -326,19 +326,19 @@ HWTEST_F(PrinterUserPreferencesTest, MultipleSetOperations_AllFieldsUpdated, Tes
 
     userPrefs.SetUserId(200);
     userPrefs.SetPrinterId("printer_200");
-    userPrefs.SetVendorOptions("{\"field2\":\"value2\"}");
+    userPrefs.SetVendorOptions(R"({"field2":"value2"})");
 
     EXPECT_EQ(userPrefs.GetUserId(), 200);
     EXPECT_EQ(userPrefs.GetPrinterId(), "printer_200");
     EXPECT_TRUE(userPrefs.HasVendorOptions());
-    EXPECT_EQ(userPrefs.GetVendorOptions(), "{\"field2\":\"value2\"}");
+    EXPECT_EQ(userPrefs.GetVendorOptions(), R"({"field2":"value2"})");
 }
 
 HWTEST_F(PrinterUserPreferencesTest, VendorOptionsWithUserPrefix_ValidJson_Succeeds, TestSize.Level1)
 {
     PrinterUserPreferences userPrefs;
 
-    std::string vendorOptions = "{\"user_username\":\"admin\",\"user_password\":\"secret\",\"color\":\"color\"}";
+    std::string vendorOptions = R"({"user_username":"admin","user_password":"secret","color":"color"})";
     userPrefs.SetVendorOptions(vendorOptions);
 
     EXPECT_TRUE(userPrefs.HasVendorOptions());
@@ -365,7 +365,7 @@ HWTEST_F(PrinterUserPreferencesTest, Dump_AllFieldsSet_LogsCorrectly, TestSize.L
     PrinterUserPreferences userPrefs;
     userPrefs.SetUserId(800);
     userPrefs.SetPrinterId("printer_008");
-    userPrefs.SetVendorOptions("{\"user_field\":\"value\"}");
+    userPrefs.SetVendorOptions(R"({"user_field":"value"})");
 
     userPrefs.Dump();
 
@@ -382,6 +382,47 @@ HWTEST_F(PrinterUserPreferencesTest, Dump_AllFieldsEmpty_LogsCorrectly, TestSize
     EXPECT_EQ(userPrefs.GetUserId(), 0);
     EXPECT_EQ(userPrefs.GetPrinterId(), "");
     EXPECT_FALSE(userPrefs.HasVendorOptions());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsEmpty_HasVendorOptions_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetVendorOptions(R"({"key":"value"})");
+    EXPECT_FALSE(userPrefs.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsEmpty_NoVendorOptions_NoCustomOptions_ReturnsTrue, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    EXPECT_TRUE(userPrefs.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsEmpty_OnlyUnsetCustomOptions_ReturnsTrue, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    SecureBlob value;
+    userPrefs.SetCustomOption("key1", value);
+    userPrefs.SetCustomOptionUnset("key1");
+    EXPECT_TRUE(userPrefs.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsEmpty_HasSetCustomOption_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01, 0x02, 0x03};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+    EXPECT_FALSE(userPrefs.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsEmpty_MixedCustomOptions_HasSet_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01, 0x02, 0x03};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+    userPrefs.SetCustomOptionUnset("key2");
+    EXPECT_FALSE(userPrefs.IsEmpty());
 }
 
 } // namespace Print

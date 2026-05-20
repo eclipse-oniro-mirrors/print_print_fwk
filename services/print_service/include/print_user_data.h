@@ -116,7 +116,7 @@ private:
     bool CheckOptionalParam(const Json::Value &jsonObject, const std::string &param);
     void DeleteOldestHistoryPrintJob();
     
-    bool GetUserPreferencesFilePath(const std::string &standardizedPrinterName, std::string &safeFilePath);
+    std::string GetUserPreferencesFilePath(const std::string &standardizedPrinterName);
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;

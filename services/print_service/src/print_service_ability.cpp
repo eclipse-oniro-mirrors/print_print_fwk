@@ -1258,6 +1258,46 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::ProcessVendorOptionsForPreference(const std::string &printerId,
+                                                            const PrinterPreferences &preferences,
+                                                            PrinterPreferences &printerPrefs)
+{
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGW("ProcessVendorOptionsForPreference: cannot find printer info by printerId");
+        return false;
+    }
+
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    std::string vendorOptions = preferences.GetVendorOptions();
+    std::string printerVendorOptions;
+    std::string userVendorOptions;
+    PrintVendorOptionsUtil::SplitVendorOptions(vendorOptions, printerVendorOptions, userVendorOptions);
+    PRINT_HILOGI("ProcessVendorOptionsForPreference: printerVendorOptions=%{private}s, userVendorOptions=%{private}s",
+        printerVendorOptions.c_str(), userVendorOptions.c_str());
+
+    printerPrefs = preferences;
+    printerPrefs.SetVendorOptions(printerVendorOptions);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(GetCurrentUserId());
+    userPrefs.SetPrinterId(printerId);
+    userPrefs.SetVendorOptions(userVendorOptions);
+    ExtractCustomOptionsFromPreferences(printerInfo, printerPrefs, userPrefs);
+
+    auto userData = GetUserDataByUserId(userPrefs.GetUserId());
+    if (userData != nullptr) {
+        if (!userPrefs.IsEmpty()) {
+            userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
+            PRINT_HILOGI("Saved user preferences for user %{private}d", userPrefs.GetUserId());
+        } else {
+            userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+            PRINT_HILOGI("Cleared user preferences for user %{private}d", userPrefs.GetUserId());
+        }
+    }
+    return true;
+}
+
 int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
@@ -1267,31 +1307,10 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("SetPrinterPreference start.");
     preferences.Dump();
-    PrinterInfo printerInfoForName;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfoForName)) {
+    PrinterPreferences printerPrefs;
+    if (!ProcessVendorOptionsForPreference(printerId, preferences, printerPrefs)) {
         PRINT_HILOGW("cannot find printer info by printerId for preference");
         return E_PRINT_INVALID_PRINTER;
-    }
-    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfoForName.GetPrinterName());
-    std::string vendorOptions = preferences.GetVendorOptions();
-    std::string printerVendorOptions;
-    std::string userVendorOptions;
-    PrintVendorOptionsUtil::SplitVendorOptions(vendorOptions, printerVendorOptions, userVendorOptions);
-    PRINT_HILOGI("SetPrinterPreference: split vendorOptions, printerVendorOptions=%{private}s, "
-        "userVendorOptions=%{private}s",
-        printerVendorOptions.c_str(), userVendorOptions.c_str());
-    PrinterPreferences printerPrefs = preferences;
-    printerPrefs.SetVendorOptions(printerVendorOptions);
-    int32_t userId = GetCurrentUserId();
-    auto userData = GetUserDataByUserId(userId);
-    if (userData != nullptr) {
-        PrinterUserPreferences userPrefs;
-        userPrefs.SetUserId(userId);
-        userPrefs.SetPrinterId(printerId);
-        userPrefs.SetVendorOptions(userVendorOptions);
-        ExtractCustomOptionsFromPreferences(printerInfoForName, printerPrefs, userPrefs);
-        userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
-        PRINT_HILOGI("Saved user vendorOptions for user %{private}d", userId);
     }
     printSystemData_.UpdatePrinterPreferences(printerId, printerPrefs);
     printSystemData_.SavePrinterFile(printerId);
@@ -1683,8 +1702,8 @@ void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterInfo &print
     auto userData = GetUserDataByUserId(userId);
     std::string userVendorOptions = "";
     if (userData != nullptr) {
-        PrinterUserPreferences userPrefs;
         std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+        PrinterUserPreferences userPrefs;
         if (userData->LoadPrinterUserPreferences(printJob.GetPrinterId(), standardizedPrinterName, userPrefs)) {
             userVendorOptions = userPrefs.HasVendorOptions() ? userPrefs.GetVendorOptions() : "";
         }
@@ -4054,19 +4073,46 @@ bool PrintServiceAbility::QueryPPDInformation(const std::string &makeModel, std:
 
 void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId)
 {
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryPrinterInfoById(printerId, printerInfo)) {
+        PRINT_HILOGW("DeletePrinterFromUserData: cannot find printer info by printerId");
+        return;
+    }
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+
     std::vector<int32_t> allPrintUserList;
     printSystemData_.GetAllPrintUser(allPrintUserList);
+
+#ifdef ENTERPRISE_ENABLE
+    bool isEnterpriseEnabled = IsEnterpriseEnable();
+    int32_t currentUserId = GetCurrentUserId();
+    PRINT_HILOGI("DeletePrinterFromUserData: isEnterpriseEnabled=%{public}d, currentUserId=%{public}d",
+        isEnterpriseEnabled, currentUserId);
+#endif
+
     for (auto userId : allPrintUserList) {
         PRINT_HILOGI("DeletePrinterFromUserData userId %{public}d.", userId);
-        auto iter = printUserMap_.find(userId);
-        if (iter != printUserMap_.end()) {
-            ChangeDefaultPrinterForDelete(iter->second, printerId);
-        } else {
-            auto userData = std::make_shared<PrintUserData>();
-            userData->SetUserId(userId);
-            userData->ParseUserData();
-            ChangeDefaultPrinterForDelete(userData, printerId);
+        auto userData = GetUserDataByUserId(userId);
+        if (userData == nullptr) {
+            PRINT_HILOGW("GetUserDataByUserId failed for user %{public}d", userId);
+            continue;
         }
+        ChangeDefaultPrinterForDelete(userData, printerId);
+
+#ifdef ENTERPRISE_ENABLE
+        if (isEnterpriseEnabled) {
+            if (userId == currentUserId) {
+                userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+                PRINT_HILOGI("Deleted PrinterUserPreferences for current user %{public}d", userId);
+            }
+        } else {
+            userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+            PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
+        }
+#else
+        userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+        PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
+#endif
     }
 }
 
@@ -4139,7 +4185,6 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     std::string dafaultPrinterId = userData->GetDefaultPrinter();
     PrinterInfo printerInfo;
     printSystemData_.QueryPrinterInfoById(printerId, printerInfo);
-    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
     std::string ops = printerInfo.GetOption();
     Json::Value opsJson;
     if (!PrintJsonUtil::Parse(ops, opsJson)) {
@@ -4157,17 +4202,6 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
         if (printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo)) {
             PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{private}s", lastUsedPrinterId.c_str());
             SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
-        }
-    }
-    std::vector<int32_t> userIds;
-    if (helper_ != nullptr) {
-        helper_->QueryAccounts(userIds);
-    }
-    for (int32_t userId : userIds) {
-        auto userAccountData = GetUserDataByUserId(userId);
-        if (userAccountData != nullptr) {
-            userAccountData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
-            PRINT_HILOGI("Deleted PrinterUserPreferences for user %{private}d", userId);
         }
     }
 }

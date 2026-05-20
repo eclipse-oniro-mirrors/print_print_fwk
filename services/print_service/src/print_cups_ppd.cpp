@@ -89,20 +89,16 @@ bool ValidateVendorAbilityBundle(const std::string &abilityName, const std::stri
 
 void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::string &ppdName)
 {
-    std::string prefAbility = printerCaps.GetVendorPrinterPrefAbility();
-    if (!prefAbility.empty()) {
-        if (!ValidateVendorAbilityBundle(prefAbility, ppdName)) {
-            printerCaps.SetVendorPrinterPrefAbility("");
-            PRINT_HILOGI("vendorPrinterPrefAbility validation failed, cleared");
-        }
+    auto prefAbility = printerCaps.GetVendorPrinterPrefAbility();
+    if (!prefAbility.empty() && !ValidateVendorAbilityBundle(prefAbility, ppdName)) {
+        printerCaps.SetVendorPrinterPrefAbility("");
+        PRINT_HILOGI("vendorPrinterPrefAbility validation failed, cleared");
     }
 
-    std::string jobAbility = printerCaps.GetVendorJobAttrAbility();
-    if (!jobAbility.empty()) {
-        if (!ValidateVendorAbilityBundle(jobAbility, ppdName)) {
-            printerCaps.SetVendorJobAttrAbility("");
-            PRINT_HILOGI("vendorJobAttrAbility validation failed, cleared");
-        }
+    auto jobAbility = printerCaps.GetVendorJobAttrAbility();
+    if (!jobAbility.empty() && !ValidateVendorAbilityBundle(jobAbility, ppdName)) {
+        printerCaps.SetVendorJobAttrAbility("");
+        PRINT_HILOGI("vendorJobAttrAbility validation failed, cleared");
     }
 }
 

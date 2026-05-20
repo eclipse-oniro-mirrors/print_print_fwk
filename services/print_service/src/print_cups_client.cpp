@@ -1312,16 +1312,12 @@ int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
 
     Json::Value vendorJson;
     if (!PrintJsonUtil::Parse(jobParams->vendorOptions, vendorJson)) {
-        PRINT_HILOGW("vendorOptions parse failed, pass as raw string");
-        std::string rawValue = "[" + jobParams->vendorOptions + "]";
-        num_options = cupsAddOption("vendorOptions", rawValue.c_str(), num_options, options);
+        PRINT_HILOGW("vendorOptions is not valid JSON string, discard");
         return num_options;
     }
 
     if (!vendorJson.isObject()) {
-        PRINT_HILOGW("vendorOptions is not object, pass as array string");
-        std::string rawValue = "[" + jobParams->vendorOptions + "]";
-        num_options = cupsAddOption("vendorOptions", rawValue.c_str(), num_options, options);
+        PRINT_HILOGW("vendorOptions is not JSON object, discard");
         return num_options;
     }
 
@@ -1340,14 +1336,19 @@ int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
             valueStr = value.asBool() ? "true" : "false";
         } else if (value.isDouble()) {
             valueStr = std::to_string(value.asDouble());
+        } else if (value.isNull()) {
+            PRINT_HILOGW("vendor option %{public}s has null value, skip", key.c_str());
+            continue;
         } else if (value.isObject() || value.isArray()) {
-            valueStr = "[" + PrintJsonUtil::WriteString(value) + "]";
+            PRINT_HILOGW("vendor option %{public}s has nested structure, skip", key.c_str());
+            continue;
         } else {
-            valueStr = PrintJsonUtil::WriteString(value);
+            PRINT_HILOGW("vendor option %{public}s has unknown type, skip", key.c_str());
+            continue;
         }
-        std::string optionKey = key;
-        num_options = cupsAddOption(optionKey.c_str(), valueStr.c_str(), num_options, options);
-        PRINT_HILOGD("vendor option: %{public}s=%{public}s", optionKey.c_str(), valueStr.c_str());
+
+        num_options = cupsAddOption(key.c_str(), valueStr.c_str(), num_options, options);
+        PRINT_HILOGD("vendor option: %{public}s=%{private}s", key.c_str(), valueStr.c_str());
     }
 
     return num_options;
