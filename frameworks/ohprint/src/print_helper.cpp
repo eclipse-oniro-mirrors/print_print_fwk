@@ -486,6 +486,10 @@ char *ParseDetailInfo(const PrinterInfo &info)
 {
     Json::Value detailInfoJson;
     Json::Value opsJson;
+    
+    if (info.HasAlias()) {
+        detailInfoJson["printerAlias"] = info.GetAlias();
+    }
     if (info.HasOption() && PrintJsonUtil::Parse(info.GetOption(), opsJson)) {
         if (PrintJsonUtil::IsMember(opsJson, "vendorId") && opsJson["vendorId"].isInt()) {
             detailInfoJson["vendorId"] = opsJson["vendorId"].asInt();
