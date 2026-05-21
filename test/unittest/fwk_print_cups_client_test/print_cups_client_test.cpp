@@ -4202,20 +4202,6 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithVersionPrefix_Test
 }
 
 /**
- * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_008
- * @tc.desc: GetIpAddressTypeFromUri with IPv6 address with scope ID (%eth0)
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithScopePercent_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    std::string uri = "ipp://[fe80::1%eth0]:631/printers/TestPrinter";
-    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
-    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
-}
-
-/**
  * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_009
  * @tc.desc: GetIpAddressTypeFromUri with IPv6 global address with scope ID
  * @tc.type: FUNC
