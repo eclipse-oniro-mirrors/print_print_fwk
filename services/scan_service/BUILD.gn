@@ -60,6 +60,10 @@ _sources = [
   "${_service_path}/src/curl_http_client.cpp",
 ]
 
+if (!print_fwk_feature_device_isolation) {
+  _sources += [ "${_service_path}/src/image_exporter.cpp" ]
+}
+
 _branch_protector_ret = "pac_ret"
 _sanitize = {
   cfi = true

@@ -31,9 +31,13 @@
 #include "ani_scanner_sync_device_helper.h"
 #include "scan_ani_callback.h"
 #include "napi_scan_helper.h"
+#include "accesstoken_kit.h"
+#include "tokenid_kit.h"
+#include "ipc_skeleton.h"
 
 using namespace OHOS::Scan;
 using namespace OHOS::Print;
+using namespace OHOS::Security::AccessToken;
 
 static void InitScanNative(ani_env *env, ani_object callback)
 {
@@ -330,6 +334,75 @@ static void GetAddedScannersNative(ani_env *env, ani_object callback)
     AsyncCallbackArray(env, callback, stsErrCode, AniScannerDeviceHelper::CreateScannerDeviceArray(env, scanners));
 }
 
+static bool ParsePictureFdList(ani_env *env, ani_object pictureFdList, std::vector<int32_t>& fdList)
+{
+    ani_int length;
+    if (env->Object_GetPropertyByName_Int(pictureFdList, "length", &length) != ANI_OK) {
+        SCAN_HILOGE("Get length fail");
+        return false;
+    }
+
+    for (ani_int i = 0; i < length; i++) {
+        ani_ref ref;
+        if (env->Object_CallMethodByName_Ref(pictureFdList, "$_get", "i:Y", &ref, i) != ANI_OK) {
+            SCAN_HILOGE("Get element fail at index %{public}d", i);
+            return false;
+        }
+        ani_int fd;
+        if (env->Object_CallMethodByName_Int(reinterpret_cast<ani_object>(ref), "toInt", nullptr, &fd) != ANI_OK) {
+            SCAN_HILOGE("toInt fail at index %{public}d", i);
+            return false;
+        }
+        fdList.push_back(static_cast<int32_t>(fd));
+    }
+    return true;
+}
+
+static void ExportScanPictureNative(ani_env *env, ani_string scannerId, ani_object pictureFdList,
+    ani_int format, ani_object callback)
+{
+    SCAN_HILOGI("enter ExportScanPictureNative");
+    if (env == nullptr) {
+        SCAN_HILOGE("env is nullptr");
+        return;
+    }
+    
+    auto callerToken = OHOS::IPCSkeleton::GetCallingTokenID();
+    auto tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType != ATokenTypeEnum::TOKEN_NATIVE &&
+        tokenType != ATokenTypeEnum::TOKEN_SHELL) {
+        auto accessTokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+        if (!TokenIdKit::IsSystemAppByFullTokenID(accessTokenId)) {
+            SCAN_HILOGE("not system app");
+            ani_object stsErrCode = CreateStsError(env, E_SCAN_ERROR_NOT_SYSTEM_APPLICATION);
+            AsyncCallbackArray(env, callback, stsErrCode, nullptr);
+            return;
+        }
+    }
+    
+    std::string id;
+    if (!GetStdString(env, scannerId, id)) {
+        SCAN_HILOGE("GetStdString fail");
+        ani_object stsErrCode = CreateStsError(env, E_SCAN_INVALID_PARAMETER);
+        AsyncCallbackArray(env, callback, stsErrCode, nullptr);
+        return;
+    }
+
+    std::vector<int32_t> fdList;
+    if (!ParsePictureFdList(env, pictureFdList, fdList)) {
+        ani_object stsErrCode = CreateStsError(env, E_SCAN_INVALID_PARAMETER);
+        AsyncCallbackArray(env, callback, stsErrCode, nullptr);
+        return;
+    }
+
+    std::vector<int32_t> exportedFdList;
+    int32_t ret = ScanManagerClient::GetInstance()->ExportScanPicture(id, fdList, format, exportedFdList);
+    ani_object stsErrCode = CreateStsError(env, ret);
+
+    ani_object resultArray = CreateAniIntArray(env, exportedFdList);
+    AsyncCallbackArray(env, callback, stsErrCode, resultArray);
+}
+
 static void OnScanDeviceFoundNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceFoundNative");
@@ -460,6 +533,7 @@ static std::array methods = {
     MakeNativeFunc("addScannerNative", AddScannerNative),
     MakeNativeFunc("deleteScannerNative", DeleteScannerNative),
     MakeNativeFunc("getAddedScannersNative", GetAddedScannersNative),
+    MakeNativeFunc("exportScanPictureNative", ExportScanPictureNative),
     MakeNativeFunc("onScanDeviceFoundNative", OnScanDeviceFoundNative),
     MakeNativeFunc("offScanDeviceFoundNative", OffScanDeviceFoundNative),
     MakeNativeFunc("onScanDeviceSyncNative", OnScanDeviceSyncNative),

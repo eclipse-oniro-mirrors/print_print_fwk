@@ -43,6 +43,8 @@ private:
 
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);
+    
+    bool OnExportScanPicture(MessageParcel &data, MessageParcel &reply);
 
 private:
     using ScanCmdHandler = bool (ScanServiceStub::*)(MessageParcel &, MessageParcel &);

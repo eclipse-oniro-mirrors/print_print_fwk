@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <random>
+#include "directory_ex.h"
+#include "os_account_manager.h"
 #include "scan_picture_data.h"
 #include "scan_constant.h"
 #include "scan_log.h"
@@ -34,22 +36,23 @@ ScanPictureData& ScanPictureData::GetInstance()
 
 ScanPictureData::~ScanPictureData()
 {
-    CleanPictureData();
+    CleanAllCache();
 }
 
-void ScanPictureData::CleanPictureData()
+void ScanPictureData::CleanAllCache()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (const auto &[imagePath, fd] : imageFdMap_) {
-        constexpr int32_t INVALID_FILE_DESCRIPTOR = -1;
-        if (fd != INVALID_FILE_DESCRIPTOR) {
+    
+    for (auto &[path, fd] : scanCacheFdMap_) {
+        if (fd != INVALID_FD) {
             fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
         }
-        if (FileExists(imagePath)) {
-            unlink(imagePath.c_str());
+        if (FileExists(path)) {
+            unlink(path.c_str());
         }
     }
-    imageFdMap_.clear();
+    scanCacheFdMap_.clear();
+    
     std::queue<int32_t> empty;
     scanQueue_.swap(empty);
     scanTaskMap_.clear();
@@ -87,7 +90,7 @@ int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress, i
         int32_t fd = open(scanProgress.GetImageRealPath().c_str(), O_RDONLY);
         fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
         scanProgress.SetScanPictureFd(fd);
-        imageFdMap_[scanProgress.GetImageRealPath()] = fd;
+        scanCacheFdMap_[scanProgress.GetImageRealPath()] = fd;
         scanProgress.Dump();
         scanQueue_.pop();
         return E_SCAN_NONE;
@@ -129,7 +132,7 @@ void ScanPictureData::PushScanPictureProgress()
     scanQueue_.push(picId_);
 }
 
-bool ScanPictureData::SetImageRealPath(const std::string& filePath)
+bool ScanPictureData::RegisterCacheFiles(const std::string& baseName)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = scanTaskMap_.find(picId_);
@@ -137,7 +140,15 @@ bool ScanPictureData::SetImageRealPath(const std::string& filePath)
         SCAN_HILOGE("cannot find picId_ %{private}d", picId_);
         return false;
     }
-    it->second.SetImageRealPath(filePath);
+    
+    // ScanProgress keeps full path
+    it->second.SetImageRealPath(baseName + JPG_EXTENSION);
+    
+    // Register cache files with full path as key
+    scanCacheFdMap_[baseName + JPG_EXTENSION] = INVALID_FD;
+    scanCacheFdMap_[baseName + RAW_SUFFIX] = INVALID_FD;
+    scanCacheFdMap_[baseName + META_SUFFIX] = INVALID_FD;
+    
     return true;
 }
 
@@ -200,5 +211,44 @@ void ScanPictureData::SetLastScanProgressFinished()
     } else {
         SCAN_HILOGE("SetLastScanProgressFinished cannot find picId_ = [%{public}d]", picId_);
     }
+}
+
+void ScanPictureData::RegisterExportedResult(const std::string& baseName, int32_t fd, int32_t format)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::string suffix = (format == EXPORT_FORMAT_PNG) ? PNG_SUFFIX : TIFF_EXTENSION;
+    std::string fullPath = baseName + suffix;
+    scanCacheFdMap_[fullPath] = fd;
+    SCAN_HILOGI("Registered exported fd: %{public}d, path=%{private}s", fd, fullPath.c_str());
+}
+
+void ScanPictureData::CleanDiskCache()
+{
+    std::vector<int32_t> userIds;
+    AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
+    if (userIds.empty()) {
+        SCAN_HILOGE("QueryActiveOsAccountIds failed");
+        return;
+    }
+    
+    for (int32_t userId : userIds) {
+        std::string cacheDir = "/data/service/el2/" + std::to_string(userId) + "/print_service/";
+        std::vector<std::string> files;
+        GetDirFiles(cacheDir, files);
+        
+        for (const auto &file : files) {
+            std::string fileName = ExtractFileName(file);
+            if (fileName.find("scan_tmp") != 0) {
+                continue;
+            }
+            
+            if (!RemoveFile(file)) {
+                SCAN_HILOGW("RemoveFile failed: %{private}s", file.c_str());
+                continue;
+            }
+            SCAN_HILOGI("Cleaned residual cache: %{private}s", file.c_str());
+        }
+    }
+    SCAN_HILOGI("Disk cache cleaned for all active users");
 }
 } // namespace OHOS::Scan

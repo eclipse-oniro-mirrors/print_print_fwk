@@ -55,11 +55,9 @@ public:
     static napi_value AddScanner(napi_env env, napi_callback_info info);
     static napi_value DeleteScanner(napi_env env, napi_callback_info info);
     static napi_value GetAddedScanner(napi_env env, napi_callback_info info);
+    static napi_value ExportScanPicture(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
-
-private:
-    static uint32_t IsSupportType(const std::string& type);
 
 private:
     struct NapiScanContext : public ScanAsyncCall::Context {
@@ -71,12 +69,18 @@ private:
         std::string discoverMode;
         std::vector<ScanOptionDescriptor> allDesc;
         std::vector<ScanDeviceInfo> allAddedScanner;
+        std::vector<int32_t> pictureFdList;
+        std::vector<int32_t> exportedFdList;
+        int32_t exportFormat = 0;
         ScanProgress prog;
         ScanOptionValue optionValue;
         NapiScanContext() : Context(nullptr, nullptr) {};
         NapiScanContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~NapiScanContext() {};
     };
+    static uint32_t IsSupportType(const std::string& type);
+    static napi_status ParseExportInput(napi_env env, napi_value *argv, NapiScanContext* context);
+    static napi_status CreateExportOutput(napi_env env, napi_value *result, NapiScanContext* context);
 };
 } // namespace OHOS::Scan
 #endif // NAPI_INNER_SCAN_H

@@ -46,6 +46,9 @@ public:
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
     int32_t On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener) override;
     int32_t Off(const std::string taskId, const std::string &type) override;
+    int32_t ExportScanPicture(const std::string scannerId,
+        const std::vector<int32_t>& pictureFdList, const int32_t format,
+        std::vector<int32_t>& exportedFdList) override;
 
 #ifndef TDD_ENABLE
 private:

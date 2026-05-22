@@ -38,6 +38,8 @@
 #include "scan_discover_data.h"
 #include "scan_task.h"
 #include "scan_picture_data.h"
+#include "pixel_map.h"
+#include "image_source.h"
 namespace OHOS::Scan {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class ScanServiceAbility : public SystemAbility, public ScanServiceStub {
@@ -66,6 +68,9 @@ public:
     int32_t AddScanner(const std::string& uniqueId, const std::string& discoverMode) override;
     int32_t DeleteScanner(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
+    int32_t ExportScanPicture(const std::string scannerId,
+        const std::vector<int32_t>& pictureFdList, const int32_t format,
+        std::vector<int32_t>& exportedFdList) override;
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId);
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo);
     void NetScannerLossNotify(const ScanDeviceInfoSync& usbSyncInfo);

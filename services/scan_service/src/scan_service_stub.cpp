@@ -43,6 +43,7 @@ ScanServiceStub::ScanServiceStub()
     cmdMap_[CMD_GET_CONNECTED_SCANNER] = &ScanServiceStub::OnGetConnectedScanner;
     cmdMap_[CMD_ON] = &ScanServiceStub::OnEventOn;
     cmdMap_[CMD_OFF] = &ScanServiceStub::OnEventOff;
+    cmdMap_[CMD_EXPORT_SCAN_PICTURE] = &ScanServiceStub::OnExportScanPicture;
 }
 
 int32_t ScanServiceStub::OnRemoteRequest(
@@ -276,6 +277,31 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
         }
     }
     SCAN_HILOGD("ScanServiceStub::OnGetConnectedScanner end");
+    return ret == E_SCAN_NONE;
+}
+
+bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &reply)
+{
+    SCAN_HILOGI("ScanServiceStub::OnExportScanPicture start");
+    std::string scannerId = data.ReadString();
+    int32_t fdCount = data.ReadInt32();
+    std::vector<int32_t> pictureFdList;
+    for (int32_t i = 0; i < fdCount; i++) {
+        pictureFdList.push_back(data.ReadFileDescriptor());
+    }
+    int32_t format = data.ReadInt32();
+    
+    std::vector<int32_t> exportedFdList;
+    int32_t ret = ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
+    
+    reply.WriteInt32(ret);
+    if (ret == E_SCAN_NONE) {
+        reply.WriteInt32(static_cast<int32_t>(exportedFdList.size()));
+        for (int32_t fd : exportedFdList) {
+            reply.WriteFileDescriptor(fd);
+        }
+    }
+    SCAN_HILOGI("ScanServiceStub::OnExportScanPicture end");
     return ret == E_SCAN_NONE;
 }
 

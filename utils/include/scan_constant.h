@@ -111,6 +111,7 @@ enum ScanErrorCode {
 };
 
 const uint32_t SCAN_INVALID_ID = 0xFFFFFFFF;   // -1
+constexpr int32_t INVALID_FD = -1;
 const uint16_t USB_VALUE_DESCRIPTOR_INDEX_SERIAL_NUMBER = 0X03;
 const uint8_t USB_REQUESTTYPE_DEVICE_TO_HOST = 0X80;
 const uint8_t USB_REQUEST_GET_DESCRIPTOR = 0X06;
@@ -203,5 +204,23 @@ constexpr int32_t CHANNEL_THREE = 3;
 constexpr int32_t JPEG_QUALITY_SEVENTY_FIVE = 75;
 constexpr uint32_t IMAGE_COMPRESS_QUALITY_MAX = 100;
 constexpr int32_t BUFFER_SIZE = 1024 * 100; // 100KB
+constexpr int32_t MAX_IMAGE_DIMENSION = 65535; // Maximum dimension for scanned images
+
+enum ExportImageFormat {
+    EXPORT_FORMAT_PNG = 0,
+    EXPORT_FORMAT_TIFF = 1,
+};
+
+constexpr const char* MIME_TYPE_PNG = "image/png";
+constexpr const char* MIME_TYPE_TIFF = "image/tiff";
+constexpr const char* PNG_SUFFIX = ".png";
+constexpr const char* PNG_CACHE_SUFFIX = "_raw.png";
+constexpr const char* RAW_SUFFIX = ".raw";
+constexpr const char* META_SUFFIX = ".meta.json";
+constexpr int32_t DEFAULT_DPI = 300;
+constexpr size_t JPG_EXTENSION_LENGTH = 4;
+constexpr const char* JPG_EXTENSION = ".jpg";
+constexpr const char* TIFF_EXTENSION = ".tiff";
+constexpr int32_t TIFF_RESOLUTION_UNIT_INCH = 2;
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H
