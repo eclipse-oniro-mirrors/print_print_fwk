@@ -5719,7 +5719,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_InvalidIpType_Shou
     std::string globalPrinterId = vendorName + ":" + printerId;
 
     PrinterInfo info;
-    info.SetPrinterId(printerId);
+    info.SetPrinterId(globalPrinterId);
     info.SetPrinterName("TestPrinter_001");
     info.SetUri("ipp://test.local:631/printers/TestPrinter_001");
     info.SetOption("test-option");
@@ -5757,7 +5757,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv6ToIpv4_ShouldS
     std::string globalPrinterId = vendorName + ":" + printerId;
 
     PrinterInfo existingInfo;
-    existingInfo.SetPrinterId(printerId);
+    existingInfo.SetPrinterId(globalPrinterId);
     existingInfo.SetPrinterName("TestPrinter_001");
     existingInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
     existingInfo.SetOption("ipv4-option");
@@ -5795,7 +5795,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToIpv4_ShouldU
     std::string globalPrinterId = vendorName + ":" + printerId;
 
     PrinterInfo existingInfo;
-    existingInfo.SetPrinterId(printerId);
+    existingInfo.SetPrinterId(globalPrinterId);
     existingInfo.SetPrinterName("TestPrinter_001");
     existingInfo.SetUri("ipp://192.168.1.50:631/printers/TestPrinter_001");
     existingInfo.SetOption("old-option");
@@ -5833,7 +5833,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToInvalid_Shou
     std::string globalPrinterId = vendorName + ":" + printerId;
 
     PrinterInfo existingInfo;
-    existingInfo.SetPrinterId(printerId);
+    existingInfo.SetPrinterId(globalPrinterId);
     existingInfo.SetPrinterName("TestPrinter_001");
     existingInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
     existingInfo.SetOption("ipv4-option");

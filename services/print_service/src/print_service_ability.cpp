@@ -342,6 +342,7 @@ int32_t PrintServiceAbility::Init()
     CheckCupsServerAlive();
     auto tmpState = state_.load();
     state_ = ServiceRunningState::STATE_RUNNING;
+    PRINT_HILOGI("InitService: 2in1");
     if (!g_publishState) {
         if (!Publish(PrintServiceAbility::GetInstance())) {
             state_ = tmpState;
