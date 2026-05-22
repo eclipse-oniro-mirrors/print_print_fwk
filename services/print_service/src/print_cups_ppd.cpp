@@ -357,6 +357,10 @@ void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json:
 
     PRINT_HILOGI("option=%{public}s default=%{public}s text=%{public}s\n", opt->keyword, opt->defchoice, opt->text);
     ppd_choice_t* choices = opt->choices;
+    if (choices == nullptr) {
+        PRINT_HILOGE("choices is nullptr for option: %{public}s", opt->keyword);
+        return;
+    }
     for (int k = 0; k < opt->num_choices; k++) {
         if (choices + k == nullptr) {
             PRINT_HILOGE("PPD choice found error: %{public}s", opt->keyword);
@@ -520,7 +524,7 @@ void ParseDuplexModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printe
         }
     }
     // save duplex default option
-    if (duplex && duplex->num_choices > 1) {
+    if (duplex && duplex->num_choices > 1 && duplex->defchoice != nullptr) {
         if (!strcmp(duplex->defchoice, "DuplexTumble"))
             code = DUPLEX_MODE_TWO_SIDED_SHORT_EDGE;
         else if (!strcmp(duplex->defchoice, "DuplexNoTumble"))

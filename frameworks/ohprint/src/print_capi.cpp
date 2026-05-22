@@ -605,7 +605,7 @@ void OH_Print_ReleasePrinterProperties(Print_PropertyList *propertyList)
 
 Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Print_PropertyList *propertyList)
 {
-    if (printerId == nullptr || propertyList->list == nullptr || propertyList->count <= 0) {
+    if (printerId == nullptr || propertyList == nullptr || propertyList->list == nullptr || propertyList->count <= 0) {
         PRINT_HILOGW("OH_Print_UpdatePrinterProperties invalid parameter.");
         return PRINT_ERROR_INVALID_PRINTER;
     }

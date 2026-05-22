@@ -789,6 +789,10 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    if (request == nullptr) {
+        PRINT_HILOGE("ippNewRequest failed");
+        return E_PRINT_SERVER_FAILURE;
+    }
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", standardName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
@@ -2082,6 +2086,11 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
 
     std::vector<const char *> UserNameAndPasswd = { userName.c_str(), userPasswd };
     request = ippNewRequest(IPP_OP_CUPS_AUTHENTICATE_JOB);
+    if (request == nullptr) {
+        PRINT_HILOGE("ippNewRequest failed");
+        httpClose(http);
+        return false;
+    }
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
     ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", cupsJobId);
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "auth-info", UserNameAndPasswd.size(), NULL,
@@ -2411,6 +2420,10 @@ bool PrintCupsClient::ModifyCupsPrinterUri(const std::string &printerName, const
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    if (request == nullptr) {
+        PRINT_HILOGE("ippNewRequest failed");
+        return false;
+    }
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
@@ -2832,7 +2845,12 @@ bool PrintCupsClient::IsIpConflict(const std::string &printerId, std::string &ni
     wifiDevice->IsConnected(isWifiConnected);
     PRINT_HILOGD("isWifiConnected: %{public}d", isWifiConnected);
     Wifi::WifiP2pLinkedInfo p2pLinkedInfo;
-    Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID)->QueryP2pLinkedInfo(p2pLinkedInfo);
+    auto wifiP2p = Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID);
+    if (wifiP2p == nullptr) {
+        PRINT_HILOGE("wifiP2p GetInstance failed");
+        return false;
+    }
+    wifiP2p->QueryP2pLinkedInfo(p2pLinkedInfo);
     PRINT_HILOGD("P2pConnectedState: %{public}d", p2pLinkedInfo.GetConnectState());
     if (isWifiConnected && p2pLinkedInfo.GetConnectState() == Wifi::P2pConnectedState::P2P_CONNECTED) {
         Wifi::IpInfo info;
@@ -2846,7 +2864,7 @@ bool PrintCupsClient::IsIpConflict(const std::string &printerId, std::string &ni
         PRINT_HILOGD("p2p go ip: %{private}s", p2pLinkedInfo.GetGroupOwnerAddress().c_str());
         if (GetIpAddress(info.serverIp) == p2pLinkedInfo.GetGroupOwnerAddress()) {
             Wifi::WifiP2pGroupInfo group;
-            Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID)->GetCurrentGroup(group);
+            wifiP2p->GetCurrentGroup(group);
             nic = group.GetInterface();
             PRINT_HILOGI("The P2P ip conflicts with the wlan ip, p2p nic: %{public}s", nic.c_str());
             return true;
@@ -2908,6 +2926,10 @@ bool PrintCupsClient::ResumePrinter(const std::string &printerName)
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
     request = ippNewRequest(IPP_OP_RESUME_PRINTER);
+    if (request == nullptr) {
+        PRINT_HILOGE("ippNewRequest failed");
+        return false;
+    }
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
     PRINT_HILOGD("IPP_OP_RESUME_PRINTER cupsDoRequest");
@@ -2922,12 +2944,20 @@ bool PrintCupsClient::ResumePrinter(const std::string &printerName)
 
 bool PrintCupsClient::CancelPrinterJob(int cupsJobId)
 {
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGE("printAbility_ is nullptr");
+        return false;
+    }
     PRINT_HILOGI("CancelPrinterJob start, cupsJobId: %{public}d", cupsJobId);
     char job_uri[1024];
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, job_uri, sizeof(job_uri), "ipp", nullptr, "localhost", 0, "/jobs/%d", cupsJobId);
     PRINT_HILOGE("cancel job_uri: %s", job_uri);
     ipp_t *cancel_request = ippNewRequest(IPP_OP_CANCEL_JOB);
+    if (cancel_request == nullptr) {
+        PRINT_HILOGE("ippNewRequest failed");
+        return false;
+    }
     ippAddString(cancel_request, IPP_TAG_OPERATION, IPP_TAG_URI, "job-uri", nullptr, job_uri);
     ippDelete(printAbility_->DoRequest(nullptr, cancel_request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
@@ -3084,6 +3114,10 @@ bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    if (request == nullptr) {
+        PRINT_HILOGE("Create IPP request failed");
+        return false;
+    }
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
@@ -3468,6 +3502,12 @@ int32_t PrintCupsClient::DeleteExtraJobsFromCups()
                         HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGE("printAbility_ is nullptr");
+        httpClose(http);
         return E_PRINT_SERVER_FAILURE;
     }
 

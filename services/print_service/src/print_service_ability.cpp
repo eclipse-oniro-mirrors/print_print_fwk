@@ -516,8 +516,9 @@ void PrintServiceAbility::ManualStart()
         OnStart();
     } else {
 #ifdef CUPS_ENABLE
-        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsCupsServerAlive()) {
-            DelayedSingleton<PrintCupsClient>::GetInstance()->StartCupsdServiceNotAlive();
+        auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+        if (printCupsClient != nullptr && !printCupsClient->IsCupsServerAlive()) {
+            printCupsClient->StartCupsdServiceNotAlive();
         }
 #endif  // CUPS_ENABLE
     }
@@ -1067,7 +1068,12 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         if (!vendorManager.ExtractVendorName(extensionId).empty()) {
             return QueryVendorPrinterInfo(printerId, info);
         }
-        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterInfoByPrinterId(printerId, info);
+        auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+        if (printCupsClient == nullptr) {
+            PRINT_HILOGE("printCupsClient is nullptr");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        int32_t ret = printCupsClient->QueryPrinterInfoByPrinterId(printerId, info);
         if (ret != 0) {
             PRINT_HILOGE("cups QueryPrinterInfoByPrinterId fail, ret = %{public}d", ret);
             return E_PRINT_INVALID_PRINTER;
@@ -2641,7 +2647,12 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
     if (iter == printerJobMap_.end() || iter->second.empty()) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
         if (printerInfo == nullptr) {
-            printerInfo = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryUsbPrinterInfoByPrinterId(printerId);
+            auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+            if (printCupsClient != nullptr) {
+                printerInfo = printCupsClient->QueryUsbPrinterInfoByPrinterId(printerId);
+            } else {
+                PRINT_HILOGE("printCupsClient is nullptr");
+            }
         }
         if (printerInfo != nullptr) {
             UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
@@ -3697,6 +3708,10 @@ bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
         }
     };
     if (ret) {
+        if (serviceHandler_ == nullptr) {
+            PRINT_HILOGE("serviceHandler_ is nullptr");
+            return ret;
+        }
         serviceHandler_->PostTask(timeoutCheck, CONNECT_PLUGIN_PRINT_TIMEOUT);
     }
     return ret;
@@ -4161,13 +4176,13 @@ PrintJobState PrintServiceAbility::DetermineUserJobStatus(
     const std::map<std::string, std::shared_ptr<PrintJob>> &jobList)
 {
     bool hasBlocked = std::any_of(jobList.begin(), jobList.end(), [](const auto &pair) {
-        return pair.second->GetJobState() == PRINT_JOB_BLOCKED;
+        return pair.second != nullptr && pair.second->GetJobState() == PRINT_JOB_BLOCKED;
     });
     if (hasBlocked) {
         return PRINT_JOB_BLOCKED;
     }
     bool allComplete = std::all_of(jobList.begin(), jobList.end(), [](const auto &pair) {
-        return pair.second->GetJobState() == PRINT_JOB_COMPLETED;
+        return pair.second != nullptr && pair.second->GetJobState() == PRINT_JOB_COMPLETED;
     });
     if (allComplete) {
         return PRINT_JOB_COMPLETED;
@@ -4563,19 +4578,25 @@ bool PrintServiceAbility::DoAddPrinterToCups(
     }
 #endif  // CUPS_ENABLE
     printerInfo->SetPrinterName(printerName);
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     PpdInfo ppdInfo;
     if (ppdName == BSUNI_PPD_NAME) {
         ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
     } else if (ppdName == DEFAULT_PPD_NAME) {
         ppdInfo.SetPpdInfo("Generic", "IPP Everywhere", DEFAULT_PPD_NAME);
-    } else if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryInfoByPpdName(ppdName, ppdInfo)) {
+    } else if (printCupsClient == nullptr) {
+        PRINT_HILOGE("printCupsClient is nullptr");
+        ppdInfo.SetPpdInfo("auto", "auto", ppdName);
+    } else if (!printCupsClient->QueryInfoByPpdName(ppdName, ppdInfo)) {
         PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
         ppdInfo.SetPpdInfo("auto", "auto", ppdName);
     }
     printerInfo->SetSelectedDriver(ppdInfo);
-    std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(printerUri);
-    if (!protocol.empty()) {
-        printerInfo->SetSelectedProtocol(protocol);
+    if (printCupsClient != nullptr) {
+        std::string protocol = printCupsClient->getScheme(printerUri);
+        if (!protocol.empty()) {
+            printerInfo->SetSelectedProtocol(protocol);
+        }
     }
     return true;
 }
@@ -4723,7 +4744,12 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (printCupsClient == nullptr) {
+        PRINT_HILOGE("printCupsClient is nullptr");
+        return false;
+    }
+    std::string ppdHashCode = printCupsClient->GetPpdHashCode(ppdName);
     printerInfo->SetPpdHashCode(ppdHashCode);
     BuildPrinterPreference(*printerInfo);
     printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
@@ -5779,7 +5805,12 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
-    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (printCupsClient == nullptr) {
+        PRINT_HILOGE("printCupsClient is nullptr");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (!printCupsClient->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }

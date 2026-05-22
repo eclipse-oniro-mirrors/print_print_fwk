@@ -98,6 +98,10 @@ bool JsPrintExtension::InitExtensionObj(JsRuntime &jsRuntime)
         return false;
     }
 
+    if (abilityInfo_ == nullptr) {
+        PRINT_HILOGE("abilityInfo_ is nullptr");
+        return false;
+    }
     std::string moduleName(abilityInfo_->moduleName);
     moduleName.append("::").append(abilityInfo_->name);
     PRINT_HILOGD("Init module:%{public}s,srcPath:%{public}s.", moduleName.c_str(), srcPath.c_str());

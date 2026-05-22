@@ -107,6 +107,10 @@ bool PrinterCapabilityHelper::CreatePageSizeList(napi_env env, napi_value &jsPri
 
     for (uint32_t index = 0; index < arrLength; index++) {
         napi_value value = PrintPageSizeHelper::MakeJsObject(env, pageSizeList[index]);
+        if (value == nullptr) {
+            PRINT_HILOGE("value is nullptr at index %{public}u", index);
+            return false;
+        }
         PRINT_CALL_BASE(env, napi_set_element(env, jsPageSizes, index, value), false);
     }
     PRINT_CALL_BASE(

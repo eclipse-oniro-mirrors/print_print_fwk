@@ -52,7 +52,12 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
         PRINT_HILOGE("Invalid user id.");
         return;
     }
-    std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    auto printBMSHelper = DelayedSingleton<PrintBMSHelper>::GetInstance();
+    if (printBMSHelper == nullptr) {
+        PRINT_HILOGE("printBMSHelper is nullptr");
+        return;
+    }
+    std::string bundleName = printBMSHelper->QueryCallerBundleName();
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName, userId);
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     if (IsProcessForeground(callerPid)) {

@@ -575,6 +575,10 @@ bool VendorManager::QueryPrinterStatusByUri(const std::string &uri, PrinterStatu
 std::shared_ptr<PrinterInfo> VendorManager::QueryDiscoveredPrinterInfoById(
     const std::string &vendorName, const std::string &printerId)
 {
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("printServiceAbility is null");
+        return nullptr;
+    }
     auto targetVendorName = IsWlanGroupDriver(printerId) ? VENDOR_WLAN_GROUP : vendorName;
     auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(targetVendorName), printerId);
     return printServiceAbility->QueryDiscoveredPrinterInfoById(globalPrinterId);
