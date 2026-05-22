@@ -2949,11 +2949,11 @@ HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_MatchingPrinter_Test, TestSi
     ClearUsbPrinters();
     
     PrinterInfo info;
-    info.SetPrinterId("USB-test_printer");
+    info.SetUri("usb://printer");
     info.SetPrinterName("test_printer");
     GetUsbPrinters().push_back(info);
     
-    bool ret = printCupsClient.CheckUsbPrinterOnline("USB-test_printer");
+    bool ret = printCupsClient.CheckUsbPrinterOnline("usb://printer");
     EXPECT_TRUE(ret);
     
     ClearUsbPrinters();

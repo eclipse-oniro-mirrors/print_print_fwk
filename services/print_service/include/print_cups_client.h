@@ -252,7 +252,7 @@ private:
     static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
     const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();
-    bool CheckUsbPrinterOnline(const std::string &printerId);
+    bool CheckUsbPrinterOnline(const std::string &printerUri);
     int32_t HandleSystemAuthInfo(const std::string &jobId);
     void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
     void RemovePrintCupsJobId(const std::string &jobId);

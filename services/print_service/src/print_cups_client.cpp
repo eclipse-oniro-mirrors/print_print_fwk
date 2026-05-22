@@ -2303,7 +2303,7 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     return true;
 }
 
-bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerId)
+bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerUri)
 {
     std::vector<PrinterInfo> usbPrinters = GetUsbPrinters();
     if (usbPrinters.empty()) {
@@ -2314,7 +2314,7 @@ bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerId)
         }
     }
     for (auto &printer: usbPrinters) {
-        if (printerId.find(printer.GetPrinterId()) != std::string::npos) {
+        if (printerUri == printer.GetUri()) {
             return true;
         }
     }
@@ -2353,7 +2353,7 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     }
 #endif // HAVE_SMB_PRINTER
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
-        if ((isUsbPrinter && CheckUsbPrinterOnline(printerId)) ||
+        if ((isUsbPrinter && CheckUsbPrinterOnline(printerUri)) ||
             monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
             PRINT_HILOGI("printer online");
             return true;
