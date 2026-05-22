@@ -117,7 +117,7 @@ std::vector<PrintSharedHost> SmbHostSearchHelper::GetSharedHosts()
 {
     if (sock_ < 0) {
         PRINT_HILOGE("sock_ is invalid");
-        return scannedHosts_->GetPrintSharedHost();;
+        return scannedHosts_->GetPrintSharedHost();
     }
     fd_set readSet;
     fd_set writeSet;

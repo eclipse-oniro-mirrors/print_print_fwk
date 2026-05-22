@@ -166,10 +166,7 @@ bool PrintAttributesHelper::CreatePageRange(napi_env env, napi_value &jsPrintAtt
     PrintRange range;
     attributes.GetPageRange(range);
     napi_value jsPageRange = PrintRangeHelper::MakeJsObject(env, range);
-    if (jsPageRange == nullptr) {
-        PRINT_HILOGE("jsPageRange is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(jsPageRange, false);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintAttributes, PARAM_JOB_PAGERANGE, jsPageRange), false);
     return true;
 }
@@ -180,10 +177,7 @@ bool PrintAttributesHelper::CreatePageSize(napi_env env, napi_value &jsPrintAttr
     PrintPageSize pageSize;
     attributes.GetPageSize(pageSize);
     napi_value jsPageSize = PrintPageSizeHelper::MakeJsObject(env, pageSize);
-    if (jsPageSize == nullptr) {
-        PRINT_HILOGE("jsPageSize is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(jsPageSize, false);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintAttributes, PARAM_JOB_PAGESIZE, jsPageSize), false);
     return true;
 }

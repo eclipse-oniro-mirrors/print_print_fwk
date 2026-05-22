@@ -313,10 +313,7 @@ bool PrintJobHelper::CreatePageRange(napi_env env, napi_value &jsPrintJob, const
     PrintRange range;
     job.GetPageRange(range);
     napi_value jsPageRange = PrintRangeHelper::MakeJsObject(env, range);
-    if (jsPageRange == nullptr) {
-        PRINT_HILOGE("jsPageRange is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(jsPageRange, false);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGERANGE, jsPageRange), false);
     return true;
 }
@@ -326,10 +323,7 @@ bool PrintJobHelper::CreatePageSize(napi_env env, napi_value &jsPrintJob, const 
     PrintPageSize pageSize;
     job.GetPageSize(pageSize);
     napi_value jsPageSize = PrintPageSizeHelper::MakeJsObject(env, pageSize);
-    if (jsPageSize == nullptr) {
-        PRINT_HILOGE("jsPageSize is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(jsPageSize, false);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGESIZE, jsPageSize), false);
     return true;
 }
@@ -557,7 +551,8 @@ bool PrintJobHelper::ExtractBinaryData(napi_env env, napi_value jsValue, void* &
         napi_typedarray_type arrayType;
         napi_value arrayBuffer;
         size_t byteOffset = 0;
-        status = napi_get_typedarray_info(env, jsBinaryData, &arrayType, &dataLength, &binaryData, &arrayBuffer, &byteOffset);
+        status = napi_get_typedarray_info(
+            env, jsBinaryData, &arrayType, &dataLength, &binaryData, &arrayBuffer, &byteOffset);
         if (status != napi_ok) {
             PRINT_HILOGE("napi_get_typedarray_info failed");
             return false;

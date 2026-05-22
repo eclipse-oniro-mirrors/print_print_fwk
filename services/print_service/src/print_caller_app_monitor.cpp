@@ -53,10 +53,7 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
         return;
     }
     auto printBMSHelper = DelayedSingleton<PrintBMSHelper>::GetInstance();
-    if (printBMSHelper == nullptr) {
-        PRINT_HILOGE("printBMSHelper is nullptr");
-        return;
-    }
+    PRINT_CHECK_NULL_RETURN_VOID(printBMSHelper);
     std::string bundleName = printBMSHelper->QueryCallerBundleName();
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName, userId);
     int32_t callerPid = IPCSkeleton::GetCallingPid();

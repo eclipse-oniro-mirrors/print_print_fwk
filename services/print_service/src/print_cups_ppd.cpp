@@ -357,10 +357,7 @@ void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json:
 
     PRINT_HILOGI("option=%{public}s default=%{public}s text=%{public}s\n", opt->keyword, opt->defchoice, opt->text);
     ppd_choice_t* choices = opt->choices;
-    if (choices == nullptr) {
-        PRINT_HILOGE("choices is nullptr for option: %{public}s", opt->keyword);
-        return;
-    }
+    PRINT_CHECK_NULL_RETURN_VOID(choices);
     for (int k = 0; k < opt->num_choices; k++) {
         if (choices + k == nullptr) {
             PRINT_HILOGE("PPD choice found error: %{public}s", opt->keyword);

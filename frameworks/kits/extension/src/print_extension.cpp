@@ -70,9 +70,8 @@ void PrintExtension::OnStop()
 {
     Extension::OnStop();
     auto context = GetContext();
-    if (context != nullptr) {
-        context->TerminateAbility();
-    }
+    PRINT_CHECK_NULL_RETURN_VOID(context);
+    context->TerminateAbility();
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

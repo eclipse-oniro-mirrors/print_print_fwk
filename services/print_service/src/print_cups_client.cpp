@@ -789,10 +789,7 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
-    if (request == nullptr) {
-        PRINT_HILOGE("ippNewRequest failed");
-        return E_PRINT_SERVER_FAILURE;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(request, E_PRINT_SERVER_FAILURE);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", standardName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
@@ -2420,10 +2417,7 @@ bool PrintCupsClient::ModifyCupsPrinterUri(const std::string &printerName, const
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
-    if (request == nullptr) {
-        PRINT_HILOGE("ippNewRequest failed");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(request, false);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
@@ -2846,10 +2840,7 @@ bool PrintCupsClient::IsIpConflict(const std::string &printerId, std::string &ni
     PRINT_HILOGD("isWifiConnected: %{public}d", isWifiConnected);
     Wifi::WifiP2pLinkedInfo p2pLinkedInfo;
     auto wifiP2p = Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID);
-    if (wifiP2p == nullptr) {
-        PRINT_HILOGE("wifiP2p GetInstance failed");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(wifiP2p, false);
     wifiP2p->QueryP2pLinkedInfo(p2pLinkedInfo);
     PRINT_HILOGD("P2pConnectedState: %{public}d", p2pLinkedInfo.GetConnectState());
     if (isWifiConnected && p2pLinkedInfo.GetConnectState() == Wifi::P2pConnectedState::P2P_CONNECTED) {
@@ -2926,10 +2917,7 @@ bool PrintCupsClient::ResumePrinter(const std::string &printerName)
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
     request = ippNewRequest(IPP_OP_RESUME_PRINTER);
-    if (request == nullptr) {
-        PRINT_HILOGE("ippNewRequest failed");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(request, false);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
     PRINT_HILOGD("IPP_OP_RESUME_PRINTER cupsDoRequest");
@@ -2944,20 +2932,14 @@ bool PrintCupsClient::ResumePrinter(const std::string &printerName)
 
 bool PrintCupsClient::CancelPrinterJob(int cupsJobId)
 {
-    if (printAbility_ == nullptr) {
-        PRINT_HILOGE("printAbility_ is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(printAbility_, false);
     PRINT_HILOGI("CancelPrinterJob start, cupsJobId: %{public}d", cupsJobId);
     char job_uri[1024];
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, job_uri, sizeof(job_uri), "ipp", nullptr, "localhost", 0, "/jobs/%d", cupsJobId);
     PRINT_HILOGE("cancel job_uri: %s", job_uri);
     ipp_t *cancel_request = ippNewRequest(IPP_OP_CANCEL_JOB);
-    if (cancel_request == nullptr) {
-        PRINT_HILOGE("ippNewRequest failed");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(cancel_request, false);
     ippAddString(cancel_request, IPP_TAG_OPERATION, IPP_TAG_URI, "job-uri", nullptr, job_uri);
     ippDelete(printAbility_->DoRequest(nullptr, cancel_request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
@@ -3114,10 +3096,7 @@ bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
-    if (request == nullptr) {
-        PRINT_HILOGE("Create IPP request failed");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(request, false);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);

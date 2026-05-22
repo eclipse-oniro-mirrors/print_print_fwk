@@ -326,10 +326,7 @@ bool StsPrintExtension::Callback(const std::string &funcName, const std::string 
     }
     
     ani_string stsPrinterId = CreateAniString(env, printerId);
-    if (stsPrinterId == nullptr) {
-        PRINT_HILOGE("CreateAniString failed");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(stsPrinterId, false);
     return CallObjectMethod(false, funcName.c_str(), "C{@ohos.lang.String}:", stsPrinterId);
 }
 

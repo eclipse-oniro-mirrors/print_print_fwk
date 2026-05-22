@@ -55,10 +55,7 @@ void PrintResourceManager::RefreshResConfig()
         return;
     }
     std::lock_guard<std::mutex> lock(resConfigMutex_);
-    if (resConfig_ == nullptr) {
-        PRINT_HILOGE("resConfig_ is null");
-        return;
-    }
+    PRINT_CHECK_NULL_RETURN_VOID(resConfig_);
     resConfig_->SetLocaleInfo(locale.getLanguage(), locale.getScript(), locale.getCountry());
     if (!resourceManager_) {
         PRINT_HILOGE("resourceManager_ is null");

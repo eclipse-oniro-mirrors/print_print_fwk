@@ -1069,10 +1069,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
             return QueryVendorPrinterInfo(printerId, info);
         }
         auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-        if (printCupsClient == nullptr) {
-            PRINT_HILOGE("printCupsClient is nullptr");
-            return E_PRINT_SERVER_FAILURE;
-        }
+        PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_SERVER_FAILURE);
         int32_t ret = printCupsClient->QueryPrinterInfoByPrinterId(printerId, info);
         if (ret != 0) {
             PRINT_HILOGE("cups QueryPrinterInfoByPrinterId fail, ret = %{public}d", ret);
@@ -3708,10 +3705,7 @@ bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
         }
     };
     if (ret) {
-        if (serviceHandler_ == nullptr) {
-            PRINT_HILOGE("serviceHandler_ is nullptr");
-            return ret;
-        }
+        PRINT_CHECK_NULL_AND_RETURN(serviceHandler_, ret);
         serviceHandler_->PostTask(timeoutCheck, CONNECT_PLUGIN_PRINT_TIMEOUT);
     }
     return ret;
@@ -4745,10 +4739,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    if (printCupsClient == nullptr) {
-        PRINT_HILOGE("printCupsClient is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, false);
     std::string ppdHashCode = printCupsClient->GetPpdHashCode(ppdName);
     printerInfo->SetPpdHashCode(ppdHashCode);
     BuildPrinterPreference(*printerInfo);
@@ -5806,10 +5797,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
     }
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    if (printCupsClient == nullptr) {
-        PRINT_HILOGE("printCupsClient is nullptr");
-        return E_PRINT_SERVER_FAILURE;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_SERVER_FAILURE);
     if (!printCupsClient->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;

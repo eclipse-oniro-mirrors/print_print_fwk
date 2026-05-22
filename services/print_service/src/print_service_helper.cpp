@@ -84,17 +84,11 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
     auto abilityManagerClient = AAFwk::AbilityManagerClient::GetInstance();
-    if (abilityManagerClient == nullptr) {
-        PRINT_HILOGE("abilityManagerClient is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(abilityManagerClient, false);
     abilityManagerClient->Connect();
     uint32_t retry = 0;
     sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection(deathCallback);
-    if (printAbilityConnection == nullptr) {
-        PRINT_HILOGE("fail to create printAbilityConnection");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(printAbilityConnection, false);
     PRINT_HILOGD("PrintServiceHelper::StartExtensionAbility %{public}s %{public}s",
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
