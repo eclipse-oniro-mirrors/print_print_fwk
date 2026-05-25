@@ -15,6 +15,7 @@
 
 #include "print_resource_manager.h"
 #include "print_log.h"
+#include "print_constant.h"
 #include "locale_config.h"
 #include "image_source.h"
 #include "pixel_map.h"

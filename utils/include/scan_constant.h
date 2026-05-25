@@ -89,6 +89,12 @@ namespace OHOS::Scan {
 #define CHECK_IS_EXCEED_SCAN_RANGE_VOID(count)     CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_NONE)
 #define CHECK_IS_EXCEED_SCAN_RANGE_INT(count)      CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_INVALID_PARAMETER)
 
+#define SCNA_CHECK_NULL_AND_RETURN(ptr, retVal)         \
+    if ((ptr) == nullptr) {                             \
+        SCAN_HILOGE("%{public}s is nullptr.", (#ptr));  \
+        return (retVal);                                \
+    }
+
 enum ScanErrorCode {
     E_SCAN_NONE = 0, // no error
     E_SCAN_NO_PERMISSION = 201, // no permission

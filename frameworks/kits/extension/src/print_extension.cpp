@@ -22,6 +22,7 @@
 #include "print_log.h"
 #include "runtime.h"
 #include "sts_print_extension.h"
+#include "print_constant.h"
 
 namespace OHOS {
 namespace AbilityRuntime {

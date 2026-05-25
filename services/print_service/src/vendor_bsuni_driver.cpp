@@ -671,10 +671,7 @@ void VendorBsuniDriver::OnSwitchSpace()
         PRINT_HILOGW("onSwitchSpace is null");
         return;
     }
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
-        return;
-    }
+    PRINT_CHECK_NULL_RETURN_VOID(vendorManager);
     if (vendorManager->IsEnterprise()) {
         PRINT_HILOGI("[] OnSwitchSpace in enterprise");
         int32_t result = vendorExtension->onSwitchSpace(CUPS_ENTERPRISE_ROOT_DIR);
