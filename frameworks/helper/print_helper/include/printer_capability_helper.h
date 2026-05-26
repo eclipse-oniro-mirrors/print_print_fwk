@@ -83,14 +83,14 @@ private:
         }
 
         bool isArray = false;
-        PRINT_CALL(env, napi_is_array(env, jsArray, &isArray));
+        PRINT_CALL_BASE(env, napi_is_array(env, jsArray, &isArray), false);
         if (!isArray) {
             PRINT_HILOGE("Property %{public}s is not an array type", propertyName);
             return false;
         }
 
         uint32_t length = 0;
-        PRINT_CALL(env, napi_get_array_length(env, jsArray, &length));
+        PRINT_CALL_BASE(env, napi_get_array_length(env, jsArray, &length), false);
         if (length > MAX_ARRAY_LENGTH) {
             PRINT_HILOGE("the array length is over %{public}d, max allowed is %{public}d", length, MAX_ARRAY_LENGTH);
             return false;
@@ -100,7 +100,7 @@ private:
 
         for (uint32_t i = 0; i < length; ++i) {
             napi_value jsItem;
-            PRINT_CALL(env, napi_get_element(env, jsArray, i, &jsItem));
+            PRINT_CALL_BASE(env, napi_get_element(env, jsArray, i, &jsItem), false);
             auto item = buildFunction(env, jsItem);
             if (!item) {
                 PRINT_HILOGE("Failed to build item for property %{public}s", propertyName);

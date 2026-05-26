@@ -86,8 +86,6 @@ private:
     static bool IsValidApplicationEvent(uint32_t event);
     static bool IsValidDefaultPrinterType(uint32_t type);
     static void NapiThrowError(napi_env env, int32_t errCode);
-    static napi_status BuildPrinterInfoArrayOutput(std::shared_ptr<InnerPrintContext> context,
-        napi_env env, napi_value* result);
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {
@@ -125,6 +123,8 @@ private:
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~InnerPrintContext() {};
     };
+    static napi_status BuildPrinterInfoArrayOutput(std::shared_ptr<InnerPrintContext> context,
+        napi_env env, napi_value* result);
     static bool CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> context);
 };
 }  // namespace OHOS::Print

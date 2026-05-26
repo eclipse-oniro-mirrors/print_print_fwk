@@ -507,7 +507,7 @@ size_t NapiScanUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value
     size_t argc = length;
     napi_value thisVal = nullptr;
     void *data = nullptr;
-    SCAN_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    SCAN_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data), 0);
     return argc;
 }
 

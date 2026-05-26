@@ -145,7 +145,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
         PRINT_HILOGE("Failed to allocate weak_ptr for Print extension context");
         return false;
     }
-    napi_wrap(engine, contextObj, new std::weak_ptr<AbilityRuntime::Context>(context),
+    napi_status wrapStatus = napi_wrap(engine, contextObj, new std::weak_ptr<AbilityRuntime::Context>(context),
         [](napi_env, void *data, void *) {
             PRINT_HILOGI("Finalizer for weak_ptr Print extension context is called");
             delete static_cast<std::weak_ptr<AbilityRuntime::Context> *>(data);
@@ -325,7 +325,7 @@ bool JsPrintExtension::Callback(std::string funcName)
             return;
         }
         napi_handle_scope scope = nullptr;
-        PRINT_CALL(env, napi_open_handle_scope(param->env, &scope));
+        PRINT_CALL_RETURN_VOID(env, napi_open_handle_scope(param->env, &scope));
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             return;
@@ -367,7 +367,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
             return;
         }
         napi_handle_scope scope = nullptr;
-        PRINT_CALL(env, napi_open_handle_scope(param->env, &scope));
+        PRINT_CALL_RETURN_VOID(env, napi_open_handle_scope(param->env, &scope));
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             return;
@@ -411,7 +411,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
             return;
         }
         napi_handle_scope scope = nullptr;
-        PRINT_CALL(env, napi_open_handle_scope(param->env, &scope));
+        PRINT_CALL_RETURN_VOID(env, napi_open_handle_scope(param->env, &scope));
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             return;
