@@ -28,6 +28,7 @@
 
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_json_util.h"
 #include "print_utils.h"
 
@@ -521,20 +522,23 @@ bool PrintUserData::FlushCacheFileToUserData(const std::string &jobId)
 
 bool PrintUserData::FlushCacheFile(int32_t fd, const std::string jobId, uint32_t index)
 {
+    if (jobId.empty()) {
+        PRINT_HILOGE("jobId is empty!");
+        return false;
+    }
     if (lseek(fd, 0, SEEK_SET) != 0) {
         PRINT_HILOGE("Error seeking to the beginning of the file");
         return false;
     }
-    char cachePath[PATH_MAX] = { 0 };
     std::string cacheDir = ObtainUserCacheDirectory();
-    if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
-        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+    std::ostringstream fileNameStream;
+    fileNameStream << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
+    std::string fileName = fileNameStream.str();
+    if (!PrintUtils::IsPathValidForCreate(cacheDir, fileName)) {
+        PRINT_HILOGE("Invalid cache file path!");
         return false;
     }
-    cacheDir = cachePath;
-    std::ostringstream cacheFileStream;
-    cacheFileStream << cacheDir << "/" << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
-    std::string cacheFilePath = cacheFileStream.str();
+    std::string cacheFilePath = cacheDir + "/" + fileName;
     int32_t cacheFileFd = open(cacheFilePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (cacheFileFd == -1) {
         PRINT_HILOGE("Open file failed");
@@ -749,14 +753,17 @@ void PrintUserData::DeleteOldestHistoryPrintJob()
 void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
 {
     PRINT_HILOGI("FlushPrintHistoryJobFile Start.");
-    std::string filePath = ObtainUserCacheDirectory();
-    char cachePath[PATH_MAX] = { 0 };
-    if (realpath(filePath.c_str(), cachePath) == nullptr) {
-        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+    if (printerId.empty()) {
+        PRINT_HILOGE("printerId is empty!");
         return;
     }
-    filePath.assign(cachePath);
-    std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    std::string cacheDir = ObtainUserCacheDirectory();
+    std::string fileName = printerId + ".json";
+    if (!PrintUtils::IsPathValidForCreate(cacheDir, fileName)) {
+        PRINT_HILOGE("Invalid print history job file path!");
+        return;
+    }
+    std::string printHistoryJobFilePath = cacheDir + "/" + fileName;
     if (printHistoryJobList_.find(printerId) == printHistoryJobList_.end()) {
         PRINT_HILOGE("printHistoryJobList_[printerId] is null.");
         std::filesystem::remove(printHistoryJobFilePath);
@@ -814,6 +821,10 @@ bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
     }
     filePath.assign(cachePath);
     std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    if (!PrintUtils::IsPathValid(printHistoryJobFilePath)) {
+        PRINT_HILOGE("Invalid print history job file path!");
+        return false;
+    }
     Json::Value printHistoryJobJson;
     if (GetJsonObjectFromFile(printHistoryJobJson, printHistoryJobFilePath, printerId) &&
         ParseJsonObjectToPrintHistory(printHistoryJobJson, printerId)) {

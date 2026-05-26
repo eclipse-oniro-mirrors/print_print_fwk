@@ -86,6 +86,7 @@ public:
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
+    static bool IsPathValidForCreate(const std::string &parentDir, const std::string &fileName);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static std::string GetJobStateChar(const uint32_t state);
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
