@@ -57,6 +57,11 @@ int32_t NapiScanHelper::GetScannerParaCount(const std::string& deviceId, int32_t
         return ret;
     }
     scannerParaCount = value.GetNumValue();
+    if (scannerParaCount < 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("Invalid scannerParaCount: %{public}d, expect range [0, %{public}d]",
+            scannerParaCount, MAX_SCANNER_PARA_COUNT);
+        return E_SCAN_GENERIC_FAILURE;
+    }
     return E_SCAN_NONE;
 }
 

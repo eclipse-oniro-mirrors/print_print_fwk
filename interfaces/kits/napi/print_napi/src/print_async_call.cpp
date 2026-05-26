@@ -67,11 +67,23 @@ napi_value PrintAsyncCall::Call(napi_env env, Context::ExecAction exec)
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "PrintAsyncCall", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, PrintAsyncCall::OnExecute,
+    napi_status status = napi_create_async_work(env, nullptr, resource, PrintAsyncCall::OnExecute,
         PrintAsyncCall::OnComplete, context_, &work);
+    if (status != napi_ok) {
+        PRINT_HILOGE("napi_create_async_work failed, status: %{public}d", status);
+        DeleteContext(env, context_);
+        context_ = nullptr;
+        return nullptr;
+    }
     context_->work = work;
     context_ = nullptr;
-    napi_queue_async_work(env, work);
+    status = napi_queue_async_work(env, work);
+    if (status != napi_ok) {
+        PRINT_HILOGE("napi_queue_async_work failed, status: %{public}d", status);
+        DeleteContext(env, context_);
+        context_ = nullptr;
+        return nullptr;
+    }
     PRINT_HILOGD("async call exec");
     return promise;
 }

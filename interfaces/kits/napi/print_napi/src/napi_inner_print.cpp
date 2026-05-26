@@ -1710,6 +1710,21 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsGuest(napi_env env, napi_callback_info
     return asyncCall.Call(env, exec);
 }
 
+napi_status NapiInnerPrint::BuildPrinterInfoArrayOutput(std::shared_ptr<InnerPrintContext> context,
+    napi_env env, napi_value* result)
+{
+    napi_status status = napi_create_array(env, result);
+    uint32_t index = 0;
+    for (const auto& printerInfo : context->printerInfos) {
+        status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, printerInfo));
+        if (status != napi_ok) {
+            PRINT_HILOGE("napi_set_element failed");
+            break;
+        }
+    }
+    return status;
+}
+
 napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<InnerPrintContext>();
@@ -1733,19 +1748,14 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_array(env, result);
-        uint32_t index = 0;
-        for (auto printerInfo : context->printerInfos) {
-            status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, printerInfo));
-            if (status != napi_ok) {
-                PRINT_HILOGE("napi_set_element failed");
-                break;
-            }
-        }
-        return status;
+        return BuildPrinterInfoArrayOutput(context, env, result);
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!CheckCallerIsSystemApp(context)) {
+            PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
+            context->userPasswd = nullptr;
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
         int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,

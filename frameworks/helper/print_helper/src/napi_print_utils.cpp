@@ -246,6 +246,7 @@ napi_value NapiPrintUtils::CreatePpdInfoVectorUtf8(napi_env env, const std::vect
         auto element = PpdInfoHelper::MakeJsSimpleObject(env, vec[i]);
         if (element == nullptr) {
             PRINT_HILOGW("failed to create element");
+            continue;
         }
         if (napi_set_element(env, array, i, element) != napi_ok) {
             PRINT_HILOGW("failed to set element");
@@ -416,6 +417,9 @@ napi_value NapiPrintUtils::GetReference(napi_env env, napi_ref callbackRef)
 
 void NapiPrintUtils::DeleteReference(napi_env env, napi_ref callbackRef)
 {
+    if (env == nullptr || callbackRef == nullptr) {
+        return;
+    }
     (void)napi_delete_reference(env, callbackRef);
 }
 

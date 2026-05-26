@@ -64,6 +64,8 @@ struct key_compare {
 static std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>, key_compare> connects_;
 static int64_t serialNumber_ = 0;
 static std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+// Guards connects_ against concurrent connect/disconnect access.
+static std::shared_timed_mutex g_connectsMutex_;
 }  // namespace AbilityRuntime
 }  // namespace OHOS
 #endif  // JS_PRINT_EXTENSION_CONNECTION_H

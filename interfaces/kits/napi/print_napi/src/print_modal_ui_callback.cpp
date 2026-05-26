@@ -52,12 +52,14 @@ void PrintModalUICallback::OnRelease(int32_t releaseCode)
         return;
     }
 
-    if (this->isResultForModal) {
-        PRINT_HILOGW("SendMessageBack isResultForModal true.");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(resultMutex_);
+        if (this->isResultForModal) {
+            PRINT_HILOGW("SendMessageBack isResultForModal true.");
+            return;
+        }
+        this->isResultForModal = true;
     }
-
-    this->isResultForModal = true;
 
     this->baseContext->errorMessage.code = releaseCode;
     SendMessageBack();
@@ -80,12 +82,14 @@ void PrintModalUICallback::OnError(int32_t code, const std::string &name, const 
         return;
     }
 
-    if (this->isResultForModal) {
-        PRINT_HILOGW("SendMessageBack isResultForModal true.");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(resultMutex_);
+        if (this->isResultForModal) {
+            PRINT_HILOGW("SendMessageBack isResultForModal true.");
+            return;
+        }
+        this->isResultForModal = true;
     }
-
-    this->isResultForModal = true;
 
     this->baseContext->errorMessage.code = E_PRINT_SERVER_FAILURE;
     SendMessageBack();
@@ -100,12 +104,14 @@ void PrintModalUICallback::OnResultForModal(int32_t resultCode, const OHOS::AAFw
         return;
     }
 
-    if (this->isResultForModal) {
-        PRINT_HILOGW("SendMessageBack isResultForModal true.");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(resultMutex_);
+        if (this->isResultForModal) {
+            PRINT_HILOGW("SendMessageBack isResultForModal true.");
+            return;
+        }
+        this->isResultForModal = true;
     }
-
-    this->isResultForModal = true;
 
     this->baseContext->errorMessage.code = resultCode;
     if (this->baseContext->errorMessage.code != E_PRINT_NONE) {

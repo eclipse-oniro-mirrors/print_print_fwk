@@ -25,6 +25,7 @@ class NapiScanHelper {
 public:
     static int32_t GetScannerAllPara(const std::string &deviceId, std::vector<ScanOptionDescriptor> &allDesc);
 private:
+    static constexpr uint32_t MAX_SCANNER_PARA_COUNT = 256;
     static int32_t GetScannerParaCount(const std::string& deviceId, int32_t& scannerParaCount);
     static int32_t GetScannerParameter(const std::string &deviceId,
         int32_t scannerParaCount, std::vector<ScanOptionDescriptor> &allDesc);
