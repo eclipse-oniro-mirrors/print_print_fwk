@@ -52,6 +52,7 @@ static constexpr const char *PARAM_JOB_NUMBERUPLAYOUT = "numberUpLayout";
 static constexpr const char *PARAM_JOB_MIRROR = "mirror";
 static constexpr const char *PARAM_JOB_PAGEBORDER = "pageBorder";
 static constexpr const char *PARAM_JOB_NUMBERUPARGS = "numberUpArgs";
+static constexpr const char *PARAM_JOB_VENDOR_OPTIONS = "vendorOptions";
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
 {
@@ -105,6 +106,11 @@ napi_value PrintJobHelper::MakeJsObject(napi_env env, const PrintJob &job)
 
     if (job.HasOption()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_OPTION, job.GetOption());
+    }
+
+    if (job.HasVendorOptions()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_VENDOR_OPTIONS,
+            job.GetVendorOptions().c_str());
     }
     return jsObj;
 }
@@ -276,6 +282,12 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, nap
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
     }
+
+    napi_value jsVendorOptions = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_VENDOR_OPTIONS);
+    if (jsVendorOptions != nullptr) {
+        nativeObj->SetVendorOptions(
+            NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_VENDOR_OPTIONS));
+    }
     return nativeObj;
 }
 
@@ -351,6 +363,7 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_JOB_NUMBERUPARGS, PRINT_PARAM_OPT},
+        {PARAM_JOB_VENDOR_OPTIONS, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
@@ -384,6 +397,7 @@ bool PrintJobHelper::ValidatePrintJobProperty(napi_env env, napi_value object)
         {PARAM_JOB_ISSEQUENTIAL, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_JOB_NUMBERUPARGS, PRINT_PARAM_OPT},
+        {PARAM_JOB_VENDOR_OPTIONS, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
@@ -431,6 +445,10 @@ bool PrintJobHelper::FillOptionalParamsFromJs(napi_env env, napi_value jsValue, 
     }
     params.cupsOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION);
     FillNumberUpParams(env, jsValue, params);
+    napi_value jsVendorOptions = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_VENDOR_OPTIONS);
+    if (jsVendorOptions != nullptr) {
+        params.vendorOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_VENDOR_OPTIONS);
+    }
     return true;
 }
 

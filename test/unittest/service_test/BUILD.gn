@@ -14,10 +14,14 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_phone_isolation) {
+if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service/print_service"
+  _scan_service_path = "${print_path}/services/phone_service/scan_service"
 } else {
   _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services/print_service"
+  _scan_service_path = "${print_path}/services/scan_service"
 }
 
 module_output_path = unit_test_output_path
@@ -30,9 +34,9 @@ ohos_unittest("print_service_test") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
-    "${print_path}/services/print_service/include",
-    "${print_path}/services/print_service/enterprise/include",
-    "${print_path}/services/print_service/include/event_callback",
+    "${_service_path}/include",
+    "${_service_path}/enterprise/include",
+    "${_service_path}/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -72,7 +76,11 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service_test",
   ]
 
-  cflags_cc = [ "-DUNIT_TEST" ]
+  cflags_cc = [
+    "-DUNIT_TEST",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
@@ -139,6 +147,10 @@ ohos_unittest("print_service_test") {
     cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
 
+  if (!print_fwk_feature_device_isolation) {
+    sources += [ "${print_path}/test/unittest/service_test/print_security_guard_util_test.cpp" ]
+  }
+
 }
 
 ohos_unittest("scan_service_test") {
@@ -148,7 +160,7 @@ ohos_unittest("scan_service_test") {
     "../fwk_inner_napi_test/mock",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_path}/interfaces/kits/napi/scan_napi/include",
-    "${print_path}/services/scan_service/include",
+    "${_scan_service_path}/include",
     "${print_utils_path}/include",
   ]
 
@@ -194,7 +206,7 @@ ohos_unittest("scan_task_test") {
   module_out_path = module_output_path
   include_dirs = [
     "${print_path}/frameworks/models/scan_models/include",
-    "${print_path}/services/scan_service/include",
+    "${_scan_service_path}/include",
     "${print_utils_path}/include",
   ]
 

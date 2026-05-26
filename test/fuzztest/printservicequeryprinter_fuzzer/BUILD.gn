@@ -16,7 +16,7 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_phone_isolation) {
+if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
   _service_path = "${print_path}/services/phone_service"
 } else {
@@ -84,6 +84,7 @@ ohos_fuzztest("PrintServiceQueryPrinterFuzzTest") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "huks:libhukssdk",
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",

@@ -51,6 +51,7 @@ public:
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
     void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
+    void UpdatePrinterOption(const std::string &printerId, const std::string &option);
     bool QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool QueryPpdHashCodeByPrinterName(const std::string &standardPrinterName, std::string &ppdHashCode);
     bool CheckPrinterBusy(const std::string &printerId);
@@ -92,6 +93,7 @@ private:
     void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertVendorAbilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     bool ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapability &printerCapability);
@@ -101,6 +103,8 @@ private:
     bool ConvertJsonToSupportedMediaType(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToSupportedQuality(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToSupportedOrientation(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToVendorAbility(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertSupportedListsFromJson(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability);
     bool CheckPrinterInfoJson(Json::Value &object, std::string &printerId);
     bool GetPrinterCapabilityFromJson(

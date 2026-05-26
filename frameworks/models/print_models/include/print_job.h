@@ -122,6 +122,12 @@ public:
 
     [[nodiscard]] const std::string &GetOption() const;
 
+    void SetVendorOptions(const std::string &vendorOptions);
+
+    [[nodiscard]] bool HasVendorOptions() const;
+
+    [[nodiscard]] const std::string &GetVendorOptions() const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     virtual bool MarshallingParam(Parcel &parcel) const;
@@ -136,6 +142,7 @@ public:
 private:
     void ReadFromParcel(Parcel &parcel);
     void ReadParcelFD(Parcel &parcel);
+    void ReadVendorOptionsFromParcel(Parcel &parcel);
 
 private:
     std::vector<uint32_t> fdList_;
@@ -157,6 +164,8 @@ private:
     PrintPreviewAttribute preview_;
     bool hasOption_;
     std::string option_;
+    bool hasVendorOptions_;
+    std::string vendorOptions_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_JOB_H

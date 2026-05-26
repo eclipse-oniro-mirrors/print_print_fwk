@@ -55,6 +55,9 @@ public:
     int32_t AddScanner(const std::string& serialNumber, const std::string& discoverMode);
     int32_t DeleteScanner(const std::string& serialNumber, const std::string& discoverMode);
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner);
+    int32_t ExportScanPicture(const std::string scannerId,
+        const std::vector<int32_t>& pictureFdList, int32_t format,
+        std::vector<int32_t>& exportedFdList);
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IScanCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
 

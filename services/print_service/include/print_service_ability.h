@@ -21,11 +21,14 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <json/json.h>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
 #include "extension_ability_info.h"
+#include "hks_api.h"
+#include "hks_param.h"
 #include "iprint_callback.h"
 #include "iremote_object.h"
 #include "print_constant.h"
@@ -193,6 +196,8 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
+    void CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob);
+    void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
@@ -205,7 +210,7 @@ private:
     std::shared_ptr<PrintJob> AddNativePrintJob(const std::string &jobId, PrintJob &printJob);
     int32_t CallStatusBar();
     bool StartExtensionAbility(const AAFwk::Want &want);
-    void ResetExtensionState(const std::string& bundleName);
+    void ResetExtensionState(int32_t userId, const std::string& bundleName);
     bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     bool IsPrinterJobMapEmpty();
     int32_t GetCurrentUserId();
@@ -256,7 +261,29 @@ private:
         const std::string& extensionId, const std::string &jobId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
-    Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
+    bool ProcessVendorOptionsForPreference(const std::string &printerId,
+                                           const PrinterPreferences &preferences,
+                                           PrinterPreferences &printerPrefs);
+    void MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
+                                       const PrinterPreferences &preferences,
+                                       PrintJob &printJob);
+    Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences, const PrinterInfo &printerInfo);
+    void DecryptAndFillCustomOptions(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);
+    void ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo, PrinterPreferences &preferences,
+        PrinterUserPreferences &userPrefs);
+    std::set<std::string> GetCustomOptionKeysFromCapability(const PrinterInfo &printerInfo);
+    void ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
+        PrinterPreferences &preferences, PrinterUserPreferences &userPrefs);
+    void ProcessSingleCustomOption(const std::string &key,
+        const std::string &optionJsonStr, PrinterUserPreferences &userPrefs);
+    int32_t EncryptCustomOptionValue(struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
+    int32_t DecryptCustomOptionValue(struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
+    int32_t InitGenParamSet(struct HksParamSet **paramSet);
+    int32_t InitCipherParamSet(struct HksParamSet **paramSet, uint32_t purpose);
+    int32_t DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
+        struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
+    int32_t DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
+        struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
     std::string GetCallerBundleName() override;
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
@@ -342,6 +369,7 @@ private:
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
+    void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

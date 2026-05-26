@@ -47,6 +47,7 @@
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
+#include "print_json_util.h"
 #ifdef WATERMARK_ENFORCING_ENABLE
 #include "watermark_manager.h"
 #endif // WATERMARK_ENFORCING_ENABLE
@@ -92,6 +93,7 @@ const int32_t STATE_UPDATE_STEP = 5;
 const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
+const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -988,7 +990,9 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
         if (!PrintUtils::IsPathValid(ppdFilePath)) {
             return E_PRINT_INVALID_PARAMETER;
         }
-        return QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
+        int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
+        ValidateAndClearVendorAbility(printerCaps, ppdName);
+        return ret;
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("[Printer: %{public}s] QueryPrinterCapabilityFromPPD", standardName.c_str());
@@ -1293,7 +1297,60 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     }
     num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
+    num_options = FillVendorOptions(jobParams, num_options, options);
     PRINT_HILOGI("FillJobOptions end.");
+    return num_options;
+}
+
+int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
+                                       int num_options,
+                                       cups_option_t **options)
+{
+    if (jobParams == nullptr || jobParams->vendorOptions.empty()) {
+        return num_options;
+    }
+
+    Json::Value vendorJson;
+    if (!PrintJsonUtil::Parse(jobParams->vendorOptions, vendorJson)) {
+        PRINT_HILOGW("vendorOptions is not valid JSON string, discard");
+        return num_options;
+    }
+
+    if (!vendorJson.isObject()) {
+        PRINT_HILOGW("vendorOptions is not JSON object, discard");
+        return num_options;
+    }
+
+    PRINT_HILOGI("vendorOptions expand first level to cups options");
+    Json::Value::Members keys = vendorJson.getMemberNames();
+    for (const auto &key : keys) {
+        const Json::Value &value = vendorJson[key];
+        std::string valueStr;
+        if (value.isString()) {
+            valueStr = value.asString();
+        } else if (value.isInt()) {
+            valueStr = std::to_string(value.asInt());
+        } else if (value.isUInt()) {
+            valueStr = std::to_string(value.asUInt());
+        } else if (value.isBool()) {
+            valueStr = value.asBool() ? "true" : "false";
+        } else if (value.isDouble()) {
+            valueStr = std::to_string(value.asDouble());
+        } else if (value.isNull()) {
+            PRINT_HILOGW("vendor option %{public}s has null value, skip", key.c_str());
+            continue;
+        } else if (value.isObject() || value.isArray()) {
+            PRINT_HILOGW("vendor option %{public}s has nested structure, skip", key.c_str());
+            continue;
+        } else {
+            PRINT_HILOGW("vendor option %{public}s has unknown type, skip", key.c_str());
+            continue;
+        }
+
+        num_options = cupsAddOption(key.c_str(), valueStr.c_str(), num_options, options);
+        PRINT_HILOGD("vendor option: %{public}s=%{private}s", key.c_str(), valueStr.c_str());
+    }
+
     return num_options;
 }
 
@@ -2246,7 +2303,7 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     return true;
 }
 
-bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerId)
+bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerUri)
 {
     std::vector<PrinterInfo> usbPrinters = GetUsbPrinters();
     if (usbPrinters.empty()) {
@@ -2257,7 +2314,7 @@ bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerId)
         }
     }
     for (auto &printer: usbPrinters) {
-        if (printerId.find(printer.GetPrinterId()) != std::string::npos) {
+        if (printerUri == printer.GetUri()) {
             return true;
         }
     }
@@ -2296,7 +2353,7 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     }
 #endif // HAVE_SMB_PRINTER
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
-        if ((isUsbPrinter && CheckUsbPrinterOnline(printerId)) ||
+        if ((isUsbPrinter && CheckUsbPrinterOnline(printerUri)) ||
             monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
             PRINT_HILOGI("printer online");
             return true;
@@ -2570,6 +2627,9 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->mirror = numberUpArgs.mirror;
     params->pageBorder = numberUpArgs.pageBorder;
     UpdateJobParameterByOption(optionJson, params);
+    if (jobInfo.HasVendorOptions()) {
+        params->vendorOptions = jobInfo.GetVendorOptions();
+    }
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
 }
@@ -2604,6 +2664,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);
     PRINT_HILOGI(
         "jobParams->printerAttrsOptionCupsOption: %{public}s", jobParams->printerAttrsOptionCupsOption.c_str());
+    PRINT_HILOGI("jobParams->vendorOptions: %{private}s", jobParams->vendorOptions.c_str());
 }
 
 std::string PrintCupsClient::GetMedieSize(const PrintJob &jobInfo)
@@ -2910,6 +2971,52 @@ bool PrintCupsClient::IsIpAddress(const char *host)
         PRINT_HILOGW("not ipv4 or ipv6");
         return false;
     }
+}
+
+IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    
+    if (host[0] == '\0') {
+        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", printerUri.c_str());
+        return IP_ADDRESS_TYPE_INVALID;
+    }
+    
+    // Pre-process IPv6 address for inet_pton validation compatibility
+    // Real-world printer URIs may contain scope ID (+wlan0/%eth0) and version prefix (v1.)
+    std::string hostStr(host);
+    
+    size_t scopePos = hostStr.find_last_of('+%');
+    if (scopePos != std::string::npos) {
+        hostStr = hostStr.substr(0, scopePos);
+    }
+    
+    size_t dotPos = hostStr.find('.');
+    if (dotPos != std::string::npos && dotPos < MAX_VERSION_PREFIX_DOT_POS && hostStr[0] == 'v') {
+        hostStr = hostStr.substr(dotPos + 1);
+    }
+    
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    
+    if (inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) {
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
+        return IP_ADDRESS_TYPE_IPV4;
+    }
+    
+    if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1) {
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address", printerUri.c_str());
+        return IP_ADDRESS_TYPE_IPV6;
+    }
+    
+    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address", printerUri.c_str(), host);
+    return IP_ADDRESS_TYPE_INVALID;
 }
 
 std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)

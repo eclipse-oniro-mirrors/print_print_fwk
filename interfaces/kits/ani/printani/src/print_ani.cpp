@@ -290,6 +290,47 @@ static void AddPrintersNative(ani_env *env, ani_object printers, ani_object call
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
 
+static void AddPrinterNative(ani_env *env, ani_string printerNameAni, ani_string uriAni,
+    ani_string ppdNameAni, ani_string optionsAni, ani_object callback)
+{
+    PRINT_HILOGI("enter AddPrinterNative");
+    std::string printerName;
+    if (!GetStdString(env, printerNameAni, printerName)) {
+        PRINT_HILOGE("GetStdString fail for printerName");
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
+        AsyncCallback(env, callback, stsErrCode, nullptr);
+        return;
+    }
+    std::string uri;
+    if (!GetStdString(env, uriAni, uri)) {
+        PRINT_HILOGE("GetStdString fail for uri");
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
+        AsyncCallback(env, callback, stsErrCode, nullptr);
+        return;
+    }
+
+    std::string ppdName;
+    if (!GetStdString(env, ppdNameAni, ppdName)) {
+        PRINT_HILOGE("GetStdString fail for ppdName");
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
+        AsyncCallback(env, callback, stsErrCode, nullptr);
+        return;
+    }
+
+    std::string options;
+    if (!GetStdString(env, optionsAni, options)) {
+        PRINT_HILOGE("GetStdString fail for options");
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
+        AsyncCallback(env, callback, stsErrCode, nullptr);
+        return;
+    }
+
+    PRINT_HILOGD("printerName: %{public}s, uri: %{private}s", printerName.c_str(), uri.c_str());
+    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(printerName, uri, ppdName, options);
+    ani_object stsErrCode = CreateStsError(env, ret);
+    AsyncCallback(env, callback, stsErrCode, nullptr);
+}
+
 static void RemovePrintersNative(ani_env *env, ani_object printerIds, ani_object callback)
 {
     PRINT_HILOGI("enter RemovePrintersNative");
@@ -795,6 +836,7 @@ static std::array methods = {
     MakeNativeFunc("requestPrintPreviewCallbackNative", RequestPrintPreviewCallbackNative),
     MakeNativeFunc("requestPrintPreviewAsyncCallbackNative", RequestPrintPreviewAsyncCallbackNative),
     MakeNativeFunc("addPrintersNative", AddPrintersNative),
+    MakeNativeFunc("addPrinterNative", AddPrinterNative),
     MakeNativeFunc("removePrintersNative", RemovePrintersNative),
     MakeNativeFunc("updatePrintersNative", UpdatePrintersNative),
     MakeNativeFunc("updatePrinterStateNative", UpdatePrinterStateNative),

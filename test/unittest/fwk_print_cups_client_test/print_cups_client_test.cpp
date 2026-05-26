@@ -2949,11 +2949,11 @@ HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_MatchingPrinter_Test, TestSi
     ClearUsbPrinters();
     
     PrinterInfo info;
-    info.SetPrinterId("USB-test_printer");
+    info.SetUri("usb://printer");
     info.SetPrinterName("test_printer");
     GetUsbPrinters().push_back(info);
     
-    bool ret = printCupsClient.CheckUsbPrinterOnline("USB-test_printer");
+    bool ret = printCupsClient.CheckUsbPrinterOnline("usb://printer");
     EXPECT_TRUE(ret);
     
     ClearUsbPrinters();
@@ -4101,6 +4101,387 @@ HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_EmptyJson_Test, TestSi
     Json::Value json(Json::objectValue);
     std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
     EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_001
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4Address_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://192.168.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_002
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6Address_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[2001:db8::1]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_003
+ * @tc.desc: GetIpAddressTypeFromUri with hostname (not IP address)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Hostname_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://test.local:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_004
+ * @tc.desc: GetIpAddressTypeFromUri with empty URI
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_EmptyUri_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_005
+ * @tc.desc: GetIpAddressTypeFromUri with malformed URI (no host)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_MalformedUri_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp:///printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_006
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address without port
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4NoPort_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://10.0.0.1/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_007
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address with version prefix and scope ID
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithVersionPrefix_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "lpd://[v1.fe00::decd:2fff:febb:f5d5+wlan0]:515/auto";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_009
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 global address with scope ID
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6GlobalWithScope_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[2001:db8:85a3::8a2e:370:7334+wlan0]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_ValidJson_Succeeds, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"stringVal":"test","intVal":123,"boolVal":true,"doubleVal":3.14})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 4);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_InvalidJson_ShouldDiscard, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = "invalid json string";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 0);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_JsonArray_ShouldDiscard, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"(["item1","item2"])";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 0);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_NestedJson_ShouldSkipNestedField, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"validField":"value","nestedField":{"key":"value"}})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 1);
+    EXPECT_STREQ(options[0].name, "validField");
+    EXPECT_STREQ(options[0].value, "value");
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_ArrayValue_ShouldSkipField, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"validField":"value","arrayField":[1,2,3]})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 1);
+    EXPECT_STREQ(options[0].name, "validField");
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_NullValue_ShouldSkipField, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"validField":"value","nullField":null})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 1);
+    EXPECT_STREQ(options[0].name, "validField");
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_EmptyVendorOptions_ReturnsZero, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = "";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 0);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_NullJobParams_ReturnsZero, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(nullptr, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 0);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_IntegerValue_ConvertsToString, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"intValue":42})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 1);
+    EXPECT_STREQ(options[0].name, "intValue");
+    EXPECT_STREQ(options[0].value, "42");
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_BooleanValue_ConvertsCorrectly, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"trueValue":true,"falseValue":false})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 2);
+
+    bool foundTrue = false;
+    bool foundFalse = false;
+    for (int i = 0; i < numOptions; i++) {
+        if (strcmp(options[i].name, "trueValue") == 0) {
+            EXPECT_STREQ(options[i].value, "true");
+            foundTrue = true;
+        } else if (strcmp(options[i].name, "falseValue") == 0) {
+            EXPECT_STREQ(options[i].value, "false");
+            foundFalse = true;
+        }
+    }
+    EXPECT_TRUE(foundTrue);
+    EXPECT_TRUE(foundFalse);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_MultipleValidFields_Succeeds, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"field1":"value1","field2":100,"field3":true})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 3);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_FillVendorOptions_012
+ * @tc.desc: FillVendorOptions with all nested/invalid fields should return 0
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_AllInvalidFields_ReturnsZero, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"nested":{"key":"value"},"array":[1,2],"nullValue":null})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 0);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_UIntValue_ConvertsToString, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"uintValue":4294967295})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 1);
+    EXPECT_STREQ(options[0].name, "uintValue");
+    EXPECT_STREQ(options[0].value, "4294967295");
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_DoubleValue_ConvertsToString, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions = R"({"doubleValue":3.14159})";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 1);
+    EXPECT_STREQ(options[0].name, "doubleValue");
+    EXPECT_NE(options[0].value, nullptr);
+
+    cupsFreeOptions(numOptions, options);
+}
+
+HWTEST_F(PrintCupsClientTest, FillVendorOptions_MixedValidInvalidTypes_SkipsInvalid, TestSize.Level1)
+{
+    auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    JobParameters jobParams;
+    jobParams.vendorOptions =
+        "{\"validString\":\"text\",\"validInt\":100,\"invalidNull\":null,\"invalidNested\":{\"k\":\"v\"}}";
+
+    cups_option_t* options = nullptr;
+    int numOptions = 0;
+
+    numOptions = cupsClient->FillVendorOptions(&jobParams, numOptions, &options);
+
+    EXPECT_EQ(numOptions, 2);
+
+    cupsFreeOptions(numOptions, options);
 }
 
 }  // namespace Print

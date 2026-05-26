@@ -28,6 +28,7 @@
 
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_json_util.h"
 #include "print_utils.h"
 
@@ -531,9 +532,14 @@ bool PrintUserData::FlushCacheFile(int32_t fd, const std::string jobId, uint32_t
         return false;
     }
     cacheDir = cachePath;
-    std::ostringstream cacheFileStream;
-    cacheFileStream << cacheDir << "/" << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
-    std::string cacheFilePath = cacheFileStream.str();
+    std::ostringstream fileNameStream;
+    fileNameStream << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
+    std::string fileName = fileNameStream.str();
+    if (!PrintUtils::IsPathValidForCreate(cacheDir, fileName)) {
+        PRINT_HILOGE("Invalid cache file path!");
+        return false;
+    }
+    std::string cacheFilePath = cacheDir + "/" + fileName;
     int32_t cacheFileFd = open(cacheFilePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (cacheFileFd == -1) {
         PRINT_HILOGE("Open file failed");
@@ -755,7 +761,12 @@ void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
         return;
     }
     filePath.assign(cachePath);
-    std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    std::string fileName = printerId + ".json";
+    if (!PrintUtils::IsPathValidForCreate(filePath, fileName)) {
+        PRINT_HILOGE("Invalid print history job file path!");
+        return;
+    }
+    std::string printHistoryJobFilePath = filePath + "/" + fileName;
     if (printHistoryJobList_.find(printerId) == printHistoryJobList_.end()) {
         PRINT_HILOGE("printHistoryJobList_[printerId] is null.");
         std::filesystem::remove(printHistoryJobFilePath);
@@ -813,6 +824,10 @@ bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
     }
     filePath.assign(cachePath);
     std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    if (!PrintUtils::IsPathValid(printHistoryJobFilePath)) {
+        PRINT_HILOGE("Invalid print history job file path!");
+        return false;
+    }
     Json::Value printHistoryJobJson;
     if (GetJsonObjectFromFile(printHistoryJobJson, printHistoryJobFilePath, printerId) &&
         ParseJsonObjectToPrintHistory(printHistoryJobJson, printerId)) {

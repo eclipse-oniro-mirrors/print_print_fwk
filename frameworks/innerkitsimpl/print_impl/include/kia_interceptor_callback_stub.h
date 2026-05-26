@@ -22,8 +22,6 @@
 
 namespace OHOS::Print {
 
-#ifdef KIA_INTERCEPTOR_ENABLE
-
 class KiaInterceptorCallbackStub : public IRemoteStub<IKiaInterceptorCallback> {
 public:
     KiaInterceptorCallbackStub();
@@ -37,20 +35,6 @@ private:
     using KIA_INTERCEPTOR_EVENT_HANDLER = bool (KiaInterceptorCallbackStub::*)(MessageParcel &, MessageParcel &);
     std::map<uint32_t, KIA_INTERCEPTOR_EVENT_HANDLER> cmdMap_;
 };
-
-#else
-
-class KiaInterceptorCallbackStub : public IRemoteStub<IKiaInterceptorCallback> {
-public:
-    KiaInterceptorCallbackStub() {}
-    virtual ~KiaInterceptorCallbackStub() = default;
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
-    {
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-    }
-};
-
-#endif // KIA_INTERCEPTOR_ENABLE
 
 } // namespace OHOS::Print
 

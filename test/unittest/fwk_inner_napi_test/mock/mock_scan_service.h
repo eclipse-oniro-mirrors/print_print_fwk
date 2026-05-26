@@ -89,6 +89,12 @@ public:
     {
         return E_SCAN_NONE;
     }
+    int32_t ExportScanPicture(const std::string scannerId,
+        const std::vector<int32_t>& pictureFdList, const int32_t format,
+        std::vector<int32_t>& exportedFdList) override
+    {
+        return E_SCAN_NONE;
+    }
 };
 
 class MockScanService final : public DummyScanServiceStub {
@@ -110,6 +116,8 @@ public:
     MOCK_METHOD1(GetAddedScanner, int32_t(std::vector<ScanDeviceInfo>&));
     MOCK_METHOD3(On, int32_t(const std::string, const std::string &, const sptr<IScanCallback> &));
     MOCK_METHOD2(Off, int32_t(const std::string, const std::string &));
+    MOCK_METHOD4(ExportScanPicture, int32_t(const std::string, const std::vector<int32_t>&, const int32_t,
+        std::vector<int32_t>&));
 };
 }  // namespace OHOS::Scan
 #endif  // MOCK_SCAN_SERVICE_H

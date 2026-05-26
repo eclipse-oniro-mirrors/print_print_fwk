@@ -14,6 +14,8 @@
  */
 #include <sstream>
 #include <iomanip>
+#include <unistd.h>
+#include <climits>
 #include "scan_log.h"
 #include "scan_service_utils.h"
 
@@ -120,5 +122,28 @@ std::vector<std::string> ScanServiceUtils::ExtractIpOrPortFromUrl(const std::str
         tokens.clear();
     }
     return tokens;
+}
+
+std::string ScanServiceUtils::GetPathFromFd(int32_t fd)
+{
+    std::string fdPath = "/proc/self/fd/" + std::to_string(fd);
+    char filePath[PATH_MAX] = {0};
+    ssize_t len = readlink(fdPath.c_str(), filePath, PATH_MAX - 1);
+    if (len < 0) {
+        SCAN_HILOGE("readlink failed for fd %{public}d, errno=%{public}d", fd, errno);
+        return "";
+    }
+    filePath[len] = '\0';
+    SCAN_HILOGI("Fd %{public}d -> path %{private}s", fd, filePath);
+    return std::string(filePath);
+}
+
+std::string ScanServiceUtils::ExtractBaseName(const std::string& filePath)
+{
+    size_t pos = filePath.rfind(JPG_EXTENSION);
+    if (pos != std::string::npos) {
+        return filePath.substr(0, pos);
+    }
+    return filePath;
 }
 }  // namespace OHOS::Scan

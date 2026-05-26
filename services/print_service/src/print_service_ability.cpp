@@ -52,6 +52,7 @@
 #include <streambuf>
 #include "print_json_util.h"
 #include "print_setting_data_helper.h"
+#include "print_vendor_options_util.h"
 #include "parameters.h"
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
@@ -93,6 +94,8 @@ const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
 const uint32_t SERIAL_LENGTH = 6;
+
+const size_t AUTH_TAG_SIZE = 16;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
@@ -190,6 +193,8 @@ const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 const std::string JOB_BANNED_VERSION = "1.0";
 const int32_t JOB_BANNED_POLICY_CODE = 1021;
 static const std::string EMD_QUERY_VERSION = "version_12";
+static const std::string IPPOVERUSB_PREFIX = ":IPP-";
+static const std::string PRINTER_ID_USB_DELIMITER = "USB";
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -337,6 +342,7 @@ int32_t PrintServiceAbility::Init()
     CheckCupsServerAlive();
     auto tmpState = state_.load();
     state_ = ServiceRunningState::STATE_RUNNING;
+    PRINT_HILOGI("InitService: 2in1");
     if (!g_publishState) {
         if (!Publish(PrintServiceAbility::GetInstance())) {
             state_ = tmpState;
@@ -558,6 +564,34 @@ int32_t PrintServiceAbility::StartPrint(
     return CallSpooler(fileList, fdList, taskId);
 }
 
+void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob)
+{
+    if (printJob == nullptr) {
+        return;
+    }
+    std::string jobId = printJob->GetJobId();
+    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
+    if (fileList.empty()) {
+        PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
+        return;
+    }
+    std::vector<FileAuditInfo> fileInfos;
+    for (const auto &fileName : fileList) {
+        FileAuditInfo info;
+        info.fileName = fileName;
+        info.md5 = "";
+        info.size = 0;
+        fileInfos.push_back(info);
+    }
+    if (!fileInfos.empty()) {
+        securityGuardManager_.SetFileAuditInfo(jobId, fileInfos);
+        PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
+            jobId.c_str(), fileInfos.size());
+    } else {
+        PRINT_HILOGW("CalculateFileAuditInfo empty result, jobId: %{public}s", jobId.c_str());
+    }
+}
+
 int32_t PrintServiceAbility::CallSpooler(
     const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId)
 {
@@ -585,8 +619,8 @@ int32_t PrintServiceAbility::CallSpooler(
     KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
-    SendPrintJobEvent(*printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
+    SendPrintJobEvent(*printJob);
     PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
 }
@@ -725,11 +759,13 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+#ifndef ENTERPRISE_ENABLE
     if (!IsPcModeSupported()) {
         StartDiscoveryCallerMonitorThread();
     } else {
         PRINT_HILOGW("Skip discovery caller monitor.");
     }
+#endif
 
     PrintCallerAppInfo appInfo(callerPid, userId, bundleName);
     discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
@@ -743,12 +779,14 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
 {
     PRINT_HILOGI("DelayStartDiscovery start, extensionId: %{public}s", extensionId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
+    int32_t userId = GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    if (extensionStateList_.find(stateKey) == extensionStateList_.end()) {
         PRINT_HILOGE("invalid extension id");
         return false;
     }
 
-    if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADED) {
+    if (extensionStateList_[stateKey] != PRINT_EXTENSION_LOADED) {
         PRINT_HILOGE("invalid extension state");
         return false;
     }
@@ -756,7 +794,7 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CallbackEventType::EXTCB_START_DISCOVERY;
     cbInfo.extensionId = extensionId;
-    cbInfo.userId = GetCurrentUserId();
+    cbInfo.userId = userId;
     if (DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo)) {
         ret = E_PRINT_NONE;
     }
@@ -793,11 +831,13 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
     }
 
     PRINT_HILOGI("All discovery callers stopped, stopping discovery");
+#ifndef ENTERPRISE_ENABLE
     if (!IsPcModeSupported()) {
         StopDiscoveryInternal();
     } else {
         PRINT_HILOGW("Skip to stop discovery.");
     }
+#endif
 
     PRINT_HILOGI("StopDiscoverPrinter end.");
     return E_PRINT_NONE;
@@ -820,7 +860,7 @@ int32_t PrintServiceAbility::DestroyExtension()
         extension.second = PRINT_EXTENSION_UNLOAD;
         CallbackInfo cbInfo;
         cbInfo.cbEventType = CallbackEventType::EXTCB_DESTROY_EXTENSION;
-        cbInfo.extensionId = extension.first;
+        cbInfo.extensionId = PrintUtils::GetBundleNameFromKey(extension.first);
         DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     }
 
@@ -902,8 +942,10 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
         PrintExtensionInfo printExtInfo = ConvertToPrintExtensionInfo(extInfo);
         extensionInfos.emplace_back(printExtInfo);
         extensionList_.insert(std::make_pair(printExtInfo.GetExtensionId(), extInfo));
-        if (extensionStateList_.find(printExtInfo.GetExtensionId()) == extensionStateList_.end()) {
-            extensionStateList_.insert(std::make_pair(printExtInfo.GetExtensionId(), PRINT_EXTENSION_UNLOAD));
+        int32_t userId = GetCurrentUserId();
+        std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, printExtInfo.GetExtensionId());
+        if (extensionStateList_.find(stateKey) == extensionStateList_.end()) {
+            extensionStateList_.insert(std::make_pair(stateKey, PRINT_EXTENSION_UNLOAD));
         }
     }
     PRINT_HILOGI("QueryAllExtension end.");
@@ -1217,6 +1259,46 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::ProcessVendorOptionsForPreference(const std::string &printerId,
+                                                            const PrinterPreferences &preferences,
+                                                            PrinterPreferences &printerPrefs)
+{
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGW("ProcessVendorOptionsForPreference: cannot find printer info by printerId");
+        return false;
+    }
+
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    std::string vendorOptions = preferences.GetVendorOptions();
+    std::string printerVendorOptions;
+    std::string userVendorOptions;
+    PrintVendorOptionsUtil::SplitVendorOptions(vendorOptions, printerVendorOptions, userVendorOptions);
+    PRINT_HILOGI("ProcessVendorOptionsForPreference: printerVendorOptions=%{private}s, userVendorOptions=%{private}s",
+        printerVendorOptions.c_str(), userVendorOptions.c_str());
+
+    printerPrefs = preferences;
+    printerPrefs.SetVendorOptions(printerVendorOptions);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetUserId(GetCurrentUserId());
+    userPrefs.SetPrinterId(printerId);
+    userPrefs.SetVendorOptions(userVendorOptions);
+    ExtractCustomOptionsFromPreferences(printerInfo, printerPrefs, userPrefs);
+
+    auto userData = GetUserDataByUserId(userPrefs.GetUserId());
+    if (userData != nullptr) {
+        if (!userPrefs.IsEmpty()) {
+            userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
+            PRINT_HILOGI("Saved user preferences for user %{private}d", userPrefs.GetUserId());
+        } else {
+            userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+            PRINT_HILOGI("Cleared user preferences for user %{private}d", userPrefs.GetUserId());
+        }
+    }
+    return true;
+}
+
 int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
@@ -1226,7 +1308,12 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("SetPrinterPreference start.");
     preferences.Dump();
-    printSystemData_.UpdatePrinterPreferences(printerId, preferences);
+    PrinterPreferences printerPrefs;
+    if (!ProcessVendorOptionsForPreference(printerId, preferences, printerPrefs)) {
+        PRINT_HILOGW("cannot find printer info by printerId for preference");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    printSystemData_.UpdatePrinterPreferences(printerId, printerPrefs);
     printSystemData_.SavePrinterFile(printerId);
     PrinterInfo printerInfo;
     if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
@@ -1238,6 +1325,324 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     SendPrinterChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, printerInfo);
     PRINT_HILOGI("SetPrinterPreference end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo,
+    PrinterPreferences &preferences, PrinterUserPreferences &userPrefs)
+{
+    std::set<std::string> customOptionKeys = GetCustomOptionKeysFromCapability(printerInfo);
+    if (customOptionKeys.empty()) {
+        PRINT_HILOGW("no custom options found");
+        return;
+    }
+    PRINT_HILOGI("customOptionKeys size: %{public}lu", customOptionKeys.size());
+    ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
+}
+
+std::set<std::string> PrintServiceAbility::GetCustomOptionKeysFromCapability(const PrinterInfo &printerInfo)
+{
+    std::set<std::string> customOptionKeys;
+    PrinterCapability capability;
+    printerInfo.GetCapability(capability);
+    std::string capOption = capability.GetOption();
+
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(capOption, capJson)) {
+        PRINT_HILOGE("failed to parse capability option json");
+        return customOptionKeys;
+    }
+
+    if (!capJson.isObject()) {
+        PRINT_HILOGE("capability option json is not an object");
+        return customOptionKeys;
+    }
+
+    if (!capJson["cupsOptions"].isObject()) {
+        PRINT_HILOGE("capability option is not valid cupsOptions json");
+        return customOptionKeys;
+    }
+
+    Json::Value cupsOptions = capJson["cupsOptions"];
+    if (!cupsOptions["advanceOptions"].isString()) {
+        PRINT_HILOGE("advanceOptions is not a string");
+        return customOptionKeys;
+    }
+
+    std::string advanceOptionsStr = cupsOptions["advanceOptions"].asString();
+    Json::Value advanceOptionsJson;
+    if (!PrintJsonUtil::Parse(advanceOptionsStr, advanceOptionsJson) || !advanceOptionsJson.isArray()) {
+        PRINT_HILOGE("failed to parse advanceOptions json or not an array");
+        return customOptionKeys;
+    }
+
+    for (const auto &opt : advanceOptionsJson) {
+        if (opt.isObject() && opt["customParamType"].isInt()) {
+            std::string keyword = opt["keyword"].asString();
+            customOptionKeys.insert(keyword);
+        }
+    }
+    return customOptionKeys;
+}
+
+void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
+    PrinterPreferences &preferences, PrinterUserPreferences &userPrefs)
+{
+    std::string prefOptionStr = preferences.GetOption();
+    if (prefOptionStr.empty()) {
+        PRINT_HILOGW("preferences option is empty");
+        return;
+    }
+
+    Json::Value prefOptionsJson;
+    if (!PrintJsonUtil::Parse(prefOptionStr, prefOptionsJson) || !prefOptionsJson.isObject()) {
+        PRINT_HILOGE("failed to parse preferences option json or not an object");
+        return;
+    }
+
+    bool hasModified = false;
+    for (const auto &key : customOptionKeys) {
+        if (!prefOptionsJson[key].isString()) {
+            continue;
+        }
+        std::string optionJsonStr = prefOptionsJson[key].asString();
+        ProcessSingleCustomOption(key, optionJsonStr, userPrefs);
+        prefOptionsJson.removeMember(key);
+        hasModified = true;
+    }
+
+    if (hasModified) {
+        preferences.SetOption(PrintJsonUtil::WriteString(prefOptionsJson));
+    }
+}
+
+void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
+    const std::string &optionJsonStr, PrinterUserPreferences &userPrefs)
+{
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(optionJsonStr, optionJson) || !optionJson.isObject()) {
+        userPrefs.SetCustomOptionUnset(key);
+        PRINT_HILOGW("failed to parse option json for key: %{public}s", key.c_str());
+        return;
+    }
+
+    std::string choice = optionJson["choice"].asString();
+    if (choice != "Custom" && optionJson["value"].asString().empty()) {
+        userPrefs.SetCustomOptionUnset(key);
+        PRINT_HILOGW("non-custom option without value for key: %{public}s", key.c_str());
+        return;
+    }
+
+    size_t valueSize = optionJson["value"].asString().size();
+    struct HksBlob plainBlob = { 0, nullptr };
+    if (valueSize > 0) {
+        plainBlob.data = new (std::nothrow) uint8_t[valueSize + 1];
+        if (plainBlob.data != nullptr) {
+            if (memcpy_s(plainBlob.data, valueSize + 1, optionJson["value"].asString().c_str(), valueSize) == EOK) {
+                plainBlob.data[valueSize] = '\0';
+                plainBlob.size = valueSize;
+            } else {
+                delete[] plainBlob.data;
+                plainBlob.data = nullptr;
+            }
+        }
+    }
+
+    struct HksBlob cipherBlob = { 0, nullptr };
+    if (plainBlob.data != nullptr && EncryptCustomOptionValue(plainBlob, cipherBlob) == HKS_SUCCESS) {
+        SecureBlob secureValue;
+        secureValue.SetData(cipherBlob.data, cipherBlob.size);
+        userPrefs.SetCustomOption(key, secureValue);
+        PRINT_HILOGI("extracted and encrypted custom option: %{public}s", key.c_str());
+    } else {
+        userPrefs.SetCustomOptionUnset(key);
+        PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
+    }
+
+    if (cipherBlob.data != nullptr) {
+        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
+        delete[] cipherBlob.data;
+    }
+    if (plainBlob.data != nullptr) {
+        (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
+        delete[] plainBlob.data;
+    }
+}
+
+int32_t PrintServiceAbility::EncryptCustomOptionValue(struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
+{
+    static const std::string keyAliasStr = "print_custom_option_key";
+    struct HksBlob keyAlias = {
+        .size = keyAliasStr.size(),
+        .data = (uint8_t *)keyAliasStr.data()
+    };
+
+    struct HksParamSet *genParamSet = nullptr;
+    int32_t ret = InitGenParamSet(&genParamSet);
+    if (ret != HKS_SUCCESS) {
+        return ret;
+    }
+
+    ret = HksKeyExist(&keyAlias, genParamSet);
+    if (ret == HKS_SUCCESS) {
+        PRINT_HILOGI("key already exists, skip generate");
+    } else if (ret == HKS_ERROR_NOT_EXIST) {
+        ret = HksGenerateKey(&keyAlias, genParamSet, nullptr);
+        if (ret != HKS_SUCCESS) {
+            PRINT_HILOGE("HksGenerateKey failed, ret: %{public}d", ret);
+            HksFreeParamSet(&genParamSet);
+            return ret;
+        }
+    } else {
+        PRINT_HILOGE("HksKeyExist failed, ret: %{public}d", ret);
+        HksFreeParamSet(&genParamSet);
+        return ret;
+    }
+
+    struct HksParamSet *encryptParamSet = nullptr;
+    ret = InitCipherParamSet(&encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT);
+    if (ret != HKS_SUCCESS) {
+        HksFreeParamSet(&genParamSet);
+        return ret;
+    }
+
+    ret = DoEncrypt(&keyAlias, encryptParamSet, plainBlob, cipherBlob);
+    HksFreeParamSet(&genParamSet);
+    HksFreeParamSet(&encryptParamSet);
+    return ret;
+}
+
+int32_t PrintServiceAbility::DecryptCustomOptionValue(struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
+{
+    static const std::string keyAliasStr = "print_custom_option_key";
+    struct HksBlob keyAlias = {
+        .size = keyAliasStr.size(),
+        .data = (uint8_t *)keyAliasStr.data()
+    };
+
+    struct HksParamSet *decryptParamSet = nullptr;
+    int32_t ret = InitCipherParamSet(&decryptParamSet, HKS_KEY_PURPOSE_DECRYPT);
+    if (ret != HKS_SUCCESS) {
+        return ret;
+    }
+
+    ret = DoDecrypt(&keyAlias, decryptParamSet, cipherBlob, plainBlob);
+    HksFreeParamSet(&decryptParamSet);
+    return ret;
+}
+
+int32_t PrintServiceAbility::InitGenParamSet(struct HksParamSet **paramSet)
+{
+    int32_t ret = HksInitParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksInitParamSet failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    struct HksParam genParams[] = {
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT | HKS_KEY_PURPOSE_DECRYPT },
+        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .uint32Param = GetCurrentUserId() }
+    };
+
+    ret = HksAddParams(*paramSet, genParams, sizeof(genParams) / sizeof(genParams[0]));
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksAddParams failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+        return ret;
+    }
+
+    ret = HksBuildParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksBuildParamSet failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+    }
+    return ret;
+}
+
+int32_t PrintServiceAbility::InitCipherParamSet(struct HksParamSet **paramSet, uint32_t purpose)
+{
+    int32_t ret = HksInitParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksInitParamSet failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    uint8_t nonceData[12] = {0};
+    struct HksBlob nonce = { .size = sizeof(nonceData), .data = nonceData };
+    struct HksParam cipherParams[] = {
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = purpose },
+        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_SPECIFIC_USER_ID, .uint32Param = GetCurrentUserId() },
+        { .tag = HKS_TAG_NONCE, .blob = nonce }
+    };
+
+    ret = HksAddParams(*paramSet, cipherParams, sizeof(cipherParams) / sizeof(cipherParams[0]));
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksAddParams failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+        return ret;
+    }
+
+    ret = HksBuildParamSet(paramSet);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksBuildParamSet failed, ret: %{public}d", ret);
+        HksFreeParamSet(paramSet);
+    }
+    return ret;
+}
+
+int32_t PrintServiceAbility::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
+    struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
+{
+    size_t bufferSize = plainBlob.size + AUTH_TAG_SIZE;
+    cipherBlob.data = new (std::nothrow) uint8_t[bufferSize];
+    if (cipherBlob.data == nullptr) {
+        PRINT_HILOGE("failed to allocate cipher buffer");
+        return HKS_ERROR_MALLOC_FAIL;
+    }
+
+    cipherBlob.size = bufferSize;
+    int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherBlob);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksEncrypt failed, ret: %{public}d", ret);
+        (void)memset_s(cipherBlob.data, bufferSize, 0, bufferSize);
+        delete[] cipherBlob.data;
+        cipherBlob.data = nullptr;
+        cipherBlob.size = 0;
+        return ret;
+    }
+
+    return HKS_SUCCESS;
+}
+
+int32_t PrintServiceAbility::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
+    struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
+{
+    size_t bufferSize = cipherBlob.size;
+    plainBlob.data = new (std::nothrow) uint8_t[bufferSize];
+    if (plainBlob.data == nullptr) {
+        PRINT_HILOGE("failed to allocate plain buffer");
+        return HKS_ERROR_MALLOC_FAIL;
+    }
+
+    plainBlob.size = bufferSize;
+    int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherBlob, &plainBlob);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksDecrypt failed, ret: %{public}d", ret);
+        (void)memset_s(plainBlob.data, bufferSize, 0, bufferSize);
+        delete[] plainBlob.data;
+        plainBlob.data = nullptr;
+        plainBlob.size = 0;
+        return ret;
+    }
+
+    return HKS_SUCCESS;
 }
 
 bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
@@ -1276,7 +1681,9 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
     UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
-
+    PrinterPreferences preferences;
+    printerInfo.GetPreferences(preferences);
+    MergeVendorOptionsForPrintJob(printerInfo, preferences, printJob);
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
@@ -1285,6 +1692,37 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob.SetOption(updatedOption);
     return true;
+}
+
+void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
+    const PrinterPreferences &preferences, PrintJob &printJob)
+{
+    // 1. 先读取厂商设置首选项（公共+用户）
+    std::string printerVendorOptions = preferences.HasVendorOptions() ? preferences.GetVendorOptions() : "";
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    std::string userVendorOptions = "";
+    if (userData != nullptr) {
+        std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+        PrinterUserPreferences userPrefs;
+        if (userData->LoadPrinterUserPreferences(printJob.GetPrinterId(), standardizedPrinterName, userPrefs)) {
+            userVendorOptions = userPrefs.HasVendorOptions() ? userPrefs.GetVendorOptions() : "";
+        }
+    }
+    // 合并公共首选项和用户首选项
+    std::string prefVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
+        printerVendorOptions, userVendorOptions);
+    // 2. 如果打印任务有传入厂商设置，则同字段厂商设置覆盖首选项里读到的
+    std::string jobVendorOptions = printJob.HasVendorOptions() ? printJob.GetVendorOptions() : "";
+    // 打印任务厂商设置覆盖首选项厂商设置
+    std::string finalVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
+        prefVendorOptions, jobVendorOptions);
+    if (!finalVendorOptions.empty()) {
+        printJob.SetVendorOptions(finalVendorOptions);
+        PRINT_HILOGI("MergeVendorOptionsForPrintJob: final vendorOptions=%{private}s", finalVendorOptions.c_str());
+    } else {
+        PRINT_HILOGD("MergeVendorOptionsForPrintJob: no vendorOptions to merge");
+    }
 }
 
 std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::string &jobId, PrintJob &printJob)
@@ -1347,6 +1785,13 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
+
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(nativePrintJob->GetOption());
+    std::vector<uint32_t> fdList;
+    nativePrintJob->GetFdList(fdList);
+    PRINT_HILOGI("StartNativePrintJob jobName as fileName");
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+
     return StartPrintJobInternal(nativePrintJob);
 }
 
@@ -1405,11 +1850,16 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         return E_PRINT_KIA_INTERCEPTED;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto jobId = jobInfo.GetJobId();
+
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(jobInfo.GetOption());
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
         return E_PRINT_INVALID_PRINTJOB;
     }
-    auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
@@ -2067,8 +2517,13 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
+    securityGuardManager_.AddBlockedSubState(printJob->GetJobId(), subState);
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
+    if (isEprint(printJob->GetPrinterId())) {
+        PRINT_HILOGI("Skip AI notifier for eprint printer");
+        return;
+    }
     auto printerId = printJob->GetPrinterId();
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo) {
@@ -2111,6 +2566,15 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
     PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
 }
 
+void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+{
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
+    if (printerInfo != nullptr) {
+        auto fileInfos = securityGuardManager_.GetFileAuditInfo(jobId);
+        securityGuardManager_.receiveAuditInfo(jobId, *printerInfo, *printJob, fileInfos);
+    }
+}
+
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
@@ -2145,6 +2609,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
+    SendJobAuditInfo(jobId, printJob);
 
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
@@ -2461,7 +2926,7 @@ void PrintServiceAbility::StopDiscoveryInternal()
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
         }
-        cbInfo.extensionId = extension.first;
+        cbInfo.extensionId = PrintUtils::GetBundleNameFromKey(extension.first);
 
         auto callback = [cbInfo]() { DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo); };
         if (helper_ != nullptr && helper_->IsSyncMode()) {
@@ -2581,6 +3046,7 @@ int32_t PrintServiceAbility::Release()
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     UnregisterPrinterCallback(PRINTER_DISCOVER_EVENT_TYPE);
     UnregisterPrinterCallback(PRINTER_CHANGE_EVENT_TYPE);
+    securityGuardManager_.clearAll();
     return E_PRINT_NONE;
 }
 
@@ -2624,7 +3090,9 @@ int32_t PrintServiceAbility::RegisterExtCallback(
     PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto extensionStateIt = extensionStateList_.find(extensionId);
+    int32_t userId = GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    auto extensionStateIt = extensionStateList_.find(stateKey);
     if (extensionStateIt == extensionStateList_.end()) {
         PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
@@ -2659,7 +3127,9 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
     }
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto it = extensionStateList_.find(extensionId);
+    int32_t userId = GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    auto it = extensionStateList_.find(stateKey);
     if (it == extensionStateList_.end()) {
         PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
@@ -2880,7 +3350,8 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     // notify securityGuard
-    if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+    uint32_t jobState = jobInfo.GetJobState();
+    if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
             securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
@@ -3187,14 +3658,16 @@ bool PrintServiceAbility::StartExtensionAbility(const AAFwk::Want &want)
     }
     AppExecFwk::ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
+    int32_t userId = GetCurrentUserId();
     PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
-    return helper_->StartExtensionAbility(want, [=]() { ResetExtensionState(bundleName); });
+    return helper_->StartExtensionAbility(want, [=]() { ResetExtensionState(userId, bundleName); });
 }
 
-void PrintServiceAbility::ResetExtensionState(const std::string& bundleName)
+void PrintServiceAbility::ResetExtensionState(int32_t userId, const std::string& bundleName)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    extensionStateList_[bundleName] = PRINT_EXTENSION_UNLOAD;
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, bundleName);
+    extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
 }
 
 bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
@@ -3601,19 +4074,46 @@ bool PrintServiceAbility::QueryPPDInformation(const std::string &makeModel, std:
 
 void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId)
 {
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryPrinterInfoById(printerId, printerInfo)) {
+        PRINT_HILOGW("DeletePrinterFromUserData: cannot find printer info by printerId");
+        return;
+    }
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+
     std::vector<int32_t> allPrintUserList;
     printSystemData_.GetAllPrintUser(allPrintUserList);
+
+#ifdef ENTERPRISE_ENABLE
+    bool isEnterpriseEnabled = IsEnterpriseEnable();
+    int32_t currentUserId = GetCurrentUserId();
+    PRINT_HILOGI("DeletePrinterFromUserData: isEnterpriseEnabled=%{public}d, currentUserId=%{public}d",
+        isEnterpriseEnabled, currentUserId);
+#endif
+
     for (auto userId : allPrintUserList) {
         PRINT_HILOGI("DeletePrinterFromUserData userId %{public}d.", userId);
-        auto iter = printUserMap_.find(userId);
-        if (iter != printUserMap_.end()) {
-            ChangeDefaultPrinterForDelete(iter->second, printerId);
-        } else {
-            auto userData = std::make_shared<PrintUserData>();
-            userData->SetUserId(userId);
-            userData->ParseUserData();
-            ChangeDefaultPrinterForDelete(userData, printerId);
+        auto userData = GetUserDataByUserId(userId);
+        if (userData == nullptr) {
+            PRINT_HILOGW("GetUserDataByUserId failed for user %{public}d", userId);
+            continue;
         }
+        ChangeDefaultPrinterForDelete(userData, printerId);
+
+#ifdef ENTERPRISE_ENABLE
+        if (isEnterpriseEnabled) {
+            if (userId == currentUserId) {
+                userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+                PRINT_HILOGI("Deleted PrinterUserPreferences for current user %{public}d", userId);
+            }
+        } else {
+            userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+            PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
+        }
+#else
+        userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+        PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
+#endif
     }
 }
 
@@ -3740,6 +4240,24 @@ int32_t PrintServiceAbility::DiscoverBackendPrinters(std::vector<PrinterInfo> &p
     return E_PRINT_NONE;
 }
 
+void PrintServiceAbility::UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr)
+{
+    if (!PrintUtil::startsWith(infoPtr->GetPrinterId(), SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX) &&
+        !PrintUtil::startsWith(infoPtr->GetPrinterId(), SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER +
+        PRINTER_ID_USB_DELIMITER)) {
+        return;
+    }
+
+    PrinterInfo addedInfo;
+    if (infoPtr->HasOption() &&
+        QueryAddedPrinterInfoByPrinterId(infoPtr->GetPrinterId(), addedInfo) &&
+        !addedInfo.HasOption()) {
+        PRINT_HILOGI("empty info option found, update it");
+        printSystemData_.UpdatePrinterOption(infoPtr->GetPrinterId(), infoPtr->GetOption());
+        printSystemData_.SavePrinterFile(infoPtr->GetPrinterId());
+    }
+}
+
 int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
     auto infoPtr = std::make_shared<PrinterInfo>(info);
@@ -3761,6 +4279,9 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
         SyncAddedPrinterUri(infoPtr);
         UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
     }
+    
+    // Background: spooler cannot associate the inserted USB device through VID and PID after OTA
+    UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
 
     return E_PRINT_NONE;
 }
@@ -3783,7 +4304,8 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     // Query complete printer capability from PPD file to fix incomplete capability issue.
     // External applications may provide incomplete printer capability information,
     // so we need to query complete capability from PPD file to ensure all advanced options are included.
-    if (printerInfo->HasPrinterMake()) {
+    // Note: Eprint printers do not have a PPD file.
+    if (printerInfo->HasPrinterMake() && !isEprint(printExtId)) {
         std::string make = printerInfo->GetPrinterMake();
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
@@ -3863,8 +4385,18 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
         PRINT_CHECK_NULL_AND_RETURN(printerInfo, false);
     }
 
-    printerInfo->SetUri(info.GetUri());
-    printerInfo->SetOption(info.GetOption());
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    IpAddressType infoIpType = printCupsClient->GetIpAddressTypeFromUri(info.GetUri());
+    IpAddressType printerInfoIpType = printCupsClient->GetIpAddressTypeFromUri(printerInfo->GetUri());
+    if (infoIpType == IP_ADDRESS_TYPE_INVALID ||
+        (infoIpType == IP_ADDRESS_TYPE_IPV6 && printerInfoIpType == IP_ADDRESS_TYPE_IPV4)) {
+        PRINT_HILOGD("[Printer: %{public}s] Skip SetUri and SetOption due to IP type mismatch or invalid IP",
+            globalPrinterId.c_str());
+    } else {
+        printerInfo->SetUri(info.GetUri());
+        printerInfo->SetOption(info.GetOption());
+    }
+
     printerInfo->SetPrinterState(PRINTER_ADDED);
     SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
     SendPrinterEvent(*printerInfo);
@@ -4255,6 +4787,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     if (!CheckStartExtensionPermission()) {
         return E_PRINT_NONE;
     }
+    int32_t userId = GetCurrentUserId();
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto const &extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {
@@ -4276,7 +4809,8 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     }
     for (auto ability : abilityList) {
         std::string extId = ability.second.bundleName;
-        auto extState = extensionStateList_.find(extId);
+        std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extId);
+        auto extState = extensionStateList_.find(stateKey);
         if (extState != extensionStateList_.end() && extState->second == PRINT_EXTENSION_LOADED) {
             PostDiscoveryTask(extId);
             continue;
@@ -4287,7 +4821,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
             PRINT_HILOGE("Failed to load extension %{public}s", ability.second.name.c_str());
             continue;
         }
-        extensionStateList_[ability.second.bundleName] = PRINT_EXTENSION_LOADING;
+        extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     }
     PRINT_HILOGI("StartDiscoverPrinter end.");
     return E_PRINT_NONE;
@@ -4317,6 +4851,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
         PRINT_HILOGW("Flush cache file failed");
     }
+    CalculateFileAuditInfo(printJob);
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
@@ -4712,7 +5247,8 @@ void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printer
     }
 }
 
-void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions, PrinterInfo &printerInfo)
+void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
+    Json::Value &jobOptions, PrinterInfo &printerInfo)
 {
     PrinterPreferences preferences;
     printerInfo.GetPreferences(preferences);
@@ -4724,7 +5260,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value
         jobOptions["isCollate"] = preferences.GetDefaultCollate();
     }
 
-    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences);
+    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences, printerInfo);
     if (preferencesJson.isNull()) {
         PRINT_HILOGW("cannot find any modified preferences");
         return;
@@ -4732,7 +5268,8 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value
     jobOptions["advancedOptions"] = preferencesJson;
 }
 
-Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPreferences &preferences)
+Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
+    const PrinterPreferences &preferences, const PrinterInfo &printerInfo)
 {
     std::string option = preferences.GetOption();
     PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
@@ -4741,7 +5278,47 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPrefere
         PRINT_HILOGW("parse preferences options error");
         return Json::nullValue;
     }
+
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData == nullptr) {
+        return opsJson;
+    }
+
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    PrinterUserPreferences userPrefs;
+    if (!userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs)) {
+        return opsJson;
+    }
+    DecryptAndFillCustomOptions(userPrefs, opsJson);
     return opsJson;
+}
+
+void PrintServiceAbility::DecryptAndFillCustomOptions(const PrinterUserPreferences &userPrefs, Json::Value &opsJson)
+{
+    for (const auto &opt : userPrefs.GetAllCustomOptions()) {
+        if (!opt.isSet) {
+            continue;
+        }
+        struct HksBlob cipherBlob = {
+            .size = opt.value.size,
+            .data = opt.value.data
+        };
+        struct HksBlob plainBlob = { 0, nullptr };
+        int32_t ret = DecryptCustomOptionValue(cipherBlob, plainBlob);
+        if (ret == HKS_SUCCESS && plainBlob.data != nullptr) {
+            opsJson[opt.key] = "Custom." + std::string((char *)plainBlob.data, plainBlob.size);
+            PRINT_HILOGI("decrypted custom option: %{public}s", opt.key.c_str());
+        } else {
+            PRINT_HILOGW("failed to decrypt custom option: %{public}s, ret: %{public}d", opt.key.c_str(), ret);
+        }
+        if (plainBlob.data != nullptr) {
+            (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
+            delete[] plainBlob.data;
+            plainBlob.data = nullptr;
+            plainBlob.size = 0;
+        }
+    }
 }
 
 void PrintServiceAbility::RefreshPrinterInfoByPpd()
@@ -5060,7 +5637,6 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
             this->helper_->DisconnectAbility(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
-            return;
         }
         if (isMonitoring_.load()) {
             PRINT_HILOGW("The monitoring thread is running");
@@ -5365,11 +5941,12 @@ int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
     }
 
     PrinterCapability printerCaps;
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD("", printerCaps, ppdName);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(
+        "", printerCaps, ppdName);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryPrinterCapabilityFromPPD failed! ret=%{public}d", ret);
         return ret;
-    }
+}
     return printSystemData_.BuildPrinterPreference(printerCaps, defaultPreferences);
 #else
     return E_PRINT_NONE;

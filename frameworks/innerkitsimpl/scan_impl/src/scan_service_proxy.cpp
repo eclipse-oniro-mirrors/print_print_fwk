@@ -420,4 +420,39 @@ int32_t ScanServiceProxy::GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedS
     return ret;
 }
 
+int32_t ScanServiceProxy::ExportScanPicture(const std::string scannerId,
+    const std::vector<int32_t>& pictureFdList, const int32_t format,
+    std::vector<int32_t>& exportedFdList)
+{
+    SCAN_HILOGI("ScanServiceProxy ExportScanPicture start");
+    CREATE_PRC_MESSAGE;
+    auto remote = Remote();
+    if (remote == nullptr) {
+        SCAN_HILOGE("ScanServiceProxy::ExportScanPicture remote is null");
+        return E_SCAN_RPC_FAILURE;
+    }
+    
+    data.WriteString(scannerId);
+    data.WriteInt32(static_cast<int32_t>(pictureFdList.size()));
+    for (int32_t fd : pictureFdList) {
+        data.WriteFileDescriptor(fd);
+    }
+    data.WriteInt32(format);
+    
+    int32_t ret = remote->SendRequest(CMD_EXPORT_SCAN_PICTURE, data, reply, option);
+    ret = GetResult(ret, reply);
+    if (ret != E_SCAN_NONE) {
+        SCAN_HILOGE("ScanServiceProxy ExportScanPicture failed");
+        return ret;
+    }
+
+    int32_t exportedCount = reply.ReadInt32();
+    for (int32_t i = 0; i < exportedCount; i++) {
+        exportedFdList.push_back(reply.ReadFileDescriptor());
+    }
+    SCAN_HILOGI("ScanServiceProxy ExportScanPicture end, exportedCount=%{public}zu",
+        exportedFdList.size());
+    return ret;
+}
+
 } // namespace OHOS::Scan

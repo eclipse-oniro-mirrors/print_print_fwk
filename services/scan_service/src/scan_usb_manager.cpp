@@ -141,7 +141,7 @@ std::string ScanUsbManager::GetDeviceSerialNumber(USBDevicePipe &usbDevicePipe)
         return "";
     }
 
-    std::vector<uint8_t> arr((bufferData[0] - HTTP_COMMON_CONST_VALUE_2) / HTTP_COMMON_CONST_VALUE_2);
+    std::vector<uint8_t> arr((bufferData[0] - 1) / HTTP_COMMON_CONST_VALUE_2);
     int arrIndex = 0;
     for (int i = 2; i < bufferData[0];) {
         arr[arrIndex++] = bufferData[i];

@@ -427,7 +427,7 @@ HWTEST_F(ScanProgressTest, ScanProgressTest_0002_SetValues, TestSize.Level2)
     progress.SetIsFinal(false);
     progress.SetPictureId(100);
     progress.SetTaskCode(E_SCAN_GENERIC_FAILURE);
-    progress.SetImageRealPath("/data/test.jpg");
+    progress.RegisterCacheFiles("/data/test.jpg");
     EXPECT_EQ(50, progress.GetScanProgress());
     EXPECT_EQ(10, progress.GetScanPictureFd());
     EXPECT_EQ(false, progress.GetIsFinal());

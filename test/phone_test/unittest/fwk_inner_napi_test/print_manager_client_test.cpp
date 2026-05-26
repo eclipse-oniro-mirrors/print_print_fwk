@@ -32,9 +32,7 @@
 #include "mock_print_callback_stub.h"
 #include "mock_print_manager_client.h"
 #include "mock_watermark_callback_stub.h"
-#ifdef KIA_INTERCEPTOR_ENABLE
 #include "mock_kia_interceptor_callback_stub.h"
-#endif // KIA_INTERCEPTOR_ENABLE
 #include "print_shared_host.h"
 
 using namespace testing;
@@ -3013,7 +3011,7 @@ HWTEST_F(PrintManagerClientTest, GetSharedHosts_Test, TestSize.Level1)
     PrintManagerClient::GetInstance()->GetSharedHosts(sharedHosts);
     EXPECT_TRUE(sharedHosts.empty());
 }
- 
+
 HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
 {
     PrintSharedHost sharedHost;
@@ -3221,7 +3219,7 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_RpcFailure, TestSize.L
     EXPECT_NE(service, nullptr);
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr;
-    
+
     EXPECT_NE(obj, nullptr);
     EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
     EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
@@ -3236,7 +3234,7 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_RpcFailure, TestSize.L
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_RPC_FAILURE;
         });
-    
+
     EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_RPC_FAILURE);
 }
 
@@ -3252,13 +3250,13 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_Success, TestSize.Leve
     EXPECT_NE(service, nullptr);
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr;
-    
+
     CallRemoteObject(service, obj, dr);
-    
+
     EXPECT_CALL(*service, StartSharedHostDiscovery())
         .Times(Exactly(1))
         .WillOnce(Return(E_PRINT_NONE));
-    
+
     EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_NONE);
 }
 }  // namespace Print

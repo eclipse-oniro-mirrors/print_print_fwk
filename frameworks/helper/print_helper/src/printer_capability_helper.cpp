@@ -34,6 +34,8 @@ static constexpr const char *PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES = "supported
 static constexpr const char *PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES = "supportedMediaTypes";
 static constexpr const char *PARAM_CAPABILITY_SUPPORTED_QUALITIES = "supportedQualities";
 static constexpr const char *PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS = "supportedOrientations";
+static constexpr const char *PARAM_CAPABILITY_VENDOR_PRINTER_PREF_ABILITY = "vendorPrinterPrefAbility";
+static constexpr const char *PARAM_CAPABILITY_VENDOR_JOB_ATTR_ABILITY = "vendorJobAttrAbility";
 
 napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapability &cap)
 {
@@ -76,6 +78,16 @@ napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapa
         cap.GetMinMargin(margin);
         napi_value jsMargin = PrintMarginHelper::MakeJsObject(env, margin);
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
+    }
+
+    if (cap.HasVendorPrinterPrefAbility()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_CAPABILITY_VENDOR_PRINTER_PREF_ABILITY,
+            cap.GetVendorPrinterPrefAbility());
+    }
+
+    if (cap.HasVendorJobAttrAbility()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_CAPABILITY_VENDOR_JOB_ATTR_ABILITY,
+            cap.GetVendorJobAttrAbility());
     }
 
     if (cap.HasOption()) {
@@ -259,6 +271,20 @@ bool PrinterCapabilityHelper::BuildSimplePropertyFromJs(napi_env env, napi_value
         nativeObj->SetMinMargin(*marginPtr);
     }
 
+    auto jsVendorPrinterPrefAbility = NapiPrintUtils::GetNamedProperty(env, jsValue,
+        PARAM_CAPABILITY_VENDOR_PRINTER_PREF_ABILITY);
+    if (jsVendorPrinterPrefAbility != nullptr) {
+        nativeObj->SetVendorPrinterPrefAbility(
+            NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CAPABILITY_VENDOR_PRINTER_PREF_ABILITY));
+    }
+
+    auto jsVendorJobAttrAbility = NapiPrintUtils::GetNamedProperty(env, jsValue,
+        PARAM_CAPABILITY_VENDOR_JOB_ATTR_ABILITY);
+    if (jsVendorJobAttrAbility != nullptr) {
+        nativeObj->SetVendorJobAttrAbility(
+            NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CAPABILITY_VENDOR_JOB_ATTR_ABILITY));
+    }
+
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_CAPABILITY_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CAPABILITY_OPTION));
@@ -375,6 +401,8 @@ bool PrinterCapabilityHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES, PRINT_PARAM_OPT},
         {PARAM_CAPABILITY_SUPPORTED_QUALITIES, PRINT_PARAM_OPT},
         {PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS, PRINT_PARAM_OPT},
+        {PARAM_CAPABILITY_VENDOR_PRINTER_PREF_ABILITY, PRINT_PARAM_OPT},
+        {PARAM_CAPABILITY_VENDOR_JOB_ATTR_ABILITY, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

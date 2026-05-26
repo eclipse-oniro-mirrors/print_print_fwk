@@ -71,6 +71,11 @@ export default namespace scan {
         SCAN_ERROR_NO_MEMORY = 13100012,
     }
 
+    export enum ExportImageFormat {
+        EXPORT_FORMAT_PNG = 0,
+        EXPORT_FORMAT_TIFF = 1,
+    }
+
     export enum ConstraintType {
         SCAN_CONSTRAINT_NONE = 0,
         SCAN_CONSTRAINT_RANGE = 1,
@@ -379,6 +384,21 @@ export default namespace scan {
         });
     }
 
+    export function exportScanPicture(scannerId: string, pictureFdList: int[], format: ExportImageFormat): Promise<int[]> {
+        return new Promise<int[]>((resolve: (data: int[])=>void, reject:(err: BusinessError)=>void):void => {
+            let myCall = new AsyncCallbackArrayWrapper<int>((err: BusinessError<void> | null, data: Array<int> | undefined) => {
+                if ((err === null || err.code == 0) && data !== undefined) {
+                    resolve(data);
+                } else {
+                    reject(err as BusinessError);
+                }
+            });
+            taskpool.execute((): void => {
+                exportScanPictureNative(scannerId, pictureFdList, format, myCall);
+            });
+        });
+    }
+
     export function onScanDeviceFound(callback: Callback<ScannerDevice>): void {
         let myCall = new CallbackWrapper<ScannerDevice>(callback);
         taskpool.execute((): void => {
@@ -446,6 +466,7 @@ export default namespace scan {
     native function addScannerNative(uniqueId: string, discoveryMode: ScannerDiscoveryMode, callback: AsyncCallbackWrapper<void>): void;
     native function deleteScannerNative(uniqueId: string, discoveryMode: ScannerDiscoveryMode, callback: AsyncCallbackWrapper<void>): void;
     native function getAddedScannersNative(callback: AsyncCallbackArrayWrapper<ScannerDevice>): void;
+    native function exportScanPictureNative(scannerId: string, pictureFdList: int[], format: ExportImageFormat, callback: AsyncCallbackArrayWrapper<int>): void;
     native function onScanDeviceFoundNative(callback: CallbackWrapper<ScannerDevice>): void;
     native function offScanDeviceFoundNative(type: string): void;
     native function onScanDeviceSyncNative(callback: CallbackWrapper<ScannerSyncDevice>): void;

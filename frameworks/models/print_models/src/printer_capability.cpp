@@ -24,7 +24,8 @@ namespace OHOS::Print {
 PrinterCapability::PrinterCapability()
     : colorMode_(0), duplexMode_(0), hasResolution_(false), hasSupportedColorMode_(false),
       hasSupportedDuplexMode_(false), hasSupportedMediaType_(false), hasSupportedQuality_(false),
-      hasSupportedOrientation_(false), hasMargin_(false), hasOption_(false), option_("")
+      hasSupportedOrientation_(false), hasMargin_(false), hasOption_(false), option_(""),
+      hasVendorPrinterPrefAbility_(false), hasVendorJobAttrAbility_(false)
 {
     pageSizeList_.clear();
     resolutionList_.clear();
@@ -67,6 +68,10 @@ PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
         supportedQualityList_.assign(right.supportedQualityList_.begin(), right.supportedQualityList_.end());
         supportedOrientationList_.assign(
             right.supportedOrientationList_.begin(), right.supportedOrientationList_.end());
+        hasVendorPrinterPrefAbility_ = right.hasVendorPrinterPrefAbility_;
+        vendorPrinterPrefAbility_ = right.vendorPrinterPrefAbility_;
+        hasVendorJobAttrAbility_ = right.hasVendorJobAttrAbility_;
+        vendorJobAttrAbility_ = right.vendorJobAttrAbility_;
     }
     return *this;
 }
@@ -94,6 +99,10 @@ void PrinterCapability::Reset()
     supportedMediaTypeList_.clear();
     supportedQualityList_.clear();
     supportedOrientationList_.clear();
+    hasVendorPrinterPrefAbility_ = false;
+    vendorPrinterPrefAbility_.clear();
+    hasVendorJobAttrAbility_ = false;
+    vendorJobAttrAbility_.clear();
 }
 
 void PrinterCapability::SetMinMargin(const PrintMargin &minMargin)
@@ -162,6 +171,43 @@ uint32_t PrinterCapability::GetDuplexMode() const
 bool PrinterCapability::HasOption() const
 {
     return hasOption_;
+}
+
+std::string PrinterCapability::GetOption() const
+{
+    return option_;
+}
+
+void PrinterCapability::SetVendorPrinterPrefAbility(const std::string &ability)
+{
+    hasVendorPrinterPrefAbility_ = true;
+    vendorPrinterPrefAbility_ = ability;
+}
+
+void PrinterCapability::SetVendorJobAttrAbility(const std::string &ability)
+{
+    hasVendorJobAttrAbility_ = true;
+    vendorJobAttrAbility_ = ability;
+}
+
+bool PrinterCapability::HasVendorPrinterPrefAbility() const
+{
+    return hasVendorPrinterPrefAbility_;
+}
+
+std::string PrinterCapability::GetVendorPrinterPrefAbility() const
+{
+    return vendorPrinterPrefAbility_;
+}
+
+bool PrinterCapability::HasVendorJobAttrAbility() const
+{
+    return hasVendorJobAttrAbility_;
+}
+
+std::string PrinterCapability::GetVendorJobAttrAbility() const
+{
+    return vendorJobAttrAbility_;
 }
 
 bool PrinterCapability::HasSupportedColorMode() const
@@ -255,11 +301,6 @@ void PrinterCapability::SetSupportedOrientation(const std::vector<uint32_t> &sup
     supportedOrientationList_.assign(supportedOrientationList.begin(), supportedOrientationList.end());
 }
 
-std::string PrinterCapability::GetOption() const
-{
-    return option_;
-}
-
 bool PrinterCapability::ReadFromParcel(Parcel &parcel)
 {
     PrinterCapability right;
@@ -284,6 +325,29 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel)
             return std::nullopt;
         }, &right.hasResolution_);
 
+    ReadSupportedListsFromParcel(parcel, right);
+
+    right.hasMargin_ = parcel.ReadBool();
+    if (right.hasMargin_) {
+        auto marginPtr = PrintMargin::Unmarshalling(parcel);
+        if (marginPtr != nullptr) {
+            right.SetMinMargin(*marginPtr);
+        }
+    }
+
+    right.hasOption_ = parcel.ReadBool();
+    if (right.hasOption_) {
+        right.SetOption(parcel.ReadString());
+    }
+
+    ReadVendorAbilityFromParcel(parcel, right);
+
+    *this = right;
+    return true;
+}
+
+void PrinterCapability::ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right)
+{
     PrintUtils::readListFromParcel<uint32_t>(
         parcel, right.supportedColorModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
         &right.hasSupportedColorMode_);
@@ -303,22 +367,19 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel)
     PrintUtils::readListFromParcel<uint32_t>(
         parcel, right.supportedOrientationList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
         &right.hasSupportedOrientation_);
+}
 
-    right.hasMargin_ = parcel.ReadBool();
-    if (right.hasMargin_) {
-        auto marginPtr = PrintMargin::Unmarshalling(parcel);
-        if (marginPtr != nullptr) {
-            right.SetMinMargin(*marginPtr);
-        }
+void PrinterCapability::ReadVendorAbilityFromParcel(Parcel &parcel, PrinterCapability &right)
+{
+    right.hasVendorPrinterPrefAbility_ = parcel.ReadBool();
+    if (right.hasVendorPrinterPrefAbility_) {
+        right.SetVendorPrinterPrefAbility(parcel.ReadString());
     }
 
-    right.hasOption_ = parcel.ReadBool();
-    if (right.hasOption_) {
-        right.SetOption(parcel.ReadString());
+    right.hasVendorJobAttrAbility_ = parcel.ReadBool();
+    if (right.hasVendorJobAttrAbility_) {
+        right.SetVendorJobAttrAbility(parcel.ReadString());
     }
-
-    *this = right;
-    return true;
 }
 
 bool PrinterCapability::Marshalling(Parcel &parcel) const
@@ -367,6 +428,17 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const
     if (hasOption_) {
         parcel.WriteString(GetOption());
     }
+
+    parcel.WriteBool(hasVendorPrinterPrefAbility_);
+    if (hasVendorPrinterPrefAbility_) {
+        parcel.WriteString(GetVendorPrinterPrefAbility());
+    }
+
+    parcel.WriteBool(hasVendorJobAttrAbility_);
+    if (hasVendorJobAttrAbility_) {
+        parcel.WriteString(GetVendorJobAttrAbility());
+    }
+
     return true;
 }
 
@@ -427,6 +499,12 @@ void PrinterCapability::Dump() const
     }
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
+    }
+    if (hasVendorPrinterPrefAbility_) {
+        PRINT_HILOGD("vendorPrinterPrefAbility: %{public}s", vendorPrinterPrefAbility_.c_str());
+    }
+    if (hasVendorJobAttrAbility_) {
+        PRINT_HILOGD("vendorJobAttrAbility: %{public}s", vendorJobAttrAbility_.c_str());
     }
 }
 

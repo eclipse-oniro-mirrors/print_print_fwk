@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <sstream>
+#include <fstream>
 #include "scan_task.h"
 #include "scan_constant.h"
 #include "scan_log.h"
@@ -20,6 +21,7 @@
 #include "sane_info.h"
 #include "media_errors.h"
 #include "image_common.h"
+#include "print_json_util.h"
 
 namespace OHOS::Scan {
 static const std::string EXIF_RESOLUTION_UNIT_INCH = "2";
@@ -350,6 +352,8 @@ void ScanTask::ImageFinishCompress()
 
     if (imageFormat_ == ImageFormat::IMAGE_TYPE_JPEG) {
         WriteJfifDensityField();
+        SaveRawData();
+        SaveImageMetadata();
     }
 
     ImageDestroyCompress();
@@ -395,6 +399,81 @@ void ScanTask::WriteJfifDensityField()
     if (ret != 0) {
         SCAN_HILOGE("Close file failed, err=%{public}d", ret);
     }
+}
+
+void ScanTask::SaveRawData()
+{
+    if (filePath_.empty() || pixMap_ == nullptr) {
+        SCAN_HILOGE("Invalid state for raw data saving");
+        return;
+    }
+
+    std::string rawPath = GetBaseName() + RAW_SUFFIX;
+
+    std::ofstream rawFile(rawPath, std::ios::binary);
+    if (!rawFile.is_open()) {
+        SCAN_HILOGE("Open raw file failed: %{private}s", rawPath.c_str());
+        return;
+    }
+
+    const uint8_t* srcData = pixMap_->GetPixels();
+    int32_t rowStride = pixMap_->GetRowStride();
+    int32_t rowBytes = pixMap_->GetRowBytes();
+    int32_t height = pixMap_->GetHeight();
+
+    for (int32_t y = 0; y < height; y++) {
+        rawFile.write(reinterpret_cast<const char*>(srcData + y * rowStride), rowBytes);
+    }
+
+    rawFile.close();
+    SCAN_HILOGI("Raw data saved: %{private}s, Size=%{public}d", rawPath.c_str(), pixMap_->GetByteCount());
+}
+
+void ScanTask::SaveImageMetadata()
+{
+    if (filePath_.empty()) {
+        SCAN_HILOGE("Invalid file path for metadata");
+        return;
+    }
+
+    std::string metaPath = GetBaseName() + META_SUFFIX;
+
+    Json::Value metadataJson;
+    metadataJson["width"] = scanParams_.GetPixelsPerLine();
+    metadataJson["height"] = scanParams_.GetLines();
+    metadataJson["depth"] = scanParams_.GetDepth();
+    metadataJson["bytesPerLine"] = scanParams_.GetBytesPerLine();
+    
+    std::string formatStr = (scanParams_.GetFormat() == SCAN_FRAME_RGB) ? "RGB" : "GRAY";
+    metadataJson["format"] = formatStr;
+    
+    metadataJson["lastFrame"] = scanParams_.GetLastFrame();
+    metadataJson["dpi"] = dpi_;
+    
+    int32_t channels = (scanParams_.GetFormat() == SCAN_FRAME_RGB) ? CHANNEL_THREE : CHANNEL_ONE;
+    metadataJson["channels"] = channels;
+    metadataJson["bitsPerSample"] = scanParams_.GetDepth();
+
+    std::string jsonString = Print::PrintJsonUtil::WriteString(metadataJson);
+    
+    std::ofstream metaFile(metaPath);
+    if (!metaFile.is_open()) {
+        SCAN_HILOGE("Open metadata file failed: %{private}s", metaPath.c_str());
+        return;
+    }
+    
+    metaFile << jsonString;
+    metaFile.close();
+    SCAN_HILOGI("Metadata saved: %{private}s", metaPath.c_str());
+}
+
+std::string ScanTask::GetBaseName() const
+{
+    size_t pos = filePath_.find(JPG_EXTENSION);
+    if (pos != std::string::npos) {
+        return filePath_.substr(0, pos);
+    }
+    return filePath_;
 }
 
 } // namespace OHOS::Scan

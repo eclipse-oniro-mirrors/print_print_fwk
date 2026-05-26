@@ -49,6 +49,9 @@ public:
     virtual int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) = 0;
     virtual int32_t On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener) = 0;
     virtual int32_t Off(const std::string taskId, const std::string &type) = 0;
+    virtual int32_t ExportScanPicture(const std::string scannerId,
+        const std::vector<int32_t>& pictureFdList, const int32_t format,
+        std::vector<int32_t>& exportedFdList) = 0;
 };
 
 enum {
@@ -68,7 +71,8 @@ enum {
     CMD_GET_CONNECTED_SCANNER,
     CMD_ADD_PRINTER,
     CMD_ON,
-    CMD_OFF
+    CMD_OFF,
+    CMD_EXPORT_SCAN_PICTURE
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SERVICE_INTERFACE_H

@@ -1401,4 +1401,18 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     dpi = outParam.valueNumber_;
     return E_SCAN_NONE;
 }
+
+int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
+    const std::vector<int32_t>& pictureFdList, const int32_t format,
+    std::vector<int32_t>& exportedFdList)
+{
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        SCAN_HILOGE("no permission to access scan service");
+        return E_SCAN_NO_PERMISSION;
+    }
+ 
+    return E_SCAN_UNSUPPORTED;
+}
 }  // namespace OHOS::Scan

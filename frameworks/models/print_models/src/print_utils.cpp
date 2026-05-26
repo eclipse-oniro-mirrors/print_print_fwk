@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <fcntl.h>
 #include <random>
 #include <sstream>
@@ -101,6 +102,31 @@ bool PrintUtils::DecodeExtensionCid(const std::string &cid, std::string &extensi
     return true;
 }
 
+std::string PrintUtils::MakeExtensionStateKey(int32_t userId, const std::string& bundleName)
+{
+    return std::to_string(userId) + "_" + bundleName;
+}
+
+int32_t PrintUtils::GetUserIdFromKey(const std::string& key)
+{
+    auto pos = key.find('_');
+    if (pos == std::string::npos) {
+        return -1;
+    }
+    int32_t userId = -1;
+    PrintUtil::ConvertToInt(key.substr(0, pos), userId);
+    return userId;
+}
+
+std::string PrintUtils::GetBundleNameFromKey(const std::string& key)
+{
+    auto pos = key.find('_');
+    if (pos == std::string::npos) {
+        return "";
+    }
+    return key.substr(pos + 1);
+}
+
 std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::string &type)
 {
     return type + TASK_EVENT_DELIMITER + taskId;
@@ -174,6 +200,41 @@ bool PrintUtils::IsPathValid(const std::string &path)
     if (path.length() >= PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
         strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         PRINT_HILOGE("invalid file path!");
+        return false;
+    }
+    return true;
+}
+
+bool PrintUtils::IsPathValidForCreate(const std::string &parentDir, const std::string &fileName)
+{
+    if (parentDir.empty() || fileName.empty()) {
+        PRINT_HILOGE("invalid input parameters!");
+        return false;
+    }
+
+    if (!IsPathValid(parentDir)) {
+        PRINT_HILOGE("parent directory is not valid!");
+        return false;
+    }
+
+    if (fileName.find('/') != std::string::npos ||
+        fileName.find('\0') != std::string::npos ||
+        fileName == "." || fileName == "..") {
+        PRINT_HILOGE("invalid file name!");
+        return false;
+    }
+
+    std::string originalPath = parentDir + "/" + fileName;
+    if (originalPath.length() >= PATH_MAX) {
+        PRINT_HILOGE("combined path is too long!");
+        return false;
+    }
+
+    std::filesystem::path fullPath(originalPath);
+    fullPath = fullPath.lexically_normal();
+    std::string completePath = fullPath.generic_string();
+    if (completePath.length() != originalPath.length()) {
+        PRINT_HILOGE("path traversal detected!");
         return false;
     }
     return true;
@@ -586,6 +647,9 @@ void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shar
     args.mirror = params.mirror;
     args.pageBorder = params.pageBorder;
     nativeObj->SetNumberUpArgs(args);
+    if (!params.vendorOptions.empty()) {
+        nativeObj->SetVendorOptions(params.vendorOptions);
+    }
 }
 
 std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
@@ -600,6 +664,9 @@ std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobPara
         return nullptr;
     }
     SetAttributesToPrintJob(params, nativeObj);
+    if (!params.vendorOptions.empty()) {
+        nativeObj->SetVendorOptions(params.vendorOptions);
+    }
     SetOptionInPrintJob(params, nativeObj);
     return nativeObj;
 }
@@ -638,7 +705,8 @@ int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &t
     }
 
     tmpPath = GenerateTempFilePath(filesDir);
-    if (!IsPathValid(filesDir)) {
+    if (tmpPath.empty()) {
+        PRINT_HILOGE("Failed to generate valid temp file path.");
         return -1;
     }
     std::ofstream tempFile(tmpPath, std::ios::binary);
@@ -671,8 +739,14 @@ std::string PrintUtils::GenerateTempFilePath(const std::string &filesDir)
     localtime_r(&now_time_t, &now_tm);
 
     std::ostringstream oss;
-    oss<< filesDir << "/job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
-    return oss.str();
+    oss << "job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
+    std::string fileName = oss.str();
+    if (!IsPathValidForCreate(filesDir, fileName)) {
+        PRINT_HILOGE("Invalid temp file path!");
+        return "";
+    }
+
+    return filesDir + "/" + fileName;
 }
 
 void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)

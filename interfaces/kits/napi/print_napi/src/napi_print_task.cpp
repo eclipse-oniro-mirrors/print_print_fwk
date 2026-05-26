@@ -24,6 +24,7 @@
 #include "print_attributes_helper.h"
 #include "print_callback.h"
 #include "iprint_callback.h"
+#include "print_utils.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -302,6 +303,14 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
         PRINT_HILOGE("invalid file name");
         return false;
     }
+    PRINT_HILOGD("fileName: %{private}s", fileName.c_str());
+    if (fileName.find("file://") == 0 || fileName.find("fd://") == 0 || fileName.find("content://") == 0) {
+        return true;
+    }
+    if (!PrintUtils::IsPathValid(fileName)) {
+        PRINT_HILOGE("invalid file path!");
+        return false;
+    }
     auto file = fopen(fileName.c_str(), "rb");
     if (file != nullptr) {
         int fcloseResult = fclose(file);
@@ -309,10 +318,6 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
             PRINT_HILOGE("Close File Failure.");
             return false;
         }
-        return true;
-    }
-    PRINT_HILOGD("fileName: %{private}s", fileName.c_str());
-    if (fileName.find("file://") == 0 || fileName.find("fd://") == 0 || fileName.find("content://") == 0) {
         return true;
     }
     PRINT_HILOGE("invalid file name");

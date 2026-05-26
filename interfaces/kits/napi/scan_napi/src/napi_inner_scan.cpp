@@ -636,6 +636,90 @@ napi_value NapiInnerScan::GetAddedScanner(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerScan::ExportScanPicture(napi_env env, napi_callback_info info)
+{
+    SCAN_HILOGI("start to ExportScanPicture");
+    auto context = std::make_shared<NapiScanContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
+        return ParseExportInput(env, argv, context.get());
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        return CreateExportOutput(env, result, context.get());
+    };
+    auto exec = [context](ScanAsyncCall::Context *ctx) {
+        if (!NapiScanUtils::CheckCallerIsSystemApp()) {
+            SCAN_HILOGE("not system app");
+            context->SetErrorIndex(E_SCAN_ERROR_NOT_SYSTEM_APPLICATION);
+            return;
+        }
+        int32_t ret = ScanManagerClient::GetInstance()->ExportScanPicture(
+            context->scannerId, context->pictureFdList, context->exportFormat, context->exportedFdList);
+        context->result = ret == E_SCAN_NONE;
+        if (ret != E_SCAN_NONE) {
+            SCAN_HILOGE("Failed to export scan picture");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    ScanAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<ScanAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_status NapiInnerScan::ParseExportInput(napi_env env, napi_value *argv, NapiScanContext* context)
+{
+    napi_valuetype valuetype = napi_undefined;
+    SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+    SCAN_ASSERT_BASE(env, valuetype == napi_string, "scannerId is not a string", napi_string_expected);
+    std::string scannerId = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
+    context->scannerId = scannerId;
+
+    bool isArray = false;
+    SCAN_CALL_BASE(env, napi_is_array(env, argv[NapiScanUtils::INDEX_ONE], &isArray), napi_invalid_arg);
+    SCAN_ASSERT_BASE(env, isArray, "pictureFdList is not an array", napi_invalid_arg);
+    napi_value fdArray = argv[NapiScanUtils::INDEX_ONE];
+    uint32_t arrayLength = 0;
+    SCAN_CALL_BASE(env, napi_get_array_length(env, fdArray, &arrayLength), napi_invalid_arg);
+    for (uint32_t i = 0; i < arrayLength; i++) {
+        napi_value element;
+        SCAN_CALL_BASE(env, napi_get_element(env, fdArray, i, &element), napi_invalid_arg);
+        int32_t fd = NapiScanUtils::GetInt32FromValue(env, element);
+        context->pictureFdList.push_back(fd);
+    }
+
+    valuetype = napi_undefined;
+    SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
+    SCAN_ASSERT_BASE(env, valuetype == napi_number, "format is not a number", napi_number_expected);
+    context->exportFormat = NapiScanUtils::GetInt32FromValue(env, argv[NapiScanUtils::INDEX_TWO]);
+
+    return napi_ok;
+}
+
+napi_status NapiInnerScan::CreateExportOutput(napi_env env, napi_value *result, NapiScanContext* context)
+{
+    napi_status status = napi_create_array(env, result);
+    if (status != napi_ok) {
+        SCAN_HILOGE("napi_create_array failed");
+        return status;
+    }
+    
+    uint32_t index = 0;
+    for (auto fd : context->exportedFdList) {
+        napi_value fdValue;
+        status = napi_create_int32(env, fd, &fdValue);
+        if (status != napi_ok) {
+            SCAN_HILOGE("napi_create_int32 failed for fd %{public}d", fd);
+            return status;
+        }
+        status = napi_set_element(env, *result, index++, fdValue);
+        if (status != napi_ok) {
+            SCAN_HILOGE("napi_set_element failed at index %{public}u", index - 1);
+            return status;
+        }
+    }
+    return napi_ok;
+}
+
 uint32_t NapiInnerScan::IsSupportType(const std::string& type)
 {
     if (type == SCAN_DEVICE_FOUND || type == SCAN_DEVICE_SYNC) {

@@ -23,6 +23,7 @@
 #include "print_log.h"
 #include "print_util.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_service_ability.h"
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
@@ -376,13 +377,13 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     if (info == nullptr) {
         return;
     }
-    std::string printerListFilePath =
-        GetPrintersPath() + "/" + PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
-    char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+    std::string printersPath = GetPrintersPath();
+    std::string fileName = PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
+    if (!PrintUtils::IsPathValidForCreate(printersPath, fileName)) {
+        PRINT_HILOGE("Invalid printer file path!");
         return;
     }
+    std::string printerListFilePath = printersPath + "/" + fileName;
     FILE *file = fopen(printerListFilePath.c_str(), "w+");
     if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -487,7 +488,6 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
         std::string uri = printerInfo->GetUri();
         info->SetUri(uri);
         info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
-        info->SetOption(printerInfo->GetOption());
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }
@@ -509,6 +509,15 @@ void PrintSystemData::UpdatePpdHashCode(const std::string &printerId, const std:
     if (info != nullptr) {
         info->SetPpdHashCode(ppdHashCode);
         PRINT_HILOGI("UpdatePpdHashCode success");
+    }
+}
+
+void PrintSystemData::UpdatePrinterOption(const std::string &printerId, const std::string &option)
+{
+    auto info = GetAddedPrinterMap().Find(printerId);
+    if (info != nullptr) {
+        info->SetOption(option);
+        PRINT_HILOGI("UpdatePrinterOption success");
     }
 }
 
@@ -600,12 +609,25 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertSupportedQualityToJson(printerCapability, capsJson);
     }
 
+    ConvertVendorAbilityToJson(printerCapability, capsJson);
+
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
         if (!PrintJsonUtil::Parse(options, capsJson["options"])) {
             PRINT_HILOGE("json accept capability options fail");
             return;
         }
+    }
+}
+
+void PrintSystemData::ConvertVendorAbilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson)
+{
+    if (printerCapability.HasVendorPrinterPrefAbility()) {
+        capsJson["vendorPrinterPrefAbility"] = printerCapability.GetVendorPrinterPrefAbility();
+    }
+
+    if (printerCapability.HasVendorJobAttrAbility()) {
+        capsJson["vendorJobAttrAbility"] = printerCapability.GetVendorJobAttrAbility();
     }
 }
 
@@ -724,6 +746,42 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, Prin
         ConvertJsonToPrintMargin(capsJson, printerCapability);
     }
 
+    if (!ConvertSupportedListsFromJson(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to supported lists failed");
+        return false;
+    }
+
+    if (PrintJsonUtil::IsMember(capsJson, "options") && capsJson["options"].isObject()) {
+        PRINT_HILOGD("find options");
+        printerCapability.SetOption(PrintJsonUtil::WriteString(capsJson["options"]));
+    }
+
+    if (!ConvertJsonToVendorAbility(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to vendor ability failed.");
+    }
+    return true;
+}
+
+bool PrintSystemData::ConvertJsonToVendorAbility(Json::Value &capsJson, PrinterCapability &printerCapability)
+{
+    if (PrintJsonUtil::IsMember(capsJson, "vendorPrinterPrefAbility") &&
+        capsJson["vendorPrinterPrefAbility"].isString()) {
+        printerCapability.SetVendorPrinterPrefAbility(capsJson["vendorPrinterPrefAbility"].asString());
+        PRINT_HILOGI("vendorPrinterPrefAbility: %{public}s",
+            capsJson["vendorPrinterPrefAbility"].asString().c_str());
+    }
+
+    if (PrintJsonUtil::IsMember(capsJson, "vendorJobAttrAbility") &&
+        capsJson["vendorJobAttrAbility"].isString()) {
+        printerCapability.SetVendorJobAttrAbility(capsJson["vendorJobAttrAbility"].asString());
+        PRINT_HILOGI("vendorJobAttrAbility: %{public}s",
+            capsJson["vendorJobAttrAbility"].asString().c_str());
+    }
+    return true;
+}
+
+bool PrintSystemData::ConvertSupportedListsFromJson(Json::Value &capsJson, PrinterCapability &printerCapability)
+{
     if (!ConvertJsonToPrintResolution(capsJson, printerCapability)) {
         PRINT_HILOGW("convert json to print resolution failed");
         return false;
@@ -759,10 +817,6 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, Prin
         return false;
     }
 
-    if (PrintJsonUtil::IsMember(capsJson, "options") && capsJson["options"].isObject()) {
-        PRINT_HILOGD("find options");
-        printerCapability.SetOption(PrintJsonUtil::WriteString(capsJson["options"]));
-    }
     return true;
 }
 

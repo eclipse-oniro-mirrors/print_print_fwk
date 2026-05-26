@@ -68,6 +68,7 @@ struct PrintJobParams {
     PrintPreviewAttribute preview;
     int32_t isSequential = PARAM_NOT_SET;
     std::string cupsOptions;
+    std::string vendorOptions;
     uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
     uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
     uint32_t mirror = MIRROR_DEFAULT_VALUE;
@@ -85,6 +86,7 @@ public:
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
+    static bool IsPathValidForCreate(const std::string &parentDir, const std::string &fileName);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static std::string GetJobStateChar(const uint32_t state);
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
@@ -115,6 +117,10 @@ public:
     static int CreateTempFileWithData(void* data, size_t length, std::string &tmpPath);
     static std::string GenerateTempFilePath(const std::string &filesDir);
     static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+
+    static std::string MakeExtensionStateKey(int32_t userId, const std::string& bundleName);
+    static int32_t GetUserIdFromKey(const std::string& key);
+    static std::string GetBundleNameFromKey(const std::string& key);
 
     static bool SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
     static void SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);

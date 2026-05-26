@@ -70,6 +70,9 @@ public:
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo);
     void NetScannerLossNotify(const ScanDeviceInfoSync& usbSyncInfo);
     void NotifyEsclScannerFound(const ScanDeviceInfo& info);
+    int32_t ExportScanPicture(const std::string scannerId,
+        const std::vector<int32_t>& pictureFdList, const int32_t format,
+        std::vector<int32_t>& exportedFdList) override;
 
 private:
     int32_t ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex);
