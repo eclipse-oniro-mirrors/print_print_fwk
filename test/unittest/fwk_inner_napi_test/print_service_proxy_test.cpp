@@ -26,9 +26,7 @@
 #include "mock_print_service.h"
 #include "mock_print_callback_stub.h"
 #include "mock_watermark_callback_stub.h"
-#ifdef KIA_INTERCEPTOR_ENABLE
 #include "mock_kia_interceptor_callback_stub.h"
-#endif // KIA_INTERCEPTOR_ENABLE
 
 using namespace testing;
 using namespace testing::ext;
