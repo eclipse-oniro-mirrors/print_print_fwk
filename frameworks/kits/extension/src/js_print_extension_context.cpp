@@ -335,7 +335,7 @@ private:
 
         ConnectAbilityParams params;
         OHOS::AppExecFwk::UnwrapWant(engine, argv[0], params.want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, 
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__,
             params.want.GetBundle().c_str(), params.want.GetElement().GetAbilityName().c_str());
 
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(engine, argv[1], params.accountId)) {
