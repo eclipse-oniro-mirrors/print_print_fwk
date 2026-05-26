@@ -18,6 +18,7 @@
 
 #include "want.h"
 #include <string>
+#include <mutex>
 #include <uv.h>
 #include <js_native_api.h>
 #include "napi/native_api.h"
@@ -49,6 +50,7 @@ private:
     int32_t sessionId_ = 0;
     std::shared_ptr<BaseContext> baseContext = nullptr;
     bool isResultForModal = false;
+    std::mutex resultMutex_;
 };
 } // namespace Print
 } // namespace OHOS

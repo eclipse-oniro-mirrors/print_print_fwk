@@ -262,21 +262,22 @@ private:
         if (argc != NapiPrintUtils::ARGC_TWO) {
             return GetUndefinedValue(engine);
         }
-
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
-
         sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
         connection->SetJsConnectionObject(argv[1]);
-        int64_t connectId = serialNumber_;
-        ConnecttionKey key;
-        key.id = serialNumber_;
-        key.want = want;
-        std::unique_lock<std::shared_timed_mutex> lock(managersMutex_);
-        connects_.emplace(key, connection);
-        (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
+        int64_t connectId = 0;
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+            connectId = serialNumber_;
+            ConnecttionKey key;
+            key.id = serialNumber_;
+            key.want = want;
+            connects_.emplace(key, connection);
+            (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
+        }
         NapiAsyncTask::CompleteCallback complete = [weak = context_, want, connection, connectId](
                                                    napi_env engine, NapiAsyncTask &task, int32_t status) {
             PRINT_HILOGD("OnConnectAbility begin");
@@ -286,7 +287,7 @@ private:
                     task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
                 return;
             }
-            PRINT_HILOGD("context->ConnectAbility connection:%{public}d", (int32_t)connectId);
+            PRINT_HILOGD("context->ConnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
             if (!context->ConnectAbility(want, connection)) {
                     connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
             }
@@ -302,6 +303,25 @@ private:
         return numberResult;
     }
 
+    static void CompleteConnectAbilityWithAccount(napi_env engine, NapiAsyncTask &task,
+        std::weak_ptr<PrintExtensionContext> weak, const ConnectAbilityParams &params)
+    {
+        PRINT_HILOGD("OnConnectAbilityWithAccount begin");
+        auto context = weak.lock();
+        if (!context) {
+            PRINT_HILOGW("context is released");
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
+            return;
+        }
+        PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d", static_cast<int32_t>(params.connectId));
+        if (!context->ConnectAbilityWithAccount(params.want, params.accountId, params.connection)) {
+            params.connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
+        }
+        napi_value undefineResult = nullptr;
+        napi_get_undefined(engine, &undefineResult);
+        task.Resolve(engine, undefineResult);
+    }
+
     napi_value OnConnectAbilityWithAccount(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnConnectAbilityWithAccount is called");
@@ -312,49 +332,61 @@ private:
             return GetUndefinedValue(engine);
         }
 
-        AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
-            want.GetElement().GetAbilityName().c_str());
+        ConnectAbilityParams params;
+        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], params.want);
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, params.want.GetBundle().c_str(),
+            params.want.GetElement().GetAbilityName().c_str());
 
-        int32_t accountId = 0;
-        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(engine, argv[1], accountId)) {
+        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(engine, argv[1], params.accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return GetUndefinedValue(engine);
         }
 
-        sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
-        connection->SetJsConnectionObject(argv[1]);
-        int64_t connectId = serialNumber_;
-        ConnecttionKey key;
-        key.id = serialNumber_;
-        key.want = want;
-        std::unique_lock<std::shared_timed_mutex> lock(managersMutex_);
-        connects_.emplace(key, connection);
-        (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
-        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, accountId, connection, connectId](
-                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
-            PRINT_HILOGD("OnConnectAbilityWithAccount begin");
-            auto context = weak.lock();
-            if (!context) {
-                PRINT_HILOGW("context is released");
-                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
-                return;
-            }
-            PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d", (int32_t)connectId);
-            if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
-                connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
-            }
-            napi_value undefineResult = nullptr;
-            napi_get_undefined(engine, &undefineResult);
-            task.Resolve(engine, undefineResult);
+        params.connection = new JSPrintExtensionConnection(engine);
+        params.connection->SetJsConnectionObject(argv[2]);
+        {
+            std::unique_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+            params.connectId = serialNumber_;
+            ConnecttionKey key;
+            key.id = serialNumber_;
+            key.want = params.want;
+            connects_.emplace(key, params.connection);
+            (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
+        }
+        NapiAsyncTask::CompleteCallback complete = [weak = context_, params](
+                                                       napi_env engine, NapiAsyncTask &task, int32_t status) {
+            CompleteConnectAbilityWithAccount(engine, task, weak, params);
         };
         napi_value result = nullptr;
         NapiAsyncTask::Schedule("PrintExtensionContext::OnConnectAbilityWithAccount", engine,
             CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
         napi_value numberResult = nullptr;
-        napi_create_double(engine, connectId, &numberResult);
+        napi_create_double(engine, params.connectId, &numberResult);
         return numberResult;
+    }
+
+    static void CompleteDisconnectAbility(napi_env engine, NapiAsyncTask &task,
+        std::weak_ptr<PrintExtensionContext> weak, const AAFwk::Want &want,
+        sptr<JSPrintExtensionConnection> connection)
+    {
+        PRINT_HILOGD("OnDisconnectAbility begin");
+        auto context = weak.lock();
+        if (!context) {
+            PRINT_HILOGW("context is released");
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
+            return;
+        }
+        if (connection == nullptr) {
+            PRINT_HILOGW("connection nullptr");
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONNECTION, "not found connection"));
+            return;
+        }
+        PRINT_HILOGD("context->DisconnectAbility");
+        auto errcode = context->DisconnectAbility(want, connection);
+        napi_value undefineResult = nullptr;
+        napi_get_undefined(engine, &undefineResult);
+        errcode == 0 ? task.Resolve(engine, undefineResult)
+                     : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
     }
 
     napi_value OnDisconnectAbility(napi_env &engine, napi_callback_info &info)
@@ -370,39 +402,24 @@ private:
         AAFwk::Want want;
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
-        napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId);
+        PRINT_CALL(env, napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId));
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
-        auto item = std::find_if(connects_.begin(), connects_.end(),
-            [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
-                return connectId == obj.first.id;
-            });
-        if (item != connects_.end()) {
-            // match id
-            want = item->first.want;
-            connection = item->second;
-        } else {
-            PRINT_HILOGD("%{public}s not find conn exist.", __func__);
+        {
+            std::shared_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+            auto item = std::find_if(connects_.begin(), connects_.end(),
+                [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+                    return connectId == obj.first.id;
+                });
+            if (item != connects_.end()) {
+                want = item->first.want;
+                connection = item->second;
+            } else {
+                PRINT_HILOGD("%{public}s not find conn exist.", __func__);
+            }
         }
         NapiAsyncTask::CompleteCallback complete = [weak = context_, want, connection](
-                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
-            PRINT_HILOGD("OnDisconnectAbility begin");
-            auto context = weak.lock();
-            if (!context) {
-                PRINT_HILOGW("context is released");
-                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
-                return;
-            }
-            if (connection == nullptr) {
-                PRINT_HILOGW("connection nullptr");
-                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONNECTION, "not found connection"));
-                return;
-            }
-            PRINT_HILOGD("context->DisconnectAbility");
-            auto errcode = context->DisconnectAbility(want, connection);
-            napi_value undefineResult = nullptr;
-            napi_get_undefined(engine, &undefineResult);
-            errcode == 0 ? task.Resolve(engine, undefineResult)
-                         : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
+                                                       napi_env engine, NapiAsyncTask &task, int32_t status) {
+            CompleteDisconnectAbility(engine, task, weak, want, connection);
         };
 
         napi_value lastParam = (argc == NapiPrintUtils::ARGC_ONE) ? nullptr : argv[1];

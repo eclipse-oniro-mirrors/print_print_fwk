@@ -20,11 +20,21 @@
 
 #include "ability_connect_callback.h"
 #include "event_handler.h"
+#include "js_print_extension_connection.h"
 #include "print_extension_context.h"
 #include "napi/native_api.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
+
+struct ConnectAbilityParams {
+    AAFwk::Want want;
+    int32_t accountId = 0;
+    sptr<JSPrintExtensionConnection> connection = nullptr;
+    int64_t connectId = 0;
+};
+
 napi_value CreateJsPrintExtensionContext(napi_env engine,
     std::shared_ptr<PrintExtensionContext> context, std::string &extensionId);
 } // namespace AbilityRuntime
