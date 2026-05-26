@@ -87,7 +87,7 @@ public:
 
 private:
     std::weak_ptr<PrintExtensionContext> context_;
-    std::shared_timed_mutex managersMutex_;
+    std::shared_mutex managersMutex_;
 
     napi_value GetUndefinedValue(napi_env &engine)
     {
@@ -270,7 +270,7 @@ private:
         connection->SetJsConnectionObject(argv[1]);
         int64_t connectId = 0;
         {
-            std::unique_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+            std::unique_lock<std::shared_mutex> lock(g_connectsMutex_);
             connectId = serialNumber_;
             ConnecttionKey key;
             key.id = serialNumber_;
@@ -346,7 +346,7 @@ private:
         params.connection = new JSPrintExtensionConnection(engine);
         params.connection->SetJsConnectionObject(argv[1]);
         {
-            std::unique_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+            std::unique_lock<std::shared_mutex> lock(g_connectsMutex_);
             params.connectId = serialNumber_;
             ConnecttionKey key;
             key.id = serialNumber_;
@@ -406,7 +406,7 @@ private:
         PRINT_CALL(env, napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId));
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
         {
-            std::shared_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+            std::shared_lock<std::shared_mutex> lock(g_connectsMutex_);
             auto item = std::find_if(connects_.begin(), connects_.end(),
                 [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
                     return connectId == obj.first.id;

@@ -43,7 +43,7 @@ public:
 private:
     napi_env engine_;
     std::unique_ptr<NativeReference> jsConnectionObject_ = nullptr;
-    std::shared_timed_mutex managersMutex_;
+    std::shared_mutex managersMutex_;
 };
 
 struct ConnecttionKey {
@@ -65,7 +65,7 @@ static std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>, key_compare> c
 static int64_t serialNumber_ = 0;
 static std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 // Guards connects_ against concurrent connect/disconnect access.
-static std::shared_timed_mutex g_connectsMutex_;
+static std::shared_mutex g_connectsMutex_;
 }  // namespace AbilityRuntime
 }  // namespace OHOS
 #endif  // JS_PRINT_EXTENSION_CONNECTION_H

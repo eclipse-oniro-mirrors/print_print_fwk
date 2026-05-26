@@ -135,7 +135,7 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
     {
-        std::unique_lock<std::shared_timed_mutex> lock(g_connectsMutex_);
+        std::unique_lock<std::shared_mutex> lock(g_connectsMutex_);
         PRINT_HILOGD("OnAbilityDisconnectDone connects_.size:%{public}zu", connects_.size());
         auto item = std::find_if(connects_.begin(),
             connects_.end(),

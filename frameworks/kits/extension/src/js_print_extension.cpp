@@ -145,7 +145,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
         PRINT_HILOGE("Failed to allocate weak_ptr for Print extension context");
         return false;
     }
-    napi_status wrapStatus = napi_wrap(engine, contextObj, new std::weak_ptr<AbilityRuntime::Context>(context),
+    napi_status wrapStatus = napi_wrap(engine, contextObj, workContext,
         [](napi_env, void *data, void *) {
             PRINT_HILOGI("Finalizer for weak_ptr Print extension context is called");
             delete static_cast<std::weak_ptr<AbilityRuntime::Context> *>(data);
