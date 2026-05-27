@@ -344,7 +344,7 @@ private:
         }
 
         params.connection = new JSPrintExtensionConnection(engine);
-        params.connection->SetJsConnectionObject(argv[1]);
+        params.connection->SetJsConnectionObject(argv[2]);
         {
             std::unique_lock<std::shared_mutex> lock(g_connectsMutex_);
             params.connectId = serialNumber_;
@@ -403,7 +403,7 @@ private:
         AAFwk::Want want;
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
-        PRINT_CALL(env, napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId));
+        PRINT_CALL(engine, napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId));
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
         {
             std::shared_lock<std::shared_mutex> lock(g_connectsMutex_);
