@@ -196,7 +196,7 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_filename = nullptr,
         .nm_register_func = Init,
         .nm_modname = "scan",
-        .nm_priv = ((void *)0),
+        .nm_priv = (static_cast<void *>(nullptr)),
         .reserved = { 0 } };
     napi_module_register(&module);
     SCAN_HILOGI("module register scan");

@@ -28,6 +28,7 @@
 
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_json_util.h"
 
 namespace OHOS {
@@ -121,7 +122,7 @@ int32_t PrintUserData::QueryHistoryPrintJobById(const std::string &printJobId, P
                 PRINT_HILOGE("printJob object is null.");
                 return E_PRINT_INVALID_PRINTJOB;
             }
-            
+
             if (innerIt->first == printJobId) {
                 printJob = *(innerIt->second);
                 return E_PRINT_NONE;
@@ -202,7 +203,7 @@ int32_t PrintUserData::SetLastUsedPrinter(const std::string &printerId)
     }
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     lastUsedPrinterId_ = printerId;
-    
+
     DeletePrinterFromUsedPrinterList(printerId);
     usedPrinterList_.push_front(printerId);
     PRINT_HILOGI("put printer at the head of the queue, printerId: %{private}s", usedPrinterList_.front().c_str());
@@ -530,9 +531,14 @@ bool PrintUserData::FlushCacheFile(int32_t fd, const std::string jobId, uint32_t
         return false;
     }
     cacheDir = cachePath;
-    std::ostringstream cacheFileStream;
-    cacheFileStream << cacheDir << "/" << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
-    std::string cacheFilePath = cacheFileStream.str();
+    std::ostringstream fileNameStream;
+    fileNameStream << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
+    std::string fileName = fileNameStream.str();
+    if (!PrintUtils::IsPathValidForCreate(cacheDir, fileName)) {
+        PRINT_HILOGE("Invalid cache file path!");
+        return false;
+    }
+    std::string cacheFilePath = cacheDir + "/" + fileName;
     int32_t cacheFileFd = open(cacheFilePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (cacheFileFd == -1) {
         PRINT_HILOGE("Open file failed");
@@ -754,13 +760,18 @@ void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
         return;
     }
     filePath.assign(cachePath);
-    std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    std::string fileName = printerId + ".json";
+    if (!PrintUtils::IsPathValidForCreate(filePath, fileName)) {
+        PRINT_HILOGE("Invalid print history job file path!");
+        return;
+    }
+    std::string printHistoryJobFilePath = filePath + "/" + fileName;
     if (printHistoryJobList_.find(printerId) == printHistoryJobList_.end()) {
         PRINT_HILOGE("printHistoryJobList_[printerId] is null.");
         std::filesystem::remove(printHistoryJobFilePath);
         return;
     }
-    
+
     FILE *printHistoryJobFile = fopen(printHistoryJobFilePath.c_str(), "w+");
     if (printHistoryJobFile == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -789,7 +800,7 @@ std::string PrintUserData::ParsePrintHistoryJobListToJsonString(const std::strin
             if (it->second == nullptr) {
                 return "";
             }
-            
+
             Json::Value printJobJson;
             for (auto innerIt = (it->second)->begin(); innerIt != (it->second)->end(); innerIt++) {
                 printJobJson[innerIt->first] = (innerIt->second)->ConvertToJsonObject();
@@ -812,6 +823,10 @@ bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
     }
     filePath.assign(cachePath);
     std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    if (!PrintUtils::IsPathValid(printHistoryJobFilePath)) {
+        PRINT_HILOGE("Invalid print history job file path!");
+        return false;
+    }
     Json::Value printHistoryJobJson;
     if (GetJsonObjectFromFile(printHistoryJobJson, printHistoryJobFilePath, printerId) &&
         ParseJsonObjectToPrintHistory(printHistoryJobJson, printerId)) {
@@ -982,7 +997,7 @@ PrintPreviewAttribute PrintUserData::ParseJsonObjectToPrintPreviewAttribute(cons
 PrintPageSize PrintUserData::ParseJsonObjectToPrintPageSize(const Json::Value &jsonObject)
 {
     PrintPageSize pageSize;
-    
+
     if (PrintJsonUtil::IsMember(jsonObject, "id_") && jsonObject["id_"].isString()) {
         pageSize.SetId(jsonObject["id_"].asString());
     }

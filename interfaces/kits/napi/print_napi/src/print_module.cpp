@@ -550,7 +550,7 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_filename = nullptr,
         .nm_register_func = Init,
         .nm_modname = "print",
-        .nm_priv = ((void *)0),
+        .nm_priv = (static_cast<void *>(nullptr)),
         .reserved = {0}};
     napi_module_register(&module);
     PRINT_HILOGD("module register print");

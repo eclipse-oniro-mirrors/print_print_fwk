@@ -598,12 +598,15 @@ HWTEST_F(PrintUtilsTest, CreateTempFileWithData_Test, TestSize.Level2)
  */
 HWTEST_F(PrintUtilsTest, GenerateTempFilePath_Test, TestSize.Level2)
 {
-    const std::string testDir = "/tmp/test_files";
-    std::string result = PrintUtils::GenerateTempFilePath(testDir);
-    EXPECT_TRUE(result.find(testDir) == 0);
+    std::string result = PrintUtils::GenerateTempFilePath("/data");
+    EXPECT_TRUE(result.find("/data") == 0);
     EXPECT_TRUE(result.find("/job_") != std::string::npos);
+
     result = PrintUtils::GenerateTempFilePath("");
-    EXPECT_TRUE(result.find("/job_") == 0);
+    EXPECT_TRUE(result.empty());
+
+    result = PrintUtils::GenerateTempFilePath("/nonexistent_dir");
+    EXPECT_TRUE(result.empty());
 }
 
 /**
@@ -769,14 +772,14 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_005, TestSize.Leve
 {
     // Data table: test all valid numberUp values
     uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
-    
+
     for (auto numberUp : validNumberUps) {
         PrintJobParams params;
         params.printerId = "printer-001";
         params.docFlavor = 0;
         params.printFdList.emplace_back(1);
         params.numberUp = numberUp;
-        
+
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr) << "Failed for numberUp=" << numberUp;
         EXPECT_EQ(result->GetNumberUpArgs().numberUp, numberUp);
@@ -798,7 +801,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_006, TestSize.Leve
         NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
         NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
     };
-    
+
     for (auto layout : layouts) {
         PrintJobParams params;
         params.printerId = "printer-001";
@@ -806,7 +809,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_006, TestSize.Leve
         params.printFdList.emplace_back(1);
         params.numberUp = 4;
         params.numberUpLayout = layout;
-        
+
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr) << "Failed for layout=" << layout;
         EXPECT_EQ(result->GetNumberUpArgs().numberUpLayout, layout);
@@ -823,7 +826,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_007, TestSize.Leve
 {
     // Data table: test mirror values
     uint32_t mirrorValues[] = {PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED};
-    
+
     for (auto mirror : mirrorValues) {
         PrintJobParams params;
         params.printerId = "printer-001";
@@ -831,7 +834,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_007, TestSize.Leve
         params.printFdList.emplace_back(1);
         params.numberUp = 4;
         params.mirror = mirror;
-        
+
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr) << "Failed for mirror=" << mirror;
         EXPECT_EQ(result->GetNumberUpArgs().mirror, mirror);
@@ -852,7 +855,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_008, TestSize.Leve
         PRINT_PAGE_BORDER_SINGLE,
         PRINT_PAGE_BORDER_DOUBLE
     };
-    
+
     for (auto border : borderValues) {
         PrintJobParams params;
         params.printerId = "printer-001";
@@ -860,7 +863,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_008, TestSize.Leve
         params.printFdList.emplace_back(1);
         params.numberUp = 4;
         params.pageBorder = border;
-        
+
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr) << "Failed for pageBorder=" << border;
         EXPECT_EQ(result->GetNumberUpArgs().pageBorder, border);
@@ -882,7 +885,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Leve
         uint32_t mirror;
         uint32_t pageBorder;
     };
-    
+
     std::vector<TestCase> testCases = {
         {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
         {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
@@ -891,7 +894,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Leve
         {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
         {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
     };
-    
+
     int index = 0;
     for (const auto& tc : testCases) {
         PrintJobParams params;
@@ -902,7 +905,7 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Leve
         params.numberUpLayout = tc.numberUpLayout;
         params.mirror = tc.mirror;
         params.pageBorder = tc.pageBorder;
-        
+
         auto result = PrintUtils::ConvertParamsToPrintJob(params);
         ASSERT_NE(result, nullptr) << "Failed at index " << index;
         NumberUpArgs args = result->GetNumberUpArgs();
@@ -912,6 +915,103 @@ HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Leve
         EXPECT_EQ(args.pageBorder, tc.pageBorder) << "Failed at index " << index;
         index++;
     }
+}
+
+// IsPathValidForCreate parameterized test structure
+struct IsPathValidForCreateTestCase {
+    std::string testName;
+    std::string parentDir;
+    std::string fileName;
+    bool expectedResult;
+    std::string description;
+};
+
+class IsPathValidForCreateCommon {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
+};
+
+class IsPathValidForCreateTest : public IsPathValidForCreateCommon,
+                                  public testing::TestWithParam<IsPathValidForCreateTestCase> {
+public:
+    using IsPathValidForCreateCommon::SetUpTestCase;
+    using IsPathValidForCreateCommon::TearDownTestCase;
+};
+
+INSTANTIATE_TEST_SUITE_P(IsPathValidForCreateTest, IsPathValidForCreateTest,
+    testing::Values(
+        // Normal cases
+        IsPathValidForCreateTestCase{
+            "ValidPath", "/data", "file.txt", true,
+            "Normal: valid parent directory and file name"},
+        IsPathValidForCreateTestCase{
+            "ValidSubDir", "/data/local/tmp", "config.json", true,
+            "Normal: valid subdirectory as parent"},
+        IsPathValidForCreateTestCase{
+            "FileNameStartsWithDots", "/data", "..file.txt", true,
+            "Normal: fileName starts with .. but is not path traversal"},
+        IsPathValidForCreateTestCase{
+            "FileNameContainsBackslash", "/data", "sub\\config.json", true,
+            "Error: fileName contains backslash (Windows path separator)"},
+
+        // Parameter empty
+        IsPathValidForCreateTestCase{
+            "EmptyParentDir", "", "file.txt", false,
+            "Error: empty parent directory"},
+        IsPathValidForCreateTestCase{
+            "EmptyFileName", "/data", "", false,
+            "Error: empty file name"},
+        IsPathValidForCreateTestCase{
+            "BothEmpty", "", "", false,
+            "Error: empty parent directory and file name"},
+
+        // Parent directory not exist (IsPathValid returns false)
+        IsPathValidForCreateTestCase{
+            "ParentNotExist", "/nonexistent", "file.txt", false,
+            "Error: parent directory does not exist"},
+
+        // Invalid fileName
+        IsPathValidForCreateTestCase{
+            "FileNameContainsSlash", "/data", "sub/file.txt", false,
+            "Error: fileName contains /"},
+        IsPathValidForCreateTestCase{
+            "FileNameContainsNullByte", "/data", std::string("file\0.txt", 9), false,
+            "Error: fileName contains null byte"},
+        IsPathValidForCreateTestCase{
+            "FileNameIsDot", "/data", ".", false,
+            "Error: fileName is . (current directory marker)"},
+        IsPathValidForCreateTestCase{
+            "PathTraversal", "/data", "..", false,
+            "Security: fileName is .. causes path traversal"},
+
+        // Invalid parentDir
+        IsPathValidForCreateTestCase{
+            "ParentDirTraversal", "/data/..", "config.json", false,
+            "Error: parentDir contains path traversal"},
+        IsPathValidForCreateTestCase{
+            "RelativeParentDir", "./", "config.json", false,
+            "Error: relative path not allowed"},
+        IsPathValidForCreateTestCase{
+            "WindowsStylePath", "\\data\\local\\tmp", "config.json", false,
+            "Error: Windows-style path not supported on Linux"}));
+
+/**
+ * @tc.name: PrintUtilsTest_IsPathValidForCreate_001
+ * @tc.desc: IsPathValidForCreate parameterized test for path validation
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_P(IsPathValidForCreateTest, IsPathValidForCreate_Parameterized_Test, TestSize.Level1)
+{
+    const IsPathValidForCreateTestCase& testCase = GetParam();
+    bool result = PrintUtils::IsPathValidForCreate(testCase.parentDir, testCase.fileName);
+
+    EXPECT_EQ(result, testCase.expectedResult) <<
+        "Test: " << testCase.testName <<
+        ", Description: " << testCase.description <<
+        ", ParentDir: " << testCase.parentDir <<
+        ", FileName: " << testCase.fileName;
 }
 
 }  // namespace Print

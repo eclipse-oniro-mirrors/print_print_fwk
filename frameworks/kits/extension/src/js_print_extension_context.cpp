@@ -288,6 +288,7 @@ private:
                 return;
             }
             PRINT_HILOGD("context->ConnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
+            PRINT_HILOGD("context->ConnectAbility connection:%{public}" PRId64, connectId);
             if (!context->ConnectAbility(want, connection)) {
                     connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
             }
