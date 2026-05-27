@@ -325,7 +325,7 @@ bool JsPrintExtension::Callback(std::string funcName)
             return;
         }
         napi_handle_scope scope = nullptr;
-        PRINT_CALL_RETURN_VOID(env, napi_open_handle_scope(param->env, &scope));
+        PRINT_CALL_RETURN_VOID(param->env, napi_open_handle_scope(param->env, &scope));
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             return;
@@ -367,7 +367,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
             return;
         }
         napi_handle_scope scope = nullptr;
-        PRINT_CALL_RETURN_VOID(env, napi_open_handle_scope(param->env, &scope));
+        PRINT_CALL_RETURN_VOID(param->env, napi_open_handle_scope(param->env, &scope));
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             return;
@@ -411,7 +411,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
             return;
         }
         napi_handle_scope scope = nullptr;
-        PRINT_CALL_RETURN_VOID(env, napi_open_handle_scope(param->env, &scope));
+        PRINT_CALL_RETURN_VOID(param->env, napi_open_handle_scope(param->env, &scope));
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             return;
