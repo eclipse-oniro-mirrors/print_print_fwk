@@ -203,17 +203,22 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
 static const StdStringMultiMap MMAP_CUPS_CHOICE_QUALITY = {
     {CUPS_PRINT_QUALITY_DRAFT, "Draft"},
     {CUPS_PRINT_QUALITY_DRAFT, "Fast"},
+    {CUPS_PRINT_QUALITY_DRAFT, "Economy"},
     {CUPS_PRINT_QUALITY_NORMAL, "Normal"},
+    {CUPS_PRINT_QUALITY_NORMAL, "Standard"},
     {CUPS_PRINT_QUALITY_HIGH, "High"},
     {CUPS_PRINT_QUALITY_HIGH, "Best"},
+    {CUPS_PRINT_QUALITY_HIGH, "Photo"},
 };
 
 static const StdStringMultiMap MMAP_CUPS_CHOICE_COLOR_MODEL = {
     {CUPS_PRINT_COLOR_MODE_MONOCHROME, "Gray"},
-    {CUPS_PRINT_COLOR_MODE_MONOCHROME, "monochrome"},
+    {CUPS_PRINT_COLOR_MODE_MONOCHROME, "GrayScale"},
+    {CUPS_PRINT_COLOR_MODE_MONOCHROME, "Mono"},
+    {CUPS_PRINT_COLOR_MODE_MONOCHROME, "Monochrome"},
     {CUPS_PRINT_COLOR_MODE_COLOR, "RGB"},
     {CUPS_PRINT_COLOR_MODE_COLOR, "CMYK"},
-    {CUPS_PRINT_COLOR_MODE_COLOR, "color"},
+    {CUPS_PRINT_COLOR_MODE_COLOR, "Color"},
 };
 
 static const StdStringMultiMap MMAP_CUPS_CHOICE_DUPLEX = {
@@ -710,46 +715,176 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
     return E_PRINT_NONE;
 }
 
-bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
-    std::string &optName, std::string &choiceName)
+bool FindDuplexChoiceByPwg(ppd_file_t *ppd, const std::string &duplexId, std::string &optName, std::string &choiceName)
 {
-    ppd_option_t *ppdOption = nullptr;
-    const CupsOptionInfo *optInf = nullptr;
+    if (ppd == nullptr || ppd->cache == nullptr) {
+        PRINT_HILOGE("ppd or cache is nullptr");
+        return false;
+    }
+    _ppd_cache_t *ppdCache = ppd->cache;
+    if (ppdCache->sides_option == nullptr) {
+        PRINT_HILOGE("sides_option is nullptr");
+        return false;
+    }
+    const char *ppdChoice = nullptr;
+    if (!strcasecmp(duplexId.c_str(), CUPS_SIDES_ONE_SIDED)) {
+        ppdChoice = ppdCache->sides_1sided;
+    } else if (!strcasecmp(duplexId.c_str(), CUPS_SIDES_TWO_SIDED_PORTRAIT)) {
+        ppdChoice = ppdCache->sides_2sided_long;
+    } else if (!strcasecmp(duplexId.c_str(), CUPS_SIDES_TWO_SIDED_LANDSCAPE)) {
+        ppdChoice = ppdCache->sides_2sided_short;
+    }
+    if (ppdChoice != nullptr) {
+        optName = ppdCache->sides_option;
+        choiceName = ppdChoice;
+        return true;
+    }
+    PRINT_HILOGD("no cache match for duplexId=%{public}s", duplexId.c_str());
+    return false;
+}
+
+bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType,
+    std::string &ppdChoiceName)
+{
+    if (ppd == nullptr || ppd->cache == nullptr || ppd->cache->types == nullptr) {
+        PRINT_HILOGE("ppd, cache or types is nullptr");
+        return false;
+    }
+    ppd_option_t *typeOption = ppdFindOption(ppd, "MediaType");
+    if (typeOption == nullptr) {
+        PRINT_HILOGE("ppdFindOption MediaType fail");
+        return false;
+    }
+    _ppd_cache_t *ppdCache = ppd->cache;
+    for (int i = 0; i < ppdCache->num_types; i++) {
+        if (!strcasecmp(pwgMediaType.c_str(), ppdCache->types[i].pwg)) {
+            ppd_choice_t *typeChoice = ppdFindChoice(typeOption, ppdCache->types[i].ppd);
+            if (typeChoice != nullptr) {
+                ppdChoiceName = typeChoice->choice;
+                return true;
+            }
+        }
+    }
+    PRINT_HILOGD("no cache match for pwgMediaType=%{public}s", pwgMediaType.c_str());
+    return false;
+}
+
+bool FindPageSizeChoiceByPwg(ppd_file_t *ppd, const std::string &pageSizeId, std::string &ppdChoiceName)
+{
+    if (ppd == nullptr || ppd->cache == nullptr || ppd->cache->sizes == nullptr) {
+        PRINT_HILOGE("ppd, cache or sizes is nullptr");
+        return false;
+    }
+
+    PrintPageSize pageSize;
+    if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+        PRINT_HILOGE("unsupported page size id: %{public}s", pageSizeId.c_str());
+        return false;
+    }
+
+    ppd_option_t *sizeOption = ppdFindOption(ppd, PPD_OPT_NAME_PAGESIZE.c_str());
+    if (sizeOption == nullptr) {
+        PRINT_HILOGE("FindPageSizeChoiceByPwg: ppdFindOption PageSize fail");
+        return false;
+    }
+
+    _ppd_cache_t *ppdCache = ppd->cache;
+    pwg_size_t *cacheSizes = ppdCache->sizes;
+    for (int i = 0; i < ppdCache->num_sizes; i++) {
+        const pwg_size_t &pwgSize = cacheSizes[i];
+        if (pageSize.GetName() == pwgSize.map.pwg) {
+            ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
+            if (sizeChoice != nullptr) {
+                ppdChoiceName = sizeChoice->choice;
+                return true;
+            }
+        }
+    }
+    PRINT_HILOGD("no cache match for pageSizeId=%{public}s", pageSizeId.c_str());
+    return false;
+}
+
+bool FindPpdOptionInfo(ppd_file_t *ppd, const std::string &type,
+    ppd_option_t *&ppdOption, const CupsOptionInfo *&optInf)
+{
     auto optRange = CUPS_PPD_FIELD_MMAP.equal_range(type);
     for (auto it = optRange.first; it != optRange.second; ++it) {
         ppdOption = ppdFindOption(ppd, it->second.name.c_str());
         if (ppdOption != nullptr) {
             optInf = &it->second;
-            break;
+            return true;
         }
     }
+    PRINT_HILOGW("FindPpdOptionInfo: no PPD option found for type=%{public}s", type.c_str());
+    return false;
+}
 
-    if (ppdOption == nullptr) {
-        optName = type;
-        choiceName = val;
-        return false;
-    }
-
-    optName = optInf->name;
+bool FindChoiceByMap(ppd_option_t *ppdOption, const CupsOptionInfo *optInf,
+    const std::string &val, std::string &choiceName)
+{
     auto choiceRange = optInf->choiceMmap.equal_range(val);
     for (auto it = choiceRange.first; it != choiceRange.second; ++it) {
         ppd_choice_t *ppdChoice = ppdFindChoice(ppdOption, it->second.c_str());
         if (ppdChoice != nullptr) {
-            choiceName = it->second;
+            choiceName = ppdChoice->choice;
             return true;
         }
     }
 
-    if (PPD_OPT_NAME_PAGESIZE == ppdOption->keyword) {
-        // Convert Human-readable page size name to PPD name
-        for (int i = 0; i < ppdOption->num_choices; ++i) {
-            if (val == ppdOption->choices[i].text) {
-                choiceName = ppdOption->choices[i].choice;
-                return true;
-            }
+    return false;
+}
+
+bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val,
+    std::string &choiceName)
+{
+    if (ppdOption == nullptr) {
+        PRINT_HILOGE("FindChoiceInPpdOption: ppdOption is nullptr");
+        return false;
+    }
+    for (int i = 0; i < ppdOption->num_choices; i++) {
+        ppd_choice_t *choice = &ppdOption->choices[i];
+        if (!strcasecmp(val.c_str(), choice->choice)) {
+            choiceName = choice->choice;
+            return true;
+        }
+        if (!strcasecmp(val.c_str(), choice->text)) {
+            choiceName = choice->choice;
+            return true;
         }
     }
+    PRINT_HILOGD("FindChoiceInPpdOption: no match for val=%{public}s", val.c_str());
+    return false;
+}
 
+bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
+    std::string &optName, std::string &choiceName)
+{
+    ppd_option_t *ppdOption = nullptr;
+    const CupsOptionInfo *optInf = nullptr;
+    if (!FindPpdOptionInfo(ppd, type, ppdOption, optInf)) {
+        optName = type;
+        choiceName = val;
+        return false;
+    }
+    optName = optInf->name;
+
+    if (type == PRINT_PARAM_TYPE_DUPLEX_MODE && FindDuplexChoiceByPwg(ppd, val, optName, choiceName)) {
+        return true;
+    }
+    if (type == PRINT_PARAM_TYPE_PAGE_SIZE && FindPageSizeChoiceByPwg(ppd, val, choiceName)) {
+        return true;
+    }
+    if (type == PRINT_PARAM_TYPE_MEDIA_TYPE && FindMediaTypeChoiceByPwg(ppd, val, choiceName)) {
+        return true;
+    }
+    if (FindChoiceByMap(ppdOption, optInf, val, choiceName)) {
+        return true;
+    }
+    if (FindChoiceInPpdOption(ppdOption, val, choiceName)) {
+        return true;
+    }
+
+    PRINT_HILOGW("no match for type=%{public}s, val=%{public}s", type.c_str(), val.c_str());
     choiceName = val;
     return false;
 }
@@ -759,6 +894,8 @@ int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::strin
     std::string optName;
     std::string choiceName;
     ConvertOptionAndChoiceNameToPpd(ppd, type, val, optName, choiceName);
+    PRINT_HILOGD("type=%{public}s, optName=%{public}s; val=%{public}s, choiceName=%{public}s",
+        type.c_str(), optName.c_str(), val.c_str(), choiceName.c_str());
 
     return ppdMarkOption(ppd, optName.c_str(), choiceName.c_str());
 }
