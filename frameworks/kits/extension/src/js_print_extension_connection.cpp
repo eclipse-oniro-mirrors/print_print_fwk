@@ -134,18 +134,21 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     PRINT_HILOGD("OnAbilityDisconnectDone connects_.size:%{public}zu", connects_.size());
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
-    auto item = std::find_if(connects_.begin(),
-        connects_.end(),
-        [bundleName, abilityName](
-            const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
-            return (bundleName == obj.first.want.GetBundle()) &&
-                   (abilityName == obj.first.want.GetElement().GetAbilityName());
-        });
-    if (item != connects_.end()) {
-        std::unique_lock<std::shared_timed_mutex> lock(managersMutex_);
-        // match bundlename && abilityname
-        connects_.erase(item);
-        PRINT_HILOGD("OnAbilityDisconnectDone erase connects_.size:%{public}zu", connects_.size());
+    {
+        std::unique_lock<std::shared_mutex> lock(g_connectsMutex_);
+        PRINT_HILOGD("OnAbilityDisconnectDone connects_.size:%{public}zu", connects_.size());
+        auto item = std::find_if(connects_.begin(),
+            connects_.end(),
+            [&bundleName, &abilityName](
+                const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+                return (bundleName == obj.first.want.GetBundle()) &&
+                    (abilityName == obj.first.want.GetElement().GetAbilityName());
+            });
+        if (item != connects_.end()) {
+            // match bundlename && abilityname
+            connects_.erase(item);
+            PRINT_HILOGD("OnAbilityDisconnectDone erase connects_.size:%{public}zu", connects_.size());
+        }
     }
     PRINT_HILOGD("OnAbilityDisconnectDone napi_call_function success");
     napi_value callResult = nullptr;

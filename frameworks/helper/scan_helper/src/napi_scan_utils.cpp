@@ -391,10 +391,8 @@ void NapiScanUtils::SetBooleanProperty(napi_env env, napi_value object, const st
 void NapiScanUtils::DefineProperties(
     napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
 {
-    napi_property_descriptor descriptors[properties.size()];
-    std::copy(properties.begin(), properties.end(), descriptors);
-
-    (void)napi_define_properties(env, object, properties.size(), descriptors);
+    std::vector<napi_property_descriptor> descriptors(properties.begin(), properties.end());
+    (void)napi_define_properties(env, object, descriptors.size(), descriptors.data());
 }
 
 std::string NapiScanUtils::ToLower(const std::string &s)
@@ -509,7 +507,7 @@ size_t NapiScanUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value
     size_t argc = length;
     napi_value thisVal = nullptr;
     void *data = nullptr;
-    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+    SCAN_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data), 0);
     return argc;
 }
 

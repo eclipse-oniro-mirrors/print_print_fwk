@@ -123,6 +123,8 @@ private:
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~InnerPrintContext() {};
     };
+    static napi_status BuildPrinterInfoArrayOutput(std::shared_ptr<InnerPrintContext> context,
+        napi_env env, napi_value* result);
     static bool CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> context);
 };
 }  // namespace OHOS::Print
