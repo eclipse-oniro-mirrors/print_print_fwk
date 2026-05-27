@@ -286,7 +286,7 @@ private:
                     task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
                 return;
             }
-            PRINT_HILOGD("context->ConnectAbility connection:%{public}d", (int32_t)connectId);
+            PRINT_HILOGD("context->ConnectAbility connection:%{public}" PRId64, connectId);
             if (!context->ConnectAbility(want, connection)) {
                     connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
             }
@@ -341,7 +341,7 @@ private:
                 task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
                 return;
             }
-            PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d", (int32_t)connectId);
+            PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}" PRId64, connectId);
             if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
                 connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
             }
