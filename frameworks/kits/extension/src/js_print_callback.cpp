@@ -29,6 +29,11 @@ bool JsPrintCallback::Call(napi_env env, WorkParam *param, std::function<void(Wo
             PRINT_HILOGE("param is a nullptr");
             return;
         }
+        if (!workCb) {
+            PRINT_HILOGE("workCb is a nullptr");
+            delete param;
+            return;
+        }
         workCb(param);
         delete param;
     };

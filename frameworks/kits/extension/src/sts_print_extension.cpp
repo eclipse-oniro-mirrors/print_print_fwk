@@ -33,6 +33,9 @@ StsPrintExtension* StsPrintExtension::Create(const std::unique_ptr<Runtime>& run
 {
     PRINT_HILOGD("StsPrintExtension begin Create");
     stsExtension_ = new (std::nothrow) StsPrintExtension(static_cast<ETSRuntime&>(*runtime));
+    if (stsExtension_ == nullptr) {
+        PRINT_HILOGE("StsPrintExtension creation failed due to memory allocation");
+    }
     return stsExtension_;
 }
 
@@ -323,6 +326,7 @@ bool StsPrintExtension::Callback(const std::string &funcName, const std::string 
     }
     
     ani_string stsPrinterId = CreateAniString(env, printerId);
+    PRINT_CHECK_NULL_AND_RETURN(stsPrinterId, false);
     return CallObjectMethod(false, funcName.c_str(), "C{@ohos.lang.String}:", stsPrinterId);
 }
 

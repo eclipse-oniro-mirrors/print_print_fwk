@@ -115,6 +115,10 @@ void SmbHostSearchHelper::SetTimeval(timeval &timeout, const long &tvSec, const 
 
 std::vector<PrintSharedHost> SmbHostSearchHelper::GetSharedHosts()
 {
+    if (sock_ < 0) {
+        PRINT_HILOGE("sock_ is invalid");
+        return scannedHosts_->GetPrintSharedHost();
+    }
     fd_set readSet;
     fd_set writeSet;
     bool moreToSend = true;

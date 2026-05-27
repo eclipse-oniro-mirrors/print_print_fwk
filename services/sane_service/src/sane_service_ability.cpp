@@ -304,6 +304,7 @@ ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice> &deviceInfos, 
         SCAN_HILOGE("sane_get_devices error, ret = [%{public}d]", status);
         return ERR_OK;
     }
+    SCAN_CHECK_NULL_AND_RETURN(deviceList, ERR_OK);
     for (int32_t i = 0; deviceList[i] != nullptr; i++) {
         SaneDevice device;
         if (deviceList[i]->name != nullptr) {

@@ -76,6 +76,12 @@ namespace OHOS::Print {
         return (retVal);                                \
     }
 
+#define PRINT_CHECK_NULL_RETURN_VOID(ptr)               \
+    if ((ptr) == nullptr) {                             \
+        PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
+        return;                                         \
+    }
+
 enum PrintErrorCode {
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,

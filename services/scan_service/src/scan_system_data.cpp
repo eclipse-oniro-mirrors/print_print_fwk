@@ -140,7 +140,12 @@ void ScanSystemData::RefreshUsbDeviceId()
             continue;
         }
         std::string serialNumber = scanDevIt.second->serialNumber;
-        auto usbPort = DelayedSingleton<ScanUsbManager>::GetInstance()->GetPortBySerialNumber(serialNumber);
+        auto scanUsbManager = DelayedSingleton<ScanUsbManager>::GetInstance();
+        if (scanUsbManager == nullptr) {
+            SCAN_HILOGE("scanUsbManager is nullptr");
+            continue;
+        }
+        auto usbPort = scanUsbManager->GetPortBySerialNumber(serialNumber);
         if (usbPort == "") {
             continue;
         }

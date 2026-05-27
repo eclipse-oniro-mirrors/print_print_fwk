@@ -121,10 +121,12 @@ void SetCapabilityGroupAttribute(ipp_t *response, PrinterCapability &printerCaps
             "printer-state", ippEnumString("printer-state", ippGetInteger(attrPtr, 0)));
     }
     if ((attrPtr = ippFindAttribute(response, "printer-info", IPP_TAG_TEXTLANG)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("printer-info", ippGetString(attrPtr, 0, nullptr));
+        const char *printerInfo = ippGetString(attrPtr, 0, nullptr);
+        printerCaps.SetPrinterAttrNameAndValue("printer-info", printerInfo ? printerInfo : "");
     }
     if ((attrPtr = ippFindAttribute(response, "printer-location", IPP_TAG_TEXT)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("printer-location", ippGetString(attrPtr, 0, nullptr));
+        const char *printerLocation = ippGetString(attrPtr, 0, nullptr);
+        printerCaps.SetPrinterAttrNameAndValue("printer-location", printerLocation ? printerLocation : "");
     }
 }
 
@@ -312,6 +314,10 @@ void ParseMediaColDefaultAttributes(ipp_t *response, PrinterCapability &printerC
         PRINT_HILOGW("media-col-default missing");
         return;
     }
+    if (ippGetCount(defaultMediaPtr) <= 0) {
+        PRINT_HILOGW("defaultMediaPtr values array is empty");
+        return;
+    }
     ipp_t *defaultMediaCol = defaultMediaPtr->values[0].collection;
     if (defaultMediaCol == nullptr) {
         PRINT_HILOGW("defaultMediaCol is null");
@@ -337,13 +343,15 @@ void ParseMediaColDefaultAttributes(ipp_t *response, PrinterCapability &printerC
     }
     attrPtr = ippFindAttribute(defaultMediaCol, "media-source", IPP_TAG_KEYWORD);
     if (attrPtr != nullptr) {
-        PRINT_HILOGD("media-source-default found: %{public}s", ippGetString(attrPtr, 0, nullptr));
-        printerCaps.SetPrinterAttrNameAndValue("media-source-default", ippGetString(attrPtr, 0, nullptr));
+        const char *mediaSource = ippGetString(attrPtr, 0, nullptr);
+        PRINT_HILOGD("media-source-default found: %{public}s", mediaSource ? mediaSource : "");
+        printerCaps.SetPrinterAttrNameAndValue("media-source-default", mediaSource ? mediaSource : "");
     }
     attrPtr = ippFindAttribute(defaultMediaCol, "media-type", IPP_TAG_KEYWORD);
     if (attrPtr != nullptr) {
-        PRINT_HILOGD("media-type-default found: %{public}s", ippGetString(attrPtr, 0, nullptr));
-        printerCaps.SetPrinterAttrNameAndValue("media-type-default", ippGetString(attrPtr, 0, nullptr));
+        const char *mediaType = ippGetString(attrPtr, 0, nullptr);
+        PRINT_HILOGD("media-type-default found: %{public}s", mediaType ? mediaType : "");
+        printerCaps.SetPrinterAttrNameAndValue("media-type-default", mediaType ? mediaType : "");
     }
 }
 

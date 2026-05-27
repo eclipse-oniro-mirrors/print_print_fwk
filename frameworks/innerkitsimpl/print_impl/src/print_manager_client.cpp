@@ -59,22 +59,17 @@ bool PrintManagerClient::GetPrintServiceProxy()
         PRINT_HILOGD("printServiceProxy_ is not null");
         return true;
     }
-    bool result = false;
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager != nullptr) {
-        auto systemAbility = systemAbilityManager->GetSystemAbility(PRINT_SERVICE_ID, "");
-        if (systemAbility != nullptr) {
-            deathRecipient_ = new (std::nothrow) PrintSaDeathRecipient();
-            if (deathRecipient_ != nullptr) {
-                systemAbility->AddDeathRecipient(deathRecipient_);
-                printServiceProxy_ = iface_cast<IPrintService>(systemAbility);
-                PRINT_HILOGD("Getting PrintManagerClientProxy succeeded.");
-                result = true;
-            }
-        }
-    }
-    PRINT_HILOGD("Getting PrintManagerClientProxy ret[%{public}d].", result);
-    return result;
+    PRINT_CHECK_NULL_AND_RETURN(systemAbilityManager, false);
+    auto systemAbility = systemAbilityManager->GetSystemAbility(PRINT_SERVICE_ID, "");
+    PRINT_CHECK_NULL_AND_RETURN(systemAbility, false);
+    deathRecipient_ = new (std::nothrow) PrintSaDeathRecipient();
+    PRINT_CHECK_NULL_AND_RETURN(deathRecipient_, false);
+    systemAbility->AddDeathRecipient(deathRecipient_);
+    printServiceProxy_ = iface_cast<IPrintService>(systemAbility);
+    PRINT_CHECK_NULL_AND_RETURN(printServiceProxy_, false);
+    PRINT_HILOGD("Getting PrintManagerClientProxy succeeded.");
+    return true;
 }
 
 void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)

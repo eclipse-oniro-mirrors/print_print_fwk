@@ -53,8 +53,8 @@ struct PrintJobParams {
     PrintPageSize pageSize;
     std::string jobId;
     std::vector<uint32_t> printFdList;
-    void* binaryData;
-    size_t dataLength;
+    void* binaryData = nullptr;
+    size_t dataLength = 0;
     int32_t printQuality = PARAM_NOT_SET;
     std::string mediaType;
     int32_t isBorderless = PARAM_NOT_SET;

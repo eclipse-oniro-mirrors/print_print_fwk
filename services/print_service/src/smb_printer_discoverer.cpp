@@ -184,6 +184,12 @@ void SmbPrinterDiscoverer::ShareEnumCallback(struct smb2_context* smb2, int32_t 
     }
     auto* rep = static_cast<struct srvsvc_NetrShareEnum_rep*>(commandData);
     if (rep->ses.ShareInfo.Level1.EntriesRead > 0) {
+        if (rep->ses.ShareInfo.Level1.Buffer == nullptr ||
+            rep->ses.ShareInfo.Level1.Buffer->share_info_1 == nullptr) {
+            PRINT_HILOGE("Buffer or share_info_1 is null");
+            smbLib_->FreeData(smb2, rep);
+            return;
+        }
         for (uint32_t i = 0; i < rep->ses.ShareInfo.Level1.EntriesRead; i++) {
             const auto& share = rep->ses.ShareInfo.Level1.Buffer->share_info_1[i];
             if ((share.type & PRINTER_TYPE) == SHARE_TYPE_PRINTQ) {

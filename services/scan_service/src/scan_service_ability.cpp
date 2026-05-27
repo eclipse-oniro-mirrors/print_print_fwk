@@ -155,8 +155,12 @@ void ScanServiceAbility::OnStart()
     int32_t ret = ServiceInit();
     if (ret != ERR_OK) {
         auto callback = [=]() { ServiceInit(); };
-        serviceHandler_->PostTask(callback, INIT_INTERVAL);
-        SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
+        if (serviceHandler_ != nullptr) {
+            serviceHandler_->PostTask(callback, INIT_INTERVAL);
+            SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
+        } else {
+            SCAN_HILOGE("ScanServiceAbility Init failed and serviceHandler_ is nullptr");
+        }
         return;
     }
     
@@ -473,6 +477,7 @@ int32_t ScanServiceAbility::GetScannerList()
     auto exec_sane_getscaner = [=]() {
         SaneGetScanner();
     };
+    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
     SCAN_HILOGI("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
@@ -999,6 +1004,7 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
             SCAN_HILOGE("discoverMode is invalid.");
         }
     };
+    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
 }
@@ -1156,6 +1162,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         ScanTask task(scannerId, userId, batchMode);
         StartScanTask(task);
     };
+    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
     scanPictureData_.SetCallerPid(IPCSkeleton::GetCallingPid());
     SCAN_HILOGI("StartScan successfully");

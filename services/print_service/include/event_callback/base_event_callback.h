@@ -104,7 +104,7 @@ public:
 protected:
     bool AddDeathRecipient(const sptr<IRemoteObject> &remoteObject)
     {
-        if (!remoteObject) {
+        if (!remoteObject || !deathRecipient_) {
             return false;
         }
         remoteObject->AddDeathRecipient(deathRecipient_);
@@ -113,7 +113,7 @@ protected:
 
     bool RemoveDeathRecipient(const sptr<IRemoteObject> &remoteObject)
     {
-        if (!remoteObject) {
+        if (!remoteObject || !deathRecipient_) {
             return false;
         }
         remoteObject->RemoveDeathRecipient(deathRecipient_);

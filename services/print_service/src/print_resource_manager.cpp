@@ -15,6 +15,7 @@
 
 #include "print_resource_manager.h"
 #include "print_log.h"
+#include "print_constant.h"
 #include "locale_config.h"
 #include "image_source.h"
 #include "pixel_map.h"
@@ -55,6 +56,7 @@ void PrintResourceManager::RefreshResConfig()
         return;
     }
     std::lock_guard<std::mutex> lock(resConfigMutex_);
+    PRINT_CHECK_NULL_RETURN_VOID(resConfig_);
     resConfig_->SetLocaleInfo(locale.getLanguage(), locale.getScript(), locale.getCountry());
     if (!resourceManager_) {
         PRINT_HILOGE("resourceManager_ is null");
