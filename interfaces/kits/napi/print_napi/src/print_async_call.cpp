@@ -76,7 +76,6 @@ napi_value PrintAsyncCall::Call(napi_env env, Context::ExecAction exec)
         return nullptr;
     }
     context_->work = work;
-    context_ = nullptr;
     status = napi_queue_async_work(env, work);
     if (status != napi_ok) {
         PRINT_HILOGE("napi_queue_async_work failed, status: %{public}d", status);
@@ -84,6 +83,7 @@ napi_value PrintAsyncCall::Call(napi_env env, Context::ExecAction exec)
         context_ = nullptr;
         return nullptr;
     }
+    context_ = nullptr;
     PRINT_HILOGD("async call exec");
     return promise;
 }
