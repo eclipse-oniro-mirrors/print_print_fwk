@@ -33,6 +33,7 @@
 #include "print_job_helper.h"
 #include "print_extension_ability_stub.h"
 #include "print_utils.h"
+#include "print_util.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -440,6 +441,7 @@ int32_t JsPrintExtension::RegisterDiscoveryCb()
     PRINT_HILOGD("Register Print Extension Callback");
     int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStartDiscoverPrinter", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -450,6 +452,7 @@ int32_t JsPrintExtension::RegisterDiscoveryCb()
     }
     ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStopDiscoverPrinter", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -462,6 +465,7 @@ int32_t JsPrintExtension::RegisterConnectionCb()
 {
     int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onConnectPrinter", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -473,6 +477,7 @@ int32_t JsPrintExtension::RegisterConnectionCb()
     }
     ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onDisconnectPrinter", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -486,6 +491,7 @@ int32_t JsPrintExtension::RegisterPrintJobCb()
 {
     int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStartPrintJob", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -496,6 +502,7 @@ int32_t JsPrintExtension::RegisterPrintJobCb()
     }
     ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onCancelPrintJob", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -508,6 +515,7 @@ int32_t JsPrintExtension::RegisterPreviewCb()
 {
     return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onRequestPreview", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -519,6 +527,7 @@ int32_t JsPrintExtension::RegisterQueryCapCb()
 {
     return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onRequestPrinterCapability", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
@@ -531,6 +540,7 @@ int32_t JsPrintExtension::RegisterExtensionCb()
 {
     return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
+            PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onDestroy", PRINT_API_COUNTED);
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }

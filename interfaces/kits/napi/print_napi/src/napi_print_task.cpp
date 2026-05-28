@@ -25,6 +25,7 @@
 #include "print_callback.h"
 #include "iprint_callback.h"
 #include "print_utils.h"
+#include "print_util.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -35,6 +36,7 @@ __thread napi_ref NapiPrintTask::globalCtor = nullptr;
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter print JsMain.");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.print", PRINT_API_COUNTED);
     napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
     napi_valuetype type;
