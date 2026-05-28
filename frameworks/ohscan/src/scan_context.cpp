@@ -168,14 +168,18 @@ std::string ScanContext::SetRangeStrInParaTable(
             std::string numStr = std::to_string(t);
             rangeStr.append(numStr).append(",");
         }
-        rangeStr.pop_back();
+        if (!rangeStr.empty()) {
+            rangeStr.pop_back();
+        }
     } else if (constraintType == SCAN_CONSTRAINT_STRING_LIST) {
         std::vector<std::string> optionConstraintString;
         desc.GetOptionConstraintString(optionConstraintString);
         for (auto t : optionConstraintString) {
             rangeStr.append(t).append(",");
         }
-        rangeStr.pop_back();
+        if (!rangeStr.empty()) {
+            rangeStr.pop_back();
+        }
     } else if (constraintType == SCAN_CONSTRAINT_RANGE) {
         ScanRange range;
         desc.GetOptionConstraintRange(range);

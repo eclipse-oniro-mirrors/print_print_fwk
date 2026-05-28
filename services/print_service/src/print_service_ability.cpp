@@ -617,7 +617,10 @@ int32_t PrintServiceAbility::CallSpooler(
     printJob->SetJobId(taskId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
+    auto ret = KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("RegisterCallerAppId failed.");
+    }
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);

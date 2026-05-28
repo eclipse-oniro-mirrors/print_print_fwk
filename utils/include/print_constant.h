@@ -385,6 +385,7 @@ const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
 const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
+const std::string VENDOR_BSUNI_DRIVER_PREFIX = "fwk.driver.bsuni:";
 const std::string VENDOR_PPD_DRIVER = "driver.ppd";
 const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
 const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";

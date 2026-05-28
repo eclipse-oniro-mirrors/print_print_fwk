@@ -103,7 +103,7 @@ private:
 
     public:
         bool IsConnected() { return isConnected_.load(); }
-        bool IsDisonnected() { return isConnected_.load(); }
+        bool IsDisonnected() { return isDisonnected_.load(); }
 
     private:
         std::atomic<bool> isConnected_ = false;

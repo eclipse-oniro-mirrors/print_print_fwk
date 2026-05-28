@@ -229,10 +229,14 @@ bool PrintServiceHelper::QueryExtension(sptr<AppExecFwk::IBundleMgr> mgr, int us
     return false;
 }
 
-bool PrintServiceHelper::QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name)
+bool PrintServiceHelper::QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string &name)
 {
     if (mgr != nullptr) {
-        mgr->GetNameForUid(userId, name);
+        auto ret = mgr->GetNameForUid(userId, name);
+        if (ret != OHOS::ERR_OK) {
+            PRINT_HILOGE("get bundleName failed, bundleName = %{private}s.", name.c_str());
+            return false;
+        }
         return true;
     }
     PRINT_HILOGE("Invalid bundle manager");

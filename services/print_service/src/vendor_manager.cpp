@@ -621,7 +621,7 @@ bool VendorManager::IsWlanGroupDriver(const std::string &bothPrinterId)
 
 ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinterIdOrIp)
 {
-    if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
+    if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER_PREFIX) == 0 && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->GetConnectingMethod(globalPrinterIdOrIp);
     }
     if (!IsConnectingPrinter(globalPrinterIdOrIp, "")) {

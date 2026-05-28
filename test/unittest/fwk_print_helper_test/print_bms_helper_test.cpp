@@ -140,5 +140,26 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0010_NeedRename, TestSize.Level0
     EXPECT_EQ(printBMSHelper.sptrBundleMgr_, nullptr);
     EXPECT_EQ(printBMSHelper.printBMSDeath_, nullptr);
 }
+
+/**
+ * @tc.name: PrintBMSHelperTest_0011
+ * @tc.desc: QueryCallerBundleName when QueryNameForUid returns false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0011_NeedRename, TestSize.Level0)
+{
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    std::shared_ptr<PrintServiceHelper> temp = std::shared_ptr<PrintServiceHelper>(helper);
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
+
+    sptr<IRemoteObject> bundleMgrObj = new (std::nothrow) MockBundleMgr();
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->sptrBundleMgr_ = iface_cast<AppExecFwk::IBundleMgr>(bundleMgrObj);
+
+    EXPECT_CALL(*helper, QueryNameForUid(_, _, _)).WillRepeatedly(Return(false));
+
+    std::string result = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    EXPECT_EQ(result, "");
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -113,10 +113,11 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
             self->ShareEnumCallback(smb2, status, commandData);
         }, this) != 0) {
         const char* errorReason = smbLib_->GetSmbError(smbCtx_);
+        std::string errorStr = errorReason ? errorReason : "null";
         PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
             ret, errorReason ? errorReason : "null");
         smbLib_->DisconnectShare(smbCtx_);
-        return {};
+        return ParseSmbErrorCode(errorStr);
     }
     ret = SmbEventLoop();
     smbLib_->DisconnectShare(smbCtx_);

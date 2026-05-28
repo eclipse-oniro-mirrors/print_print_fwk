@@ -136,7 +136,7 @@ std::string ScanUsbManager::GetDeviceSerialNumber(USBDevicePipe &usbDevicePipe)
     const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
     std::vector<uint8_t> bufferData(HTTP_COMMON_CONST_VALUE_100, 0);
     int32_t ret = UsbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
-    if (ret != 0 || bufferData[0] == 0) {
+    if (ret != 0 || bufferData[0] == 0 || bufferData[0] > HTTP_COMMON_CONST_VALUE_100) {
         SCAN_HILOGE("ControlTransfer failed ret = %{public}d, buffer length = %{public}d", ret, bufferData[0]);
         return "";
     }
@@ -240,7 +240,6 @@ void ScanUsbManager::DisConnectUsbScanner(std::string usbDevicePort)
         if (scannerDiscoverData_.HasUsbDevice(serialNumber)) {
             ScanDeviceInfo info;
             scannerDiscoverData_.GetUsbDevice(serialNumber, info);
-            ScanServiceAbility::GetInstance()->DisConnectUsbScanner(serialNumber, info.deviceId);
         }
         usbSnMap_.erase(usbDevicePort);
         SCAN_HILOGD("DealUsbDevStatusChange detached usbDevicePort = %{private}s, serialNumber = %{private}s",

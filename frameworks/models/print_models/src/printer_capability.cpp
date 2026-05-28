@@ -598,8 +598,7 @@ std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize(
         } else {
             // if already has the same withAndHeight, replace it with the last element, and shorten the list
             PRINT_HILOGI("SetSupportedPageSize find duplicate!");
-            *it = std::move(uniquePageSizeList.back());
-            uniquePageSizeList.pop_back();
+            it = uniquePageSizeList.erase(it);
         }
     }
     return uniquePageSizeList;

@@ -25,6 +25,10 @@ template <typename T>
 bool ParseAttributeToValue(
     ipp_t *response, const std::string &keyword, T &value, bool (*convertAttr)(const char *src, T &dst))
 {
+    if (response == nullptr) {
+        PRINT_HILOGW("response is null");
+        return false;
+    }
     if (convertAttr == nullptr) {
         PRINT_HILOGW("convertAttr is null");
         return false;
@@ -51,6 +55,10 @@ template <typename T>
 bool ParseAttributesToList(
     ipp_t *response, const std::string &keyword, std::vector<T> &list, bool (*convertAttr)(const char *src, T &dst))
 {
+    if (response == nullptr) {
+        PRINT_HILOGW("response is null");
+        return false;
+    }
     if (convertAttr == nullptr) {
         PRINT_HILOGW("convertAttr is null");
         return false;

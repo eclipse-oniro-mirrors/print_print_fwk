@@ -447,7 +447,7 @@ bool PrintUserData::SetUserDataToFile()
         userData["usedPrinterList"] = usedPrinterListJson;
         jsonObject["print_user_data"][std::to_string(userId_)] = userData;
         std::string temp = PrintJsonUtil::WriteString(jsonObject);
-        PRINT_HILOGD("json temp: %{public}s", temp.c_str());
+        PRINT_HILOGD("json temp: %{private}s", temp.c_str());
         char realPidFile[PATH_MAX] = {};
         std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
         if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
@@ -1019,19 +1019,19 @@ PrintRange PrintUserData::ParseJsonObjectToPrintRange(const Json::Value &jsonObj
 {
     PrintRange printRange;
     if (CheckOptionalParam(jsonObject, "hasStartPage_") &&
-        PrintJsonUtil::IsMember(jsonObject, "startPage") && jsonObject["startPage"].isInt()) {
-        printRange.SetStartPage(jsonObject["startPage"].asInt());
+        PrintJsonUtil::IsMember(jsonObject, "startPage") && jsonObject["startPage"].isUInt()) {
+        printRange.SetStartPage(jsonObject["startPage"].asUInt());
     }
     if (CheckOptionalParam(jsonObject, "hasEndPage_") &&
-        PrintJsonUtil::IsMember(jsonObject, "endPage") && jsonObject["endPage"].isInt()) {
-        printRange.SetStartPage(jsonObject["endPage"].asInt());
+        PrintJsonUtil::IsMember(jsonObject, "endPage") && jsonObject["endPage"].isUInt()) {
+        printRange.SetStartPage(jsonObject["endPage"].asUInt());
     }
     if (PrintJsonUtil::IsMember(jsonObject, "pages") && jsonObject["pages"].isArray()) {
         std::vector<uint32_t> pages;
         Json::Value pagesJsonObject = jsonObject["pages"];
         for (const auto& item : pagesJsonObject) {
-            if (item.isInt()) {
-                pages.push_back(item.asInt());
+            if (item.isUInt()) {
+                pages.push_back(item.asUInt());
             }
         }
         printRange.SetPages(pages);

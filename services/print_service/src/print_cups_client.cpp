@@ -693,8 +693,12 @@ bool PrintCupsClient::QueryPPDInformation(const std::string &makeModel, std::str
     if (request == nullptr) {
         return false;
     }
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel.c_str());
-
+    if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model",
+        nullptr, makeModel.c_str()) == nullptr) {
+        PRINT_HILOGW("attr is null");
+        printAbility_->FreeRequest(request);
+        return false;
+    }
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
     if (response == NULL) {
@@ -1009,7 +1013,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
         return E_PRINT_SERVER_FAILURE;
     }
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
-    if (dinfo == nullptr) {
+    if (dinfo == nullptr || dinfo->attrs == nullptr) {
         PRINT_HILOGE("cupsCopyDestInfo failed");
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
         return E_PRINT_SERVER_FAILURE;
@@ -1535,6 +1539,7 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), nullptr);
         if (dest != nullptr) {
             if (PrintUtil::startsWith(jobParams->printerId, RAW_PPD_DRIVER)) {
+                printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
                 PRINT_HILOGI("raw printer, skip check printer make and model.");
                 return true;
             }
@@ -2279,10 +2284,11 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
         return false;
     }
     ipp_jstate_t job_state = IPP_JOB_PENDING;
-    char job_state_reasons[1024];
-    char job_printer_state_reasons[1024];
+    char job_state_reasons[1024] = {0};
+    char job_printer_state_reasons[1024] = {0};
     if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != nullptr) {
         job_state = (ipp_jstate_t)ippGetInteger(attr, 0);
+        PRINT_HILOGD("ippFindAttribute job_state: %{public}u.", job_state);
     }
     if ((attr = ippFindAttribute(response, "job-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
         ippAttributeString(attr, job_state_reasons, sizeof(job_state_reasons));
@@ -3198,9 +3204,7 @@ int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
 bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &info)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + fileName;
-    char realPath[PATH_MAX] = {};
-    if (realpath(ppdFilePath.c_str(), realPath) == nullptr) {
-        PRINT_HILOGE("The realPpdFile is null, errno:%{public}s", std::to_string(errno).c_str());
+    if (!PrintUtils::IsPathValid(ppdFilePath)) {
         return false;
     }
     std::unordered_map<std::string, std::string> keyValues;

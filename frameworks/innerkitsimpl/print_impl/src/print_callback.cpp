@@ -96,6 +96,33 @@ static void NapiCallFunction(CallbackParam* cbParam, size_t argcCount, napi_valu
     napi_close_handle_scope(cbParam->env, scope);
 }
 
+static napi_value WriteResultCallback(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("parse from js callback data start");
+    size_t argc = NapiPrintUtils::ARGC_TWO;
+    napi_value args[NapiPrintUtils::ARGC_TWO] = {nullptr};
+    void *data = nullptr;
+
+    napi_get_cb_info(env, info, &argc, args, nullptr, &data);
+    CallbackParam *cbParam = static_cast<CallbackParam*> (data);
+    if (cbParam == nullptr) {
+        PRINT_HILOGE("cbParam is nullptr.");
+        return nullptr;
+    }
+
+    std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
+    uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
+
+    PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
+        jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
+    if (cbParam->fd != INVALID_FD) {
+        close(cbParam->fd);
+        cbParam->fd = INVALID_FD;
+    }
+    PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
+    return nullptr;
+}
+
 static void PrintAdapterWorkCb(CallbackParam *cbParam)
 {
     PRINT_HILOGI("OnCallback start run PrintAdapterWorkCb");
@@ -107,27 +134,16 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
-        close(cbParam->fd);
+        if (cbParam->fd != INVALID_FD) {
+            close(cbParam->fd);
+            cbParam->fd = INVALID_FD;
+        }
         return;
     }
     napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
     if (adapterObj != nullptr) {
         napi_value layoutWriteFunc =
             NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
-        auto successCallback = [](napi_env env, napi_callback_info info) -> napi_value {
-            PRINT_HILOGI("parse from js callback data start");
-            size_t argc = NapiPrintUtils::ARGC_TWO;
-            napi_value args[NapiPrintUtils::ARGC_TWO] = {nullptr};
-
-            napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-            std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
-            uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
-
-            PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
-                jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
-            PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
-            return nullptr;
-        };
         napi_value callbackResult = nullptr;
         napi_value callbackValues[NapiPrintUtils::ARGC_FIVE] = { 0 };
         callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
@@ -137,14 +153,16 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
         callbackValues[NapiPrintUtils::ARGC_THREE] =
             NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
-            NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", successCallback, nullptr);
-
+            NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", WriteResultCallback, cbParam);
         napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
             callbackValues, &callbackResult);
         PRINT_HILOGI("OnCallback end run PrintAdapterWorkCb success");
     }
     if (napi_close_handle_scope(cbParam->env, scope) != napi_ok) {
-        close(cbParam->fd);
+        if (cbParam->fd != INVALID_FD) {
+            close(cbParam->fd);
+            cbParam->fd = INVALID_FD;
+        }
     }
 }
 
@@ -159,7 +177,10 @@ static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
-        close(cbParam->fd);
+        if (cbParam->fd != INVALID_FD) {
+            close(cbParam->fd);
+            cbParam->fd = INVALID_FD;
+        }
         return;
     }
     napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
@@ -352,6 +373,7 @@ bool PrintCallback::OnCallbackAdapterJobStateChanged(const std::string jobId, co
             [jobId, subState](CallbackParam* param) {
                 param->jobId = jobId;
                 param->state = subState;
+                param->fd = INVALID_FD;
             }, PrintAdapterJobStateChangedAfterCallFun);
     }
 }

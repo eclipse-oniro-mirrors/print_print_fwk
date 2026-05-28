@@ -245,6 +245,12 @@ bool PrintServiceStub::OnStartDiscoverPrinter(MessageParcel &data, MessageParcel
     PRINT_HILOGI("PrintServiceStub::OnStartDiscoverPrinter in");
     std::vector<std::string> extensionList;
     data.ReadStringVector(&extensionList);
+    PRINT_HILOGD("Current extensionList is %{public}zd", extensionList.size());
+    if (extensionList.size() > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("extensionList'size: %{public}zd, is out of range.", extensionList.size());
+        reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+        return false;
+    }
     int32_t ret = StartDiscoverPrinter(extensionList);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnStartDiscoverPrinter out");

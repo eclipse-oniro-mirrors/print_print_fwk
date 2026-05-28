@@ -134,9 +134,16 @@ bool PrintSystemData::Init()
     GetAddedPrinterMap().Clear();
     PRINT_HILOGI("load new printer list file");
     std::filesystem::path printersDir(GetPrintersPath());
-    for (const auto& entry : std::filesystem::directory_iterator(printersDir)) {
-        if (!entry.is_directory()) {
-            ReadJsonFile(entry.path());
+    std::error_code ec;
+    std::filesystem::directory_iterator iter(printersDir, ec);
+    if (ec) {
+        PRINT_HILOGW("Failed to open printers directory: %{public}s.", ec.message().c_str());
+        return false;
+    } else {
+        for (const auto &entry : std::filesystem::directory_iterator(printersDir)) {
+            if (!entry.is_directory()) {
+                ReadJsonFile(entry.path());
+            }
         }
     }
 

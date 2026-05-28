@@ -121,7 +121,12 @@ bool ScanOptionValue::GetBoolValue() const
 
 void ScanOptionValue::ReadFromParcel(Parcel &parcel)
 {
-    SetScanOptionValueType((ScanOptionValueType)parcel.ReadUint32());
+    uint32_t type = parcel.ReadUint32();
+    if (type > SCAN_VALUE_GROUP) {
+        SCAN_HILOGE("Invalid ScanOptionValueType: %{public}u.", type);
+        return;
+    }
+    SetScanOptionValueType((ScanOptionValueType)type);
     SetValueSize(parcel.ReadInt32());
     if (valueType_ == SCAN_VALUE_STR) {
         SetStrValue(parcel.ReadString());

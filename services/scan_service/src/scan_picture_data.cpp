@@ -88,6 +88,10 @@ int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress, i
         SCAN_HILOGI("get scan picture successfully!");
         scanProgress = prog;
         int32_t fd = open(scanProgress.GetImageRealPath().c_str(), O_RDONLY);
+        if (fd == INVALID_FD) {
+            SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+            return E_SCAN_SERVER_FAILURE;
+        }
         fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
         scanProgress.SetScanPictureFd(fd);
         scanCacheFdMap_[scanProgress.GetImageRealPath()] = fd;
