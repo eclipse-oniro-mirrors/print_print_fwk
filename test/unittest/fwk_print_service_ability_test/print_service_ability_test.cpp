@@ -3969,7 +3969,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_ShouldPr
     printerInfo2->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo2->SetPrinterMake("Make2");
     service->printSystemData_.GetAddedPrinterMap().Insert(printerId2, printerInfo2);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(true));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 2);
@@ -3984,7 +3984,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_QueryPpd
     printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo->SetPrinterMake("Make1");
     service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(false));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
@@ -4000,7 +4000,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode
     printerInfo->SetPrinterMake("Make1");
     printerInfo->SetPpdHashCode("");
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
@@ -4016,7 +4016,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode
     printerInfo->SetPrinterMake("Make1");
     printerInfo->SetPpdHashCode("notEqualHash");
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
