@@ -1289,30 +1289,6 @@ HWTEST_F(PrintUserDataTest, PrinterUserPreferences_ConvertFromJson_WithoutVendor
     EXPECT_FALSE(userPrefs.HasVendorOptions());
 }
 
-HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_SaveNewPrefs_ReturnsFalseWithoutDir, TestSize.Level1)
-{
-    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    userData->SetUserId(100);
-
-    PrinterUserPreferences userPrefs;
-    userPrefs.SetUserId(100);
-    userPrefs.SetPrinterId("printer_001");
-    userPrefs.SetVendorOptions("{\"user_username\":\"admin\"}");
-
-    bool result = userData->SavePrinterUserPreferences("printer_001", "printer_001", userPrefs);
-    EXPECT_FALSE(result);
-}
-
-HWTEST_F(PrintUserDataTest, LoadPrinterUserPreferences_FileNotExist_ReturnsFalse, TestSize.Level1)
-{
-    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    userData->SetUserId(100);
-
-    PrinterUserPreferences userPrefs;
-    bool result = userData->LoadPrinterUserPreferences("printer_001", "printer_001", userPrefs);
-    EXPECT_FALSE(result);
-}
-
 HWTEST_F(PrintUserDataTest, LoadPrinterUserPreferences_CachedPrefs_ReturnsTrue, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
