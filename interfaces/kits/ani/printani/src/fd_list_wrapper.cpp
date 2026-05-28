@@ -23,9 +23,14 @@ FdListWrapper::~FdListWrapper()
     ReleaseAll();
 }
 
-void FdListWrapper::Add(uint32_t fd)
+bool FdListWrapper::Add(uint32_t fd)
 {
+    if (fd == INVALID_FD || fd <= STD_FD_MAX) {
+        PRINT_HILOGE("invalid fd: %{public}u", fd);
+        return false;
+    }
     fdList_.emplace_back(fd);
+    return true;
 }
 
 const std::vector<uint32_t>& FdListWrapper::Get() const
@@ -36,9 +41,11 @@ const std::vector<uint32_t>& FdListWrapper::Get() const
 void FdListWrapper::ReleaseAll()
 {
     for (auto fd : fdList_) {
-        if (fd != INVALID_FD) {
-            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+        if (fd == INVALID_FD || fd <= STD_FD_MAX) {
+            PRINT_HILOGW("skip invalid or std fd: %{public}u", fd);
+            continue;
         }
+        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
     }
     fdList_.clear();
 }

@@ -25,7 +25,7 @@ public:
     FdListWrapper() = default;
     ~FdListWrapper();
 
-    void Add(uint32_t fd);
+    bool Add(uint32_t fd);
 
     const std::vector<uint32_t>& Get() const;
 
@@ -34,6 +34,7 @@ public:
 private:
     std::vector<uint32_t> fdList_;
     static constexpr uint32_t INVALID_FD = static_cast<uint32_t>(-1);
+    static constexpr uint32_t STD_FD_MAX = 2;
 };
 
 } // namespace OHOS::Print

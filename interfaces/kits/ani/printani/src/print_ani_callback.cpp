@@ -36,6 +36,19 @@ PrintAniCallback::PrintAniCallback(ani_env *env, ani_object aniCallback)
 
 PrintAniCallback::~PrintAniCallback()
 {
+    if (aniCallback_ != nullptr) {
+        if (aniVm_ != nullptr) {
+            ani_env *env = nullptr;
+            ani_options aniArgs { 0, nullptr };
+            auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+            if (status == ANI_OK && env != nullptr) {
+                env->GlobalReference_Delete(aniCallback_);
+                aniVm_->DetachCurrentThread();
+            }
+        } else {
+            PRINT_HILOGW("aniVm_ is nullptr, aniCallback_ may not be released properly");
+        }
+    }
     aniVm_ = nullptr;
     aniCallback_ = nullptr;
 }
@@ -235,6 +248,19 @@ WatermarkAniCallback::WatermarkAniCallback(ani_env *env, ani_object aniCallback)
 
 WatermarkAniCallback::~WatermarkAniCallback()
 {
+    if (aniCallback_ != nullptr) {
+        if (aniVm_ != nullptr) {
+            ani_env *env = nullptr;
+            ani_options aniArgs { 0, nullptr };
+            auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+            if (status == ANI_OK && env != nullptr) {
+                env->GlobalReference_Delete(aniCallback_);
+                aniVm_->DetachCurrentThread();
+            }
+        } else {
+            PRINT_HILOGW("aniVm_ is nullptr, aniCallback_ may not be released properly");
+        }
+    }
     aniVm_ = nullptr;
     aniCallback_ = nullptr;
 }

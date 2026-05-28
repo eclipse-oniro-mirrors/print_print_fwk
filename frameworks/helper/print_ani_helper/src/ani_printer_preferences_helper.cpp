@@ -34,17 +34,33 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 
     static const char *className = "@ohos.print.print.PrinterPreferencesImpl";
     ani_object obj = CreateObject(env, nullptr, className);
+    if (obj == nullptr) {
+        PRINT_HILOGE("CreateObject failed for PrinterPreferencesImpl");
+        return nullptr;
+    }
 
     ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintDuplexMode",
                                                           static_cast<int32_t>(preferences.GetDefaultDuplexMode()));
+    if (printDuplexModeEnum == nullptr) {
+        PRINT_HILOGE("CreateEnumByIndex failed for PrintDuplexMode");
+        return nullptr;
+    }
     SetEnumProperty(env, obj, "<set>defaultDuplexMode", "C{@ohos.print.print.PrintDuplexMode}:", printDuplexModeEnum);
 
     ani_enum_item printQualityEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintQuality",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
+    if (printQualityEnum == nullptr) {
+        PRINT_HILOGE("CreateEnumByIndex failed for PrintQuality");
+        return nullptr;
+    }
     SetEnumProperty(env, obj, "<set>defaultPrintQuality", "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
 
     ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintOrientationMode",
                                                           static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
+    if (orientationModeEnum == nullptr) {
+        PRINT_HILOGE("CreateEnumByIndex failed for PrintOrientationMode");
+        return nullptr;
+    }
     SetEnumProperty(env, obj, "<set>defaultOrientation", "C{@ohos.print.print.PrintOrientationMode}:",
         orientationModeEnum);
 

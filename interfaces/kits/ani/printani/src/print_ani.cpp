@@ -49,8 +49,8 @@ using namespace OHOS::Print;
 static void PrintNative(ani_env *env, ani_object arrayObj, ani_object callback)
 {
     PRINT_HILOGI("enter PrintNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::vector<std::string> files;
@@ -63,17 +63,17 @@ static void PrintNative(ani_env *env, ani_object arrayObj, ani_object callback)
     for (const auto &file : files) {
         PRINT_HILOGD("Array String Content: = %{private}s", file.c_str());
     }
-    auto nativePrintTask = AniPrintTask(env);
-    int32_t ret = nativePrintTask.StartPrint(files);
+    auto nativePrintTask = std::make_shared<AniPrintTask>(env);
+    int32_t ret = nativePrintTask->StartPrint(files);
     ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, &nativePrintTask));
+    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
 }
 
 static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object context, ani_object callback)
 {
     PRINT_HILOGI("enter PrintWithContextNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::vector<std::string> files;
@@ -93,17 +93,17 @@ static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
-    auto nativePrintTask = AniPrintTask(env);
-    int32_t ret = nativePrintTask.StartPrint(files);
+    auto nativePrintTask = std::make_shared<AniPrintTask>(env);
+    int32_t ret = nativePrintTask->StartPrint(files);
     ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, &nativePrintTask));
+    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
 }
 
 static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object callback)
 {
     PRINT_HILOGI("enter PrintWithAttributesNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string jobName;
@@ -130,16 +130,10 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
-    auto nativePrintTask = new AniPrintTask(env);
+    auto nativePrintTask = std::make_shared<AniPrintTask>(env);
     OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, static_cast<ani_object>(printAdapter));
-    if (nativePrintTask == nullptr) {
-        PRINT_HILOGE("nativePrintTask is nullptr");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
-        return;
-    }
     if (callbackWrapper == nullptr) {
         PRINT_HILOGE("callbackWrapper is nullptr");
-        delete nativePrintTask;
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
@@ -150,6 +144,10 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
 static void QueryAllPrinterExtensionInfosNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter QueryAllPrinterExtensionInfosNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<PrintExtensionInfo> extensionInfos;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -160,8 +158,17 @@ static void QueryAllPrinterExtensionInfosNative(ani_env *env, ani_object callbac
 static void StartDiscoverPrinterNative(ani_env *env, ani_object arrayObj, ani_object callback)
 {
     PRINT_HILOGI("enter StartDiscoverPrinterNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<std::string> extensionList;
-    GetStdStringArray(env, arrayObj, extensionList);
+    if (!GetStdStringArray(env, arrayObj, extensionList)) {
+        PRINT_HILOGE("GetStringArray fail");
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
+        AsyncCallback(env, callback, stsErrCode, nullptr);
+        return;
+    }
     for (auto extension : extensionList) {
         PRINT_HILOGD("extension = %{public}s", extension.c_str());
     }
@@ -173,6 +180,10 @@ static void StartDiscoverPrinterNative(ani_env *env, ani_object arrayObj, ani_ob
 static void StopDiscoverPrinterNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter StopDiscoverPrinterNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -181,6 +192,10 @@ static void StopDiscoverPrinterNative(ani_env *env, ani_object callback)
 static void ConnectPrinterNative(ani_env *env, ani_string printerIdAni, ani_object callback)
 {
     PRINT_HILOGI("enter ConnectPrinterNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string printerId;
     if (!GetStdString(env, printerIdAni, printerId)) {
         PRINT_HILOGE("GetStdString fail");
@@ -197,6 +212,10 @@ static void ConnectPrinterNative(ani_env *env, ani_string printerIdAni, ani_obje
 static void DisconnectPrinterNative(ani_env *env, ani_string printerId, ani_object callback)
 {
     PRINT_HILOGI("enter DisconnectPrinterNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -213,6 +232,10 @@ static void DisconnectPrinterNative(ani_env *env, ani_string printerId, ani_obje
 static void QueryPrinterCapabilityNative(ani_env *env, ani_string printerId, ani_object callback)
 {
     PRINT_HILOGI("enter QueryPrinterCapabilityNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -229,6 +252,10 @@ static void QueryPrinterCapabilityNative(ani_env *env, ani_string printerId, ani
 static void StartPrintJobNative(ani_env *env, ani_object jobInfo, ani_object callback)
 {
     PRINT_HILOGI("enter StartPrintJobNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(job);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -238,6 +265,10 @@ static void StartPrintJobNative(ani_env *env, ani_object jobInfo, ani_object cal
 static void CancelPrintJobNative(ani_env *env, ani_string jobId, ani_object callback)
 {
     PRINT_HILOGI("enter CancelPrintJobNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -254,6 +285,10 @@ static void CancelPrintJobNative(ani_env *env, ani_string jobId, ani_object call
 static void RequestPrintPreviewCallbackNative(ani_env *env, ani_object jobInfo, ani_object callback)
 {
     PRINT_HILOGI("enter RequestPrintPreviewNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     std::string previewResult;
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(job, previewResult);
@@ -268,6 +303,10 @@ static void RequestPrintPreviewCallbackNative(ani_env *env, ani_object jobInfo, 
 static void RequestPrintPreviewAsyncCallbackNative(ani_env *env, ani_object jobInfo, ani_object callback)
 {
     PRINT_HILOGI("enter RequestPrintPreviewNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     std::string previewResult;
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(job, previewResult);
@@ -278,6 +317,10 @@ static void RequestPrintPreviewAsyncCallbackNative(ani_env *env, ani_object jobI
 static void AddPrintersNative(ani_env *env, ani_object printers, ani_object callback)
 {
     PRINT_HILOGI("enter AddPrintersNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<PrinterInfo> printerList;
     if (!PrinterInfoAniHelper::GetPrinterInfoArray(env, printers, printerList)) {
         PRINT_HILOGE("GetPrinterInfoArray fail");
@@ -294,6 +337,10 @@ static void AddPrinterNative(ani_env *env, ani_string printerNameAni, ani_string
     ani_string ppdNameAni, ani_string optionsAni, ani_object callback)
 {
     PRINT_HILOGI("enter AddPrinterNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string printerName;
     if (!GetStdString(env, printerNameAni, printerName)) {
         PRINT_HILOGE("GetStdString fail for printerName");
@@ -334,6 +381,10 @@ static void AddPrinterNative(ani_env *env, ani_string printerNameAni, ani_string
 static void RemovePrintersNative(ani_env *env, ani_object printerIds, ani_object callback)
 {
     PRINT_HILOGI("enter RemovePrintersNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<std::string> ids;
     if (!GetStdStringArray(env, printerIds, ids)) {
         PRINT_HILOGE("GetStringArray fail");
@@ -352,6 +403,10 @@ static void RemovePrintersNative(ani_env *env, ani_object printerIds, ani_object
 static void UpdatePrintersNative(ani_env *env, ani_object printers, ani_object callback)
 {
     PRINT_HILOGI("enter UpdatePrintersNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<PrinterInfo> printerList;
     if (!PrinterInfoAniHelper::GetPrinterInfoArray(env, printers, printerList)) {
         PRINT_HILOGE("GetPrinterInfoArray fail");
@@ -367,6 +422,10 @@ static void UpdatePrintersNative(ani_env *env, ani_object printers, ani_object c
 static void UpdatePrinterStateNative(ani_env *env, ani_string printerId, ani_enum_item enumObj, ani_object callback)
 {
     PRINT_HILOGI("enter UpdatePrinterStateNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -392,6 +451,10 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
     ani_enum_item enumJobSubStateObj, ani_object callback)
 {
     PRINT_HILOGI("enter UpdatePrintJobStateNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -423,6 +486,10 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
 static void UpdateExtensionInfoNative(ani_env *env, ani_string info, ani_object callback)
 {
     PRINT_HILOGI("enter UpdateExtensionInfoNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string infoStr;
     if (!GetStdString(env, info, infoStr)) {
         PRINT_HILOGE("GetStdString fail");
@@ -439,6 +506,10 @@ static void UpdateExtensionInfoNative(ani_env *env, ani_string info, ani_object 
 static void QueryAllPrintJobsNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter QueryAllPrintJobsNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<PrintJob> jobs;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(jobs);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -448,6 +519,10 @@ static void QueryAllPrintJobsNative(ani_env *env, ani_object callback)
 static void QueryPrintJobListNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter QueryPrintJobListNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::vector<PrintJob> jobs;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(jobs);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -457,6 +532,10 @@ static void QueryPrintJobListNative(ani_env *env, ani_object callback)
 static void QueryPrintJobByIdNative(ani_env *env, ani_string jobId, ani_object callback)
 {
     PRINT_HILOGI("enter QueryPrintJobByIdNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -475,6 +554,10 @@ static void StartGettingPrintFileNative(ani_env *env, ani_string jobId,
     ani_object printAttributes, ani_int fd, ani_object callback)
 {
     PRINT_HILOGI("enter StartGettingPrintFileNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -492,6 +575,10 @@ static void StartGettingPrintFileNative(ani_env *env, ani_string jobId,
 static void NotifyPrintServiceNative(ani_env *env, ani_string jobId, ani_string typeAni, ani_object callback)
 {
     PRINT_HILOGI("enter NotifyPrintServiceNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -516,6 +603,14 @@ static void NotifyPrintServiceNative(ani_env *env, ani_string jobId, ani_string 
 static ani_int GetAddedPrintersNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter GetAddedPrintersNative");
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return ANI_ERROR;
+    }
+    if (callback == nullptr) {
+        PRINT_HILOGE("callback is nullptr");
+        return ANI_ERROR;
+    }
     std::vector<std::string> printers;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(printers);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -526,6 +621,10 @@ static ani_int GetAddedPrintersNative(ani_env *env, ani_object callback)
 static void GetPrinterInfoByIdNative(ani_env *env, ani_string printerId, ani_object callback)
 {
     PRINT_HILOGI("enter GetPrinterInfoByIdNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -543,6 +642,10 @@ static void GetPrinterInfoByIdNative(ani_env *env, ani_string printerId, ani_obj
 static void NotifyPrintServiceEventNative(ani_env *env, ani_enum_item enumObj, ani_object callback)
 {
     PRINT_HILOGI("enter NotifyPrintServiceEventNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     uint32_t event = 0;
     if (!GetEnumValueInt(env, enumObj, event)) {
         PRINT_HILOGE("GetEnumValueInt fail");
@@ -560,6 +663,10 @@ static void NotifyPrintServiceEventNative(ani_env *env, ani_enum_item enumObj, a
 static void AddPrinterToDiscoveryNative(ani_env *env, ani_object printerInfo, ani_object callback)
 {
     PRINT_HILOGI("enter AddPrinterToDiscoveryNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
     info.Dump();
     int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToDiscovery(info);
@@ -570,6 +677,10 @@ static void AddPrinterToDiscoveryNative(ani_env *env, ani_object printerInfo, an
 static void UpdatePrinterInDiscoveryNative(ani_env *env, ani_object printerInfo, ani_object callback)
 {
     PRINT_HILOGI("enter UpdatePrinterInDiscoveryNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInDiscovery(info);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -579,6 +690,10 @@ static void UpdatePrinterInDiscoveryNative(ani_env *env, ani_object printerInfo,
 static void RemovePrinterFromDiscoveryNative(ani_env *env, ani_string printerId, ani_object callback)
 {
     PRINT_HILOGI("enter RemovePrinterFromDiscoveryNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
@@ -595,8 +710,8 @@ static void RemovePrinterFromDiscoveryNative(ani_env *env, ani_string printerId,
 static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAni, ani_object callback)
 {
     PRINT_HILOGI("enter GetPrinterInformationByIdNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string printerId;
@@ -610,6 +725,7 @@ static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAn
         PRINT_HILOGE("printerId is empty");
         ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
+        return;
     }
     PRINT_HILOGD("printerId: %{public}s", printerId.c_str());
     PrinterInfo info;
@@ -621,8 +737,8 @@ static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAn
 static void OnPrinterStateChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnPrinterStateChangeNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "printerStateChange";
@@ -633,8 +749,8 @@ static void OnPrinterStateChangeNative(ani_env *env, ani_object callback)
 static void OnJobStateChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnJobStateChangeNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "jobStateChange";
@@ -645,8 +761,8 @@ static void OnJobStateChangeNative(ani_env *env, ani_object callback)
 static void OnExtInfoChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnExtInfoChangeNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "extInfoChange";
@@ -657,8 +773,8 @@ static void OnExtInfoChangeNative(ani_env *env, ani_object callback)
 static void OnPrintTask(ani_env *env, ani_string type, ani_object callback, ani_object taskObj)
 {
     PRINT_HILOGI("enter OnPrintTask");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr;
@@ -666,7 +782,7 @@ static void OnPrintTask(ani_env *env, ani_string type, ani_object callback, ani_
         PRINT_HILOGE("GetStdString fail");
         return;
     }
-    AniPrintTask* printTask = AniPrintTaskHelper::UnwrappPrintTask(env, taskObj);
+    auto printTask = AniPrintTaskHelper::UnwrappPrintTask(env, taskObj);
     if (printTask == nullptr) {
         PRINT_HILOGE("printTask is a nullptr");
         return;
@@ -678,8 +794,8 @@ static void OnPrintTask(ani_env *env, ani_string type, ani_object callback, ani_
 static void OffPrintTask(ani_env *env, ani_string type, ani_object callback, ani_object taskObj)
 {
     PRINT_HILOGI("enter OffPrintTask");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr;
@@ -687,7 +803,7 @@ static void OffPrintTask(ani_env *env, ani_string type, ani_object callback, ani
         PRINT_HILOGE("GetStdString fail");
         return;
     }
-    AniPrintTask* printTask = AniPrintTaskHelper::UnwrappPrintTask(env, taskObj);
+    auto printTask = AniPrintTaskHelper::UnwrappPrintTask(env, taskObj);
     if (printTask == nullptr) {
         PRINT_HILOGE("printTask is a nullptr");
         return;
@@ -723,8 +839,8 @@ static void OffPrinterChangeNative(ani_env *env, ani_string type, ani_object cal
 static void OnPrinterChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnPrinterChangeNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "printerChange";
@@ -735,6 +851,10 @@ static void OnPrinterChangeNative(ani_env *env, ani_object callback)
 static void StartPrintNative(ani_env *env, ani_object job, ani_object callback)
 {
     PRINT_HILOGI("enter StartPrintNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrintJob printJob = AniPrintJobHelper::ParsePrintJob(env, job);
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(printJob);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -744,8 +864,8 @@ static void StartPrintNative(ani_env *env, ani_object job, ani_object callback)
 static void RegisterWatermarkCallbackNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter RegisterWatermarkCallbackNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     OHOS::sptr<IWatermarkCallback> callbackWrapper = new (std::nothrow) WatermarkAniCallback(env, callback);
@@ -760,8 +880,8 @@ static void RegisterWatermarkCallbackNative(ani_env *env, ani_object callback)
 static void UnregisterWatermarkCallbackNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter UnregisterWatermarkCallbackNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
@@ -771,8 +891,8 @@ static void UnregisterWatermarkCallbackNative(ani_env *env, ani_object callback)
 static void NotifyWatermarkCompleteNative(ani_env *env, ani_string jobId, ani_enum_item enumObj)
 {
     PRINT_HILOGI("enter NotifyWatermarkCompleteNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || jobId == nullptr || enumObj == nullptr) {
+        PRINT_HILOGE("env, jobId or enumObj is nullptr");
         return;
     }
     std::string id;
@@ -792,8 +912,8 @@ static void NotifyWatermarkCompleteNative(ani_env *env, ani_string jobId, ani_en
 static void OnPrinterInfoQueryNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnPrinterInfoQueryNative");
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
         return;
     }
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
@@ -803,12 +923,20 @@ static void OnPrinterInfoQueryNative(ani_env *env, ani_object callback)
 static void OffPrinterInfoQueryNative(ani_env *env, ani_string type, ani_object callback)
 {
     PRINT_HILOGI("enter OffPrinterInfoQueryNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrintManagerClient::GetInstance()->Off("", PRINTER_INFO_QUERY_EVENT_TYPE);
 }
 
 static void UpdatePrinterInformationNative(ani_env *env, ani_object printerInfo, ani_object callback)
 {
     PRINT_HILOGI("enter UpdatePrinterInformationNative");
+    if (env == nullptr || callback == nullptr) {
+        PRINT_HILOGE("env or callback is nullptr");
+        return;
+    }
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(info);
     ani_object stsErrCode = CreateStsError(env, ret);

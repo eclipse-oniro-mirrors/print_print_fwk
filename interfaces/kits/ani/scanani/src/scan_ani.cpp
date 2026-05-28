@@ -42,8 +42,8 @@ using namespace OHOS::Security::AccessToken;
 static void InitScanNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter InitScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or call is nullptr");
         return;
     }
     int32_t ret = ScanManagerClient::GetInstance()->InitScan();
@@ -54,8 +54,8 @@ static void InitScanNative(ani_env *env, ani_object callback)
 static void ExitScanNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter ExitScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     int32_t ret = ScanManagerClient::GetInstance()->ExitScan();
@@ -66,8 +66,8 @@ static void ExitScanNative(ani_env *env, ani_object callback)
 static void StartScannerDiscoveryNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter StartScannerDiscoveryNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     int32_t ret = ScanManagerClient::GetInstance()->GetScannerList();
@@ -78,8 +78,8 @@ static void StartScannerDiscoveryNative(ani_env *env, ani_object callback)
 static void OpenScannerNative(ani_env *env, ani_string scannerIdAni, ani_object callback)
 {
     SCAN_HILOGI("enter OpenScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string scannerId;
@@ -98,8 +98,8 @@ static void OpenScannerNative(ani_env *env, ani_string scannerIdAni, ani_object 
 static void CloseScannerNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter CloseScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -118,8 +118,8 @@ static void CloseScannerNative(ani_env *env, ani_string scannerId, ani_object ca
 static void GetScannerParameterNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter GetScannerParameterNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -141,8 +141,8 @@ static void SetScannerParameterNative(ani_env *env, ani_string scannerId, ani_in
     ani_object value, ani_object callback)
 {
     SCAN_HILOGI("enter SetScannerParameterNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -164,8 +164,8 @@ static void SetScanAutoOptionNative(ani_env *env, ani_string scannerId, ani_int 
     ani_object callback)
 {
     SCAN_HILOGI("enter SetScanAutoOptionNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -187,8 +187,8 @@ static void GetScannerCurrentSettingNative(ani_env *env, ani_string scannerId, a
     ani_object callback)
 {
     SCAN_HILOGI("enter GetScannerCurrentSettingNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -209,8 +209,8 @@ static void GetScannerCurrentSettingNative(ani_env *env, ani_string scannerId, a
 static void StartScanNative(ani_env *env, ani_string scannerId, ani_boolean batchMode, ani_object callback)
 {
     SCAN_HILOGI("enter StartScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -229,8 +229,8 @@ static void StartScanNative(ani_env *env, ani_string scannerId, ani_boolean batc
 static void CancelScanNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter CancelScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -249,8 +249,8 @@ static void CancelScanNative(ani_env *env, ani_string scannerId, ani_object call
 static void GetPictureScanProgressNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter GetPictureScanProgressNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -270,8 +270,8 @@ static void GetPictureScanProgressNative(ani_env *env, ani_string scannerId, ani
 static void AddScannerNative(ani_env *env, ani_string uniqueId, ani_string discoveryMode, ani_object callback)
 {
     SCAN_HILOGI("enter AddScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -297,8 +297,8 @@ static void AddScannerNative(ani_env *env, ani_string uniqueId, ani_string disco
 static void DeleteScannerNative(ani_env *env, ani_string uniqueId, ani_string discoveryMode, ani_object callback)
 {
     SCAN_HILOGI("enter DeleteScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string id;
@@ -324,8 +324,8 @@ static void DeleteScannerNative(ani_env *env, ani_string uniqueId, ani_string di
 static void GetAddedScannersNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter GetAddedScannersNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::vector<ScanDeviceInfo> scanners;
@@ -362,8 +362,8 @@ static void ExportScanPictureNative(ani_env *env, ani_string scannerId, ani_obje
     ani_int format, ani_object callback)
 {
     SCAN_HILOGI("enter ExportScanPictureNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     
@@ -406,8 +406,8 @@ static void ExportScanPictureNative(ani_env *env, ani_string scannerId, ani_obje
 static void OnScanDeviceFoundNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceFoundNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "scanDeviceFound";
@@ -418,8 +418,8 @@ static void OnScanDeviceFoundNative(ani_env *env, ani_object callback)
 static void OffScanDeviceFoundNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceFoundNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || type == nullptr) {
+        SCAN_HILOGE("env or type is nullptr");
         return;
     }
     std::string typeStr;
@@ -433,8 +433,8 @@ static void OffScanDeviceFoundNative(ani_env *env, ani_string type)
 static void OnScanDeviceSyncNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceSyncNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "scanDeviceSync";
@@ -445,8 +445,8 @@ static void OnScanDeviceSyncNative(ani_env *env, ani_object callback)
 static void OffScanDeviceSyncNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceSyncNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || type == nullptr) {
+        SCAN_HILOGE("env or type is nullptr");
         return;
     }
     std::string typeStr;
@@ -460,8 +460,8 @@ static void OffScanDeviceSyncNative(ani_env *env, ani_string type)
 static void OnScanDeviceAddNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceAddNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "scanDeviceAdd";
@@ -472,8 +472,8 @@ static void OnScanDeviceAddNative(ani_env *env, ani_object callback)
 static void OffScanDeviceAddNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceAddNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || type == nullptr) {
+        SCAN_HILOGE("env or type is nullptr");
         return;
     }
     std::string typeStr;
@@ -487,8 +487,8 @@ static void OffScanDeviceAddNative(ani_env *env, ani_string type)
 static void OnScanDeviceDelNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceDelNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("env or callback is nullptr");
         return;
     }
     std::string typeStr = "scanDeviceDel";
@@ -499,8 +499,8 @@ static void OnScanDeviceDelNative(ani_env *env, ani_object callback)
 static void OffScanDeviceDelNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceDelNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
+    if (env == nullptr || type == nullptr) {
+        SCAN_HILOGE("env or type is nullptr");
         return;
     }
     std::string typeStr;

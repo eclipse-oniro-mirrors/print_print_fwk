@@ -18,9 +18,15 @@
 #include "print_base_ani_util.h"
 #include "print_object_ani_util.h"
 #include "print_log.h"
+
 namespace OHOS::Print {
-ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativePrintTask)
+
+ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, std::shared_ptr<AniPrintTask> nativePrintTask)
 {
+    if (env == nullptr) {
+        PRINT_HILOGE("env is a nullptr");
+        return nullptr;
+    }
     if (nativePrintTask == nullptr) {
         PRINT_HILOGE("nativePrintTask is a nullptr");
         return nullptr;
@@ -39,25 +45,40 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativ
         return nullptr;
     }
 
+    uint64_t taskId = ++GetPrintTaskIdCounter();
+    {
+        std::lock_guard<std::mutex> lock(GetPrintTaskMapMutex());
+        GetPrintTaskMap()[taskId] = nativePrintTask;
+    }
+
     ani_object obj;
-    if (ANI_OK !=env->Object_New(cls, ctor, &obj, reinterpret_cast<ani_long>(nativePrintTask))) {
+    if (ANI_OK != env->Object_New(cls, ctor, &obj, static_cast<ani_long>(taskId))) {
         PRINT_HILOGE("New Context Fail");
+        std::lock_guard<std::mutex> lock(GetPrintTaskMapMutex());
+        GetPrintTaskMap().erase(taskId);
         return nullptr;
     }
     return obj;
 }
 
-AniPrintTask* AniPrintTaskHelper::UnwrappPrintTask(ani_env *env, ani_object object)
+std::shared_ptr<AniPrintTask> AniPrintTaskHelper::UnwrappPrintTask(ani_env *env, ani_object object)
 {
     if (env == nullptr) {
         PRINT_HILOGE("env is a nullptr");
         return nullptr;
     }
-    ani_long printTask;
-    if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &printTask)) {
+    ani_long taskId = 0;
+    if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &taskId)) {
         PRINT_HILOGE("UnwrappPrintTask Fail");
         return nullptr;
     }
-    return reinterpret_cast<AniPrintTask *>(printTask);
+    uint64_t id = static_cast<uint64_t>(taskId);
+    std::lock_guard<std::mutex> lock(GetPrintTaskMapMutex());
+    auto it = GetPrintTaskMap().find(id);
+    if (it == GetPrintTaskMap().end()) {
+        PRINT_HILOGE("PrintTask not found in map, taskId=%{public}llu", static_cast<unsigned long long>(id));
+        return nullptr;
+    }
+    return it->second;
 }
 }  // namespace OHOS::Print

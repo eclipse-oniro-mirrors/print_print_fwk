@@ -154,9 +154,17 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
     SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
     ani_enum_item printerStateEnum = CreateEnumByIndex(env, "@ohos.print.print.PrinterState",
         static_cast<int32_t>(info.GetPrinterState()));
+    if (printerStateEnum == nullptr) {
+        PRINT_HILOGE("CreateEnumByIndex failed for PrinterState");
+        return nullptr;
+    }
     SetRefProperty(env, obj, PARAM_INFO_PRINTERSTATE, static_cast<ani_ref>(printerStateEnum));
     ani_enum_item printerStatusEnum = CreateEnumByIndex(env, "@ohos.print.print.PrinterStatus",
         static_cast<int32_t>(info.GetPrinterStatus()));
+    if (printerStatusEnum == nullptr) {
+        PRINT_HILOGE("CreateEnumByIndex failed for PrinterStatus");
+        return nullptr;
+    }
     SetRefProperty(env, obj, PARAM_INFO_PRINTER_STATUS, static_cast<ani_ref>(printerStatusEnum));
     PrinterCapability cap;
     info.GetCapability(cap);

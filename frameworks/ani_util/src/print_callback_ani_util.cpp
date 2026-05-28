@@ -58,8 +58,8 @@ namespace OHOS::Print {
 
 bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_object retObj)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is a nullptr");
+    if (env == nullptr || call == nullptr) {
+        PRINT_HILOGE("env or call is a nullptr");
         return false;
     }
     ani_class clsCall = nullptr;
@@ -92,6 +92,10 @@ bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_obj
 
 bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
 {
+    if (env == nullptr || call == nullptr) {
+        PRINT_HILOGE("env or call is a nullptr");
+        return false;
+    }
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
     if ((status = env->FindClass(CALLBACK_WRAPPER, &clsCall)) != ANI_OK) {
@@ -118,6 +122,10 @@ bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
 
 bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result)
 {
+    if (env == nullptr || call == nullptr) {
+        PRINT_HILOGE("env or call is a nullptr");
+        return false;
+    }
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
     if ((status = env->FindClass(ASYNC_CALLBACK_ARRAY_WRAPPER, &clsCall)) != ANI_OK) {
@@ -179,6 +187,10 @@ bool Callback(ani_env *env, ani_object call, ani_object data)
         PRINT_HILOGE("env is nullptr");
         return false;
     }
+    if (call == nullptr) {
+        PRINT_HILOGE("call is nullptr");
+        return false;
+    }
     ani_class clsCall = nullptr;
     ani_status status = env->FindClass(CALLBACK_WRAPPER, &clsCall);
     if (status != ANI_OK || clsCall == nullptr) {
@@ -201,5 +213,4 @@ bool Callback(ani_env *env, ani_object call, ani_object data)
     }
     return true;
 }
-
 }  // namespace OHOS::Print

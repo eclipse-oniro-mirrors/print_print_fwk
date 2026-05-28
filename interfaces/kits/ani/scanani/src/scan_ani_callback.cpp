@@ -21,76 +21,114 @@
 namespace OHOS::Scan {
 using namespace OHOS::Print;
 ScanAniCallback::ScanAniCallback(ani_env *env, ani_object callback)
-    : env_(env), callback_(callback)
 {
+    if (env == nullptr || callback == nullptr) {
+        SCAN_HILOGE("nullptr error");
+        return;
+    }
+    ani_vm *vm = nullptr;
+    env->GetVM(&vm);
+    aniVm_ = vm;
+    env->GlobalReference_Create(reinterpret_cast<ani_ref>(callback), &callback_);
+}
+
+ScanAniCallback::~ScanAniCallback()
+{
+    if (callback_ != nullptr) {
+        if (aniVm_ != nullptr) {
+            ani_env *env = nullptr;
+            ani_options aniArgs { 0, nullptr };
+            auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+            if (status == ANI_OK && env != nullptr) {
+                env->GlobalReference_Delete(callback_);
+                aniVm_->DetachCurrentThread();
+            }
+        } else {
+            SCAN_HILOGW("aniVm_ is nullptr, callback_ may not be released properly");
+        }
+    }
+    aniVm_ = nullptr;
+    callback_ = nullptr;
 }
 
 bool ScanAniCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
     SCAN_HILOGI("OnScanDeviceFound");
-    if (env_ == nullptr) {
-        SCAN_HILOGE("env_ is nullptr");
+    if (aniVm_ == nullptr || callback_ == nullptr) {
+        SCAN_HILOGE("aniVm_ or callback_ is nullptr");
         return false;
     }
-    if (callback_ == nullptr) {
-        SCAN_HILOGE("callback_ is nullptr");
-        return false;
+    ani_env *env = nullptr;
+    ani_options aniArgs { 0, nullptr };
+    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    if (status != ANI_OK) {
+        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            SCAN_HILOGE("GetEnv failed");
+            return false;
+        }
     }
-    ani_object deviceObj = AniScannerDeviceHelper::CreateScannerDevice(env_, info);
+    ani_object deviceObj = AniScannerDeviceHelper::CreateScannerDevice(env, info);
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
         return false;
     }
-    if (!Callback(env_, callback_, deviceObj)) {
-        SCAN_HILOGE("Callback failed");
-        return false;
-    }
-    return true;
+    bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
+    aniVm_->DetachCurrentThread();
+    return result;
 }
 
 bool ScanAniCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info)
 {
     SCAN_HILOGI("OnScanDeviceSync");
-    if (env_ == nullptr) {
-        SCAN_HILOGE("env_ is nullptr");
+    if (aniVm_ == nullptr || callback_ == nullptr) {
+        SCAN_HILOGE("aniVm_ or callback_ is nullptr");
         return false;
     }
-    if (callback_ == nullptr) {
-        SCAN_HILOGE("callback_ is nullptr");
-        return false;
+    ani_env *env = nullptr;
+    ani_options aniArgs { 0, nullptr };
+    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    if (status != ANI_OK) {
+        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            SCAN_HILOGE("GetEnv failed");
+            return false;
+        }
     }
-    ani_object deviceObj = AniScannerSyncDeviceHelper::CreateScannerSyncDevice(env_, info);
+    ani_object deviceObj = AniScannerSyncDeviceHelper::CreateScannerSyncDevice(env, info);
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
         return false;
     }
-    if (!Callback(env_, callback_, deviceObj)) {
-        SCAN_HILOGE("Callback failed");
-        return false;
-    }
-    return true;
+    bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
+    aniVm_->DetachCurrentThread();
+    return result;
 }
 
 bool ScanAniCallback::OnGetDevicesList(std::vector<ScanDeviceInfo> &info)
 {
     SCAN_HILOGI("OnGetDevicesList");
-    if (env_ == nullptr) {
-        SCAN_HILOGE("env_ is nullptr");
+    if (aniVm_ == nullptr || callback_ == nullptr) {
+        SCAN_HILOGE("aniVm_ or callback_ is nullptr");
         return false;
     }
-    if (callback_ == nullptr) {
-        SCAN_HILOGE("callback_ is nullptr");
-        return false;
+    ani_env *env = nullptr;
+    ani_options aniArgs { 0, nullptr };
+    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    if (status != ANI_OK) {
+        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            SCAN_HILOGE("GetEnv failed");
+            return false;
+        }
     }
-    ani_object deviceObj = AniScannerDeviceHelper::CreateScannerDeviceArray(env_, info);
+    ani_object deviceObj = AniScannerDeviceHelper::CreateScannerDeviceArray(env, info);
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
         return false;
     }
-    if (!Callback(env_, callback_, deviceObj)) {
-        SCAN_HILOGE("Callback failed");
-        return false;
-    }
-    return true;
+    bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
+    aniVm_->DetachCurrentThread();
+    return result;
 }
 }
