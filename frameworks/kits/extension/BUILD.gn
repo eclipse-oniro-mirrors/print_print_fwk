@@ -128,6 +128,11 @@ ohos_shared_library("print_extension_framework") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
 
+  if (print_fwk_feature_api_metrics) {
+    cflags_cc += [ "-DPRINT_API_METRICS_ENABLE" ]
+    external_deps += [ "api_metrics:histogrammanager" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }

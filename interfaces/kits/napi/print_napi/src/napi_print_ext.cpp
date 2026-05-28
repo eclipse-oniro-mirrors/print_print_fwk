@@ -20,6 +20,7 @@
 #include "print_manager_client.h"
 #include "printer_info_helper.h"
 #include "printer_capability_helper.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
@@ -76,10 +77,9 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
 
 napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("Enter ---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.removePrinters", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input =
-        [context](
+    auto input = [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
 
@@ -107,7 +107,6 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
@@ -184,6 +183,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
 napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.updatePrinterState", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input =
         [context](
@@ -192,16 +192,10 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
-
         PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "printerState is not a number", napi_number_expected);
-
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
-
         uint32_t printerState = NapiPrintUtils::GetUint32FromValue(env, argv[1]);
-        PRINT_HILOGD("printerState : %{public}d", printerState);
-
         if (printerId == "" || !IsValidPrinterState(printerState)) {
             PRINT_HILOGE("invalid printer id or printer state");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -239,6 +233,7 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
 
 napi_value NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp(napi_env env, napi_callback_info info)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.updatePrintJobState", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](
         napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
@@ -286,6 +281,7 @@ napi_value NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp(napi_env env, napi_
 napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.updateExtensionInfo", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input =
         [context](
@@ -333,6 +329,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
 napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter AddPrinterToCups---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.addPrinterToCups", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input =
         [context](
@@ -383,6 +380,7 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
 napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter QueryPrinterCapabilityByUri---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.queryPrinterCapabilityByUri", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input =
         [context](
@@ -435,6 +433,7 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
 napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter DeletePrinterFromCups---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.deletePrinterFromCups", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input =
         [context](
@@ -473,6 +472,7 @@ napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info 
 napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter DiscoverUsbPrinters---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.discoverUsbPrinters", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input =
         [context](
@@ -515,6 +515,7 @@ napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info in
 napi_value NapiPrintExt::AddPrinterToDiscovery(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter AddPrinterToDiscovery---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.addPrinterToDiscovery", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
 
     auto input =
@@ -566,6 +567,7 @@ napi_value NapiPrintExt::AddPrinterToDiscovery(napi_env env, napi_callback_info 
 napi_value NapiPrintExt::UpdatePrinterInDiscovery(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter UpdatePrinterInDiscovery---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.updatePrinterInDiscovery", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
 
     auto input =
@@ -617,6 +619,7 @@ napi_value NapiPrintExt::UpdatePrinterInDiscovery(napi_env env, napi_callback_in
 napi_value NapiPrintExt::RemovePrinterFromDiscovery(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter RemovePrinterFromDiscovery---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.removePrinterFromDiscovery", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
 
     auto input =
@@ -662,6 +665,7 @@ napi_value NapiPrintExt::RemovePrinterFromDiscovery(napi_env env, napi_callback_
 napi_value NapiPrintExt::UpdatePrinterInSystem(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter UpdatePrinterInSystem---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.updatePrinterInformation", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
 
     auto input =

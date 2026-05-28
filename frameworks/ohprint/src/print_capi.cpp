@@ -204,6 +204,7 @@ static void GetPrintJobState(const PrintJob &jobInfo,  uint32_t &state)
 // 初始化
 Print_ErrorCode OH_Print_Init()
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_Init", PRINT_API_COUNTED);
     int32_t ret = PrintManagerClient::GetInstance()->Init();
     PRINT_HILOGI("OH_Print_Init ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
@@ -212,6 +213,7 @@ Print_ErrorCode OH_Print_Init()
 // 反初始化
 Print_ErrorCode OH_Print_Release()
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_Release", PRINT_API_COUNTED);
     int32_t ret = PrintManagerClient::GetInstance()->Release();
     PRINT_HILOGI("OH_Print_Release ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
@@ -269,6 +271,7 @@ Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList)
 
 Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback callback)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StartPrinterDiscovery", PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_StartPrinterDiscovery");
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
@@ -293,6 +296,7 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
 
 Print_ErrorCode OH_Print_StopPrinterDiscovery()
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StopPrinterDiscovery", PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_StopPrinterDiscovery");
     PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
     {
@@ -304,6 +308,7 @@ Print_ErrorCode OH_Print_StopPrinterDiscovery()
 
 Print_ErrorCode OH_Print_ConnectPrinter(const char *printerId)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_ConnectPrinter", PRINT_API_COUNTED);
     if (printerId == nullptr) {
         PRINT_HILOGW("printerId is null.");
         return PRINT_ERROR_INVALID_PRINTER;
@@ -316,6 +321,7 @@ Print_ErrorCode OH_Print_ConnectPrinter(const char *printerId)
 
 Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StartPrintJob", PRINT_API_COUNTED);
     if (printJob == nullptr) {
         PRINT_HILOGI("printJob is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
@@ -334,6 +340,8 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
 Print_ErrorCode OH_Print_StartPrintWithJobStateCallback(const Print_PrintJob *printJob,
     OH_Print_OnJobStateChanged jobStateChangedCb)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StartPrintWithJobStateCallback",
+        PRINT_API_COUNTED);
     if (printJob == nullptr) {
         PRINT_HILOGW("printJob is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
@@ -447,6 +455,8 @@ Print_ErrorCode OH_Print_StartPrintTaskWithCallback(const Print_PrintTask *print
 
 Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallback callback)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_RegisterPrinterChangeListener",
+        PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_RegisterPrinterChangeListener");
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
@@ -459,6 +469,8 @@ Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallba
 
 void OH_Print_UnregisterPrinterChangeListener()
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_UnregisterPrinterChangeListener",
+        PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_UnregisterPrinterChangeListener");
     PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
     {
@@ -469,6 +481,7 @@ void OH_Print_UnregisterPrinterChangeListener()
 
 Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_QueryPrinterList", PRINT_API_COUNTED);
     if (printerIdList == nullptr) {
         PRINT_HILOGW("printerIdList is null.");
         return PRINT_ERROR_INVALID_PARAMETER;
@@ -500,6 +513,7 @@ Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
 
 void OH_Print_ReleasePrinterList(Print_StringList *printerIdList)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_ReleasePrinterList", PRINT_API_COUNTED);
     if (printerIdList == nullptr) {
         PRINT_HILOGW("printerIdList is null.");
         return;
@@ -515,6 +529,7 @@ void OH_Print_ReleasePrinterList(Print_StringList *printerIdList)
 
 Print_ErrorCode OH_Print_QueryPrinterInfo(const char *printerId, Print_PrinterInfo **printerInfo)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_QueryPrinterInfo", PRINT_API_COUNTED);
     if (printerId == nullptr || printerInfo == nullptr) {
         PRINT_HILOGW("Invalid parameter.");
         return PRINT_ERROR_INVALID_PARAMETER;
@@ -539,6 +554,7 @@ Print_ErrorCode OH_Print_QueryPrinterInfo(const char *printerId, Print_PrinterIn
 
 void OH_Print_ReleasePrinterInfo(Print_PrinterInfo *printerInfo)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_ReleasePrinterInfo", PRINT_API_COUNTED);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null.");
         return;
@@ -550,6 +566,7 @@ void OH_Print_ReleasePrinterInfo(Print_PrinterInfo *printerInfo)
 
 Print_ErrorCode OH_Print_LaunchPrinterManager()
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_LaunchPrinterManager", PRINT_API_COUNTED);
     PRINT_HILOGW("Ability context is needed to start ability");
     return PRINT_ERROR_GENERIC_FAILURE;
 }
@@ -557,6 +574,7 @@ Print_ErrorCode OH_Print_LaunchPrinterManager()
 Print_ErrorCode OH_Print_QueryPrinterProperties(
     const char *printerId, const Print_StringList *propertyKeyList, Print_PropertyList *propertyList)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_QueryPrinterProperties", PRINT_API_COUNTED);
     if (printerId == nullptr || propertyKeyList == nullptr || propertyKeyList->list == nullptr ||
         propertyList == nullptr) {
         PRINT_HILOGW("OH_Print_QueryPrinterProperties invalid parameter.");
@@ -589,6 +607,7 @@ Print_ErrorCode OH_Print_QueryPrinterProperties(
 
 void OH_Print_ReleasePrinterProperties(Print_PropertyList *propertyList)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_ReleasePrinterProperties", PRINT_API_COUNTED);
     if (propertyList == nullptr) {
         PRINT_HILOGW("propertyList is null");
         return;
@@ -605,6 +624,7 @@ void OH_Print_ReleasePrinterProperties(Print_PropertyList *propertyList)
 
 Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Print_PropertyList *propertyList)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_UpdatePrinterProperties", PRINT_API_COUNTED);
     if (printerId == nullptr || propertyList == nullptr || propertyList->list == nullptr || propertyList->count <= 0) {
         PRINT_HILOGW("OH_Print_UpdatePrinterProperties invalid parameter.");
         return PRINT_ERROR_INVALID_PRINTER;
@@ -627,6 +647,7 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
 
 Print_ErrorCode OH_Print_RestorePrinterProperties(const char *printerId, const Print_StringList *propertyKeyList)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_RestorePrinterProperties", PRINT_API_COUNTED);
     return PRINT_ERROR_NONE;
 }
 
@@ -776,6 +797,7 @@ Print_PrintAttributes *PrintDocumentAdapterWrapper::BuildPrintAttributes(const P
 Print_ErrorCode OH_Print_StartPrintByNative(
     const char *printJobName, Print_PrintDocCallback printDocCallback, void *context)
 {
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StartPrintByNative", PRINT_API_COUNTED);
     if (printJobName == nullptr) {
         PRINT_HILOGE("OH_Print start print native print job name is null.");
         return PRINT_ERROR_INVALID_PARAMETER;
