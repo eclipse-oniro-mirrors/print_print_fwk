@@ -78,11 +78,11 @@ namespace OHOS::Print {
 
 #define PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                \
     if ((ptr) == nullptr) {                                                         \
-        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));    \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
         return (retVal);                                                            \
     }
 
-#define PRINT_CHECK_NULL_RETURN_VOID(ptr)              \
+#define PRINT_CHECK_NULL_RETURN_VOID(ptr)               \
     if ((ptr) == nullptr) {                             \
         PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
         return;                                         \
@@ -90,7 +90,7 @@ namespace OHOS::Print {
 
 #define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
     if ((ptr) == nullptr) {                                                         \
-        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));    \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
         return;                                                                     \
     }
 

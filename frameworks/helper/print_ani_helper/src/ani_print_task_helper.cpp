@@ -54,9 +54,9 @@ AniPrintTask* AniPrintTaskHelper::UnwrappPrintTask(ani_env *env, ani_object obje
     }
     ani_long printTask;
     if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &printTask)) {
-        PRINT_HILOGE("UnwrappPrintTask Fail");	
+        PRINT_HILOGE("UnwrappPrintTask Fail");
         return nullptr;
     }
     return reinterpret_cast<AniPrintTask *>(printTask);
- }
+}
 }  // namespace OHOS::Print
