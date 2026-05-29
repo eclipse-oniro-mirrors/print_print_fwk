@@ -21,7 +21,6 @@
 #include "print_constant.h"
 
 namespace OHOS::Print {
-
 ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativePrintTask)
 {
     PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, nullptr, __func__);
@@ -49,15 +48,15 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativ
 
 AniPrintTask* AniPrintTaskHelper::UnwrappPrintTask(ani_env *env, ani_object object)
 {
-     if (env == nullptr) {
-         PRINT_HILOGE("env is a nullptr");
-         return nullptr;
-     }
-     ani_long printTask;
-     if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &printTask)) {
-         PRINT_HILOGE("UnwrappPrintTask Fail");	 
-         return nullptr;
-     }
-     return reinterpret_cast<AniPrintTask *>(printTask);
+    if (env == nullptr) {
+        PRINT_HILOGE("env is a nullptr");
+        return nullptr;
+    }
+    ani_long printTask;
+    if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &printTask)) {
+        PRINT_HILOGE("UnwrappPrintTask Fail");	
+        return nullptr;
+    }
+    return reinterpret_cast<AniPrintTask *>(printTask);
  }
 }  // namespace OHOS::Print
