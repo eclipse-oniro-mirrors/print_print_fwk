@@ -443,6 +443,12 @@ HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriIsIPv6,
     EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnEmpty_WhenUriEndWithAtOnly, TestSize.Level1)
+{
+    std::string uri = "aaa://@";
+    EXPECT_TRUE(PrintUtils::ExtractHostFromUri(uri).empty());
+}
+
 HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenVendorManagerIsNull, TestSize.Level1)
 {
     VendorWlanGroup group(nullptr);

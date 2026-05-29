@@ -287,11 +287,10 @@ char* NapiPrintUtils::GetCharPtrFromValueUtf8(napi_env env, napi_value value)
         return nullptr;
     }
 
-    char* result = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE];
+    char* result = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]();
     if (result == nullptr) {
         return nullptr;
     }
-
     status = napi_get_value_string_utf8(env, value, result, length + 1, &length);
     if (status != napi_ok) {
         delete[] result;
@@ -299,7 +298,6 @@ char* NapiPrintUtils::GetCharPtrFromValueUtf8(napi_env env, napi_value value)
     }
 
     result[length] = '\0';
-
     return result;
 }
 

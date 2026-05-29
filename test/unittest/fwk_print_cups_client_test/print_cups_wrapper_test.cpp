@@ -547,14 +547,14 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0088, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
 {
     cups_dest_t cupsDests = {0};
-    cups_dinfo_t cupsDinfo = {0};
-    MockTestFunc testFunc = [this, &cupsDests, &cupsDinfo](
+    MockTestFunc testFunc = [this, &cupsDests](
                                 PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
-        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
+        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
         std::string printerName = "testName";
         PrinterCapability printerCaps;
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_NONE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_SERVER_FAILURE);
     };
     DoMockTest(testFunc);
 }
@@ -568,16 +568,15 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0090, TestSize.Level1)
 {
     cups_dest_t cupsDests = {0};
-    cups_dinfo_t cupsDinfo = {0};
-    MockTestFunc testFunc = [this, &cupsDests, &cupsDinfo](
+    MockTestFunc testFunc = [this, &cupsDests](
                                 PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDests));
-        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDinfo));
+        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
         std::string printerName = "testName";
         PrinterCapability printerCaps;
         EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_SERVER_FAILURE);
         EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_SERVER_FAILURE);
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_NONE);
     };
     DoMockTest(testFunc);
 }

@@ -122,8 +122,11 @@ int32_t KiaInterceptorManager::RegisterCallerAppId(const std::string &jobId,
 {
     AppExecFwk::BundleInfo bundleInfo;
     AppExecFwk::BundleMgrClient bundleMgrClient;
-    bundleMgrClient.GetBundleInfo(callerBundleName,
-        AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    if (!bundleMgrClient.GetBundleInfo(callerBundleName,
+        AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId)) {
+        PRINT_HILOGW("user [%{public}d] has not installed [%{public}s]", userId, callerBundleName.c_str());
+        return E_PRINT_INVALID_PARAMETER;
+    }
     PRINT_HILOGD("callerBundleName: %{public}s, callerAppId: %{public}s",
         callerBundleName.c_str(), bundleInfo.appId.c_str());
     std::lock_guard<std::mutex> lock(mutex_);

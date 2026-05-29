@@ -299,11 +299,12 @@ void JsPrintExtension::GetSrcPath(std::string &srcPath)
         srcPath.append("/").append(Extension::abilityInfo_->name).append(".abc");
         return;
     }
-
     if (!Extension::abilityInfo_->srcEntrance.empty()) {
         srcPath.append(Extension::abilityInfo_->moduleName + "/");
         srcPath.append(Extension::abilityInfo_->srcEntrance);
-        srcPath.erase(srcPath.rfind('.'));
+        if (srcPath.rfind(".") != std::string::npos) {
+            srcPath.erase(srcPath.rfind('.'));
+        }
         srcPath.append(".abc");
     }
 }

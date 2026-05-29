@@ -179,8 +179,10 @@ public:
     template<typename T>
     static bool CheckJsonType(const Json::Value &j)
     {
-        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, unsigned int> || std::is_same_v<T, uint32_t>) {
+        if constexpr (std::is_same_v<T, int>) {
             return j.isInt();
+        } else if constexpr (std::is_same_v<T, unsigned int> || std::is_same_v<T, uint32_t>) {
+            return j.isUInt();
         } else if constexpr (std::is_same_v<T, std::string>) {
             return j.isString();
         } else if constexpr (std::is_same_v<T, bool>) {

@@ -188,7 +188,6 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
     PRINT_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         return PRINT_INVALID_ID;
     }
     return fd;
@@ -564,6 +563,9 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     size_t atPos = uri.find('@', startPos);
     if (atPos != std::string::npos) {
         startPos = atPos + 1;
+    }
+    if (startPos >= uri.length()) {
+        return "";
     }
     if (uri[startPos] == '[') {
         size_t endBracketPos = uri.find(']', startPos);

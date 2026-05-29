@@ -146,7 +146,13 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
         fileList_.clear();
         return ret;
     }
-    return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    ret = PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    for (auto fd : fdList_) {
+        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+    }
+    fdList_.clear();
+    fileList_.clear();
+    return ret;
 }
 
 uint32_t PrintTask::StartPrintAdapter(napi_env env, napi_callback_info info)
