@@ -306,18 +306,18 @@ bool PrinterCapability::ReadCoreAttrsFromParcel(Parcel &parcel, PrinterCapabilit
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.colorMode_), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.duplexMode_), false);
 
-    if (!PrintUtils::readListFromParcel<PrintPageSize>(parcel, right.supportedPageSizeList_,
-        [](Parcel& p) -> std::optional<PrintPageSize> {
-            auto ptr = PrintPageSize::Unmarshalling(p);
-            if (ptr) {
-                return std::optional<PrintPageSize>(*ptr);
-            }
-            return std::nullopt;
-        })) {
-        return false;
-    }
+	if (!PrintUtils::readListFromParcel<PrintPageSize>(parcel, right.supportedPageSizeList_,
+		[](Parcel& p) -> std::optional<PrintPageSize> {
+			auto ptr = PrintPageSize::Unmarshalling(p);
+			if (ptr) {
+				return std::optional<PrintPageSize>(*ptr);
+			}
+			return std::nullopt;
+		})) {
+		return false;
+	}
 
-    if (!PrintUtils::readListFromParcel<PrintResolution>(parcel, right.resolutionList_,
+	if (!PrintUtils::readListFromParcel<PrintResolution>(parcel, right.resolutionList_,
         [](Parcel& p) -> std::optional<PrintResolution> {
             auto ptr = PrintResolution::Unmarshalling(p);
             if (ptr) {
@@ -371,17 +371,17 @@ bool PrinterCapability::ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapa
         return false;
     }
 
-    if (!PrintUtils::readListFromParcel<std::string>(
-        parcel, right.supportedMediaTypeList_, [](Parcel &p) -> std::optional<std::string> {
-            std::string val;
-            if (!p.ReadString(val)) {
-                return std::nullopt;
-            }
-            return std::make_optional(val);
-        },
-        &right.hasSupportedMediaType_)) {
-        return false;
-    }
+	if (!PrintUtils::readListFromParcel<std::string>(
+		parcel, right.supportedMediaTypeList_, [](Parcel &p) -> std::optional<std::string> {
+			std::string val;
+			if (!p.ReadString(val)) {
+				return std::nullopt;
+			}
+			return std::make_optional(val);
+		},
+		&right.hasSupportedMediaType_)) {
+		return false;
+	}
 
     if (!PrintUtils::readListFromParcel<uint32_t>(
         parcel, right.supportedQualityList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
