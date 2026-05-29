@@ -20,18 +20,20 @@
 #include "scanner_info_helper.h"
 
 namespace OHOS::Scan {
-ScanCallback::ScanCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), callbackFunction_(nullptr)
+ScanCallback::ScanCallback(napi_env env, napi_ref ref)
+    : env_(env), ref_(ref), callbackFunction_(nullptr), mutex_(std::make_shared<std::mutex>())
 {
 }
 
-ScanCallback::ScanCallback(std::function<void(std::vector<ScanDeviceInfo> &infos)>
-    callbackFunction) : env_(nullptr), ref_(nullptr), callbackFunction_(callbackFunction)
+ScanCallback::ScanCallback(std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction)
+    : env_(nullptr), ref_(nullptr), callbackFunction_(callbackFunction), mutex_(std::make_shared<std::mutex>())
 {
 }
 
 ScanCallback::~ScanCallback()
 {
-    std::lock_guard<std::mutex> autoLock(mutex_);
+    auto mutexPtr = mutex_;
+    std::lock_guard<std::mutex> autoLock(*mutexPtr);
     if (env_ == nullptr || ref_ == nullptr) {
         return;
     }
@@ -64,12 +66,12 @@ ScanCallback::~ScanCallback()
     }
 }
 
-void CallbackParam::InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::mutex &mutex_)
+void CallbackParam::InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::shared_ptr<std::mutex> &mutex_)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(*mutex_);
     this->env = env_;
     this->ref = ref_;
-    this->mutexPtr = &mutex_;
+    this->mutexPtr = mutex_;
 }
 
 void CallbackParam::SetCallbackParam(uint32_t &state, const ScanDeviceInfo &deviceInfo)

@@ -159,6 +159,7 @@ ohos_unittest("scan_service_test") {
     "mock",
     "../fwk_inner_napi_test/mock",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/frameworks/models/scan_models/include",
     "${print_path}/interfaces/kits/napi/scan_napi/include",
     "${_scan_service_path}/include",
     "${print_utils_path}/include",

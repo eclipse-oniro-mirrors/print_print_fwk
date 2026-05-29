@@ -243,8 +243,9 @@ bool ScanContext::SetParaTable(ScanOptionDescriptor &desc, ScanParaTable &paraTa
 int32_t ScanContext::GetOptionValueFromTable(
     const std::string &deviceId, int32_t option, const char *value, ScanOptionValue &optionValue)
 {
-    auto *paraTable = GetScanParaTable(deviceId);
     std::lock_guard<std::mutex> lock(mutex_);
+    auto it = innerScanParaTables_.find(deviceId);
+    ScanParaTable *paraTable = it != innerScanParaTables_.end() ? it->second.get() : nullptr;
     if (paraTable == nullptr) {
         SCAN_HILOGE("cannot find scannerId [%{private}s] in parameter tables.", deviceId.c_str());
         return SCAN_ERROR_INVALID_PARAMETER;
@@ -450,19 +451,9 @@ int32_t ScanContext::StatusConvert(int32_t status)
 void ScanContext::Clear()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (auto &pair : exScanParaTables_) {
-        FreeScannerOptionsMemory(pair.second);
-    }
     exScanParaTables_.clear();
     innerScanParaTables_.clear();
     discoverCallback_ = nullptr;
-}
-
-ScanParaTable *ScanContext::GetScanParaTable(const std::string &scannerId)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it = innerScanParaTables_.find(scannerId);
-    return it != innerScanParaTables_.end() ? it->second.get() : nullptr;
 }
 
 void ScanContext::SetScanParaTable(const std::string &scannerId, std::unique_ptr<ScanParaTable> table)
@@ -471,17 +462,25 @@ void ScanContext::SetScanParaTable(const std::string &scannerId, std::unique_ptr
     innerScanParaTables_[scannerId] = std::move(table);
 }
 
-Scan_ScannerOptions *ScanContext::GetScannerOptions(const std::string &scannerId)
+std::shared_ptr<Scan_ScannerOptions> ScanContext::GetScannerOptions(const std::string &scannerId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = exScanParaTables_.find(scannerId);
     return it != exScanParaTables_.end() ? it->second : nullptr;
 }
 
-void ScanContext::SetScannerOptions(const std::string &scannerId, Scan_ScannerOptions *options)
+void ScanContext::SetScannerOptions(const std::string &scannerId, std::shared_ptr<Scan_ScannerOptions> options)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    exScanParaTables_[scannerId] = options;
+    exScanParaTables_[scannerId] = std::move(options);
+}
+
+std::shared_ptr<Scan_ScannerOptions> ScanContext::CreateScannerOptionsSharedPtr(Scan_ScannerOptions *options)
+{
+    auto deleter = [](Scan_ScannerOptions *p) {
+        ScanContext::FreeScannerOptionsMemory(p);
+    };
+    return std::shared_ptr<Scan_ScannerOptions>(options, deleter);
 }
 
 void ScanContext::SetDiscoverCallback(Scan_ScannerDiscoveryCallback callback)

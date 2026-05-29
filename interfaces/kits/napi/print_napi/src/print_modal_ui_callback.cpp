@@ -116,7 +116,7 @@ void PrintModalUICallback::OnResultForModal(int32_t resultCode, const OHOS::AAFw
     this->baseContext->errorMessage.code = resultCode;
     if (this->baseContext->errorMessage.code != E_PRINT_NONE) {
         this->baseContext->errorMessage.message = result.GetStringParam("message");
-        PRINT_HILOGI("OnResultForModal errorMessage is %s", this->baseContext->errorMessage.message.c_str());
+        PRINT_HILOGI("OnResultForModal errorMessage is %{private}s", this->baseContext->errorMessage.message.c_str());
     }
 
     SendMessageBack();

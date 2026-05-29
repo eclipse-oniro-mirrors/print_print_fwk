@@ -146,7 +146,7 @@ public:
     Language language;
 };
 
-class MockRuntimeJS : public Runtime {
+class MockRuntimeJS : public JsRuntime {
 public:
     const int DEFAULT_LANGUAGE = static_cast<int>(Language::JS);
     MockRuntimeJS() = default;

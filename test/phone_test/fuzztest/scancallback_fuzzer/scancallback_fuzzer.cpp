@@ -28,7 +28,7 @@ constexpr size_t U32_AT_SIZE = 4;
 void TestSetCallbackParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     CallbackParam param;
-    std::mutex mutex;
+    std::shared_ptr<std::mutex> mutex = std::make_shared<std::mutex>();
     napi_env env = nullptr;
     napi_ref ref = nullptr;
     param.InitialCallbackParam(env, ref, mutex);
@@ -37,7 +37,7 @@ void TestSetCallbackParam(const uint8_t* data, size_t size, FuzzedDataProvider* 
 void TestSetCallbackSyncParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     CallbackParam param;
-    std::mutex mutex;
+    std::shared_ptr<std::mutex> mutex = std::make_shared<std::mutex>();
     napi_env env = nullptr;
     napi_ref ref = nullptr;
     param.InitialCallbackParam(env, ref, mutex);

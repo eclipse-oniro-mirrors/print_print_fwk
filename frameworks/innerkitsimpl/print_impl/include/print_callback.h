@@ -17,6 +17,7 @@
 #define PRINT_CALLBACK_H
 
 #include <mutex>
+#include <memory>
 #include <uv.h>
 #include <functional>
 #include "napi/native_api.h"
@@ -30,7 +31,7 @@ namespace OHOS::Print {
 struct CallbackParam {
     napi_env env;
     napi_ref ref;
-    std::mutex* mutexPtr;
+    std::shared_ptr<std::mutex> mutexPtr;
     uint32_t state;
     PrinterInfo printerInfo;
     PrintJob jobInfo;
@@ -56,7 +57,7 @@ class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
     explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
-    PrintCallback(){}; // This interface is invoked by ndk C++ Object
+    PrintCallback() : mutex_(std::make_shared<std::mutex>()){}; // This interface is invoked by CAPI Object
     ~PrintCallback();
     bool OnCallback() override;
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
@@ -86,7 +87,7 @@ private:
 private:
     napi_env env_ = nullptr;
     napi_ref ref_ = nullptr;
-    std::mutex mutex_;
+    std::shared_ptr<std::mutex> mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
     NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
     NativePrintJobChangeCallback nativePrintJobChange_cb = nullptr;
