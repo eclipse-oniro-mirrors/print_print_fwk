@@ -110,41 +110,39 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGE("no data in parcel");
         return false;
     }
-    std::string element = parcel.ReadString();
-    if (element.empty()) {
+    
+    std::string manufacturer;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(manufacturer), false);
+    if (manufacturer.empty()) {
         PRINT_HILOGE("manufacturer is empty");
         return false;
     }
-    SetManufacturer(element);
-    element = parcel.ReadString();
-    if (element.empty()) {
+    SetManufacturer(manufacturer);
+    
+    std::string nickName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(nickName), false);
+    if (nickName.empty()) {
         PRINT_HILOGE("nickName is empty");
         return false;
     }
-    SetNickName(element);
-    element = parcel.ReadString();
-    if (element.empty()) {
+    SetNickName(nickName);
+    
+    std::string ppdName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(ppdName), false);
+    if (ppdName.empty()) {
         PRINT_HILOGE("ppdName is empty");
         return false;
     }
-    SetPpdName(element);
+    SetPpdName(ppdName);
+    
     return true;
 }
 
 bool PpdInfo::Marshalling(Parcel &parcel) const
 {
-    if (!parcel.WriteString(GetManufacturer())) {
-        PRINT_HILOGE("parcel WriteString Manufacturer failed");
-        return false;
-    }
-    if (!parcel.WriteString(GetNickName())) {
-        PRINT_HILOGE("parcel WriteString NickName failed");
-        return false;
-    }
-    if (!parcel.WriteString(GetPpdName())) {
-        PRINT_HILOGE("parcel WriteString PpdName failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetManufacturer()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetNickName()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetPpdName()), false);
     return true;
 }
 

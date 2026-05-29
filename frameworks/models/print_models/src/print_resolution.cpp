@@ -14,6 +14,7 @@
  */
 
 #include "print_resolution.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -78,25 +79,28 @@ void PrintResolution::SetVerticalDpi(uint32_t verticalDpi)
     verticalDpi_ = verticalDpi;
 }
 
-void PrintResolution::ReadFromParcel(Parcel &parcel)
+bool PrintResolution::ReadFromParcel(Parcel &parcel)
 {
-    SetId(parcel.ReadString());
-    SetHorizontalDpi(parcel.ReadUint32());
-    SetVerticalDpi(parcel.ReadUint32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(id_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(horizontalDpi_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(verticalDpi_), false);
+    return true;
 }
 
 bool PrintResolution::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetId());
-    parcel.WriteUint32(GetHorizontalDpi());
-    parcel.WriteUint32(GetVerticalDpi());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetHorizontalDpi()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetVerticalDpi()), false);
     return true;
 }
 
 std::shared_ptr<PrintResolution> PrintResolution::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintResolution>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

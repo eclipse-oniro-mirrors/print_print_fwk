@@ -19,6 +19,7 @@
 #include "securec.h"
 #include "message_parcel.h"
 #include "parcel.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SanePictureData::SanePictureData() : ret_(SANE_READ_OK) {}
@@ -42,9 +43,10 @@ SanePictureData* SanePictureData::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr");
         return nullptr;
     }
-    obj->ret_ = parcel.ReadUint32();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(obj->ret_), nullptr);
     if (obj->ret_ == SANE_READ_OK) {
-        uint32_t bufferSize = parcel.ReadUint32();
+        uint32_t bufferSize = 0;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(bufferSize), nullptr);
         const uint8_t* data = parcel.ReadUnpadBuffer(bufferSize);
         if (data == nullptr) {
             SCAN_HILOGE("data is a nullptr");

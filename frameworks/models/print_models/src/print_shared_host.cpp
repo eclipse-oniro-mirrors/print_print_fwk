@@ -54,26 +54,17 @@ bool PrintSharedHost::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGE("no data in parcel");
         return false;
     }
-    SetIp(parcel.ReadString());
-    SetShareName(parcel.ReadString());
-    SetWorkgroupName(parcel.ReadString());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(ip_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(shareName_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(workgroupName_), false);
     return true;
 }
 
 bool PrintSharedHost::Marshalling(Parcel &parcel) const
 {
-    if (!parcel.WriteString(GetIp())) {
-        PRINT_HILOGE("parcel WriteString ip failed");
-        return false;
-    }
-    if (!parcel.WriteString(GetShareName())) {
-        PRINT_HILOGE("parcel WriteString shareName failed");
-        return false;
-    }
-    if (!parcel.WriteString(GetWorkgroupName())) {
-        PRINT_HILOGE("parcel WriteString workgroupName failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetIp()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetShareName()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetWorkgroupName()), false);
     return true;
 }
 

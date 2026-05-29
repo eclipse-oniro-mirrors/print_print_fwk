@@ -82,6 +82,12 @@ namespace OHOS::Print {
         return;                                         \
     }
 
+#define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
+    if (!(parcelOpExp)) { \
+        PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        return retVal; \
+    }
+
 enum PrintErrorCode {
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,

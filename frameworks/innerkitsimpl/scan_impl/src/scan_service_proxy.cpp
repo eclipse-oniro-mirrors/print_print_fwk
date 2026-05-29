@@ -32,9 +32,10 @@ int32_t ScanServiceProxy::GetResult(int32_t retCode, MessageParcel &reply)
         return E_SCAN_RPC_FAILURE;
     }
 
-    retCode = reply.ReadInt32();
-    SCAN_HILOGD("ScanServiceProxy end. ret = [%{public}d]", retCode);
-    return retCode;
+    int32_t resultCode = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadInt32(resultCode), E_SCAN_RPC_FAILURE);
+    SCAN_HILOGD("ScanServiceProxy end. ret = [%{public}d]", resultCode);
+    return resultCode;
 }
 
 int32_t ScanServiceProxy::InitScan()
@@ -403,7 +404,8 @@ int32_t ScanServiceProxy::GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedS
         SCAN_HILOGE("ScanServiceProxy GetAddedScanner failed");
         return ret;
     }
-    uint32_t len = reply.ReadUint32();
+    uint32_t len = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_SCAN_RPC_FAILURE);
     if (len > SCAN_MAX_COUNT) {
         SCAN_HILOGE("len is out of range.");
         return E_SCAN_INVALID_PARAMETER;

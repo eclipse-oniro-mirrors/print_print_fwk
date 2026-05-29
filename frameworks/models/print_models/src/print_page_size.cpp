@@ -14,6 +14,7 @@
  */
 
 #include "print_page_size.h"
+#include "print_constant.h"
 #include "print_log.h"
 #include <cups/cups.h>
 
@@ -430,27 +431,30 @@ uint32_t PrintPageSize::GetHeight() const
     return height_;
 }
 
-void PrintPageSize::ReadFromParcel(Parcel &parcel)
+bool PrintPageSize::ReadFromParcel(Parcel &parcel)
 {
-    SetId(parcel.ReadString());
-    SetName(parcel.ReadString());
-    SetWidth(parcel.ReadUint32());
-    SetHeight(parcel.ReadUint32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(id_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(name_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(width_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(height_), false);
+    return true;
 }
 
 bool PrintPageSize::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetId());
-    parcel.WriteString(GetName());
-    parcel.WriteUint32(GetWidth());
-    parcel.WriteUint32(GetHeight());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetName()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetWidth()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetHeight()), false);
     return true;
 }
 
 std::shared_ptr<PrintPageSize> PrintPageSize::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintPageSize>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

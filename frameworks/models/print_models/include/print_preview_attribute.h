@@ -51,7 +51,7 @@ public:
     Json::Value ConvertToJsonObject() const;
 
 private:
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 private:
     bool hasResult_;

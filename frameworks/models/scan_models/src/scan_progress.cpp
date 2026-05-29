@@ -122,27 +122,31 @@ std::string ScanProgress::GetImageRealPath() const
     return imageRealPath_;
 }
 
-void ScanProgress::ReadFromParcel(Parcel &parcel)
+bool ScanProgress::ReadFromParcel(Parcel &parcel)
 {
     auto mesgParcel = static_cast<MessageParcel*>(&parcel);
-    SetScanProgress(parcel.ReadInt32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(progress_), false);
     SetScanPictureFd(mesgParcel->ReadFileDescriptor());
-    SetIsFinal(parcel.ReadBool());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isFinal_), false);
+    return true;
 }
 
 bool ScanProgress::Marshalling(Parcel &parcel) const
 {
     auto mesgParcel = static_cast<MessageParcel*>(&parcel);
-    parcel.WriteInt32(progress_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(progress_), false);
     mesgParcel->WriteFileDescriptor(fd_);
-    parcel.WriteBool(isFinal_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(isFinal_), false);
     return true;
 }
 
 std::shared_ptr<ScanProgress> ScanProgress::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanProgress>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        SCAN_HILOGE("Failed to unmarshalling scan progress");
+        return nullptr;
+    }
     return nativeObj;
 }
 

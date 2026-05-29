@@ -95,6 +95,12 @@ namespace OHOS::Scan {
         return (retVal);                                \
     }
 
+#define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
+    if (!(parcelOpExp)) { \
+        SCAN_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        return retVal; \
+    }
+
 enum ScanErrorCode {
     E_SCAN_NONE = 0, // no error
     E_SCAN_NO_PERMISSION = 201, // no permission

@@ -14,6 +14,7 @@
  */
 
 #include "print_range.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -109,41 +110,45 @@ void PrintRange::SetPages(const std::vector<uint32_t> &pages)
     pages_.assign(pages.begin(), pages.end());
 }
 
-void PrintRange::ReadFromParcel(Parcel &parcel)
+bool PrintRange::ReadFromParcel(Parcel &parcel)
 {
-    hasStartPage_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasStartPage_), false);
     if (hasStartPage_) {
-        SetStartPage(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(startPage_), false);
     }
 
-    hasEndPage_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasEndPage_), false);
     if (hasEndPage_) {
-        SetEndPage(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(endPage_), false);
     }
 
-    hasPages_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPages_), false);
     if (hasPages_) {
         std::vector<uint32_t> pages;
-        parcel.ReadUInt32Vector(&pages);
+        if (!parcel.ReadUInt32Vector(&pages)) {
+            PRINT_HILOGE("ReadUInt32Vector for pages failed");
+            return false;
+        }
         if (pages.size() > 0) {
             SetPages(pages);
         }
     }
+    return true;
 }
 
 bool PrintRange::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteBool(hasStartPage_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasStartPage_), false);
     if (hasStartPage_) {
-        parcel.WriteUint32(GetStartPage());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetStartPage()), false);
     }
 
-    parcel.WriteBool(hasEndPage_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasEndPage_), false);
     if (hasEndPage_) {
-        parcel.WriteUint32(GetEndPage());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetEndPage()), false);
     }
 
-    parcel.WriteBool(hasPages_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPages_), false);
     if (hasPages_ && !parcel.WriteUInt32Vector(pages_)) {
         PRINT_HILOGE("Failed to marshalling print range object");
         return false;
@@ -154,7 +159,9 @@ bool PrintRange::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintRange> PrintRange::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintRange>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

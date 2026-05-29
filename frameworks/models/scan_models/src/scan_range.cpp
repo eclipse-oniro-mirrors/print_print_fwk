@@ -14,6 +14,7 @@
  */
 
 #include "scan_range.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS::Scan {
@@ -77,29 +78,31 @@ int32_t ScanRange::GetQuantValue() const
     return quantValue_;
 }
 
-void ScanRange::ReadFromParcel(Parcel &parcel)
+bool ScanRange::ReadFromParcel(Parcel &parcel)
 {
-    SetMinValue(parcel.ReadInt32());
-
-    SetMaxValue(parcel.ReadInt32());
-
-    SetQuantValue(parcel.ReadInt32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(minValue_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(maxValue_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(quantValue_), false);
+    return true;
 }
 
 bool ScanRange::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteInt32(minValue_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(minValue_), false);
 
-    parcel.WriteInt32(maxValue_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(maxValue_), false);
 
-    parcel.WriteInt32(quantValue_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(quantValue_), false);
     return true;
 }
 
 std::shared_ptr<ScanRange> ScanRange::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanRange>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        SCAN_HILOGE("Failed to unmarshalling scan range");
+        return nullptr;
+    }
     return nativeObj;
 }
 

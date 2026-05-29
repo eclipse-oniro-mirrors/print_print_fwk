@@ -119,24 +119,27 @@ int32_t ScanParameters::GetDepth() const
 }
 
 
-void ScanParameters::ReadFromParcel(Parcel &parcel)
+bool ScanParameters::ReadFromParcel(Parcel &parcel)
 {
-    SetFormat((ScanFrame)parcel.ReadUint32());
-    SetLastFrame(parcel.ReadBool());
-    SetBytesPerLine(parcel.ReadInt32());
-    SetPixelsPerLine(parcel.ReadInt32());
-    SetLines(parcel.ReadInt32());
-    SetDepth(parcel.ReadInt32());
+    uint32_t format = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(format), false);
+    format_ = static_cast<ScanFrame>(format);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(lastFrame_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(bytesPerLine_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(pixelsPerLine_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(lines_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(depth_), false);
+    return true;
 }
 
 bool ScanParameters::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteUint32((uint32_t)format_);
-    parcel.WriteBool(lastFrame_);
-    parcel.WriteInt32(bytesPerLine_);
-    parcel.WriteInt32(pixelsPerLine_);
-    parcel.WriteInt32(lines_);
-    parcel.WriteInt32(depth_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(format_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(lastFrame_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(bytesPerLine_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(pixelsPerLine_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(lines_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(depth_), false);
     return true;
 }
 
@@ -162,7 +165,10 @@ std::shared_ptr<ScanParameters> ScanParameters::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("ScanParameters allocate error.");
         return nullptr;
     }
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        SCAN_HILOGE("ScanParameters read from parcel error.");
+        return nullptr;
+    }
     if (!nativeObj->Validate()) {
         SCAN_HILOGE("ScanParameters is not valid.");
         return nullptr;

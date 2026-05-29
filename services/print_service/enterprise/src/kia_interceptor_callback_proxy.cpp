@@ -49,7 +49,11 @@ bool KiaInterceptorCallbackProxy::OnCheckPrintJobNeedReject(const int32_t &pid, 
         return false;
     }
 
-    bool result = reply.ReadBool();
+    bool result = false;
+    if (!reply.ReadBool(result)) {
+        PRINT_HILOGE("ReadBool for result failed");
+        return false;
+    }
     PRINT_HILOGD("KiaInterceptorCallbackProxy OnCheckPrintJobNeedReject End, result = %{public}d", result);
     return result;
 }

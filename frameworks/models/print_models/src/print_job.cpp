@@ -323,82 +323,95 @@ const std::string &PrintJob::GetVendorOptions() const
     return vendorOptions_;
 }
 
-void PrintJob::ReadParcelFD(Parcel &parcel)
+bool PrintJob::ReadParcelFD(Parcel &parcel)
 {
-    uint32_t fdSize = parcel.ReadUint32();
+    uint32_t fdSize = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(fdSize), false);
     fdList_.clear();
 
-    CHECK_IS_EXCEED_PRINT_RANGE_VOID(fdSize);
+    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(fdSize);
     auto msgParcel = static_cast<MessageParcel *>(&parcel);
     for (uint32_t index = 0; index < fdSize; index++) {
         auto fd = msgParcel->ReadFileDescriptor();
         PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
         fdList_.emplace_back(fd);
     }
+    return true;
 }
 
-void PrintJob::ReadFromParcel(Parcel &parcel)
+bool PrintJob::ReadFromParcel(Parcel &parcel)
 {
     if (parcel.GetReadableBytes() == 0) {
         PRINT_HILOGE("no data in parcel");
-        return;
+        return false;
     }
-    ReadParcelFD(parcel);
-    SetJobId(parcel.ReadString());
-    SetPrinterId(parcel.ReadString());
-    SetJobState(parcel.ReadUint32());
-    SetSubState(parcel.ReadUint32());
-    SetCopyNumber(parcel.ReadUint32());
+    if (!ReadParcelFD(parcel)) {
+        return false;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(jobId_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(printerId_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(jobState_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(subState_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(copyNumber_), false);
     auto rangePtr = PrintRange::Unmarshalling(parcel);
     if (rangePtr != nullptr) {
         SetPageRange(*rangePtr);
     }
-    SetIsSequential(parcel.ReadBool());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isSequential_), false);
     auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
     if (pageSizePtr != nullptr) {
         SetPageSize(*pageSizePtr);
     }
-    SetIsLandscape(parcel.ReadBool());
-    SetColorMode(parcel.ReadUint32());
-    SetDuplexMode(parcel.ReadUint32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isLandscape_), false);
+    return ReadLayoutFromParcel(parcel);
+}
+
+bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(colorMode_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(duplexMode_), false);
     NumberUpArgs args;
-    args.numberUp = parcel.ReadUint32();
-    args.numberUpLayout = parcel.ReadUint32();
-    args.mirror = parcel.ReadUint32();
-    args.pageBorder = parcel.ReadUint32();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.numberUp), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.numberUpLayout), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.mirror), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.pageBorder), false);
     SetNumberUpArgs(args);
-    hasMargin_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasMargin_), false);
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
         if (marginPtr != nullptr) {
             margin_ = *marginPtr;
         }
     }
-    hasPreview_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPreview_), false);
     if (hasPreview_) {
         auto previewPtr = PrintPreviewAttribute::Unmarshalling(parcel);
         if (previewPtr != nullptr) {
             preview_ = *previewPtr;
         }
     }
-    hasOption_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasOption_), false);
     if (hasOption_) {
-        SetOption(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(option_), false);
     }
-    ReadVendorOptionsFromParcel(parcel);
+    if (!ReadVendorOptionsFromParcel(parcel)) {
+        return false;
+    }
+    return true;
 }
 
-void PrintJob::ReadVendorOptionsFromParcel(Parcel &parcel)
+bool PrintJob::ReadVendorOptionsFromParcel(Parcel &parcel)
 {
-    hasVendorOptions_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasVendorOptions_), false);
     if (hasVendorOptions_) {
-        SetVendorOptions(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(vendorOptions_), false);
     }
+    return true;
 }
 
 bool PrintJob::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteUint32(fdList_.size());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(static_cast<uint32_t>(fdList_.size())), false);
     auto msgParcel = static_cast<MessageParcel *>(&parcel);
     if (msgParcel != nullptr) {
         for (auto fd : fdList_) {
@@ -406,45 +419,57 @@ bool PrintJob::Marshalling(Parcel &parcel) const
         }
     }
 
-    parcel.WriteString(GetJobId());
-    parcel.WriteString(GetPrinterId());
-    parcel.WriteUint32(GetJobState());
-    parcel.WriteUint32(GetSubState());
-    parcel.WriteUint32(GetCopyNumber());
-    pageRange_.Marshalling(parcel);
-    parcel.WriteBool(GetIsSequential());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetJobId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetPrinterId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetJobState()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetSubState()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetCopyNumber()), false);
+    if (!pageRange_.Marshalling(parcel)) {
+        PRINT_HILOGE("Marshalling for pageRange_ failed");
+        return false;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetIsSequential()), false);
     return MarshallingParam(parcel);
 }
 
 bool PrintJob::MarshallingParam(Parcel &parcel) const
 {
-    pageSize_.Marshalling(parcel);
-    parcel.WriteBool(GetIsLandscape());
-    parcel.WriteUint32(GetColorMode());
-    parcel.WriteUint32(GetDuplexMode());
-    parcel.WriteUint32(numberUpArgs_.numberUp);
-    parcel.WriteUint32(numberUpArgs_.numberUpLayout);
-    parcel.WriteUint32(numberUpArgs_.mirror);
-    parcel.WriteUint32(numberUpArgs_.pageBorder);
+    if (!pageSize_.Marshalling(parcel)) {
+        PRINT_HILOGE("Marshalling for pageSize_ failed");
+        return false;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetIsLandscape()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetColorMode()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDuplexMode()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.numberUp), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.numberUpLayout), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.mirror), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.pageBorder), false);
 
-    parcel.WriteBool(hasMargin_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasMargin_), false);
     if (hasMargin_) {
-        margin_.Marshalling(parcel);
+        if (!margin_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for margin_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasPreview_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPreview_), false);
     if (hasPreview_) {
-        preview_.Marshalling(parcel);
+        if (!preview_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for preview_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasOption_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasOption_), false);
     if (hasOption_) {
-        parcel.WriteString(GetOption());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetOption()), false);
     }
 
-    parcel.WriteBool(hasVendorOptions_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasVendorOptions_), false);
     if (hasVendorOptions_) {
-        parcel.WriteString(GetVendorOptions());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorOptions()), false);
     }
 
     return true;
@@ -457,7 +482,9 @@ std::shared_ptr<PrintJob> PrintJob::Unmarshalling(Parcel &parcel)
         PRINT_HILOGE("nativeObj is nullptr");
         return nullptr;
     }
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

@@ -14,6 +14,7 @@
  */
 
 #include "scan_option_descriptor.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS::Scan {
@@ -155,57 +156,62 @@ void ScanOptionDescriptor::GetOptionConstraintRange(ScanRange &optionConstraintR
     optionConstraintRange = optionConstraintRange_;
 }
 
-void ScanOptionDescriptor::ReadFromParcel(Parcel &parcel)
+bool ScanOptionDescriptor::ReadFromParcel(Parcel &parcel)
 {
-    SetOptionName(parcel.ReadString());
-    SetOptionTitle(parcel.ReadString());
-    SetOptionDesc(parcel.ReadString());
-    SetOptionType(parcel.ReadUint32());
-    SetOptionUnit(parcel.ReadUint32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(optionName_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(optionTitle_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(optionDesc_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(optionType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(optionUnit_), false);
 
-    SetOptionConstraintType(parcel.ReadUint32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(optionConstraintType_), false);
 
-    std::vector<std::string> optionConstraintString;
-    parcel.ReadStringVector(&optionConstraintString);
-    if (optionConstraintString.size() > 0) {
-        SetOptionConstraintString(optionConstraintString);
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadStringVector(&optionConstraintString_), false);
 
-    std::vector<std::int32_t> optionConstraintNumber;
-    parcel.ReadInt32Vector(&optionConstraintNumber);
-    if (optionConstraintNumber.size() > 0) {
-        SetOptionConstraintNumber(optionConstraintNumber);
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&optionConstraintNumber_), false);
 
     auto scanRange = ScanRange::Unmarshalling(parcel);
     if (scanRange != nullptr) {
         ScanRange optionConstraintRange = *scanRange;
         SetOptionConstraintRange(optionConstraintRange);
     }
+    return true;
 }
 
 bool ScanOptionDescriptor::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(optionName_);
-    parcel.WriteString(optionTitle_);
-    parcel.WriteString(optionDesc_);
-    parcel.WriteUint32(optionType_);
-    parcel.WriteUint32(optionUnit_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(optionName_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(optionTitle_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(optionDesc_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(optionType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(optionUnit_), false);
 
-    parcel.WriteUint32(optionConstraintType_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(optionConstraintType_), false);
 
-    parcel.WriteStringVector(optionConstraintString_);
+    if (!parcel.WriteStringVector(optionConstraintString_)) {
+        SCAN_HILOGE("WriteStringVector for optionConstraintString_ failed");
+        return false;
+    }
 
-    parcel.WriteInt32Vector(optionConstraintNumber_);
+    if (!parcel.WriteInt32Vector(optionConstraintNumber_)) {
+        SCAN_HILOGE("WriteInt32Vector for optionConstraintNumber_ failed");
+        return false;
+    }
 
-    optionConstraintRange_.Marshalling(parcel);
+    if (!optionConstraintRange_.Marshalling(parcel)) {
+        SCAN_HILOGE("Marshalling for optionConstraintRange_ failed");
+        return false;
+    }
     return true;
 }
 
 std::shared_ptr<ScanOptionDescriptor> ScanOptionDescriptor::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanOptionDescriptor>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        SCAN_HILOGE("Failed to unmarshalling scan option descriptor");
+        return nullptr;
+    }
     return nativeObj;
 }
 

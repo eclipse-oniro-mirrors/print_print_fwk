@@ -15,6 +15,7 @@
 #include "scan_callback_proxy.h"
 
 #include "message_parcel.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS::Scan {
@@ -27,10 +28,7 @@ bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     data.WriteUint32(state);
     info.Marshalling(data);
@@ -58,10 +56,7 @@ bool ScanCallbackProxy::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync 
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteUint32(state);
     info.Marshalling(data);
 
@@ -88,10 +83,7 @@ bool ScanCallbackProxy::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteInt32(infos.size());
     for (size_t i = 0; i < infos.size(); i++) {
         infos[i].Marshalling(data);

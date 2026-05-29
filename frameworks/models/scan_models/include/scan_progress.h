@@ -50,7 +50,7 @@ public:
     virtual bool Marshalling(Parcel &parcel) const override;
     static std::shared_ptr<ScanProgress> Unmarshalling(Parcel &parcel);
 private:
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 private:
     int32_t progress_; // 0~100

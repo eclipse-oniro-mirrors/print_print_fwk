@@ -48,8 +48,10 @@ int32_t KiaInterceptorCallbackStub::OnRemoteRequest(
 bool KiaInterceptorCallbackStub::HandleCheckRejectEvent(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("KiaInterceptorCallbackStub HandleCheckRejectEvent start");
-    int32_t pid = data.ReadInt32();
-    std::string callerAppId = data.ReadString();
+    int32_t pid = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(pid), false);
+    std::string callerAppId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(callerAppId), false);
     PRINT_HILOGD("KiaInterceptorCallbackStub pid:%{public}d, callerAppId:%{public}s", pid, callerAppId.c_str());
     bool result = OnCheckPrintJobNeedReject(pid, callerAppId);
     reply.WriteBool(result);

@@ -113,7 +113,9 @@ public:
 private:
     bool ReadFromParcel(Parcel &parcel);
     void ConvertBoolDefaultJsonToPrinterPreferences(Json::Value &preferencesJson);
-    void ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterPreferences &right);
+    bool ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterPreferences &right);
+    bool ReadDefaultSettingsFromParcel(Parcel &parcel, PrinterPreferences &right);
+    bool MarshallingDefaultSettings(Parcel &parcel) const;
 
 private:
     bool hasDefaultDuplexMode_;

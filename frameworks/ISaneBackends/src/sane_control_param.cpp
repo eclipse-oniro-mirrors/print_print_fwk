@@ -16,6 +16,7 @@
 #include "sane_control_param.h"
 #include "scan_log.h"
 #include "message_parcel.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SaneControlParam::SaneControlParam() : option_(0), action_(SANE_ACTION_GET_VALUE),
@@ -39,12 +40,14 @@ SaneControlParam* SaneControlParam::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->option_ = parcel.ReadInt32();
-    obj->action_ = static_cast<SaneAction>(parcel.ReadInt32());
-    obj->valueType_ = parcel.ReadInt32();
-    obj->valueSize_ = parcel.ReadInt32();
-    obj->valueNumber_ = parcel.ReadInt32();
-    obj->valueStr_ = parcel.ReadString();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->option_), nullptr);
+    int32_t action = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(action), nullptr);
+    obj->action_ = static_cast<SaneAction>(action);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueType_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueSize_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueNumber_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->valueStr_), nullptr);
     return obj;
 }
 }   // namespace OHOS::Scan

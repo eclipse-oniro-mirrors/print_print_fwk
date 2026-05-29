@@ -16,6 +16,7 @@
 #include "sane_parameters.h"
 #include "scan_log.h"
 #include "message_parcel.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SaneParameters::SaneParameters() : format_(SANE_FRAME_GRAY), lastFrame_(0),
@@ -39,12 +40,16 @@ SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->format_ = static_cast<SaneFrame>(parcel.ReadInt32());
-    obj->lastFrame_ = parcel.ReadInt32();
-    obj->bytesPerLine_ = parcel.ReadInt32();
-    obj->pixelsPerLine_ = parcel.ReadInt32();
-    obj->lines_ = parcel.ReadInt32();
-    obj->depth_ = parcel.ReadInt32();
+    int32_t format = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(format), nullptr);
+    obj->format_ = static_cast<SaneFrame>(format);
+    int32_t lastFrame = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(lastFrame), nullptr);
+    obj->lastFrame_ = lastFrame;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->bytesPerLine_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->pixelsPerLine_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->lines_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->depth_), nullptr);
     return obj;
 }
 }   // namespace OHOS::Scan

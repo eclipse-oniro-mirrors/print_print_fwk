@@ -127,7 +127,11 @@ public:
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
     {
-        uint32_t vecSize = parcel.ReadUint32();
+        uint32_t vecSize = 0;
+        if (!parcel.ReadUint32(vecSize)) {
+            PRINT_HILOGE("ReadUint32 for vecSize failed");
+            return false;
+        }
         CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
         supportedList.clear();
         supportedList.reserve(vecSize);  // Allocate the required memory all at once to speed up processing efficiency.
@@ -147,7 +151,10 @@ public:
                                    bool *hasSupportedPtr)
     {
         if (hasSupportedPtr) {
-            *hasSupportedPtr = parcel.ReadBool();
+            if (!parcel.ReadBool(*hasSupportedPtr)) {
+                PRINT_HILOGE("ReadBool for hasSupportedPtr failed");
+                return false;
+            }
             if (*hasSupportedPtr) {
                 return readListFromParcel(parcel, supportedList, readFunc);
             }
@@ -159,21 +166,29 @@ public:
     }
 
     template <typename T, typename WriteFunc>
-    static void WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc)
+    static bool WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc)
     {
         uint32_t vecSize = static_cast<uint32_t>(list.size());
-        parcel.WriteUint32(vecSize);
+        if (!parcel.WriteUint32(vecSize)) {
+            PRINT_HILOGE("WriteUint32 for vecSize failed");
+            return false;
+        }
         for (uint32_t index = 0; index < vecSize; index++) {
             writeFunc(parcel, list[index]);
         }
+        return true;
     }
     template <typename T, typename WriteFunc>
-    static void WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc, bool hasFlag)
+    static bool WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc, bool hasFlag)
     {
-        parcel.WriteBool(hasFlag);
-        if (hasFlag) {
-            WriteListToParcel(parcel, list, writeFunc);
+        if (!parcel.WriteBool(hasFlag)) {
+            PRINT_HILOGE("WriteBool for hasFlag failed");
+            return false;
         }
+        if (hasFlag) {
+            return WriteListToParcel(parcel, list, writeFunc);
+        }
+        return true;
     }
 
     template<typename T>

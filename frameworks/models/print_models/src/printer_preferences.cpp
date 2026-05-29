@@ -302,6 +302,35 @@ std::string PrinterPreferences::GetVendorOptions() const
     return vendorOptions_;
 }
 
+bool PrinterPreferences::ReadDefaultSettingsFromParcel(Parcel &parcel, PrinterPreferences &right)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultDuplexMode_), false);
+    if (right.hasDefaultDuplexMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.defaultDuplexMode_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultPrintQuality_), false);
+    if (right.hasDefaultPrintQuality_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.defaultPrintQuality_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultMediaType_), false);
+    if (right.hasDefaultMediaType_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.defaultMediaType_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultPageSizeId_), false);
+    if (right.hasDefaultPageSizeId_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.defaultPageSizeId_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultOrientation_), false);
+    if (right.hasDefaultOrientation_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.defaultOrientation_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultColorMode_), false);
+    if (right.hasDefaultColorMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.defaultColorMode_), false);
+    }
+    return true;
+}
+
 bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
 {
     PrinterPreferences right;
@@ -309,134 +338,108 @@ bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGE("no data in parcel");
         return false;
     }
-    right.hasDefaultDuplexMode_ = parcel.ReadBool();
-    if (right.hasDefaultDuplexMode_) {
-        right.SetDefaultDuplexMode(parcel.ReadUint32());
+    if (!ReadDefaultSettingsFromParcel(parcel, right)) {
+        return false;
     }
-
-    right.hasDefaultPrintQuality_ = parcel.ReadBool();
-    if (right.hasDefaultPrintQuality_) {
-        right.SetDefaultPrintQuality(parcel.ReadUint32());
+    if (!ReadAdvancedSettingsFromParcel(parcel, right)) {
+        return false;
     }
-
-    right.hasDefaultMediaType_ = parcel.ReadBool();
-    if (right.hasDefaultMediaType_) {
-        right.SetDefaultMediaType(parcel.ReadString());
-    }
-
-    right.hasDefaultPageSizeId_ = parcel.ReadBool();
-    if (right.hasDefaultPageSizeId_) {
-        right.SetDefaultPageSizeId(parcel.ReadString());
-    }
-
-    right.hasDefaultOrientation_ = parcel.ReadBool();
-    if (right.hasDefaultOrientation_) {
-        right.SetDefaultOrientation(parcel.ReadUint32());
-    }
-
-    right.hasDefaultColorMode_ = parcel.ReadBool();
-    if (right.hasDefaultColorMode_) {
-        right.SetDefaultColorMode(parcel.ReadUint32());
-    }
-
-    ReadAdvancedSettingsFromParcel(parcel, right);
-
     *this = right;
     return true;
 }
 
-void PrinterPreferences::ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterPreferences &right)
+bool PrinterPreferences::ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterPreferences &right)
 {
-    right.hasBorderless_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasBorderless_), false);
     if (right.hasBorderless_) {
-        right.SetBorderless(parcel.ReadBool());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.borderless_), false);
     }
 
-    right.hasDefaultCollate_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultCollate_), false);
     if (right.hasDefaultCollate_) {
-        right.SetDefaultCollate(parcel.ReadBool());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.defaultCollate_), false);
     }
 
-    right.hasDefaultReverse_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultReverse_), false);
     if (right.hasDefaultReverse_) {
-        right.SetDefaultReverse(parcel.ReadBool());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.defaultReverse_), false);
     }
 
-    right.hasOption_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasOption_), false);
     if (right.hasOption_) {
-        right.SetOption(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.option_), false);
     }
 
-    right.hasVendorOptions_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasVendorOptions_), false);
     if (right.hasVendorOptions_) {
-        right.SetVendorOptions(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.vendorOptions_), false);
     }
+    return true;
 }
 
 bool PrinterPreferences::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteBool(hasDefaultDuplexMode_);
-    if (hasDefaultDuplexMode_) {
-        parcel.WriteUint32(GetDefaultDuplexMode());
+    if (!MarshallingDefaultSettings(parcel)) {
+        return false;
     }
-
-    parcel.WriteBool(hasDefaultPrintQuality_);
-    if (hasDefaultPrintQuality_) {
-        parcel.WriteUint32(GetDefaultPrintQuality());
-    }
-
-    parcel.WriteBool(hasDefaultMediaType_);
-    if (hasDefaultMediaType_) {
-        parcel.WriteString(GetDefaultMediaType());
-    }
-
-    parcel.WriteBool(hasDefaultPageSizeId_);
-    if (hasDefaultPageSizeId_) {
-        parcel.WriteString(GetDefaultPageSizeId());
-    }
-
-    parcel.WriteBool(hasDefaultOrientation_);
-    if (hasDefaultOrientation_) {
-        parcel.WriteUint32(GetDefaultOrientation());
-    }
-
-    parcel.WriteBool(hasDefaultColorMode_);
-    if (hasDefaultColorMode_) {
-        parcel.WriteUint32(GetDefaultColorMode());
-    }
-
-    parcel.WriteBool(hasBorderless_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasBorderless_), false);
     if (hasBorderless_) {
-        parcel.WriteBool(GetBorderless());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetBorderless()), false);
     }
-
-    parcel.WriteBool(hasDefaultCollate_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultCollate_), false);
     if (hasDefaultCollate_) {
-        parcel.WriteBool(GetDefaultCollate());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetDefaultCollate()), false);
     }
-
-    parcel.WriteBool(hasDefaultReverse_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultReverse_), false);
     if (hasDefaultReverse_) {
-        parcel.WriteBool(GetDefaultReverse());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetDefaultReverse()), false);
     }
-
-    parcel.WriteBool(hasOption_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasOption_), false);
     if (hasOption_) {
-        parcel.WriteString(GetOption());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetOption()), false);
     }
-
-    parcel.WriteBool(hasVendorOptions_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasVendorOptions_), false);
     if (hasVendorOptions_) {
-        parcel.WriteString(GetVendorOptions());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorOptions()), false);
     }
+    return true;
+}
 
+bool PrinterPreferences::MarshallingDefaultSettings(Parcel &parcel) const
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultDuplexMode_), false);
+    if (hasDefaultDuplexMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDefaultDuplexMode()), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultPrintQuality_), false);
+    if (hasDefaultPrintQuality_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDefaultPrintQuality()), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultMediaType_), false);
+    if (hasDefaultMediaType_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetDefaultMediaType()), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultPageSizeId_), false);
+    if (hasDefaultPageSizeId_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetDefaultPageSizeId()), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultOrientation_), false);
+    if (hasDefaultOrientation_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDefaultOrientation()), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultColorMode_), false);
+    if (hasDefaultColorMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDefaultColorMode()), false);
+    }
     return true;
 }
 
 std::shared_ptr<PrinterPreferences> PrinterPreferences::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrinterPreferences>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

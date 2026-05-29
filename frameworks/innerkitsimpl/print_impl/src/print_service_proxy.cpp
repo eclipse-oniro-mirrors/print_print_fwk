@@ -32,9 +32,10 @@ int32_t PrintServiceProxy::GetResult(int retCode, MessageParcel &reply)
         return E_PRINT_RPC_FAILURE;
     }
 
-    retCode = reply.ReadInt32();
-    PRINT_HILOGD("PrintServiceProxy out. ret = [%{public}d]", retCode);
-    return retCode;
+    int32_t resultCode = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadInt32(resultCode), E_PRINT_RPC_FAILURE);
+    PRINT_HILOGD("PrintServiceProxy out. ret = [%{public}d]", resultCode);
+    return resultCode;
 }
 
 int32_t PrintServiceProxy::StartService()
@@ -42,7 +43,7 @@ int32_t PrintServiceProxy::StartService()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     const std::string ndkInfo = "nativePrint";
     data.WriteString(ndkInfo);
     PRINT_HILOGI("nativePrint PrintServiceProxy StartService started.");
@@ -62,7 +63,7 @@ int32_t PrintServiceProxy::Release()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     const std::string ndkInfo = "nativePrint";
     data.WriteString(ndkInfo);
     PRINT_HILOGI("nativePrint PrintServiceProxy Release started.");
@@ -83,7 +84,7 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("Current file is %{public}zd", fileList.size());
     for (auto file : fileList) {
         PRINT_HILOGD("file is %{private}s", file.c_str());
@@ -121,7 +122,7 @@ int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy ConnectPrinter started.");
     sptr<IRemoteObject> remote = Remote();
@@ -140,7 +141,7 @@ int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy DisconnectPrinter started.");
     sptr<IRemoteObject> remote = Remote();
@@ -159,7 +160,7 @@ int32_t PrintServiceProxy::AddRawPrinter(PrinterInfo &info)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     info.Marshalling(data);
     PRINT_HILOGI("PrintServiceProxy AddRawPrinter started.");
     sptr<IRemoteObject> remote = Remote();
@@ -178,7 +179,7 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy QueryAllExtension started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -192,7 +193,8 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
         return ret;
     }
 
-    uint32_t len = reply.ReadUint32();
+    uint32_t len = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
         return E_PRINT_INVALID_PARAMETER;
@@ -214,7 +216,7 @@ int32_t PrintServiceProxy::StartDiscoverPrinter(const std::vector<std::string> &
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteStringVector(extensionList);
     PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter started.");
     sptr<IRemoteObject> remote = Remote();
@@ -234,7 +236,7 @@ int32_t PrintServiceProxy::StopDiscoverPrinter()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -253,7 +255,7 @@ int32_t PrintServiceProxy::StartPrintJob(PrintJob &jobinfo)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     jobinfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy StartPrintJob started.");
     sptr<IRemoteObject> remote = Remote();
@@ -273,7 +275,7 @@ int32_t PrintServiceProxy::CancelPrintJob(const std::string &jobId)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     PRINT_HILOGD("PrintServiceProxy CancelPrintJob started.");
     sptr<IRemoteObject> remote = Remote();
@@ -292,7 +294,7 @@ int32_t PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &printerIn
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteUint32(printerInfos.size());
     PRINT_HILOGD("AddPrinters printerInfos.size() = %{public}zu", printerInfos.size());
     for (uint32_t i = 0; i < printerInfos.size(); i++) {
@@ -315,7 +317,7 @@ int32_t PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printe
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteStringVector(printerIds);
 
     PRINT_HILOGD("PrintServiceProxy RemovePrinters started.");
@@ -335,7 +337,7 @@ int32_t PrintServiceProxy::UpdatePrinters(const std::vector<PrinterInfo> &printe
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteUint32(printerInfos.size());
     PRINT_HILOGD("UpdatePrinters printerInfos.size() = %{public}zu", printerInfos.size());
     for (uint32_t i = 0; i < printerInfos.size(); i++) {
@@ -358,7 +360,7 @@ int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId, uint
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     data.WriteUint32(state);
     PRINT_HILOGD("PrintServiceProxy UpdatePrinterState started.");
@@ -379,7 +381,7 @@ int32_t PrintServiceProxy::AdapterGetFileCallBack(
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteUint32(state);
     data.WriteUint32(subState);
@@ -402,7 +404,7 @@ int32_t PrintServiceProxy::UpdatePrintJobStateOnlyForSystemApp(
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteUint32(state);
     data.WriteUint32(subState);
@@ -424,7 +426,7 @@ int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extInfo)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(extInfo);
     PRINT_HILOGD("PrintServiceProxy UpdateExtensionInfo started.");
     sptr<IRemoteObject> remote = Remote();
@@ -443,7 +445,7 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     jobinfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy RequestPreview started.");
     sptr<IRemoteObject> remote = Remote();
@@ -453,7 +455,7 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &
     }
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REQUESTPREVIEW, data, reply, option);
     ret = GetResult(ret, reply);
-    previewResult = reply.ReadString();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadString(previewResult), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("PrintServiceProxy RequestPreview ret = [%{public}d] previewResult = %{public}s",
         ret, previewResult.c_str());
     return ret;
@@ -464,7 +466,7 @@ int32_t PrintServiceProxy::QueryPrinterCapability(const std::string &printerId)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability started.");
     sptr<IRemoteObject> remote = Remote();
@@ -484,7 +486,7 @@ int32_t PrintServiceProxy::QueryPrinterInfoByPrinterId(const std::string &printe
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     info.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterInfoByPrinterId started.");
@@ -511,7 +513,7 @@ int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNa
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -521,7 +523,7 @@ int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNa
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYADDEDPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter out. ret = [%{public}d]", ret);
-    reply.ReadStringVector(&printerNameList);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadStringVector(&printerNameList), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter printerNameList size %{public}zu.", printerNameList.size());
     return ret;
 }
@@ -531,7 +533,7 @@ int32_t PrintServiceProxy::QueryRawAddedPrinter(std::vector<std::string> &printe
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -541,7 +543,7 @@ int32_t PrintServiceProxy::QueryRawAddedPrinter(std::vector<std::string> &printe
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYRAWADDEDPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter out. ret = [%{public}d]", ret);
-    reply.ReadStringVector(&printerNameList);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadStringVector(&printerNameList), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter printerNameList size %{public}zu.", printerNameList.size());
     return ret;
 }
@@ -552,7 +554,7 @@ int32_t PrintServiceProxy::QueryPrinterProperties(const std::string &printerId,
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     data.WriteStringVector(keyList);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterProperties started.");
@@ -564,7 +566,7 @@ int32_t PrintServiceProxy::QueryPrinterProperties(const std::string &printerId,
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERPROPERTIES, data, reply,
         option);
     ret = GetResult(ret, reply);
-    reply.ReadStringVector(&valueList);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadStringVector(&valueList), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterProperties out. ret = [%{public}d]", ret);
     return ret;
 }
@@ -574,7 +576,7 @@ int32_t PrintServiceProxy::StartNativePrintJob(PrintJob &printJob)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     printJob.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy StartNativePrintJob started.");
     sptr<IRemoteObject> remote = Remote();
@@ -595,7 +597,7 @@ int32_t PrintServiceProxy::SetPrinterPreference(
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     printerPreference.Marshalling(data);
     PRINT_HILOGI("PrintServiceProxy SetPrinterPreference started.");
@@ -616,7 +618,7 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -630,7 +632,8 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
         return ret;
     }
 
-    uint32_t len = reply.ReadUint32();
+    uint32_t len = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
         return E_PRINT_INVALID_PARAMETER;
@@ -652,7 +655,7 @@ int32_t PrintServiceProxy::QueryAllActivePrintJob(std::vector<PrintJob> &printJo
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy QueryAllActivePrintJob started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -667,7 +670,8 @@ int32_t PrintServiceProxy::QueryAllActivePrintJob(std::vector<PrintJob> &printJo
         return ret;
     }
 
-    uint32_t len = reply.ReadUint32();
+    uint32_t len = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
         return E_PRINT_INVALID_PARAMETER;
@@ -689,7 +693,7 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printJobId);
     PRINT_HILOGD("PrintServiceProxy QueryPrintJobById started.");
     sptr<IRemoteObject> remote = Remote();
@@ -716,7 +720,7 @@ int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerUri);
     data.WriteString(printerName);
     data.WriteString(printerMake);
@@ -738,7 +742,7 @@ int32_t PrintServiceProxy::AddPrinter(const std::string &printerName, const std:
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerName);
     data.WriteString(uri);
     data.WriteString(ppdName);
@@ -761,7 +765,7 @@ int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printe
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerUri);
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri started.");
@@ -784,7 +788,7 @@ int32_t PrintServiceProxy::NotifyPrintServiceEvent(std::string &jobId, uint32_t 
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteUint32(event);
     PRINT_HILOGD("PrintServiceProxy NotifyPrintServiceEvent started.");
@@ -805,7 +809,7 @@ int32_t PrintServiceProxy::SetDefaultPrinter(const std::string &printerId, uint3
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     data.WriteUint32(type);
     PRINT_HILOGD("PrintServiceProxy SetDefaultPrinter started.");
@@ -826,7 +830,7 @@ int32_t PrintServiceProxy::DeletePrinterFromCups(const std::string &printerName)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerName);
     PRINT_HILOGD("PrintServiceProxy DeletePrinterFromCups started.");
     sptr<IRemoteObject> remote = Remote();
@@ -846,7 +850,7 @@ int32_t PrintServiceProxy::DiscoverUsbPrinters(std::vector<PrinterInfo> &printer
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -861,7 +865,8 @@ int32_t PrintServiceProxy::DiscoverUsbPrinters(std::vector<PrinterInfo> &printer
         return ret;
     }
 
-    uint32_t len = reply.ReadUint32();
+    uint32_t len = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
         return E_PRINT_INVALID_PARAMETER;
@@ -894,7 +899,7 @@ int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(taskId);
     data.WriteString(type);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
@@ -921,7 +926,7 @@ int32_t PrintServiceProxy::Off(const std::string taskId, const std::string &type
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(taskId);
     data.WriteString(type);
     sptr<IRemoteObject> remote = Remote();
@@ -951,7 +956,7 @@ int32_t PrintServiceProxy::RegisterPrinterCallback(const std::string &type, cons
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(type);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
     sptr<IRemoteObject> remote = Remote();
@@ -977,7 +982,7 @@ int32_t PrintServiceProxy::UnregisterPrinterCallback(const std::string &type)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(type);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -1003,7 +1008,7 @@ int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(extensionCID);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
 
@@ -1026,7 +1031,7 @@ int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const 
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printJobName);
     printAttributes.Marshalling(data);
     data.WriteString(taskId);
@@ -1054,7 +1059,7 @@ int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const Pri
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     printAttributes.Marshalling(data);
     data.WriteFileDescriptor(fd);
@@ -1082,7 +1087,7 @@ int32_t PrintServiceProxy::NotifyPrintService(const std::string &jobId, const st
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteString(type);
     sptr<IRemoteObject> remote = Remote();
@@ -1102,7 +1107,7 @@ int32_t PrintServiceProxy::AddPrinterToDiscovery(const PrinterInfo &printerInfo)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     printerInfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy AddPrinterToDiscovery started.");
     sptr<IRemoteObject> remote = Remote();
@@ -1122,7 +1127,7 @@ int32_t PrintServiceProxy::UpdatePrinterInDiscovery(const PrinterInfo& printerIn
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     printerInfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy UpdatePrinterInDiscovery started.");
     sptr<IRemoteObject> remote = Remote();
@@ -1142,7 +1147,7 @@ int32_t PrintServiceProxy::RemovePrinterFromDiscovery(const std::string &printer
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy RemovePrinterFromDiscovery started.");
     sptr<IRemoteObject> remote = Remote();
@@ -1162,7 +1167,7 @@ int32_t PrintServiceProxy::UpdatePrinterInSystem(const PrinterInfo& printerInfo)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     printerInfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy UpdatePrinterInSystem started.");
     sptr<IRemoteObject> remote = Remote();
@@ -1189,7 +1194,7 @@ int32_t PrintServiceProxy::AnalyzePrintEvents(const std::string &printerId, cons
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     data.WriteString(type);
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ANALYZEPRINTEVENTS,
@@ -1199,7 +1204,7 @@ int32_t PrintServiceProxy::AnalyzePrintEvents(const std::string &printerId, cons
         return E_PRINT_RPC_FAILURE;
     }
     ret = GetResult(ret, reply);
-    detail = reply.ReadString();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadString(detail), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("PrintServiceProxy AnalyzePrintEvents out. ret = [%{public}d]", ret);
     return ret;
 }
@@ -1210,7 +1215,7 @@ int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(extensionId);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -1229,7 +1234,7 @@ int32_t PrintServiceProxy::RestartPrintJob(const std::string &jobId)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     PRINT_HILOGD("PrintServiceProxy RestartPrintJob started.");
     sptr<IRemoteObject> remote = Remote();
@@ -1250,7 +1255,7 @@ int32_t PrintServiceProxy::AuthPrintJob(const std::string &jobId, const std::str
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteString(userName);
 
@@ -1279,7 +1284,7 @@ int32_t PrintServiceProxy::QueryAllPrinterPpds(std::vector<PpdInfo> &ppdInfos)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -1293,7 +1298,8 @@ int32_t PrintServiceProxy::QueryAllPrinterPpds(std::vector<PpdInfo> &ppdInfos)
     }
     ret = GetResult(ret, reply);
     if (ret == ERR_NONE) {
-        uint32_t len = reply.ReadUint32();
+        uint32_t len = 0;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
         if (len > PRINT_MAX_PPD_COUNT) {
             PRINT_HILOGE("len is out of range.");
             return E_PRINT_INVALID_PARAMETER;
@@ -1318,7 +1324,7 @@ int32_t PrintServiceProxy::QueryPrinterInfoByIp(const std::string &printerIp)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerIp);
 
     sptr<IRemoteObject> remote = Remote();
@@ -1344,7 +1350,7 @@ int32_t PrintServiceProxy::ConnectPrinterByIpAndPpd(const std::string &printerIp
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerIp);
     data.WriteString(protocol);
     data.WriteString(ppdName);
@@ -1372,7 +1378,7 @@ int32_t PrintServiceProxy::SavePdfFileJob(const std::string &jobId, uint32_t fd)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteFileDescriptor(fd);
 
@@ -1398,7 +1404,7 @@ int32_t PrintServiceProxy::QueryRecommendDriversById(const std::string &printerI
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
 
     sptr<IRemoteObject> remote = Remote();
@@ -1414,7 +1420,8 @@ int32_t PrintServiceProxy::QueryRecommendDriversById(const std::string &printerI
     }
     ret = GetResult(ret, reply);
     if (ret == ERR_NONE) {
-        uint32_t len = reply.ReadUint32();
+        uint32_t len = 0;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
         if (len > PRINT_MAX_PPD_COUNT) {
             PRINT_HILOGE("len is out of range.");
             return E_PRINT_INVALID_PARAMETER;
@@ -1441,7 +1448,7 @@ int32_t PrintServiceProxy::ConnectPrinterByIdAndPpd(const std::string &printerId
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     data.WriteString(protocol);
     data.WriteString(ppdName);
@@ -1470,7 +1477,7 @@ int32_t PrintServiceProxy::CheckPreferencesConflicts(const std::string &printerI
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
     data.WriteString(changedType);
     printerPreference.Marshalling(data);
@@ -1486,8 +1493,11 @@ int32_t PrintServiceProxy::CheckPreferencesConflicts(const std::string &printerI
         PRINT_HILOGE("CheckPreferencesConflicts failed, error code = %{public}d", ret);
         return E_PRINT_RPC_FAILURE;
     }
-    ret = reply.ReadInt32();
-    reply.ReadStringVector(&conflictingOptions);
+    if (!reply.ReadInt32(ret)) {
+        PRINT_HILOGE("ReadInt32 for ret failed");
+        return E_PRINT_RPC_FAILURE;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadStringVector(&conflictingOptions), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("CheckPreferencesConflicts conflictingOptions ret:%{public}d size:%{public}zu",
         ret, conflictingOptions.size());
     return ret;
@@ -1501,7 +1511,7 @@ int32_t PrintServiceProxy::CheckPrintJobConflicts(const std::string &changedType
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(changedType);
     printJob.Marshalling(data);
 
@@ -1518,8 +1528,11 @@ int32_t PrintServiceProxy::CheckPrintJobConflicts(const std::string &changedType
         return E_PRINT_RPC_FAILURE;
     }
 
-    ret = reply.ReadInt32();
-    reply.ReadStringVector(&conflictingOptions);
+    if (!reply.ReadInt32(ret)) {
+        PRINT_HILOGE("ReadInt32 for ret failed");
+        return E_PRINT_RPC_FAILURE;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadStringVector(&conflictingOptions), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("CheckPrintJobConflicts conflictingOptions ret:%{public}d size:%{public}zu",
         ret, conflictingOptions.size());
     return ret;
@@ -1533,7 +1546,7 @@ int32_t PrintServiceProxy::GetPrinterDefaultPreferences(
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(printerId);
 
     sptr<IRemoteObject> remote = Remote();
@@ -1567,7 +1580,7 @@ int32_t PrintServiceProxy::GetSharedHosts(std::vector<PrintSharedHost> &sharedHo
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -1583,7 +1596,8 @@ int32_t PrintServiceProxy::GetSharedHosts(std::vector<PrintSharedHost> &sharedHo
     }
     ret = GetResult(ret, reply);
     if (ret == ERR_NONE) {
-        int32_t len = reply.ReadInt32();
+        int32_t len = 0;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadInt32(len), E_PRINT_RPC_FAILURE);
         if (len > PRINT_MAX_PRINT_COUNT) {
             PRINT_HILOGE("len is out of range.");
             return E_PRINT_INVALID_PARAMETER;
@@ -1608,7 +1622,7 @@ int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, cons
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     sharedHost.Marshalling(data);
     data.WriteString(userName);
     if (userPasswd) {
@@ -1626,7 +1640,8 @@ int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, cons
     }
     ret = GetResult(ret, reply);
     if (ret == ERR_NONE) {
-        uint32_t len = reply.ReadUint32();
+        uint32_t len = 0;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadUint32(len), E_PRINT_RPC_FAILURE);
         if (len > PRINT_MAX_PRINT_COUNT) {
             PRINT_HILOGE("len is out of range.");
             return E_PRINT_INVALID_PARAMETER;
@@ -1657,7 +1672,7 @@ int32_t PrintServiceProxy::RegisterWatermarkCallback(const sptr<IWatermarkCallba
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteRemoteObject(callback->AsObject().GetRefPtr());
 
     sptr<IRemoteObject> remote = Remote();
@@ -1684,7 +1699,7 @@ int32_t PrintServiceProxy::UnregisterWatermarkCallback()
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -1711,7 +1726,7 @@ int32_t PrintServiceProxy::NotifyWatermarkComplete(const std::string &jobId, int
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(jobId);
     data.WriteInt32(result);
 
@@ -1744,7 +1759,7 @@ int32_t PrintServiceProxy::RegisterKiaInterceptorCallback(const sptr<IKiaInterce
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteRemoteObject(callback->AsObject().GetRefPtr());
 
     sptr<IRemoteObject> remote = Remote();
@@ -1771,7 +1786,7 @@ int32_t PrintServiceProxy::StartSharedHostDiscovery()
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

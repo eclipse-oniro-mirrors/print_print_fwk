@@ -15,6 +15,7 @@
 #include "print_extension_callback_proxy.h"
 
 #include "message_parcel.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -28,7 +29,7 @@ bool PrintExtensionCallbackProxy::OnCallback()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("error: remote is null");
@@ -39,7 +40,11 @@ bool PrintExtensionCallbackProxy::OnCallback()
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = reply.ReadBool();
+    bool ret = false;
+    if (!reply.ReadBool(ret)) {
+        PRINT_HILOGE("ReadBool for ret failed");
+        return false;
+    }
     PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
     return ret;
 }
@@ -62,7 +67,11 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId)
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = reply.ReadBool();
+    bool ret = false;
+    if (!reply.ReadBool(ret)) {
+        PRINT_HILOGE("ReadBool for ret failed");
+        return false;
+    }
     PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
     return ret;
 }
@@ -85,7 +94,11 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = reply.ReadBool();
+    bool ret = false;
+    if (!reply.ReadBool(ret)) {
+        PRINT_HILOGE("ReadBool for ret failed");
+        return false;
+    }
     PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
     return ret;
 }
@@ -108,7 +121,11 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId, Print
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = reply.ReadBool();
+    bool ret = false;
+    if (!reply.ReadBool(ret)) {
+        PRINT_HILOGE("ReadBool for ret failed");
+        return false;
+    }
     if (ret) {
         auto capPtr = PrinterCapability::Unmarshalling(reply);
         if (capPtr == nullptr) {

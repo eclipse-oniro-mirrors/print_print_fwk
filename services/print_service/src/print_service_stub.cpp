@@ -149,7 +149,9 @@ bool PrintServiceStub::OnStartService(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("nativePrint PrintServiceStub::OnStartService in");
     int32_t ret = E_PRINT_INVALID_PARAMETER;
-    if (data.ReadString() == "nativePrint") {
+    std::string printType;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printType), false);
+    if (printType == "nativePrint") {
         ret = StartService();
         reply.WriteInt32(ret);
         PRINT_HILOGI("nativePrint PrintServiceStub::OnStartService out:%{public}d", ret);
@@ -161,12 +163,41 @@ bool PrintServiceStub::OnRelease(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("nativePrint PrintServiceStub::OnRelease in");
     int32_t ret = E_PRINT_INVALID_PARAMETER;
-    if (data.ReadString() == "nativePrint") {
+    std::string printType;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printType), false);
+    if (printType == "nativePrint") {
         ret = Release();
         reply.WriteInt32(ret);
         PRINT_HILOGI("nativePrint PrintServiceStub::OnRelease out:%{public}d", ret);
     }
     return ret == E_PRINT_NONE;
+}
+
+static bool ReadFdListFromParcel(MessageParcel &data, std::vector<uint32_t> &fdList)
+{
+    uint32_t len = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(len), false);
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return false;
+    }
+    for (uint32_t index = 0; index < len; index++) {
+        int fdTemp = data.ReadFileDescriptor();
+        if (fdTemp >= 0) {
+            uint32_t fd = static_cast<uint32_t>(fdTemp);
+            fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
+            PRINT_HILOGD("fdList[%{public}u] = %{public}u", index, fd);
+            fdList.emplace_back(fd);
+            continue;
+        }
+        PRINT_HILOGE("invalid fd");
+        for (auto fd : fdList) {
+            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+        }
+        fdList.clear();
+        return false;
+    }
+    return true;
 }
 
 bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
@@ -176,7 +207,7 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     std::vector<uint32_t> fdList;
 
     if (data.ReadBool()) {
-        data.ReadStringVector(&fileList);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadStringVector(&fileList), false);
         PRINT_HILOGD("Current file is %{public}zd", fileList.size());
         if (fileList.size() > PRINT_MAX_PRINT_COUNT) {
             PRINT_HILOGE("fileList'size is out of range.");
@@ -186,31 +217,13 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     }
 
     if (data.ReadBool()) {
-        uint32_t len = data.ReadUint32();
-        if (len > PRINT_MAX_PRINT_COUNT) {
-            PRINT_HILOGE("len is out of range.");
-            reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
-            return false;
-        }
-        for (uint32_t index = 0; index < len; index++) {
-            int fdTemp = data.ReadFileDescriptor();
-            if (fdTemp >= 0) {
-                uint32_t fd = static_cast<uint32_t>(fdTemp);
-                fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
-                PRINT_HILOGD("fdList[%{public}u] = %{public}u", index, fd);
-                fdList.emplace_back(fd);
-                continue;
-            }
-            PRINT_HILOGE("invalid fd");
-            for (auto fd : fdList) {
-                fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
-            }
-            fdList.clear();
+        if (!ReadFdListFromParcel(data, fdList)) {
             reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
             return false;
         }
     }
-    std::string taskId = data.ReadString();
+    std::string taskId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
     int32_t ret = StartPrint(fileList, fdList, taskId);
     if (ret != E_PRINT_NONE) {
         for (auto fd : fdList) {
@@ -225,7 +238,9 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
 bool PrintServiceStub::OnConnectPrinter(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinter in");
-    int32_t ret = ConnectPrinter(data.ReadString());
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    int32_t ret = ConnectPrinter(printerId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnConnectPrinter out");
     return ret == E_PRINT_NONE;
@@ -234,7 +249,9 @@ bool PrintServiceStub::OnConnectPrinter(MessageParcel &data, MessageParcel &repl
 bool PrintServiceStub::OnDisconnectPrinter(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnDisconnectPrinter in");
-    int32_t ret = DisconnectPrinter(data.ReadString());
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    int32_t ret = DisconnectPrinter(printerId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnDisconnectPrinter out");
     return ret == E_PRINT_NONE;
@@ -244,7 +261,7 @@ bool PrintServiceStub::OnStartDiscoverPrinter(MessageParcel &data, MessageParcel
 {
     PRINT_HILOGI("PrintServiceStub::OnStartDiscoverPrinter in");
     std::vector<std::string> extensionList;
-    data.ReadStringVector(&extensionList);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadStringVector(&extensionList), false);
     PRINT_HILOGD("Current extensionList is %{public}zd", extensionList.size());
     if (extensionList.size() > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("extensionList'size: %{public}zd, is out of range.", extensionList.size());
@@ -317,7 +334,9 @@ bool PrintServiceStub::OnStartPrintJob(MessageParcel &data, MessageParcel &reply
 bool PrintServiceStub::OnCancelPrintJob(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnCancelPrintJob in");
-    int32_t ret = CancelPrintJob(data.ReadString());
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    int32_t ret = CancelPrintJob(jobId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnCancelPrintJob out");
     return ret == E_PRINT_NONE;
@@ -360,7 +379,8 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
 bool PrintServiceStub::OnQueryPrinterInfoByPrinterId(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByPrinterId in");
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     PrinterInfo info;
     int32_t ret = QueryPrinterInfoByPrinterId(printerId, info);
     reply.WriteInt32(ret);
@@ -373,7 +393,8 @@ bool PrintServiceStub::OnQueryPrinterInfoByPrinterId(MessageParcel &data, Messag
 bool PrintServiceStub::OnSetPrinterPreference(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnSetPrinterPreference in");
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     auto preferencesPtr = PrinterPreferences::Unmarshalling(data);
     if (preferencesPtr == nullptr) {
         PRINT_HILOGE("Failed to unmarshall printer preferences");
@@ -413,9 +434,10 @@ bool PrintServiceStub::OnQueryRawAddedPrinter(MessageParcel &data, MessageParcel
 bool PrintServiceStub::OnQueryPrinterProperties(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryAddedPrinter in");
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     std::vector<std::string> keyList;
-    data.ReadStringVector(&keyList);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadStringVector(&keyList), false);
     std::vector<std::string> valueList;
     int32_t ret = QueryPrinterProperties(printerId, keyList, valueList);
     reply.WriteInt32(ret);
@@ -442,7 +464,7 @@ bool PrintServiceStub::OnRemovePrinters(MessageParcel &data, MessageParcel &repl
 {
     PRINT_HILOGI("PrintServiceStub::OnRemovePrinters in");
     std::vector<std::string> printerIds;
-    data.ReadStringVector(&printerIds);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadStringVector(&printerIds), false);
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}zd", printerIds.size());
 
     if (printerIds.size() > PRINT_MAX_PRINT_COUNT) {
@@ -494,8 +516,10 @@ bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data, MessageParcel &repl
 bool PrintServiceStub::OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnUpdatePrinterState in");
-    std::string printerId = data.ReadString();
-    uint32_t state = data.ReadUint32();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
     int32_t ret = UpdatePrinterState(printerId, state);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnUpdatePrinterState out");
@@ -505,9 +529,12 @@ bool PrintServiceStub::OnUpdatePrinterState(MessageParcel &data, MessageParcel &
 bool PrintServiceStub::OnAdapterGetFileCallBack(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnAdapterGetFileCallBack in");
-    std::string jobId = data.ReadString();
-    uint32_t state = data.ReadUint32();
-    uint32_t subState = data.ReadUint32();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
+    uint32_t subState = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(subState), false);
     PRINT_HILOGD("jobId = %{public}s; state = %{public}u; subState = %{public}u",
         jobId.c_str(), state, subState);
     int32_t ret = AdapterGetFileCallBack(jobId, state, subState);
@@ -519,9 +546,12 @@ bool PrintServiceStub::OnAdapterGetFileCallBack(MessageParcel &data, MessageParc
 bool PrintServiceStub::OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnUpdatePrintJobStateOnlyForSystemApp in");
-    std::string jobId = data.ReadString();
-    uint32_t state = data.ReadUint32();
-    uint32_t subState = data.ReadUint32();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
+    uint32_t subState = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(subState), false);
     PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp jobId = %{public}s", jobId.c_str());
     PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp state = %{public}u", state);
     PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp subState = %{public}u", subState);
@@ -535,7 +565,8 @@ bool PrintServiceStub::OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data
 bool PrintServiceStub::OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnUpdateExtensionInfo in");
-    std::string extInfo = data.ReadString();
+    std::string extInfo;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(extInfo), false);
     PRINT_HILOGD("OnUpdateExtensionInfo extInfo = %{public}s", extInfo.c_str());
 
     int32_t ret = UpdateExtensionInfo(extInfo);
@@ -563,7 +594,8 @@ bool PrintServiceStub::OnRequestPreview(MessageParcel &data, MessageParcel &repl
 bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterCapability in");
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
     int32_t ret = QueryPrinterCapability(printerId);
     reply.WriteInt32(ret);
@@ -611,7 +643,8 @@ bool PrintServiceStub::OnQueryPrintJobById(MessageParcel &data, MessageParcel &r
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryPrintJobById in");
     PrintJob printJob;
-    std::string printJobId = data.ReadString();
+    std::string printJobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printJobId), false);
     int32_t ret = QueryPrintJobById(printJobId, printJob);
     reply.WriteInt32(ret);
     printJob.Marshalling(reply);
@@ -622,9 +655,12 @@ bool PrintServiceStub::OnQueryPrintJobById(MessageParcel &data, MessageParcel &r
 bool PrintServiceStub::OnAddPrinterToCups(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnAddPrinterToCups in");
-    std::string printerUri = data.ReadString();
-    std::string printerName = data.ReadString();
-    std::string printerMake = data.ReadString();
+    std::string printerUri;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerUri), false);
+    std::string printerName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerName), false);
+    std::string printerMake;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerMake), false);
     int32_t ret = AddPrinterToCups(printerUri, printerName, printerMake);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnAddPrinterToCups out");
@@ -635,8 +671,10 @@ bool PrintServiceStub::OnQueryPrinterCapabilityByUri(MessageParcel &data, Messag
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterCapabilityByUri in");
     PrinterCapability printerCaps;
-    std::string printerUri = data.ReadString();
-    std::string printerId = data.ReadString();
+    std::string printerUri;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerUri), false);
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     int32_t ret = QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
     reply.WriteInt32(ret);
     printerCaps.Marshalling(reply);
@@ -647,8 +685,10 @@ bool PrintServiceStub::OnQueryPrinterCapabilityByUri(MessageParcel &data, Messag
 bool PrintServiceStub::OnNotifyPrintServiceEvent(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnNotifyPrintServiceEvent in");
-    std::string jobId = data.ReadString();
-    uint32_t event = data.ReadUint32();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    uint32_t event = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(event), false);
     PRINT_HILOGD("OnNotifyPrintServiceEvent jobId = %{public}s, event = %{public}u", jobId.c_str(), event);
     int32_t ret = NotifyPrintServiceEvent(jobId, event);
     reply.WriteInt32(ret);
@@ -659,9 +699,11 @@ bool PrintServiceStub::OnNotifyPrintServiceEvent(MessageParcel &data, MessagePar
 bool PrintServiceStub::OnSetDefaultPrinter(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnSetDefaultPrinter in");
-    std::string printerId = data.ReadString();
-    uint32_t type = data.ReadUint32();
-    int32_t ret = SetDefaultPrinter(printerId, type);
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    uint32_t printerType = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(printerType), false);
+    int32_t ret = SetDefaultPrinter(printerId, printerType);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnSetDefaultPrinter out");
     return ret == E_PRINT_NONE;
@@ -670,7 +712,8 @@ bool PrintServiceStub::OnSetDefaultPrinter(MessageParcel &data, MessageParcel &r
 bool PrintServiceStub::OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnDeletePrinterFromCups in");
-    std::string printerName = data.ReadString();
+    std::string printerName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerName), false);
     int32_t ret = DeletePrinterFromCups(printerName);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnDeletePrinterFromCups out");
@@ -696,8 +739,10 @@ bool PrintServiceStub::OnDiscoverUsbPrinters(MessageParcel &data, MessageParcel 
 
 bool PrintServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 {
-    std::string taskId = data.ReadString();
-    std::string type = data.ReadString();
+    std::string taskId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     PRINT_HILOGI("PrintServiceStub::OnEventOn type=%{public}s ", type.c_str());
     if (type.empty()) {
         PRINT_HILOGE("PrintServiceStub::OnEventOn type is null.");
@@ -725,8 +770,10 @@ bool PrintServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 bool PrintServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnEventOff in");
-    std::string taskId = data.ReadString();
-    std::string type = data.ReadString();
+    std::string taskId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     PRINT_HILOGI("PrintServiceStub::OnEventOff type=%{public}s ", type.c_str());
     int32_t ret = Off(taskId, type);
     reply.WriteInt32(ret);
@@ -736,7 +783,8 @@ bool PrintServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
 
 bool PrintServiceStub::OnRegisterPrinterCallback(MessageParcel &data, MessageParcel &reply)
 {
-    std::string type = data.ReadString();
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     if (type.empty()) {
         PRINT_HILOGE("PrintServiceStub::OnEventOn type is null.");
         reply.WriteInt32(E_PRINT_RPC_FAILURE);
@@ -763,7 +811,8 @@ bool PrintServiceStub::OnRegisterPrinterCallback(MessageParcel &data, MessagePar
 
 bool PrintServiceStub::OnUnregisterPrinterCallback(MessageParcel &data, MessageParcel &reply)
 {
-    std::string type = data.ReadString();
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     if (type.empty()) {
         reply.WriteInt32(E_PRINT_RPC_FAILURE);
         return false;
@@ -778,7 +827,8 @@ bool PrintServiceStub::OnUnregisterPrinterCallback(MessageParcel &data, MessageP
 bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnRegisterExtCallback in");
-    std::string extensionCID = data.ReadString();
+    std::string extensionCID;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(extensionCID), false);
     sptr<IRemoteObject> remote = data.ReadRemoteObject();
     if (remote == nullptr) {
         PRINT_HILOGD("PrintServiceStub::OnRegisterExtCallback remote is nullptr");
@@ -801,7 +851,8 @@ bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data, MessageParcel 
 bool PrintServiceStub::OnLoadExtSuccess(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnLoadExtSuccess in");
-    std::string extensionId = data.ReadString();
+    std::string extensionId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(extensionId), false);
     int32_t ret = LoadExtSuccess(extensionId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnLoadExtSuccess out");
@@ -812,9 +863,11 @@ bool PrintServiceStub::OnPrintByAdapter(MessageParcel &data, MessageParcel &repl
 {
     PRINT_HILOGI("PrintServiceStub::OnPrintByAdapter in");
     int32_t ret = E_PRINT_RPC_FAILURE;
-    std::string jobName = data.ReadString();
+    std::string jobName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobName), false);
     auto attrs = PrintAttributes::Unmarshalling(data);
-    std::string taskId = data.ReadString();
+    std::string taskId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
     if (attrs != nullptr) {
         attrs->Dump();
         ret = PrintByAdapter(jobName, *attrs, taskId);
@@ -828,7 +881,8 @@ bool PrintServiceStub::OnStartGetPrintFile(MessageParcel &data, MessageParcel &r
 {
     PRINT_HILOGI("PrintServiceStub::OnStartGetPrintFile in");
     int32_t ret = E_PRINT_RPC_FAILURE;
-    std::string jobId = data.ReadString();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
     auto attrs = PrintAttributes::Unmarshalling(data);
     int32_t fd = data.ReadFileDescriptor();
     if (fd >= 0 && attrs != nullptr) {
@@ -843,8 +897,10 @@ bool PrintServiceStub::OnStartGetPrintFile(MessageParcel &data, MessageParcel &r
 bool PrintServiceStub::OnNotifyPrintService(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnNotifyPrintService in");
-    std::string jobId = data.ReadString();
-    std::string type = data.ReadString();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     PRINT_HILOGD(
         "PrintServiceStub::OnNotifyPrintService jobId=%{public}s type=%{public}s ", jobId.c_str(), type.c_str());
     int32_t ret = NotifyPrintService(jobId, type);
@@ -894,7 +950,8 @@ bool PrintServiceStub::OnRemovePrinterFromDiscovery(MessageParcel &data, Message
 {
     PRINT_HILOGI("PrintServiceStub::OnRemovePrinterFromDiscovery in");
 
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
 
     int32_t ret = RemovePrinterFromDiscovery(printerId);
     reply.WriteInt32(ret);
@@ -925,7 +982,9 @@ bool PrintServiceStub::OnUpdatePrinterInSystem(MessageParcel &data, MessageParce
 bool PrintServiceStub::OnRestartPrintJob(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::RestartPrintJob in");
-    int32_t ret = RestartPrintJob(data.ReadString());
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    int32_t ret = RestartPrintJob(jobId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::RestartPrintJob out");
     return ret == E_PRINT_NONE;
@@ -934,8 +993,10 @@ bool PrintServiceStub::OnRestartPrintJob(MessageParcel &data, MessageParcel &rep
 bool PrintServiceStub::OnAnalyzePrintEvents(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::AnalyzePrintEvents in");
-    std::string printerId = data.ReadString();
-    std::string eventType = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    std::string eventType;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(eventType), false);
     std::string detail;
     int32_t ret = AnalyzePrintEvents(printerId, eventType, detail);
     reply.WriteInt32(ret);
@@ -947,8 +1008,10 @@ bool PrintServiceStub::OnAnalyzePrintEvents(MessageParcel &data, MessageParcel &
 bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::AuthPrintJob in");
-    std::string jobId = data.ReadString();
-    std::string userName = data.ReadString();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    std::string userName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(userName), false);
     const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
     if (outData == nullptr) {
         PRINT_HILOGE("Read Password Buffer fail.");
@@ -1001,7 +1064,8 @@ bool PrintServiceStub::OnQueryAllPrinterPpds(MessageParcel &data, MessageParcel 
 bool PrintServiceStub::OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByIp in");
-    std::string printerIp = data.ReadString();
+    std::string printerIp;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerIp), false);
     int32_t ret = QueryPrinterInfoByIp(printerIp);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByIp out");
@@ -1011,9 +1075,12 @@ bool PrintServiceStub::OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel
 bool PrintServiceStub::OnConnectPrinterByIpAndPpd(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIpAndPpd in");
-    std::string printerIp = data.ReadString();
-    std::string protocol = data.ReadString();
-    std::string ppdName = data.ReadString();
+    std::string printerIp;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerIp), false);
+    std::string protocol;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(protocol), false);
+    std::string ppdName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(ppdName), false);
     int32_t ret = ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIpAndPpd out");
@@ -1024,7 +1091,8 @@ bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &repl
 {
     PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob in");
     int32_t ret = E_PRINT_RPC_FAILURE;
-    std::string jobId = data.ReadString();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
     int32_t fd = data.ReadFileDescriptor();
     if (fd >= 0) {
         ret = SavePdfFileJob(jobId, static_cast<uint32_t>(fd));
@@ -1042,7 +1110,8 @@ bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &repl
 bool PrintServiceStub::OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryRecommendDriversById in");
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     std::vector<PpdInfo> ppdInfos;
     int32_t ret = QueryRecommendDriversById(printerId, ppdInfos);
     reply.WriteInt32(ret);
@@ -1063,9 +1132,12 @@ bool PrintServiceStub::OnQueryRecommendDriversById(MessageParcel &data, MessageP
 bool PrintServiceStub::OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd in");
-    std::string printerId = data.ReadString();
-    std::string protocol = data.ReadString();
-    std::string ppdName = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    std::string protocol;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(protocol), false);
+    std::string ppdName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(ppdName), false);
     int32_t ret = ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd out");
@@ -1075,8 +1147,10 @@ bool PrintServiceStub::OnConnectPrinterByIdAndPpd(MessageParcel &data, MessagePa
 bool PrintServiceStub::OnCheckPreferencesConflicts(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnCheckPreferencesConflicts in");
-    std::string printerId = data.ReadString();
-    std::string changedType = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    std::string changedType;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(changedType), false);
     auto preferencesPtr = PrinterPreferences::Unmarshalling(data);
     if (preferencesPtr == nullptr) {
         PRINT_HILOGE("Failed to unmarshall printerPreferences");
@@ -1095,7 +1169,8 @@ bool PrintServiceStub::OnCheckPreferencesConflicts(MessageParcel &data, MessageP
 bool PrintServiceStub::OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnCheckPrintJobConflicts in");
-    std::string changedType = data.ReadString();
+    std::string changedType;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(changedType), false);
     auto printJobPtr = PrintJob::Unmarshalling(data);
     if (printJobPtr == nullptr) {
         PRINT_HILOGE("Failed to unmarshall printJob");
@@ -1114,7 +1189,8 @@ bool PrintServiceStub::OnCheckPrintJobConflicts(MessageParcel &data, MessageParc
 bool PrintServiceStub::OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnGetPrinterDefaultPreferences in");
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     PrinterPreferences defaultPreferences;
     int32_t ret = GetPrinterDefaultPreferences(printerId, defaultPreferences);
     reply.WriteInt32(ret);
@@ -1142,6 +1218,28 @@ bool PrintServiceStub::OnGetSharedHosts(MessageParcel &data, MessageParcel &repl
     return ret == E_PRINT_NONE;
 }
 
+static bool ReadSmbPasswordFromParcel(MessageParcel &data, char *&userPasswd)
+{
+    const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
+    if (outData == nullptr) {
+        PRINT_HILOGE("Read Password Buffer fail.");
+        return false;
+    }
+    userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
+    if (userPasswd == nullptr) {
+        PRINT_HILOGE("Allocate Password fail.");
+        return false;
+    }
+    auto memcpyRet = memcpy_s(userPasswd, MAX_AUTH_LENGTH_SIZE, outData, MAX_AUTH_LENGTH_SIZE);
+    if (memcpyRet != E_PRINT_NONE) {
+        PrintUtil::SafeDeleteAuthInfo(userPasswd);
+        PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
+        return false;
+    }
+    userPasswd[MAX_AUTH_LENGTH_SIZE - 1] = '\0';
+    return true;
+}
+
 bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnAuthSmbDevice in");
@@ -1153,26 +1251,13 @@ bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply
         return false;
     }
 
-    std::string userName = data.ReadString();
+    std::string userName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(userName), false);
     char* userPasswd = nullptr;
     if (!userName.empty()) {
-        const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
-        if (outData == nullptr) {
-            PRINT_HILOGE("Read Password Buffer fail.");
+        if (!ReadSmbPasswordFromParcel(data, userPasswd)) {
             return false;
         }
-        userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
-        if (userPasswd == nullptr) {
-            PRINT_HILOGE("Allocate Password fail.");
-            return false;
-        }
-        auto memcpyRet = memcpy_s(userPasswd, MAX_AUTH_LENGTH_SIZE, outData, MAX_AUTH_LENGTH_SIZE);
-        if (memcpyRet != E_PRINT_NONE) {
-            PrintUtil::SafeDeleteAuthInfo(userPasswd);
-            PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
-            return false;
-        }
-        userPasswd[MAX_AUTH_LENGTH_SIZE - 1] = '\0';
     }
     std::vector<PrinterInfo> printerInfos;
     int32_t ret = AuthSmbDevice(*sharedHostPtr, userName, userPasswd, printerInfos);
@@ -1227,9 +1312,11 @@ bool PrintServiceStub::OnUnregisterWatermarkCallback(MessageParcel &data, Messag
 bool PrintServiceStub::OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete in");
-    std::string jobId = data.ReadString();
-    int32_t result = data.ReadInt32();
-    int32_t ret = NotifyWatermarkComplete(jobId, result);
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    int32_t watermarkResult = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(watermarkResult), false);
+    int32_t ret = NotifyWatermarkComplete(jobId, watermarkResult);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete out");
     return ret == E_PRINT_NONE;
@@ -1259,10 +1346,14 @@ bool PrintServiceStub::OnRegisterKiaInterceptorCallback(MessageParcel &data, Mes
 bool PrintServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnAddPrinter in");
-    std::string printerName = data.ReadString();
-    std::string uri = data.ReadString();
-    std::string ppdName = data.ReadString();
-    std::string options = data.ReadString();
+    std::string printerName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerName), false);
+    std::string uri;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(uri), false);
+    std::string ppdName;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(ppdName), false);
+    std::string options;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(options), false);
     int32_t ret = AddPrinter(printerName, uri, ppdName, options);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnAddPrinter out");

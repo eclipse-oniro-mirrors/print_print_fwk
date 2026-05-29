@@ -812,6 +812,12 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0028_NeedRename, TestSize.
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            reply.WriteInt32(E_PRINT_NONE);
+            return ERR_NONE;
+        });
     EXPECT_EQ(E_PRINT_NONE, proxy->RegisterPrinterCallback(testType, testListener));
 }
 
@@ -1222,6 +1228,17 @@ HWTEST_F(PrintServiceProxyTest, CheckPrintJobConflictsTest, TestSize.Level1)
 {
     std::string testChangedType = PRINT_PARAM_TYPE_PAGE_SIZE;
     PrintJob testPrintJob;
+    testPrintJob.SetJobId("test-job");
+    testPrintJob.SetPrinterId("test-printer");
+    testPrintJob.SetJobState(PRINT_JOB_PREPARED);
+    testPrintJob.SetSubState(PRINT_JOB_PREPARED);
+    testPrintJob.SetCopyNumber(1);
+    PrintPageSize testPageSize;
+    testPageSize.SetId("ISO_A4");
+    testPageSize.SetName("A4");
+    testPageSize.SetWidth(21000);
+    testPageSize.SetHeight(29700);
+    testPrintJob.SetPageSize(testPageSize);
     std::vector<std::string> testConflictingOptions;
 
     auto proxy = std::make_shared<PrintServiceProxy>(nullptr);

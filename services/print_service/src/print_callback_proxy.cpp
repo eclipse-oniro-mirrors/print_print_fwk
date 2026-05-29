@@ -28,7 +28,7 @@ bool PrintCallbackProxy::OnCallback()
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("SendRequest failed, error: remote is null");
@@ -51,7 +51,7 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info)
     MessageOption option(MessageOption::TF_ASYNC);
 
     PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{private}s]", state, info.GetPrinterId().c_str());
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteUint32(state);
     info.Marshalling(data);
 
@@ -77,7 +77,7 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
     MessageOption option(MessageOption::TF_ASYNC);
 
     PRINT_HILOGD("PrintJob Event state:[%{public}d], subState [%{public}d]", state, info.GetSubState());
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteUint32(state);
     info.Marshalling(data);
 
@@ -102,7 +102,7 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     data.WriteString(extensionId);
     data.WriteString(info);
 
@@ -127,7 +127,7 @@ bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<P
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     info.Marshalling(data);
     data.WriteUint32(ppds.size());
     for (const auto &ppd : ppds) {
@@ -156,10 +156,7 @@ bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     data.WriteString(jobId);
     oldAttrs.Marshalling(data);
@@ -188,10 +185,7 @@ bool PrintCallbackProxy::OnCallbackAdapterJobStateChanged(const std::string jobI
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     data.WriteString(jobId);
     data.WriteUint32(state);
@@ -218,10 +212,7 @@ bool PrintCallbackProxy::OnCallbackAdapterGetFile(uint32_t state)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     data.WriteUint32(state);
 
@@ -246,10 +237,7 @@ bool PrintCallbackProxy::OnCallback(const std::vector<PrintSharedHost> &sharedHo
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     if (sharedHosts.size() > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("too much sharedHosts");

@@ -51,7 +51,7 @@ public:
     virtual bool Marshalling(Parcel &parcel) const override;
     static std::shared_ptr<ScanOptionValue> Unmarshalling(Parcel &parcel);
 private:
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 private:
     ScanOptionValueType valueType_;

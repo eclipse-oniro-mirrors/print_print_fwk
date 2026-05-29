@@ -76,9 +76,9 @@ void PrintPreviewAttribute::GetPreviewRange(PrintRange &previewRange) const
     previewRange = previewRange_;
 }
 
-void PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
+bool PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
 {
-    hasResult_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasResult_), false);
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
     if (hasResult_ && msgParcel != nullptr) {
         SetResult(msgParcel->ReadFileDescriptor());
@@ -87,6 +87,7 @@ void PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
     if (rangePtr != nullptr) {
         SetPreviewRange(*rangePtr);
     }
+    return true;
 }
 
 bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
@@ -94,7 +95,9 @@ bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
     bool result = false;
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
     if (msgParcel != nullptr) {
-        msgParcel->WriteBool(hasResult_);
+        if (!msgParcel->WriteBool(hasResult_)) {
+            return false;
+        }
         if (hasResult_) {
             msgParcel->WriteFileDescriptor(GetResult());
         }
@@ -106,7 +109,9 @@ bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintPreviewAttribute>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

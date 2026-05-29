@@ -115,7 +115,8 @@ bool PrintExtensionCallbackStub::HandleExtCallback(MessageParcel &data, MessageP
 
 bool PrintExtensionCallbackStub::HandlePrinterCallback(MessageParcel &data, MessageParcel &reply)
 {
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     bool result = OnCallback(printerId);
     PRINT_HILOGI("Handle Printer Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
@@ -136,7 +137,8 @@ bool PrintExtensionCallbackStub::HandlePrintJobCallback(MessageParcel &data, Mes
 
 bool PrintExtensionCallbackStub::HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply)
 {
-    std::string printerId = data.ReadString();
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     PrinterCapability cap;
     bool result = OnCallback(printerId, cap);
     PRINT_HILOGI("Handle Printer Capability Extension Callback ret[%{public}d]", result);
