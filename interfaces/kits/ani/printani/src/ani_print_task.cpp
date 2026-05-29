@@ -99,7 +99,7 @@ int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& file
         PRINT_HILOGD("list type: fdlist");
         for (auto fdPath : files) {
             uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
-            if (fd <= FdListWrapper::STD_FD_MAX) {  // fd 0/1/2 are stdin/stdout/stderr - skip them
+            if (fd <= FdListWrapper::STD_FD_MAX) {
                 PRINT_HILOGE("invalid fd: %{public}u", fd);
                 continue;
             }
