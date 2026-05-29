@@ -30,6 +30,7 @@
 #include "print_constant.h"
 #include "print_utils.h"
 #include "print_json_util.h"
+#include "print_utils.h"
 
 namespace OHOS {
 namespace Print {
@@ -705,7 +706,7 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
         return false;
     }
     std::string oldOption = printJob->GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(oldOption).c_str());
     Json::Value infoJson;
     if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
@@ -713,7 +714,7 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
     }
     infoJson["isHistory"] = true;
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
-    PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
+    PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob->SetOption(updatedOption);
     auto it = printerHistroyJobList->begin();
     if ((printerHistroyJobList->insert(std::make_pair(jobId, printJob))).second) {
