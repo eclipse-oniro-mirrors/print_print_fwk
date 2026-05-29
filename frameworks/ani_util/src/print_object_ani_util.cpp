@@ -15,14 +15,12 @@
 #include "print_object_ani_util.h"
 #include "print_base_ani_util.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &res)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
     ani_ref arrayObj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -114,10 +112,7 @@ bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, st
 
 bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -158,10 +153,8 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
 
 bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool &value)
 {
-    if (env == nullptr || param == nullptr) {
-        PRINT_HILOGE("env or param is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false, __func__);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;

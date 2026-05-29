@@ -14,6 +14,7 @@
  */
 #include "scan_ani_callback.h"
 #include "scan_log.h"
+#include "scan_constant.h"
 #include "ani_scanner_device_helper.h"
 #include "ani_scanner_sync_device_helper.h"
 #include "print_callback_ani_util.h"
@@ -22,10 +23,8 @@ namespace OHOS::Scan {
 using namespace OHOS::Print;
 ScanAniCallback::ScanAniCallback(ani_env *env, ani_object callback)
 {
-    if (env == nullptr || callback == nullptr) {
-        SCAN_HILOGE("nullptr error");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     ani_vm *vm = nullptr;
     env->GetVM(&vm);
     aniVm_ = vm;
@@ -54,10 +53,8 @@ ScanAniCallback::~ScanAniCallback()
 bool ScanAniCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
     SCAN_HILOGI("OnScanDeviceFound");
-    if (aniVm_ == nullptr || callback_ == nullptr) {
-        SCAN_HILOGE("aniVm_ or callback_ is nullptr");
-        return false;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(aniVm_, false, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(callback_, false, __func__);
     ani_env *env = nullptr;
     ani_options aniArgs { 0, nullptr };
     auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
@@ -81,10 +78,8 @@ bool ScanAniCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 bool ScanAniCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info)
 {
     SCAN_HILOGI("OnScanDeviceSync");
-    if (aniVm_ == nullptr || callback_ == nullptr) {
-        SCAN_HILOGE("aniVm_ or callback_ is nullptr");
-        return false;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(aniVm_, false, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(callback_, false, __func__);
     ani_env *env = nullptr;
     ani_options aniArgs { 0, nullptr };
     auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
@@ -108,10 +103,8 @@ bool ScanAniCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &i
 bool ScanAniCallback::OnGetDevicesList(std::vector<ScanDeviceInfo> &info)
 {
     SCAN_HILOGI("OnGetDevicesList");
-    if (aniVm_ == nullptr || callback_ == nullptr) {
-        SCAN_HILOGE("aniVm_ or callback_ is nullptr");
-        return false;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(aniVm_, false, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(callback_, false, __func__);
     ani_env *env = nullptr;
     ani_options aniArgs { 0, nullptr };
     auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);

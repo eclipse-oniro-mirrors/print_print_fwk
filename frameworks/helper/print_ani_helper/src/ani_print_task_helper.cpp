@@ -18,19 +18,14 @@
 #include "print_base_ani_util.h"
 #include "print_object_ani_util.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 
-ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, std::shared_ptr<AniPrintTask> nativePrintTask)
+ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativePrintTask)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is a nullptr");
-        return nullptr;
-    }
-    if (nativePrintTask == nullptr) {
-        PRINT_HILOGE("nativePrintTask is a nullptr");
-        return nullptr;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, nullptr, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(nativePrintTask, nullptr, __func__);
 
     static const char *className = "@ohos.print.print.PrintTaskImpl";
     ani_class cls;
@@ -63,10 +58,7 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, std::shared_ptr<Ani
 
 std::shared_ptr<AniPrintTask> AniPrintTaskHelper::UnwrappPrintTask(ani_env *env, ani_object object)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is a nullptr");
-        return nullptr;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, nullptr, __func__);
     ani_long taskId = 0;
     if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &taskId)) {
         PRINT_HILOGE("UnwrappPrintTask Fail");

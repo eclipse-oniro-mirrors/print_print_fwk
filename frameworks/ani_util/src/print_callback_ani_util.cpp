@@ -14,6 +14,7 @@
  */
 #include "print_callback_ani_util.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace {
 const char *INVOKE_METHOD_NAME = "invoke";
@@ -58,10 +59,8 @@ namespace OHOS::Print {
 
 bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_object retObj)
 {
-    if (env == nullptr || call == nullptr) {
-        PRINT_HILOGE("env or call is a nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(call, false, __func__);
     ani_class clsCall = nullptr;
     ani_status status = env->FindClass(ASYNC_CALLBACK_WRAPPER, &clsCall);
     if (status!= ANI_OK || clsCall == nullptr) {
@@ -92,10 +91,8 @@ bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_obj
 
 bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
 {
-    if (env == nullptr || call == nullptr) {
-        PRINT_HILOGE("env or call is a nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(call, false, __func__);
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
     if ((status = env->FindClass(CALLBACK_WRAPPER, &clsCall)) != ANI_OK) {
@@ -122,10 +119,8 @@ bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
 
 bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result)
 {
-    if (env == nullptr || call == nullptr) {
-        PRINT_HILOGE("env or call is a nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(call, false, __func__);
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
     if ((status = env->FindClass(ASYNC_CALLBACK_ARRAY_WRAPPER, &clsCall)) != ANI_OK) {
@@ -183,14 +178,8 @@ ani_object CreateStsError(ani_env *env, ani_int code, const std::string& msg)
 
 bool Callback(ani_env *env, ani_object call, ani_object data)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
-        return false;
-    }
-    if (call == nullptr) {
-        PRINT_HILOGE("call is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(call, false, __func__);
     ani_class clsCall = nullptr;
     ani_status status = env->FindClass(CALLBACK_WRAPPER, &clsCall);
     if (status != ANI_OK || clsCall == nullptr) {
