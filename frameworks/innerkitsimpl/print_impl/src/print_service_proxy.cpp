@@ -1267,7 +1267,8 @@ int32_t PrintServiceProxy::AuthPrintJob(const std::string &jobId, const std::str
         PRINT_HILOGE("PrintServiceProxy AuthPrintJob parameter is null");
         return E_PRINT_INVALID_PARAMETER;
     }
-    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(
+        data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE), E_PRINT_RPC_FAILURE);
 
     PrintUtil::SafeDeleteAuthInfo(userPasswd);
     sptr<IRemoteObject> remote = Remote();
@@ -1630,7 +1631,8 @@ int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, cons
     CHECK_PARCEL_OP_AND_RETURN_VAL(sharedHost.Marshalling(data), E_PRINT_RPC_FAILURE);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(userName), E_PRINT_RPC_FAILURE);
     if (userPasswd) {
-        CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE), E_PRINT_RPC_FAILURE);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(
+            data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE), E_PRINT_RPC_FAILURE);
     }
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
