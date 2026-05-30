@@ -303,11 +303,11 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
     }
     
     size_t paddingCount = 0;
-    if (base64Blob.size >= BASE64_LAST_PADDING_OFFSET && 
+    if (base64Blob.size >= BASE64_LAST_PADDING_OFFSET &&
         base64Blob.data[base64Blob.size - BASE64_LAST_PADDING_OFFSET] == '=') {
         paddingCount++;
     }
-    if (base64Blob.size >= BASE64_SECOND_LAST_PADDING_OFFSET && 
+    if (base64Blob.size >= BASE64_SECOND_LAST_PADDING_OFFSET &&
         base64Blob.data[base64Blob.size - BASE64_SECOND_LAST_PADDING_OFFSET] == '=') {
         paddingCount++;
     }
