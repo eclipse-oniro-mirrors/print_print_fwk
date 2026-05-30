@@ -469,10 +469,6 @@ int32_t ScanServiceAbility::GetScannerList()
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         return E_SCAN_NO_PERMISSION;
     }
-    if (scannerState_.load() == SCANNER_SCANING) {
-        SCAN_HILOGW("scannerState_ is busy");
-        return E_SCAN_DEVICE_BUSY;
-    }
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
     auto exec_sane_getscaner = [=]() {
         SaneGetScanner();
