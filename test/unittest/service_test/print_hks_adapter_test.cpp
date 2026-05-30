@@ -35,15 +35,19 @@ protected:
     std::shared_ptr<MockHksAdapter> mockAdapter_;
 };
 
-void PrintHksAdapterTest::SetUpTestCase(void) {}
+void PrintHksAdapterTest::SetUpTestCase(void)
+{}
 
-void PrintHksAdapterTest::TearDownTestCase(void) {}
+void PrintHksAdapterTest::TearDownTestCase(void)
+{}
 
-void PrintHksAdapterTest::SetUp(void) {
+void PrintHksAdapterTest::SetUp(void)
+{
     mockAdapter_ = std::make_shared<MockHksAdapter>();
 }
 
-void PrintHksAdapterTest::TearDown(void) {
+void PrintHksAdapterTest::TearDown(void)
+{
     mockAdapter_.reset();
 }
 

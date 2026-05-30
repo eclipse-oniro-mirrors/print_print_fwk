@@ -29,13 +29,13 @@ class IHksAdapter {
 public:
     virtual ~IHksAdapter() = default;
     
-    virtual int32_t HksKeyExist(const struct HksBlob *keyAlias, 
+    virtual int32_t HksKeyExist(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet) = 0;
     
     virtual int32_t HksGenerateKey(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet, struct HksParamSet *paramSetOut) = 0;
     
-    virtual int32_t HksEncrypt(const struct HksBlob *keyAlias, 
+    virtual int32_t HksEncrypt(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet,
         const struct HksBlob *plainText, struct HksBlob *cipherText) = 0;
     
@@ -58,13 +58,13 @@ public:
 
 class HksAdapter : public IHksAdapter {
 public:
-    int32_t HksKeyExist(const struct HksBlob *keyAlias, 
+    int32_t HksKeyExist(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet) override;
     
     int32_t HksGenerateKey(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet, struct HksParamSet *paramSetOut) override;
     
-    int32_t HksEncrypt(const struct HksBlob *keyAlias, 
+    int32_t HksEncrypt(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet,
         const struct HksBlob *plainText, struct HksBlob *cipherText) override;
     

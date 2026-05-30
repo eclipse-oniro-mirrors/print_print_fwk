@@ -23,6 +23,8 @@ namespace OHOS::Print {
 
 const size_t AUTH_TAG_SIZE = 16;
 static const std::string KEY_ALIAS_PREFIX = "print_custom_option_key_user_";
+constexpr size_t BASE64_LAST_PADDING_OFFSET = 1;
+constexpr size_t BASE64_SECOND_LAST_PADDING_OFFSET = 2;
 
 int32_t HksAdapter::HksKeyExist(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet)
 {
@@ -35,7 +37,7 @@ int32_t HksAdapter::HksGenerateKey(const struct HksBlob *keyAlias,
     return ::HksGenerateKey(keyAlias, paramSet, paramSetOut);
 }
 
-int32_t HksAdapter::HksEncrypt(const struct HksBlob *keyAlias, 
+int32_t HksAdapter::HksEncrypt(const struct HksBlob *keyAlias,
     const struct HksParamSet *paramSet,
     const struct HksBlob *plainText, struct HksBlob *cipherText)
 {
@@ -301,10 +303,12 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
     }
     
     size_t paddingCount = 0;
-    if (base64Blob.size >= 1 && base64Blob.data[base64Blob.size - 1] == '=') {
+    if (base64Blob.size >= BASE64_LAST_PADDING_OFFSET && 
+        base64Blob.data[base64Blob.size - BASE64_LAST_PADDING_OFFSET] == '=') {
         paddingCount++;
     }
-    if (base64Blob.size >= 2 && base64Blob.data[base64Blob.size - 2] == '=') {
+    if (base64Blob.size >= BASE64_SECOND_LAST_PADDING_OFFSET && 
+        base64Blob.data[base64Blob.size - BASE64_SECOND_LAST_PADDING_OFFSET] == '=') {
         paddingCount++;
     }
     
@@ -316,7 +320,6 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
     }
     
     int ret = EVP_DecodeBlockWrapper(cipherBlob.data, base64Blob.data, static_cast<int>(base64Blob.size));
-    
     if (ret < 0) {
         PRINT_HILOGE("Base64 decode failed");
         delete[] cipherBlob.data;
