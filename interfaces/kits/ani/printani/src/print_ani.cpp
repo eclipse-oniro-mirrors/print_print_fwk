@@ -138,7 +138,7 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
         return;
     }
     int32_t ret = nativePrintTask->StartPrintWithAttributes(jobName, ctx, attributes, callbackWrapper);
-    AsyncCallback(env, callback, CreateStsError(env, ret), AniPrintTaskHelper::CreatePrintTask(env, &nativePrintTask));
+    AsyncCallback(env, callback, CreateStsError(env, ret), AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
 }
 
 static void QueryAllPrinterExtensionInfosNative(ani_env *env, ani_object callback)

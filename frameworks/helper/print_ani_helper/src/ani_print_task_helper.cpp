@@ -39,7 +39,7 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativ
         return nullptr;
     }
     ani_object obj;
-    if (ANI_OK != env->Object_New(cls, ctor, &obj, reinterpret_cast<ani_long>(nativePrintTask)) {
+    if (ANI_OK != env->Object_New(cls, ctor, &obj, reinterpret_cast<ani_long>(nativePrintTask))) {
         PRINT_HILOGE("New Context Fail");
         return nullptr;
     }
