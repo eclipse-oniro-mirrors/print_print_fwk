@@ -26,7 +26,7 @@ namespace OHOS::Print {
     bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<std::string> &value);
     bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res);
     bool GetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref &value);
-    bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool value);
+    bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool &value);
 
     // set property
     bool SetEnumProperty(ani_env *env, ani_object object, const std::string &fieldName, const std::string &signature,

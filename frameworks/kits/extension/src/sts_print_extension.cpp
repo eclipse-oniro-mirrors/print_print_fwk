@@ -47,6 +47,7 @@ StsPrintExtension::~StsPrintExtension()
     if (context) {
         context->Unbind();
     }
+    stsExtension_ = nullptr;
 }
 
 void StsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,

@@ -60,6 +60,10 @@ int32_t AniPrintTask::StartPrint(const std::vector<std::string>& files)
         PRINT_HILOGD("list type: fdlist");
         for (auto fdPath : files) {
             uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
+            if (fd <= FdListWrapper::STD_FD_MAX) {  // fd 0/1/2 are stdin/stdout/stderr - skip them
+                PRINT_HILOGE("invalid fd: %{public}u", fd);
+                continue;
+            }
             fdList.Add(fd);
         }
     } else if (files.begin()->find("file://") == 0) {
@@ -95,6 +99,10 @@ int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& file
         PRINT_HILOGD("list type: fdlist");
         for (auto fdPath : files) {
             uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
+            if (fd <= FdListWrapper::STD_FD_MAX) {
+                PRINT_HILOGE("invalid fd: %{public}u", fd);
+                continue;
+            }
             fdList.Add(fd);
         }
     } else if (files.begin()->find("file://") == 0) {
@@ -229,12 +237,12 @@ bool AniPrintTask::CheckPermission(const std::string &name)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType == TOKEN_INVALID) {
-        PRINT_HILOGE("invalid token id %{public}d", tokenId);
+        PRINT_HILOGE("invalid token id");
         return false;
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, name);
     if (result != PERMISSION_GRANTED) {
-        PRINT_HILOGE("Current tokenId permission is %{public}d", result);
+        PRINT_HILOGE("Current tokenId permission check failed");
     }
     return result == PERMISSION_GRANTED;
 }

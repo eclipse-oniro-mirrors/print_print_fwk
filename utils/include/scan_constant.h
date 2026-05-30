@@ -99,6 +99,17 @@ namespace OHOS::Scan {
     if (!(parcelOpExp)) { \
         SCAN_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
         return retVal; \
+
+#define SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                 \
+    if ((ptr) == nullptr) {                                                         \
+        SCAN_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));     \
+        return (retVal);                                                            \
+    }
+
+#define SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                        \
+    if ((ptr) == nullptr) {                                                         \
+        SCAN_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));     \
+        return;                                                                     \
     }
 
 enum ScanErrorCode {
