@@ -18,6 +18,9 @@
 #include "print_json_util.h"
 #include "print_log.h"
 
+#include <algorithm>
+#include <unordered_set>
+
 namespace OHOS::Print {
 
 namespace {
@@ -78,6 +81,9 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
     std::set<std::string> errorSet;
     
     auto addErrorCode = [&errorSet](uint32_t subState) {
+        if (subState == PRINT_JOB_COMPLETED_SUCCESS) {
+            return;
+        }
         std::string code = SubStateToErrorCodeStr(subState);
         if (code == ERROR_CODE_UNKNOWN || code == ERROR_CODE_OTHER_ERROR) {
             errorSet.insert(ERROR_CODE_UNKNOWN);
@@ -113,6 +119,29 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
         }
     }
     return fileList;
+}
+
+static const std::unordered_set<std::string> PRINTABLE_EXTENSIONS = {
+    ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg", ".ico", ".dng",
+    ".jpg", ".jpe", ".jfif", ".jif",
+    ".docx", ".doc", ".txt", ".docm", ".dot", ".dotx", ".dotm",
+    ".wps", ".wpt", ".rtf", ".xml",
+    ".htm", ".html", ".mht", ".mhtml",
+    ".xlsx", ".xls", ".et", ".ett", ".xlt", ".xlsm", ".xltx", ".csv", ".xlsb",
+    ".ppt", ".pptx", ".dps", ".dpt", ".potm", ".potx", ".pot",
+    ".ppsm", ".ppsx", ".pps", ".pptm",
+    ".pdf",
+};
+
+bool PrintSecurityGuardUtil::IsPrintableFile(const std::string &fileName)
+{
+    auto dotPos = fileName.rfind('.');
+    if (dotPos == std::string::npos) {
+        return false;
+    }
+    std::string ext = fileName.substr(dotPos);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    return PRINTABLE_EXTENSIONS.find(ext) != PRINTABLE_EXTENSIONS.end();
 }
 
 } // namespace OHOS::Print

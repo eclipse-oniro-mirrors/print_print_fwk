@@ -578,6 +578,10 @@ void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob>
     }
     std::vector<FileAuditInfo> fileInfos;
     for (const auto &fileName : fileList) {
+        if (!PrintSecurityGuardUtil::IsPrintableFile(fileName)) {
+            PRINT_HILOGW("Skip non-printable file: %{public}s", fileName.c_str());
+            continue;
+        }
         FileAuditInfo info;
         info.fileName = fileName;
         info.md5 = "";
@@ -1915,6 +1919,9 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     if (!CreateNewJobWhenRestart(printJob)) {
         return E_PRINT_FILE_IO;
     }
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(printJob->GetOption());
+    securityGuardManager_.receiveBaseInfo(printJob->GetJobId(), callerPkg, fileList);
 
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
