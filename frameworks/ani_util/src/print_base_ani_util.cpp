@@ -14,6 +14,7 @@
  */
 #include "print_base_ani_util.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 
@@ -215,10 +216,8 @@ ani_object CreateObject(ani_env *env, const char *signature, const char* classNa
 
 bool GetStdString(ani_env *env, ani_string str, std::string &res)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(str, false, __func__);
     ani_size sz {};
     ani_status status = ANI_ERROR;
     if ((status = env->String_GetUTF8Size(str, &sz)) != ANI_OK) {
@@ -269,12 +268,13 @@ bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> 
 
 bool GetEnumValueInt(ani_env *env, ani_enum_item enumObj, uint32_t& enumValue)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(enumObj, false, __func__);
+    ani_int result = 0;
+    if (env->EnumItem_GetValue_Int(enumObj, &result) != ANI_OK) {
+        PRINT_HILOGE("EnumItem_GetValue_Int failed");
         return false;
     }
-    ani_int result = 0;
-    env->EnumItem_GetValue_Int(enumObj, &result);
     enumValue = static_cast<uint32_t>(result);
     return true;
 }

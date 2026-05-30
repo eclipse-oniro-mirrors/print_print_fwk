@@ -22,15 +22,15 @@ namespace OHOS::Scan {
 class ScanAniCallback : public ScanCallbackStub {
 public:
     explicit ScanAniCallback(ani_env *env, ani_object callback);
-    ~ScanAniCallback() override = default;
+    ~ScanAniCallback() override;
 
     bool OnCallback(uint32_t state, const ScanDeviceInfo &info) override;
     bool OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info) override;
     bool OnGetDevicesList(std::vector<ScanDeviceInfo> &info) override;
 
 private:
-    ani_env *env_;
-    ani_object callback_;
+    ani_vm *aniVm_ = nullptr;
+    ani_ref callback_ = nullptr;
 };
 }
 #endif
