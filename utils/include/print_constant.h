@@ -92,6 +92,7 @@ namespace OHOS::Print {
     if (!(parcelOpExp)) { \
         PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
         return retVal; \
+    }
 
 #define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
     if ((ptr) == nullptr) {                                                         \
