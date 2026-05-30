@@ -44,7 +44,6 @@ static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 static const std::string ABILITY_PARAMS_STREAM = "ability.params.stream";
 static const std::string LAUNCH_PARAMETER_FILE_LIST_SIZE = "fileListSize";
-static const int32_t MAX_FILE_LIST_SIZE = 100;
 
 static void ReportOffEventMetrics(const std::string type)
 {
@@ -285,7 +284,7 @@ uint32_t PrintTask::StartUIExtensionAbility(
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, adapterParam->jobId);
-    if (fileList_.size() <= MAX_FILE_LIST_SIZE) {
+    if (fileList_.size() <= PRINT_MAX_FILE_LIST_SIZE) {
         want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList_);
     } else {
         PRINT_HILOGW("fileList exceeds the maximum length.");

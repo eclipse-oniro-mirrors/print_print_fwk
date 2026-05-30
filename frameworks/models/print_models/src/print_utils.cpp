@@ -396,6 +396,10 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     }
     if (PrintJsonUtil::IsMember(optionJson, "files") && optionJson["files"].isArray()) {
         Json::Value filesArr = optionJson["files"];
+        if (filesArr.size() > PRINT_MAX_FILE_LIST_SIZE) {
+            PRINT_HILOGE("filesArr size %{public}u exceeds max limit.", filesArr.size());
+            return "";
+        }
         for (Json::Value::ArrayIndex i = 0; i < filesArr.size(); i++) {
             if (filesArr[i].isString()) {
                 filesArr[i] = AnonymizeFilePath(filesArr[i].asString());
