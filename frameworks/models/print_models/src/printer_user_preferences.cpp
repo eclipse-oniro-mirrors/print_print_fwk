@@ -108,6 +108,17 @@ void SecureBlob::SetData(const uint8_t *src, uint32_t srcSize)
     }
 }
 
+void SecureBlob::Allocate(uint32_t allocSize)
+{
+    Clear();
+    if (allocSize > 0) {
+        data = new (std::nothrow) uint8_t[allocSize];
+        if (data != nullptr) {
+            size = allocSize;
+        }
+    }
+}
+
 std::string SecureBlob::ToString() const
 {
     if (data == nullptr || size == 0) {
@@ -287,8 +298,8 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
                 opt.isSet = optJson["isSet"].asBool();
             }
             if (optJson["value"].isString()) {
-                std::string valueStr = optJson["value"].asString();
-                opt.value.SetData(reinterpret_cast<const uint8_t *>(valueStr.c_str()), valueStr.size());
+                opt.value.SetData(reinterpret_cast<const uint8_t *>(
+                    optJson["value"].asString().c_str()), optJson["value"].asString().size());
             }
             customOptions_.push_back(opt);
         }

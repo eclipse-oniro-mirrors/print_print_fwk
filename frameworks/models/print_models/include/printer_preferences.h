@@ -110,6 +110,8 @@ public:
 
     void ConvertJsonToPrinterPreferences(Json::Value &preferencesJson);
 
+    bool GetOptionJson(Json::Value &prefOptionsJson) const;
+
 private:
     bool ReadFromParcel(Parcel &parcel);
     void ConvertBoolDefaultJsonToPrinterPreferences(Json::Value &preferencesJson);

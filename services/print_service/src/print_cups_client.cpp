@@ -991,13 +991,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
     const std::string &printerName, PrinterCapability &printerCaps, const std::string &ppdName)
 {
     if (!ppdName.empty()) {
-        std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
-        if (!PrintUtils::IsPathValid(ppdFilePath)) {
-            return E_PRINT_INVALID_PARAMETER;
-        }
-        int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
-        ValidateAndClearVendorAbility(printerCaps, ppdName);
-        return ret;
+        return QueryPrinterCapabilityFromPPDFile(printerCaps, ppdName);
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("[Printer: %{public}s] QueryPrinterCapabilityFromPPD", standardName.c_str());
@@ -1359,6 +1353,42 @@ int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
     return num_options;
 }
 
+bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
+    const struct HksBlob &base64Blob, struct HksBlob &plainBlob, PrintServiceAbility *serviceAbility)
+{
+    if (serviceAbility == nullptr) {
+        PRINT_HILOGW("serviceAbility is null for custom option: %{public}s", keyStr.c_str());
+        return false;
+    }
+
+    auto hksAdapter = serviceAbility->GetHksAdapter();
+    if (hksAdapter == nullptr) {
+        PRINT_HILOGW("hksAdapter is null for custom option: %{public}s", keyStr.c_str());
+        return false;
+    }
+
+    struct HksBlob cipherBlob = { 0, nullptr };
+    if (!hksAdapter->Base64Decode(base64Blob, cipherBlob)) {
+        PRINT_HILOGW("Base64 decode failed for custom option: %{public}s", keyStr.c_str());
+        return false;
+    }
+
+    int32_t ret = hksAdapter->DecryptCustomOption(serviceAbility->GetCurrentUserId(), cipherBlob, plainBlob);
+
+    if (cipherBlob.data != nullptr) {
+        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
+        delete[] cipherBlob.data;
+    }
+
+    if (ret == HKS_SUCCESS && plainBlob.data != nullptr) {
+        PRINT_HILOGI("decrypted custom option: %{public}s", keyStr.c_str());
+        return true;
+    }
+
+    PRINT_HILOGW("failed to decrypt custom option: %{public}s, ret: %{public}d", keyStr.c_str(), ret);
+    return false;
+}
+
 int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->advancedOpsJson.isNull()) {
@@ -1369,8 +1399,31 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
     Json::Value::Members keys = jobParams->advancedOpsJson.getMemberNames();
     for (auto key = keys.begin(); key != keys.end(); key++) {
         std::string keyStr = *key;
-        if (jobParams->advancedOpsJson.isMember(keyStr) || jobParams->advancedOpsJson[keyStr].isString()) {
-            std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
+        if (!jobParams->advancedOpsJson.isMember(keyStr)) {
+            continue;
+        }
+        Json::Value optValue = jobParams->advancedOpsJson[keyStr];
+        if (optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
+            && optValue["choice"].asString() == "Custom" && optValue.isMember("value")
+            && optValue["value"].isString()) {
+            const char *valueData = optValue["value"].asCString();
+            struct HksBlob base64Blob = {
+                .size = static_cast<uint32_t>(strlen(valueData)),
+                .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
+            };
+            struct HksBlob plainBlob = { 0, nullptr };
+            if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
+                num_options = cupsAddOption(keyStr.c_str(),
+                    ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
+                    num_options, options);
+            }
+            if (plainBlob.data != nullptr) {
+                (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
+                delete[] plainBlob.data;
+            }
+            continue;
+        } else if (optValue.isString()) {
+            std::string valueStr = optValue.asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
                 num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(), num_options, options);
                 continue;

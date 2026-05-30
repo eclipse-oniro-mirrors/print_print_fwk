@@ -50,10 +50,6 @@ ohos_unittest("fwk_print_service_ability_test") {
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_mock_permission.cpp",
   ]
 
-  if (!print_fwk_feature_device_isolation) {
-    sources += [ "${_test_path}/unittest/fwk_print_service_ability_test/mock/mock_hks_api.cpp" ]
-  }
-
   cflags_cc = []
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]

@@ -22,7 +22,7 @@
 #include "print_constant.h"
 
 namespace OHOS::Print {
-int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath);
+int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName);
 
 int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::string &val);
 int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type, const std::string &val,
