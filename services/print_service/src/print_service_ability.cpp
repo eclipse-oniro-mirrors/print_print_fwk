@@ -1920,7 +1920,10 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         return E_PRINT_FILE_IO;
     }
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(printJob->GetOption());
+    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
+    if (fileList.empty()) {
+        fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(printJob->GetOption());
+    }
     securityGuardManager_.receiveBaseInfo(printJob->GetJobId(), callerPkg, fileList);
 
     ret = StartPrintJobInternal(printJob);
