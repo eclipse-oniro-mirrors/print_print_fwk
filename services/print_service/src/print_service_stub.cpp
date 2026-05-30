@@ -206,7 +206,9 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     std::vector<std::string> fileList;
     std::vector<uint32_t> fdList;
 
-    if (data.ReadBool()) {
+    bool hasFileList = false;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadBool(hasFileList), false);
+    if (hasFileList) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadStringVector(&fileList), false);
         PRINT_HILOGD("Current file is %{public}zd", fileList.size());
         if (fileList.size() > PRINT_MAX_PRINT_COUNT) {
@@ -216,7 +218,9 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
         }
     }
 
-    if (data.ReadBool()) {
+    bool hasFdList = false;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadBool(hasFdList), false);
+    if (hasFdList) {
         if (!ReadFdListFromParcel(data, fdList)) {
             reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
             return false;

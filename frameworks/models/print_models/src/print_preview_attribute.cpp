@@ -92,18 +92,16 @@ bool PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
 
 bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
 {
-    bool result = false;
-    auto msgParcel = static_cast<MessageParcel*>(&parcel);
-    if (msgParcel != nullptr) {
-        if (!msgParcel->WriteBool(hasResult_)) {
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasResult_), false);
+    if (hasResult_) {
+        auto msgParcel = static_cast<MessageParcel*>(&parcel);
+        if (msgParcel == nullptr) {
             return false;
         }
-        if (hasResult_) {
-            msgParcel->WriteFileDescriptor(GetResult());
-        }
-        result = previewRange_.Marshalling(parcel);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(msgParcel->WriteFileDescriptor(GetResult()), false);
     }
-    return result;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(previewRange_.Marshalling(parcel), false);
+    return true;
 }
 
 std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::Unmarshalling(Parcel &parcel)

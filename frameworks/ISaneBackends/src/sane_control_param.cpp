@@ -23,14 +23,13 @@ SaneControlParam::SaneControlParam() : option_(0), action_(SANE_ACTION_GET_VALUE
     valueType_(0), valueSize_(0), valueNumber_(0) {}
 bool SaneControlParam::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteInt32(option_);
-    status &= parcel.WriteInt32(static_cast<int32_t>(action_));
-    status &= parcel.WriteInt32(valueType_);
-    status &= parcel.WriteInt32(valueSize_);
-    status &= parcel.WriteInt32(valueNumber_);
-    status &= parcel.WriteString(valueStr_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(option_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(static_cast<int32_t>(action_)), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueSize_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueNumber_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(valueStr_), false);
+    return true;
 }
 
 SaneControlParam* SaneControlParam::Unmarshalling(Parcel &parcel)

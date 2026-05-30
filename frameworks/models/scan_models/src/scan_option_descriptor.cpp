@@ -188,20 +188,9 @@ bool ScanOptionDescriptor::Marshalling(Parcel &parcel) const
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(optionConstraintType_), false);
 
-    if (!parcel.WriteStringVector(optionConstraintString_)) {
-        SCAN_HILOGE("WriteStringVector for optionConstraintString_ failed");
-        return false;
-    }
-
-    if (!parcel.WriteInt32Vector(optionConstraintNumber_)) {
-        SCAN_HILOGE("WriteInt32Vector for optionConstraintNumber_ failed");
-        return false;
-    }
-
-    if (!optionConstraintRange_.Marshalling(parcel)) {
-        SCAN_HILOGE("Marshalling for optionConstraintRange_ failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteStringVector(optionConstraintString_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32Vector(optionConstraintNumber_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(optionConstraintRange_.Marshalling(parcel), false);
     return true;
 }
 

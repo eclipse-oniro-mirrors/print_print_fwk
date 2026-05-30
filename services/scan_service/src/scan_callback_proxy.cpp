@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
-    data.WriteUint32(state);
-    info.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -57,8 +57,8 @@ bool ScanCallbackProxy::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync 
     MessageOption option;
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
-    data.WriteUint32(state);
-    info.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -84,9 +84,9 @@ bool ScanCallbackProxy::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     MessageOption option;
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
-    data.WriteInt32(infos.size());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(infos.size()), false);
     for (size_t i = 0; i < infos.size(); i++) {
-        infos[i].Marshalling(data);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(infos[i].Marshalling(data), false);
     }
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

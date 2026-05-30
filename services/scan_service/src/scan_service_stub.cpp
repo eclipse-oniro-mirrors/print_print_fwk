@@ -303,22 +303,30 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
 bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnExportScanPicture start");
-    std::string scannerId = data.ReadString();
-    int32_t fdCount = data.ReadInt32();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
+    int32_t fdCount = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(fdCount), false);
     std::vector<int32_t> pictureFdList;
     for (int32_t i = 0; i < fdCount; i++) {
-        pictureFdList.push_back(data.ReadFileDescriptor());
+        int fd = data.ReadFileDescriptor();
+        if (fd < 0) {
+            SCAN_HILOGE("ReadFileDescriptor failed at index %{public}d", i);
+            return false;
+        }
+        pictureFdList.push_back(fd);
     }
-    int32_t format = data.ReadInt32();
-    
+    int32_t format = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(format), false);
+
     std::vector<int32_t> exportedFdList;
     int32_t ret = ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
-    
-    reply.WriteInt32(ret);
+
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
-        reply.WriteInt32(static_cast<int32_t>(exportedFdList.size()));
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(static_cast<int32_t>(exportedFdList.size())), false);
         for (int32_t fd : exportedFdList) {
-            reply.WriteFileDescriptor(fd);
+            CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteFileDescriptor(fd), false);
         }
     }
     SCAN_HILOGI("ScanServiceStub::OnExportScanPicture end");

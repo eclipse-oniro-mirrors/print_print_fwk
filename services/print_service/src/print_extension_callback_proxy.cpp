@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,8 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("error: remote is null");
@@ -82,8 +82,8 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    job.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(job.Marshalling(data), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("error: remote is null");
@@ -109,8 +109,8 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId, Print
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("error: remote is null");

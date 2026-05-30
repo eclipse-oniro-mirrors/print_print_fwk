@@ -74,7 +74,7 @@ namespace OHOS::Scan {
     MessageParcel data; \
     MessageParcel reply; \
     MessageOption option; \
-    data.WriteInterfaceToken(GetDescriptor()) \
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_SCAN_RPC_FAILURE) \
 
 #define CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, retVal)                                             \
     do {                                                                                            \

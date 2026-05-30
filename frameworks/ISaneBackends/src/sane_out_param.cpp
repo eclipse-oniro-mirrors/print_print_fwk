@@ -22,13 +22,12 @@ namespace OHOS::Scan {
 SaneOutParam::SaneOutParam() : info_(0), valueNumber_(0), valueBool_(true) {}
 bool SaneOutParam::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteInt32(info_);
-    status &= parcel.WriteInt32(valueNumber_);
-    status &= parcel.WriteInt32Vector(valueNumList_);
-    status &= parcel.WriteString(valueStr_);
-    status &= parcel.WriteBool(valueBool_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(info_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueNumber_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32Vector(valueNumList_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(valueStr_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(valueBool_), false);
+    return true;
 }
 
 SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ int32_t ScanServiceProxy::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("ScanServiceProxy::OpenScanner remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_OPEN_SCANNER, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -124,7 +124,7 @@ int32_t ScanServiceProxy::CloseScanner(const std::string scannerId)
         SCAN_HILOGE("ScanServiceProxy::CloseScanner remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_CLOSE_SCANNER, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -145,8 +145,8 @@ int32_t ScanServiceProxy::GetScanOptionDesc(const std::string scannerId, const i
         SCAN_HILOGE("ScanServiceProxy::GetScanOptionDesc remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
-    data.WriteInt32(optionIndex);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(optionIndex), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_GET_SCAN_OPTION_DESC, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -154,6 +154,10 @@ int32_t ScanServiceProxy::GetScanOptionDesc(const std::string scannerId, const i
         return ret;
     }
     auto scanOptionDescriptor = ScanOptionDescriptor::Unmarshalling(reply);
+    if (scanOptionDescriptor == nullptr) {
+        SCAN_HILOGE("ScanServiceProxy scanOptionDescriptor is a nullptr");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     desc = *scanOptionDescriptor;
     SCAN_HILOGD("ScanServiceProxy GetScanOptionDesc end");
     return ret;
@@ -169,10 +173,10 @@ int32_t ScanServiceProxy::OpScanOptionValue(const std::string scannerId,
         SCAN_HILOGE("ScanServiceProxy::OpScanOptionValue remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
-    data.WriteInt32(optionIndex);
-    data.WriteUint32(op);
-    value.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(optionIndex), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(op), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(value.Marshalling(data), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_OP_SCAN_OPTION_VALUE, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -198,7 +202,7 @@ int32_t ScanServiceProxy::GetScanParameters(const std::string scannerId, ScanPar
         SCAN_HILOGE("ScanServiceProxy::GetScanParameters remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_GET_SCAN_PARAMETERS, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -224,8 +228,8 @@ int32_t ScanServiceProxy::StartScan(const std::string scannerId, const bool &bat
         SCAN_HILOGE("ScanServiceProxy::StartScan remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
-    data.WriteBool(batchMode);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteBool(batchMode), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_START_SCAN, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -245,7 +249,7 @@ int32_t ScanServiceProxy::CancelScan(const std::string scannerId)
         SCAN_HILOGE("ScanServiceProxy::CancelScan remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_CANCEL_SCAN, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -270,9 +274,9 @@ int32_t ScanServiceProxy::On(const std::string taskId, const std::string &type, 
     }
 
     CREATE_PRC_MESSAGE;
-    data.WriteString(taskId);
-    data.WriteString(type);
-    data.WriteRemoteObject(listener->AsObject().GetRefPtr());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(taskId), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(type), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteRemoteObject(listener->AsObject().GetRefPtr()), E_SCAN_RPC_FAILURE);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -301,8 +305,8 @@ int32_t ScanServiceProxy::Off(const std::string taskId, const std::string &type)
     }
 
     CREATE_PRC_MESSAGE;
-    data.WriteString(taskId);
-    data.WriteString(type);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(taskId), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(type), E_SCAN_RPC_FAILURE);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -329,7 +333,7 @@ int32_t ScanServiceProxy::GetScanProgress(const std::string scannerId, ScanProgr
         SCAN_HILOGE("ScanServiceProxy::GetScanProgress remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(scannerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_GET_SCAN_PROGRESS, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -356,8 +360,8 @@ int32_t ScanServiceProxy::AddScanner(const std::string& serialNumber, const std:
         SCAN_HILOGE("ScanServiceProxy::AddScanner remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(serialNumber);
-    data.WriteString(discoverMode);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(serialNumber), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(discoverMode), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_CONNECT_SCANNER, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -377,8 +381,8 @@ int32_t ScanServiceProxy::DeleteScanner(const std::string& serialNumber, const s
         SCAN_HILOGE("ScanServiceProxy::DeleteScanner remote is null");
         return E_SCAN_RPC_FAILURE;
     }
-    data.WriteString(serialNumber);
-    data.WriteString(discoverMode);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(serialNumber), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(discoverMode), E_SCAN_RPC_FAILURE);
     int32_t ret = remote->SendRequest(CMD_DISCONNECT_SCANNER, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_SCAN_NONE) {
@@ -434,12 +438,12 @@ int32_t ScanServiceProxy::ExportScanPicture(const std::string scannerId,
         return E_SCAN_RPC_FAILURE;
     }
     
-    data.WriteString(scannerId);
-    data.WriteInt32(static_cast<int32_t>(pictureFdList.size()));
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(scannerId), E_SCAN_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(static_cast<int32_t>(pictureFdList.size())), E_SCAN_RPC_FAILURE);
     for (int32_t fd : pictureFdList) {
-        data.WriteFileDescriptor(fd);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteFileDescriptor(fd), E_SCAN_RPC_FAILURE);
     }
-    data.WriteInt32(format);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(format), E_SCAN_RPC_FAILURE);
     
     int32_t ret = remote->SendRequest(CMD_EXPORT_SCAN_PICTURE, data, reply, option);
     ret = GetResult(ret, reply);
@@ -448,9 +452,15 @@ int32_t ScanServiceProxy::ExportScanPicture(const std::string scannerId,
         return ret;
     }
 
-    int32_t exportedCount = reply.ReadInt32();
+    int32_t exportedCount = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadInt32(exportedCount), E_SCAN_RPC_FAILURE);
     for (int32_t i = 0; i < exportedCount; i++) {
-        exportedFdList.push_back(reply.ReadFileDescriptor());
+        int fd = reply.ReadFileDescriptor();
+        if (fd < 0) {
+            SCAN_HILOGE("ReadFileDescriptor failed at index %{public}d", i);
+            return E_SCAN_RPC_FAILURE;
+        }
+        exportedFdList.push_back(fd);
     }
     SCAN_HILOGI("ScanServiceProxy ExportScanPicture end, exportedCount=%{public}zu",
         exportedFdList.size());

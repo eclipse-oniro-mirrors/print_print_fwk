@@ -27,13 +27,12 @@ SanePictureData::~SanePictureData() {}
 
 bool SanePictureData::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteUint32(ret_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(ret_), false);
     if (ret_ == SANE_READ_OK) {
-        status &= parcel.WriteUint32(dataBuffer_.size());
-        status &= parcel.WriteBuffer((void*) dataBuffer_.data(), dataBuffer_.size());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(dataBuffer_.size()), false);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBuffer((void*) dataBuffer_.data(), dataBuffer_.size()), false);
     }
-    return status;
+    return true;
 }
 
 SanePictureData* SanePictureData::Unmarshalling(Parcel &parcel)

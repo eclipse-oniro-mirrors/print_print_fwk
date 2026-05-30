@@ -21,12 +21,11 @@
 namespace OHOS::Scan {
 bool SaneDevice::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteString(name_);
-    status &= parcel.WriteString(vendor_);
-    status &= parcel.WriteString(model_);
-    status &= parcel.WriteString(type_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(name_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(vendor_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(model_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(type_), false);
+    return true;
 }
 
 SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
