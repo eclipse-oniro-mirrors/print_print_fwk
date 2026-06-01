@@ -46,8 +46,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCod
 {
     std::set<uint32_t> subStates = {PRINT_JOB_COMPLETED_SUCCESS};
     auto result = GenerateErrorCodes(subStates);
-    ASSERT_EQ(result.size(), 1U);
-    EXPECT_EQ(result[0], "success");
+    EXPECT_TRUE(result.empty());
 }
 
 /**
@@ -165,7 +164,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCod
 
 /**
  * @tc.name: PrintSecurityGuardUtilTest_GenerateErrorCodes_009
- * @tc.desc: Verify GenerateErrorCodes with all COMPLETED subStates.
+ * @tc.desc: Verify GenerateErrorCodes filters out SUCCESS.
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -178,7 +177,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GenerateErrorCod
         PRINT_JOB_COMPLETED_FILE_CORRUPT
     };
     auto result = GenerateErrorCodes(subStates);
-    EXPECT_EQ(result.size(), 4U);
+    EXPECT_EQ(result.size(), 3U);
 }
 
 /**
@@ -392,7 +391,6 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         std::string expected;
     };
     std::vector<TestCase> testCases = {
-        {PRINT_JOB_COMPLETED_SUCCESS, "success"},
         {PRINT_JOB_COMPLETED_FAILED, "failed"},
         {PRINT_JOB_COMPLETED_CANCELLED, "cancelled"},
         {PRINT_JOB_COMPLETED_FILE_CORRUPT, "file_corrupt"},
@@ -403,6 +401,8 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         ASSERT_EQ(result.size(), 1U) << "Failed for subState " << tc.subState;
         EXPECT_EQ(result[0], tc.expected) << "Failed for subState " << tc.subState;
     }
+    // SUCCESS should be filtered out
+    EXPECT_TRUE(GenerateErrorCodes({PRINT_JOB_COMPLETED_SUCCESS}).empty());
 }
 
 /**
