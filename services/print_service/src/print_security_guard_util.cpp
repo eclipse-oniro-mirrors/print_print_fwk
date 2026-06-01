@@ -114,7 +114,13 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     std::vector<std::string> fileList;
     Json::Value optionJson;
     if (PrintJsonUtil::Parse(option, optionJson)) {
-        if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
+        if (PrintJsonUtil::IsMember(optionJson, "fileList") && optionJson["fileList"].isArray()) {
+            for (const auto &file : optionJson["fileList"]) {
+                if (file.isString()) {
+                    fileList.push_back(file.asString());
+                }
+            }
+        } else if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
             fileList.push_back(optionJson["jobName"].asString());
         }
     }

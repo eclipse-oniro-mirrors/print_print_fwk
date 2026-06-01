@@ -1787,6 +1787,19 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
     }
+    std::vector<std::string> fileListForOption = PrintSecurityGuardUtil::ExtractFileListFromOption(
+        nativePrintJob->GetOption());
+    if (!fileListForOption.empty()) {
+        Json::Value optionJson;
+        if (PrintJsonUtil::Parse(nativePrintJob->GetOption(), optionJson)) {
+            Json::Value fileListJson(Json::arrayValue);
+            for (const auto &file : fileListForOption) {
+                fileListJson.append(file);
+            }
+            optionJson["fileList"] = fileListJson;
+            nativePrintJob->SetOption(PrintJsonUtil::WriteString(optionJson));
+        }
+    }
     UpdateQueuedJobList(jobId, nativePrintJob);
     auto printerId = nativePrintJob->GetPrinterId();
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
@@ -1873,6 +1886,18 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
+    std::vector<std::string> fileListForOption = securityGuardManager_.GetFileList(jobId);
+    if (!fileListForOption.empty()) {
+        Json::Value optionJson;
+        if (PrintJsonUtil::Parse(printJob->GetOption(), optionJson)) {
+            Json::Value fileListJson(Json::arrayValue);
+            for (const auto &file : fileListForOption) {
+                fileListJson.append(file);
+            }
+            optionJson["fileList"] = fileListJson;
+            printJob->SetOption(PrintJsonUtil::WriteString(optionJson));
+        }
+    }
     PRINT_HILOGI("[Job Id: %{public}s] set job state to PRINT_JOB_QUEUED, [Printer: %{public}s]",
         jobId.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
     printJob->SetJobState(PRINT_JOB_QUEUED);
