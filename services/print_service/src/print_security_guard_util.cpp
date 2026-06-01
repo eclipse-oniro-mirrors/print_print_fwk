@@ -109,20 +109,26 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
     return std::vector<std::string>(errorSet.begin(), errorSet.end());
 }
 
+static void ExtractFileListFromJsonArray(const Json::Value &array, std::vector<std::string> &fileList)
+{
+    for (const auto &file : array) {
+        if (file.isString()) {
+            fileList.push_back(file.asString());
+        }
+    }
+}
+
 std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const std::string &option)
 {
     std::vector<std::string> fileList;
     Json::Value optionJson;
-    if (PrintJsonUtil::Parse(option, optionJson)) {
-        if (PrintJsonUtil::IsMember(optionJson, "fileList") && optionJson["fileList"].isArray()) {
-            for (const auto &file : optionJson["fileList"]) {
-                if (file.isString()) {
-                    fileList.push_back(file.asString());
-                }
-            }
-        } else if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
-            fileList.push_back(optionJson["jobName"].asString());
-        }
+    if (!PrintJsonUtil::Parse(option, optionJson)) {
+        return fileList;
+    }
+    if (PrintJsonUtil::IsMember(optionJson, "fileList") && optionJson["fileList"].isArray()) {
+        ExtractFileListFromJsonArray(optionJson["fileList"], fileList);
+    } else if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
+        fileList.push_back(optionJson["jobName"].asString());
     }
     return fileList;
 }
