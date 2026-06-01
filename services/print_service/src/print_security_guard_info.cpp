@@ -32,25 +32,16 @@ const std::vector<std::string> &PrintSecurityGuardInfo::GetFileList() const
     return fileList_;
 }
 
-void PrintSecurityGuardInfo::SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos)
+void PrintSecurityGuardInfo::SetFileAuditInfo(const std::vector<std::string> &fileInfos)
 {
     files_ = fileInfos;
 }
 
-const std::vector<FileAuditInfo> &PrintSecurityGuardInfo::GetFileAuditInfo() const
+const std::vector<std::string> &PrintSecurityGuardInfo::GetFileAuditInfo() const
 {
     return files_;
 }
 
-void PrintSecurityGuardInfo::AddBlockedSubState(uint32_t subState)
-{
-    blockedSubStates_.insert(subState);
-}
-
-const std::set<uint32_t>& PrintSecurityGuardInfo::GetBlockedSubStates() const
-{
-    return blockedSubStates_;
-}
 void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
 {
     std::string printerId = printerInfo.GetPrinterId();
@@ -101,11 +92,11 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
 
 void PrintSecurityGuardInfo::SetPrintAuditInfo(
     const PrinterInfo &printerInfo, const PrintJob &printJob,
-    const std::vector<FileAuditInfo> &fileInfos)
+    const std::vector<std::string> &fileInfos)
 {
     files_ = fileInfos;
     duplexMode_ = printJob.GetDuplexMode();
-    std::set<uint32_t> allStates = blockedSubStates_;
+    std::set<uint32_t> allStates;
     allStates.insert(printJob.GetSubState());
     errorCode_ = GenerateErrorCodes(allStates);
     printerName_ = printerInfo.GetPrinterName();
@@ -142,11 +133,9 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     securityGuardInfoJson["jobName"] = jobName_;
 
     Json::Value filesArray(Json::arrayValue);
-    for (const auto &file : files_) {
+    for (const auto &fileName : files_) {
         Json::Value fileObj;
-        fileObj["fileName"] = PrintSecurityGuardUtil::ExtractFileName(file.fileName);
-        fileObj["md5"] = file.md5;
-        fileObj["size"] = static_cast<Json::UInt64>(file.size);
+        fileObj["fileName"] = PrintSecurityGuardUtil::ExtractFileName(fileName);
         filesArray.append(fileObj);
     }
     securityGuardInfoJson["files"] = filesArray;

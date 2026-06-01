@@ -39,12 +39,6 @@ enum PrinterFoundType {
     FROM_USB = 3
 };
 
-struct FileAuditInfo {
-    std::string fileName;
-    std::string md5;
-    uint64_t size = 0;
-};
-
 class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);

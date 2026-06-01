@@ -127,15 +127,11 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     printJob.SetDuplexMode(1);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
 
     EXPECT_EQ(info.files_.size(), 1U);
-    EXPECT_EQ(info.files_[0].fileName, "doc1.pdf");
-    EXPECT_EQ(info.files_[0].md5, "d41d8cd98f00b204e9800998ecf8427e");
-    EXPECT_EQ(info.files_[0].size, 102400U);
+    EXPECT_EQ(info.files_[0], "doc1.pdf");
     EXPECT_EQ(info.duplexMode_, 1U);
     EXPECT_EQ(info.printerName_, "HP LaserJet Pro");
 }
@@ -156,15 +152,11 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     printJob.SetDuplexMode(2);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400},
-        {"doc2.pdf", "098f6bcd4621d373cade4e832627b4f6", 204800}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf", "doc2.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
 
     EXPECT_EQ(info.files_.size(), 2U);
-    EXPECT_EQ(info.files_[1].fileName, "doc2.pdf");
-    EXPECT_EQ(info.files_[1].size, 204800U);
+    EXPECT_EQ(info.files_[1], "doc2.pdf");
 }
 
 /**
@@ -181,11 +173,8 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     printerInfo.SetPrinterName("HP LaserJet Pro");
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    info.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
 
     bool hasOutOfPaper = false;
@@ -209,7 +198,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
 
     EXPECT_TRUE(info.files_.empty());
@@ -217,7 +206,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_SetPrintAuditInfo_005
- * @tc.desc: Verify SetPrintAuditInfo with multiple blocked subStates.
+ * @tc.desc: Verify SetPrintAuditInfo reports only current subState, not accumulated history.
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -227,24 +216,17 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrintSecurityGuardInfo info("callPkg", fileList);
     PrinterInfo printerInfo;
     PrintJob printJob;
-    info.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    info.AddBlockedSubState(PRINT_JOB_BLOCKED_OUT_OF_INK);
     printJob.SetSubState(PRINT_JOB_BLOCKED_JAMMED);
 
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
 
-    EXPECT_GE(info.errorCode_.size(), 2U);
-    bool hasOutOfPaper = false;
-    bool hasOutOfInk = false;
+    // Only current subState should be reported
+    EXPECT_EQ(info.errorCode_.size(), 1U);
     bool hasJammed = false;
     for (const auto &code : info.errorCode_) {
-        if (code == "out_of_paper") hasOutOfPaper = true;
-        if (code == "out_of_ink") hasOutOfInk = true;
         if (code == "jammed") hasJammed = true;
     }
-    EXPECT_TRUE(hasOutOfPaper);
-    EXPECT_TRUE(hasOutOfInk);
     EXPECT_TRUE(hasJammed);
 }
 
@@ -266,9 +248,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     printJob.SetDuplexMode(1);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     info.SetPrintTypeInfo(printerInfo, printJob);
 
@@ -278,7 +258,6 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     EXPECT_NE(json.find("errorCode"), std::string::npos);
     EXPECT_NE(json.find("printerName"), std::string::npos);
     EXPECT_NE(json.find("doc1.pdf"), std::string::npos);
-    EXPECT_NE(json.find("d41d8cd98f00b204e9800998ecf8427e"), std::string::npos);
     EXPECT_NE(json.find("HP LaserJet Pro"), std::string::npos);
 }
 
@@ -296,9 +275,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"/data/local/tmp/doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"/data/local/tmp/doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     info.SetPrintTypeInfo(printerInfo, printJob);
 
@@ -323,7 +300,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     info.SetPrintTypeInfo(printerInfo, printJob);
 

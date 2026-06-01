@@ -57,7 +57,7 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
 
 void PrintSecurityGuardManager::receiveAuditInfo(const std::string jobId,
     const PrinterInfo &printerInfo, const PrintJob &printJob,
-    const std::vector<FileAuditInfo> &fileInfos)
+    const std::vector<std::string> &fileInfos)
 {
     PRINT_HILOGI("receiveAuditInfo jobId:%{public}s, fileCount:%{public}zu",
         jobId.c_str(), fileInfos.size());
@@ -96,7 +96,7 @@ std::vector<std::string> PrintSecurityGuardManager::GetFileList(const std::strin
 }
 
 void PrintSecurityGuardManager::SetFileAuditInfo(const std::string &jobId,
-    const std::vector<FileAuditInfo> &fileInfos)
+    const std::vector<std::string> &fileInfos)
 {
     std::lock_guard<std::mutex> lock(securityMapMutex_);
     auto it = securityMap_.find(jobId);
@@ -105,7 +105,7 @@ void PrintSecurityGuardManager::SetFileAuditInfo(const std::string &jobId,
     }
 }
 
-std::vector<FileAuditInfo> PrintSecurityGuardManager::GetFileAuditInfo(const std::string &jobId) const
+std::vector<std::string> PrintSecurityGuardManager::GetFileAuditInfo(const std::string &jobId) const
 {
     std::lock_guard<std::mutex> lock(securityMapMutex_);
     auto it = securityMap_.find(jobId);
@@ -114,13 +114,54 @@ std::vector<FileAuditInfo> PrintSecurityGuardManager::GetFileAuditInfo(const std
     }
     return {};
 }
-void PrintSecurityGuardManager::AddBlockedSubState(const std::string &jobId, uint32_t subState)
+
+void PrintSecurityGuardManager::CalculateFileAuditInfo(const std::string &jobId)
 {
-    std::lock_guard<std::mutex> lock(securityMapMutex_);
-    auto it = securityMap_.find(jobId);
-    if (it != securityMap_.end() && it->second != nullptr) {
-        it->second->AddBlockedSubState(subState);
+    std::vector<std::string> fileList = GetFileList(jobId);
+    if (fileList.empty()) {
+        PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
+        return;
     }
+    std::vector<std::string> fileNames;
+    for (const auto &fileName : fileList) {
+        if (!PrintSecurityGuardUtil::IsPrintableFile(fileName)) {
+            PRINT_HILOGW("Skip non-printable file: %{public}s", fileName.c_str());
+            continue;
+        }
+        fileNames.push_back(fileName);
+    }
+    if (!fileNames.empty()) {
+        SetFileAuditInfo(jobId, fileNames);
+        PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
+            jobId.c_str(), fileNames.size());
+    } else {
+        PRINT_HILOGW("CalculateFileAuditInfo empty result, jobId: %{public}s", jobId.c_str());
+    }
+}
+
+void PrintSecurityGuardManager::SendJobAuditInfo(const std::string &jobId,
+    const PrinterInfo &printerInfo, const PrintJob &printJob)
+{
+    auto fileInfos = GetFileAuditInfo(jobId);
+    receiveAuditInfo(jobId, printerInfo, printJob, fileInfos);
+}
+
+void PrintSecurityGuardManager::InjectFileListIntoOption(const std::string &jobId, std::string &option)
+{
+    std::vector<std::string> fileList = GetFileList(jobId);
+    if (fileList.empty()) {
+        return;
+    }
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(option, optionJson)) {
+        return;
+    }
+    Json::Value fileListJson(Json::arrayValue);
+    for (const auto &file : fileList) {
+        fileListJson.append(file);
+    }
+    optionJson["fileList"] = fileListJson;
+    option = PrintJsonUtil::WriteString(optionJson);
 }
 
 void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const std::string version,

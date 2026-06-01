@@ -196,10 +196,10 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
-    void CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob);
-    void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+
 
 private:
+    int32_t DoRestartPrintJob(const std::string &oldJobId, std::shared_ptr<PrintJob> &printJob);
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
     void HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
         bool jobInQueue);

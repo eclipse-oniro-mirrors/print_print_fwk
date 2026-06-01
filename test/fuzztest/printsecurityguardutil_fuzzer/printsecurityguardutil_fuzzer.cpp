@@ -60,17 +60,6 @@ void TestGetPrinterType(const uint8_t *data, size_t size, FuzzedDataProvider *da
     (void)result;
 }
 
-void TestFileAuditInfoStruct(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    FileAuditInfo info;
-    info.fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    info.md5 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    info.size = dataProvider->ConsumeIntegral<uint64_t>();
-    (void)info.fileName;
-    (void)info.md5;
-    (void)info.size;
-}
-
 void TestIsPrintableFile(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -96,7 +85,6 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestExtractFileName,
         &TestExtractFileListFromOption,
         &TestGetPrinterType,
-        &TestFileAuditInfoStruct,
         &TestIsPrintableFile,
         &TestGenerateErrorCodesWithCombinedState,
     };

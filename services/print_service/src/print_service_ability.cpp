@@ -565,38 +565,6 @@ int32_t PrintServiceAbility::StartPrint(
     return CallSpooler(fileList, fdList, taskId);
 }
 
-void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob)
-{
-    if (printJob == nullptr) {
-        return;
-    }
-    std::string jobId = printJob->GetJobId();
-    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
-    if (fileList.empty()) {
-        PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
-        return;
-    }
-    std::vector<FileAuditInfo> fileInfos;
-    for (const auto &fileName : fileList) {
-        if (!PrintSecurityGuardUtil::IsPrintableFile(fileName)) {
-            PRINT_HILOGW("Skip non-printable file: %{public}s", fileName.c_str());
-            continue;
-        }
-        FileAuditInfo info;
-        info.fileName = fileName;
-        info.md5 = "";
-        info.size = 0;
-        fileInfos.push_back(info);
-    }
-    if (!fileInfos.empty()) {
-        securityGuardManager_.SetFileAuditInfo(jobId, fileInfos);
-        PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
-            jobId.c_str(), fileInfos.size());
-    } else {
-        PRINT_HILOGW("CalculateFileAuditInfo empty result, jobId: %{public}s", jobId.c_str());
-    }
-}
-
 int32_t PrintServiceAbility::CallSpooler(
     const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId)
 {
@@ -1787,33 +1755,23 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
     }
-    std::vector<std::string> fileListForOption = PrintSecurityGuardUtil::ExtractFileListFromOption(
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(
         nativePrintJob->GetOption());
-    if (!fileListForOption.empty()) {
-        Json::Value optionJson;
-        if (PrintJsonUtil::Parse(nativePrintJob->GetOption(), optionJson)) {
-            Json::Value fileListJson(Json::arrayValue);
-            for (const auto &file : fileListForOption) {
-                fileListJson.append(file);
-            }
-            optionJson["fileList"] = fileListJson;
-            nativePrintJob->SetOption(PrintJsonUtil::WriteString(optionJson));
-        }
-    }
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+    std::string option = nativePrintJob->GetOption();
+    securityGuardManager_.InjectFileListIntoOption(jobId, option);
+    nativePrintJob->SetOption(option);
     UpdateQueuedJobList(jobId, nativePrintJob);
     auto printerId = nativePrintJob->GetPrinterId();
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     ingressPackage = callerPkg;
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
-
-    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(nativePrintJob->GetOption());
     std::vector<uint32_t> fdList;
     nativePrintJob->GetFdList(fdList);
     PRINT_HILOGI("StartNativePrintJob jobName as fileName");
-    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
 
     return StartPrintJobInternal(nativePrintJob);
 }
@@ -1886,18 +1844,9 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
-    std::vector<std::string> fileListForOption = securityGuardManager_.GetFileList(jobId);
-    if (!fileListForOption.empty()) {
-        Json::Value optionJson;
-        if (PrintJsonUtil::Parse(printJob->GetOption(), optionJson)) {
-            Json::Value fileListJson(Json::arrayValue);
-            for (const auto &file : fileListForOption) {
-                fileListJson.append(file);
-            }
-            optionJson["fileList"] = fileListJson;
-            printJob->SetOption(PrintJsonUtil::WriteString(optionJson));
-        }
-    }
+    std::string option = printJob->GetOption();
+    securityGuardManager_.InjectFileListIntoOption(jobId, option);
+    printJob->SetOption(option);
     PRINT_HILOGI("[Job Id: %{public}s] set job state to PRINT_JOB_QUEUED, [Printer: %{public}s]",
         jobId.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
     printJob->SetJobState(PRINT_JOB_QUEUED);
@@ -1941,11 +1890,17 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         return E_PRINT_KIA_INTERCEPTED;
     }
 
+    return DoRestartPrintJob(jobId, printJob);
+}
+
+int32_t PrintServiceAbility::DoRestartPrintJob(const std::string &oldJobId,
+    std::shared_ptr<PrintJob> &printJob)
+{
     if (!CreateNewJobWhenRestart(printJob)) {
         return E_PRINT_FILE_IO;
     }
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
+    std::vector<std::string> fileList = securityGuardManager_.GetFileList(oldJobId);
     if (fileList.empty()) {
         fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(printJob->GetOption());
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob fileList from option, count: %{public}zu",
@@ -1955,12 +1910,11 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
             printJob->GetJobId().c_str(), fileList.size());
     }
     securityGuardManager_.receiveBaseInfo(printJob->GetJobId(), callerPkg, fileList);
-
-    ret = StartPrintJobInternal(printJob);
+    int32_t ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob success, oldJobId: %{public}s",
-            printJob->GetJobId().c_str(), jobId.c_str());
-        CancelPrintJob(jobId);
+            printJob->GetJobId().c_str(), oldJobId.c_str());
+        CancelPrintJob(oldJobId);
     }
     return ret;
 }
@@ -2563,7 +2517,6 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
-    securityGuardManager_.AddBlockedSubState(printJob->GetJobId(), subState);
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     if (isEprint(printJob->GetPrinterId())) {
@@ -2612,18 +2565,6 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
     PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
 }
 
-void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
-{
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
-    if (printerInfo != nullptr) {
-        auto fileInfos = securityGuardManager_.GetFileAuditInfo(jobId);
-        securityGuardManager_.receiveAuditInfo(jobId, *printerInfo, *printJob, fileInfos);
-    } else {
-        PRINT_HILOGW("[Job Id: %{public}s] SendJobAuditInfo printerInfo is null, audit fields not set",
-            jobId.c_str());
-    }
-}
-
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
@@ -2658,7 +2599,13 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
-    SendJobAuditInfo(jobId, printJob);
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
+    if (printerInfo != nullptr) {
+        securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
+    } else {
+        PRINT_HILOGW("[Job Id: %{public}s] SendJobAuditInfo printerInfo is null, audit fields not set",
+            jobId.c_str());
+    }
 
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
@@ -4918,7 +4865,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
         PRINT_HILOGW("Flush cache file failed");
     }
-    CalculateFileAuditInfo(printJob);
+    securityGuardManager_.CalculateFileAuditInfo(printJob->GetJobId());
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
