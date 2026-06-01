@@ -1404,6 +1404,9 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
             && optValue["choice"].asString() == "Custom" && optValue.isMember("value")
             && optValue["value"].isString()) {
             const char *valueData = optValue["value"].asCString();
+            if (valueData == nullptr) {
+                continue;
+            }
             struct HksBlob base64Blob = {
                 .size = static_cast<uint32_t>(strlen(valueData)),
                 .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
