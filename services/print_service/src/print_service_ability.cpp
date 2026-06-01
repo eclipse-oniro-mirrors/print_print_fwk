@@ -1948,6 +1948,11 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
     if (fileList.empty()) {
         fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(printJob->GetOption());
+        PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob fileList from option, count: %{public}zu",
+            printJob->GetJobId().c_str(), fileList.size());
+    } else {
+        PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob fileList from old securityMap, count: %{public}zu",
+            printJob->GetJobId().c_str(), fileList.size());
     }
     securityGuardManager_.receiveBaseInfo(printJob->GetJobId(), callerPkg, fileList);
 
@@ -2613,6 +2618,9 @@ void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::
     if (printerInfo != nullptr) {
         auto fileInfos = securityGuardManager_.GetFileAuditInfo(jobId);
         securityGuardManager_.receiveAuditInfo(jobId, *printerInfo, *printJob, fileInfos);
+    } else {
+        PRINT_HILOGW("[Job Id: %{public}s] SendJobAuditInfo printerInfo is null, audit fields not set",
+            jobId.c_str());
     }
 }
 
@@ -3402,8 +3410,12 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
         if (printerInfo != nullptr) {
             securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
         } else {
-            PRINT_HILOGD("receiveJobStateUpdate printer is empty");
+            PRINT_HILOGW("[Job Id: %{public}s] receiveJobStateUpdate printerInfo is null, audit event skipped",
+                jobId.c_str());
         }
+    } else {
+        PRINT_HILOGD("[Job Id: %{public}s] state %{public}u not COMPLETED/BLOCKED, audit event skipped",
+            jobId.c_str(), jobState);
     }
     if (stateInfo != "") {
         cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(stateInfo);

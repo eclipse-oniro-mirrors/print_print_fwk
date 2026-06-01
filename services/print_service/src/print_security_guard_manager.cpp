@@ -126,12 +126,15 @@ void PrintSecurityGuardManager::AddBlockedSubState(const std::string &jobId, uin
 void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const std::string version,
     const std::string content)
 {
+    PRINT_HILOGI("ReportSecurityInfo called, eventId:%{public}d", eventId);
 #ifdef SECURITY_GUARDE_ENABLE
     PRINT_HILOGI("start to push data to security_guard service, eventId:%{public}d, content:%{private}s",
         eventId, content.c_str());
     auto eventInfo = std::make_shared<Security::SecurityGuard::EventInfo>(eventId, version, content);
     int res = OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(eventInfo);
     PRINT_HILOGI("end to push data to security_guard service status:%{public}d", res);
+#else
+    PRINT_HILOGW("SECURITY_GUARDE_ENABLE not defined, report skipped");
 #endif
 }
 } // namespace OHOS::Print
