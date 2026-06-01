@@ -24,6 +24,8 @@ namespace OHOS::Print {
 
 const size_t AUTH_TAG_SIZE = 16;
 static const std::string KEY_ALIAS_PREFIX = "print_custom_option_key_user_";
+constexpr size_t BASE64_ENCODED_BLOCK_SIZE = 4;
+constexpr size_t BASE64_DECODED_BLOCK_SIZE = 3;
 constexpr size_t BASE64_LAST_PADDING_OFFSET = 1;
 constexpr size_t BASE64_SECOND_LAST_PADDING_OFFSET = 2;
 
@@ -271,7 +273,7 @@ bool HksAdapter::Base64Encode(const struct HksBlob &cipherBlob, SecureBlob &secu
         return false;
     }
     
-    uint32_t outputLen = 4 * ((cipherBlob.size + 2) / 3);
+    uint32_t outputLen = BASE64_ENCODED_BLOCK_SIZE * ((cipherBlob.size + 2) / BASE64_DECODED_BLOCK_SIZE);
     secureValue.Allocate(outputLen);
     
     if (secureValue.data == nullptr) {
@@ -297,7 +299,7 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
         return true;
     }
     
-    if (base64Blob.size % 4 != 0) {
+    if (base64Blob.size % BASE64_ENCODED_BLOCK_SIZE != 0) {
         PRINT_HILOGE("Invalid base64 input size=%{public}zu", base64Blob.size);
         return false;
     }
@@ -312,7 +314,7 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
         paddingCount++;
     }
     
-    size_t decodedLen = base64Blob.size / 4 * 3 - paddingCount;
+    size_t decodedLen = base64Blob.size / BASE64_ENCODED_BLOCK_SIZE * BASE64_DECODED_BLOCK_SIZE - paddingCount;
     cipherBlob.data = new (std::nothrow) uint8_t[decodedLen];
     if (cipherBlob.data == nullptr) {
         PRINT_HILOGE("failed to allocate cipher buffer for base64 decode");
