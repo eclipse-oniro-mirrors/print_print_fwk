@@ -16,18 +16,18 @@
 #include "message_parcel.h"
 #include "sane_out_param.h"
 #include "scan_log.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SaneOutParam::SaneOutParam() : info_(0), valueNumber_(0), valueBool_(true) {}
 bool SaneOutParam::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteInt32(info_);
-    status &= parcel.WriteInt32(valueNumber_);
-    status &= parcel.WriteInt32Vector(valueNumList_);
-    status &= parcel.WriteString(valueStr_);
-    status &= parcel.WriteBool(valueBool_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(info_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueNumber_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32Vector(valueNumList_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(valueStr_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(valueBool_), false);
+    return true;
 }
 
 SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
@@ -37,12 +37,11 @@ SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->info_ = parcel.ReadInt32();
-    obj->valueNumber_ = parcel.ReadInt32();
-    std::vector<int32_t>& value = obj->valueNumList_;
-    parcel.ReadInt32Vector(&value);
-    obj->valueStr_ = parcel.ReadString();
-    obj->valueBool_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->info_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueNumber_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&obj->valueNumList_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->valueStr_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(obj->valueBool_), nullptr);
     return obj;
 }
 }   // namespace OHOS::Scan

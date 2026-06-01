@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 #include "scan_callback_proxy.h"
 
 #include "message_parcel.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS::Scan {
@@ -27,13 +28,10 @@ bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
-    data.WriteUint32(state);
-    info.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -58,12 +56,9 @@ bool ScanCallbackProxy::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync 
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
-    data.WriteUint32(state);
-    info.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -88,13 +83,10 @@ bool ScanCallbackProxy::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
-    data.WriteInt32(infos.size());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(infos.size()), false);
     for (size_t i = 0; i < infos.size(); i++) {
-        infos[i].Marshalling(data);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(infos[i].Marshalling(data), false);
     }
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

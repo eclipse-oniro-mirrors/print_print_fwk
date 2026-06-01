@@ -14,6 +14,7 @@
  */
 
 #include "print_extension_info.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -92,29 +93,32 @@ const std::string &PrintExtensionInfo::GetVersion() const
     return version_;
 }
 
-void PrintExtensionInfo::ReadFromParcel(Parcel &parcel)
+bool PrintExtensionInfo::ReadFromParcel(Parcel &parcel)
 {
-    SetExtensionId(parcel.ReadString());
-    SetVendorId(parcel.ReadString());
-    SetVendorName(parcel.ReadString());
-    SetVendorIcon(parcel.ReadUint32());
-    SetVersion(parcel.ReadString());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(extensionId_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(vendorId_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(vendorName_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(vendorIcon_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(version_), false);
+    return true;
 }
 
 bool PrintExtensionInfo::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetExtensionId());
-    parcel.WriteString(GetVendorId());
-    parcel.WriteString(GetVendorName());
-    parcel.WriteUint32(GetVendorIcon());
-    parcel.WriteString(GetVersion());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetExtensionId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorName()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetVendorIcon()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVersion()), false);
     return true;
 }
 
 std::shared_ptr<PrintExtensionInfo> PrintExtensionInfo::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintExtensionInfo>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

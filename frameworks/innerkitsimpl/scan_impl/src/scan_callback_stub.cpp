@@ -49,7 +49,8 @@ int32_t ScanCallbackStub::OnRemoteRequest(
 
 bool ScanCallbackStub::HandleDeviceInfoEvent(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t state = data.ReadUint32();
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
     auto info = ScanDeviceInfo::Unmarshalling(data);
     if (info == nullptr) {
         SCAN_HILOGE("invalid scaner info object");
@@ -62,7 +63,8 @@ bool ScanCallbackStub::HandleDeviceInfoEvent(MessageParcel &data, MessageParcel 
 
 bool ScanCallbackStub::HandleDeviceInfoSyncEvent(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t state = data.ReadUint32();
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
     auto info = ScanDeviceInfoSync::Unmarshalling(data);
     if (info == nullptr) {
         SCAN_HILOGE("invalid scaner info object");
@@ -76,7 +78,8 @@ bool ScanCallbackStub::HandleDeviceInfoSyncEvent(MessageParcel &data, MessagePar
 bool ScanCallbackStub::HandleSendDeviceList(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<ScanDeviceInfo> infos;
-    int infosSize = data.ReadInt32();
+    int32_t infosSize = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(infosSize), false);
     CHECK_IS_EXCEED_SCAN_RANGE_BOOL(infosSize);
     SCAN_HILOGI("get infosSize : %{public}d", infosSize);
     for (auto i = 0; i < infosSize; i++) {

@@ -16,27 +16,27 @@
 #include "sane_option_descriptor.h"
 #include "scan_log.h"
 #include "message_parcel.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SaneOptionDescriptor::SaneOptionDescriptor() : optionType_(0), optionUnit_(0), optionSize_(0),
     optionCap_(0), optionConstraintType_(0), minValue_(0), maxValue_(0), quantValue_(0) {}
 bool SaneOptionDescriptor::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteString(optionName_);
-    status &= parcel.WriteString(optionTitle_);
-    status &= parcel.WriteString(optionDesc_);
-    status &= parcel.WriteInt32(optionType_);
-    status &= parcel.WriteInt32(optionUnit_);
-    status &= parcel.WriteInt32(optionSize_);
-    status &= parcel.WriteInt32(optionCap_);
-    status &= parcel.WriteInt32(optionConstraintType_);
-    status &= parcel.WriteStringVector(optionConstraintString_);
-    status &= parcel.WriteInt32Vector(optionConstraintNumber_);
-    status &= parcel.WriteInt32(minValue_);
-    status &= parcel.WriteInt32(maxValue_);
-    status &= parcel.WriteInt32(quantValue_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(optionName_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(optionTitle_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(optionDesc_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(optionType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(optionUnit_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(optionSize_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(optionCap_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(optionConstraintType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteStringVector(optionConstraintString_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32Vector(optionConstraintNumber_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(minValue_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(maxValue_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(quantValue_), false);
+    return true;
 }
 
 SaneOptionDescriptor* SaneOptionDescriptor::Unmarshalling(Parcel &parcel)
@@ -46,19 +46,19 @@ SaneOptionDescriptor* SaneOptionDescriptor::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->optionName_ = parcel.ReadString();
-    obj->optionTitle_ = parcel.ReadString();
-    obj->optionDesc_ = parcel.ReadString();
-    obj->optionType_ = parcel.ReadInt32();
-    obj->optionUnit_ = parcel.ReadInt32();
-    obj->optionSize_ = parcel.ReadInt32();
-    obj->optionCap_ = parcel.ReadInt32();
-    obj->optionConstraintType_ = parcel.ReadInt32();
-    parcel.ReadStringVector(&(obj->optionConstraintString_));
-    parcel.ReadInt32Vector(&(obj->optionConstraintNumber_));
-    obj->minValue_ = parcel.ReadInt32();
-    obj->maxValue_ = parcel.ReadInt32();
-    obj->quantValue_ = parcel.ReadInt32();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->optionName_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->optionTitle_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->optionDesc_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->optionType_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->optionUnit_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->optionSize_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->optionCap_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->optionConstraintType_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadStringVector(&obj->optionConstraintString_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&obj->optionConstraintNumber_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->minValue_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->maxValue_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->quantValue_), nullptr);
     return obj;
 }
 

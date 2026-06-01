@@ -60,7 +60,7 @@ public:
     void Dump();
 
 private:
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 private:
     bool hasStartPage_;

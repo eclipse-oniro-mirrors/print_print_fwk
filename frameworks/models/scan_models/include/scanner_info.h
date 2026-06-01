@@ -173,7 +173,7 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 #ifndef TDD_ENABLE
 private:

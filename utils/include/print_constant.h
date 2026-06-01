@@ -88,6 +88,12 @@ namespace OHOS::Print {
         return;                                         \
     }
 
+#define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
+    if (!(parcelOpExp)) { \
+        PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        return retVal; \
+    }
+
 #define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
     if ((ptr) == nullptr) {                                                         \
         PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \

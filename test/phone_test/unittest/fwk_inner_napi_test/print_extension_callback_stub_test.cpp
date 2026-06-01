@@ -17,6 +17,7 @@
 #include "print_manager_client.h"
 #include "iremote_broker.h"
 #include "print_constant.h"
+#include "print_job.h"
 #include "print_log.h"
 #include "print_resolution.h"
 
@@ -141,6 +142,19 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0006, Te
     uint32_t code = static_cast<uint32_t>(PRINT_EXTCB_PRINTJOB);
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
+    PrintJob job;
+    job.SetJobId("test-job");
+    job.SetPrinterId("test-printer");
+    job.SetJobState(PRINT_JOB_PREPARED);
+    job.SetSubState(PRINT_JOB_PREPARED);
+    job.SetCopyNumber(1);
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    pageSize.SetName("A4");
+    pageSize.SetWidth(21000);
+    pageSize.SetHeight(29700);
+    job.SetPageSize(pageSize);
+    EXPECT_TRUE(job.Marshalling(data));
     PrintExtensionCallbackStub callback;
     PrintJobCallback printJobCb = [](const PrintJob &) -> bool { return true; };
     callback.SetPrintJobCallback(printJobCb);

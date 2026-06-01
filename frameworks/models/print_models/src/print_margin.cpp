@@ -14,6 +14,7 @@
  */
 
 #include "print_margin.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -126,49 +127,50 @@ uint32_t PrintMargin::GetRight() const
     return right_;
 }
 
-void PrintMargin::ReadFromParcel(Parcel &parcel)
+bool PrintMargin::ReadFromParcel(Parcel &parcel)
 {
-    hasTop_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasTop_), false);
     if (hasTop_) {
-        SetTop(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(top_), false);
     }
 
-    hasBottom_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasBottom_), false);
     if (hasBottom_) {
-        SetBottom(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(bottom_), false);
     }
 
-    hasLeft_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasLeft_), false);
     if (hasLeft_) {
-        SetLeft(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(left_), false);
     }
 
-    hasRight_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasRight_), false);
     if (hasRight_) {
-        SetRight(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right_), false);
     }
+    return true;
 }
 
 bool PrintMargin::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteBool(hasTop_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasTop_), false);
     if (hasTop_) {
-        parcel.WriteUint32(GetTop());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetTop()), false);
     }
 
-    parcel.WriteBool(hasBottom_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasBottom_), false);
     if (hasBottom_) {
-        parcel.WriteUint32(GetBottom());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetBottom()), false);
     }
 
-    parcel.WriteBool(hasLeft_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasLeft_), false);
     if (hasLeft_) {
-        parcel.WriteUint32(GetLeft());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetLeft()), false);
     }
 
-    parcel.WriteBool(hasRight_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasRight_), false);
     if (hasRight_) {
-        parcel.WriteUint32(GetRight());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetRight()), false);
     }
     return true;
 }
@@ -176,7 +178,9 @@ bool PrintMargin::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintMargin> PrintMargin::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintMargin>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

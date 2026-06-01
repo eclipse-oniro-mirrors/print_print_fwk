@@ -34,8 +34,8 @@ bool KiaInterceptorCallbackProxy::OnCheckPrintJobNeedReject(const int32_t &pid, 
         PRINT_HILOGE("Write descriptor failed");
         return false;
     }
-    data.WriteInt32(pid);
-    data.WriteString(callerAppId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(pid), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(callerAppId), false);
 
     auto remote = Remote();
     if (remote == nullptr) {
@@ -49,7 +49,11 @@ bool KiaInterceptorCallbackProxy::OnCheckPrintJobNeedReject(const int32_t &pid, 
         return false;
     }
 
-    bool result = reply.ReadBool();
+    bool result = false;
+    if (!reply.ReadBool(result)) {
+        PRINT_HILOGE("ReadBool for result failed");
+        return false;
+    }
     PRINT_HILOGD("KiaInterceptorCallbackProxy OnCheckPrintJobNeedReject End, result = %{public}d", result);
     return result;
 }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ bool PrintCallbackProxy::OnCallback()
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    data.WriteInterfaceToken(GetDescriptor());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("SendRequest failed, error: remote is null");
@@ -51,9 +51,9 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info)
     MessageOption option(MessageOption::TF_ASYNC);
 
     PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{private}s]", state, info.GetPrinterId().c_str());
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteUint32(state);
-    info.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -77,9 +77,9 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
     MessageOption option(MessageOption::TF_ASYNC);
 
     PRINT_HILOGD("PrintJob Event state:[%{public}d], subState [%{public}d]", state, info.GetSubState());
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteUint32(state);
-    info.Marshalling(data);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -102,9 +102,9 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(extensionId);
-    data.WriteString(info);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(extensionId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(info), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -127,11 +127,11 @@ bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<P
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    data.WriteInterfaceToken(GetDescriptor());
-    info.Marshalling(data);
-    data.WriteUint32(ppds.size());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(info.Marshalling(data), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(ppds.size()), false);
     for (const auto &ppd : ppds) {
-        ppd.Marshalling(data);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(ppd.Marshalling(data), false);
     }
 
     sptr<IRemoteObject> remote = Remote();
@@ -156,15 +156,12 @@ bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
-    data.WriteString(jobId);
-    oldAttrs.Marshalling(data);
-    newAttrs.Marshalling(data);
-    data.WriteFileDescriptor(fd);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(jobId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(oldAttrs.Marshalling(data), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(newAttrs.Marshalling(data), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteFileDescriptor(fd), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -188,14 +185,11 @@ bool PrintCallbackProxy::OnCallbackAdapterJobStateChanged(const std::string jobI
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
-    data.WriteString(jobId);
-    data.WriteUint32(state);
-    data.WriteUint32(subState);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(jobId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(subState), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -218,12 +212,9 @@ bool PrintCallbackProxy::OnCallbackAdapterGetFile(uint32_t state)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
-    data.WriteUint32(state);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -246,18 +237,15 @@ bool PrintCallbackProxy::OnCallback(const std::vector<PrintSharedHost> &sharedHo
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
     if (sharedHosts.size() > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("too much sharedHosts");
         return false;
     }
-    data.WriteUint32(sharedHosts.size());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(sharedHosts.size()), false);
     for (const auto &host : sharedHosts) {
-        host.Marshalling(data);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(host.Marshalling(data), false);
     }
 
     sptr<IRemoteObject> remote = Remote();
