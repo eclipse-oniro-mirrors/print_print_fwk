@@ -16,6 +16,7 @@
 #include "printer_user_preferences.h"
 #include "print_log.h"
 #include "print_json_util.h"
+#include "print_util.h"
 #include <cstring>
 #include "securec.h"
 
@@ -82,14 +83,7 @@ SecureBlob::~SecureBlob()
 
 void SecureBlob::Clear()
 {
-    if (data != nullptr) {
-        if (size > 0) {
-            (void)memset_s(data, size, 0, size);
-        }
-        delete[] data;
-        data = nullptr;
-    }
-    size = 0;
+    PrintUtil::SecureDeleteBlob(data, size);
 }
 
 void SecureBlob::SetData(const uint8_t *src, uint32_t srcSize)

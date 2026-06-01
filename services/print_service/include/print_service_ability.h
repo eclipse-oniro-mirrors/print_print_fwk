@@ -165,7 +165,6 @@ public:
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
     void HandleWebPrinterUninstall();
-    void SetHksAdapter(const std::shared_ptr<IHksAdapter> &adapter);
     std::shared_ptr<IHksAdapter> GetHksAdapter();
     int32_t GetCurrentUserId();
 

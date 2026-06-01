@@ -212,11 +212,6 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
       hksAdapter_(std::make_shared<HksAdapter>())
 {}
 
-void PrintServiceAbility::SetHksAdapter(const std::shared_ptr<IHksAdapter> &adapter)
-{
-    hksAdapter_ = adapter;
-}
-
 std::shared_ptr<IHksAdapter> PrintServiceAbility::GetHksAdapter()
 {
     return hksAdapter_;
@@ -1425,14 +1420,8 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
         PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
     }
 
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-    if (plainBlob.data != nullptr) {
-        (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
-        delete[] plainBlob.data;
-    }
+    PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
+    PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
 }
 
 bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)

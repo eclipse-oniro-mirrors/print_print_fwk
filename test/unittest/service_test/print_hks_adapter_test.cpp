@@ -398,6 +398,16 @@ HWTEST_F(PrintHksAdapterTest, Base64Decode_ZeroSize_ReturnsTrue, TestSize.Level1
     EXPECT_EQ(cipherBlob.data, nullptr);
 }
 
+HWTEST_F(PrintHksAdapterTest, Base64Decode_InvalidSizeNotMultipleOfFour_ReturnsFalse, TestSize.Level1)
+{
+    uint8_t data[] = "SGVsbG8";
+    struct HksBlob base64Blob = { .size = 7, .data = data };
+    struct HksBlob cipherBlob = { 0, nullptr };
+    
+    bool ret = mockAdapter_->Base64Decode(base64Blob, cipherBlob);
+    EXPECT_FALSE(ret);
+}
+
 HWTEST_F(PrintHksAdapterTest, Base64Decode_DecodeFail_ReturnsFalse, TestSize.Level1)
 {
     uint8_t base64Data[] = "SGVsbG8=";

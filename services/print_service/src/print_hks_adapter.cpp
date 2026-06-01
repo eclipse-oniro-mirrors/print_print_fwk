@@ -16,6 +16,7 @@
 #include "print_hks_adapter.h"
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_util.h"
 #include <openssl/evp.h>
 #include <securec.h>
 
@@ -226,10 +227,7 @@ int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *para
     int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherBlob);
     if (ret != HKS_SUCCESS) {
         PRINT_HILOGE("HksEncrypt failed, ret: %{public}d", ret);
-        (void)memset_s(cipherBlob.data, bufferSize, 0, bufferSize);
-        delete[] cipherBlob.data;
-        cipherBlob.data = nullptr;
-        cipherBlob.size = 0;
+        PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
         return ret;
     }
     
@@ -250,10 +248,7 @@ int32_t HksAdapter::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *para
     int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherBlob, &plainBlob);
     if (ret != HKS_SUCCESS) {
         PRINT_HILOGE("HksDecrypt failed, ret: %{public}d", ret);
-        (void)memset_s(plainBlob.data, bufferSize, 0, bufferSize);
-        delete[] plainBlob.data;
-        plainBlob.data = nullptr;
-        plainBlob.size = 0;
+        PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
         return ret;
     }
     
@@ -300,6 +295,11 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
         cipherBlob.size = 0;
         cipherBlob.data = nullptr;
         return true;
+    }
+    
+    if (base64Blob.size % 4 != 0) {
+        PRINT_HILOGE("Invalid base64 input size=%{public}zu", base64Blob.size);
+        return false;
     }
     
     size_t paddingCount = 0;

@@ -1375,10 +1375,7 @@ bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
 
     int32_t ret = hksAdapter->DecryptCustomOption(serviceAbility->GetCurrentUserId(), cipherBlob, plainBlob);
 
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
+    PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
 
     if (ret == HKS_SUCCESS && plainBlob.data != nullptr) {
         PRINT_HILOGI("decrypted custom option: %{public}s", keyStr.c_str());
@@ -1417,10 +1414,7 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
                     ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
                     num_options, options);
             }
-            if (plainBlob.data != nullptr) {
-                (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
-                delete[] plainBlob.data;
-            }
+            PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
             continue;
         } else if (optValue.isString()) {
             std::string valueStr = optValue.asString();

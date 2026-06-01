@@ -64,6 +64,8 @@ public:
     static bool ValidatePrinterName(const char *name);
 
     static void PrintHistogramBoolean(const std::string& apiName, bool counted);
+
+    static void SecureDeleteBlob(uint8_t *&data, uint32_t &size);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -214,6 +216,22 @@ inline void PrintUtil::PrintHistogramBoolean(const std::string& apiName, bool co
 #ifdef PRINT_API_METRICS_ENABLE
     HISTOGRAM_BOOLEAN(apiName.c_str(), counted);
 #endif
+}
+
+inline void PrintUtil::SecureDeleteBlob(uint8_t *&data, uint32_t &size)
+{
+    if (data == nullptr) {
+        return;
+    }
+    if (size > 0) {
+        errno_t ret = memset_s(data, size, 0, size);
+        if (ret != EOK) {
+            PRINT_HILOGE("memset_s failed, ret: %{public}d", ret);
+        }
+    }
+    delete[] data;
+    data = nullptr;
+    size = 0;
 }
 
 } // namespace OHOS::Print
