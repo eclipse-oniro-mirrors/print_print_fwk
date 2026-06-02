@@ -30,7 +30,7 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
     if (argc > 0) {
         pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
     }
-    if (pos >= 0 && pos < argc) {
+    if (pos < NapiPrintUtils::MAX_ARGC && pos < argc) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, argv[pos], &valueType);
         if (valueType == napi_function) {
