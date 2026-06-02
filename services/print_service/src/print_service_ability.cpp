@@ -2600,12 +2600,17 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
-    if (printerInfo != nullptr) {
-        securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
-    } else {
-        PRINT_HILOGW("[Job Id: %{public}s] SendJobAuditInfo printerInfo is null, audit fields not set",
+    if (printerInfo == nullptr) {
+        printerInfo = std::make_shared<PrinterInfo>();
+        Json::Value optionJson;
+        if (PrintJsonUtil::Parse(printJob->GetOption(), optionJson) &&
+            PrintJsonUtil::IsMember(optionJson, "printerName") && optionJson["printerName"].isString()) {
+            printerInfo->SetPrinterName(optionJson["printerName"].asString());
+        }
+        PRINT_HILOGW("[Job Id: %{public}s] printerInfo not in discovered list, audit may lack printer data",
             jobId.c_str());
     }
+    securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
 
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
@@ -3354,12 +3359,15 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     uint32_t jobState = jobInfo.GetJobState();
     if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
-        if (printerInfo != nullptr) {
-            securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
-        } else {
-            PRINT_HILOGW("[Job Id: %{public}s] receiveJobStateUpdate printerInfo is null, audit event skipped",
-                jobId.c_str());
+        if (printerInfo == nullptr) {
+            printerInfo = std::make_shared<PrinterInfo>();
+            Json::Value optionJson;
+            if (PrintJsonUtil::Parse(jobInfo.GetOption(), optionJson) &&
+                PrintJsonUtil::IsMember(optionJson, "printerName") && optionJson["printerName"].isString()) {
+                printerInfo->SetPrinterName(optionJson["printerName"].asString());
+            }
         }
+        securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
     } else {
         PRINT_HILOGD("[Job Id: %{public}s] state %{public}u not COMPLETED/BLOCKED, audit event skipped",
             jobId.c_str(), jobState);
