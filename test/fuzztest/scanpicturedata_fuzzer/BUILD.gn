@@ -16,13 +16,19 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _scan_service_path = "${print_path}/services/phone_service/scan_service"
+} else {
+  _scan_service_path = "${print_path}/services/scan_service"
+}
+
 ohos_fuzztest("ScanPictureDataFuzzTest") {
   module_out_path = "${fuzz_test_output_path}/concurrent"
 
   fuzz_config_file = "${print_path}/test/fuzztest/scanpicturedata_fuzzer"
 
   include_dirs = [
-    "${print_path}/services/scan_service/include",
+    "${_scan_service_path}/include",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_utils_path}/include",
   ]
@@ -35,7 +41,7 @@ ohos_fuzztest("ScanPictureDataFuzzTest") {
   ]
 
   deps = [
-    "${print_path}/services/scan_service:scan_service_test",
+    "${_scan_service_path}:scan_service_test",
     "${print_path}/frameworks/models/scan_models:scan_models",
   ]
 

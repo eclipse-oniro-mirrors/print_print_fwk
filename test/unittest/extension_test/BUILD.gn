@@ -16,8 +16,10 @@ import("//build/test.gni")
 
 if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service/print_service"
 } else {
   _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services/print_service"
 }
 
 module_output_path = unit_test_output_path
@@ -49,7 +51,7 @@ ohos_unittest("print_ext_test") {
     "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service_test",
+    "${_service_path}:print_service_test",
   ]
 
   external_deps = [
