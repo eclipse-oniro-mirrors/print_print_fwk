@@ -16,6 +16,7 @@
 #include "printer_user_preferences.h"
 #include "print_log.h"
 #include "print_json_util.h"
+#include "print_util.h"
 #include <cstring>
 #include "securec.h"
 
@@ -82,14 +83,7 @@ SecureBlob::~SecureBlob()
 
 void SecureBlob::Clear()
 {
-    if (data != nullptr) {
-        if (size > 0) {
-            (void)memset_s(data, size, 0, size);
-        }
-        delete[] data;
-        data = nullptr;
-    }
-    size = 0;
+    PrintUtil::SecureDeleteBlob(data, size);
 }
 
 void SecureBlob::SetData(const uint8_t *src, uint32_t srcSize)
@@ -104,6 +98,17 @@ void SecureBlob::SetData(const uint8_t *src, uint32_t srcSize)
                 delete[] data;
                 data = nullptr;
             }
+        }
+    }
+}
+
+void SecureBlob::Allocate(uint32_t allocSize)
+{
+    Clear();
+    if (allocSize > 0) {
+        data = new (std::nothrow) uint8_t[allocSize];
+        if (data != nullptr) {
+            size = allocSize;
         }
     }
 }
@@ -287,8 +292,8 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
                 opt.isSet = optJson["isSet"].asBool();
             }
             if (optJson["value"].isString()) {
-                std::string valueStr = optJson["value"].asString();
-                opt.value.SetData(reinterpret_cast<const uint8_t *>(valueStr.c_str()), valueStr.size());
+                opt.value.SetData(reinterpret_cast<const uint8_t *>(
+                    optJson["value"].asString().c_str()), optJson["value"].asString().size());
             }
             customOptions_.push_back(opt);
         }

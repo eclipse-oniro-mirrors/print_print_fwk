@@ -79,6 +79,7 @@ _sources = [
 if (!print_fwk_feature_device_isolation) {
   _sources += [
     "${print_path}/services/print_service/src/print_security_guard_util.cpp",
+    "${print_path}/services/print_service/src/print_hks_adapter.cpp",
   ]
 }
 
@@ -109,6 +110,7 @@ _external_deps = [
   "ipc:ipc_core",
   "jsoncpp:jsoncpp",
   "napi:ace_napi",
+  "openssl:libcrypto_shared",
   "openssl:libssl_shared",
   "os_account:os_account_innerkits",
   "resource_management:global_resmgr",

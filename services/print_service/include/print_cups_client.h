@@ -22,6 +22,8 @@
 #include <json/json.h>
 
 #include "singleton.h"
+#include "hks_api.h"
+#include "hks_param.h"
 #include "print_cups_wrapper.h"
 #include "print_service_ability.h"
 #include "print_job.h"
@@ -249,6 +251,8 @@ private:
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static bool DecryptCustomOption(const std::string &keyStr,
+        const struct HksBlob &base64Blob, struct HksBlob &plainBlob, PrintServiceAbility *serviceAbility);
     static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
     const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();

@@ -22,6 +22,7 @@
 #include "print_page_size.h"
 #include "print_resolution.h"
 #include <json/json.h>
+#include <set>
 
 namespace OHOS::Print {
 class PrinterCapability final : public Parcelable {
@@ -123,6 +124,10 @@ public:
     Json::Value GetPrinterAttrGroupJson();
 
     void ClearCurPrinterAttrGroup();
+
+    bool GetAdvanceOptionsJson(Json::Value &advanceOptionsJson) const;
+
+    std::set<std::string> GetCustomOptionKeys() const;
 
 private:
     bool ReadFromParcel(Parcel &parcel);

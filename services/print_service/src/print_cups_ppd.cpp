@@ -17,6 +17,8 @@
 #include "print_service_converter.h"
 #include "print_log.h"
 #include "bundle_mgr_client.h"
+#include "print_utils.h"
+#include "print_cups_client.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -348,7 +350,8 @@ Json::Value FindCustomParamLimit(ppd_cparam_t *cparam)
     return customParamLimitJs;
 }
 
-void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json::Value& advanceOptJsSingle)
+void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json::Value& advanceOptJsSingle,
+    bool &hasCustomParam)
 {
     Json::Value advanceChoiceJs;
     Json::Value advanceChoiceJsDefaultLanguage;
@@ -369,6 +372,7 @@ void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json:
             (cparam = FindCustomParam(coption))) {
             advanceOptJsSingle["customParamType"] = cparam->type;
             advanceOptJsSingle["customParamLimit"] = FindCustomParamLimit(cparam);
+            hasCustomParam = true;
         }
         advanceChoiceJsDefaultLanguage[choices[k].choice] = choices[k].text;
         advanceChoiceJsCNLanguage[choices[k].choice] = GetCNFromPpdAttr(ppd, opt->keyword, choices[k].choice,
@@ -389,6 +393,8 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     cups_array_t *options_arr = ppd->options;
     Json::Value advanceOptJs;
     Json::Value advanceDefaultJs;
+    bool hasVendorAbility = !printerCaps.GetVendorPrinterPrefAbility().empty() ||
+        !printerCaps.GetVendorJobAttrAbility().empty();
     for (ppd_option_t *opt = (ppd_option_t*)cupsArrayFirst(options_arr);
         opt != nullptr; opt = (ppd_option_t*)cupsArrayNext(options_arr)) {
         if (advanceOptJs.size() > ADVANCE_OPTION_MAXLENGTH) {
@@ -404,7 +410,12 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
         }
         advanceDefaultJs[opt->keyword] = opt->defchoice;
         Json::Value advanceOptJsSingle;
-        GetAdvanceOptJsSingleJSFromOption(ppd, opt, advanceOptJsSingle);
+        bool hasCustomParam = false;
+        GetAdvanceOptJsSingleJSFromOption(ppd, opt, advanceOptJsSingle, hasCustomParam);
+        if (hasVendorAbility && hasCustomParam) {
+            PRINT_HILOGW("has vendor ability, skip adding custom params");
+            continue;
+        }
         advanceOptJs.append(advanceOptJsSingle);
     }
     printerCaps.SetPrinterAttrNameAndValue("advanceOptions", PrintJsonUtil::WriteString(advanceOptJs).c_str());
@@ -680,11 +691,14 @@ void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     ParseQualityAttributesFromPPD(ppd, printerCaps);
     ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
     SetOptionAttributeFromPPD(ppd, printerCaps);
-    ParseVendorAbilityFromPPD(ppd, printerCaps);
 }
 
-int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath)
+int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName)
 {
+    std::string ppdFilePath = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir() + ppdName;
+    if (!PrintUtils::IsPathValid(ppdFilePath)) {
+        return E_PRINT_INVALID_PARAMETER;
+    }
     PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", ppdFilePath.c_str());
     char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
     if (locale == nullptr) {
@@ -703,6 +717,8 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
         ppdClose(ppd);
         return E_PRINT_FILE_IO;
     }
+    ParseVendorAbilityFromPPD(ppd, printerCaps);
+    ValidateAndClearVendorAbility(printerCaps, ppdName);
     GetAdvanceOptionsFromPPD(ppd, printerCaps);
     ParsePrinterAttributesFromPPD(ppd, printerCaps);
 

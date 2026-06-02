@@ -613,6 +613,62 @@ void PrinterCapability::ClearCurPrinterAttrGroup()
     printerAttr_group.clear();
 }
 
+bool PrinterCapability::GetAdvanceOptionsJson(Json::Value &advanceOptionsJson) const
+{
+    if (!hasOption_ || option_.empty()) {
+        PRINT_HILOGE("capability option is empty");
+        return false;
+    }
+
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(option_, capJson)) {
+        PRINT_HILOGE("failed to parse capability option json");
+        return false;
+    }
+
+    if (!capJson.isObject()) {
+        PRINT_HILOGE("capability option json is not an object");
+        return false;
+    }
+
+    if (!capJson["cupsOptions"].isObject()) {
+        PRINT_HILOGE("capability option is not valid cupsOptions json");
+        return false;
+    }
+
+    Json::Value cupsOptions = capJson["cupsOptions"];
+    if (!cupsOptions["advanceOptions"].isString()) {
+        PRINT_HILOGE("advanceOptions is not a string");
+        return false;
+    }
+
+    std::string advanceOptionsStr = cupsOptions["advanceOptions"].asString();
+    if (!PrintJsonUtil::Parse(advanceOptionsStr, advanceOptionsJson) || !advanceOptionsJson.isArray()) {
+        PRINT_HILOGE("failed to parse advanceOptions json or not an array");
+        return false;
+    }
+
+    return true;
+}
+
+std::set<std::string> PrinterCapability::GetCustomOptionKeys() const
+{
+    Json::Value advanceOptionsJson;
+    if (!GetAdvanceOptionsJson(advanceOptionsJson)) {
+        PRINT_HILOGE("failed to get advanceOptions json from capability");
+        return {};
+    }
+
+    std::set<std::string> customOptionKeys;
+    for (const auto &opt : advanceOptionsJson) {
+        if (opt.isObject() && opt["customParamType"].isInt()) {
+            std::string keyword = opt["keyword"].asString();
+            customOptionKeys.insert(keyword);
+        }
+    }
+    return customOptionKeys;
+}
+
 std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize(
     const std::vector<PrintPageSize> &supportedPageSizeList)
 {

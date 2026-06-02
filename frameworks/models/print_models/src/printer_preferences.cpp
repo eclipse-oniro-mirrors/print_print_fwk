@@ -618,4 +618,19 @@ void PrinterPreferences::ConvertJsonToPrinterPreferences(Json::Value &preference
 
     ConvertBoolDefaultJsonToPrinterPreferences(preferencesJson);
 }
+
+bool PrinterPreferences::GetOptionJson(Json::Value &prefOptionsJson) const
+{
+    if (!hasOption_ || option_.empty()) {
+        PRINT_HILOGW("preferences option is empty");
+        return false;
+    }
+
+    if (!PrintJsonUtil::Parse(option_, prefOptionsJson) || !prefOptionsJson.isObject()) {
+        PRINT_HILOGE("failed to parse preferences option json or not an object");
+        return false;
+    }
+
+    return true;
+}
 }  // namespace OHOS::Print

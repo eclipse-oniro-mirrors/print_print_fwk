@@ -26,6 +26,7 @@
 #include "iprint_adapter_inner.h"
 #include "printer_user_preferences.h"
 #include "print_vendor_options_util.h"
+#include "print_json_util.h"
 #include <functional>
 
 namespace OHOS {
@@ -231,17 +232,13 @@ void TestExtractCustomOptionsFromPreferences(const uint8_t *data, size_t size, F
     PrintServiceAbility::GetInstance()->ExtractCustomOptionsFromPreferences(printerInfo, preferences, userPrefs);
 }
 
-void TestGetCustomOptionKeysFromCapability(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestGetCustomOptionKeys(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     PrinterCapability capability;
     std::string capOption = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     capability.SetOption(capOption);
-    printerInfo.SetCapability(capability);
     
-    PrintServiceAbility::GetInstance()->GetCustomOptionKeysFromCapability(printerInfo);
+    capability.GetCustomOptionKeys();
 }
 
 void TestExtractCustomOptionsFromPreferenceJson(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -259,100 +256,7 @@ void TestExtractCustomOptionsFromPreferenceJson(const uint8_t *data, size_t size
         ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
 }
 
-void TestEncryptCustomOptionValue(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string plainText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    struct HksBlob plainBlob = { (uint32_t)plainText.size(), (uint8_t *)plainText.data() };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    PrintServiceAbility::GetInstance()->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-}
-
-void TestDecryptCustomOptionValue(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string cipherText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    struct HksBlob cipherBlob = { (uint32_t)cipherText.size(), (uint8_t *)cipherText.data() };
-    struct HksBlob plainBlob = { 0, nullptr };
-    PrintServiceAbility::GetInstance()->DecryptCustomOptionValue(cipherBlob, plainBlob);
-    if (plainBlob.data != nullptr) {
-        (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
-        delete[] plainBlob.data;
-    }
-}
-
-void TestInitGenParamSet(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    struct HksParamSet *paramSet = nullptr;
-    PrintServiceAbility::GetInstance()->InitGenParamSet(&paramSet);
-    if (paramSet != nullptr) {
-        HksFreeParamSet(&paramSet);
-    }
-}
-
-void TestInitCipherParamSet(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    struct HksParamSet *paramSet = nullptr;
-    uint32_t purpose = dataProvider->ConsumeIntegralInRange<uint32_t>(0, 1);
-    PrintServiceAbility::GetInstance()->InitCipherParamSet(&paramSet, purpose);
-    if (paramSet != nullptr) {
-        HksFreeParamSet(&paramSet);
-    }
-}
-
-void TestDoEncrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    static const std::string keyAliasStr = "print_custom_option_key_test";
-    struct HksBlob keyAlias = {
-        .size = keyAliasStr.size(),
-        .data = (uint8_t *)keyAliasStr.data()
-    };
-    
-    struct HksParamSet *encryptParamSet = nullptr;
-    int32_t ret = PrintServiceAbility::GetInstance()->InitCipherParamSet(&encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT);
-    if (ret != HKS_SUCCESS || encryptParamSet == nullptr) {
-        return;
-    }
-    
-    std::string plainText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    struct HksBlob plainBlob = { (uint32_t)plainText.size(), (uint8_t *)plainText.data() };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    PrintServiceAbility::GetInstance()->DoEncrypt(&keyAlias, encryptParamSet, plainBlob, cipherBlob);
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-    HksFreeParamSet(&encryptParamSet);
-}
-
-void TestDoDecrypt(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    static const std::string keyAliasStr = "print_custom_option_key_test";
-    struct HksBlob keyAlias = {
-        .size = keyAliasStr.size(),
-        .data = (uint8_t *)keyAliasStr.data()
-    };
-    
-    struct HksParamSet *decryptParamSet = nullptr;
-    int32_t ret = PrintServiceAbility::GetInstance()->InitCipherParamSet(&decryptParamSet, HKS_KEY_PURPOSE_DECRYPT);
-    if (ret != HKS_SUCCESS || decryptParamSet == nullptr) {
-        return;
-    }
-    
-    std::string cipherText = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    struct HksBlob cipherBlob = { (uint32_t)cipherText.size(), (uint8_t *)cipherText.data() };
-    struct HksBlob plainBlob = { 0, nullptr };
-    PrintServiceAbility::GetInstance()->DoDecrypt(&keyAlias, decryptParamSet, cipherBlob, plainBlob);
-    if (plainBlob.data != nullptr) {
-        (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
-        delete[] plainBlob.data;
-    }
-    HksFreeParamSet(&decryptParamSet);
-}
-
-void TestDecryptAndFillCustomOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestFillCustomOptionsToJson(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrinterUserPreferences userPrefs;
     std::string valueStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -360,7 +264,33 @@ void TestDecryptAndFillCustomOptions(const uint8_t *data, size_t size, FuzzedDat
     value.SetData((const uint8_t *)valueStr.c_str(), valueStr.size());
     userPrefs.SetCustomOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH), value);
     Json::Value opsJson;
-    PrintServiceAbility::GetInstance()->DecryptAndFillCustomOptions(userPrefs, opsJson);
+    PrintServiceAbility::GetInstance()->FillCustomOptionsToJson(userPrefs, opsJson);
+}
+
+void TestProcessSingleCustomOption(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    
+    PrinterUserPreferences userPrefs;
+    
+    std::string choice = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string value = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    
+    Json::Value optionJson;
+    optionJson["choice"] = choice;
+    optionJson["value"] = value;
+    std::string optionJsonStr = PrintJsonUtil::WriteString(optionJson);
+    
+    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, optionJsonStr, userPrefs);
+    
+    std::string invalidJsonStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, invalidJsonStr, userPrefs);
+    
+    std::string emptyValueJson = "{\"choice\":\"Custom\",\"value\":\"\"}";
+    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, emptyValueJson, userPrefs);
+    
+    std::string nonCustomEmptyJson = "{\"choice\":\"Standard\",\"value\":\"\"}";
+    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, nonCustomEmptyJson, userPrefs);
 }
 
 void TestPrinterUserPreferencesSetGetUserId(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -500,15 +430,10 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
         &TestProcessVendorOptionsForPreference,
         &TestNoParmFuncs,
         &TestExtractCustomOptionsFromPreferences,
-        &TestGetCustomOptionKeysFromCapability,
+        &TestGetCustomOptionKeys,
         &TestExtractCustomOptionsFromPreferenceJson,
-        &TestEncryptCustomOptionValue,
-        &TestDecryptCustomOptionValue,
-        &TestInitGenParamSet,
-        &TestInitCipherParamSet,
-        &TestDoEncrypt,
-        &TestDoDecrypt,
-        &TestDecryptAndFillCustomOptions,
+        &TestFillCustomOptionsToJson,
+        &TestProcessSingleCustomOption,
         &TestPrinterUserPreferencesSetGetUserId,
         &TestPrinterUserPreferencesSetGetPrinterId,
         &TestPrinterUserPreferencesVendorOptions,
