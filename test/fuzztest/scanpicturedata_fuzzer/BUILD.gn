@@ -41,7 +41,7 @@ ohos_fuzztest("ScanPictureDataFuzzTest") {
   ]
 
   deps = [
-    "${_scan_service_path}:scan_service_test",
+    "${print_path}/services/scan_service:scan_service_test",
     "${print_path}/frameworks/models/scan_models:scan_models",
   ]
 
