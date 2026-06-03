@@ -74,9 +74,11 @@
         "image_framework",
         "data_share",
         "enterprise_device_management",
-        "security_guard",
         "huks",
-        "api_metrics"
+        "api_metrics",
+        "ets_frontend",
+        "netmanager_base",
+        "relational_store"
       ],
       "third_party": [
         "zlib"
