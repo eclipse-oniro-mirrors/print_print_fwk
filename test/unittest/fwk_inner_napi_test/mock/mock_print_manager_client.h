@@ -23,7 +23,7 @@ namespace Print {
 class MockPrintManagerClient final : public PrintManagerClient {
 public:
     MOCK_METHOD0(LoadServer, bool());
-    MOCK_METHOD0(GetPrintServiceProxy, bool());
+    MOCK_METHOD0(GetPrintServiceProxy, sptr<IPrintService>());
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -17,6 +17,7 @@
 #define JS_PRINT_EXTENSION_H
 
 #include <initializer_list>
+#include <memory>
 #include <mutex>
 
 #include "napi/native_api.h"
@@ -33,7 +34,7 @@ class JsRuntime;
 /**
  * @brief Basic Print components.
  */
-class JsPrintExtension : public PrintExtension, public std::enable_shared_from_this<JsPrintExtension> {
+class JsPrintExtension : public PrintExtension {
 public:
     JsPrintExtension(JsRuntime &jsRuntime);
     virtual ~JsPrintExtension() override;
@@ -129,7 +130,7 @@ private:
 
     JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
-    static JsPrintExtension *jsExtension_;
+    static std::weak_ptr<JsPrintExtension> jsExtension_;
     static std::mutex mtx;
     std::string extensionId_;
 };

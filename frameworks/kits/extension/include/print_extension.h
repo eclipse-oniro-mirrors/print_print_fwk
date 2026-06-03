@@ -25,8 +25,7 @@ class Runtime;
 /**
  * @brief Basic Print components.
  */
-class PrintExtension : public ExtensionBase<PrintExtensionContext>,
-                       public std::enable_shared_from_this<PrintExtension> {
+class PrintExtension : public ExtensionBase<PrintExtensionContext> {
 public:
     PrintExtension() = default;
     virtual ~PrintExtension() = default;

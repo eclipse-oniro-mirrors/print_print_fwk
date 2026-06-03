@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <map>
 #include <mutex>
+#include <shared_mutex>
 
 #include "want.h"
 #include "iprint_callback.h"
@@ -121,7 +122,7 @@ public:
 
     int32_t SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb);
 
-    void LoadServerSuccess();
+    void LoadServerSuccess(const sptr<IRemoteObject> &remoteObject = nullptr);
     void LoadServerFail();
     void SetProxy(const sptr<IRemoteObject> &obj);
     void ResetProxy();
@@ -153,12 +154,12 @@ public:
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);
     virtual bool LoadServer();
-    virtual bool GetPrintServiceProxy();
+    virtual sptr<IPrintService> GetPrintServiceProxy();
     int32_t runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func);
 #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
 private:
-    std::recursive_mutex proxyLock_;
+    std::shared_mutex proxyLock_;
     sptr<IPrintService> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;
 

@@ -53,32 +53,52 @@ int32_t PrintExtensionCallbackStub::OnRemoteRequest(
 
 bool PrintExtensionCallbackStub::OnCallback()
 {
-    if (extCb_ != nullptr) {
-        return extCb_();
+    PrintExtCallback localCb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        localCb = extCb_;
+    }
+    if (localCb != nullptr) {
+        return localCb();
     }
     return false;
 }
 
 bool PrintExtensionCallbackStub::OnCallback(const std::string &printerId)
 {
-    if (cb_ != nullptr) {
-        return cb_(printerId);
+    PrinterCallback localCb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        localCb = cb_;
+    }
+    if (localCb != nullptr) {
+        return localCb(printerId);
     }
     return false;
 }
 
 bool PrintExtensionCallbackStub::OnCallback(const PrintJob &job)
 {
-    if (jobCb_ != nullptr) {
-        return jobCb_(job);
+    PrintJobCallback localCb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        localCb = jobCb_;
+    }
+    if (localCb != nullptr) {
+        return localCb(job);
     }
     return false;
 }
 
 bool PrintExtensionCallbackStub::OnCallback(const std::string &printerId, PrinterCapability &cap)
 {
-    if (capability_ != nullptr) {
-        if (capability_(printerId, cap)) {
+    PrinterCapabilityCallback localCb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        localCb = capability_;
+    }
+    if (localCb != nullptr) {
+        if (localCb(printerId, cap)) {
             return true;
         }
     }
@@ -87,21 +107,25 @@ bool PrintExtensionCallbackStub::OnCallback(const std::string &printerId, Printe
 
 void PrintExtensionCallbackStub::SetExtCallback(PrintExtCallback cb)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     extCb_ = cb;
 }
 
 void PrintExtensionCallbackStub::SetPrintJobCallback(PrintJobCallback cb)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     jobCb_ = cb;
 }
 
 void PrintExtensionCallbackStub::SetPrinterCallback(PrinterCallback cb)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     cb_ = cb;
 }
 
 void PrintExtensionCallbackStub::SetCapabilityCallback(PrinterCapabilityCallback cb)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     capability_ = cb;
 }
 

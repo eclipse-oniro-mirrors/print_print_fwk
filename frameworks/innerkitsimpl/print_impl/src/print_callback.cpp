@@ -22,11 +22,13 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), adapter_(nullptr)
+PrintCallback::PrintCallback(napi_env env, napi_ref ref)
+    : env_(env), ref_(ref), mutex_(std::make_shared<std::mutex>()), adapter_(nullptr)
 {
 }
 
-PrintCallback::PrintCallback(PrintDocumentAdapter *adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
+PrintCallback::PrintCallback(PrintDocumentAdapter *adapter)
+    : env_(nullptr), ref_(nullptr), mutex_(std::make_shared<std::mutex>()), adapter_(adapter)
 {
 }
 
@@ -40,7 +42,8 @@ PrintCallback::~PrintCallback()
     } else if (nativePrintJobChange_cb != nullptr) {
         nativePrintJobChange_cb = nullptr;
     } else {
-        std::lock_guard<std::mutex> autoLock(mutex_);
+        auto mutexPtr = mutex_;
+        std::lock_guard<std::mutex> autoLock(*mutexPtr);
         Param *param = new (std::nothrow) Param;
         if (param == nullptr) {
             return;
@@ -212,10 +215,10 @@ bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     }
     
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(*mutex_);
         param->env = env_;
         param->ref = ref_;
-        param->mutexPtr = &mutex_;
+        param->mutexPtr = mutex_;
         paramFun(param);
     }
 

@@ -135,10 +135,10 @@ Scan_ScannerOptions *OH_Scan_GetScannerParameter(const char *scannerId, int32_t 
     auto &context = ScanContext::GetInstance();
     std::string deviceId(scannerId);
     auto cachedOptions = context.GetScannerOptions(deviceId);
-    if (cachedOptions != nullptr) {
+    if (cachedOptions) {
         SCAN_HILOGI("Device parameters have been obtained.");
         *errorCode = SCAN_ERROR_NONE;
-        return cachedOptions;
+        return cachedOptions.get();
     }
     int32_t scannerParaCount = 0;
     int32_t status = context.GetScannerParaCount(deviceId, scannerParaCount);
@@ -164,8 +164,9 @@ Scan_ScannerOptions *OH_Scan_GetScannerParameter(const char *scannerId, int32_t 
         *errorCode = SCAN_ERROR_GENERIC_FAILURE;
         return nullptr;
     }
+    auto optionsPtr = context.CreateScannerOptionsSharedPtr(scaParaOptions);
     context.SetScanParaTable(scannerId, std::move(paraTable));
-    context.SetScannerOptions(deviceId, scaParaOptions);
+    context.SetScannerOptions(deviceId, std::move(optionsPtr));
     *errorCode = SCAN_ERROR_NONE;
     return scaParaOptions;
 }

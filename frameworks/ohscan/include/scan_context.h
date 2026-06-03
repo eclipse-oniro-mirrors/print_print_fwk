@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <mutex>
+#include <memory>
 #include "ohscan.h"
 #include "scanner_info.h"
 #include "scan_option_descriptor.h"
@@ -49,8 +50,9 @@ public:
     Scan_ScannerOptions* ConvertToScannerOptions(ScanParaTable& paraTable);
     int32_t GetScannerParaCount(const std::string& deviceId, int32_t& scannerParaCount);
     int32_t GetScannerParameter(const std::string& deviceId, int32_t scannerParaCount, ScanParaTable& paraTable);
-    void SetScannerOptions(const std::string& scannerId, Scan_ScannerOptions* options);
-    Scan_ScannerOptions* GetScannerOptions(const std::string& scannerId);
+    void SetScannerOptions(const std::string& scannerId, std::shared_ptr<Scan_ScannerOptions> options);
+    std::shared_ptr<Scan_ScannerOptions> GetScannerOptions(const std::string& scannerId);
+    std::shared_ptr<Scan_ScannerOptions> CreateScannerOptionsSharedPtr(Scan_ScannerOptions* options);
     void SetScanParaTable(const std::string& scannerId, std::unique_ptr<ScanParaTable> table);
     const std::string& GetRegisterType();
     void Clear();
@@ -67,14 +69,14 @@ private:
     Scan_ScannerOptions* CreateScannerOptions(int32_t& optionCount);
     bool CopySingleBuf(char* destBuf, const char* srcBuf, size_t bufferSize);
     bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t& optionCount, ScanParaTable& paraTable);
-    void FreeScannerOptionsMemory(Scan_ScannerOptions* scannerOptions);
-    ScanParaTable* GetScanParaTable(const std::string& scannerId);
+    static void FreeScannerOptionsMemory(Scan_ScannerOptions* scannerOptions);
+    
     std::string GetPhysicalUnitDesc(uint32_t physicalUnit);
     std::string SetRangeStrInParaTable(const ScanOptionDescriptor& desc,
         ScanParaTable& paraTable, const int32_t& buffLength);
 
     mutable std::mutex mutex_;
-    std::map<std::string, Scan_ScannerOptions*> exScanParaTables_;
+    std::map<std::string, std::shared_ptr<Scan_ScannerOptions>> exScanParaTables_;
     std::map<std::string, std::unique_ptr<ScanParaTable>> innerScanParaTables_;
     Scan_ScannerDiscoveryCallback discoverCallback_ = nullptr;
 };

@@ -37,7 +37,7 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-JsPrintExtension *JsPrintExtension::jsExtension_ = nullptr;
+std::weak_ptr<JsPrintExtension> JsPrintExtension::jsExtension_;
 std::mutex JsPrintExtension::mtx;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
@@ -45,18 +45,13 @@ using namespace OHOS::Print;
 JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runtime)
 {
     PRINT_HILOGI("JsPrintExtension begin Create");
-    jsExtension_ = new JsPrintExtension(static_cast<JsRuntime &>(*runtime));
-    return jsExtension_;
+    return new JsPrintExtension(static_cast<JsRuntime &>(*runtime));
 }
 
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
     extensionId_("") {}
 JsPrintExtension::~JsPrintExtension()
 {
-    std::lock_guard<std::mutex> lock(mtx);
-    if (jsExtension_ != nullptr) {
-        jsExtension_ = nullptr;
-    }
     if (jsObj_) {
         jsRuntime_.FreeNativeReference(std::move(jsObj_));
     }
@@ -70,6 +65,11 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
 {
     PRINT_HILOGI("JsPrintExtension begin Init");
     PrintExtension::Init(record, application, handler, token);
+
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        jsExtension_ = std::static_pointer_cast<JsPrintExtension>(shared_from_this());
+    }
 
     HandleScope handleScope(jsRuntime_);
     if (!InitExtensionObj(jsRuntime_)) {
@@ -205,18 +205,21 @@ bool JsPrintExtension::RegisterHelper(
 
 void JsPrintExtension::OnStop()
 {
-    PrintExtension::OnStop();
-    PRINT_HILOGI("JsPrintExtension OnStop begin.");
     auto context = GetContext();
     if (context == nullptr) {
-        PRINT_HILOGE("Failed to get context");
+        PRINT_HILOGE("Extension not initialized, skip OnStop");
         return;
     }
+    PrintExtension::OnStop();
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        jsExtension_.reset();
+    }
+    PRINT_HILOGI("JsPrintExtension OnStop begin.");
     bool ret = ConnectionManager::GetInstance().DisconnectCaller(context->GetToken());
     if (ret) {
         PRINT_HILOGD("The Print extension connection is not disconnected.");
     }
-    PRINT_HILOGD("%{public}s end.", __func__);
 }
 
 sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
@@ -312,17 +315,22 @@ void JsPrintExtension::GetSrcPath(std::string &srcPath)
 bool JsPrintExtension::Callback(std::string funcName)
 {
     PRINT_HILOGI("JsPrintExtension call %{public}s", funcName.c_str());
-    std::lock_guard<std::mutex> lock(mtx);
-    if (JsPrintExtension::jsExtension_ == nullptr) {
+    std::shared_ptr<JsPrintExtension> local;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        local = jsExtension_.lock();
+    }
+    if (!local) {
         return false;
     }
-    napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
+    napi_env env = local->jsRuntime_.GetNapiEnv();
+    PRINT_CHECK_NULL_AND_RETURN(env, false);
     WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
     if (workParam == nullptr) {
         PRINT_HILOGE("workParam is a nullptr");
         return false;
     }
-    auto workCb = [](WorkParam *param) {
+    auto workCb = [local](WorkParam *param) {
         if (param == nullptr) {
             PRINT_HILOGE("param is a nullptr");
             return;
@@ -334,9 +342,8 @@ bool JsPrintExtension::Callback(std::string funcName)
             return;
         }
         napi_value arg[] = { 0 };
-        std::lock_guard<std::mutex> lock(mtx);
-        if (JsPrintExtension::jsExtension_ != nullptr) {
-            JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ZERO);
+        if (local) {
+            local->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ZERO);
         }
         napi_close_handle_scope(param->env, scope);
     };
@@ -352,11 +359,16 @@ bool JsPrintExtension::Callback(std::string funcName)
 bool JsPrintExtension::Callback(const std::string funcName, const std::string &printerId)
 {
     PRINT_HILOGD("call %{public}s", funcName.c_str());
-    std::lock_guard<std::mutex> lock(mtx);
-    if (JsPrintExtension::jsExtension_ == nullptr) {
+    std::shared_ptr<JsPrintExtension> local;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        local = jsExtension_.lock();
+    }
+    if (!local) {
         return false;
     }
-    napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
+    napi_env env = local->jsRuntime_.GetNapiEnv();
+    PRINT_CHECK_NULL_AND_RETURN(env, false);
     WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
     if (workParam == nullptr) {
         PRINT_HILOGE("workParam is a nullptr");
@@ -364,7 +376,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
     }
     workParam->printerId = printerId;
     
-    auto workCb = [](WorkParam *param) {
+    auto workCb = [local](WorkParam *param) {
         if (param == nullptr) {
             PRINT_HILOGE("param is a nullptr");
             return;
@@ -377,9 +389,8 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
         }
         napi_value id = OHOS::AppExecFwk::WrapStringToJS(param->env, param->printerId);
         napi_value arg[] = { id };
-        std::lock_guard<std::mutex> lock(mtx);
-        if (JsPrintExtension::jsExtension_ != nullptr) {
-            JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
+        if (local) {
+            local->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
         }
         napi_close_handle_scope(param->env, scope);
     };
@@ -396,11 +407,16 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
 bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJob &job)
 {
     PRINT_HILOGD("call %{public}s", funcName.c_str());
-    std::lock_guard<std::mutex> lock(mtx);
-    if (JsPrintExtension::jsExtension_ == nullptr) {
+    std::shared_ptr<JsPrintExtension> local;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        local = jsExtension_.lock();
+    }
+    if (!local) {
         return false;
     }
-    napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
+    napi_env env = local->jsRuntime_.GetNapiEnv();
+    PRINT_CHECK_NULL_AND_RETURN(env, false);
     WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
     if (workParam == nullptr) {
         PRINT_HILOGE("workParam is a nullptr");
@@ -408,7 +424,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     }
     workParam->job = job;
     
-    auto workCb = [](WorkParam *param) {
+    auto workCb = [local](WorkParam *param) {
         if (param == nullptr) {
             PRINT_HILOGE("param is a nullptr");
             return;
@@ -421,9 +437,8 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
         }
         napi_value jobObject = PrintJobHelper::MakeJsObject(param->env, param->job);
         napi_value arg[] = { jobObject };
-        std::lock_guard<std::mutex> lock(mtx);
-        if (JsPrintExtension::jsExtension_ != nullptr) {
-            JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
+        if (local) {
+            local->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
         }
         napi_close_handle_scope(param->env, scope);
     };
@@ -443,10 +458,15 @@ int32_t JsPrintExtension::RegisterDiscoveryCb()
     int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStartDiscoverPrinter", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            return JsPrintExtension::jsExtension_->Callback("onStartDiscoverPrinter");
+            return local->Callback("onStartDiscoverPrinter");
     });
     if (ret) {
         return ret;
@@ -454,10 +474,15 @@ int32_t JsPrintExtension::RegisterDiscoveryCb()
     ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStopDiscoverPrinter", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            return JsPrintExtension::jsExtension_->Callback("onStopDiscoverPrinter");
+            return local->Callback("onStopDiscoverPrinter");
     });
     return ret;
 }
@@ -467,11 +492,16 @@ int32_t JsPrintExtension::RegisterConnectionCb()
     int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onConnectPrinter", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
-            return JsPrintExtension::jsExtension_->Callback("onConnectPrinter", realPrinterId);
+            std::string realPrinterId = PrintUtils::GetLocalId(printId, local->extensionId_);
+            return local->Callback("onConnectPrinter", realPrinterId);
     });
     if (ret) {
         return ret;
@@ -479,11 +509,16 @@ int32_t JsPrintExtension::RegisterConnectionCb()
     ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onDisconnectPrinter", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
-            return JsPrintExtension::jsExtension_->Callback("onDisconnectPrinter", realPrinterId);
+            std::string realPrinterId = PrintUtils::GetLocalId(printId, local->extensionId_);
+            return local->Callback("onDisconnectPrinter", realPrinterId);
     });
     return ret;
 }
@@ -493,10 +528,15 @@ int32_t JsPrintExtension::RegisterPrintJobCb()
     int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStartPrintJob", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            return JsPrintExtension::jsExtension_->Callback("onStartPrintJob", job);
+            return local->Callback("onStartPrintJob", job);
     });
     if (ret) {
         return ret;
@@ -504,10 +544,15 @@ int32_t JsPrintExtension::RegisterPrintJobCb()
     ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onCancelPrintJob", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            return JsPrintExtension::jsExtension_->Callback("onCancelPrintJob", job);
+            return local->Callback("onCancelPrintJob", job);
     });
     return ret;
 }
@@ -517,10 +562,15 @@ int32_t JsPrintExtension::RegisterPreviewCb()
     return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onRequestPreview", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            return JsPrintExtension::jsExtension_->Callback("onRequestPreview", job);
+            return local->Callback("onRequestPreview", job);
     });
 }
 
@@ -529,11 +579,16 @@ int32_t JsPrintExtension::RegisterQueryCapCb()
     return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onRequestPrinterCapability", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
-            return JsPrintExtension::jsExtension_->Callback("onRequestPrinterCapability", realPrinterId);
+            std::string realPrinterId = PrintUtils::GetLocalId(printId, local->extensionId_);
+            return local->Callback("onRequestPrinterCapability", realPrinterId);
     });
 }
 
@@ -542,10 +597,15 @@ int32_t JsPrintExtension::RegisterExtensionCb()
     return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onDestroy", PRINT_API_COUNTED);
-            if (JsPrintExtension::jsExtension_ == nullptr) {
+            std::shared_ptr<JsPrintExtension> local;
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                local = JsPrintExtension::jsExtension_.lock();
+            }
+            if (!local) {
                 return false;
             }
-            JsPrintExtension::jsExtension_->OnStop();
+            local->OnStop();
             return true;
     });
 }
