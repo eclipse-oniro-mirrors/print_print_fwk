@@ -35,6 +35,8 @@ public:
     virtual int32_t HksGenerateKey(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet, struct HksParamSet *paramSetOut) = 0;
     
+    virtual int32_t HksGenerateRandom(const struct HksParamSet *paramSet, struct HksBlob *randomBlob) = 0;
+    
     virtual int32_t HksEncrypt(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet,
         const struct HksBlob *plainText, struct HksBlob *cipherText) = 0;
@@ -64,6 +66,8 @@ public:
     int32_t HksGenerateKey(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet, struct HksParamSet *paramSetOut) override;
     
+    int32_t HksGenerateRandom(const struct HksParamSet *paramSet, struct HksBlob *randomBlob) override;
+    
     int32_t HksEncrypt(const struct HksBlob *keyAlias,
         const struct HksParamSet *paramSet,
         const struct HksBlob *plainText, struct HksBlob *cipherText) override;
@@ -90,9 +94,10 @@ protected:
 
 private:
     int32_t InitGenParamSet(int32_t userId, struct HksParamSet **paramSet);
-    int32_t InitCipherParamSet(int32_t userId, struct HksParamSet **paramSet, uint32_t purpose);
+    int32_t InitCipherParamSet(int32_t userId, struct HksParamSet **paramSet, uint32_t purpose,
+        const struct HksBlob *nonce);
     int32_t DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-        struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
+        struct HksBlob &plainBlob, struct HksBlob &cipherBlob, const struct HksBlob &nonce);
     int32_t DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
         struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
 };

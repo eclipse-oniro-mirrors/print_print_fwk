@@ -25,6 +25,7 @@ class MockHksAdapter : public HksAdapter {
 public:
     MOCK_METHOD2(HksKeyExist, int32_t(const HksBlob*, const HksParamSet*));
     MOCK_METHOD3(HksGenerateKey, int32_t(const HksBlob*, const HksParamSet*, HksParamSet*));
+    MOCK_METHOD2(HksGenerateRandom, int32_t(const HksParamSet*, HksBlob*));
     MOCK_METHOD4(HksEncrypt, int32_t(const HksBlob*, const HksParamSet*, const HksBlob*, HksBlob*));
     MOCK_METHOD4(HksDecrypt, int32_t(const HksBlob*, const HksParamSet*, const HksBlob*, HksBlob*));
     MOCK_METHOD1(HksInitParamSet, int32_t(HksParamSet**));

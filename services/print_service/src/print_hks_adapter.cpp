@@ -23,6 +23,7 @@
 namespace OHOS::Print {
 
 const size_t AUTH_TAG_SIZE = 16;
+constexpr size_t NONCE_LEN = 12;
 static const std::string KEY_ALIAS_PREFIX = "print_custom_option_key_user_";
 constexpr size_t BASE64_ENCODED_BLOCK_SIZE = 4;
 constexpr size_t BASE64_DECODED_BLOCK_SIZE = 3;
@@ -38,6 +39,11 @@ int32_t HksAdapter::HksGenerateKey(const struct HksBlob *keyAlias,
     const struct HksParamSet *paramSet, struct HksParamSet *paramSetOut)
 {
     return ::HksGenerateKey(keyAlias, paramSet, paramSetOut);
+}
+
+int32_t HksAdapter::HksGenerateRandom(const struct HksParamSet *paramSet, struct HksBlob *randomBlob)
+{
+    return ::HksGenerateRandom(paramSet, randomBlob);
 }
 
 int32_t HksAdapter::HksEncrypt(const struct HksBlob *keyAlias,
@@ -109,15 +115,24 @@ int32_t HksAdapter::EncryptCustomOption(int32_t userId, struct HksBlob &plainBlo
         HksFreeParamSet(&genParamSet);
         return ret;
     }
+
+    uint8_t nonceData[NONCE_LEN] = {0};
+    struct HksBlob nonce = { .size = NONCE_LEN, .data = nonceData };
+    ret = HksGenerateRandom(nullptr, &nonce);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGE("HksGenerateRandom failed, ret: %{public}d", ret);
+        HksFreeParamSet(&genParamSet);
+        return ret;
+    }
     
     struct HksParamSet *encryptParamSet = nullptr;
-    ret = InitCipherParamSet(userId, &encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT);
+    ret = InitCipherParamSet(userId, &encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT, &nonce);
     if (ret != HKS_SUCCESS) {
         HksFreeParamSet(&genParamSet);
         return ret;
     }
     
-    ret = DoEncrypt(&keyAlias, encryptParamSet, plainBlob, cipherBlob);
+    ret = DoEncrypt(&keyAlias, encryptParamSet, plainBlob, cipherBlob, nonce);
     
     HksFreeParamSet(&genParamSet);
     HksFreeParamSet(&encryptParamSet);
@@ -135,9 +150,16 @@ int32_t HksAdapter::DecryptCustomOption(int32_t userId, struct HksBlob &cipherBl
         .size = keyAliasStr.size(),
         .data = (uint8_t *)keyAliasStr.data()
     };
+
+    if (cipherBlob.size < NONCE_LEN) {
+        PRINT_HILOGE("cipher blob size too small");
+        return HKS_FAILURE;
+    }
+
+    struct HksBlob nonce = { .size = NONCE_LEN, .data = cipherBlob.data };
     
     struct HksParamSet *decryptParamSet = nullptr;
-    int32_t ret = InitCipherParamSet(userId, &decryptParamSet, HKS_KEY_PURPOSE_DECRYPT);
+    int32_t ret = InitCipherParamSet(userId, &decryptParamSet, HKS_KEY_PURPOSE_DECRYPT, &nonce);
     if (ret != HKS_SUCCESS) {
         return ret;
     }
@@ -180,7 +202,8 @@ int32_t HksAdapter::InitGenParamSet(int32_t userId, struct HksParamSet **paramSe
     return ret;
 }
 
-int32_t HksAdapter::InitCipherParamSet(int32_t userId, struct HksParamSet **paramSet, uint32_t purpose)
+int32_t HksAdapter::InitCipherParamSet(int32_t userId, struct HksParamSet **paramSet, uint32_t purpose,
+    const struct HksBlob *nonce)
 {
     int32_t ret = HksInitParamSet(paramSet);
     if (ret != HKS_SUCCESS) {
@@ -188,15 +211,13 @@ int32_t HksAdapter::InitCipherParamSet(int32_t userId, struct HksParamSet **para
         return ret;
     }
     
-    uint8_t nonceData[12] = {0};
-    struct HksBlob nonce = { .size = sizeof(nonceData), .data = nonceData };
     struct HksParam cipherParams[] = {
         { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
         { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
         { .tag = HKS_TAG_PURPOSE, .uint32Param = purpose },
         { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_NONCE, .blob = nonce },
+        { .tag = HKS_TAG_NONCE, .blob = { nonce->size, nonce->data } },
         { .tag = HKS_TAG_SPECIFIC_USER_ID, .int32Param = userId }
     };
     
@@ -216,38 +237,48 @@ int32_t HksAdapter::InitCipherParamSet(int32_t userId, struct HksParamSet **para
 }
 
 int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-    struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
+    struct HksBlob &plainBlob, struct HksBlob &cipherBlob, const struct HksBlob &nonce)
 {
-    size_t bufferSize = plainBlob.size + AUTH_TAG_SIZE;
+    size_t cipherTextSize = plainBlob.size + AUTH_TAG_SIZE;
+    size_t bufferSize = NONCE_LEN + cipherTextSize;
     cipherBlob.data = new (std::nothrow) uint8_t[bufferSize];
     if (cipherBlob.data == nullptr) {
         PRINT_HILOGE("failed to allocate cipher buffer");
         return HKS_ERROR_MALLOC_FAIL;
     }
     
-    cipherBlob.size = bufferSize;
-    int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherBlob);
+    if (memcpy_s(cipherBlob.data, bufferSize, nonce.data, NONCE_LEN) != EOK) {
+        PRINT_HILOGE("memcpy nonce failed");
+        PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
+        return HKS_FAILURE;
+    }
+
+    struct HksBlob cipherTextWithTag = { .size = cipherTextSize, .data = cipherBlob.data + NONCE_LEN };
+    int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherTextWithTag);
     if (ret != HKS_SUCCESS) {
         PRINT_HILOGE("HksEncrypt failed, ret: %{public}d", ret);
         PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
         return ret;
     }
     
+    cipherBlob.size = bufferSize;
     return HKS_SUCCESS;
 }
 
 int32_t HksAdapter::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
     struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
 {
-    size_t bufferSize = cipherBlob.size;
-    plainBlob.data = new (std::nothrow) uint8_t[bufferSize];
+    size_t cipherWithTagSize = cipherBlob.size - NONCE_LEN;
+    struct HksBlob cipherTextWithTag = { .size = cipherWithTagSize, .data = cipherBlob.data + NONCE_LEN };
+    
+    plainBlob.data = new (std::nothrow) uint8_t[cipherWithTagSize];
     if (plainBlob.data == nullptr) {
         PRINT_HILOGE("failed to allocate plain buffer");
         return HKS_ERROR_MALLOC_FAIL;
     }
     
-    plainBlob.size = bufferSize;
-    int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherBlob, &plainBlob);
+    plainBlob.size = cipherWithTagSize;
+    int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherTextWithTag, &plainBlob);
     if (ret != HKS_SUCCESS) {
         PRINT_HILOGE("HksDecrypt failed, ret: %{public}d", ret);
         PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
