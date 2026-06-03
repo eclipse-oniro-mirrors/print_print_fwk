@@ -76,9 +76,7 @@
         "enterprise_device_management",
         "huks",
         "api_metrics",
-        "ets_frontend",
-        "netmanager_base",
-        "relational_store"
+        "ets_frontend"
       ],
       "third_party": [
         "zlib"
