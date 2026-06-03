@@ -90,16 +90,14 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveAud
 
     manager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     manager.receiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
 
     auto it = manager.securityMap_.find("jobId-1");
     ASSERT_NE(it, manager.securityMap_.end());
     ASSERT_NE(it->second, nullptr);
     EXPECT_EQ(it->second->files_.size(), 1U);
-    EXPECT_EQ(it->second->files_[0].fileName, "doc1.pdf");
+    EXPECT_EQ(it->second->files_[0], "doc1.pdf");
     EXPECT_EQ(it->second->duplexMode_, 1U);
     EXPECT_EQ(it->second->printerName_, "HP LaserJet");
 }
@@ -116,7 +114,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveAud
     PrinterInfo printerInfo;
     PrintJob printJob;
 
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     manager.receiveAuditInfo("jobId-unknown", printerInfo, printJob, fileInfos);
 
     auto it = manager.securityMap_.find("jobId-unknown");
@@ -137,7 +135,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveAud
 
     PrinterInfo printerInfo;
     PrintJob printJob;
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     manager.receiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos);
 
     auto it = manager.securityMap_.find("jobId-1");
@@ -169,9 +167,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_FullFlow_0
     printJob.SetDuplexMode(1);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     manager.receiveAuditInfo("jobId-flow1", printerInfo, printJob, fileInfos);
 
     // Step 3: receiveJobStateUpdate (should clear the map entry)
@@ -198,11 +194,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_FullFlow_0
     PrintJob printJob;
     printJob.SetDuplexMode(0);
     printJob.SetSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    manager.AddBlockedSubState("jobId-blocked", PRINT_JOB_BLOCKED_OUT_OF_PAPER);
 
-    std::vector<FileAuditInfo> fileInfos = {
-        {"doc1.pdf", "d41d8cd98f00b204e9800998ecf8427e", 102400}
-    };
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     manager.receiveAuditInfo("jobId-blocked", printerInfo, printJob, fileInfos);
     printJob.SetJobState(PRINT_JOB_COMPLETED);
     manager.receiveJobStateUpdate("jobId-blocked", printerInfo, printJob);
@@ -254,8 +247,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_MultipleJo
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
 
-    std::vector<FileAuditInfo> fileInfos1 = {{"doc1.pdf", "md5_1", 100}};
-    std::vector<FileAuditInfo> fileInfos2 = {{"doc2.pdf", "md5_2", 200}};
+    std::vector<std::string> fileInfos1 = {"doc1.pdf"};
+    std::vector<std::string> fileInfos2 = {"doc2.pdf"};
 
     manager.receiveAuditInfo("jobId-1", printerInfo, printJob, fileInfos1);
     manager.receiveAuditInfo("jobId-2", printerInfo, printJob, fileInfos2);
@@ -264,8 +257,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_MultipleJo
     auto it2 = manager.securityMap_.find("jobId-2");
     ASSERT_NE(it1, manager.securityMap_.end());
     ASSERT_NE(it2, manager.securityMap_.end());
-    EXPECT_EQ(it1->second->files_[0].fileName, "doc1.pdf");
-    EXPECT_EQ(it2->second->files_[0].fileName, "doc2.pdf");
+    EXPECT_EQ(it1->second->files_[0], "doc1.pdf");
+    EXPECT_EQ(it2->second->files_[0], "doc2.pdf");
 }
 }  // namespace Print
 }  // namespace OHOS
