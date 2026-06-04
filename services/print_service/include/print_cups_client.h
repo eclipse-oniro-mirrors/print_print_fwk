@@ -57,7 +57,7 @@ struct JobParameters {
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
-    bool isCanceled = false;
+    std::atomic<bool> isCanceled{false};
     Json::Value advancedOpsJson;
     std::string vendorOptions;
     bool isReverse = false;
@@ -93,8 +93,8 @@ struct JobMonitorParam {
     bool isBlock = false;
     uint32_t substate = 0;
     std::string jobOriginatingUserName;
-    bool isCanceled = false;
-    bool isInterrupt = false;
+    std::atomic<bool> isCanceled{false};
+    std::atomic<bool> isInterrupt{false};
     bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
