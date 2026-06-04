@@ -15,6 +15,8 @@
 
 #include "print_security_guard_manager.h"
 
+#include "print_system_data.h"
+
 namespace OHOS::Print {
 static int64_t EVENT_ID = 1011015004;
 static std::string VERSION = "1.0";
@@ -177,5 +179,28 @@ void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const 
 #else
     PRINT_HILOGW("SECURITY_GUARDE_ENABLE not defined, report skipped");
 #endif
+}
+
+std::shared_ptr<PrinterInfo> PrintSecurityGuardManager::ResolvePrinterInfo(
+    const std::string &printerId, const std::string &option, PrintSystemData &printSystemData)
+{
+    auto printerInfo = printSystemData.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo != nullptr) {
+        return printerInfo;
+    }
+    PrinterInfo addedInfo;
+    if (printSystemData.QueryAddedPrinterInfoByPrinterId(printerId, addedInfo)) {
+        PRINT_HILOGI("[Job Id: %{public}s] printerInfo from added list", printerId.c_str());
+        return std::make_shared<PrinterInfo>(addedInfo);
+    }
+    auto fallback = std::make_shared<PrinterInfo>();
+    Json::Value optionJson;
+    if (PrintJsonUtil::Parse(option, optionJson) &&
+        PrintJsonUtil::IsMember(optionJson, "printerName") && optionJson["printerName"].isString()) {
+        fallback->SetPrinterName(optionJson["printerName"].asString());
+    }
+    PRINT_HILOGW("[Job Id: %{public}s] printerInfo not found, audit may lack printer data",
+        printerId.c_str());
+    return fallback;
 }
 } // namespace OHOS::Print
