@@ -24,7 +24,6 @@
 
 namespace OHOS::Print {
 class PrintSecurityGuardManager {
-
 public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
