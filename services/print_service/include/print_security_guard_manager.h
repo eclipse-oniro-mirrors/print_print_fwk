@@ -23,6 +23,7 @@
 #include "print_security_guard_info.h"
 
 namespace OHOS::Print {
+class PrintSystemData;
 class PrintSecurityGuardManager {
 public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
