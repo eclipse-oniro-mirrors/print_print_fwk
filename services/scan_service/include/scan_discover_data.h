@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <functional>
 #include "scanner_info.h"
 
 namespace OHOS::Scan {
@@ -33,22 +34,17 @@ public:
     bool GetUsbDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     bool GetTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     bool GetEsclDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
-    
-    bool RemoveUsbDevice(const std::string& uniqueId);
-    bool RemoveTcpDevice(const std::string& uniqueId);
+
+    bool GetAndRemoveTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info);
+    bool GetAndRemoveEsclDevice(const std::string& uniqueId, ScanDeviceInfo& info);
+
+    bool UpdateUsbDevice(const std::string& uniqueId, std::function<void(ScanDeviceInfo&)> modifier);
+    bool UpdateTcpDevice(const std::string& srcKey, const std::string& dstKey,
+        std::function<void(ScanDeviceInfo&)> modifier);
+
     bool RemoveEsclDevice(const std::string& uniqueId);
-    
-    std::map<std::string, ScanDeviceInfo> GetAllUsbDevices() const;
-    std::map<std::string, ScanDeviceInfo> GetAllTcpDevices() const;
     std::map<std::string, ScanDeviceInfo> GetAllEsclDevices() const;
-    
-    void ClearUsbDevices();
-    void ClearTcpDevices();
     void ClearEsclDevices();
-    
-    bool HasUsbDevice(const std::string& uniqueId) const;
-    bool HasTcpDevice(const std::string& uniqueId) const;
-    bool HasEsclDevice(const std::string& uniqueId) const;
 
 private:
     ScannerDiscoverData() = default;

@@ -28,3 +28,5 @@ void ScanCallbackProxyTest::SetUpTestCase(void)
 
 void ScanCallbackProxyTest::TearDownTestCase(void)
 {}
+} // namespace Scan
+} // namespace OHOS

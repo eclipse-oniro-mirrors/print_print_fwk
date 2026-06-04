@@ -204,6 +204,7 @@ ohos_unittest("scan_service_test") {
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
     "usb_manager:usbsrv_client",
+    "netmanager_ext:mdns_manager_if",
   ]
 }
 

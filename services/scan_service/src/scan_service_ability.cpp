@@ -889,22 +889,18 @@ void ScanServiceAbility::UpdateScannerId(const ScanDeviceInfoSync &syncInfo)
     SCAN_HILOGD("UpdateScannerId start newDeviceId:[%{private}s]", syncInfo.deviceId.c_str());
     ScanDeviceInfoSync scanDeviceInfoSync = syncInfo;
     if (scanDeviceInfoSync.discoverMode == ScannerDiscoveryMode::USB_MODE) {
-        if (scannerDiscoverData_.HasUsbDevice(scanDeviceInfoSync.uniqueId)) {
-            ScanDeviceInfo info;
-            scannerDiscoverData_.GetUsbDevice(syncInfo.uniqueId, info);
-            info.deviceId = scanDeviceInfoSync.deviceId;
-            scannerDiscoverData_.SetUsbDevice(scanDeviceInfoSync.uniqueId, info);
-        }
+        scannerDiscoverData_.UpdateUsbDevice(scanDeviceInfoSync.uniqueId,
+            [&scanDeviceInfoSync](ScanDeviceInfo& info) {
+                info.deviceId = scanDeviceInfoSync.deviceId;
+            });
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
     } else if (scanDeviceInfoSync.discoverMode == ScannerDiscoveryMode::TCP_MODE) {
         std::string oldIp;
         ScanUtil::ExtractIpAddresses(scanDeviceInfoSync.oldDeviceId, oldIp);
-        if (scannerDiscoverData_.HasTcpDevice(oldIp)) {
-            ScanDeviceInfo info;
-            scannerDiscoverData_.GetTcpDevice(oldIp, info);
-            info.deviceId = scanDeviceInfoSync.deviceId;
-            scannerDiscoverData_.SetTcpDevice(scanDeviceInfoSync.uniqueId, info);
-        }
+        scannerDiscoverData_.UpdateTcpDevice(oldIp, scanDeviceInfoSync.uniqueId,
+            [&scanDeviceInfoSync](ScanDeviceInfo& info) {
+                info.deviceId = scanDeviceInfoSync.deviceId;
+            });
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
     } else {
         SCAN_HILOGE("invalid discover mode %{public}s", scanDeviceInfoSync.discoverMode.c_str());
@@ -1009,11 +1005,9 @@ void ScanServiceAbility::AddNetScanner(const std::string& uniqueId, const std::s
 {
     ScanSystemData &scanData = ScanSystemData::GetInstance();
     ScanDeviceInfo info;
-    if (scannerDiscoverData_.HasTcpDevice(uniqueId)) {
-        scannerDiscoverData_.GetTcpDevice(uniqueId, info);
+    if (scannerDiscoverData_.GetTcpDevice(uniqueId, info)) {
         SCAN_HILOGI("add private driver scanner");
-    } else if (scannerDiscoverData_.HasEsclDevice(uniqueId)) {
-        scannerDiscoverData_.GetEsclDevice(uniqueId, info);
+    } else if (scannerDiscoverData_.GetEsclDevice(uniqueId, info)) {
         SCAN_HILOGI("add escl driver scanner");
     } else {
         SCAN_HILOGE("not found net scanner in map");
@@ -1035,9 +1029,7 @@ void ScanServiceAbility::AddUsbScanner(const std::string& uniqueId, const std::s
 {
     ScanSystemData &scanData = ScanSystemData::GetInstance();
     ScanDeviceInfo info;
-    if (scannerDiscoverData_.HasUsbDevice(uniqueId)) {
-        scannerDiscoverData_.GetUsbDevice(uniqueId, info);
-    } else {
+    if (!scannerDiscoverData_.GetUsbDevice(uniqueId, info)) {
         SCAN_HILOGE("AddUsbScanner fail, the scanner was not found in the discovery list");
         return;
     }
