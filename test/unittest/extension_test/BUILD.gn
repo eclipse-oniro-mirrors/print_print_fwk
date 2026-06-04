@@ -82,9 +82,6 @@ ohos_unittest("print_ext_test") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "napi:ace_napi",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]

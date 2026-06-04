@@ -109,9 +109,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "ace_engine:ace_uicontent",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]
