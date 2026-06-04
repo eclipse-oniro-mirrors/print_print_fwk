@@ -121,6 +121,7 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnNotifyWatermarkComplete;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_KIA_INTERCEPTOR_CB] =
                &PrintServiceStub::OnRegisterKiaInterceptorCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] = &PrintServiceStub::OnGetPrinterPreference;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1200,6 +1201,18 @@ bool PrintServiceStub::OnGetPrinterDefaultPreferences(MessageParcel &data, Messa
     reply.WriteInt32(ret);
     defaultPreferences.Marshalling(reply);
     PRINT_HILOGI("PrintServiceStub::OnGetPrinterDefaultPreferences out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference in");
+    std::string printerId = data.ReadString();
+    PrinterPreferences printerPreference;
+    int32_t ret = GetPrinterPreference(printerId, printerPreference);
+    reply.WriteInt32(ret);
+    printerPreference.Marshalling(reply);
+    PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference out");
     return ret == E_PRINT_NONE;
 }
 

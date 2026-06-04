@@ -1323,6 +1323,44 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterDefaultPreferencesTest, TestSize.Level
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
+HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    OHOS::Print::PrinterPreferences testPreferences;
+
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    int32_t ret = proxy->GetPrinterPreference(testPrinterId, testPreferences);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    proxy.reset();
+
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, GetPrinterPreference(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId, &testPreferences]
+            (const std::string &printerId, const PrinterPreferences &preferences) {
+            EXPECT_EQ(testPrinterId, printerId);
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_TRANSACTION_FAILED))
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    ret = proxy->GetPrinterPreference(testPrinterId, testPreferences);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+
+    ret = proxy->GetPrinterPreference(testPrinterId, testPreferences);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
 /**
  * @tc.name: RegisterWatermarkCallback_NullCallback
  * @tc.desc: Verify RegisterWatermarkCallback returns error when callback is null.

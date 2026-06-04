@@ -1241,14 +1241,14 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
     return E_PRINT_NONE;
 }
 
-bool PrintServiceAbility::ProcessVendorOptionsForPreference(const std::string &printerId,
-                                                            const PrinterPreferences &preferences,
-                                                            PrinterPreferences &printerPrefs)
+int32_t PrintServiceAbility::ProcessVendorOptionsForPreference(const std::string &printerId,
+                                                               const PrinterPreferences &preferences,
+                                                               PrinterPreferences &printerPrefs)
 {
     PrinterInfo printerInfo;
     if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PRINT_HILOGW("ProcessVendorOptionsForPreference: cannot find printer info by printerId");
-        return false;
+        return E_PRINT_INVALID_PRINTER;
     }
 
     std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
@@ -1271,14 +1271,17 @@ bool PrintServiceAbility::ProcessVendorOptionsForPreference(const std::string &p
     auto userData = GetUserDataByUserId(userPrefs.GetUserId());
     if (userData != nullptr) {
         if (!userPrefs.IsEmpty()) {
-            userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
+            if (!userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+                PRINT_HILOGE("Failed to save user preferences for user %{private}d", userPrefs.GetUserId());
+                return E_PRINT_FILE_IO;
+            }
             PRINT_HILOGI("Saved user preferences for user %{private}d", userPrefs.GetUserId());
         } else {
             userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
             PRINT_HILOGI("Cleared user preferences for user %{private}d", userPrefs.GetUserId());
         }
     }
-    return true;
+    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences)
@@ -1289,12 +1292,13 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("SetPrinterPreference start.");
-    preferences.Dump();
     PrinterPreferences printerPrefs;
-    if (!ProcessVendorOptionsForPreference(printerId, preferences, printerPrefs)) {
-        PRINT_HILOGW("cannot find printer info by printerId for preference");
-        return E_PRINT_INVALID_PRINTER;
+    int32_t ret = ProcessVendorOptionsForPreference(printerId, preferences, printerPrefs);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGW("ProcessVendorOptionsForPreference failed, ret=%{public}d", ret);
+        return ret;
     }
+    printerPrefs.Dump();
     printSystemData_.UpdatePrinterPreferences(printerId, printerPrefs);
     printSystemData_.SavePrinterFile(printerId);
     PrinterInfo printerInfo;
@@ -1334,11 +1338,19 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
 
     bool hasModified = false;
     for (const auto &key : customOptionKeys) {
-        if (!prefOptionsJson[key].isString()) {
+        if (!prefOptionsJson.isMember(key)) {
             continue;
         }
-        std::string optionJsonStr = prefOptionsJson[key].asString();
-        ProcessSingleCustomOption(key, optionJsonStr, userPrefs);
+        if (prefOptionsJson[key].isString()) {
+            Json::Value parsedJson;
+            if (PrintJsonUtil::Parse(prefOptionsJson[key].asString(), parsedJson) && parsedJson.isObject()) {
+                ProcessSingleCustomOption(key, parsedJson, userPrefs);
+            } else {
+                userPrefs.SetCustomOption(key, "");
+            }
+        } else if (prefOptionsJson[key].isObject()) {
+            ProcessSingleCustomOption(key, prefOptionsJson[key], userPrefs);
+        }
         prefOptionsJson.removeMember(key);
         hasModified = true;
     }
@@ -1349,19 +1361,24 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
 }
 
 void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
-    const std::string &optionJsonStr, PrinterUserPreferences &userPrefs)
+    const Json::Value &optionJson, PrinterUserPreferences &userPrefs)
 {
-    Json::Value optionJson;
-    if (!PrintJsonUtil::Parse(optionJsonStr, optionJson) || !optionJson.isObject()) {
-        userPrefs.SetCustomOptionUnset(key);
-        PRINT_HILOGW("failed to parse option json for key: %{public}s", key.c_str());
+    if (!optionJson.isObject()) {
+        userPrefs.SetCustomOption(key, "");
+        PRINT_HILOGW("option value is not a json object for key: %{public}s", key.c_str());
         return;
     }
 
     std::string choice = optionJson["choice"].asString();
-    if (choice != "Custom" && optionJson["value"].asString().empty()) {
-        userPrefs.SetCustomOptionUnset(key);
-        PRINT_HILOGW("non-custom option without value for key: %{public}s", key.c_str());
+    if (choice != CUSTOM_OPTION_CHOICE) {
+        userPrefs.SetCustomOption(key, choice);
+        PRINT_HILOGI("non-custom option for key: %{public}s", key.c_str());
+        return;
+    }
+
+    if (optionJson["value"].asString().empty()) {
+        userPrefs.SetCustomOption(key, "");
+        PRINT_HILOGW("custom option without value for key: %{public}s", key.c_str());
         return;
     }
 
@@ -1385,10 +1402,10 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
     if (plainBlob.data != nullptr && hksAdapter_ != nullptr &&
         hksAdapter_->EncryptCustomOption(GetCurrentUserId(), plainBlob, cipherBlob) == HKS_SUCCESS &&
         hksAdapter_->Base64Encode(cipherBlob, secureValue)) {
-        userPrefs.SetCustomOption(key, secureValue);
+        userPrefs.SetCustomOption(key, CUSTOM_OPTION_CHOICE, secureValue);
         PRINT_HILOGI("extracted and encrypted custom option: %{public}s", key.c_str());
     } else {
-        userPrefs.SetCustomOptionUnset(key);
+        userPrefs.SetCustomOption(key, "");
         PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
     }
 
@@ -1421,7 +1438,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
         return false;
     }
     std::string oldOption = printJob.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s",  PrintUtils::AnonymizeJobOption(oldOption).c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(oldOption).c_str());
     Json::Value infoJson;
     if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
@@ -1431,10 +1448,18 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
-    UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
+
     PrinterPreferences preferences;
     printerInfo.GetPreferences(preferences);
-    MergeVendorOptionsForPrintJob(printerInfo, preferences, printJob);
+    PrinterUserPreferences userPrefs;
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData != nullptr) {
+        userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs);
+    }
+    UpdatePrintJobOptionWithPrinterPreferences(infoJson, preferences, userPrefs);
+    MergeVendorOptionsForPrintJob(preferences, userPrefs, printJob);
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
@@ -1445,25 +1470,13 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     return true;
 }
 
-void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
-    const PrinterPreferences &preferences, PrintJob &printJob)
+void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterPreferences &preferences,
+    const PrinterUserPreferences &userPrefs, PrintJob &printJob)
 {
-    // 1. 先读取厂商设置首选项（公共+用户）
     std::string printerVendorOptions = preferences.HasVendorOptions() ? preferences.GetVendorOptions() : "";
-    int32_t userId = GetCurrentUserId();
-    auto userData = GetUserDataByUserId(userId);
-    std::string userVendorOptions = "";
-    if (userData != nullptr) {
-        std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
-        PrinterUserPreferences userPrefs;
-        if (userData->LoadPrinterUserPreferences(printJob.GetPrinterId(), standardizedPrinterName, userPrefs)) {
-            userVendorOptions = userPrefs.HasVendorOptions() ? userPrefs.GetVendorOptions() : "";
-        }
-    }
-    // 合并公共首选项和用户首选项
+    std::string userVendorOptions = userPrefs.HasVendorOptions() ? userPrefs.GetVendorOptions() : "";
     std::string prefVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
         printerVendorOptions, userVendorOptions);
-    // 2. 如果打印任务有传入厂商设置，则同字段厂商设置覆盖首选项里读到的
     std::string jobVendorOptions = printJob.HasVendorOptions() ? printJob.GetVendorOptions() : "";
     // 打印任务厂商设置覆盖首选项厂商设置
     std::string finalVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(
@@ -3871,9 +3884,11 @@ void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId
     std::vector<int32_t> allPrintUserList;
     printSystemData_.GetAllPrintUser(allPrintUserList);
 
+    bool isEnterpriseEnabled = false;
+    int32_t currentUserId = -1;
 #ifdef ENTERPRISE_ENABLE
-    bool isEnterpriseEnabled = IsEnterpriseEnable();
-    int32_t currentUserId = GetCurrentUserId();
+    isEnterpriseEnabled = IsEnterpriseEnable();
+    currentUserId = GetCurrentUserId();
     PRINT_HILOGI("DeletePrinterFromUserData: isEnterpriseEnabled=%{public}d, currentUserId=%{public}d",
         isEnterpriseEnabled, currentUserId);
 #endif
@@ -3887,20 +3902,10 @@ void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId
         }
         ChangeDefaultPrinterForDelete(userData, printerId);
 
-#ifdef ENTERPRISE_ENABLE
-        if (isEnterpriseEnabled) {
-            if (userId == currentUserId) {
-                userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
-                PRINT_HILOGI("Deleted PrinterUserPreferences for current user %{public}d", userId);
-            }
-        } else {
+        if (!isEnterpriseEnabled || userId == currentUserId) {
             userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
             PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
         }
-#else
-        userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
-        PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
-#endif
     }
 }
 
@@ -5043,11 +5048,8 @@ void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printer
 }
 
 void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
-    Json::Value &jobOptions, PrinterInfo &printerInfo)
+    Json::Value &jobOptions, const PrinterPreferences &preferences, const PrinterUserPreferences &userPrefs)
 {
-    PrinterPreferences preferences;
-    printerInfo.GetPreferences(preferences);
-
     if (!jobOptions.isMember("isReverse") || !jobOptions["isReverse"].isBool()) {
         jobOptions["isReverse"] = preferences.GetDefaultReverse();
     }
@@ -5055,7 +5057,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
         jobOptions["isCollate"] = preferences.GetDefaultCollate();
     }
 
-    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences, printerInfo);
+    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences, userPrefs);
     if (preferencesJson.isNull()) {
         PRINT_HILOGW("cannot find any modified preferences");
         return;
@@ -5064,7 +5066,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
 }
 
 Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
-    const PrinterPreferences &preferences, const PrinterInfo &printerInfo)
+    const PrinterPreferences &preferences, const PrinterUserPreferences &userPrefs)
 {
     std::string option = preferences.GetOption();
     PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
@@ -5074,32 +5076,69 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
         return Json::nullValue;
     }
 
-    int32_t userId = GetCurrentUserId();
-    auto userData = GetUserDataByUserId(userId);
-    if (userData == nullptr) {
-        return opsJson;
-    }
-
-    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
-    PrinterUserPreferences userPrefs;
-    if (!userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs)) {
-        return opsJson;
-    }
     FillCustomOptionsToJson(userPrefs, opsJson);
     return opsJson;
 }
 
 void PrintServiceAbility::FillCustomOptionsToJson(const PrinterUserPreferences &userPrefs, Json::Value &opsJson)
 {
-    for (const auto &opt : userPrefs.GetAllCustomOptions()) {
-        if (!opt.isSet) {
+    for (const auto &key : userPrefs.GetAllCustomOptionKeys()) {
+        auto opt = userPrefs.GetCustomOption(key);
+        if (opt == nullptr || opt->choice != CUSTOM_OPTION_CHOICE) {
             continue;
         }
         Json::Value optValue;
-        optValue["choice"] = "Custom";
-        optValue["value"] = opt.value.ToString();
-        opsJson[opt.key] = optValue;
-        PRINT_HILOGI("custom option stored with cipher: %{public}s", opt.key.c_str());
+        optValue["choice"] = opt->choice;
+        optValue["value"] = opt->value.ToString();
+        opsJson[opt->key] = optValue;
+        PRINT_HILOGI("custom option stored with cipher: %{public}s", opt->key.c_str());
+    }
+}
+
+bool PrintServiceAbility::DecryptCustomOptionValue(const SecureBlob &cipherValue, struct HksBlob &plainBlob)
+{
+    if (hksAdapter_ == nullptr) {
+        PRINT_HILOGW("hksAdapter_ is null");
+        return false;
+    }
+    if (cipherValue.IsEmpty()) {
+        PRINT_HILOGW("custom option cipher value is empty");
+        return false;
+    }
+    struct HksBlob base64Blob = { cipherValue.size, cipherValue.data };
+    struct HksBlob cipherBlob = { 0, nullptr };
+    if (!hksAdapter_->Base64Decode(base64Blob, cipherBlob)) {
+        PRINT_HILOGW("Base64 decode failed for custom option");
+        return false;
+    }
+    int32_t ret = hksAdapter_->DecryptCustomOption(GetCurrentUserId(), cipherBlob, plainBlob);
+    PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
+    if (ret != HKS_SUCCESS) {
+        PRINT_HILOGW("failed to decrypt custom option, ret: %{public}d", ret);
+    }
+    return ret == HKS_SUCCESS;
+}
+
+void PrintServiceAbility::DecryptAndFillCustomOptionsToJson(
+    const PrinterUserPreferences &userPrefs, Json::Value &opsJson)
+{
+    for (const auto &key : userPrefs.GetAllCustomOptionKeys()) {
+        auto opt = userPrefs.GetCustomOption(key);
+        if (opt == nullptr) {
+            continue;
+        }
+        Json::Value optValue;
+        optValue["choice"] = opt->choice;
+        struct HksBlob plainBlob = { 0, nullptr };
+        if (DecryptCustomOptionValue(opt->value, plainBlob) && plainBlob.data != nullptr) {
+            optValue["value"] = std::string(reinterpret_cast<char *>(plainBlob.data), plainBlob.size);
+            PRINT_HILOGI("decrypted custom option: %{public}s", opt->key.c_str());
+        } else {
+            optValue["value"] = std::string();
+            PRINT_HILOGW("failed to get plain value for custom option: %{public}s", opt->key.c_str());
+        }
+        PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
+        opsJson[opt->key] = optValue;
     }
 }
 
@@ -5735,6 +5774,49 @@ int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
 #else
     return E_PRINT_NONE;
 #endif
+}
+
+int32_t PrintServiceAbility::GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("GetPrinterPreference start.");
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("cannot find printer info by printerId");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    printerInfo.GetPreferences(printerPreference);
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData == nullptr) {
+        PRINT_HILOGW("no user data for user %{public}d, return system preferences only", userId);
+        return E_PRINT_NONE;
+    }
+    PrinterUserPreferences userPrefs;
+    if (!userData->LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        PRINT_HILOGD("no user preferences found, return system preferences only");
+        return E_PRINT_NONE;
+    }
+    std::string systemVendorOptions = printerPreference.GetVendorOptions();
+    std::string userVendorOptions = userPrefs.GetVendorOptions();
+    if (!userVendorOptions.empty()) {
+        std::string mergedVendorOptions = PrintVendorOptionsUtil::MergeVendorOptions(systemVendorOptions,
+            userVendorOptions);
+        printerPreference.SetVendorOptions(mergedVendorOptions);
+    }
+    std::string option = printerPreference.GetOption();
+    Json::Value opsJson;
+    if (!option.empty() && PrintJsonUtil::Parse(option, opsJson)) {
+        DecryptAndFillCustomOptionsToJson(userPrefs, opsJson);
+        printerPreference.SetOption(PrintJsonUtil::WriteString(opsJson));
+    }
+    PRINT_HILOGI("GetPrinterPreference end.");
+    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName)

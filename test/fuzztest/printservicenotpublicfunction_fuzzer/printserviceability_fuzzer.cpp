@@ -156,10 +156,9 @@ void TestUpdatePrintJobOptionWithPrinterPreferences(const uint8_t *data, size_t 
     std::string value = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     Json::Value jobOptions;
     jobOptions[key] = value;
-    PrinterInfo printerInfo;
     PrinterPreferences preferences;
-    printerInfo.SetPreferences(preferences);
-    PrintServiceAbility::GetInstance()->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, printerInfo);
+    PrinterUserPreferences userPrefs;
+    PrintServiceAbility::GetInstance()->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, preferences, userPrefs);
 }
 
 void TestConnectUsbPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -179,19 +178,16 @@ void TestClosePrintJobFd(const uint8_t *data, size_t size, FuzzedDataProvider *d
 
 void TestMergeVendorOptionsForPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-
     PrinterPreferences preferences;
     std::string vendorOptions = R"({"colorMode":"color","paperSize":"A4"})";
     preferences.SetVendorOptions(vendorOptions);
+    PrinterUserPreferences userPrefs;
 
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printJob.SetPrinterId(printerInfo.GetPrinterId());
+    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     
-    PrintServiceAbility::GetInstance()->MergeVendorOptionsForPrintJob(printerInfo, preferences, printJob);
+    PrintServiceAbility::GetInstance()->MergeVendorOptionsForPrintJob(preferences, userPrefs, printJob);
 }
 
 void TestProcessVendorOptionsForPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -220,12 +216,12 @@ void TestExtractCustomOptionsFromPreferences(const uint8_t *data, size_t size, F
     printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     PrinterCapability capability;
-    std::string capOption = "{\"cupsOptions\":{\"advanceOptions\":\"[]\"}}";
+    std::string capOption = R"({"cupsOptions":{"advanceOptions":"[]"}})";
     capability.SetOption(capOption);
     printerInfo.SetCapability(capability);
     
     PrinterPreferences preferences;
-    std::string prefOption = "{\"testKey\":\"testValue\"}";
+    std::string prefOption = R"({"testKey":"testValue"})";
     preferences.SetOption(prefOption);
     
     PrinterUserPreferences userPrefs;
@@ -262,7 +258,8 @@ void TestFillCustomOptionsToJson(const uint8_t *data, size_t size, FuzzedDataPro
     std::string valueStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     SecureBlob value;
     value.SetData((const uint8_t *)valueStr.c_str(), valueStr.size());
-    userPrefs.SetCustomOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH), value);
+    userPrefs.SetCustomOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH),
+        CUSTOM_OPTION_CHOICE, value);
     Json::Value opsJson;
     PrintServiceAbility::GetInstance()->FillCustomOptionsToJson(userPrefs, opsJson);
 }
@@ -279,17 +276,20 @@ void TestProcessSingleCustomOption(const uint8_t *data, size_t size, FuzzedDataP
     Json::Value optionJson;
     optionJson["choice"] = choice;
     optionJson["value"] = value;
-    std::string optionJsonStr = PrintJsonUtil::WriteString(optionJson);
+    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, optionJson, userPrefs);
     
-    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, optionJsonStr, userPrefs);
+    Json::Value invalidJson;
+    invalidJson = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, invalidJson, userPrefs);
     
-    std::string invalidJsonStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, invalidJsonStr, userPrefs);
-    
-    std::string emptyValueJson = "{\"choice\":\"Custom\",\"value\":\"\"}";
+    Json::Value emptyValueJson;
+    emptyValueJson["choice"] = "Custom";
+    emptyValueJson["value"] = "";
     PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, emptyValueJson, userPrefs);
     
-    std::string nonCustomEmptyJson = "{\"choice\":\"Standard\",\"value\":\"\"}";
+    Json::Value nonCustomEmptyJson;
+    nonCustomEmptyJson["choice"] = "Standard";
+    nonCustomEmptyJson["value"] = "";
     PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, nonCustomEmptyJson, userPrefs);
 }
 
@@ -325,13 +325,11 @@ void TestPrinterUserPreferencesCustomOption(const uint8_t *data, size_t size, Fu
     std::string valueStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     SecureBlob value;
     value.SetData((const uint8_t *)valueStr.c_str(), valueStr.size());
-    userPrefs.SetCustomOption(key, value);
-    userPrefs.SetCustomOptionUnset(key);
-    SecureBlob retrievedValue;
-    userPrefs.GetCustomOption(key, retrievedValue);
-    userPrefs.IsCustomOptionSet(key);
+    userPrefs.SetCustomOption(key, CUSTOM_OPTION_CHOICE, value);
+    userPrefs.SetCustomOption(key, "");
+    userPrefs.GetCustomOption(key);
     userPrefs.RemoveCustomOption(key);
-    userPrefs.GetAllCustomOptions();
+    userPrefs.GetAllCustomOptionKeys();
 }
 
 void TestPrinterUserPreferencesJsonRoundtrip(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

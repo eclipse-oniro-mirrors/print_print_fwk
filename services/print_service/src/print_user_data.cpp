@@ -1181,13 +1181,7 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
         return false;
     }
 
-    char realBaseDir[PATH_MAX] = {0};
-    if (realpath(baseDir.c_str(), realBaseDir) == nullptr) {
-        PRINT_HILOGE("Failed to canonicalize base directory, errno=%{public}d", errno);
-        return false;
-    }
-
-    std::string dirPath = std::string(realBaseDir) + "/printer_user_prefs";
+    std::string dirPath = baseDir + "/printer_user_prefs";
     if (access(dirPath.c_str(), F_OK) != 0) {
         if (mkdir(dirPath.c_str(), DIR_MODE) != 0) {
             PRINT_HILOGE("Failed to create user preferences directory, errno=%{public}d", errno);
@@ -1195,35 +1189,28 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
         }
     }
 
-    std::string filePath = dirPath + "/" + standardizedPrinterName + ".json";
-    if (standardizedPrinterName.empty() || standardizedPrinterName.find("..") != std::string::npos) {
-        PRINT_HILOGE("Invalid file path: potential path traversal");
+    std::string fileName = standardizedPrinterName + ".json";
+    if (!PrintUtils::IsPathValidForCreate(dirPath, fileName)) {
+        PRINT_HILOGE("Invalid file path for user preferences");
         return false;
     }
-
-    Json::Value json = userPrefs.ConvertToJson();
-    std::string jsonString = PrintJsonUtil::WriteString(json);
-
-    FILE *file = fopen(filePath.c_str(), "w+");
-    if (file == nullptr) {
+    std::string filePath = dirPath + "/" + fileName;
+    int fd = open(filePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP);
+    if (fd < 0) {
         PRINT_HILOGE("Failed to open user preferences file, errno=%{public}d", errno);
         return false;
     }
-
+    fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
+    Json::Value json = userPrefs.ConvertToJson();
+    std::string jsonString = PrintJsonUtil::WriteString(json);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
-    if (writeLength != jsonLength) {
-        PRINT_HILOGE("Failed to write user preferences file, writeLength=%{public}zu, jsonLength=%{public}zu",
+    ssize_t writeLength = write(fd, jsonString.c_str(), jsonLength);
+    fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+    if (static_cast<size_t>(writeLength) != jsonLength) {
+        PRINT_HILOGE("Failed to write user preferences file, writeLength=%{public}zd, jsonLength=%{public}zu",
             writeLength, jsonLength);
-        fclose(file);
         return false;
     }
-
-    if (fclose(file) != 0) {
-        PRINT_HILOGE("Failed to close user preferences file, errno=%{public}d", errno);
-        return false;
-    }
-
     PRINT_HILOGI("Saved PrinterUserPreferences to %{private}s", filePath.c_str());
     return true;
 }

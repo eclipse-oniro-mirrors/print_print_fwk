@@ -501,6 +501,40 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_007, TestSize.Level2)
     EXPECT_EQ(resultJson["files"][1].asString(), "/xxx/xxx.jpg");
 }
 
+/**
+ * @tc.name: AnonymizeJobOption_CustomOptionValueAnonymized_StandardOptionPreserved
+ * @tc.desc: Verify advancedOptions with custom option anonymized.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_CustomOptionValueAnonymized_StandardOptionPreserved, TestSize.Level2)
+{
+    std::string option = R"({"advancedOptions":{"CustomPin":{"choice":"Custom","value":"secret123"},"
+        "\"media-size\":\"A4\"}})";
+    std::string result = PrintUtils::AnonymizeJobOption(option);
+    EXPECT_NE(result, "");
+    Json::Value resultJson;
+    PrintJsonUtil::Parse(result, resultJson);
+    EXPECT_EQ(resultJson["advancedOptions"]["CustomPin"]["choice"].asString(), "Custom");
+    EXPECT_EQ(resultJson["advancedOptions"]["CustomPin"]["value"].asString(), "***");
+    EXPECT_EQ(resultJson["advancedOptions"]["media-size"].asString(), "A4");
+}
+
+/**
+ * @tc.name: AnonymizeJobOption_StandardOptionsPreserved_NoSensitiveData
+ * @tc.desc: Verify advancedOptions with standard options preserved.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_StandardOptionsPreserved_NoSensitiveData, TestSize.Level2)
+{
+    std::string option = R"({"advancedOptions":{"media-size\":\"A4\",\"colorMode\":\"color\"}})";
+    std::string result = PrintUtils::AnonymizeJobOption(option);
+    EXPECT_NE(result, "");
+    Json::Value resultJson;
+    PrintJsonUtil::Parse(result, resultJson);
+    EXPECT_EQ(resultJson["advancedOptions"]["media-size"].asString(), "A4");
+    EXPECT_EQ(resultJson["advancedOptions"]["colorMode"].asString(), "color");
+}
+
 // ==================== AnonymizeJobName Test ====================
 /**
  * @tc.name: AnonymizeJobName_001

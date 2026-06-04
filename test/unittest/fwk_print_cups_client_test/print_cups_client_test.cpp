@@ -4409,12 +4409,6 @@ HWTEST_F(PrintCupsClientTest, FillVendorOptions_MultipleValidFields_Succeeds, Te
     cupsFreeOptions(numOptions, options);
 }
 
-/**
- * @tc.name: PrintCupsClientTest_FillVendorOptions_012
- * @tc.desc: FillVendorOptions with all nested/invalid fields should return 0
- * @tc.type: FUNC
- * @tc.require:
- */
 HWTEST_F(PrintCupsClientTest, FillVendorOptions_AllInvalidFields_ReturnsZero, TestSize.Level1)
 {
     auto cupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();

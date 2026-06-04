@@ -98,6 +98,7 @@ public:
     static std::string AnonymizePrinterUri(const std::string &printerUri);
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
+    static void AnonymizeAdvancedOptions(Json::Value &advancedOptions);
     static std::string AnonymizeJobName(const std::string &jobName);
     static std::string AnonymizeFilePath(const std::string &filePath);
 

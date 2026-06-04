@@ -17,24 +17,20 @@
 #include "print_log.h"
 #include "print_json_util.h"
 #include "print_util.h"
+#include "print_constant.h"
 #include <cstring>
 #include "securec.h"
 
 namespace OHOS::Print {
 
+SecureBlob::SecureBlob(uint32_t s, uint8_t *d) : size(0), data(nullptr)
+{
+    SetData(d, s);
+}
+
 SecureBlob::SecureBlob(const SecureBlob &other) : size(0), data(nullptr)
 {
-    if (other.data != nullptr && other.size > 0) {
-        data = new (std::nothrow) uint8_t[other.size];
-        if (data != nullptr) {
-            if (memcpy_s(data, other.size, other.data, other.size) == EOK) {
-                size = other.size;
-            } else {
-                delete[] data;
-                data = nullptr;
-            }
-        }
-    }
+    SetData(other.data, other.size);
 }
 
 SecureBlob& SecureBlob::operator=(const SecureBlob &other)
@@ -42,18 +38,7 @@ SecureBlob& SecureBlob::operator=(const SecureBlob &other)
     if (this == &other) {
         return *this;
     }
-    Clear();
-    if (other.data != nullptr && other.size > 0) {
-        data = new (std::nothrow) uint8_t[other.size];
-        if (data != nullptr) {
-            if (memcpy_s(data, other.size, other.data, other.size) == EOK) {
-                size = other.size;
-            } else {
-                delete[] data;
-                data = nullptr;
-            }
-        }
-    }
+    SetData(other.data, other.size);
     return *this;
 }
 
@@ -166,56 +151,31 @@ std::string PrinterUserPreferences::GetVendorOptions() const
     return vendorOptions_;
 }
 
-void PrinterUserPreferences::SetCustomOption(const std::string &key, const SecureBlob &value)
+void PrinterUserPreferences::SetCustomOption(const std::string &key, const std::string &choice,
+    const SecureBlob &value)
 {
     for (auto &option : customOptions_) {
         if (option.key == key) {
-            option.isSet = true;
-            option.value = value;
+            option.choice = choice;
+            option.value = (choice == CUSTOM_OPTION_CHOICE) ? value : SecureBlob{};
             return;
         }
     }
     CustomOption option;
     option.key = key;
-    option.isSet = true;
-    option.value = value;
+    option.choice = choice;
+    option.value = (choice == CUSTOM_OPTION_CHOICE) ? value : SecureBlob{};
     customOptions_.push_back(option);
 }
 
-void PrinterUserPreferences::SetCustomOptionUnset(const std::string &key)
-{
-    for (auto &option : customOptions_) {
-        if (option.key == key) {
-            option.isSet = false;
-            option.value.Clear();
-            return;
-        }
-    }
-    CustomOption option;
-    option.key = key;
-    option.isSet = false;
-    customOptions_.push_back(option);
-}
-
-bool PrinterUserPreferences::GetCustomOption(const std::string &key, SecureBlob &value) const
+std::shared_ptr<CustomOption> PrinterUserPreferences::GetCustomOption(const std::string &key) const
 {
     for (const auto &option : customOptions_) {
-        if (option.key == key) {
-            value = option.value;
-            return true;
+        if (option.key == key && !option.choice.empty()) {
+            return std::make_shared<CustomOption>(option);
         }
     }
-    return false;
-}
-
-bool PrinterUserPreferences::IsCustomOptionSet(const std::string &key) const
-{
-    for (const auto &option : customOptions_) {
-        if (option.key == key) {
-            return option.isSet;
-        }
-    }
-    return false;
+    return nullptr;
 }
 
 void PrinterUserPreferences::RemoveCustomOption(const std::string &key)
@@ -228,9 +188,14 @@ void PrinterUserPreferences::RemoveCustomOption(const std::string &key)
     }
 }
 
-const std::vector<CustomOption>& PrinterUserPreferences::GetAllCustomOptions() const
+std::vector<std::string> PrinterUserPreferences::GetAllCustomOptionKeys() const
 {
-    return customOptions_;
+    std::vector<std::string> keys;
+    keys.reserve(customOptions_.size());
+    for (const auto &option : customOptions_) {
+        keys.push_back(option.key);
+    }
+    return keys;
 }
 
 bool PrinterUserPreferences::IsEmpty() const
@@ -239,7 +204,7 @@ bool PrinterUserPreferences::IsEmpty() const
         return false;
     }
     for (const auto &option : customOptions_) {
-        if (option.isSet) {
+        if (!option.choice.empty()) {
             return false;
         }
     }
@@ -259,7 +224,7 @@ Json::Value PrinterUserPreferences::ConvertToJson() const
         for (const auto &opt : customOptions_) {
             Json::Value optJson;
             optJson["key"] = opt.key;
-            optJson["isSet"] = opt.isSet;
+            optJson["choice"] = opt.choice;
             optJson["value"] = opt.value.ToString();
             customArr.append(optJson);
         }
@@ -288,8 +253,10 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
             if (optJson["key"].isString()) {
                 opt.key = optJson["key"].asString();
             }
-            if (optJson["isSet"].isBool()) {
-                opt.isSet = optJson["isSet"].asBool();
+            if (optJson["choice"].isString()) {
+                opt.choice = optJson["choice"].asString();
+            } else if (optJson["isSet"].isBool()) {
+                opt.choice = optJson["isSet"].asBool() ? CUSTOM_OPTION_CHOICE : "";
             }
             if (optJson["value"].isString()) {
                 opt.value.SetData(reinterpret_cast<const uint8_t *>(
@@ -306,8 +273,8 @@ void PrinterUserPreferences::Dump() const
     PRINT_HILOGD("printerId: %{private}s", printerId_.c_str());
     PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
     for (const auto &opt : customOptions_) {
-        PRINT_HILOGD("customOption: key=%{public}s, isSet=%{public}d",
-            opt.key.c_str(), opt.isSet);
+        PRINT_HILOGD("customOption: key=%{public}s, choice=%{public}s",
+            opt.key.c_str(), opt.choice.c_str());
     }
 }
 

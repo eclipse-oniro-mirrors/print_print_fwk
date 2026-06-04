@@ -115,6 +115,13 @@ void TestGetPrinterDefaultPreferences(const uint8_t *data, size_t size, FuzzedDa
     PrintServiceAbility::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
 }
 
+void TestGetPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterPreferences printerPreference;
+    PrintServiceAbility::GetInstance()->GetPrinterPreference(printerId, printerPreference);
+}
+
 void TestCheckPreferencesConflicts(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -171,6 +178,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestQueryQueuedPrintJobById,
         &TestOnQueryCallBackEvent,
         &TestGetPrinterDefaultPreferences,
+        &TestGetPrinterPreference,
         &TestCheckPreferencesConflicts,
         &TestCheckPrintJobConflicts,
         &TestCheckPrintConstraint,

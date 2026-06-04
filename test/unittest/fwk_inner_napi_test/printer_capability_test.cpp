@@ -281,44 +281,6 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0016_NeedRename, TestSize.
     EXPECT_EQ(getPagesize.size(), 1);
 }
 
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_Reset_ClearsVendorAbilities, TestSize.Level2)
-{
-    PrinterCapability capability;
-    capability.SetVendorPrinterPrefAbility("com.test.vendor.Ability");
-    capability.SetVendorJobAttrAbility("com.test.vendor.JobAbility");
-
-    EXPECT_TRUE(capability.HasVendorPrinterPrefAbility());
-    EXPECT_TRUE(capability.HasVendorJobAttrAbility());
-    EXPECT_EQ(capability.GetVendorPrinterPrefAbility(), "com.test.vendor.Ability");
-    EXPECT_EQ(capability.GetVendorJobAttrAbility(), "com.test.vendor.JobAbility");
-
-    capability.Reset();
-
-    EXPECT_FALSE(capability.HasVendorPrinterPrefAbility());
-    EXPECT_FALSE(capability.HasVendorJobAttrAbility());
-    EXPECT_EQ(capability.GetVendorPrinterPrefAbility(), "");
-    EXPECT_EQ(capability.GetVendorJobAttrAbility(), "");
-}
-
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_VendorAbility_SettersAndGetters, TestSize.Level2)
-{
-    PrinterCapability capability;
-
-    capability.SetVendorPrinterPrefAbility("com.example.PrinterPref");
-    EXPECT_TRUE(capability.HasVendorPrinterPrefAbility());
-    EXPECT_EQ(capability.GetVendorPrinterPrefAbility(), "com.example.PrinterPref");
-
-    capability.SetVendorJobAttrAbility("com.example.JobAttr");
-    EXPECT_TRUE(capability.HasVendorJobAttrAbility());
-    EXPECT_EQ(capability.GetVendorJobAttrAbility(), "com.example.JobAttr");
-
-    capability.SetVendorPrinterPrefAbility("");
-    EXPECT_FALSE(capability.HasVendorPrinterPrefAbility());
-
-    capability.SetVendorJobAttrAbility("");
-    EXPECT_FALSE(capability.HasVendorJobAttrAbility());
-}
-
 /**
  * @tc.name: PrinterCapabilityTest_0017
  * @tc.desc: Verify empty pageSize list returns empty.

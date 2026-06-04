@@ -473,7 +473,7 @@ void PrinterPreferences::Dump() const
         PRINT_HILOGD("defaultReverse: %{public}d", defaultReverse_);
     }
     if (hasOption_) {
-        PRINT_HILOGD("option: %{public}s", option_.c_str());
+        PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
     if (hasVendorOptions_) {
         PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
@@ -510,7 +510,7 @@ void PrinterPreferences::DumpInfo() const
         PRINT_HILOGI("defaultReverse: %{public}d", defaultReverse_);
     }
     if (hasOption_) {
-        PRINT_HILOGI("option: %{public}s", option_.c_str());
+        PRINT_HILOGI("option: %{private}s", option_.c_str());
     }
     if (hasVendorOptions_) {
         PRINT_HILOGI("vendorOptions: %{private}s", vendorOptions_.c_str());

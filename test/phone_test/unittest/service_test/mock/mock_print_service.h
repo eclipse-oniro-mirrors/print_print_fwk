@@ -285,6 +285,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -341,6 +345,7 @@ public:
         char *userPasswd, std::vector<PrinterInfo>& printerInfos));
     MOCK_METHOD2(GetPrinterDefaultPreferences, int32_t(const std::string &printerId,
         PrinterPreferences &defaultPreferences));
+    MOCK_METHOD2(GetPrinterPreference, int32_t(const std::string &printerId, PrinterPreferences &printerPreference));
     MOCK_METHOD1(RegisterWatermarkCallback, int32_t(const sptr<IWatermarkCallback> &callback));
     MOCK_METHOD0(UnregisterWatermarkCallback, int32_t());
     MOCK_METHOD2(NotifyWatermarkComplete, int32_t(const std::string &jobId, int32_t result));

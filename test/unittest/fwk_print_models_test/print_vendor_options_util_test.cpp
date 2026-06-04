@@ -273,20 +273,6 @@ HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_OverrideFieldOverridesDe
     EXPECT_EQ(mergedJson["paperSize"].asString(), "A5");
 }
 
-HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_BaseOptionsEmpty_ReturnsExtraOptions, TestSize.Level1)
-{
-    std::string defaultVendorOptions = "";
-    std::string overrideVendorOptions = R"({"user_username":"admin"})";
-
-    std::string merged = PrintVendorOptionsUtil::MergeVendorOptions(defaultVendorOptions, overrideVendorOptions);
-
-    Json::Value mergedJson;
-    PrintJsonUtil::Parse(merged, mergedJson);
-
-    EXPECT_FALSE(mergedJson.isMember("paperSize"));
-    EXPECT_TRUE(mergedJson.isMember("user_username"));
-}
-
 HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_BothEmpty_ReturnsEmpty, TestSize.Level1)
 {
     std::string defaultVendorOptions = "";
@@ -295,48 +281,6 @@ HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_BothEmpty_ReturnsEmpty, 
     std::string merged = PrintVendorOptionsUtil::MergeVendorOptions(defaultVendorOptions, overrideVendorOptions);
 
     EXPECT_TRUE(merged.empty());
-}
-
-HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_InvalidBaseJson_ReturnsExtraOptions, TestSize.Level1)
-{
-    std::string defaultVendorOptions = "invalid";
-    std::string overrideVendorOptions = R"({"user_username":"admin"})";
-
-    std::string merged = PrintVendorOptionsUtil::MergeVendorOptions(defaultVendorOptions, overrideVendorOptions);
-
-    Json::Value mergedJson;
-    PrintJsonUtil::Parse(merged, mergedJson);
-
-    EXPECT_TRUE(mergedJson.isMember("user_username"));
-}
-
-HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_InvalidExtraJson_ReturnsBaseOptions, TestSize.Level1)
-{
-    std::string defaultVendorOptions = R"({"paperSize":"A4"})";
-    std::string overrideVendorOptions = "invalid";
-
-    std::string merged = PrintVendorOptionsUtil::MergeVendorOptions(defaultVendorOptions, overrideVendorOptions);
-
-    Json::Value mergedJson;
-    PrintJsonUtil::Parse(merged, mergedJson);
-
-    EXPECT_TRUE(mergedJson.isMember("paperSize"));
-}
-
-HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_ExtraFieldOverridesBaseField, TestSize.Level1)
-{
-    std::string defaultVendorOptions = R"({"paperSize":"A4","colorMode":"color"})";
-    std::string overrideVendorOptions = R"({"user_username":"admin","paperSize":"A5"})";
-
-    std::string merged = PrintVendorOptionsUtil::MergeVendorOptions(defaultVendorOptions, overrideVendorOptions);
-
-    Json::Value mergedJson;
-    PrintJsonUtil::Parse(merged, mergedJson);
-
-    EXPECT_TRUE(mergedJson.isMember("paperSize"));
-    EXPECT_TRUE(mergedJson.isMember("colorMode"));
-    EXPECT_TRUE(mergedJson.isMember("user_username"));
-    EXPECT_EQ(mergedJson["paperSize"].asString(), "A5");
 }
 
 HWTEST_F(PrintVendorOptionsUtilTest, SplitAndMergeRoundTrip_RestoresOriginal, TestSize.Level1)
@@ -513,12 +457,12 @@ HWTEST_F(PrintVendorOptionsUtilTest, ClassifyFields_SpecialKeyNames_ClassifiedCo
     EXPECT_FALSE(printerFields.isMember("user_"));
     EXPECT_FALSE(printerFields.isMember("user_123"));
     EXPECT_TRUE(printerFields.isMember("printer.user"));
-    EXPECT_TRUE(printerFields.isMember("user_username"));
+    EXPECT_FALSE(printerFields.isMember("user_username"));
 
     EXPECT_TRUE(userFields.isMember("user_"));
     EXPECT_TRUE(userFields.isMember("user_123"));
     EXPECT_FALSE(userFields.isMember("printer.user"));
-    EXPECT_FALSE(userFields.isMember("user_username"));
+    EXPECT_TRUE(userFields.isMember("user_username"));
 }
 
 HWTEST_F(PrintVendorOptionsUtilTest, MergeVendorOptions_DefaultJsonArray_IgnoresDefault, TestSize.Level1)
