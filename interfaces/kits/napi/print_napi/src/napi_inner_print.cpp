@@ -565,6 +565,12 @@ napi_value NapiInnerPrint::GetPrinterPreference(napi_env env, napi_callback_info
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
         int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(
                                           context->printerId, context->printerPreference);
         context->result = ret == E_PRINT_NONE;
@@ -821,6 +827,12 @@ napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
         int32_t ret =
             PrintManagerClient::GetInstance()->SetPrinterPreference(context->printerId, context->printerPreference);
         context->result = ret == E_PRINT_NONE;

@@ -1205,7 +1205,10 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
     std::string jsonString = PrintJsonUtil::WriteString(json);
     size_t jsonLength = jsonString.length();
     ssize_t writeLength = write(fd, jsonString.c_str(), jsonLength);
-    fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+    if (fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN) != 0) {
+        PRINT_HILOGE("Failed to close user preferences file, errno=%{public}d", errno);
+        return false;
+    }
     if (static_cast<size_t>(writeLength) != jsonLength) {
         PRINT_HILOGE("Failed to write user preferences file, writeLength=%{public}zd, jsonLength=%{public}zu",
             writeLength, jsonLength);

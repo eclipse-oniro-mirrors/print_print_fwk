@@ -569,13 +569,14 @@ int32_t PrintManagerClient::GetPrinterDefaultPreferences(
 
 int32_t PrintManagerClient::GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     PRINT_HILOGD("PrintManagerClient GetPrinterPreference start.");
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->GetPrinterPreference(printerId, printerPreference);
-        PRINT_HILOGD("PrintManagerClient GetPrinterPreference out ret = [%{public}d].", ret);
+    auto proxy = GetPrintServiceProxy();
+    if (proxy == nullptr) {
+        PRINT_HILOGE("GetPrintServiceProxy failed.");
+        return E_PRINT_RPC_FAILURE;
     }
+    int32_t ret = proxy->GetPrinterPreference(printerId, printerPreference);
+    PRINT_HILOGD("PrintManagerClient GetPrinterPreference out ret = [%{public}d].", ret);
     return ret;
 }
 
