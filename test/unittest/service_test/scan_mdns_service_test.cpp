@@ -17,6 +17,9 @@
 #include "mock_bundle_mgr.h"
 #include "scan_mdns_service.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace OHOS {
 namespace Scan {
 class ScanMdnsServiceTest : public testing::Test {
@@ -39,8 +42,8 @@ void ScanMdnsServiceTest::TearDownTestCase(void)
  */
 HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001_NeedRename, TestSize.Level1)
 {
-    EXPECT_EQ(ScanMdnsService::OnStartDiscoverService(), true);
-    EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
+    EXPECT_EQ(ScanMdnsService::GetInstance().OnStartDiscoverService(), true);
+    EXPECT_EQ(ScanMdnsService::GetInstance().OnStopDiscoverService(), true);
 }
 
 /**
@@ -51,7 +54,7 @@ HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001_NeedRename, TestSize.Leve
  */
 HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0002_NeedRename, TestSize.Level1)
 {
-    EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
+    EXPECT_EQ(ScanMdnsService::GetInstance().OnStopDiscoverService(), true);
 }
 
 }  // namespace Scan

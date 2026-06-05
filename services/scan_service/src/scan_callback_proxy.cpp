@@ -26,7 +26,7 @@ bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
     SCAN_HILOGI("ScanCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
 
@@ -54,7 +54,7 @@ bool ScanCallbackProxy::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync 
     SCAN_HILOGD("ScanCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteUint32(state), false);
@@ -81,7 +81,7 @@ bool ScanCallbackProxy::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     SCAN_HILOGI("Enter OnGetDevicesList");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInt32(infos.size()), false);

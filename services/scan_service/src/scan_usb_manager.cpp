@@ -202,28 +202,27 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
         SCAN_HILOGE("UpdateUsbScannerId serialNumber or usbDevicePort is null.");
         return;
     }
-    if (scannerDiscoverData_.HasUsbDevice(serialNumber)) {
-        ScanDeviceInfo info;
-        scannerDiscoverData_.GetUsbDevice(serialNumber, info);
-        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{private}s, deviceId = %{private}s.",
-            usbDevicePort.c_str(),
-            info.deviceId.c_str());
-        std::string newDeviceId = ScanServiceUtils::ReplaceDeviceIdUsbPort(info.deviceId, usbDevicePort);
-        ScanDeviceInfoSync syncInfo;
-        syncInfo.deviceId = newDeviceId;
-        syncInfo.uniqueId = serialNumber;
-        syncInfo.oldDeviceId = info.deviceId;
-        syncInfo.discoverMode = ScannerDiscoveryMode::USB_MODE;
-        syncInfo.syncMode = ScannerSyncMode::UPDATE_MODE;
-        ScanServiceAbility::GetInstance()->UpdateScannerId(syncInfo);
-        ScanSystemData::GetInstance().UpdateScannerIdByUsbDevicePort(
-            ScannerDiscoveryMode::USB_MODE + serialNumber, usbDevicePort);
-        if (!ScanSystemData::GetInstance().SaveScannerMap()) {
-            SCAN_HILOGE("UpdateUsbScannerId SaveScannerMap fail");
-        }
-    } else {
+    ScanDeviceInfo info;
+    if (!scannerDiscoverData_.GetUsbDevice(serialNumber, info)) {
         SCAN_HILOGD("not find scanner, start discover");
         ScanServiceAbility::GetInstance()->GetScannerList();
+        return;
+    }
+    SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{private}s, deviceId = %{private}s.",
+        usbDevicePort.c_str(),
+        info.deviceId.c_str());
+    std::string newDeviceId = ScanServiceUtils::ReplaceDeviceIdUsbPort(info.deviceId, usbDevicePort);
+    ScanDeviceInfoSync syncInfo;
+    syncInfo.deviceId = newDeviceId;
+    syncInfo.uniqueId = serialNumber;
+    syncInfo.oldDeviceId = info.deviceId;
+    syncInfo.discoverMode = ScannerDiscoveryMode::USB_MODE;
+    syncInfo.syncMode = ScannerSyncMode::UPDATE_MODE;
+    ScanServiceAbility::GetInstance()->UpdateScannerId(syncInfo);
+    ScanSystemData::GetInstance().UpdateScannerIdByUsbDevicePort(
+        ScannerDiscoveryMode::USB_MODE + serialNumber, usbDevicePort);
+    if (!ScanSystemData::GetInstance().SaveScannerMap()) {
+        SCAN_HILOGE("UpdateUsbScannerId SaveScannerMap fail");
     }
 }
 
@@ -237,9 +236,9 @@ void ScanUsbManager::DisConnectUsbScanner(std::string usbDevicePort)
     auto usbSnMapit = usbSnMap_.find(usbDevicePort);
     if (usbSnMapit != usbSnMap_.end()) {
         std::string serialNumber = usbSnMapit->second.GetmSerial();
-        if (scannerDiscoverData_.HasUsbDevice(serialNumber)) {
-            ScanDeviceInfo info;
-            scannerDiscoverData_.GetUsbDevice(serialNumber, info);
+        ScanDeviceInfo info;
+        if (scannerDiscoverData_.GetUsbDevice(serialNumber, info)) {
+            ScanServiceAbility::GetInstance()->DisConnectUsbScanner(serialNumber, info.deviceId);
         }
         usbSnMap_.erase(usbDevicePort);
         SCAN_HILOGD("DealUsbDevStatusChange detached usbDevicePort = %{private}s, serialNumber = %{private}s",

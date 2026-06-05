@@ -116,7 +116,7 @@ protected:
 private:
 #endif // UNIT_TEST
     WatermarkManager() = default;
-    ~WatermarkManager() override = default;
+    ~WatermarkManager() override;
 
 private:
 

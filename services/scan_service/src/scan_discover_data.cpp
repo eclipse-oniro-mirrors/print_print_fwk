@@ -74,16 +74,57 @@ bool ScannerDiscoverData::GetEsclDevice(const std::string& uniqueId, ScanDeviceI
     return false;
 }
 
-bool ScannerDiscoverData::RemoveUsbDevice(const std::string& uniqueId)
-{
-    std::lock_guard<std::mutex> lock(usbMutex_);
-    return usbDeviceInfoMap_.erase(uniqueId) > 0;
-}
-
-bool ScannerDiscoverData::RemoveTcpDevice(const std::string& uniqueId)
+bool ScannerDiscoverData::GetAndRemoveTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info)
 {
     std::lock_guard<std::mutex> lock(tcpMutex_);
-    return tcpDeviceInfoMap_.erase(uniqueId) > 0;
+    auto it = tcpDeviceInfoMap_.find(uniqueId);
+    if (it != tcpDeviceInfoMap_.end()) {
+        info = it->second;
+        tcpDeviceInfoMap_.erase(it);
+        return true;
+    }
+    return false;
+}
+
+bool ScannerDiscoverData::GetAndRemoveEsclDevice(const std::string& uniqueId, ScanDeviceInfo& info)
+{
+    std::lock_guard<std::mutex> lock(esclMutex_);
+    auto it = esclDeviceInfoMap_.find(uniqueId);
+    if (it != esclDeviceInfoMap_.end()) {
+        info = it->second;
+        esclDeviceInfoMap_.erase(it);
+        return true;
+    }
+    return false;
+}
+
+bool ScannerDiscoverData::UpdateUsbDevice(const std::string& uniqueId,
+    std::function<void(ScanDeviceInfo&)> modifier)
+{
+    std::lock_guard<std::mutex> lock(usbMutex_);
+    auto it = usbDeviceInfoMap_.find(uniqueId);
+    if (it == usbDeviceInfoMap_.end()) {
+        return false;
+    }
+    modifier(it->second);
+    return true;
+}
+
+bool ScannerDiscoverData::UpdateTcpDevice(const std::string& srcKey, const std::string& dstKey,
+    std::function<void(ScanDeviceInfo&)> modifier)
+{
+    std::lock_guard<std::mutex> lock(tcpMutex_);
+    auto it = tcpDeviceInfoMap_.find(srcKey);
+    if (it == tcpDeviceInfoMap_.end()) {
+        return false;
+    }
+    ScanDeviceInfo info = it->second;
+    if (srcKey != dstKey) {
+        tcpDeviceInfoMap_.erase(it);
+    }
+    modifier(info);
+    tcpDeviceInfoMap_[dstKey] = info;
+    return true;
 }
 
 bool ScannerDiscoverData::RemoveEsclDevice(const std::string& uniqueId)
@@ -92,58 +133,16 @@ bool ScannerDiscoverData::RemoveEsclDevice(const std::string& uniqueId)
     return esclDeviceInfoMap_.erase(uniqueId) > 0;
 }
 
-std::map<std::string, ScanDeviceInfo> ScannerDiscoverData::GetAllUsbDevices() const
-{
-    std::lock_guard<std::mutex> lock(usbMutex_);
-    return usbDeviceInfoMap_;
-}
-
-std::map<std::string, ScanDeviceInfo> ScannerDiscoverData::GetAllTcpDevices() const
-{
-    std::lock_guard<std::mutex> lock(tcpMutex_);
-    return tcpDeviceInfoMap_;
-}
-
 std::map<std::string, ScanDeviceInfo> ScannerDiscoverData::GetAllEsclDevices() const
 {
     std::lock_guard<std::mutex> lock(esclMutex_);
     return esclDeviceInfoMap_;
 }
 
-void ScannerDiscoverData::ClearUsbDevices()
-{
-    std::lock_guard<std::mutex> lock(usbMutex_);
-    usbDeviceInfoMap_.clear();
-}
-
-void ScannerDiscoverData::ClearTcpDevices()
-{
-    std::lock_guard<std::mutex> lock(tcpMutex_);
-    tcpDeviceInfoMap_.clear();
-}
-
 void ScannerDiscoverData::ClearEsclDevices()
 {
     std::lock_guard<std::mutex> lock(esclMutex_);
     esclDeviceInfoMap_.clear();
-}
-
-bool ScannerDiscoverData::HasUsbDevice(const std::string& uniqueId) const
-{
-    std::lock_guard<std::mutex> lock(usbMutex_);
-    return usbDeviceInfoMap_.find(uniqueId) != usbDeviceInfoMap_.end();
-}
-
-bool ScannerDiscoverData::HasTcpDevice(const std::string& uniqueId) const
-{
-    std::lock_guard<std::mutex> lock(tcpMutex_);
-    return tcpDeviceInfoMap_.find(uniqueId) != tcpDeviceInfoMap_.end();
-}
-
-bool ScannerDiscoverData::HasEsclDevice(const std::string& uniqueId) const
-{
-    std::lock_guard<std::mutex> lock(esclMutex_);
-    return esclDeviceInfoMap_.find(uniqueId) != esclDeviceInfoMap_.end();
 }
 
 } // namespace OHOS::Scan
