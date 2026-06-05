@@ -6356,7 +6356,8 @@ HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_OnlyUserOpti
     EXPECT_TRUE(printerPrefs.GetVendorOptions().empty());
 }
 
-HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_InvalidPrinterId_ReturnsInvalidPrinter, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_InvalidPrinterId_ReturnsInvalidPrinter,
+    TestSize.Level1)
 {
     OHOS::uid_ = 100 * 200000;
 

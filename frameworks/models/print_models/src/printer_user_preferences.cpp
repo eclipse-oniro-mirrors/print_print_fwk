@@ -23,14 +23,14 @@
 
 namespace OHOS::Print {
 
-SecureBlob::SecureBlob(uint32_t s, uint8_t *d) : size(0), data(nullptr)
-{
-    SetData(d, s);
-}
-
 SecureBlob::SecureBlob(const SecureBlob &other) : size(0), data(nullptr)
 {
     SetData(other.data, other.size);
+}
+
+SecureBlob::SecureBlob(uint32_t s, uint8_t *d) : size(0), data(nullptr)
+{
+    SetData(d, s);
 }
 
 SecureBlob& SecureBlob::operator=(const SecureBlob &other)

@@ -571,8 +571,8 @@ napi_value NapiInnerPrint::GetPrinterPreference(napi_env env, napi_callback_info
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(
-                                          context->printerId, context->printerPreference);
+        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(context->printerId,
+            context->printerPreference);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("GetPrinterPreference failed!");
@@ -797,10 +797,6 @@ napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info
     PRINT_HILOGI("Enter SetPrinterPreference---->");
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.setPrinterPreferences", PRINT_API_COUNTED);
     auto context = std::make_shared<InnerPrintContext>();
-    if (context == nullptr) {
-        PRINT_HILOGE("InnerPrintContext context nullptr");
-        return nullptr;
-    }
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {

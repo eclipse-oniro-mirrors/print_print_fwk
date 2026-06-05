@@ -278,8 +278,7 @@ void TestProcessSingleCustomOption(const uint8_t *data, size_t size, FuzzedDataP
     optionJson["value"] = value;
     PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, optionJson, userPrefs);
     
-    Json::Value invalidJson;
-    invalidJson = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    Json::Value invalidJson = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->ProcessSingleCustomOption(key, invalidJson, userPrefs);
     
     Json::Value emptyValueJson;

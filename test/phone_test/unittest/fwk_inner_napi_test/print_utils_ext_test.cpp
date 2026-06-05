@@ -526,7 +526,7 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_CustomOptionValueAnonymized_Stand
  */
 HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_StandardOptionsPreserved_NoSensitiveData, TestSize.Level2)
 {
-    std::string option = R"({"advancedOptions":{"media-size\":\"A4\",\"colorMode\":\"color\"}})";
+    std::string option = R"({"advancedOptions":{"media-size":"A4", "colorMode":"color"}})";
     std::string result = PrintUtils::AnonymizeJobOption(option);
     EXPECT_NE(result, "");
     Json::Value resultJson;

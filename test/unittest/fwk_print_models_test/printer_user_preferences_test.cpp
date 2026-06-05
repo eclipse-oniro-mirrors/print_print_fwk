@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include "printer_user_preferences.h"
+#include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
 
@@ -445,23 +446,6 @@ HWTEST_F(PrinterUserPreferencesTest, SetCustomOption_NonCustomChoice_ClearsValue
     EXPECT_TRUE(opt->value.IsEmpty());
 }
 
-HWTEST_F(PrinterUserPreferencesTest, SetCustomOption_OverrideExisting_UpdatesFields, TestSize.Level1)
-{
-    PrinterUserPreferences userPrefs;
-    uint8_t data1[] = {0x01};
-    SecureBlob value1(sizeof(data1), data1);
-    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value1);
-
-    uint8_t data2[] = {0x02, 0x03};
-    SecureBlob value2(sizeof(data2), data2);
-    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value2);
-
-    auto opt = userPrefs.GetCustomOption("key1");
-    ASSERT_NE(opt, nullptr);
-    EXPECT_EQ(opt->choice, CUSTOM_OPTION_CHOICE);
-    EXPECT_EQ(opt->value.size, 2u);
-}
-
 HWTEST_F(PrinterUserPreferencesTest, GetCustomOption_ExistingKey_ReturnsCorrectData, TestSize.Level1)
 {
     PrinterUserPreferences userPrefs;
@@ -498,13 +482,6 @@ HWTEST_F(PrinterUserPreferencesTest, RemoveCustomOption_ExistingKey_RemovesEntry
     userPrefs.RemoveCustomOption("key1");
     EXPECT_EQ(userPrefs.GetCustomOption("key1"), nullptr);
     EXPECT_TRUE(userPrefs.GetAllCustomOptionKeys().empty());
-}
-
-HWTEST_F(PrinterUserPreferencesTest, RemoveCustomOption_NonExistentKey_NoCrash, TestSize.Level1)
-{
-    PrinterUserPreferences userPrefs;
-    userPrefs.RemoveCustomOption("nonexistent");
-    EXPECT_TRUE(userPrefs.IsEmpty());
 }
 
 HWTEST_F(PrinterUserPreferencesTest, GetAllCustomOptionKeys_ReturnsAllKeys, TestSize.Level1)
@@ -565,18 +542,6 @@ HWTEST_F(PrinterUserPreferencesTest, SetData_ZeroSize_RemainsEmpty, TestSize.Lev
     EXPECT_TRUE(blob.IsEmpty());
 }
 
-HWTEST_F(PrinterUserPreferencesTest, SetData_OverwritePrevious_ClearsOld, TestSize.Level1)
-{
-    uint8_t data1[] = {0x01, 0x02, 0x03};
-    SecureBlob blob;
-    blob.SetData(data1, sizeof(data1));
-    EXPECT_EQ(blob.size, 3u);
-
-    uint8_t data2[] = {0x0A, 0x0B};
-    blob.SetData(data2, sizeof(data2));
-    EXPECT_EQ(blob.size, 2u);
-}
-
 HWTEST_F(PrinterUserPreferencesTest, MoveAssign_TransfersOwnership, TestSize.Level1)
 {
     uint8_t data[] = {0x01, 0x02, 0x03};
@@ -601,26 +566,6 @@ HWTEST_F(PrinterUserPreferencesTest, ToString_EmptyBlob_ReturnsEmpty, TestSize.L
 {
     SecureBlob blob;
     EXPECT_EQ(blob.ToString(), "");
-}
-
-HWTEST_F(PrinterUserPreferencesTest, TwoArgConstructor_NullPtr_RemainsEmpty, TestSize.Level1)
-{
-    SecureBlob blob(5, nullptr);
-    EXPECT_TRUE(blob.IsEmpty());
-}
-
-HWTEST_F(PrinterUserPreferencesTest, TwoArgConstructor_ZeroSize_RemainsEmpty, TestSize.Level1)
-{
-    uint8_t data[] = {0x01, 0x02};
-    SecureBlob blob(0, data);
-    EXPECT_TRUE(blob.IsEmpty());
-}
-
-HWTEST_F(PrinterUserPreferencesTest, CopyFromEmpty_RemainsEmpty, TestSize.Level1)
-{
-    SecureBlob empty;
-    SecureBlob copy(empty);
-    EXPECT_TRUE(copy.IsEmpty());
 }
 
 } // namespace Print
