@@ -57,7 +57,7 @@ bool ScanCallbackStub::HandleDeviceInfoEvent(MessageParcel &data, MessageParcel 
         return false;
     }
     bool result = OnCallback(state, *info);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 
@@ -71,7 +71,7 @@ bool ScanCallbackStub::HandleDeviceInfoSyncEvent(MessageParcel &data, MessagePar
         return false;
     }
     bool result = OnCallbackSync(state, *info);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 
@@ -91,7 +91,7 @@ bool ScanCallbackStub::HandleSendDeviceList(MessageParcel &data, MessageParcel &
         infos.emplace_back(*info);
     }
     bool result = OnGetDevicesList(infos);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 

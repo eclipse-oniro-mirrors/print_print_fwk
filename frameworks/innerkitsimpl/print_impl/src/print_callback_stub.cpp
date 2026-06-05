@@ -58,7 +58,7 @@ int32_t PrintCallbackStub::OnRemoteRequest(
 bool PrintCallbackStub::HandlePrintTaskEvent(MessageParcel &data, MessageParcel &reply)
 {
     bool result = OnCallback();
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 
@@ -70,7 +70,7 @@ bool PrintCallbackStub::HandlePrinterEvent(MessageParcel &data, MessageParcel &r
     bool result = false;
     if (info != nullptr) {
         result = OnCallback(state, *info);
-        reply.WriteBool(result);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     }
     return result;
 }
@@ -83,7 +83,7 @@ bool PrintCallbackStub::HandlePrintJobEvent(MessageParcel &data, MessageParcel &
     bool result = false;
     if (info != nullptr) {
         result = OnCallback(state, *info);
-        reply.WriteBool(result);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     }
     return result;
 }
@@ -95,7 +95,7 @@ bool PrintCallbackStub::HandleExtEvent(MessageParcel &data, MessageParcel &reply
     std::string info;
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(info), false);
     bool result = OnCallback(extensionId, info);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 
@@ -125,7 +125,7 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
         ppds.push_back(*ppd);
     }
     bool result = OnCallback(*info, ppds);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return result;
 }
 
@@ -149,7 +149,7 @@ bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageP
             close(fd);
         }
     }
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent end");
     return true;
 }
@@ -167,7 +167,7 @@ bool PrintCallbackStub::HandlePrintAdapterJobChangedEvent(MessageParcel &data, M
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent jobId:%{public}s, subState:%{public}d",
         jobId.c_str(), subState);
     bool result = OnCallbackAdapterJobStateChanged(jobId, state, subState);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent end");
     return true;
 }
@@ -181,7 +181,7 @@ bool PrintCallbackStub::HandlePrintAdapterGetFileEvent(MessageParcel &data, Mess
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent state:%{public}d",
         state);
     bool result = OnCallbackAdapterGetFile(state);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent end");
     return true;
 }
@@ -208,7 +208,7 @@ bool PrintCallbackStub::HandleSharedHostDiscoverEvent(MessageParcel &data, Messa
         sharedHosts.push_back(*host);
     }
     bool result = OnCallback(sharedHosts);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandleSharedHostDiscoverEvent end");
     return true;
 }
