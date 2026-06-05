@@ -459,11 +459,14 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const
 bool PrinterCapability::MarshallingSupportedLists(Parcel &parcel) const
 {
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedPageSizeList_, [](Parcel &p, const PrintPageSize &item) -> bool { return item.Marshalling(p); })) {
+        parcel, supportedPageSizeList_,
+        [](Parcel &p, const PrintPageSize &item) -> bool { return item.Marshalling(p); })) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, resolutionList_, [](Parcel &p, const PrintResolution &item) -> bool { return item.Marshalling(p); }, hasResolution_)) {
+        parcel, resolutionList_,
+        [](Parcel &p, const PrintResolution &item) -> bool { return item.Marshalling(p); },
+        hasResolution_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
@@ -482,7 +485,9 @@ bool PrinterCapability::MarshallingSupportedLists(Parcel &parcel) const
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedQualityList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); }, hasSupportedQuality_)) {
+        parcel, supportedQualityList_,
+        [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
+        hasSupportedQuality_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
