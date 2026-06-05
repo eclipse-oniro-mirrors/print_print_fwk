@@ -21,9 +21,9 @@
 #include <vector>
 
 #include "print_security_guard_info.h"
+#include "print_system_data.h"
 
 namespace OHOS::Print {
-class PrintSystemData;
 class PrintSecurityGuardManager {
 public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,

@@ -15,8 +15,6 @@
 
 #include "print_security_guard_manager.h"
 
-#include "print_system_data.h"
-
 namespace OHOS::Print {
 static int64_t EVENT_ID = 1011015004;
 static std::string VERSION = "1.0";
