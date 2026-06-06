@@ -175,7 +175,10 @@ public:
             return false;
         }
         for (uint32_t index = 0; index < vecSize; index++) {
-            writeFunc(parcel, list[index]);
+            if (!writeFunc(parcel, list[index])) {
+                PRINT_HILOGE("WriteListToParcel element %{public}u failed", index);
+                return false;
+            }
         }
         return true;
     }

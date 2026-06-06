@@ -54,7 +54,7 @@ bool KiaInterceptorCallbackStub::HandleCheckRejectEvent(MessageParcel &data, Mes
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(callerAppId), false);
     PRINT_HILOGD("KiaInterceptorCallbackStub pid:%{public}d, callerAppId:%{public}s", pid, callerAppId.c_str());
     bool result = OnCheckPrintJobNeedReject(pid, callerAppId);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("KiaInterceptorCallbackStub HandleCheckRejectEvent end");
     return true;
 }

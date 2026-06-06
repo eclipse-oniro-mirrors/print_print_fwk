@@ -360,13 +360,21 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel)
 bool PrinterCapability::ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right)
 {
     if (!PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedColorModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        parcel, right.supportedColorModeList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
         &right.hasSupportedColorMode_)) {
         return false;
     }
 
     if (!PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedDuplexModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        parcel, right.supportedDuplexModeList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
         &right.hasSupportedDuplexMode_)) {
         return false;
     }
@@ -384,13 +392,21 @@ bool PrinterCapability::ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapa
     }
 
     if (!PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedQualityList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        parcel, right.supportedQualityList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
         &right.hasSupportedQuality_)) {
         return false;
     }
 
     if (!PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedOrientationList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        parcel, right.supportedOrientationList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
         &right.hasSupportedOrientation_)) {
         return false;
     }
@@ -443,34 +459,39 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const
 bool PrinterCapability::MarshallingSupportedLists(Parcel &parcel) const
 {
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedPageSizeList_, [](Parcel &p, const PrintPageSize &item) { item.Marshalling(p); })) {
+        parcel, supportedPageSizeList_,
+        [](Parcel &p, const PrintPageSize &item) -> bool { return item.Marshalling(p); })) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, resolutionList_, [](Parcel &p, const PrintResolution &item) { item.Marshalling(p); }, hasResolution_)) {
+        parcel, resolutionList_,
+        [](Parcel &p, const PrintResolution &item) -> bool { return item.Marshalling(p); },
+        hasResolution_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedColorModeList_, [](Parcel &p, const int &item) { p.WriteUint32(item); },
+        parcel, supportedColorModeList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
         hasSupportedColorMode_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedDuplexModeList_, [](Parcel &p, const int &item) { p.WriteUint32(item); },
+        parcel, supportedDuplexModeList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
         hasSupportedDuplexMode_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedMediaTypeList_, [](Parcel &p, const std::string &item) { p.WriteString(item); },
+        parcel, supportedMediaTypeList_, [](Parcel &p, const std::string &item) -> bool { return p.WriteString(item); },
         hasSupportedMediaType_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedQualityList_, [](Parcel &p, const int &item) { p.WriteUint32(item); }, hasSupportedQuality_)) {
+        parcel, supportedQualityList_,
+        [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
+        hasSupportedQuality_)) {
         return false;
     }
     if (!PrintUtils::WriteListToParcel(
-        parcel, supportedOrientationList_, [](Parcel &p, const int &item) { p.WriteUint32(item); },
+        parcel, supportedOrientationList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
         hasSupportedOrientation_)) {
         return false;
     }
