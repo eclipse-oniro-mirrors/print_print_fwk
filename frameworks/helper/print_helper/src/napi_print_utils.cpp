@@ -272,12 +272,12 @@ std::string NapiPrintUtils::GetStringFromValueUtf8(napi_env env, napi_value valu
         return "";
     }
 
-    std::string result(length + 1, '\0');
-    status = napi_get_value_string_utf8(env, value, result.data(), length + 1, &length);
+    std::vector<char> buffer(length + 1);
+    status = napi_get_value_string_utf8(env, value, buffer.data(), length + 1, &length);
     if (status != napi_ok) {
         return "";
     }
-    result.resize(length);
+    std::string result(buffer.data());
     return result;
 }
 
