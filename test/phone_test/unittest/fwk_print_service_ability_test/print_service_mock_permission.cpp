@@ -25,12 +25,13 @@ void PrintServiceMockPermission::MockPermission()
     static const char *PERMS[] = {
         "ohos.permission.PRINT",
         "ohos.permission.MANAGE_PRINT_JOB",
-        "ohos.permission.ENTERPRISE_MANAGE_PRINT"
+        "ohos.permission.ENTERPRISE_MANAGE_PRINT",
+        "ohos.permission.REPORT_SECURITY_EVENT"
     };
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
-        .permsNum = 3,
+        .permsNum = 4,
         .aclsNum = 0,
         .dcaps = nullptr,
         .perms = PERMS,
