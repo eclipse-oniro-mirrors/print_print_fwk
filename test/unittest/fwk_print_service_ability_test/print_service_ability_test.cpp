@@ -23,7 +23,9 @@
 #define protected public
 #include "print_service_ability.h"
 #include "print_bms_helper.h"
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
 #include "print_failure_ai_notifier.h"
+#endif
 #include "event_listener_mgr.h"
 #undef protected
 #undef private
@@ -6404,6 +6406,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterOption_PrinterNotFound_NoOp, Test
     EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("non_existent_printer_id"), nullptr);
 }
 
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
 HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterInAddedList_NotifySuccess, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -6478,5 +6481,6 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_Eprint_SkipNotify, TestS
     auto &notifier = PrintFailureAiNotifier::GetInstance();
     EXPECT_EQ(notifier.jobStateMap_.size(), 0);
 }
+#endif
 }  // namespace Print
 }  // namespace OHOS
