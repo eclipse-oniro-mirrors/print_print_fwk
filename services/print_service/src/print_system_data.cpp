@@ -116,7 +116,8 @@ std::string PrintSystemData::ParseSelectedProtocolFromJson(Json::Value &object)
     if (PrintJsonUtil::IsMember(object, "selectedProtocol") && object["selectedProtocol"].isString()) {
         return object["selectedProtocol"].asString();
     }
-    return "";
+    PRINT_HILOGI("selectedProtocol not found, set to auto");
+    return "auto";
 }
 
 std::string PrintSystemData::HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri, 
@@ -127,10 +128,15 @@ std::string PrintSystemData::HandleOtaProtocolUpgrade(Json::Value &object, const
     std::string uriProtocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri);
     PpdInfo tempDriver;
     
-    if (ParseSelectedDriverFromJson(object, tempDriver) && 
-        uriProtocol == "lpd" && tempDriver.GetPpdName() != BSUNI_PPD_NAME) {
-        PRINT_HILOGI("OTA upgrade: set protocol to lpd for printer %{public}s", printerId.c_str());
-        return "lpd";
+    if (ParseSelectedDriverFromJson(object, tempDriver) && tempDriver.GetPpdName() != BSUNI_PPD_NAME) {
+        if (uriProtocol == "lpd") {
+            PRINT_HILOGI("OTA upgrade: set protocol to lpd for printer %{public}s", printerId.c_str());
+            return "lpd";
+        }
+        if (uriProtocol == "socket") {
+            PRINT_HILOGI("OTA upgrade: set protocol to socket for printer %{public}s", printerId.c_str());
+            return "socket";
+        }
     }
     
     PRINT_HILOGI("OTA upgrade: set protocol to auto for printer %{public}s", printerId.c_str());
