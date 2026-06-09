@@ -1929,11 +1929,9 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfo_SelectedProtocolExists_Te
     ppd.SetPpdInfo("HP", "HP LaserJet", "hp-laserjet.ppd");
     object["selectedDriver"] = ppd.ConvertToJson();
     
-    PrinterCapability caps;
     Json::Value capsJson;
-    capsJson["colorModes"] = Json::arrayValue;
-    capsJson["duplexModes"] = Json::arrayValue;
-    capsJson["qualities"] = Json::arrayValue;
+    capsJson["colorMode"] = 1;
+    capsJson["duplexMode"] = 1;
     object["capability"] = capsJson;
     
     EXPECT_TRUE(systemData->ConvertJsonToPrinterInfo(object));
@@ -1952,11 +1950,9 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfo_SelectedProtocolNotExists
     ppd.SetPpdInfo("Canon", "Canon Printer", "canon.ppd");
     object["selectedDriver"] = ppd.ConvertToJson();
     
-    PrinterCapability caps;
     Json::Value capsJson;
-    capsJson["colorModes"] = Json::arrayValue;
-    capsJson["duplexModes"] = Json::arrayValue;
-    capsJson["qualities"] = Json::arrayValue;
+    capsJson["colorMode"] = 1;
+    capsJson["duplexMode"] = 1;
     object["capability"] = capsJson;
     
     EXPECT_TRUE(systemData->ConvertJsonToPrinterInfo(object));
