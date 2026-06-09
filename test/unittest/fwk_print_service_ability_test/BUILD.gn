@@ -75,6 +75,10 @@ ohos_unittest("fwk_print_service_ability_test") {
     cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
   }
 
+  if (print_fwk_feature_print_failure_ai_notifier) {
+    cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
   deps = [
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",

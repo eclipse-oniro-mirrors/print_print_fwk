@@ -20,7 +20,6 @@
 #include <mutex>
 #include <string>
 #include <set>
-#include "print_notification_builder.h"
 
 namespace OHOS::Print {
 
