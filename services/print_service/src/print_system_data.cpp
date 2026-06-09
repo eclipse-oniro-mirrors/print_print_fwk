@@ -62,9 +62,8 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     std::string uri;
     if (!PrintJsonUtil::FindJsonStringMember(object, "uri", uri)) {return false;}
     
-    std::string selectedProtocol = ParseSelectedProtocolFromJson(object);
-    bool needOtaUpdate = !PrintJsonUtil::IsMember(object, "selectedProtocol");
-    
+    std::string selectedProtocol;
+    bool needOtaUpdate = !PrintJsonUtil::FindJsonStringMember(object, "selectedProtocol", selectedProtocol);
     if (needOtaUpdate) {
         selectedProtocol = HandleOtaProtocolUpgrade(object, uri, id);
     }
@@ -109,15 +108,6 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     
     PRINT_HILOGI("ConvertJsonToPrinterInfo success, id: %{public}s", id.c_str());
     return true;
-}
-
-std::string PrintSystemData::ParseSelectedProtocolFromJson(Json::Value &object)
-{
-    if (PrintJsonUtil::IsMember(object, "selectedProtocol") && object["selectedProtocol"].isString()) {
-        return object["selectedProtocol"].asString();
-    }
-    PRINT_HILOGI("selectedProtocol not found, set to auto");
-    return "auto";
 }
 
 std::string PrintSystemData::HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri, 
