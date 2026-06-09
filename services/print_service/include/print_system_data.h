@@ -124,14 +124,14 @@ private:
     Json::Value GetCupsOptionsJson(const PrinterCapability &cap);
     void SaveJsonFile(const std::string &fileName, const std::string &jsonString);
     PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();
-    const std::string& GetPrintersPath();
+const std::string& GetPrintersPath();
     void ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson);
     std::string ParseSelectedProtocolFromJson(Json::Value &object);
     std::string HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri, 
                                           const std::string &printerId);
     bool ParseSelectedDriverFromJson(Json::Value &object, PpdInfo &selectedDriver);
 
-    template<typename T>
+template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,
                                      const std::string &key,
                                      PrinterCapability &printerCapability,
