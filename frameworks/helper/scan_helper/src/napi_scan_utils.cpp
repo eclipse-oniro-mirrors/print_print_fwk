@@ -229,7 +229,7 @@ std::string NapiScanUtils::GetStringFromValueUtf8(napi_env env, napi_value value
         return "";
     }
 
-    std::vector<char> buffer(length + 1);
+    std::vector<char> buffer(length + 1, 0);
     status = napi_get_value_string_utf8(env, value, buffer.data(), length + 1, &length);
     if (status != napi_ok) {
         return "";
