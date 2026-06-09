@@ -2297,10 +2297,10 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
         return;
     }
     auto printerId = printJob->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo) {
+    PrinterInfo printerInfo;
+    if (QueryAddedPrinterInfoByPrinterId(printerId, printerinfo)) {
         PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
-            printerInfo->GetPrinterName());
+            printerInfo.GetPrinterName());
     } else {
         PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
     }
@@ -5498,7 +5498,7 @@ int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPp
 
 bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 {
-    PRINT_HILOGI("Start CallBack Printerinfo");
+    PRINT_HILOGI("Start CallBack PrinterInfo");
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINT_QUERY_INFO_EVENT_TYPE);
     cbInfo.printerInfo = std::make_shared<PrinterInfo>(info);
