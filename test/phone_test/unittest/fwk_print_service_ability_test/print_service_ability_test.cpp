@@ -3094,6 +3094,7 @@ HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 {
 #ifdef EDM_SERVICE_ENABLE
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string emptyString = "";
     EXPECT_EQ(service->ReportBannedEvent(emptyString), 401);
