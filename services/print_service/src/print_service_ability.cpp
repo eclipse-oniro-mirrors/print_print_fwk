@@ -2298,7 +2298,7 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
     }
     auto printerId = printJob->GetPrinterId();
     PrinterInfo printerInfo;
-    if (QueryAddedPrinterInfoByPrinterId(printerId, printerinfo)) {
+    if (QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
             printerInfo.GetPrinterName());
     } else {
