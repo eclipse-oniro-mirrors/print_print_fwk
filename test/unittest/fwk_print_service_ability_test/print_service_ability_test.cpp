@@ -5013,10 +5013,55 @@ HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_CupsFailed_GenericFa
     auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
     EXPECT_CALL(*service, IsPpdNameValid(_)).WillOnce(Return(true));
-    EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(false));
-    int32_t ret = service->AddPrinterByPrinterDriver(
-        "TestPrinter", "ipp://192.168.1.1:631/ipp/print", "valid.ppd", "", "com.example");
-    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(false));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("com.test.ext:TestPrinter_001");
+    printerInfo->SetPrinterName("TestPrinter");
+    printerInfo->SetUri("ipp://192.168.1.100:631/printers/TestPrinter");
+    std::string ppdName = "default.ppd";
+    std::string ppdData = "";
+    
+    auto result = service->AddIpPrinterToCupsWithPpd(printerInfo, ppdName, ppdData);
+    EXPECT_EQ(result, E_PRINT_GENERIC_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_BsuniPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = BSUNI_PPD_NAME;
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), BSUNI_PPD_NAME);
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "Generic");
+    EXPECT_EQ(ppdInfo.GetModelNickName(), "System Default Driver");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_DefaultPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = DEFAULT_PPD_NAME;
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), DEFAULT_PPD_NAME);
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "Generic");
+    EXPECT_EQ(ppdInfo.GetModelNickName(), "IPP Everywhere");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_UnknownPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = "unknown.ppd";
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), "unknown.ppd");
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "auto");
+    EXPECT_EQ(ppdInfo.GetModelNickName(), "auto");
 }
 
 /**
