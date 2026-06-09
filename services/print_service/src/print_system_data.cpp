@@ -541,9 +541,7 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
 {
     auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
     if (info != nullptr) {
-        std::string uri = printerInfo->GetUri();
-        info->SetUri(uri);
-        info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
+        info->SetUri(printerInfo->GetUri());
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }
