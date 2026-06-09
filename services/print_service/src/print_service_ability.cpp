@@ -2074,14 +2074,14 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
 #ifdef PHONE_ISOLATION_ENABLE
     std::string newUri = info->GetUri();
 #else
-    std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(oldUri);
-    if (protocol.empty()) {
-        PRINT_HILOGW("Cannot parse uri");
-        return false;
+    std::string protocol = addedPrinter.GetSelectedProtocol();
+    std::string newUri;
+    if (!protocol.empty() && protocol != "auto") {
+        newUri = GetConnectUri(*info, protocol);
+        info->SetUri(newUri);
+    } else {
+        newUri = info->GetUri();
     }
-
-    std::string newUri = GetConnectUri(*info, protocol);
-    info->SetUri(newUri);
 #endif
 
     PRINT_HILOGD("CheckPrinterUriDifferent, old = %{public}s, new = %{public}s",
@@ -4271,15 +4271,6 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
 std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol)
 {
     std::string printerUri = printerInfo.GetUri();
-    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
-    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
-    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
-    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
-    int port = 0; /* Port portion of URI */
-    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
-        host, sizeof(host), &port, resource, sizeof(resource));
-    std::string printerIp;
-    printerIp.assign(host);
     std::string optionStr = printerInfo.GetOption();
     Json::Value option;
     if (!PrintJsonUtil::Parse(optionStr, option)) {
@@ -4334,28 +4325,28 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         return false;
     }
 #endif  // CUPS_ENABLE
+    PpdInfo ppdInfo = GetPpdInfoFromPpdName(ppdName);
+    std::string finalProtocol = connectProtocol.empty() ? "auto" : connectProtocol;
     printerInfo->SetPrinterName(printerName);
-    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    printerInfo->SetSelectedDriver(ppdInfo);
+    printerInfo->SetSelectedProtocol(finalProtocol);
+    PRINT_HILOGI("[Printer: %{public}s] DoAddPrinterToCups success, protocol: %{public}s",
+        printerName.c_str(), finalProtocol.c_str());
+    return true;
+}
+
+PpdInfo PrintServiceAbility::GetPpdInfoFromPpdName(const std::string &ppdName)
+{
     PpdInfo ppdInfo;
     if (ppdName == BSUNI_PPD_NAME) {
         ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
     } else if (ppdName == DEFAULT_PPD_NAME) {
         ppdInfo.SetPpdInfo("Generic", "IPP Everywhere", DEFAULT_PPD_NAME);
-    } else if (printCupsClient == nullptr) {
-        PRINT_HILOGE("printCupsClient is nullptr");
-        ppdInfo.SetPpdInfo("auto", "auto", ppdName);
-    } else if (!printCupsClient->QueryInfoByPpdName(ppdName, ppdInfo)) {
+    } else if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryInfoByPpdName(ppdName, ppdInfo)) {
         PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
         ppdInfo.SetPpdInfo("auto", "auto", ppdName);
     }
-    printerInfo->SetSelectedDriver(ppdInfo);
-    if (printCupsClient != nullptr) {
-        std::string protocol = printCupsClient->getScheme(printerUri);
-        if (!protocol.empty()) {
-            printerInfo->SetSelectedProtocol(protocol);
-        }
-    }
-    return true;
+    return ppdInfo;
 }
 
 bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
