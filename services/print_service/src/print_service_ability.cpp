@@ -4337,12 +4337,16 @@ bool PrintServiceAbility::DoAddPrinterToCups(
 
 PpdInfo PrintServiceAbility::GetPpdInfoFromPpdName(const std::string &ppdName)
 {
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     PpdInfo ppdInfo;
     if (ppdName == BSUNI_PPD_NAME) {
         ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
     } else if (ppdName == DEFAULT_PPD_NAME) {
         ppdInfo.SetPpdInfo("Generic", "IPP Everywhere", DEFAULT_PPD_NAME);
-    } else if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryInfoByPpdName(ppdName, ppdInfo)) {
+    } else if (printCupsClient == nullptr) {
+        PRINT_HILOGE("printCupsClient is nullptr");
+        ppdInfo.SetPpdInfo("auto", "auto", ppdName);
+    } else if (!printCupsClient->QueryInfoByPpdName(ppdName, ppdInfo)) {
         PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
         ppdInfo.SetPpdInfo("auto", "auto", ppdName);
     }
