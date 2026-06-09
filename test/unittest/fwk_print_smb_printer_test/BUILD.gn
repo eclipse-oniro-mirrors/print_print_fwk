@@ -14,6 +14,12 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
+if (print_fwk_feature_device_isolation) {
+  _service_path = "${print_path}/services/phone_service/print_service"
+} else {
+  _service_path = "${print_path}/services/print_service"
+}
+
 module_output_path = unit_test_output_path
 
 ohos_unittest("fwk_print_smb_printer_test") {
@@ -23,7 +29,7 @@ ohos_unittest("fwk_print_smb_printer_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
-    "${print_path}/services/print_service/include",
+    "${_service_path}/include",
     "${print_utils_path}/include",
   ]
 
