@@ -88,6 +88,7 @@ struct JobMonitorParam {
     ipp_jstate_t job_state = IPP_JOB_PENDING;
     char job_state_reasons[1024] = {};
     char job_printer_state_reasons[1024] = {};
+    char job_printer_state_message[1024] = {};
     bool isFirstQueryState = true;
     int32_t timesOfSameState = -1;
     bool isBlock = false;
@@ -95,6 +96,7 @@ struct JobMonitorParam {
     std::string jobOriginatingUserName;
     std::atomic<bool> isCanceled{false};
     std::atomic<bool> isInterrupt{false};
+    uint64_t uploadingFilesStartTime = 0;
     bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
@@ -223,6 +225,7 @@ private:
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
+    void ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleHeldState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandlePendingState(std::shared_ptr<JobMonitorParam> monitorParams);
