@@ -2271,8 +2271,14 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
 
 uint32_t PrintCupsClient::GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate)
 {
+    // 使用 64 位运算检测是否溢出
+    uint64_t result = (uint64_t)substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
+    if (result > UINT32_MAX) {
+        PRINT_HILOGW("substate overflow detected, ignore new substate(%{public}d)", singleSubstate);
+        return substate;
+    }
     PRINT_HILOGD("add new substate(%{public}d) to substate(%{public}u)", singleSubstate, substate);
-    return substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
+    return (uint32_t)result;
 }
 
 bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorParam> monitorParams)

@@ -2842,20 +2842,35 @@ HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByAdvJson_NestedJson_Test, Te
 }
 
 /**
- * @tc.name: PrintCupsClientTest_GetNewSubstate_001
- * @tc.desc: GetNewSubstate with various inputs
+ * @tc.name: PrintCupsClientTest_GetNewSubstate_BasicAndOverflow
+ * @tc.desc: GetNewSubstate basic functionality and overflow protection
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, GetNewSubstate_VariousInputs_Test, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, GetNewSubstate_BasicAndOverflow, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    
+
+    // 测试基本功能
     uint32_t result1 = printCupsClient.GetNewSubstate(0, PRINT_JOB_BLOCKED_UNKNOWN);
     EXPECT_EQ(result1, static_cast<uint32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
-    
+
     uint32_t result2 = printCupsClient.GetNewSubstate(result1, PRINT_JOB_BLOCKED_OFFLINE);
     EXPECT_GT(result2, result1);
+
+    // 测试溢出保护 - 组合 5 个 substate
+    uint32_t result = 0;
+    result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_OUT_OF_PAPER);
+    result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_OUT_OF_INK);
+    result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_JAMMED);
+    result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_DOOR_OPEN);
+    result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_LOW_ON_TONER);
+    EXPECT_GT(result, 0);
+
+    // 第 6 个应该触发溢出保护，返回原值
+    uint32_t before = result;
+    result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_UNKNOWN);
+    EXPECT_EQ(result, before);  // 溢出保护，值不变
 }
 
 /**
