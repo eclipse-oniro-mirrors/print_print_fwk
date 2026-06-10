@@ -94,6 +94,7 @@ const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
 const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
+const uint32_t SLOW_FILE_CONVERSION_THRESHOLD_TIME = 5000;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -181,6 +182,22 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
     {PRINTER_STATE_TIMED_OUT, PRINT_JOB_BLOCKED_UNKNOWN},
     {PRINTER_SPOOL_AREA_FULL, PRINT_JOB_BLOCKED_UNKNOWN},
     {PRINTER_INPUT_TRAY_MISSING, PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING},
+};
+
+static const std::string JOB_STATE_MESSAGE_UPLOADING_FILES = "uploading-files";
+static const std::string JOB_STATE_MESSAGE_CONVERTING_FILES = "converting-files";
+static const std::string JOB_STATE_MESSAGE_LARGE_FILE_ERROR = "large-file-error";
+static const std::string JOB_STATE_MESSAGE_FILE_PARSING_ERROR = "file-parsing-error";
+static const std::string JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION = "slow-file-convertion";
+static const std::string JOB_STATE_MESSAGE_PORT_ERROR = "port-error";
+
+static const std::map<std::string, PrintJobSubState> JOB_PRINTER_STATE_MESSAGE_LIST{
+    {JOB_STATE_MESSAGE_UPLOADING_FILES, PRINT_JOB_RUNNING_UPLOADING_FILES},
+    {JOB_STATE_MESSAGE_CONVERTING_FILES, PRINT_JOB_RUNNING_CONVERTING_FILES},
+    {JOB_STATE_MESSAGE_LARGE_FILE_ERROR, PRINT_JOB_BLOCKED_LARGE_FILE_ERROR},
+    {JOB_STATE_MESSAGE_FILE_PARSING_ERROR, PRINT_JOB_BLOCKED_FILE_PARSING_ERROR},
+    {JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION, PRINT_JOB_RUNNING_CONVERTING_FILES},
+    {JOB_STATE_MESSAGE_PORT_ERROR, PRINT_JOB_BLOCKED_PORT_ERROR},
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY{
@@ -1985,6 +2002,7 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
         return true;
     }
     ParseStateReasons(monitorParams);
+    ParseStateMessage(monitorParams);
     if (JobStatusCallback(monitorParams)) {
         PRINT_HILOGD("the job is processing");
         return true;
@@ -1999,11 +2017,12 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return false;
     }
-    
-    PRINT_HILOGI("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s\n",
+
+    PRINT_HILOGI("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s, MESSAGE: %{public}s\n",
         monitorParams->cupsJobId, ippEnumString("job-state", (int)monitorParams->job_state),
-        monitorParams->job_state_reasons, monitorParams->job_printer_state_reasons);
-    
+        monitorParams->job_state_reasons, monitorParams->job_printer_state_reasons,
+        monitorParams->job_printer_state_message);
+
     switch (monitorParams->job_state) {
         case IPP_JOB_PROCESSING:
             return HandleProcessingState(monitorParams);
@@ -2237,6 +2256,52 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
         monitorParams->substate);
 }
 
+void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (monitorParams == nullptr) {
+        PRINT_HILOGE("parse state message failed, monitorParams is nullptr");
+        return;
+    }
+    bool isUploadingOrConvertingState = false;
+    for (auto messageItem = JOB_PRINTER_STATE_MESSAGE_LIST.begin();
+         messageItem != JOB_PRINTER_STATE_MESSAGE_LIST.end(); messageItem++) {
+        if (strstr(monitorParams->job_printer_state_message, messageItem->first.c_str()) == nullptr) {
+            continue;
+        }
+        PRINT_HILOGI("match %{public}s message success", messageItem->first.c_str());
+        monitorParams->substate = GetNewSubstate(monitorParams->substate, messageItem->second);
+        switch (messageItem->second) {
+            case PRINT_JOB_BLOCKED_LARGE_FILE_ERROR:
+            case PRINT_JOB_BLOCKED_FILE_PARSING_ERROR:
+            case PRINT_JOB_BLOCKED_PORT_ERROR:
+                PRINT_HILOGI("uploadingFilesStartTime = 0;");
+                monitorParams->uploadingFilesStartTime = 0;
+                monitorParams->isBlock = true;
+                break;
+            case PRINT_JOB_RUNNING_UPLOADING_FILES:
+            case PRINT_JOB_RUNNING_CONVERTING_FILES:
+                isUploadingOrConvertingState = true;
+                if (monitorParams->uploadingFilesStartTime == 0) {
+                    monitorParams->uploadingFilesStartTime = GetNowTime();
+                }
+                break;
+            default:
+                PRINT_HILOGI("default uploadingFilesStartTime = 0;");
+                monitorParams->uploadingFilesStartTime = 0;
+                break;
+        }
+    }
+    // Check slow file conversion timeout
+    if (monitorParams->uploadingFilesStartTime > 0) {
+        uint64_t elapsedTime = GetNowTime() - monitorParams->uploadingFilesStartTime;
+        if (elapsedTime >= SLOW_FILE_CONVERSION_THRESHOLD_TIME) {
+            PRINT_HILOGI("uploading/converting files exceeded %{public}d ms, add slow file conversion substate",
+                SLOW_FILE_CONVERSION_THRESHOLD_TIME);
+            monitorParams->substate = GetNewSubstate(monitorParams->substate, PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION);
+        }
+    }
+}
+
 bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
     std::string substateString, PrintJobSubState jobSubstate)
 {
@@ -2279,12 +2344,13 @@ bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorPara
 {
     ipp_t *request = nullptr;  /* IPP request */
     ipp_t *response = nullptr; /* IPP response */
-    int jattrsLen = 3;
+    int jattrsLen = 4;
     bool needUpdate = false;
     static const char *const jattrs[] = {
         "job-state",
         "job-state-reasons",
         "job-printer-state-reasons",
+        "job-printer-state-message",
     };
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
@@ -2336,6 +2402,7 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     ipp_jstate_t job_state = IPP_JOB_PENDING;
     char job_state_reasons[1024] = {0};
     char job_printer_state_reasons[1024] = {0};
+    char job_printer_state_message[1024] = {0};
     if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != nullptr) {
         job_state = (ipp_jstate_t)ippGetInteger(attr, 0);
         PRINT_HILOGD("ippFindAttribute job_state: %{public}u.", job_state);
@@ -2346,8 +2413,13 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
         ippAttributeString(attr, job_printer_state_reasons, sizeof(job_printer_state_reasons));
     }
+    if ((attr = ippFindAttribute(response, "job-printer-state-message", IPP_TAG_TEXT)) != nullptr) {
+        ippAttributeString(attr, job_printer_state_message, sizeof(job_printer_state_message));
+        PRINT_HILOGI("job_printer_state_message: %{public}s", job_printer_state_message);
+    }
     if (monitorParams->job_state == job_state &&
-        strcmp(monitorParams->job_printer_state_reasons, job_printer_state_reasons) == 0) {
+        strcmp(monitorParams->job_printer_state_reasons, job_printer_state_reasons) == 0 &&
+        strcmp(monitorParams->job_printer_state_message, job_printer_state_message) == 0) {
         monitorParams->timesOfSameState++;
         if (monitorParams->timesOfSameState % STATE_UPDATE_STEP != 0) {
             PRINT_HILOGD("the prevous jobState is the same as current, ignore");
@@ -2362,6 +2434,9 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     strlcpy(monitorParams->job_printer_state_reasons,
         job_printer_state_reasons,
         sizeof(monitorParams->job_printer_state_reasons));
+    strlcpy(monitorParams->job_printer_state_message,
+        job_printer_state_message,
+        sizeof(monitorParams->job_printer_state_message));
     return true;
 }
 
