@@ -1130,11 +1130,7 @@ void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)
     }
     printServiceProxy_ = iface_cast<IPrintService>(obj);
 }
-void PrintManagerClient::ResetProxy()
-{
-    std::unique_lock<std::shared_mutex> lock(proxyLock_);
-    printServiceProxy_ = nullptr;
-}
+
 
 int32_t PrintManagerClient::Init()
 {

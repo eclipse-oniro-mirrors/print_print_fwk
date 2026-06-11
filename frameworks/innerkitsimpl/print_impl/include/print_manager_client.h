@@ -125,7 +125,6 @@ public:
     void LoadServerSuccess(const sptr<IRemoteObject> &remoteObject = nullptr);
     void LoadServerFail();
     void SetProxy(const sptr<IRemoteObject> &obj);
-    void ResetProxy();
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
     int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &infos);
     int32_t QueryPrinterInfoByIp(const std::string &printerIp);
