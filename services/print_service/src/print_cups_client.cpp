@@ -2274,7 +2274,6 @@ void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitor
             case PRINT_JOB_BLOCKED_LARGE_FILE_ERROR:
             case PRINT_JOB_BLOCKED_FILE_PARSING_ERROR:
             case PRINT_JOB_BLOCKED_PORT_ERROR:
-                PRINT_HILOGI("uploadingFilesStartTime = 0;");
                 monitorParams->uploadingFilesStartTime = 0;
                 monitorParams->isBlock = true;
                 break;
@@ -2286,7 +2285,6 @@ void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitor
                 }
                 break;
             default:
-                PRINT_HILOGI("default uploadingFilesStartTime = 0;");
                 monitorParams->uploadingFilesStartTime = 0;
                 break;
         }
