@@ -218,13 +218,23 @@ std::string NapiScanUtils::GetStringFromValueUtf8(napi_env env, napi_value value
     if (value == nullptr) {
         return "";
     }
-    std::string result;
-    std::vector<char> str(MAX_STRING_LENGTH + 1, '\0');
+
     size_t length = 0;
-    SCAN_CALL_BASE(env, napi_get_value_string_utf8(env, value, &str[0], MAX_STRING_LENGTH, &length), result);
-    if (length > 0) {
-        return result.append(&str[0], length);
+    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &length);
+    if (status != napi_ok) {
+        return "";
     }
+
+    if (length == 0 || length + 1 > MAX_STRING_LENGTH) {
+        return "";
+    }
+
+    std::vector<char> buffer(length + 1, 0);
+    status = napi_get_value_string_utf8(env, value, buffer.data(), length + 1, &length);
+    if (status != napi_ok) {
+        return "";
+    }
+    std::string result(buffer.data());
     return result;
 }
 
