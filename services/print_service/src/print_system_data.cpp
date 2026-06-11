@@ -61,22 +61,22 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     if (!PrintJsonUtil::FindJsonStringMember(object, "name", name)) {return false;}
     std::string uri;
     if (!PrintJsonUtil::FindJsonStringMember(object, "uri", uri)) {return false;}
-    std::string selectedProtocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri);
-    if (selectedProtocol.empty()) {return false;}
+    
+    std::string selectedProtocol;
+    bool needOtaUpdate = !PrintJsonUtil::FindJsonStringMember(object, "selectedProtocol", selectedProtocol);
+    if (needOtaUpdate) {
+        selectedProtocol = HandleOtaProtocolUpgrade(object, uri, id);
+    }
+    
     std::string maker;
     if (!PrintJsonUtil::FindJsonStringMember(object, "maker", maker)) {return false;}
+
     PpdInfo selectedDriver;
-    if (!PrintJsonUtil::IsMember(object, "selectedDriver") || !object["selectedDriver"].isObject()) {
-        PRINT_HILOGW("old version file, cannot find selectedDriver");
-        selectedDriver.SetPpdInfo("auto", "auto", "auto");
-    } else {
-        Json::Value driverJson = object["selectedDriver"];
-        if (!selectedDriver.ConvertFromJson(driverJson)) {
-            PRINT_HILOGW("convert json to selectedDriver failed");
-            return false;
-        }
+    if (!ParseSelectedDriverFromJson(object, selectedDriver)) {
+        PRINT_HILOGW("Parse selectedDriver failed");
+        return false;
     }
-    selectedDriver.Dump();
+
     PrinterCapability printerCapability;
     Json::Value capsJson = object["capability"];
     if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
@@ -84,6 +84,7 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
         return false;
     }
     printerCapability.Dump();
+
     PrinterInfo info;
     info.SetPrinterId(id);
     info.SetPrinterName(name);
@@ -92,12 +93,59 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     info.SetPrinterMake(maker);
     info.SetSelectedDriver(selectedDriver);
     info.SetCapability(printerCapability);
+
     if (PrintJsonUtil::IsMember(object, "ppdHashCode") && object["ppdHashCode"].isString()) {
         std::string ppdHashCode = object["ppdHashCode"].asString();
         info.SetPpdHashCode(ppdHashCode);
     }
     ConvertInnerJsonToPrinterInfo(object, info);
     InsertAddedPrinter(id, info);
+    
+    if (needOtaUpdate) {
+        SavePrinterFile(id);
+        PRINT_HILOGI("OTA update: saved printer file for %{public}s", id.c_str());
+    }
+    
+    PRINT_HILOGI("ConvertJsonToPrinterInfo success, id: %{public}s", id.c_str());
+    return true;
+}
+
+std::string PrintSystemData::HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri,
+    const std::string &printerId)
+{
+    PRINT_HILOGI("OTA upgrade: handling protocol for printer %{public}s", printerId.c_str());
+
+    std::string uriProtocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri);
+    PpdInfo tempDriver;
+
+    if (ParseSelectedDriverFromJson(object, tempDriver) && tempDriver.GetPpdName() != BSUNI_PPD_NAME) {
+        if (uriProtocol == "lpd") {
+            PRINT_HILOGI("OTA upgrade: set protocol to lpd for printer %{public}s", printerId.c_str());
+            return "lpd";
+        }
+        if (uriProtocol == "socket") {
+            PRINT_HILOGI("OTA upgrade: set protocol to socket for printer %{public}s", printerId.c_str());
+            return "socket";
+        }
+    }
+
+    PRINT_HILOGI("OTA upgrade: set protocol to auto for printer %{public}s", printerId.c_str());
+    return "auto";
+}
+
+bool PrintSystemData::ParseSelectedDriverFromJson(Json::Value &object, PpdInfo &selectedDriver)
+{
+    if (!PrintJsonUtil::IsMember(object, "selectedDriver") || !object["selectedDriver"].isObject()) {
+        PRINT_HILOGW("old version file, cannot find selectedDriver");
+        selectedDriver.SetPpdInfo("auto", "auto", "auto");
+        return true;
+    }
+    Json::Value driverJson = object["selectedDriver"];
+    if (!selectedDriver.ConvertFromJson(driverJson)) {
+        PRINT_HILOGW("convert json to selectedDriver failed");
+        return false;
+    }
+    selectedDriver.Dump();
     return true;
 }
 
@@ -368,6 +416,7 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
     printerJson["capability"] = capsJson;
     printerJson["preferences"] = preference.ConvertToJson();
     printerJson["selectedDriver"] = ppdInfo.ConvertToJson();
+    printerJson["selectedProtocol"] = info->GetSelectedProtocol();
     if (info->HasOriginId()) {
         printerJson["originId"] = info->GetOriginId();
     } else {
@@ -492,9 +541,7 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
 {
     auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
     if (info != nullptr) {
-        std::string uri = printerInfo->GetUri();
-        info->SetUri(uri);
-        info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
+        info->SetUri(printerInfo->GetUri());
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }

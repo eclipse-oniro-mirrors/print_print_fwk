@@ -3568,7 +3568,7 @@ int32_t PrintCupsClient::DeleteExtraJobsFromCups()
     return E_PRINT_NONE;
 }
 
-std::string PrintCupsClient::getScheme(std::string &printerUri)
+std::string PrintCupsClient::getScheme(const std::string &printerUri)
 {
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
     char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */

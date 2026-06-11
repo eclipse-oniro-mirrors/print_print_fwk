@@ -5023,6 +5023,45 @@ HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_CupsFailed_GenericFa
     EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
 }
 
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_BsuniPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = BSUNI_PPD_NAME;
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), BSUNI_PPD_NAME);
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "Generic");
+    EXPECT_EQ(ppdInfo.GetNickName(), "System Default Driver");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_DefaultPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = DEFAULT_PPD_NAME;
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), DEFAULT_PPD_NAME);
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "Generic");
+    EXPECT_EQ(ppdInfo.GetNickName(), "IPP Everywhere");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_UnknownPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = "unknown.ppd";
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), "unknown.ppd");
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "auto");
+    EXPECT_EQ(ppdInfo.GetNickName(), "auto");
+}
+
 /**
  * @tc.name: SetPrinterCapabilityAndRegister_QueryPPDFailed_Error
  * @tc.desc: QueryPrinterCapabilityFromPPD returns error propagates error
@@ -5286,12 +5325,12 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_PrinterNotInAddedMap_
 }
 
 /**
- * @tc.name: CheckPrinterUriDifferent_EmptyProtocol_ShouldReturnFalse
- * @tc.desc: Test CheckPrinterUriDifferent when protocol from oldUri is empty
+ * @tc.name: CheckPrinterUriDifferent_EmptyProtocol_ShouldUseOriginalUri
+ * @tc.desc: Test CheckPrinterUriDifferent when selectedProtocol is empty or auto
  * @tc.type: FUNC
- * @tc.require: Should return false when getScheme returns empty protocol
+ * @tc.require: Should use info's original URI when protocol is empty or auto
  */
-HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldReturnFalse, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldUseOriginalUri, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
@@ -5301,19 +5340,20 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldR
     auto addedPrinterInfo = std::make_shared<PrinterInfo>();
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
-    addedPrinterInfo->SetUri("invalid_uri_without_protocol");
+    addedPrinterInfo->SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
+    addedPrinterInfo->SetSelectedProtocol("");
     service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
-    printerInfo->SetUri("ipp://test.local:631/printers/TestPrinter_001");
+    printerInfo->SetUri("ipp://192.168.1.200:631/printers/TestPrinter_001");
 
     bool result = service->CheckPrinterUriDifferent(printerInfo);
 #ifdef PHONE_ISOLATION_ENABLE
     EXPECT_TRUE(result);
 #else
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 #endif
 }
 

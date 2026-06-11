@@ -1915,71 +1915,71 @@ HWTEST_F(PrintSystemDataTest, ConvertVendorAbilityToJson_EmptyAbilities_Test, Te
     EXPECT_FALSE(json.isMember("vendorJobAttrAbility"));
 }
 
-HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_BothAbilities_Test, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfo_SelectedProtocolExists_Test, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    Json::Value json;
-    json["vendorPrinterPrefAbility"] = "com.vendor.driver.VendorPrinterSettingsAbility";
-    json["vendorJobAttrAbility"] = "com.vendor.driver.VendorJobAttrAbility";
-
-    PrinterCapability printerCaps;
-    systemData->ConvertJsonToVendorAbility(json, printerCaps);
-
-    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
-    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+    Json::Value object;
+    object["id"] = "com.test.ext:TestPrinter_001";
+    object["name"] = "TestPrinter";
+    object["uri"] = "ipp://192.168.1.100:631/printers/TestPrinter";
+    object["maker"] = "HP";
+    object["selectedProtocol"] = "ipp";
+    
+    PpdInfo ppd;
+    ppd.SetPpdInfo("HP", "HP LaserJet", "hp-laserjet.ppd");
+    object["selectedDriver"] = ppd.ConvertToJson();
+    
+    Json::Value capsJson;
+    capsJson["colorMode"] = 1;
+    capsJson["duplexMode"] = 1;
+    object["capability"] = capsJson;
+    
+    EXPECT_TRUE(systemData->ConvertJsonToPrinterInfo(object));
 }
 
-HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_OnlyPrefAbility_Test, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfo_SelectedProtocolNotExists_DefaultAuto_Test, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    Json::Value json;
-    json["vendorPrinterPrefAbility"] = "com.vendor.driver.VendorPrinterSettingsAbility";
-
-    PrinterCapability printerCaps;
-    systemData->ConvertJsonToVendorAbility(json, printerCaps);
-
-    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "com.vendor.driver.VendorPrinterSettingsAbility");
-    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
+    Json::Value object;
+    object["id"] = "com.test.ext:TestPrinter_002";
+    object["name"] = "TestPrinter2";
+    object["uri"] = "ipp://192.168.1.101:631/printers/TestPrinter2";
+    object["maker"] = "Canon";
+    
+    PpdInfo ppd;
+    ppd.SetPpdInfo("Canon", "Canon Printer", "canon.ppd");
+    object["selectedDriver"] = ppd.ConvertToJson();
+    
+    Json::Value capsJson;
+    capsJson["colorMode"] = 1;
+    capsJson["duplexMode"] = 1;
+    object["capability"] = capsJson;
+    
+    EXPECT_TRUE(systemData->ConvertJsonToPrinterInfo(object));
 }
 
-HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_OnlyJobAbility_Test, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_SelectedProtocol_Test, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    Json::Value json;
-    json["vendorJobAttrAbility"] = "com.vendor.driver.VendorJobAttrAbility";
-
-    PrinterCapability printerCaps;
-    systemData->ConvertJsonToVendorAbility(json, printerCaps);
-
-    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
-    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "com.vendor.driver.VendorJobAttrAbility");
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId("com.test.ext:TestPrinter_003");
+    info->SetPrinterName("TestPrinter3");
+    info->SetUri("ipp://192.168.1.102:631/printers/TestPrinter3");
+    info->SetPrinterMake("Epson");
+    info->SetSelectedProtocol("ipps");
+    
+    PpdInfo ppd;
+    ppd.SetPpdInfo("Epson", "Epson Printer", "epson.ppd");
+    info->SetSelectedDriver(ppd);
+    
+    PrinterCapability caps;
+    info->SetCapability(caps);
+    
+    Json::Value printerJson;
+    systemData->ParseInfoToPrinterJson(info, printerJson);
+    
+    EXPECT_TRUE(printerJson.isMember("selectedProtocol"));
+    EXPECT_EQ(printerJson["selectedProtocol"].asString(), "ipps");
 }
-
-HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_EmptyJson_Test, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    Json::Value json;
-
-    PrinterCapability printerCaps;
-    systemData->ConvertJsonToVendorAbility(json, printerCaps);
-
-    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
-    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
-}
-
-HWTEST_F(PrintSystemDataTest, ConvertJsonToVendorAbility_InvalidFormat_Test, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    Json::Value json;
-    json["vendorPrinterPrefAbility"] = 123;
-    json["vendorJobAttrAbility"] = true;
-
-    PrinterCapability printerCaps;
-    systemData->ConvertJsonToVendorAbility(json, printerCaps);
-
-    EXPECT_EQ(printerCaps.GetVendorPrinterPrefAbility(), "");
-    EXPECT_EQ(printerCaps.GetVendorJobAttrAbility(), "");
-}
-
 }  // namespace Print
 }  // namespace OHOS
