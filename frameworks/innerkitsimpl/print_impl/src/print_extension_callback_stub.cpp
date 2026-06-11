@@ -133,7 +133,7 @@ bool PrintExtensionCallbackStub::HandleExtCallback(MessageParcel &data, MessageP
 {
     bool result = OnCallback();
     PRINT_HILOGI("Handle Print Extension Callback ret[%{public}d]", result);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return result;
 }
 
@@ -143,7 +143,7 @@ bool PrintExtensionCallbackStub::HandlePrinterCallback(MessageParcel &data, Mess
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     bool result = OnCallback(printerId);
     PRINT_HILOGI("Handle Printer Extension Callback ret[%{public}d]", result);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return result;
 }
 
@@ -154,7 +154,7 @@ bool PrintExtensionCallbackStub::HandlePrintJobCallback(MessageParcel &data, Mes
     if (printJobPtr != nullptr) {
         result = OnCallback(*printJobPtr);
         PRINT_HILOGI("Handle Print Job Extension Callback ret[%{public}d]", result);
-        reply.WriteBool(result);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     }
     return result;
 }
@@ -166,8 +166,8 @@ bool PrintExtensionCallbackStub::HandleCapabilityCallback(MessageParcel &data, M
     PrinterCapability cap;
     bool result = OnCallback(printerId, cap);
     PRINT_HILOGI("Handle Printer Capability Extension Callback ret[%{public}d]", result);
-    reply.WriteBool(result);
-    cap.Marshalling(reply);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(cap.Marshalling(reply), false);
     return result;
 }
 } // namespace OHOS::Print

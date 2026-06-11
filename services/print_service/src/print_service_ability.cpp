@@ -2310,10 +2310,10 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
         return;
     }
     auto printerId = printJob->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo) {
+    PrinterInfo printerInfo;
+    if (QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
-            printerInfo->GetPrinterName());
+            printerInfo.GetPrinterName());
     } else {
         PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
     }
@@ -2385,17 +2385,8 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
-    if (printerInfo == nullptr) {
-        printerInfo = std::make_shared<PrinterInfo>();
-        Json::Value optionJson;
-        if (PrintJsonUtil::Parse(printJob->GetOption(), optionJson) &&
-            PrintJsonUtil::IsMember(optionJson, "printerName") && optionJson["printerName"].isString()) {
-            printerInfo->SetPrinterName(optionJson["printerName"].asString());
-        }
-        PRINT_HILOGW("[Job Id: %{public}s] printerInfo not in discovered list, audit may lack printer data",
-            jobId.c_str());
-    }
+    auto printerInfo = securityGuardManager_.ResolvePrinterInfo(
+        printJob->GetPrinterId(), printJob->GetOption(), printSystemData_);
     securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
 
     SendPrintJobEvent(*printJob);
@@ -3144,15 +3135,8 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     // notify securityGuard
     uint32_t jobState = jobInfo.GetJobState();
     if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
-        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
-        if (printerInfo == nullptr) {
-            printerInfo = std::make_shared<PrinterInfo>();
-            Json::Value optionJson;
-            if (PrintJsonUtil::Parse(jobInfo.GetOption(), optionJson) &&
-                PrintJsonUtil::IsMember(optionJson, "printerName") && optionJson["printerName"].isString()) {
-                printerInfo->SetPrinterName(optionJson["printerName"].asString());
-            }
-        }
+        auto printerInfo = securityGuardManager_.ResolvePrinterInfo(
+            jobInfo.GetPrinterId(), jobInfo.GetOption(), printSystemData_);
         securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
     } else {
         PRINT_HILOGD("[Job Id: %{public}s] state %{public}u not COMPLETED/BLOCKED, audit event skipped",
@@ -5553,7 +5537,7 @@ int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPp
 
 bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 {
-    PRINT_HILOGI("Start CallBack Printerinfo");
+    PRINT_HILOGI("Start CallBack PrinterInfo");
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINT_QUERY_INFO_EVENT_TYPE);
     cbInfo.printerInfo = std::make_shared<PrinterInfo>(info);

@@ -263,7 +263,7 @@ int32_t ScanTask::WriteGreyData(const std::vector<uint8_t>& dataBuffer)
             *dstData++ = *srcData;
         }
         if (srcStride < colWriteIdx_) {
-            PRINT_HILOGE("srcStride: %{public}zu < colWriteIdx_: %{public}zu", srcStride, colWriteIdx_);
+            SCAN_HILOGE("srcStride: %{public}zu < colWriteIdx_: %{public}zu", srcStride, colWriteIdx_);
             return E_SCAN_INVALID_PARAMETER;
         }
         size_t srcRowDataLeft = srcStride - colWriteIdx_;
