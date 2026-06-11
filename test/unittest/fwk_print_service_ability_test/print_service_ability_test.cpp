@@ -6041,7 +6041,7 @@ HWTEST_F(PrintServiceAbilityTest,
     service->ExtractCustomOptionsFromPreferenceJson(keys, preferences, userPrefs);
 
     Json::Value updatedJson;
-    PrintJsonUtil::Parse(preferences.GetOption(), updatedJson);
+    EXPECT_TRUE(PrintJsonUtil::Parse(preferences.GetOption(), updatedJson));
     EXPECT_FALSE(updatedJson.isMember("CustomPin"));
 }
 

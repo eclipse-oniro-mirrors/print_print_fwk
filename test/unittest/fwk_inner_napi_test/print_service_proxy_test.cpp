@@ -1342,8 +1342,8 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
     ASSERT_NE(service, nullptr);
     EXPECT_CALL(*service, GetPrinterPreference(_, _))
         .Times(Exactly(1))
-        .WillOnce([&testPrinterId, &testPreferences]
-            (const std::string &printerId, const PrinterPreferences &preferences) {
+        .WillOnce([&testPrinterId]
+            (const std::string &printerId, PrinterPreferences &preferences) {
             EXPECT_EQ(testPrinterId, printerId);
             return E_PRINT_NONE;
     });

@@ -1585,8 +1585,8 @@ int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, Pr
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), E_PRINT_RPC_FAILURE);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

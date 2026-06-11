@@ -561,6 +561,11 @@ napi_value NapiInnerPrint::GetPrinterPreference(napi_env env, napi_callback_info
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("NapiInnerPrint::GetPrinterPreference output enter.");
+        if (!context->result) {
+            PRINT_HILOGE("GetPrinterPreference exec failed, skip output.");
+            napi_get_undefined(env, result);
+            return napi_ok;
+        }
         *result = PrinterPreferencesHelper::MakeJsObject(env, context->printerPreference);
         return napi_ok;
     };

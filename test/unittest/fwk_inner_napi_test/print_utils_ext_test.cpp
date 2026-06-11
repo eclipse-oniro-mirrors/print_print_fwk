@@ -508,12 +508,12 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_007, TestSize.Level2)
  */
 HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_CustomOptionValueAnonymized_StandardOptionPreserved, TestSize.Level2)
 {
-    std::string option = R"({"advancedOptions":{"CustomPin":{"choice":"Custom","value":"secret123"},"
-        "\"media-size\":\"A4\"}})";
+    std::string option = "{\"advancedOptions\":{\"CustomPin\":{\"choice\":\"Custom\","
+        "\"value\":\"secret123\"},\"media-size\":\"A4\"}}";
     std::string result = PrintUtils::AnonymizeJobOption(option);
     EXPECT_NE(result, "");
     Json::Value resultJson;
-    PrintJsonUtil::Parse(result, resultJson);
+    EXPECT_TRUE(PrintJsonUtil::Parse(result, resultJson));
     EXPECT_EQ(resultJson["advancedOptions"]["CustomPin"]["choice"].asString(), "Custom");
     EXPECT_EQ(resultJson["advancedOptions"]["CustomPin"]["value"].asString(), "***");
     EXPECT_EQ(resultJson["advancedOptions"]["media-size"].asString(), "A4");
@@ -530,7 +530,7 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_StandardOptionsPreserved_NoSensit
     std::string result = PrintUtils::AnonymizeJobOption(option);
     EXPECT_NE(result, "");
     Json::Value resultJson;
-    PrintJsonUtil::Parse(result, resultJson);
+    EXPECT_TRUE(PrintJsonUtil::Parse(result, resultJson));
     EXPECT_EQ(resultJson["advancedOptions"]["media-size"].asString(), "A4");
     EXPECT_EQ(resultJson["advancedOptions"]["colorMode"].asString(), "color");
 }
