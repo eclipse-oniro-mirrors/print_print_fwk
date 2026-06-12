@@ -311,5 +311,32 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     EXPECT_NE(json.find("errorCode"), std::string::npos);
     EXPECT_NE(json.find("printerName"), std::string::npos);
 }
+
+/**
+ * @tc.name: PrintSecurityGuardInfoTest_ToJsonUrlDecode_001
+ * @tc.desc: Verify ToJsonStr decodes URL-encoded Chinese in jobName and fileName.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonUrlDecode_001, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {"%E5%8D%B0%E7%AB%A0.pdf"};
+    PrintSecurityGuardInfo info("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("HP LaserJet Pro");
+    PrintJob printJob;
+    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
+    printJob.SetOption(R"({"jobName":"%E6%8A%A5%E5%91%8A.pdf","printPages":1})");
+
+    std::vector<std::string> fileInfos = {"%E5%8D%B0%E7%AB%A0.pdf"};
+    info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    info.SetPrintTypeInfo(printerInfo, printJob);
+
+    std::string json = info.ToJsonStr();
+    std::string decodedFileName = "\xe5\x8d\xb0\xe7\xab\xa0.pdf";
+    std::string decodedJobName = "\xe6\x8a\xa5\xe5\x91\x8a.pdf";
+    EXPECT_NE(json.find(decodedFileName), std::string::npos);
+    EXPECT_NE(json.find(decodedJobName), std::string::npos);
+}
 }  // namespace Print
 }  // namespace OHOS

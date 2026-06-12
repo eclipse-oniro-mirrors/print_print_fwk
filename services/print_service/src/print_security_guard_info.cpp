@@ -135,7 +135,8 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     Json::Value filesArray(Json::arrayValue);
     for (const auto &fileName : files_) {
         Json::Value fileObj;
-        fileObj["fileName"] = PrintSecurityGuardUtil::ExtractFileName(fileName);
+        fileObj["fileName"] = PrintSecurityGuardUtil::UrlDecode(
+            PrintSecurityGuardUtil::ExtractFileName(fileName));
         filesArray.append(fileObj);
     }
     securityGuardInfoJson["files"] = filesArray;

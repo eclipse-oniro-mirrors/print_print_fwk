@@ -130,9 +130,6 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     } else if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
         fileList.push_back(optionJson["jobName"].asString());
     }
-    for (auto &file : fileList) {
-        file = UrlDecode(file);
-    }
     return fileList;
 }
 

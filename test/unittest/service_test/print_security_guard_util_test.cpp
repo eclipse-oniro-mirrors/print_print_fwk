@@ -610,8 +610,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListF
     std::string option = R"({"fileList":["/data/storage/%E5%8D%B0%E7%AB%A0%E5%8F%91%E7%A5%A81.pdf"]})";
     auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
     ASSERT_EQ(result.size(), 1U);
-    std::string expected = "/data/storage/\xe5\x8d\xb0\xe7\xab\xa0\xe5\x8f\x91\xe7\xa5\xa8" "1.pdf";
-    EXPECT_EQ(result[0], expected);
+    EXPECT_EQ(result[0], "/data/storage/%E5%8D%B0%E7%AB%A0%E5%8F%91%E7%A5%A81.pdf");
 }
 
 /**
@@ -625,8 +624,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListF
     std::string option = R"({"jobName":"%E6%8A%A5%E5%91%8A_2024.pdf"})";
     auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
     ASSERT_EQ(result.size(), 1U);
-    std::string expected = "\xe6\x8a\xa5\xe5\x91\x8a_2024.pdf";
-    EXPECT_EQ(result[0], expected);
+    EXPECT_EQ(result[0], "%E6%8A%A5%E5%91%8A_2024.pdf");
 }
 
 /**
@@ -655,8 +653,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListF
     std::string option = R"({"fileList":["%E6%8A%A5%E5%91%8A.pdf","report.pdf"]})";
     auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
     ASSERT_EQ(result.size(), 2U);
-    std::string expected = "\xe6\x8a\xa5\xe5\x91\x8a.pdf";
-    EXPECT_EQ(result[0], expected);
+    EXPECT_EQ(result[0], "%E6%8A%A5%E5%91%8A.pdf");
     EXPECT_EQ(result[1], "report.pdf");
 }
 
