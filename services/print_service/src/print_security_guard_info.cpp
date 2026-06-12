@@ -154,6 +154,6 @@ Json::Value PrintSecurityGuardInfo::ToJson()
 std::string PrintSecurityGuardInfo::ToJsonStr()
 {
     Json::Value jsonObject = ToJson();
-    return PrintJsonUtil::WriteString(jsonObject);
+    return PrintJsonUtil::WriteStringUTF8(jsonObject);
 }
 } // namespace OHOS::Print
