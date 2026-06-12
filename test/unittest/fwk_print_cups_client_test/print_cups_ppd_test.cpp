@@ -135,17 +135,17 @@ bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, c
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_InvalidPath_ReturnsFileIOError, TestSize.Level1)
 {
     PrinterCapability printerCaps;
-    std::string invalidPath = "/invalid/path/to/nonexistent.ppd";
-    int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, invalidPath);
-    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+    std::string invalidPpdName = "nonexistent.ppd";
+    int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, invalidPpdName);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_EmptyPath_ReturnsFileIOError, TestSize.Level1)
 {
     PrinterCapability printerCaps;
-    std::string emptyPath = "";
-    int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, emptyPath);
-    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+    std::string emptyPpdName = "";
+    int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, emptyPpdName);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintCupsPpdTest, MarkPpdOption_NullPpd_ReturnsZero, TestSize.Level1)

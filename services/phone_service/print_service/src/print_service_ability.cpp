@@ -1266,7 +1266,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
         return false;
     }
     std::string oldOption = printJob.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(oldOption).c_str());
     Json::Value infoJson;
     if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
@@ -1283,7 +1283,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
     printJob.SetPageSize(pageSize);
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
-    PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
+    PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob.SetOption(updatedOption);
     return true;
 }
@@ -4732,7 +4732,7 @@ void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value
 Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPreferences &preferences)
 {
     std::string option = preferences.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", option.c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     Json::Value opsJson;
     if (!PrintJsonUtil::Parse(option, opsJson)) {
         PRINT_HILOGW("parse preferences options error");

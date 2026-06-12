@@ -22,6 +22,8 @@
 #include <json/json.h>
 
 #include "singleton.h"
+#include "hks_api.h"
+#include "hks_param.h"
 #include "print_cups_wrapper.h"
 #include "print_service_ability.h"
 #include "print_job.h"
@@ -55,7 +57,7 @@ struct JobParameters {
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
-    bool isCanceled = false;
+    std::atomic<bool> isCanceled{false};
     Json::Value advancedOpsJson;
     std::string vendorOptions;
     bool isReverse = false;
@@ -86,13 +88,15 @@ struct JobMonitorParam {
     ipp_jstate_t job_state = IPP_JOB_PENDING;
     char job_state_reasons[1024] = {};
     char job_printer_state_reasons[1024] = {};
+    char job_printer_state_message[1024] = {};
     bool isFirstQueryState = true;
     int32_t timesOfSameState = -1;
     bool isBlock = false;
     uint32_t substate = 0;
     std::string jobOriginatingUserName;
-    bool isCanceled = false;
-    bool isInterrupt = false;
+    std::atomic<bool> isCanceled{false};
+    std::atomic<bool> isInterrupt{false};
+    uint64_t uploadingFilesStartTime = 0;
     bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
@@ -181,7 +185,7 @@ public:
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t DeleteExtraJobsFromCups();
-    std::string getScheme(std::string &printerUri);
+    std::string getScheme(const std::string &printerUri);
     bool IsIpAddress(const char* host);
     IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
@@ -221,6 +225,7 @@ private:
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
+    void ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleHeldState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandlePendingState(std::shared_ptr<JobMonitorParam> monitorParams);
@@ -249,6 +254,8 @@ private:
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static bool DecryptCustomOption(const std::string &keyStr,
+        const struct HksBlob &base64Blob, struct HksBlob &plainBlob, PrintServiceAbility *serviceAbility);
     static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
     const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();

@@ -22,6 +22,7 @@
 #include "print_log.h"
 #include "print_manager_client.h"
 #include "print_constant.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 
@@ -43,7 +44,19 @@ static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 static const std::string ABILITY_PARAMS_STREAM = "ability.params.stream";
 static const std::string LAUNCH_PARAMETER_FILE_LIST_SIZE = "fileListSize";
-static const int32_t MAX_FILE_LIST_SIZE = 100;
+
+static void ReportOffEventMetrics(const std::string type)
+{
+    if (type == EVENT_BLOCK) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.off_block", PRINT_API_COUNTED);
+    } else if (type == EVENT_SUCCESS) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.off_succeed", PRINT_API_COUNTED);
+    } else if (type == EVENT_FAIL) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.off_fail", PRINT_API_COUNTED);
+    } else if (type == EVENT_CANCEL) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.off_cancel", PRINT_API_COUNTED);
+    }
+}
 
 PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)
     : taskId_("")
@@ -132,7 +145,13 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
         fileList_.clear();
         return ret;
     }
-    return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    ret = PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    for (auto fd : fdList_) {
+        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+    }
+    fdList_.clear();
+    fileList_.clear();
+    return ret;
 }
 
 uint32_t PrintTask::StartPrintAdapter(napi_env env, napi_callback_info info)
@@ -265,7 +284,7 @@ uint32_t PrintTask::StartUIExtensionAbility(
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, adapterParam->jobId);
-    if (fileList_.size() <= MAX_FILE_LIST_SIZE) {
+    if (fileList_.size() <= PRINT_MAX_FILE_LIST_SIZE) {
         want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList_);
     } else {
         PRINT_HILOGW("fileList exceeds the maximum length.");
@@ -389,6 +408,16 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
     std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
+    if (type == EVENT_BLOCK) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.on_block", PRINT_API_COUNTED);
+    } else if (type == EVENT_SUCCESS) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.on_succeed", PRINT_API_COUNTED);
+    } else if (type == EVENT_FAIL) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.on_fail", PRINT_API_COUNTED);
+    } else if (type == EVENT_CANCEL) {
+        PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.on_cancel", PRINT_API_COUNTED);
+    }
+
     valuetype = napi_undefined;
     napi_typeof(env, argv[1], &valuetype);
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
@@ -422,23 +451,20 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info)
         PRINT_HILOGE("create context failed.");
         return nullptr;
     }
-    auto input =
-        [context](
+    auto input = [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string", napi_string_expected);
-        std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
+        context->type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PrintTask *task;
         PRINT_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&task)), napi_invalid_arg);
-        if (task == nullptr || !task->IsSupportType(type)) {
-            PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
+        if (task == nullptr || !task->IsSupportType(context->type)) {
+            PRINT_HILOGE("Event On type : %{public}s not support", context->type.c_str());
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
-
-        context->type = type;
         context->taskId = task->taskId_;
         PRINT_HILOGD("event type : %{public}s", context->type.c_str());
         return napi_ok;
@@ -458,6 +484,7 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info)
     };
     context->SetAction(std::move(input), std::move(output));
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    ReportOffEventMetrics(context->type);
     return asyncCall.Call(env, exec);
 }
 

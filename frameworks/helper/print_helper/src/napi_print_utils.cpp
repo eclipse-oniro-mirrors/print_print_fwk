@@ -261,13 +261,23 @@ std::string NapiPrintUtils::GetStringFromValueUtf8(napi_env env, napi_value valu
     if (value == nullptr) {
         return "";
     }
-    std::string result;
-    std::vector<char> str(MAX_STRING_LENGTH + 1, '\0');
+
     size_t length = 0;
-    PRINT_CALL_BASE(env, napi_get_value_string_utf8(env, value, &str[0], MAX_STRING_LENGTH, &length), result);
-    if (length > 0) {
-        return result.append(&str[0], length);
+    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &length);
+    if (status != napi_ok) {
+        return "";
     }
+
+    if (length == 0 || length + 1 > MAX_STRING_LENGTH) {
+        return "";
+    }
+
+    std::vector<char> buffer(length + 1, 0);
+    status = napi_get_value_string_utf8(env, value, buffer.data(), length + 1, &length);
+    if (status != napi_ok) {
+        return "";
+    }
+    std::string result(buffer.data());
     return result;
 }
 
@@ -287,11 +297,10 @@ char* NapiPrintUtils::GetCharPtrFromValueUtf8(napi_env env, napi_value value)
         return nullptr;
     }
 
-    char* result = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE];
+    char* result = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]();
     if (result == nullptr) {
         return nullptr;
     }
-
     status = napi_get_value_string_utf8(env, value, result, length + 1, &length);
     if (status != napi_ok) {
         delete[] result;
@@ -299,7 +308,6 @@ char* NapiPrintUtils::GetCharPtrFromValueUtf8(napi_env env, napi_value value)
     }
 
     result[length] = '\0';
-
     return result;
 }
 

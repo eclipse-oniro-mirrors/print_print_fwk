@@ -22,6 +22,7 @@
 #include "print_page_size.h"
 #include "print_resolution.h"
 #include <json/json.h>
+#include <set>
 
 namespace OHOS::Print {
 class PrinterCapability final : public Parcelable {
@@ -124,11 +125,17 @@ public:
 
     void ClearCurPrinterAttrGroup();
 
+    bool GetAdvanceOptionsJson(Json::Value &advanceOptionsJson) const;
+
+    std::set<std::string> GetCustomOptionKeys() const;
+
 private:
     bool ReadFromParcel(Parcel &parcel);
     std::vector<PrintPageSize> RemoveDuplicatePageSize(const std::vector<PrintPageSize> &supportedPageSizeList);
-    void ReadVendorAbilityFromParcel(Parcel &parcel, PrinterCapability &right);
-    void ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right);
+    bool ReadVendorAbilityFromParcel(Parcel &parcel, PrinterCapability &right);
+    bool ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right);
+    bool ReadCoreAttrsFromParcel(Parcel &parcel, PrinterCapability &right);
+    bool MarshallingSupportedLists(Parcel &parcel) const;
 
 private:
     uint32_t colorMode_; // Property in API 10, deprecated in API 12

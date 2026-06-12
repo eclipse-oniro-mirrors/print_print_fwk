@@ -107,12 +107,16 @@ bool KiaInterceptorManager::CheckPrintJobNeedReject(const std::string &jobId)
     int32_t pid = IPCSkeleton::GetCallingPid();
     std::string callerAppId = GetCallerAppId(jobId);
 
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (callback_ == nullptr) {
-        PRINT_HILOGD("No KIA interceptor callback registered");
-        return false;
+    sptr<IKiaInterceptorCallback> callback;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (callback_ == nullptr) {
+            PRINT_HILOGD("No KIA interceptor callback registered");
+            return false;
+        }
+        callback = callback_;
     }
-    bool shouldReject = callback_->OnCheckPrintJobNeedReject(pid, callerAppId);
+    bool shouldReject = callback->OnCheckPrintJobNeedReject(pid, callerAppId);
     PRINT_HILOGI("CheckPrintJobNeedReject result for jobId=%{private}s: %{public}d", jobId.c_str(), shouldReject);
     return shouldReject;
 }
@@ -122,8 +126,11 @@ int32_t KiaInterceptorManager::RegisterCallerAppId(const std::string &jobId,
 {
     AppExecFwk::BundleInfo bundleInfo;
     AppExecFwk::BundleMgrClient bundleMgrClient;
-    bundleMgrClient.GetBundleInfo(callerBundleName,
-        AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    if (!bundleMgrClient.GetBundleInfo(callerBundleName,
+        AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId)) {
+        PRINT_HILOGW("user [%{public}d] has not installed [%{public}s]", userId, callerBundleName.c_str());
+        return E_PRINT_INVALID_PARAMETER;
+    }
     PRINT_HILOGD("callerBundleName: %{public}s, callerAppId: %{public}s",
         callerBundleName.c_str(), bundleInfo.appId.c_str());
     std::lock_guard<std::mutex> lock(mutex_);

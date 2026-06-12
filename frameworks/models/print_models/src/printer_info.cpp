@@ -413,28 +413,50 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGE("no data in parcel");
         return false;
     }
-    right.SetPrinterId(parcel.ReadString());
-    right.SetPrinterName(parcel.ReadString());
-    right.SetPrinterState(parcel.ReadUint32());
+    if (!ReadBasicInfoFromParcel(right, parcel)) {
+        return false;
+    }
+    if (!ReadCapabilityAndUriFromParcel(right, parcel)) {
+        return false;
+    }
+    if (!ReadInnerPropertyFromParcel(right, parcel)) {
+        return false;
+    }
+    right.Dump();
+    *this = right;
+    return true;
+}
+
+bool PrinterInfo::ReadBasicInfoFromParcel(PrinterInfo& right, Parcel& parcel)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.printerId_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.printerName_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.printerState_), false);
 
     uint32_t iconId = PRINT_INVALID_ID;
-    right.hasPrinterIcon_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasPrinterIcon_), false);
     if (right.hasPrinterIcon_) {
-        iconId = parcel.ReadUint32();
+        uint32_t iconIdVal = 0;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(iconIdVal), false);
+        iconId = iconIdVal;
     }
     right.SetPrinterIcon(iconId);
 
-    right.hasDescription_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDescription_), false);
     if (right.hasDescription_) {
-        right.SetDescription(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.description_), false);
     }
 
-    right.hasPrinterStatus_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasPrinterStatus_), false);
     if (right.hasPrinterStatus_) {
-        right.SetPrinterStatus(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.printerStatus_), false);
     }
+    return true;
+}
 
-    right.hasCapability_ = parcel.ReadBool();
+bool PrinterInfo::ReadCapabilityAndUriFromParcel(PrinterInfo& right, Parcel& parcel)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasCapability_), false);
     if (right.hasCapability_) {
         auto capPtr = PrinterCapability::Unmarshalling(parcel);
         if (capPtr == nullptr) {
@@ -444,26 +466,32 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
         right.SetCapability(*capPtr);
     }
 
-    right.hasUri_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasUri_), false);
     if (right.hasUri_) {
-        right.SetUri(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.uri_), false);
     }
 
-    right.hasPrinterMake_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasPrinterMake_), false);
     if (right.hasPrinterMake_) {
-        right.SetPrinterMake(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.printerMake_), false);
     }
-
-    ReadInnerPropertyFromParcel(right, parcel);
-
-    right.Dump();
-    *this = right;
     return true;
 }
 
 bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel)
 {
-    right.hasSelectedDriver_ = parcel.ReadBool();
+    if (!ReadDriverAndPrefsFromParcel(right, parcel)) {
+        return false;
+    }
+    if (!ReadFlagsFromParcel(right, parcel)) {
+        return false;
+    }
+    return true;
+}
+
+bool PrinterInfo::ReadDriverAndPrefsFromParcel(PrinterInfo& right, Parcel& parcel)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasSelectedDriver_), false);
     if (right.hasSelectedDriver_) {
         auto ppdInfo = PpdInfo::Unmarshalling(parcel);
         if (ppdInfo == nullptr) {
@@ -473,17 +501,17 @@ bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel
         right.SetSelectedDriver(*ppdInfo);
     }
 
-    right.hasSelectedProtocol_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasSelectedProtocol_), false);
     if (right.hasSelectedProtocol_) {
-        right.SetSelectedProtocol(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.selectedProtocol_), false);
     }
 
-    right.hasPrinterUuid_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasPrinterUuid_), false);
     if (right.hasPrinterUuid_) {
-        right.SetPrinterUuid(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.printerUuid_), false);
     }
 
-    right.hasPreferences_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasPreferences_), false);
     if (right.hasPreferences_) {
         auto preferencesPtr = PrinterPreferences::Unmarshalling(parcel);
         if (preferencesPtr == nullptr) {
@@ -492,118 +520,131 @@ bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel
         }
         right.SetPreferences(*preferencesPtr);
     }
+    return true;
+}
 
-    right.hasAlias_ = parcel.ReadBool();
+bool PrinterInfo::ReadFlagsFromParcel(PrinterInfo& right, Parcel& parcel)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasAlias_), false);
     if (right.hasAlias_) {
-        right.SetAlias(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.alias_), false);
     }
 
-    right.hasOption_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasOption_), false);
     if (right.hasOption_) {
-        right.SetOption(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.option_), false);
     }
 
-    right.hasIsDefaultPrinter_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasIsDefaultPrinter_), false);
     if (right.hasIsDefaultPrinter_) {
-        right.isDefaultPrinter_ = parcel.ReadBool();
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.isDefaultPrinter_), false);
     }
 
-    right.hasIsLastUsedPrinter_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasIsLastUsedPrinter_), false);
     if (right.hasIsLastUsedPrinter_) {
-        right.isLastUsedPrinter_ = parcel.ReadBool();
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.isLastUsedPrinter_), false);
     }
-
     return true;
 }
 
 bool PrinterInfo::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetPrinterId());
-    parcel.WriteString(GetPrinterName());
-    parcel.WriteUint32(GetPrinterState());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetPrinterId()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetPrinterName()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetPrinterState()), false);
 
-    parcel.WriteBool(hasPrinterIcon_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPrinterIcon_), false);
     if (hasPrinterIcon_) {
-        parcel.WriteUint32(GetPrinterIcon());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetPrinterIcon()), false);
     }
 
-    parcel.WriteBool(hasDescription_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDescription_), false);
     if (hasDescription_) {
-        parcel.WriteString(GetDescription());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetDescription()), false);
     }
 
-    parcel.WriteBool(hasPrinterStatus_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPrinterStatus_), false);
     if (hasPrinterStatus_) {
-        parcel.WriteUint32(GetPrinterStatus());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetPrinterStatus()), false);
     }
 
-    parcel.WriteBool(hasCapability_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasCapability_), false);
     if (hasCapability_) {
-        capability_.Marshalling(parcel);
+        if (!capability_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for capability_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasUri_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasUri_), false);
     if (hasUri_) {
-        parcel.WriteString(GetUri());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetUri()), false);
     }
 
-    parcel.WriteBool(hasPrinterMake_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPrinterMake_), false);
     if (hasPrinterMake_) {
-        parcel.WriteString(GetPrinterMake());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetPrinterMake()), false);
     }
 
-    MarshallingInnerProperty(parcel);
-
-    return true;
+    return MarshallingInnerProperty(parcel);
 }
 
-void PrinterInfo::MarshallingInnerProperty(Parcel &parcel) const
+bool PrinterInfo::MarshallingInnerProperty(Parcel &parcel) const
 {
-    parcel.WriteBool(hasSelectedDriver_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasSelectedDriver_), false);
     if (hasSelectedDriver_) {
-        selectedDriver_.Marshalling(parcel);
+        if (!selectedDriver_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for selectedDriver_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasSelectedProtocol_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasSelectedProtocol_), false);
     if (hasSelectedProtocol_) {
-        parcel.WriteString(GetSelectedProtocol());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetSelectedProtocol()), false);
     }
 
-    parcel.WriteBool(hasPrinterUuid_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPrinterUuid_), false);
     if (hasPrinterUuid_) {
-        parcel.WriteString(GetPrinterUuid());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetPrinterUuid()), false);
     }
 
-    parcel.WriteBool(hasPreferences_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPreferences_), false);
     if (hasPreferences_) {
-        preferences_.Marshalling(parcel);
+        if (!preferences_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for preferences_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasAlias_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasAlias_), false);
     if (hasAlias_) {
-        parcel.WriteString(GetAlias());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetAlias()), false);
     }
 
-    parcel.WriteBool(hasOption_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasOption_), false);
     if (hasOption_) {
-        parcel.WriteString(GetOption());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetOption()), false);
     }
 
-    parcel.WriteBool(hasIsDefaultPrinter_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasIsDefaultPrinter_), false);
     if (hasIsDefaultPrinter_) {
-        parcel.WriteBool(isDefaultPrinter_);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(isDefaultPrinter_), false);
     }
 
-    parcel.WriteBool(hasIsLastUsedPrinter_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasIsLastUsedPrinter_), false);
     if (hasIsLastUsedPrinter_) {
-        parcel.WriteBool(isLastUsedPrinter_);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(isLastUsedPrinter_), false);
     }
+    return true;
 }
 
 std::shared_ptr<PrinterInfo> PrinterInfo::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrinterInfo>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 

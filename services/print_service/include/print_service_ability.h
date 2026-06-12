@@ -29,6 +29,7 @@
 #include "extension_ability_info.h"
 #include "hks_api.h"
 #include "hks_param.h"
+#include "print_hks_adapter.h"
 #include "iprint_callback.h"
 #include "iremote_object.h"
 #include "print_constant.h"
@@ -164,6 +165,8 @@ public:
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
     void HandleWebPrinterUninstall();
+    std::shared_ptr<IHksAdapter> GetHksAdapter();
+    int32_t GetCurrentUserId();
 
 protected:
     void OnStart() override;
@@ -196,10 +199,9 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
-    void CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob);
-    void SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:
+    int32_t DoRestartPrintJob(const std::string &oldJobId, std::shared_ptr<PrintJob> &printJob);
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
     void HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
         bool jobInQueue);
@@ -213,7 +215,6 @@ private:
     void ResetExtensionState(int32_t userId, const std::string& bundleName);
     bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     bool IsPrinterJobMapEmpty();
-    int32_t GetCurrentUserId();
     std::string GetCallerUserName();
     void UpdatePrintUserMap();
     void AddToPrintJobList(std::string jobId, const std::shared_ptr<PrintJob> &printjob);
@@ -268,22 +269,13 @@ private:
                                        const PrinterPreferences &preferences,
                                        PrintJob &printJob);
     Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences, const PrinterInfo &printerInfo);
-    void DecryptAndFillCustomOptions(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);
+    void FillCustomOptionsToJson(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);
     void ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo, PrinterPreferences &preferences,
         PrinterUserPreferences &userPrefs);
-    std::set<std::string> GetCustomOptionKeysFromCapability(const PrinterInfo &printerInfo);
     void ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
         PrinterPreferences &preferences, PrinterUserPreferences &userPrefs);
     void ProcessSingleCustomOption(const std::string &key,
         const std::string &optionJsonStr, PrinterUserPreferences &userPrefs);
-    int32_t EncryptCustomOptionValue(struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
-    int32_t DecryptCustomOptionValue(struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
-    int32_t InitGenParamSet(struct HksParamSet **paramSet);
-    int32_t InitCipherParamSet(struct HksParamSet **paramSet, uint32_t purpose);
-    int32_t DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-        struct HksBlob &plainBlob, struct HksBlob &cipherBlob);
-    int32_t DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-        struct HksBlob &cipherBlob, struct HksBlob &plainBlob);
     std::string GetCallerBundleName() override;
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
@@ -370,9 +362,11 @@ private:
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
+    PpdInfo GetPpdInfoFromPpdName(const std::string &ppdName);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
+    std::shared_ptr<IHksAdapter> hksAdapter_;
     std::atomic<ServiceRunningState> state_;
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;

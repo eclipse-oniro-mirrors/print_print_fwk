@@ -23,6 +23,7 @@ namespace OHOS::Print {
 #define PRINT_RET_NONE
 
 #define PRINT_MAX_PRINT_COUNT 1000
+#define PRINT_MAX_FILE_LIST_SIZE 100
 #define PRINT_MAX_PPD_COUNT 4096
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"
@@ -76,10 +77,28 @@ namespace OHOS::Print {
         return (retVal);                                \
     }
 
+#define PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                \
+    if ((ptr) == nullptr) {                                                         \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
+        return (retVal);                                                            \
+    }
+
 #define PRINT_CHECK_NULL_RETURN_VOID(ptr)               \
     if ((ptr) == nullptr) {                             \
         PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
         return;                                         \
+    }
+
+#define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
+    if (!(parcelOpExp)) { \
+        PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        return retVal; \
+    }
+
+#define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
+    if ((ptr) == nullptr) {                                                         \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
+        return;                                                                     \
     }
 
 enum PrintErrorCode {
@@ -182,6 +201,8 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING = 39,  // Input tray is missing or not properly installed
     PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 40, // print job restricted by security policy.
     PRINT_JOB_BLOCKED_INVALID_NUMBER_UP = 41, // n-in-1 print with invalid number-up parameter.
+    PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION = 42, // slow file conversion
+    PRINT_JOB_BLOCKED_PORT_ERROR = 43, // port error
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -385,6 +406,7 @@ const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
 const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
+const std::string VENDOR_BSUNI_DRIVER_PREFIX = "fwk.driver.bsuni:";
 const std::string VENDOR_PPD_DRIVER = "driver.ppd";
 const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
 const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
@@ -398,6 +420,7 @@ const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
+const int32_t PRINT_API_COUNTED = 1;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";
 const std::string PRINT_PARAM_TYPE_QUALITY = "defaultPrintQuality";

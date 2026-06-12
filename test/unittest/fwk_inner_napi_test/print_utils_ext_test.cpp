@@ -444,6 +444,63 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_004, TestSize.Level2)
     EXPECT_EQ(result, "");
 }
 
+/**
+ * @tc.name: AnonymizeJobOption_005
+ * @tc.desc: Verify AnonymizeJobOption with files array size equal to PRINT_MAX_FILE_LIST_SIZE.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_005, TestSize.Level2)
+{
+    Json::Value optionJson;
+    Json::Value filesArr(Json::arrayValue);
+    for (int32_t i = 0; i < PRINT_MAX_FILE_LIST_SIZE; i++) {
+        filesArr.append("/data/test/file_" + std::to_string(i) + ".pdf");
+    }
+    optionJson["files"] = filesArr;
+    std::string option = PrintJsonUtil::WriteString(optionJson);
+    std::string result = PrintUtils::AnonymizeJobOption(option);
+    EXPECT_NE(result, "");
+    Json::Value resultJson;
+    PrintJsonUtil::Parse(result, resultJson);
+    EXPECT_EQ(resultJson["files"].size(), static_cast<Json::UInt>(PRINT_MAX_FILE_LIST_SIZE));
+    EXPECT_EQ(resultJson["files"][0].asString(), "/xxx/xxx.pdf");
+}
+
+/**
+ * @tc.name: AnonymizeJobOption_006
+ * @tc.desc: Verify AnonymizeJobOption with files array size exceeding PRINT_MAX_FILE_LIST_SIZE.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_006, TestSize.Level2)
+{
+    Json::Value optionJson;
+    Json::Value filesArr(Json::arrayValue);
+    for (int32_t i = 0; i <= PRINT_MAX_FILE_LIST_SIZE; i++) {
+        filesArr.append("/data/test/file_" + std::to_string(i) + ".pdf");
+    }
+    optionJson["files"] = filesArr;
+    std::string option = PrintJsonUtil::WriteString(optionJson);
+    std::string result = PrintUtils::AnonymizeJobOption(option);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: AnonymizeJobOption_007
+ * @tc.desc: Verify AnonymizeJobOption with files array within limit and correctly anonymized.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_007, TestSize.Level2)
+{
+    std::string option = R"({"files":["/data/local/tmp/doc.pdf","/data/local/tmp/img.jpg"]})";
+    std::string result = PrintUtils::AnonymizeJobOption(option);
+    EXPECT_NE(result, "");
+    Json::Value resultJson;
+    PrintJsonUtil::Parse(result, resultJson);
+    EXPECT_EQ(resultJson["files"].size(), static_cast<Json::UInt>(2));
+    EXPECT_EQ(resultJson["files"][0].asString(), "/xxx/xxx.pdf");
+    EXPECT_EQ(resultJson["files"][1].asString(), "/xxx/xxx.jpg");
+}
+
 // ==================== AnonymizeJobName Test ====================
 /**
  * @tc.name: AnonymizeJobName_001

@@ -126,6 +126,9 @@ private:
     PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();
     const std::string& GetPrintersPath();
     void ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson);
+    std::string HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri,
+        const std::string &printerId);
+    bool ParseSelectedDriverFromJson(Json::Value &object, PpdInfo &selectedDriver);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,

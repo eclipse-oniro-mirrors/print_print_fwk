@@ -16,8 +16,10 @@ import("//build/test.gni")
 
 if (print_fwk_feature_device_isolation) {
   _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service/print_service"
 } else {
   _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services/print_service"
 }
 
 module_output_path = unit_test_output_path
@@ -26,10 +28,12 @@ ohos_unittest("print_ext_test") {
   module_out_path = module_output_path
   include_dirs = [
     "mock",
+    "${_test_path}/unittest/service_test/mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/kits/extension/include",
     "${print_path}/frameworks/helper/print_helper/include",
     "${print_path}/frameworks/models/print_models/include",
+    "${_service_path}/include",
     "${print_utils_path}/include",
   ]
 
@@ -37,6 +41,12 @@ ohos_unittest("print_ext_test") {
     "${_test_path}/unittest/extension_test/print_extension_context_test.cpp",
     "${_test_path}/unittest/extension_test/print_extension_test.cpp",
   ]
+
+  if (print_fwk_feature_device_isolation) {
+    sources += [
+      "${print_path}/test/phone_test/unittest/extension_test/js_print_extension_test.cpp",
+    ]
+  }
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
@@ -72,9 +82,6 @@ ohos_unittest("print_ext_test") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "napi:ace_napi",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]

@@ -23,7 +23,8 @@
       "print_fwk_feature_watermark_enforcing",
       "print_fwk_feature_kia_interceptor",
       "print_fwk_feature_print_failure_ai_notifier",
-      "print_fwk_feature_device_isolation"
+      "print_fwk_feature_device_isolation",
+      "print_fwk_feature_api_metrics"
     ],
     "adapted_system_type": [
       "standard"
@@ -73,8 +74,9 @@
         "image_framework",
         "data_share",
         "enterprise_device_management",
-        "security_guard",
-        "huks"
+        "huks",
+        "api_metrics",
+        "ets_frontend"
       ],
       "third_party": [
         "zlib"

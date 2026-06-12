@@ -272,11 +272,11 @@ bool PrintAttributes::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGE("no data in parcel");
         return false;
     }
-    hasCopyNumber_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasCopyNumber_), false);
     if (hasCopyNumber_) {
-        SetCopyNumber(parcel.ReadUint32());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(copyNumber_), false);
     }
-    hasPageRange_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPageRange_), false);
     if (hasPageRange_) {
         auto rangePtr = PrintRange::Unmarshalling(parcel);
         if (rangePtr == nullptr) {
@@ -285,11 +285,11 @@ bool PrintAttributes::ReadFromParcel(Parcel &parcel)
         }
         SetPageRange(*rangePtr);
     }
-    hasSequential_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasSequential_), false);
     if (hasSequential_) {
-        SetIsSequential(parcel.ReadBool());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isSequential_), false);
     }
-    hasPageSize_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPageSize_), false);
     if (hasPageSize_) {
         auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
         if (pageSizePtr == nullptr) {
@@ -298,28 +298,36 @@ bool PrintAttributes::ReadFromParcel(Parcel &parcel)
         }
         SetPageSize(*pageSizePtr);
     }
-    hasLandscape_ = parcel.ReadBool();
-    if (hasLandscape_) {
-        SetIsLandscape(parcel.ReadBool());
-    }
-    hasDirectionMode_ = parcel.ReadBool();
-    if (hasDirectionMode_) {
-        SetDirectionMode(parcel.ReadUint32());
-    }
-    hasColorMode_ = parcel.ReadBool();
-    if (hasColorMode_) {
-        SetColorMode(parcel.ReadUint32());
-    }
-    hasDuplexMode_ = parcel.ReadBool();
-    if (hasDuplexMode_) {
-        SetDuplexMode(parcel.ReadUint32());
+    if (!ReadModeAttrsFromParcel(parcel)) {
+        return false;
     }
     return ReadNextDataFromParcel(parcel);
 }
 
+bool PrintAttributes::ReadModeAttrsFromParcel(Parcel &parcel)
+{
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasLandscape_), false);
+    if (hasLandscape_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isLandscape_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasDirectionMode_), false);
+    if (hasDirectionMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(directionMode_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasColorMode_), false);
+    if (hasColorMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(colorMode_), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasDuplexMode_), false);
+    if (hasDuplexMode_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(duplexMode_), false);
+    }
+    return true;
+}
+
 bool PrintAttributes::ReadNextDataFromParcel(Parcel &parcel)
 {
-    hasMargin_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasMargin_), false);
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
         if (marginPtr == nullptr) {
@@ -328,28 +336,31 @@ bool PrintAttributes::ReadNextDataFromParcel(Parcel &parcel)
         }
         margin_ = *marginPtr;
     }
-    hasOption_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasOption_), false);
     if (hasOption_) {
-        SetOption(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(option_), false);
     }
     return true;
 }
 
 bool PrintAttributes::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteBool(hasCopyNumber_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasCopyNumber_), false);
     if (hasCopyNumber_) {
-        parcel.WriteUint32(GetCopyNumber());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetCopyNumber()), false);
     }
 
-    parcel.WriteBool(hasPageRange_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPageRange_), false);
     if (hasPageRange_) {
-        pageRange_.Marshalling(parcel);
+        if (!pageRange_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for pageRange_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasSequential_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasSequential_), false);
     if (hasSequential_) {
-        parcel.WriteBool(GetIsSequential());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetIsSequential()), false);
     }
 
     return MarshallingParam(parcel);
@@ -357,39 +368,45 @@ bool PrintAttributes::Marshalling(Parcel &parcel) const
 
 bool PrintAttributes::MarshallingParam(Parcel &parcel) const
 {
-    parcel.WriteBool(hasPageSize_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPageSize_), false);
     if (hasPageSize_) {
-        pageSize_.Marshalling(parcel);
+        if (!pageSize_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for pageSize_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasLandscape_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasLandscape_), false);
     if (hasLandscape_) {
-        parcel.WriteBool(GetIsLandscape());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetIsLandscape()), false);
     }
 
-    parcel.WriteBool(hasDirectionMode_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDirectionMode_), false);
     if (hasDirectionMode_) {
-        parcel.WriteUint32(GetDirectionMode());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDirectionMode()), false);
     }
 
-    parcel.WriteBool(hasColorMode_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasColorMode_), false);
     if (hasColorMode_) {
-        parcel.WriteUint32(GetColorMode());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetColorMode()), false);
     }
 
-    parcel.WriteBool(hasDuplexMode_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDuplexMode_), false);
     if (hasDuplexMode_) {
-        parcel.WriteUint32(GetDuplexMode());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDuplexMode()), false);
     }
 
-    parcel.WriteBool(hasMargin_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasMargin_), false);
     if (hasMargin_) {
-        margin_.Marshalling(parcel);
+        if (!margin_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for margin_ failed");
+            return false;
+        }
     }
 
-    parcel.WriteBool(hasOption_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasOption_), false);
     if (hasOption_) {
-        parcel.WriteString(GetOption());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetOption()), false);
     }
 
     return true;

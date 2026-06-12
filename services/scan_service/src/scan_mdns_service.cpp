@@ -249,17 +249,17 @@ int32_t ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &
 {
     SCAN_HILOGI("mdnsloss name = [%{public}s], type = [%{public}s]", info.name.c_str(), info.type.c_str());
     auto& discoverData = ScannerDiscoverData::GetInstance();
-    if (!discoverData.HasTcpDevice(info.addr) && !discoverData.HasEsclDevice(info.addr)) {
-        SCAN_HILOGW("not found scanner in discover data");
-        return NETMANAGER_EXT_SUCCESS;
-    }
     ScanDeviceInfo discoveredInfo;
-    if (discoverData.HasTcpDevice(info.addr)) {
-        discoverData.GetTcpDevice(info.addr, discoveredInfo);
-    } else if (discoverData.HasEsclDevice(info.addr)) {
-        discoverData.GetEsclDevice(info.addr, discoveredInfo);
+    bool hasTcp = discoverData.GetTcpDevice(info.addr, discoveredInfo);
+    if (!hasTcp) {
+        bool hasEscl = discoverData.GetEsclDevice(info.addr, discoveredInfo);
+        if (!hasEscl) {
+            SCAN_HILOGW("not found scanner in discover data");
+            return NETMANAGER_EXT_SUCCESS;
+        }
     }
-    discoverData.RemoveTcpDevice(info.addr);
+    ScanDeviceInfo tempInfo;
+    discoverData.GetAndRemoveTcpDevice(info.addr, tempInfo);
     discoverData.RemoveEsclDevice(info.addr);
     ScanDeviceInfoSync syncInfo;
     syncInfo.deviceId = discoveredInfo.deviceId;

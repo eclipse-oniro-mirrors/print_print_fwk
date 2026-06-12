@@ -34,13 +34,21 @@ public:
         count_.fetch_add(1, std::memory_order_relaxed);
         Value();
     }
-    void Decrement(int num = 1)
+    bool Decrement(int num = 1)
     {
-        int value = count_.load(std::memory_order_relaxed);
-        if (value > 0) {
-            count_.fetch_add(-num, std::memory_order_relaxed);
+        if (num <= 0) {
+            return false;
         }
-        Value();
+        int expected = count_.load(std::memory_order_acquire);
+        while (expected >= num) {
+            if (count_.compare_exchange_weak(expected, expected - num,
+                                            std::memory_order_release,
+                                            std::memory_order_acquire)) {
+                Value();
+                return true;
+            }
+        }
+        return false;
     }
     int Value() const
     {

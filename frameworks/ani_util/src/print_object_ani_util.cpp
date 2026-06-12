@@ -15,10 +15,12 @@
 #include "print_object_ani_util.h"
 #include "print_base_ani_util.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &res)
 {
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
     ani_ref arrayObj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -110,6 +112,7 @@ bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, st
 
 bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res)
 {
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -148,31 +151,34 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
     return true;
 }
 
-bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool value)
+bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool &value)
 {
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false, __func__);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
-    ani_boolean res = 0.0;
+    ani_boolean res = false;
 
     if ((status = env->Object_GetFieldByName_Ref(param, name, &obj)) != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
-        return res;
+        return false;
     }
     if ((status = env->Reference_IsUndefined(obj, &isUndefined)) != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
-        return res;
+        return false;
     }
     if (isUndefined) {
         PRINT_HILOGD("%{public}s : undefined", name);
-        return res;
+        return false;
     }
     if ((status = env->Object_CallMethodByName_Boolean(
         reinterpret_cast<ani_object>(obj), "booleanValue", nullptr, &res)) != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
-        return res;
+        return false;
     }
-    return res;
+    value = res;
+    return true;
 }
 
 bool GetStringProperty(ani_env *env, ani_object param, const char *name, std::string &value)

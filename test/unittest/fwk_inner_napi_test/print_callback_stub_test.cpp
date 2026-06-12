@@ -233,6 +233,7 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0009, TestSize.Level1)
     std::string jobId = "job:1234";
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(jobId));
     EXPECT_TRUE(data.WriteUint32(testState));
     EXPECT_TRUE(data.WriteUint32(testSubState));
     auto callback = std::make_shared<MockPrintCallbackStub>();

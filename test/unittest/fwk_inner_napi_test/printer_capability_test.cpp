@@ -17,6 +17,7 @@
 #include "printer_capability.h"
 #include "print_margin.h"
 #include "print_resolution.h"
+#include "print_json_util.h"
 
 using namespace testing::ext;
 
@@ -316,6 +317,212 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_VendorAbility_SettersAndGe
 
     capability.SetVendorJobAttrAbility("");
     EXPECT_FALSE(capability.HasVendorJobAttrAbility());
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0017
+ * @tc.desc: Verify empty pageSize list returns empty.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0017, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 0);
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0018
+ * @tc.desc: Verify single pageSize with no duplicate.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0018, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "A4", 210000, 297000);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 1);
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0019
+ * @tc.desc: Verify all custom pageSize handled correctly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0019, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "Custom.A4", 1, 1);
+    pagesize.emplace_back("page2", "Custom.Letter", 2, 2);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 2);
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0020
+ * @tc.desc: Verify mixed custom and standard pageSize with duplicate dimensions.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0020, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "A4", 1, 1);
+    pagesize.emplace_back("page2", "Custom.A4", 1, 1);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 1);
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_HasOptionFalse_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_OptionEmpty_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    capability.SetOption("");
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_InvalidJson_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    capability.SetOption("invalid json string");
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_NotJsonObject_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    capability.SetOption("\"just a string\"");
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_CupsOptionsNotObject_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    capJson["cupsOptions"] = "not an object";
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_AdvanceOptionsNotString_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    cupsOptions["advanceOptions"] = 123;
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_AdvanceOptionsParseFail_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    cupsOptions["advanceOptions"] = "invalid json";
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_AdvanceOptionsNotArray_ReturnFalse, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    cupsOptions["advanceOptions"] = "{\"key\":\"value\"}";
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(false, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_ValidAdvanceOptions_ReturnTrue, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    Json::Value advanceOptions;
+    Json::Value opt;
+    opt["keyword"] = "CustomPin";
+    opt["customParamType"] = 1;
+    advanceOptions.append(opt);
+    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    Json::Value advanceOptionsJson;
+    EXPECT_EQ(true, capability.GetAdvanceOptionsJson(advanceOptionsJson));
+    EXPECT_EQ(true, advanceOptionsJson.isArray());
+}
+
+HWTEST_F(PrinterCapabilityTest, GetCustomOptionKeys_GetAdvanceOptionsFail_ReturnEmpty, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::set<std::string> keys = capability.GetCustomOptionKeys();
+    EXPECT_EQ(true, keys.empty());
+}
+
+HWTEST_F(PrinterCapabilityTest, GetCustomOptionKeys_NoCustomOptions_ReturnEmpty, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    Json::Value advanceOptions;
+    Json::Value opt;
+    opt["keyword"] = "CustomPin";
+    advanceOptions.append(opt);
+    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    std::set<std::string> keys = capability.GetCustomOptionKeys();
+    EXPECT_EQ(true, keys.empty());
+}
+
+HWTEST_F(PrinterCapabilityTest, GetCustomOptionKeys_HasCustomOptions_ReturnKeys, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    Json::Value advanceOptions;
+    Json::Value opt1;
+    opt1["keyword"] = "CustomPin";
+    opt1["customParamType"] = 1;
+    advanceOptions.append(opt1);
+    Json::Value opt2;
+    opt2["keyword"] = "CustomPassword";
+    opt2["customParamType"] = 2;
+    advanceOptions.append(opt2);
+    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    std::set<std::string> keys = capability.GetCustomOptionKeys();
+    EXPECT_EQ(2, keys.size());
+    EXPECT_EQ(true, keys.find("CustomPin") != keys.end());
+    EXPECT_EQ(true, keys.find("CustomPassword") != keys.end());
 }
 }  // namespace Print
 }  // namespace OHOS

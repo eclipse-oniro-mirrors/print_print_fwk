@@ -118,6 +118,7 @@ private:
 #endif
     bool ReadFromParcel(Parcel &parcel);
     bool ReadNextDataFromParcel(Parcel &parcel);
+    bool ReadModeAttrsFromParcel(Parcel &parcel);
 
 #ifndef TDD_ENABLE
 private:

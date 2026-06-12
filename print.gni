@@ -37,4 +37,5 @@ declare_args() {
   print_fwk_feature_kia_interceptor = false
   print_fwk_feature_print_failure_ai_notifier = false
   print_fwk_feature_device_isolation = false
+  print_fwk_feature_api_metrics = false
 }

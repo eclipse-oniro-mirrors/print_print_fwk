@@ -29,6 +29,13 @@ ScanManagerClient::ScanManagerClient() : scanServiceProxy_(nullptr)
 
 ScanManagerClient::~ScanManagerClient()
 {
+    std::unique_lock<std::shared_mutex> lock(proxyLock_);
+    if (scanServiceProxy_ != nullptr) {
+        auto serviceRemote = scanServiceProxy_->AsObject();
+        if (serviceRemote != nullptr) {
+            serviceRemote->RemoveDeathRecipient(deathRecipient_);
+        }
+    }
     scanServiceProxy_ = nullptr;
     deathRecipient_ = nullptr;
 }
@@ -46,9 +53,16 @@ sptr<ScanManagerClient> ScanManagerClient::GetInstance()
 sptr<IScanService> ScanManagerClient::GetScanServiceProxy()
 {
     {
-        std::unique_lock<std::shared_mutex> lock(proxyLock_);
+        std::shared_lock<std::shared_mutex> sharedLock(proxyLock_);
         if (scanServiceProxy_ != nullptr) {
             SCAN_HILOGD("already get scanServiceProxy_");
+            return scanServiceProxy_;
+        }
+    }
+    {
+        std::unique_lock<std::shared_mutex> uniqueLock(proxyLock_);
+        if (scanServiceProxy_ != nullptr) {
+            SCAN_HILOGD("already get scanServiceProxy_ (second check)");
             return scanServiceProxy_;
         }
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -58,13 +72,18 @@ sptr<IScanService> ScanManagerClient::GetScanServiceProxy()
         }
         auto object = samgrProxy->CheckSystemAbility(SCAN_SERVICE_ID);
         if (object != nullptr) {
-            object->AddDeathRecipient(deathRecipient_);
+            if (deathRecipient_ == nullptr) {
+                deathRecipient_ = new (std::nothrow) ScanSaDeathRecipient();
+            }
+            if (deathRecipient_ != nullptr) {
+                object->AddDeathRecipient(deathRecipient_);
+            }
             scanServiceProxy_ = iface_cast<IScanService>(object);
             return scanServiceProxy_;
         }
     }
     if (LoadScanService()) {
-        std::unique_lock<std::shared_mutex> lock(proxyLock_);
+        std::shared_lock<std::shared_mutex> sharedLock(proxyLock_);
         return scanServiceProxy_;
     }
     return nullptr;
@@ -72,52 +91,94 @@ sptr<IScanService> ScanManagerClient::GetScanServiceProxy()
 
 bool ScanManagerClient::LoadScanService()
 {
-    std::unique_lock<std::shared_mutex> lock(proxyLock_);
-    sptr<ScanSyncLoadCallback> lockCallback = new (std::nothrow) ScanSyncLoadCallback();
-    if (lockCallback == nullptr) {
-        SCAN_HILOGE("lockCallback is a nullptr");
-        return false;
+    {
+        std::lock_guard<std::mutex> conditionLock(conditionMutex_);
+        ready_ = false;
     }
-    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (samgrProxy == nullptr) {
-        SCAN_HILOGE("get samgr failed");
-        return false;
+    {
+        std::unique_lock<std::shared_mutex> lock(proxyLock_);
+        sptr<ScanSyncLoadCallback> lockCallback = new (std::nothrow) ScanSyncLoadCallback();
+        if (lockCallback == nullptr) {
+            SCAN_HILOGE("lockCallback is a nullptr");
+            return false;
+        }
+        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (samgrProxy == nullptr) {
+            SCAN_HILOGE("get samgr failed");
+            return false;
+        }
+        int32_t ret = samgrProxy->LoadSystemAbility(SCAN_SERVICE_ID, lockCallback);
+        if (ret != ERR_OK) {
+            SCAN_HILOGE("LoadSystemAbility failed");
+            return false;
+        }
     }
-    int32_t ret = samgrProxy->LoadSystemAbility(SCAN_SERVICE_ID, lockCallback);
-    if (ret != ERR_OK) {
-        SCAN_HILOGE("LoadSystemAbility failed");
-        return false;
+    {
+        std::unique_lock<std::mutex> conditionLock(conditionMutex_);
+        auto waitStatus = syncCon_.wait_for(conditionLock,
+            std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return ready_; });
+        if (!waitStatus) {
+            SCAN_HILOGE("scan server load sa timeout");
+            return false;
+        }
     }
-    auto waitStatus = syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-        [this]() { return scanServiceProxy_ != nullptr; });
-    if (!waitStatus) {
-        return false;
-    }
-    return true;
+    std::shared_lock<std::shared_mutex> proxySharedLock(proxyLock_);
+    return scanServiceProxy_ != nullptr;
 }
 
 void ScanManagerClient::LoadServerSuccess(const sptr<IRemoteObject> &remoteObject)
 {
-    std::unique_lock<std::shared_mutex> lock(proxyLock_);
-    SCAN_HILOGI("scan_service LoadServerSuccess");
-    if (remoteObject != nullptr) {
-        remoteObject->AddDeathRecipient(deathRecipient_);
-        scanServiceProxy_ = iface_cast<IScanService>(remoteObject);
+    {
+        std::unique_lock<std::shared_mutex> lock(proxyLock_);
+        SCAN_HILOGI("scan_service LoadServerSuccess");
+        if (remoteObject != nullptr) {
+            if (deathRecipient_ == nullptr) {
+                deathRecipient_ = new (std::nothrow) ScanSaDeathRecipient();
+            }
+            if (deathRecipient_ != nullptr) {
+                remoteObject->AddDeathRecipient(deathRecipient_);
+            }
+            scanServiceProxy_ = iface_cast<IScanService>(remoteObject);
+        }
+    }
+    {
+        std::unique_lock<std::mutex> lock(conditionMutex_);
+        ready_ = true;
         syncCon_.notify_one();
     }
 }
 
 void ScanManagerClient::LoadServerFail()
 {
-    std::unique_lock<std::shared_mutex> lock(proxyLock_);
-    SCAN_HILOGI("scan_service LoadServerFail");
-    scanServiceProxy_ = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(proxyLock_);
+        SCAN_HILOGI("scan_service LoadServerFail");
+        scanServiceProxy_ = nullptr;
+    }
+    {
+        std::unique_lock<std::mutex> lock(conditionMutex_);
+        ready_ = true;
+        syncCon_.notify_one();
+    }
 }
 
 void ScanManagerClient::OnRemoteSaDied(const wptr<IRemoteObject>& object)
 {
     std::unique_lock<std::shared_mutex> lock(proxyLock_);
-    scanServiceProxy_ = nullptr;
+    if (object == nullptr) {
+        SCAN_HILOGE("object is nullptr");
+        return;
+    }
+    if (scanServiceProxy_ == nullptr) {
+        SCAN_HILOGE("scanServiceProxy_ is null");
+        return;
+    }
+    auto serviceRemote = scanServiceProxy_->AsObject();
+    if ((serviceRemote != nullptr) && (serviceRemote == object.promote())) {
+        serviceRemote->RemoveDeathRecipient(deathRecipient_);
+        scanServiceProxy_ = nullptr;
+        deathRecipient_ = nullptr;
+    }
 }
 
 int32_t ScanManagerClient::InitScan()

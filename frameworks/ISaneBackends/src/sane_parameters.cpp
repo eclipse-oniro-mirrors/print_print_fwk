@@ -16,20 +16,20 @@
 #include "sane_parameters.h"
 #include "scan_log.h"
 #include "message_parcel.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SaneParameters::SaneParameters() : format_(SANE_FRAME_GRAY), lastFrame_(0),
     bytesPerLine_(0), pixelsPerLine_(0), lines_(0), depth_(0) {}
 bool SaneParameters::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteInt32(static_cast<int32_t>(format_));
-    status &= parcel.WriteInt32(static_cast<int32_t>(lastFrame_));
-    status &= parcel.WriteInt32(bytesPerLine_);
-    status &= parcel.WriteInt32(pixelsPerLine_);
-    status &= parcel.WriteInt32(lines_);
-    status &= parcel.WriteInt32(depth_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(static_cast<int32_t>(format_)), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(static_cast<int32_t>(lastFrame_)), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(bytesPerLine_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(pixelsPerLine_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(lines_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(depth_), false);
+    return true;
 }
 
 SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
@@ -39,12 +39,16 @@ SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->format_ = static_cast<SaneFrame>(parcel.ReadInt32());
-    obj->lastFrame_ = parcel.ReadInt32();
-    obj->bytesPerLine_ = parcel.ReadInt32();
-    obj->pixelsPerLine_ = parcel.ReadInt32();
-    obj->lines_ = parcel.ReadInt32();
-    obj->depth_ = parcel.ReadInt32();
+    int32_t format = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(format), nullptr);
+    obj->format_ = static_cast<SaneFrame>(format);
+    int32_t lastFrame = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(lastFrame), nullptr);
+    obj->lastFrame_ = lastFrame;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->bytesPerLine_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->pixelsPerLine_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->lines_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->depth_), nullptr);
     return obj;
 }
 }   // namespace OHOS::Scan

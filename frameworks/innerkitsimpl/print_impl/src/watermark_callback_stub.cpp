@@ -48,7 +48,8 @@ int32_t WatermarkCallbackStub::OnRemoteRequest(
 bool WatermarkCallbackStub::HandleAddWatermarkEvent(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("WatermarkCallbackStub HandleAddWatermarkEvent start");
-    std::string jobId = data.ReadString();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
     int32_t fd = data.ReadFileDescriptor();
     if (fd < 0) {
         PRINT_HILOGE("Invalid file descriptor");

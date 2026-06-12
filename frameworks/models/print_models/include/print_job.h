@@ -140,9 +140,10 @@ public:
 
     Json::Value ConvertToJsonObject() const;
 private:
-    void ReadFromParcel(Parcel &parcel);
-    void ReadParcelFD(Parcel &parcel);
-    void ReadVendorOptionsFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
+    bool ReadParcelFD(Parcel &parcel);
+    bool ReadVendorOptionsFromParcel(Parcel &parcel);
+    bool ReadLayoutFromParcel(Parcel &parcel);
 
 private:
     std::vector<uint32_t> fdList_;

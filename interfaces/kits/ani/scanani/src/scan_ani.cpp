@@ -42,10 +42,8 @@ using namespace OHOS::Security::AccessToken;
 static void InitScanNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter InitScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     int32_t ret = ScanManagerClient::GetInstance()->InitScan();
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -54,10 +52,8 @@ static void InitScanNative(ani_env *env, ani_object callback)
 static void ExitScanNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter ExitScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     int32_t ret = ScanManagerClient::GetInstance()->ExitScan();
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -66,10 +62,8 @@ static void ExitScanNative(ani_env *env, ani_object callback)
 static void StartScannerDiscoveryNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter StartScannerDiscoveryNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     int32_t ret = ScanManagerClient::GetInstance()->GetScannerList();
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
@@ -78,10 +72,8 @@ static void StartScannerDiscoveryNative(ani_env *env, ani_object callback)
 static void OpenScannerNative(ani_env *env, ani_string scannerIdAni, ani_object callback)
 {
     SCAN_HILOGI("enter OpenScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string scannerId;
     if (!GetStdString(env, scannerIdAni, scannerId)) {
         SCAN_HILOGE("GetStdString fail");
@@ -98,10 +90,8 @@ static void OpenScannerNative(ani_env *env, ani_string scannerIdAni, ani_object 
 static void CloseScannerNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter CloseScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -118,10 +108,8 @@ static void CloseScannerNative(ani_env *env, ani_string scannerId, ani_object ca
 static void GetScannerParameterNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter GetScannerParameterNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -141,10 +129,8 @@ static void SetScannerParameterNative(ani_env *env, ani_string scannerId, ani_in
     ani_object value, ani_object callback)
 {
     SCAN_HILOGI("enter SetScannerParameterNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -164,10 +150,8 @@ static void SetScanAutoOptionNative(ani_env *env, ani_string scannerId, ani_int 
     ani_object callback)
 {
     SCAN_HILOGI("enter SetScanAutoOptionNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -187,10 +171,8 @@ static void GetScannerCurrentSettingNative(ani_env *env, ani_string scannerId, a
     ani_object callback)
 {
     SCAN_HILOGI("enter GetScannerCurrentSettingNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -209,10 +191,8 @@ static void GetScannerCurrentSettingNative(ani_env *env, ani_string scannerId, a
 static void StartScanNative(ani_env *env, ani_string scannerId, ani_boolean batchMode, ani_object callback)
 {
     SCAN_HILOGI("enter StartScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -229,10 +209,8 @@ static void StartScanNative(ani_env *env, ani_string scannerId, ani_boolean batc
 static void CancelScanNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter CancelScanNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -249,10 +227,8 @@ static void CancelScanNative(ani_env *env, ani_string scannerId, ani_object call
 static void GetPictureScanProgressNative(ani_env *env, ani_string scannerId, ani_object callback)
 {
     SCAN_HILOGI("enter GetPictureScanProgressNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, scannerId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -270,10 +246,8 @@ static void GetPictureScanProgressNative(ani_env *env, ani_string scannerId, ani
 static void AddScannerNative(ani_env *env, ani_string uniqueId, ani_string discoveryMode, ani_object callback)
 {
     SCAN_HILOGI("enter AddScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, uniqueId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -297,10 +271,8 @@ static void AddScannerNative(ani_env *env, ani_string uniqueId, ani_string disco
 static void DeleteScannerNative(ani_env *env, ani_string uniqueId, ani_string discoveryMode, ani_object callback)
 {
     SCAN_HILOGI("enter DeleteScannerNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string id;
     if (!GetStdString(env, uniqueId, id)) {
         SCAN_HILOGE("GetStdString fail");
@@ -324,10 +296,8 @@ static void DeleteScannerNative(ani_env *env, ani_string uniqueId, ani_string di
 static void GetAddedScannersNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter GetAddedScannersNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::vector<ScanDeviceInfo> scanners;
     int32_t ret = ScanManagerClient::GetInstance()->GetAddedScanner(scanners);
     ani_object stsErrCode = CreateStsError(env, ret);
@@ -362,10 +332,8 @@ static void ExportScanPictureNative(ani_env *env, ani_string scannerId, ani_obje
     ani_int format, ani_object callback)
 {
     SCAN_HILOGI("enter ExportScanPictureNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     
     auto callerToken = OHOS::IPCSkeleton::GetCallingTokenID();
     auto tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
@@ -406,10 +374,8 @@ static void ExportScanPictureNative(ani_env *env, ani_string scannerId, ani_obje
 static void OnScanDeviceFoundNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceFoundNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceFound";
     OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
@@ -418,10 +384,8 @@ static void OnScanDeviceFoundNative(ani_env *env, ani_object callback)
 static void OffScanDeviceFoundNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceFoundNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(type, __func__);
     std::string typeStr;
     if (!GetStdString(env, type, typeStr)) {
         SCAN_HILOGE("GetStdString fail");
@@ -433,10 +397,8 @@ static void OffScanDeviceFoundNative(ani_env *env, ani_string type)
 static void OnScanDeviceSyncNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceSyncNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceSync";
     OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
@@ -445,10 +407,8 @@ static void OnScanDeviceSyncNative(ani_env *env, ani_object callback)
 static void OffScanDeviceSyncNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceSyncNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(type, __func__);
     std::string typeStr;
     if (!GetStdString(env, type, typeStr)) {
         SCAN_HILOGE("GetStdString fail");
@@ -460,10 +420,8 @@ static void OffScanDeviceSyncNative(ani_env *env, ani_string type)
 static void OnScanDeviceAddNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceAddNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceAdd";
     OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
@@ -472,10 +430,8 @@ static void OnScanDeviceAddNative(ani_env *env, ani_object callback)
 static void OffScanDeviceAddNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceAddNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(type, __func__);
     std::string typeStr;
     if (!GetStdString(env, type, typeStr)) {
         SCAN_HILOGE("GetStdString fail");
@@ -487,10 +443,8 @@ static void OffScanDeviceAddNative(ani_env *env, ani_string type)
 static void OnScanDeviceDelNative(ani_env *env, ani_object callback)
 {
     SCAN_HILOGI("enter OnScanDeviceDelNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceDel";
     OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
@@ -499,10 +453,8 @@ static void OnScanDeviceDelNative(ani_env *env, ani_object callback)
 static void OffScanDeviceDelNative(ani_env *env, ani_string type)
 {
     SCAN_HILOGI("enter OffScanDeviceDelNative");
-    if (env == nullptr) {
-        SCAN_HILOGE("env is nullptr");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(type, __func__);
     std::string typeStr;
     if (!GetStdString(env, type, typeStr)) {
         SCAN_HILOGE("GetStdString fail");

@@ -188,7 +188,6 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
     PRINT_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         return PRINT_INVALID_ID;
     }
     return fd;
@@ -395,6 +394,19 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
         optionJson["printerId"] = AnonymizePrinterId(optionJson["printerId"].asString());
     }
+    if (PrintJsonUtil::IsMember(optionJson, "files") && optionJson["files"].isArray()) {
+        Json::Value filesArr = optionJson["files"];
+        if (filesArr.size() > PRINT_MAX_FILE_LIST_SIZE) {
+            PRINT_HILOGE("filesArr size %{public}u exceeds max limit.", filesArr.size());
+            return "";
+        }
+        for (Json::Value::ArrayIndex i = 0; i < filesArr.size(); i++) {
+            if (filesArr[i].isString()) {
+                filesArr[i] = AnonymizeFilePath(filesArr[i].asString());
+            }
+        }
+        optionJson["files"] = filesArr;
+    }
     return PrintJsonUtil::WriteString(optionJson);
 }
 
@@ -406,6 +418,17 @@ std::string PrintUtils::AnonymizeJobName(const std::string &jobName)
         return "xxx" + extension;
     }
     return "xxx";
+}
+
+std::string PrintUtils::AnonymizeFilePath(const std::string &filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of('/');
+    if (lastSlashPos != std::string::npos) {
+        std::string fileName = filePath.substr(lastSlashPos + 1);
+        std::string anonymizedName = AnonymizeJobName(fileName);
+        return "/xxx/" + anonymizedName;
+    }
+    return AnonymizeJobName(filePath);
 }
 void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
 {
@@ -564,6 +587,9 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     size_t atPos = uri.find('@', startPos);
     if (atPos != std::string::npos) {
         startPos = atPos + 1;
+    }
+    if (startPos >= uri.length()) {
+        return "";
     }
     if (uri[startPos] == '[') {
         size_t endBracketPos = uri.find(']', startPos);
@@ -770,7 +796,7 @@ void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_p
         jsonOptions["cupsOptions"] = params.cupsOptions;
     }
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", option.c_str());
+    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", AnonymizeJobOption(option).c_str());
     nativeObj->SetOption(option);
 }
 }  // namespace OHOS::Print

@@ -94,6 +94,7 @@ const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
 const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
+const uint32_t SLOW_FILE_CONVERSION_THRESHOLD_TIME = 5000;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -181,6 +182,22 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
     {PRINTER_STATE_TIMED_OUT, PRINT_JOB_BLOCKED_UNKNOWN},
     {PRINTER_SPOOL_AREA_FULL, PRINT_JOB_BLOCKED_UNKNOWN},
     {PRINTER_INPUT_TRAY_MISSING, PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING},
+};
+
+static const std::string JOB_STATE_MESSAGE_UPLOADING_FILES = "uploading-files";
+static const std::string JOB_STATE_MESSAGE_CONVERTING_FILES = "converting-files";
+static const std::string JOB_STATE_MESSAGE_LARGE_FILE_ERROR = "large-file-error";
+static const std::string JOB_STATE_MESSAGE_FILE_PARSING_ERROR = "file-parsing-error";
+static const std::string JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION = "slow-file-convertion";
+static const std::string JOB_STATE_MESSAGE_PORT_ERROR = "port-error";
+
+static const std::map<std::string, PrintJobSubState> JOB_PRINTER_STATE_MESSAGE_LIST{
+    {JOB_STATE_MESSAGE_UPLOADING_FILES, PRINT_JOB_RUNNING_UPLOADING_FILES},
+    {JOB_STATE_MESSAGE_CONVERTING_FILES, PRINT_JOB_RUNNING_CONVERTING_FILES},
+    {JOB_STATE_MESSAGE_LARGE_FILE_ERROR, PRINT_JOB_BLOCKED_LARGE_FILE_ERROR},
+    {JOB_STATE_MESSAGE_FILE_PARSING_ERROR, PRINT_JOB_BLOCKED_FILE_PARSING_ERROR},
+    {JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION, PRINT_JOB_RUNNING_CONVERTING_FILES},
+    {JOB_STATE_MESSAGE_PORT_ERROR, PRINT_JOB_BLOCKED_PORT_ERROR},
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY{
@@ -693,8 +710,12 @@ bool PrintCupsClient::QueryPPDInformation(const std::string &makeModel, std::str
     if (request == nullptr) {
         return false;
     }
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel.c_str());
-
+    if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model",
+        nullptr, makeModel.c_str()) == nullptr) {
+        PRINT_HILOGW("attr is null");
+        printAbility_->FreeRequest(request);
+        return false;
+    }
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
     if (response == NULL) {
@@ -987,13 +1008,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
     const std::string &printerName, PrinterCapability &printerCaps, const std::string &ppdName)
 {
     if (!ppdName.empty()) {
-        std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
-        if (!PrintUtils::IsPathValid(ppdFilePath)) {
-            return E_PRINT_INVALID_PARAMETER;
-        }
-        int32_t ret = QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
-        ValidateAndClearVendorAbility(printerCaps, ppdName);
-        return ret;
+        return QueryPrinterCapabilityFromPPDFile(printerCaps, ppdName);
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("[Printer: %{public}s] QueryPrinterCapabilityFromPPD", standardName.c_str());
@@ -1009,7 +1024,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
         return E_PRINT_SERVER_FAILURE;
     }
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
-    if (dinfo == nullptr) {
+    if (dinfo == nullptr || dinfo->attrs == nullptr) {
         PRINT_HILOGE("cupsCopyDestInfo failed");
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
         return E_PRINT_SERVER_FAILURE;
@@ -1355,6 +1370,39 @@ int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
     return num_options;
 }
 
+bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
+    const struct HksBlob &base64Blob, struct HksBlob &plainBlob, PrintServiceAbility *serviceAbility)
+{
+    if (serviceAbility == nullptr) {
+        PRINT_HILOGW("serviceAbility is null for custom option: %{public}s", keyStr.c_str());
+        return false;
+    }
+
+    auto hksAdapter = serviceAbility->GetHksAdapter();
+    if (hksAdapter == nullptr) {
+        PRINT_HILOGW("hksAdapter is null for custom option: %{public}s", keyStr.c_str());
+        return false;
+    }
+
+    struct HksBlob cipherBlob = { 0, nullptr };
+    if (!hksAdapter->Base64Decode(base64Blob, cipherBlob)) {
+        PRINT_HILOGW("Base64 decode failed for custom option: %{public}s", keyStr.c_str());
+        return false;
+    }
+
+    int32_t ret = hksAdapter->DecryptCustomOption(serviceAbility->GetCurrentUserId(), cipherBlob, plainBlob);
+
+    PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
+
+    if (ret == HKS_SUCCESS && plainBlob.data != nullptr) {
+        PRINT_HILOGI("decrypted custom option: %{public}s", keyStr.c_str());
+        return true;
+    }
+
+    PRINT_HILOGW("failed to decrypt custom option: %{public}s, ret: %{public}d", keyStr.c_str(), ret);
+    return false;
+}
+
 int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->advancedOpsJson.isNull()) {
@@ -1365,8 +1413,31 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
     Json::Value::Members keys = jobParams->advancedOpsJson.getMemberNames();
     for (auto key = keys.begin(); key != keys.end(); key++) {
         std::string keyStr = *key;
-        if (jobParams->advancedOpsJson.isMember(keyStr) || jobParams->advancedOpsJson[keyStr].isString()) {
-            std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
+        if (!jobParams->advancedOpsJson.isMember(keyStr)) {
+            continue;
+        }
+        Json::Value optValue = jobParams->advancedOpsJson[keyStr];
+        if (optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
+            && optValue["choice"].asString() == "Custom" && optValue.isMember("value")
+            && optValue["value"].isString()) {
+            const char *valueData = optValue["value"].asCString();
+            if (valueData == nullptr) {
+                continue;
+            }
+            struct HksBlob base64Blob = {
+                .size = static_cast<uint32_t>(strlen(valueData)),
+                .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
+            };
+            struct HksBlob plainBlob = { 0, nullptr };
+            if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
+                num_options = cupsAddOption(keyStr.c_str(),
+                    ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
+                    num_options, options);
+            }
+            PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
+            continue;
+        } else if (optValue.isString()) {
+            std::string valueStr = optValue.asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
                 num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(), num_options, options);
                 continue;
@@ -1535,6 +1606,7 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), nullptr);
         if (dest != nullptr) {
             if (PrintUtil::startsWith(jobParams->printerId, RAW_PPD_DRIVER)) {
+                printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
                 PRINT_HILOGI("raw printer, skip check printer make and model.");
                 return true;
             }
@@ -1930,6 +2002,7 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
         return true;
     }
     ParseStateReasons(monitorParams);
+    ParseStateMessage(monitorParams);
     if (JobStatusCallback(monitorParams)) {
         PRINT_HILOGD("the job is processing");
         return true;
@@ -1945,9 +2018,10 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         return false;
     }
 
-    PRINT_HILOGI("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s\n",
+    PRINT_HILOGI("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s, MESSAGE: %{public}s\n",
         monitorParams->cupsJobId, ippEnumString("job-state", (int)monitorParams->job_state),
-        monitorParams->job_state_reasons, monitorParams->job_printer_state_reasons);
+        monitorParams->job_state_reasons, monitorParams->job_printer_state_reasons,
+        monitorParams->job_printer_state_message);
 
     switch (monitorParams->job_state) {
         case IPP_JOB_PROCESSING:
@@ -2182,6 +2256,50 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
         monitorParams->substate);
 }
 
+void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (monitorParams == nullptr) {
+        PRINT_HILOGE("parse state message failed, monitorParams is nullptr");
+        return;
+    }
+    bool isUploadingOrConvertingState = false;
+    for (auto messageItem = JOB_PRINTER_STATE_MESSAGE_LIST.begin();
+         messageItem != JOB_PRINTER_STATE_MESSAGE_LIST.end(); messageItem++) {
+        if (strstr(monitorParams->job_printer_state_message, messageItem->first.c_str()) == nullptr) {
+            continue;
+        }
+        PRINT_HILOGI("match %{public}s message success", messageItem->first.c_str());
+        monitorParams->substate = GetNewSubstate(monitorParams->substate, messageItem->second);
+        switch (messageItem->second) {
+            case PRINT_JOB_BLOCKED_LARGE_FILE_ERROR:
+            case PRINT_JOB_BLOCKED_FILE_PARSING_ERROR:
+            case PRINT_JOB_BLOCKED_PORT_ERROR:
+                monitorParams->uploadingFilesStartTime = 0;
+                monitorParams->isBlock = true;
+                break;
+            case PRINT_JOB_RUNNING_UPLOADING_FILES:
+            case PRINT_JOB_RUNNING_CONVERTING_FILES:
+                isUploadingOrConvertingState = true;
+                if (monitorParams->uploadingFilesStartTime == 0) {
+                    monitorParams->uploadingFilesStartTime = GetNowTime();
+                }
+                break;
+            default:
+                monitorParams->uploadingFilesStartTime = 0;
+                break;
+        }
+    }
+    // Check slow file conversion timeout
+    if (monitorParams->uploadingFilesStartTime > 0) {
+        uint64_t elapsedTime = GetNowTime() - monitorParams->uploadingFilesStartTime;
+        if (elapsedTime >= SLOW_FILE_CONVERSION_THRESHOLD_TIME) {
+            PRINT_HILOGI("uploading/converting files exceeded %{public}d ms, add slow file conversion substate",
+                SLOW_FILE_CONVERSION_THRESHOLD_TIME);
+            monitorParams->substate = GetNewSubstate(monitorParams->substate, PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION);
+        }
+    }
+}
+
 bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
     std::string substateString, PrintJobSubState jobSubstate)
 {
@@ -2224,12 +2342,13 @@ bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorPara
 {
     ipp_t *request = nullptr;  /* IPP request */
     ipp_t *response = nullptr; /* IPP response */
-    int jattrsLen = 3;
+    int jattrsLen = 4;
     bool needUpdate = false;
     static const char *const jattrs[] = {
         "job-state",
         "job-state-reasons",
         "job-printer-state-reasons",
+        "job-printer-state-message",
     };
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
@@ -2279,10 +2398,12 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
         return false;
     }
     ipp_jstate_t job_state = IPP_JOB_PENDING;
-    char job_state_reasons[1024];
-    char job_printer_state_reasons[1024];
+    char job_state_reasons[1024] = {0};
+    char job_printer_state_reasons[1024] = {0};
+    char job_printer_state_message[1024] = {0};
     if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != nullptr) {
         job_state = (ipp_jstate_t)ippGetInteger(attr, 0);
+        PRINT_HILOGD("ippFindAttribute job_state: %{public}u.", job_state);
     }
     if ((attr = ippFindAttribute(response, "job-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
         ippAttributeString(attr, job_state_reasons, sizeof(job_state_reasons));
@@ -2290,8 +2411,13 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
         ippAttributeString(attr, job_printer_state_reasons, sizeof(job_printer_state_reasons));
     }
+    if ((attr = ippFindAttribute(response, "job-printer-state-message", IPP_TAG_TEXT)) != nullptr) {
+        ippAttributeString(attr, job_printer_state_message, sizeof(job_printer_state_message));
+        PRINT_HILOGI("job_printer_state_message: %{public}s", job_printer_state_message);
+    }
     if (monitorParams->job_state == job_state &&
-        strcmp(monitorParams->job_printer_state_reasons, job_printer_state_reasons) == 0) {
+        strcmp(monitorParams->job_printer_state_reasons, job_printer_state_reasons) == 0 &&
+        strcmp(monitorParams->job_printer_state_message, job_printer_state_message) == 0) {
         monitorParams->timesOfSameState++;
         if (monitorParams->timesOfSameState % STATE_UPDATE_STEP != 0) {
             PRINT_HILOGD("the prevous jobState is the same as current, ignore");
@@ -2306,6 +2432,9 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     strlcpy(monitorParams->job_printer_state_reasons,
         job_printer_state_reasons,
         sizeof(monitorParams->job_printer_state_reasons));
+    strlcpy(monitorParams->job_printer_state_message,
+        job_printer_state_message,
+        sizeof(monitorParams->job_printer_state_message));
     return true;
 }
 
@@ -3198,9 +3327,7 @@ int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
 bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &info)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + fileName;
-    char realPath[PATH_MAX] = {};
-    if (realpath(ppdFilePath.c_str(), realPath) == nullptr) {
-        PRINT_HILOGE("The realPpdFile is null, errno:%{public}s", std::to_string(errno).c_str());
+    if (!PrintUtils::IsPathValid(ppdFilePath)) {
         return false;
     }
     std::unordered_map<std::string, std::string> keyValues;
@@ -3520,7 +3647,7 @@ int32_t PrintCupsClient::DeleteExtraJobsFromCups()
     return E_PRINT_NONE;
 }
 
-std::string PrintCupsClient::getScheme(std::string &printerUri)
+std::string PrintCupsClient::getScheme(const std::string &printerUri)
 {
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
     char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */

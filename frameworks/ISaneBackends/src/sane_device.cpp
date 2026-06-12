@@ -16,16 +16,16 @@
 #include "message_parcel.h"
 #include "sane_device.h"
 #include "scan_log.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 bool SaneDevice::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteString(name_);
-    status &= parcel.WriteString(vendor_);
-    status &= parcel.WriteString(model_);
-    status &= parcel.WriteString(type_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(name_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(vendor_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(model_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(type_), false);
+    return true;
 }
 
 SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
@@ -35,10 +35,10 @@ SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->name_ = parcel.ReadString();
-    obj->vendor_ = parcel.ReadString();
-    obj->model_ = parcel.ReadString();
-    obj->type_ = parcel.ReadString();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->name_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->vendor_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->model_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->type_), nullptr);
     return obj;
 }
 

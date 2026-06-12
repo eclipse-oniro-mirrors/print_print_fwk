@@ -4484,5 +4484,254 @@ HWTEST_F(PrintCupsClientTest, FillVendorOptions_MixedValidInvalidTypes_SkipsInva
     cupsFreeOptions(numOptions, options);
 }
 
+/**
+ * @tc.name: ParseStateMessage_NullParams_Test
+ * @tc.desc: ParseStateMessage with null params should not crash
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_NullParams_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.ParseStateMessage(nullptr);
+}
+
+/**
+ * @tc.name: ParseStateMessage_RunningTokens_Test
+ * @tc.desc: ParseStateMessage hits the 3 RUNNING-semantic tokens, isBlock stays false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_RunningTokens_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto makeParam = []() {
+        return std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+            TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+            PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    };
+
+    auto param = makeParam();
+    std::string msg = "uploading-files";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_FALSE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
+
+    param = makeParam();
+    msg = "converting-files";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_FALSE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
+
+    param = makeParam();
+    msg = "slow-file-convertion";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_FALSE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION));
+}
+
+/**
+ * @tc.name: ParseStateMessage_BlockTokens_Test
+ * @tc.desc: ParseStateMessage hits the 3 BLOCK-semantic tokens, isBlock becomes true
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_BlockTokens_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto makeParam = []() {
+        return std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+            TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+            PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    };
+
+    auto param = makeParam();
+    std::string msg = "large-file-error";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_TRUE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR));
+
+    param = makeParam();
+    msg = "file-parsing-error";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_TRUE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR));
+
+    param = makeParam();
+    msg = "port-error";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_TRUE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_BLOCKED_PORT_ERROR));
+}
+
+/**
+ * @tc.name: ParseStateMessage_NoMatch_Test
+ * @tc.desc: empty / unrelated message should not change substate or isBlock
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_NoMatch_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    param->isBlock = false;
+    param->substate = 0;
+
+    // empty message
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_FALSE(param->isBlock);
+    EXPECT_EQ(param->substate, 0u);
+
+    // unrelated text
+    std::string msg = "some unrelated message";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_FALSE(param->isBlock);
+    EXPECT_EQ(param->substate, 0u);
+}
+
+/**
+ * @tc.name: ParseStateMessage_Substring_Test
+ * @tc.desc: substring match still hits the token
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_Substring_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    std::string msg = "port-error: connection refused";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_TRUE(param->isBlock);
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_BLOCKED_PORT_ERROR));
+}
+
+/**
+ * @tc.name: ParseStateMessage_StackedWithReasons_Test
+ * @tc.desc: message substate stacks on top of reasons substate via GetNewSubstate
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_StackedWithReasons_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    // Pretend ParseStateReasons already pushed PRINT_JOB_BLOCKED_OUT_OF_PAPER.
+    param->isBlock = true;
+    param->substate = printCupsClient.GetNewSubstate(0, PRINT_JOB_BLOCKED_OUT_OF_PAPER);
+    uint32_t before = param->substate;
+
+    std::string msg = "port-error";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+    printCupsClient.ParseStateMessage(param);
+    EXPECT_TRUE(param->isBlock);
+    EXPECT_EQ(param->substate,
+        printCupsClient.GetNewSubstate(before, PRINT_JOB_BLOCKED_PORT_ERROR));
+}
+
+/**
+ * @tc.name: ParseStateMessage_SlowConversionTriggered_Test
+ * @tc.desc: When uploadingFilesStartTime > 0 and elapsedTime >= 5000ms, slow conversion substate is added
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_SlowConversionTriggered_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+
+    // Simulate that uploading-files state started 10 seconds ago (well above 5000ms threshold)
+    param->uploadingFilesStartTime = GetNowTime() - 10000;
+    std::string msg = "uploading-files";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+
+    printCupsClient.ParseStateMessage(param);
+
+    // uploadingFilesStartTime was already > 0, so it should stay unchanged (not reset)
+    EXPECT_GT(param->uploadingFilesStartTime, 0u);
+    EXPECT_FALSE(param->isBlock);
+    // substate should include both UPLOADING_FILES and SLOW_FILE_CONVERSION
+    EXPECT_EQ(param->substate,
+        printCupsClient.GetNewSubstate(
+            printCupsClient.GetNewSubstate(0, PRINT_JOB_RUNNING_UPLOADING_FILES),
+            PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION));
+}
+
+/**
+ * @tc.name: ParseStateMessage_SlowConversionNotYetTriggered_Test
+ * @tc.desc: When uploadingFilesStartTime > 0 but elapsedTime < 5000ms, no slow conversion substate is added
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_SlowConversionNotYetTriggered_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+
+    // Simulate that converting-files state started only 1 second ago (below 5000ms threshold)
+    param->uploadingFilesStartTime = GetNowTime() - 1000;
+    std::string msg = "converting-files";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+
+    printCupsClient.ParseStateMessage(param);
+
+    // uploadingFilesStartTime should stay > 0
+    EXPECT_GT(param->uploadingFilesStartTime, 0u);
+    EXPECT_FALSE(param->isBlock);
+    // substate should only include CONVERTING_FILES, NOT SLOW_FILE_CONVERSION
+    EXPECT_EQ(param->substate, static_cast<uint32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
+}
+
+/**
+ * @tc.name: ParseStateMessage_NoMatchButStartTimeSet_SlowConversion_Test
+ * @tc.desc: When uploadingFilesStartTime > 0 from prior state and message has no match,
+ *           slow conversion check still triggers if elapsed time >= 5000ms
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateMessage_NoMatchButStartTimeSet_SlowConversion_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+
+    // Pretend a prior call already set uploadingFilesStartTime to 8 seconds ago
+    param->uploadingFilesStartTime = GetNowTime() - 8000;
+    param->substate = static_cast<uint32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES);
+
+    // Current message does not match any known token
+    std::string msg = "some unrelated message";
+    msg.copy(param->job_printer_state_message, msg.length() + 1);
+
+    printCupsClient.ParseStateMessage(param);
+
+    // No token matched, so substate stays unchanged, but slow check still fires
+    EXPECT_GT(param->uploadingFilesStartTime, 0u);
+    EXPECT_FALSE(param->isBlock);
+    // The slow conversion substate should be stacked on top of existing substate
+    EXPECT_EQ(param->substate,
+        printCupsClient.GetNewSubstate(
+            static_cast<uint32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES),
+            PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION));
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -21,23 +21,29 @@
 #include <vector>
 
 #include "print_security_guard_info.h"
+#include "print_system_data.h"
 
 namespace OHOS::Print {
 class PrintSecurityGuardManager {
-
 public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
     void receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
     void receiveAuditInfo(const std::string jobId, const PrinterInfo &printerInfo,
-        const PrintJob &printJob, const std::vector<FileAuditInfo> &fileInfos);
+        const PrintJob &printJob, const std::vector<std::string> &fileInfos);
     void clearAll();
 
-    // Orchestration methods for ServiceAbility
+    // Orchestration methods
     std::vector<std::string> GetFileList(const std::string &jobId) const;
-    void SetFileAuditInfo(const std::string &jobId, const std::vector<FileAuditInfo> &fileInfos);
-    std::vector<FileAuditInfo> GetFileAuditInfo(const std::string &jobId) const;
-    void AddBlockedSubState(const std::string &jobId, uint32_t subState);
+    void SetFileAuditInfo(const std::string &jobId, const std::vector<std::string> &fileInfos);
+    std::vector<std::string> GetFileAuditInfo(const std::string &jobId) const;
+    void CalculateFileAuditInfo(const std::string &jobId);
+    void SendJobAuditInfo(const std::string &jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void InjectFileListIntoOption(const std::string &jobId, std::string &option);
+
+    // Resolve PrinterInfo with fallback chain: discovered -> added -> option JSON
+    std::shared_ptr<PrinterInfo> ResolvePrinterInfo(
+        const std::string &printerId, const std::string &option, PrintSystemData &printSystemData);
 
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);

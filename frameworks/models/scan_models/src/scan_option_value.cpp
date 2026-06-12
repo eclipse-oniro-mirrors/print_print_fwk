@@ -119,28 +119,34 @@ bool ScanOptionValue::GetBoolValue() const
     return boolValue_;
 }
 
-void ScanOptionValue::ReadFromParcel(Parcel &parcel)
+bool ScanOptionValue::ReadFromParcel(Parcel &parcel)
 {
-    SetScanOptionValueType((ScanOptionValueType)parcel.ReadUint32());
-    SetValueSize(parcel.ReadInt32());
-    if (valueType_ == SCAN_VALUE_STR) {
-        SetStrValue(parcel.ReadString());
-    } else {
-        SetNumValue(parcel.ReadInt32());
+    uint32_t valueType = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(valueType), false);
+    if (valueType > SCAN_VALUE_GROUP) {
+        SCAN_HILOGE("Invalid ScanOptionValueType: %{public}u.", valueType);
+        return false;
     }
+    SetScanOptionValueType(static_cast<ScanOptionValueType>(valueType));
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(valueSize_), false);
+    if (valueType_ == SCAN_VALUE_STR) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(strValue_), false);
+    } else {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(numValue_), false);
+    }
+    return true;
 }
 
 bool ScanOptionValue::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteUint32(valueType_);
-    status &= parcel.WriteInt32(valueSize_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(valueType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueSize_), false);
     if (valueType_ == SCAN_VALUE_STR) {
-        status &= parcel.WriteString(strValue_);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(strValue_), false);
     } else {
-        status &= parcel.WriteInt32(numValue_);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(numValue_), false);
     }
-    return status;
+    return true;
 }
 
 std::shared_ptr<ScanOptionValue> ScanOptionValue::Unmarshalling(Parcel &parcel)
@@ -154,7 +160,10 @@ std::shared_ptr<ScanOptionValue> ScanOptionValue::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("nativeObj is a nullptr");
         return nullptr;
     }
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        SCAN_HILOGE("Failed to unmarshalling scan option value");
+        return nullptr;
+    }
     return nativeObj;
 }
 

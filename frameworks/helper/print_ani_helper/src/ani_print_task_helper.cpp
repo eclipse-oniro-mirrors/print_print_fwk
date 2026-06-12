@@ -18,13 +18,13 @@
 #include "print_base_ani_util.h"
 #include "print_object_ani_util.h"
 #include "print_log.h"
+#include "print_constant.h"
+
 namespace OHOS::Print {
 ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativePrintTask)
 {
-    if (nativePrintTask == nullptr) {
-        PRINT_HILOGE("nativePrintTask is a nullptr");
-        return nullptr;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, nullptr, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(nativePrintTask, nullptr, __func__);
 
     static const char *className = "@ohos.print.print.PrintTaskImpl";
     ani_class cls;
@@ -38,9 +38,8 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativ
         PRINT_HILOGE("[ANI] Not found ctor");
         return nullptr;
     }
-
     ani_object obj;
-    if (ANI_OK !=env->Object_New(cls, ctor, &obj, reinterpret_cast<ani_long>(nativePrintTask))) {
+    if (ANI_OK != env->Object_New(cls, ctor, &obj, reinterpret_cast<ani_long>(nativePrintTask))) {
         PRINT_HILOGE("New Context Fail");
         return nullptr;
     }

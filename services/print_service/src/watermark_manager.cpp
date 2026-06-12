@@ -58,6 +58,20 @@ WatermarkManager& WatermarkManager::GetInstance()
 }
 #endif // UNIT_TEST
 
+WatermarkManager::~WatermarkManager()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto& info : callbacks_) {
+        if (info.callback != nullptr && info.deathRecipient != nullptr) {
+            auto remoteObject = info.callback->AsObject();
+            if (remoteObject != nullptr) {
+                remoteObject->RemoveDeathRecipient(info.deathRecipient);
+            }
+        }
+    }
+    callbacks_.clear();
+}
+
 int32_t WatermarkManager::FindCallbackIndexByPid(int32_t pid) const
 {
     for (size_t i = 0; i < callbacks_.size(); ++i) {

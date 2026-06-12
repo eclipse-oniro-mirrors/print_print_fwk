@@ -37,6 +37,7 @@ struct SecureBlob {
     void Clear();
     bool IsEmpty() const { return data == nullptr || size == 0; }
     void SetData(const uint8_t *src, uint32_t srcSize);
+    void Allocate(uint32_t allocSize);
     std::string ToString() const;
 };
 

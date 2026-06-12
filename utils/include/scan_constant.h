@@ -74,7 +74,7 @@ namespace OHOS::Scan {
     MessageParcel data; \
     MessageParcel reply; \
     MessageOption option; \
-    data.WriteInterfaceToken(GetDescriptor()) \
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_SCAN_RPC_FAILURE) \
 
 #define CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, retVal)                                             \
     do {                                                                                            \
@@ -93,6 +93,24 @@ namespace OHOS::Scan {
     if ((ptr) == nullptr) {                             \
         SCAN_HILOGE("%{public}s is nullptr.", (#ptr));  \
         return (retVal);                                \
+    }
+
+#define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
+    if (!(parcelOpExp)) { \
+        SCAN_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        return retVal; \
+    }
+
+#define SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                 \
+    if ((ptr) == nullptr) {                                                         \
+        SCAN_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));     \
+        return (retVal);                                                            \
+    }
+
+#define SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                        \
+    if ((ptr) == nullptr) {                                                         \
+        SCAN_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));     \
+        return;                                                                     \
     }
 
 enum ScanErrorCode {

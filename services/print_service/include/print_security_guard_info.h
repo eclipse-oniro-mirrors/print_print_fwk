@@ -16,7 +16,6 @@
 #ifndef PRINT_SECURITY_GUARD_INFO_H
 #define PRINT_SECURITY_GUARD_INFO_H
 
-#include <set>
 #include <string>
 #include <vector>
 
@@ -51,12 +50,10 @@ public:
     std::string ToJsonStr();
     void SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
     void SetPrintAuditInfo(const PrinterInfo &printerInfo, const PrintJob &printJob,
-        const std::vector<FileAuditInfo> &fileInfos);
+        const std::vector<std::string> &fileInfos);
     const std::vector<std::string> &GetFileList() const;
-    void SetFileAuditInfo(const std::vector<FileAuditInfo> &fileInfos);
-    const std::vector<FileAuditInfo> &GetFileAuditInfo() const;
-    void AddBlockedSubState(uint32_t subState);
-    [[nodiscard]] const std::set<uint32_t>& GetBlockedSubStates() const;
+    void SetFileAuditInfo(const std::vector<std::string> &fileInfos);
+    const std::vector<std::string> &GetFileAuditInfo() const;
 
 private:
     int32_t subType_{};
@@ -71,11 +68,10 @@ private:
     std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
     std::vector<std::string> fileList_;
-    std::vector<FileAuditInfo> files_;
+    std::vector<std::string> files_;
     uint32_t duplexMode_ = 0;
     std::vector<std::string> errorCode_;
     std::string printerName_;
-    std::set<uint32_t> blockedSubStates_;
 
     Json::Value ToJson();
 };

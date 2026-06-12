@@ -301,151 +301,209 @@ void PrinterCapability::SetSupportedOrientation(const std::vector<uint32_t> &sup
     supportedOrientationList_.assign(supportedOrientationList.begin(), supportedOrientationList.end());
 }
 
-bool PrinterCapability::ReadFromParcel(Parcel &parcel)
+bool PrinterCapability::ReadCoreAttrsFromParcel(Parcel &parcel, PrinterCapability &right)
 {
-    PrinterCapability right;
-    right.SetColorMode(parcel.ReadUint32());
-    right.SetDuplexMode(parcel.ReadUint32());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.colorMode_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.duplexMode_), false);
 
-    PrintUtils::readListFromParcel<PrintPageSize>(parcel, right.supportedPageSizeList_,
+    if (!PrintUtils::readListFromParcel<PrintPageSize>(parcel, right.supportedPageSizeList_,
         [](Parcel& p) -> std::optional<PrintPageSize> {
             auto ptr = PrintPageSize::Unmarshalling(p);
             if (ptr) {
                 return std::optional<PrintPageSize>(*ptr);
             }
             return std::nullopt;
-        });
+        })) {
+        return false;
+    }
 
-    PrintUtils::readListFromParcel<PrintResolution>(parcel, right.resolutionList_,
+    if (!PrintUtils::readListFromParcel<PrintResolution>(parcel, right.resolutionList_,
         [](Parcel& p) -> std::optional<PrintResolution> {
             auto ptr = PrintResolution::Unmarshalling(p);
             if (ptr) {
                 return std::optional<PrintResolution>(*ptr);
             }
             return std::nullopt;
-        }, &right.hasResolution_);
+        }, &right.hasResolution_)) {
+        return false;
+    }
+    return true;
+}
 
-    ReadSupportedListsFromParcel(parcel, right);
-
-    right.hasMargin_ = parcel.ReadBool();
+bool PrinterCapability::ReadFromParcel(Parcel &parcel)
+{
+    PrinterCapability right;
+    if (!ReadCoreAttrsFromParcel(parcel, right)) {
+        return false;
+    }
+    if (!ReadSupportedListsFromParcel(parcel, right)) {
+        return false;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasMargin_), false);
     if (right.hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
         if (marginPtr != nullptr) {
             right.SetMinMargin(*marginPtr);
         }
     }
-
-    right.hasOption_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasOption_), false);
     if (right.hasOption_) {
-        right.SetOption(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.option_), false);
     }
-
-    ReadVendorAbilityFromParcel(parcel, right);
-
+    if (!ReadVendorAbilityFromParcel(parcel, right)) {
+        return false;
+    }
     *this = right;
     return true;
 }
 
-void PrinterCapability::ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right)
+bool PrinterCapability::ReadSupportedListsFromParcel(Parcel &parcel, PrinterCapability &right)
 {
-    PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedColorModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
-        &right.hasSupportedColorMode_);
+    if (!PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedColorModeList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
+        &right.hasSupportedColorMode_)) {
+        return false;
+    }
 
-    PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedDuplexModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
-        &right.hasSupportedDuplexMode_);
+    if (!PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedDuplexModeList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
+        &right.hasSupportedDuplexMode_)) {
+        return false;
+    }
 
-    PrintUtils::readListFromParcel<std::string>(
-        parcel, right.supportedMediaTypeList_, [](Parcel &p) { return std::make_optional(p.ReadString()); },
-        &right.hasSupportedMediaType_);
+    if (!PrintUtils::readListFromParcel<std::string>(
+        parcel, right.supportedMediaTypeList_, [](Parcel &p) -> std::optional<std::string> {
+            std::string val;
+            if (!p.ReadString(val)) {
+                return std::nullopt;
+            }
+            return std::make_optional(val);
+        },
+        &right.hasSupportedMediaType_)) {
+        return false;
+    }
 
-    PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedQualityList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
-        &right.hasSupportedQuality_);
+    if (!PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedQualityList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
+        &right.hasSupportedQuality_)) {
+        return false;
+    }
 
-    PrintUtils::readListFromParcel<uint32_t>(
-        parcel, right.supportedOrientationList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
-        &right.hasSupportedOrientation_);
+    if (!PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedOrientationList_, [](Parcel &p) -> std::optional<uint32_t> {
+            uint32_t val = 0;
+            if (!p.ReadUint32(val)) { return std::nullopt; }
+            return std::make_optional(val);
+        },
+        &right.hasSupportedOrientation_)) {
+        return false;
+    }
+    return true;
 }
 
-void PrinterCapability::ReadVendorAbilityFromParcel(Parcel &parcel, PrinterCapability &right)
+bool PrinterCapability::ReadVendorAbilityFromParcel(Parcel &parcel, PrinterCapability &right)
 {
-    right.hasVendorPrinterPrefAbility_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasVendorPrinterPrefAbility_), false);
     if (right.hasVendorPrinterPrefAbility_) {
-        right.SetVendorPrinterPrefAbility(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.vendorPrinterPrefAbility_), false);
     }
 
-    right.hasVendorJobAttrAbility_ = parcel.ReadBool();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasVendorJobAttrAbility_), false);
     if (right.hasVendorJobAttrAbility_) {
-        right.SetVendorJobAttrAbility(parcel.ReadString());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.vendorJobAttrAbility_), false);
     }
+    return true;
 }
 
 bool PrinterCapability::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteUint32(GetColorMode());
-    parcel.WriteUint32(GetDuplexMode());
-
-    PrintUtils::WriteListToParcel(
-        parcel, supportedPageSizeList_, [](Parcel &p, const PrintPageSize &item) { item.Marshalling(p); });
-
-    PrintUtils::WriteListToParcel(
-        parcel, resolutionList_, [](Parcel &p, const PrintResolution &item) { item.Marshalling(p); }, hasResolution_);
-
-    PrintUtils::WriteListToParcel(
-        parcel,
-        supportedColorModeList_,
-        [](Parcel &p, const int &item) { p.WriteUint32(item); },
-        hasSupportedColorMode_);
-
-    PrintUtils::WriteListToParcel(
-        parcel,
-        supportedDuplexModeList_,
-        [](Parcel &p, const int &item) { p.WriteUint32(item); },
-        hasSupportedDuplexMode_);
-
-    PrintUtils::WriteListToParcel(
-        parcel,
-        supportedMediaTypeList_,
-        [](Parcel &p, const std::string &item) { p.WriteString(item); },
-        hasSupportedMediaType_);
-
-    PrintUtils::WriteListToParcel(
-        parcel, supportedQualityList_, [](Parcel &p, const int &item) { p.WriteUint32(item); }, hasSupportedQuality_);
-
-    PrintUtils::WriteListToParcel(
-        parcel,
-        supportedOrientationList_,
-        [](Parcel &p, const int &item) { p.WriteUint32(item); },
-        hasSupportedOrientation_);
-
-    parcel.WriteBool(hasMargin_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetColorMode()), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDuplexMode()), false);
+    if (!MarshallingSupportedLists(parcel)) {
+        return false;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasMargin_), false);
     if (hasMargin_) {
-        minMargin_.Marshalling(parcel);
+        if (!minMargin_.Marshalling(parcel)) {
+            PRINT_HILOGE("Marshalling for minMargin_ failed");
+            return false;
+        }
     }
-    parcel.WriteBool(hasOption_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasOption_), false);
     if (hasOption_) {
-        parcel.WriteString(GetOption());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetOption()), false);
     }
-
-    parcel.WriteBool(hasVendorPrinterPrefAbility_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasVendorPrinterPrefAbility_), false);
     if (hasVendorPrinterPrefAbility_) {
-        parcel.WriteString(GetVendorPrinterPrefAbility());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorPrinterPrefAbility()), false);
     }
-
-    parcel.WriteBool(hasVendorJobAttrAbility_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasVendorJobAttrAbility_), false);
     if (hasVendorJobAttrAbility_) {
-        parcel.WriteString(GetVendorJobAttrAbility());
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorJobAttrAbility()), false);
     }
+    return true;
+}
 
+bool PrinterCapability::MarshallingSupportedLists(Parcel &parcel) const
+{
+    if (!PrintUtils::WriteListToParcel(
+        parcel, supportedPageSizeList_,
+        [](Parcel &p, const PrintPageSize &item) -> bool { return item.Marshalling(p); })) {
+        return false;
+    }
+    if (!PrintUtils::WriteListToParcel(
+        parcel, resolutionList_,
+        [](Parcel &p, const PrintResolution &item) -> bool { return item.Marshalling(p); },
+        hasResolution_)) {
+        return false;
+    }
+    if (!PrintUtils::WriteListToParcel(
+        parcel, supportedColorModeList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
+        hasSupportedColorMode_)) {
+        return false;
+    }
+    if (!PrintUtils::WriteListToParcel(
+        parcel, supportedDuplexModeList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
+        hasSupportedDuplexMode_)) {
+        return false;
+    }
+    if (!PrintUtils::WriteListToParcel(
+        parcel, supportedMediaTypeList_, [](Parcel &p, const std::string &item) -> bool { return p.WriteString(item); },
+        hasSupportedMediaType_)) {
+        return false;
+    }
+    if (!PrintUtils::WriteListToParcel(
+        parcel, supportedQualityList_,
+        [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
+        hasSupportedQuality_)) {
+        return false;
+    }
+    if (!PrintUtils::WriteListToParcel(
+        parcel, supportedOrientationList_, [](Parcel &p, const int &item) -> bool { return p.WriteUint32(item); },
+        hasSupportedOrientation_)) {
+        return false;
+    }
     return true;
 }
 
 std::shared_ptr<PrinterCapability> PrinterCapability::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrinterCapability>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        return nullptr;
+    }
     return nativeObj;
 }
 
@@ -576,6 +634,62 @@ void PrinterCapability::ClearCurPrinterAttrGroup()
     printerAttr_group.clear();
 }
 
+bool PrinterCapability::GetAdvanceOptionsJson(Json::Value &advanceOptionsJson) const
+{
+    if (!hasOption_ || option_.empty()) {
+        PRINT_HILOGE("capability option is empty");
+        return false;
+    }
+
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(option_, capJson)) {
+        PRINT_HILOGE("failed to parse capability option json");
+        return false;
+    }
+
+    if (!capJson.isObject()) {
+        PRINT_HILOGE("capability option json is not an object");
+        return false;
+    }
+
+    if (!capJson["cupsOptions"].isObject()) {
+        PRINT_HILOGE("capability option is not valid cupsOptions json");
+        return false;
+    }
+
+    Json::Value cupsOptions = capJson["cupsOptions"];
+    if (!cupsOptions["advanceOptions"].isString()) {
+        PRINT_HILOGE("advanceOptions is not a string");
+        return false;
+    }
+
+    std::string advanceOptionsStr = cupsOptions["advanceOptions"].asString();
+    if (!PrintJsonUtil::Parse(advanceOptionsStr, advanceOptionsJson) || !advanceOptionsJson.isArray()) {
+        PRINT_HILOGE("failed to parse advanceOptions json or not an array");
+        return false;
+    }
+
+    return true;
+}
+
+std::set<std::string> PrinterCapability::GetCustomOptionKeys() const
+{
+    Json::Value advanceOptionsJson;
+    if (!GetAdvanceOptionsJson(advanceOptionsJson)) {
+        PRINT_HILOGE("failed to get advanceOptions json from capability");
+        return {};
+    }
+
+    std::set<std::string> customOptionKeys;
+    for (const auto &opt : advanceOptionsJson) {
+        if (opt.isObject() && opt["customParamType"].isInt()) {
+            std::string keyword = opt["keyword"].asString();
+            customOptionKeys.insert(keyword);
+        }
+    }
+    return customOptionKeys;
+}
+
 std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize(
     const std::vector<PrintPageSize> &supportedPageSizeList)
 {
@@ -598,8 +712,7 @@ std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize(
         } else {
             // if already has the same withAndHeight, replace it with the last element, and shorten the list
             PRINT_HILOGI("SetSupportedPageSize find duplicate!");
-            *it = std::move(uniquePageSizeList.back());
-            uniquePageSizeList.pop_back();
+            it = uniquePageSizeList.erase(it);
         }
     }
     return uniquePageSizeList;

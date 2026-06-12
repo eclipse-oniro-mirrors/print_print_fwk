@@ -51,7 +51,7 @@ public:
     void Dump() const;
 
 private:
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 private:
     int32_t minValue_;

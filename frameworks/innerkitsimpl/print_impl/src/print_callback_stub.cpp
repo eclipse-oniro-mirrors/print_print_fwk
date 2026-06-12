@@ -58,40 +58,44 @@ int32_t PrintCallbackStub::OnRemoteRequest(
 bool PrintCallbackStub::HandlePrintTaskEvent(MessageParcel &data, MessageParcel &reply)
 {
     bool result = OnCallback();
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 
 bool PrintCallbackStub::HandlePrinterEvent(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t state = data.ReadUint32();
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
     auto info = PrinterInfo::Unmarshalling(data);
     bool result = false;
     if (info != nullptr) {
         result = OnCallback(state, *info);
-        reply.WriteBool(result);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     }
     return result;
 }
 
 bool PrintCallbackStub::HandlePrintJobEvent(MessageParcel &data, MessageParcel &reply)
 {
-    uint32_t state = data.ReadUint32();
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
     auto info = PrintJob::Unmarshalling(data);
     bool result = false;
     if (info != nullptr) {
         result = OnCallback(state, *info);
-        reply.WriteBool(result);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     }
     return result;
 }
 
 bool PrintCallbackStub::HandleExtEvent(MessageParcel &data, MessageParcel &reply)
 {
-    std::string extensionId = data.ReadString();
-    std::string info = data.ReadString();
+    std::string extensionId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(extensionId), false);
+    std::string info;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(info), false);
     bool result = OnCallback(extensionId, info);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return true;
 }
 
@@ -103,7 +107,8 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
         return false;
     }
     std::vector<PpdInfo> ppds;
-    uint32_t ppdsSize = data.ReadUint32();
+    uint32_t ppdsSize = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(ppdsSize), false);
     if (ppdsSize == 0) {
         PRINT_HILOGW("Cannot find ppds");
     }
@@ -120,14 +125,15 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
         ppds.push_back(*ppd);
     }
     bool result = OnCallback(*info, ppds);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     return result;
 }
 
 bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent start");
-    std::string jobId = data.ReadString();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
     auto oldAttrs = PrintAttributes::Unmarshalling(data);
     auto newAttrs = PrintAttributes::Unmarshalling(data);
     if (newAttrs == nullptr || oldAttrs == nullptr) {
@@ -143,7 +149,7 @@ bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageP
             close(fd);
         }
     }
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent end");
     return true;
 }
@@ -151,14 +157,17 @@ bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageP
 bool PrintCallbackStub::HandlePrintAdapterJobChangedEvent(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent start");
-    std::string jobId = data.ReadString();
-    uint32_t state = data.ReadUint32();
-    uint32_t subState = data.ReadUint32();
+    std::string jobId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(jobId), false);
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
+    uint32_t subState = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(subState), false);
 
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent jobId:%{public}s, subState:%{public}d",
         jobId.c_str(), subState);
     bool result = OnCallbackAdapterJobStateChanged(jobId, state, subState);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent end");
     return true;
 }
@@ -166,12 +175,13 @@ bool PrintCallbackStub::HandlePrintAdapterJobChangedEvent(MessageParcel &data, M
 bool PrintCallbackStub::HandlePrintAdapterGetFileEvent(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent start");
-    uint32_t state = data.ReadUint32();
+    uint32_t state = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(state), false);
 
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent state:%{public}d",
         state);
     bool result = OnCallbackAdapterGetFile(state);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent end");
     return true;
 }
@@ -180,7 +190,8 @@ bool PrintCallbackStub::HandleSharedHostDiscoverEvent(MessageParcel &data, Messa
 {
     PRINT_HILOGI("PrintCallbackStub HandleSharedHostDiscoverEvent start");
     std::vector<PrintSharedHost> sharedHosts;
-    uint32_t sharedHostsSize = data.ReadUint32();
+    uint32_t sharedHostsSize = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(sharedHostsSize), false);
     if (sharedHostsSize == 0) {
         PRINT_HILOGW("Cannot find sharedHosts");
     }
@@ -197,7 +208,7 @@ bool PrintCallbackStub::HandleSharedHostDiscoverEvent(MessageParcel &data, Messa
         sharedHosts.push_back(*host);
     }
     bool result = OnCallback(sharedHosts);
-    reply.WriteBool(result);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
     PRINT_HILOGI("PrintCallbackStub HandleSharedHostDiscoverEvent end");
     return true;
 }

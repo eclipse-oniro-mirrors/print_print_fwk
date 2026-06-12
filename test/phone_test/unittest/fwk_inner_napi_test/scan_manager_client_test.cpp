@@ -22,6 +22,7 @@
 #include "scan_constant.h"
 #include "mock_scan_manager_client.h"
 #include "mock_scan_service.h"
+#include "mock_scan_remote_object.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -413,5 +414,131 @@ HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_GetAddedScanner_Success, T
     EXPECT_CALL(*mockService, GetAddedScanner(_)).WillOnce(Return(E_SCAN_NONE));
     int32_t ret = mockClient->GetAddedScanner(allAddedScanner);
     EXPECT_EQ(ret, E_SCAN_NONE);
+}
+
+HWTEST_F(ScanManagerClientTest, LoadServerSuccess_NullRemoteObject, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    client->ready_ = false;
+    client->LoadServerSuccess(nullptr);
+    EXPECT_EQ(client->scanServiceProxy_, nullptr);
+    EXPECT_TRUE(client->ready_);
+}
+
+HWTEST_F(ScanManagerClientTest, LoadServerSuccess_WithRemoteObject, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    sptr<MockScanRemoteObject> obj = new MockScanRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillOnce(DoAll(SaveArg<0>(&dr), Return(true)));
+    client->LoadServerSuccess(obj);
+    EXPECT_NE(dr, nullptr);
+    EXPECT_TRUE(client->ready_);
+}
+
+HWTEST_F(ScanManagerClientTest, LoadServerSuccess_DeathRecipientRecreated, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    client->deathRecipient_ = nullptr;
+    sptr<MockScanRemoteObject> obj = new MockScanRemoteObject();
+    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillOnce(Return(true));
+    client->LoadServerSuccess(obj);
+    EXPECT_NE(client->deathRecipient_, nullptr);
+    EXPECT_TRUE(client->ready_);
+}
+
+HWTEST_F(ScanManagerClientTest, LoadServerFail_ClearsProxy, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    sptr<MockScanService> mockService = new MockScanService();
+    client->scanServiceProxy_ = mockService;
+    client->ready_ = false;
+    client->LoadServerFail();
+    EXPECT_EQ(client->scanServiceProxy_, nullptr);
+    EXPECT_TRUE(client->ready_);
+}
+
+HWTEST_F(ScanManagerClientTest, OnRemoteSaDied_NullObject, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    sptr<MockScanService> mockService = new MockScanService();
+    client->scanServiceProxy_ = mockService;
+    wptr<IRemoteObject> nullObj;
+    client->OnRemoteSaDied(nullObj);
+    EXPECT_NE(client->scanServiceProxy_, nullptr);
+}
+
+HWTEST_F(ScanManagerClientTest, OnRemoteSaDied_NullProxy, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    client->scanServiceProxy_ = nullptr;
+    sptr<MockScanRemoteObject> obj = new MockScanRemoteObject();
+    wptr<IRemoteObject> wpObj(obj);
+    client->OnRemoteSaDied(wpObj);
+    EXPECT_EQ(client->scanServiceProxy_, nullptr);
+}
+
+HWTEST_F(ScanManagerClientTest, OnRemoteSaDied_MatchingObject, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    sptr<MockScanService> mockService = new MockScanService();
+    client->scanServiceProxy_ = mockService;
+    client->deathRecipient_ = new ScanSaDeathRecipient();
+    sptr<IRemoteObject> serviceRemote = mockService->AsObject();
+    ASSERT_NE(serviceRemote, nullptr);
+    wptr<IRemoteObject> wpObj(serviceRemote);
+    client->OnRemoteSaDied(wpObj);
+    EXPECT_EQ(client->scanServiceProxy_, nullptr);
+    EXPECT_EQ(client->deathRecipient_, nullptr);
+}
+
+HWTEST_F(ScanManagerClientTest, OnRemoteSaDied_NonMatchingObject, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    sptr<MockScanService> mockService = new MockScanService();
+    client->scanServiceProxy_ = mockService;
+    client->deathRecipient_ = new ScanSaDeathRecipient();
+    sptr<MockScanRemoteObject> otherObj = new MockScanRemoteObject();
+    wptr<IRemoteObject> wpOther(otherObj);
+    client->OnRemoteSaDied(wpOther);
+    EXPECT_NE(client->scanServiceProxy_, nullptr);
+    EXPECT_NE(client->deathRecipient_, nullptr);
+}
+
+HWTEST_F(ScanManagerClientTest, Destructor_WithProxy, TestSize.Level1)
+{
+    sptr<MockScanService> mockService = new MockScanService();
+    {
+        sptr<ScanManagerClient> client = new ScanManagerClient();
+        client->scanServiceProxy_ = mockService;
+    }
+    EXPECT_NE(mockService, nullptr);
+}
+
+HWTEST_F(ScanManagerClientTest, GetScanServiceProxy_CachedProxy, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    sptr<MockScanService> mockService = new MockScanService();
+    client->scanServiceProxy_ = mockService;
+    auto result = client->GetScanServiceProxy();
+    EXPECT_EQ(result, sptr<IScanService>(mockService));
+}
+
+HWTEST_F(ScanManagerClientTest, LoadScanService_SamgrUnavailable, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    client->ready_ = true;
+    bool result = client->LoadScanService();
+    EXPECT_FALSE(result);
+    EXPECT_FALSE(client->ready_);
+    EXPECT_EQ(client->scanServiceProxy_, nullptr);
+}
+
+HWTEST_F(ScanManagerClientTest, LoadScanService_ReadyStateReset, TestSize.Level1)
+{
+    sptr<ScanManagerClient> client = new ScanManagerClient();
+    client->ready_ = true;
+    client->LoadScanService();
+    EXPECT_FALSE(client->ready_);
 }
 }  // namespace OHOS::Scan

@@ -72,7 +72,7 @@ bool ScanServiceStub::OnInitScan(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnInitScan start");
     int32_t ret = InitScan();
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnInitScan end");
     return ret == E_SCAN_NONE;
 }
@@ -81,7 +81,7 @@ bool ScanServiceStub::OnExitScan(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnExitScan start");
     int32_t ret = ExitScan();
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnExitScan end");
     return ret == E_SCAN_NONE;
 }
@@ -90,7 +90,7 @@ bool ScanServiceStub::OnGetScannerList(MessageParcel &data, MessageParcel &reply
 {
     SCAN_HILOGI("ScanServiceStub::OnGetScannerList start");
     int32_t ret = GetScannerList();
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnGetScannerList end");
     return ret == E_SCAN_NONE;
 }
@@ -98,9 +98,10 @@ bool ScanServiceStub::OnGetScannerList(MessageParcel &data, MessageParcel &reply
 bool ScanServiceStub::OnOpenScanner(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnOpenScanner start");
-    std::string scannerId = data.ReadString();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
     int32_t ret = OpenScanner(scannerId);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnOpenScanner end");
     return ret == E_SCAN_NONE;
 }
@@ -108,9 +109,10 @@ bool ScanServiceStub::OnOpenScanner(MessageParcel &data, MessageParcel &reply)
 bool ScanServiceStub::OnCloseScanner(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnCloseScanner start");
-    std::string scannerId = data.ReadString();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
     int32_t ret = CloseScanner(scannerId);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnCloseScanner end");
     return ret == E_SCAN_NONE;
 }
@@ -118,13 +120,15 @@ bool ScanServiceStub::OnCloseScanner(MessageParcel &data, MessageParcel &reply)
 bool ScanServiceStub::OnGetScanOptionDesc(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnGetScanOptionDesc start");
-    std::string scannerId = data.ReadString();
-    int32_t optionIndex = data.ReadInt32();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
+    int32_t optionIndex = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(optionIndex), false);
     ScanOptionDescriptor desc;
     int32_t ret = GetScanOptionDesc(scannerId, optionIndex, desc);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
-        desc.Marshalling(reply);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(desc.Marshalling(reply), false);
     }
     SCAN_HILOGI("ScanServiceStub::OnGetScanOptionDesc end");
     return ret == E_SCAN_NONE;
@@ -133,9 +137,12 @@ bool ScanServiceStub::OnGetScanOptionDesc(MessageParcel &data, MessageParcel &re
 bool ScanServiceStub::OnOpScanOptionValue(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGD("ScanServiceStub::OnOpScanOptionValue start");
-    std::string scannerId = data.ReadString();
-    int32_t optionIndex = data.ReadInt32();
-    ScanOptionOpType op = (ScanOptionOpType)data.ReadUint32();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
+    int32_t optionIndex = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(optionIndex), false);
+    uint32_t op = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadUint32(op), false);
     ScanOptionValue value;
     auto scanOptionValue = ScanOptionValue::Unmarshalling(data);
     if (scanOptionValue == nullptr) {
@@ -143,10 +150,10 @@ bool ScanServiceStub::OnOpScanOptionValue(MessageParcel &data, MessageParcel &re
         return false;
     }
     value = *scanOptionValue;
-    int32_t ret = OpScanOptionValue(scannerId, optionIndex, op, value);
-    reply.WriteInt32(ret);
+    int32_t ret = OpScanOptionValue(scannerId, optionIndex, static_cast<ScanOptionOpType>(op), value);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
-        value.Marshalling(reply);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(value.Marshalling(reply), false);
     }
     SCAN_HILOGD("ScanServiceStub::OnOpScanOptionValue end");
     return ret == E_SCAN_NONE;
@@ -155,12 +162,13 @@ bool ScanServiceStub::OnOpScanOptionValue(MessageParcel &data, MessageParcel &re
 bool ScanServiceStub::OnGetScanParameters(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGD("ScanServiceStub::OnGetScanParameters start");
-    std::string scannerId = data.ReadString();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
     ScanParameters para;
     int32_t ret = GetScanParameters(scannerId, para);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
-        para.Marshalling(reply);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(para.Marshalling(reply), false);
     }
     SCAN_HILOGD("ScanServiceStub::OnGetScanParameters end");
     return ret == E_SCAN_NONE;
@@ -169,10 +177,12 @@ bool ScanServiceStub::OnGetScanParameters(MessageParcel &data, MessageParcel &re
 bool ScanServiceStub::OnStartScan(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnStartScan start");
-    std::string scannerId = data.ReadString();
-    bool batchMode = data.ReadBool();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
+    bool batchMode = false;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadBool(batchMode), false);
     int32_t ret = StartScan(scannerId, batchMode);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnStartScan end");
     return ret == E_SCAN_NONE;
 }
@@ -180,37 +190,40 @@ bool ScanServiceStub::OnStartScan(MessageParcel &data, MessageParcel &reply)
 bool ScanServiceStub::OnCancelScan(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnCancelScan start");
-    std::string scannerId = data.ReadString();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
     int32_t ret = CancelScan(scannerId);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnCancelScan end");
     return ret == E_SCAN_NONE;
 }
 
 bool ScanServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 {
-    std::string taskId = data.ReadString();
-    std::string type = data.ReadString();
+    std::string taskId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     SCAN_HILOGI("ScanServiceStub::OnEventOn type=%{public}s ", type.c_str());
     if (type.empty()) {
         SCAN_HILOGE("ScanServiceStub::OnEventOn type is null.");
-        reply.WriteInt32(E_SCAN_RPC_FAILURE);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(E_SCAN_RPC_FAILURE), false);
         return false;
     }
     sptr<IRemoteObject> remote = data.ReadRemoteObject();
     if (remote == nullptr) {
         SCAN_HILOGE("ScanServiceStub::OnEventOn remote is nullptr");
-        reply.WriteInt32(E_SCAN_RPC_FAILURE);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(E_SCAN_RPC_FAILURE), false);
         return false;
     }
     sptr<IScanCallback> listener = iface_cast<IScanCallback>(remote);
     if (listener.GetRefPtr() == nullptr) {
         SCAN_HILOGE("ScanServiceStub::OnEventOn listener is null");
-        reply.WriteInt32(E_SCAN_RPC_FAILURE);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(E_SCAN_RPC_FAILURE), false);
         return false;
     }
     int32_t ret = On(taskId, type, listener);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnEventOn out");
     return ret == E_SCAN_NONE;
 }
@@ -218,11 +231,13 @@ bool ScanServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 bool ScanServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGD("ScanServiceStub::OnEventOff in");
-    std::string taskId = data.ReadString();
-    std::string type = data.ReadString();
+    std::string taskId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
+    std::string type;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(type), false);
     SCAN_HILOGD("ScanServiceStub::OnEventOff type=%{public}s ", type.c_str());
     int32_t ret = Off(taskId, type);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGD("ScanServiceStub::OnEventOff out");
     return ret == E_SCAN_NONE;
 }
@@ -230,12 +245,13 @@ bool ScanServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply)
 bool ScanServiceStub::OnGetScanProgress(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGD("ScanServiceStub::OnGetScanProgress start");
-    std::string scannerId = data.ReadString();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
     ScanProgress prog;
     int32_t ret = GetScanProgress(scannerId, prog);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
-        prog.Marshalling(reply);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(prog.Marshalling(reply), false);
     }
     SCAN_HILOGD("ScanServiceStub::OnGetScanProgress end");
     return ret == E_SCAN_NONE;
@@ -244,10 +260,12 @@ bool ScanServiceStub::OnGetScanProgress(MessageParcel &data, MessageParcel &repl
 bool ScanServiceStub::OnConnectScanner(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnConnectScanner start");
-    std::string serialNumber = data.ReadString();
-    std::string discoverMode = data.ReadString();
+    std::string serialNumber;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(serialNumber), false);
+    std::string discoverMode;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(discoverMode), false);
     int32_t ret = AddScanner(serialNumber, discoverMode);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnConnectScanner end");
     return ret == E_SCAN_NONE;
 }
@@ -255,10 +273,12 @@ bool ScanServiceStub::OnConnectScanner(MessageParcel &data, MessageParcel &reply
 bool ScanServiceStub::OnDisConnectScanner(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnDisConnectScanner start");
-    std::string serialNumber = data.ReadString();
-    std::string discoverMode = data.ReadString();
+    std::string serialNumber;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(serialNumber), false);
+    std::string discoverMode;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(discoverMode), false);
     int32_t ret = DeleteScanner(serialNumber, discoverMode);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     SCAN_HILOGI("ScanServiceStub::OnDisConnectScanner end");
     return ret == E_SCAN_NONE;
 }
@@ -268,12 +288,12 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
     SCAN_HILOGD("ScanServiceStub::OnGetConnectedScanner start");
     std::vector<ScanDeviceInfo> allAddedScanner;
     int32_t ret = GetAddedScanner(allAddedScanner);
-    reply.WriteInt32(ret);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
         uint32_t size = static_cast<uint32_t>(allAddedScanner.size());
-        reply.WriteUint32(size);
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteUint32(size), false);
         for (uint32_t index = 0; index < size; index++) {
-            allAddedScanner[index].Marshalling(reply);
+            CHECK_PARCEL_OP_AND_RETURN_VAL(allAddedScanner[index].Marshalling(reply), false);
         }
     }
     SCAN_HILOGD("ScanServiceStub::OnGetConnectedScanner end");
@@ -283,22 +303,30 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
 bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnExportScanPicture start");
-    std::string scannerId = data.ReadString();
-    int32_t fdCount = data.ReadInt32();
+    std::string scannerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
+    int32_t fdCount = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(fdCount), false);
     std::vector<int32_t> pictureFdList;
     for (int32_t i = 0; i < fdCount; i++) {
-        pictureFdList.push_back(data.ReadFileDescriptor());
+        int fd = data.ReadFileDescriptor();
+        if (fd < 0) {
+            SCAN_HILOGE("ReadFileDescriptor failed at index %{public}d", i);
+            return false;
+        }
+        pictureFdList.push_back(fd);
     }
-    int32_t format = data.ReadInt32();
-    
+    int32_t format = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(format), false);
+
     std::vector<int32_t> exportedFdList;
     int32_t ret = ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
-    
-    reply.WriteInt32(ret);
+
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
-        reply.WriteInt32(static_cast<int32_t>(exportedFdList.size()));
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(static_cast<int32_t>(exportedFdList.size())), false);
         for (int32_t fd : exportedFdList) {
-            reply.WriteFileDescriptor(fd);
+            CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteFileDescriptor(fd), false);
         }
     }
     SCAN_HILOGI("ScanServiceStub::OnExportScanPicture end");

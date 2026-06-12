@@ -18,6 +18,7 @@
 #define TDD_ENABLE 1
 
 #include <mutex>
+#include <memory>
 #include <uv.h>
 #include <functional>
 #include "napi/native_api.h"
@@ -27,7 +28,7 @@ namespace OHOS::Scan {
 struct CallbackParam {
     napi_env env;
     napi_ref ref;
-    std::mutex* mutexPtr;
+    std::shared_ptr<std::mutex> mutexPtr;
     uint32_t state;
 
     bool isGetSucc;
@@ -38,7 +39,7 @@ struct CallbackParam {
     ScanDeviceInfo deviceInfo;
     ScanDeviceInfoSync deviceInfoSync;
 
-    void InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::mutex &mutex_);
+    void InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::shared_ptr<std::mutex> &mutex_);
     void SetCallbackParam(uint32_t &state, const ScanDeviceInfo &deviceInfo);
     void SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSync &deviceInfoSync);
 };
@@ -65,7 +66,7 @@ private:
     napi_env env_;
     napi_ref ref_;
     std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction_;
-    std::mutex mutex_;
+    std::shared_ptr<std::mutex> mutex_;
 };
 } // namespace OHOS::Scan
 

@@ -103,6 +103,7 @@ ohos_unittest("print_service_test") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "googletest:gmock_main",
     "hilog:libhilog",
+    "huks:libhukssdk",
     "i18n:intl_util",
     "image_framework:image_source",
     "ipc:ipc_core",
@@ -148,7 +149,10 @@ ohos_unittest("print_service_test") {
   }
 
   if (!print_fwk_feature_device_isolation) {
-    sources += [ "${print_path}/test/unittest/service_test/print_security_guard_util_test.cpp" ]
+    sources += [
+      "${print_path}/test/unittest/service_test/print_security_guard_util_test.cpp",
+      "${print_path}/test/unittest/service_test/print_hks_adapter_test.cpp",
+    ]
   }
 
 }
@@ -159,6 +163,7 @@ ohos_unittest("scan_service_test") {
     "mock",
     "../fwk_inner_napi_test/mock",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/frameworks/models/scan_models/include",
     "${print_path}/interfaces/kits/napi/scan_napi/include",
     "${_scan_service_path}/include",
     "${print_utils_path}/include",
@@ -199,6 +204,7 @@ ohos_unittest("scan_service_test") {
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
     "usb_manager:usbsrv_client",
+    "netmanager_ext:mdns_manager_if",
   ]
 }
 

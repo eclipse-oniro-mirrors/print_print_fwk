@@ -223,5 +223,50 @@ HWTEST_F(PrinterPreferencesTest, ConvertJsonToPrinterPreferences_CorrectValue_Ha
     preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
 }
+
+HWTEST_F(PrinterPreferencesTest, GetOptionJson_HasOptionFalse_ReturnFalse, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value prefOptionsJson;
+    EXPECT_EQ(false, preferences.GetOptionJson(prefOptionsJson));
+}
+
+HWTEST_F(PrinterPreferencesTest, GetOptionJson_OptionEmpty_ReturnFalse, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    preferences.SetOption("");
+    Json::Value prefOptionsJson;
+    EXPECT_EQ(false, preferences.GetOptionJson(prefOptionsJson));
+}
+
+HWTEST_F(PrinterPreferencesTest, GetOptionJson_InvalidJson_ReturnFalse, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    preferences.SetOption("invalid json string");
+    Json::Value prefOptionsJson;
+    EXPECT_EQ(false, preferences.GetOptionJson(prefOptionsJson));
+}
+
+HWTEST_F(PrinterPreferencesTest, GetOptionJson_NotJsonObject_ReturnFalse, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    preferences.SetOption("\"just a string\"");
+    Json::Value prefOptionsJson;
+    EXPECT_EQ(false, preferences.GetOptionJson(prefOptionsJson));
+}
+
+HWTEST_F(PrinterPreferencesTest, GetOptionJson_ValidJsonObject_ReturnTrue, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value optionJson;
+    optionJson["key"] = "value";
+    optionJson["number"] = 123;
+    preferences.SetOption(PrintJsonUtil::WriteString(optionJson));
+    Json::Value prefOptionsJson;
+    EXPECT_EQ(true, preferences.GetOptionJson(prefOptionsJson));
+    EXPECT_EQ(true, prefOptionsJson.isMember("key"));
+    EXPECT_EQ("value", prefOptionsJson["key"].asString());
+    EXPECT_EQ(123, prefOptionsJson["number"].asInt());
+}
 }  // namespace Print
 }  // namespace OHOS

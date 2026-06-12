@@ -17,6 +17,7 @@
 #define PRINT_EXTENSION_CALLBACK_STUB_H
 
 #include <memory>
+#include <mutex>
 #include <functional>
 #include "iprint_extension_callback.h"
 #include "iremote_stub.h"
@@ -61,6 +62,7 @@ private:
     PrinterCallback cb_;
     PrinterCapabilityCallback capability_;
     std::map<uint32_t, PRINT_EXT_HANDLER> cmdMap_;
+    std::mutex callbackMutex_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_EXTCB_STUB_H

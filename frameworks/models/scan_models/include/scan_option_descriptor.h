@@ -57,7 +57,7 @@ public:
     void Dump();
 
 private:
-    void ReadFromParcel(Parcel &parcel);
+    bool ReadFromParcel(Parcel &parcel);
 
 private:
     std::string optionName_;

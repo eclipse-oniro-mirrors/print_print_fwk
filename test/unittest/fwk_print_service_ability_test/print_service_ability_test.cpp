@@ -19,11 +19,13 @@
 #include "mock_watermark_callback.h"
 #include "iwatermark_callback.h"
 #include "printer_user_preferences.h"
-#include "mock_hks_api.h"
 #define private public
 #define protected public
 #include "print_service_ability.h"
 #include "print_bms_helper.h"
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
+#include "print_failure_ai_notifier.h"
+#endif
 #include "event_listener_mgr.h"
 #undef protected
 #undef private
@@ -3157,6 +3159,7 @@ HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 {
 #ifdef EDM_SERVICE_ENABLE
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string emptyString = "";
     EXPECT_EQ(service->ReportBannedEvent(emptyString), 401);
@@ -3969,7 +3972,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_ShouldPr
     printerInfo2->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo2->SetPrinterMake("Make2");
     service->printSystemData_.GetAddedPrinterMap().Insert(printerId2, printerInfo2);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(true));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 2);
@@ -3984,7 +3987,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_QueryPpd
     printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo->SetPrinterMake("Make1");
     service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(false));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
@@ -4000,7 +4003,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode
     printerInfo->SetPrinterMake("Make1");
     printerInfo->SetPpdHashCode("");
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
@@ -4016,7 +4019,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode
     printerInfo->SetPrinterMake("Make1");
     printerInfo->SetPpdHashCode("notEqualHash");
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
+    // PREINSTALLED_DRIVER_PRINTER is empty, IsPreinstalledDriverPrinter always returns false
     service->UpdatePpdForPreinstalledDriverPrinter();
     std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
@@ -5020,6 +5023,45 @@ HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_CupsFailed_GenericFa
     EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
 }
 
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_BsuniPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = BSUNI_PPD_NAME;
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), BSUNI_PPD_NAME);
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "Generic");
+    EXPECT_EQ(ppdInfo.GetNickName(), "System Default Driver");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_DefaultPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = DEFAULT_PPD_NAME;
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), DEFAULT_PPD_NAME);
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "Generic");
+    EXPECT_EQ(ppdInfo.GetNickName(), "IPP Everywhere");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdInfoFromPpdName_UnknownPpd_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    
+    std::string ppdName = "unknown.ppd";
+    PpdInfo ppdInfo = service->GetPpdInfoFromPpdName(ppdName);
+    
+    EXPECT_EQ(ppdInfo.GetPpdName(), "unknown.ppd");
+    EXPECT_EQ(ppdInfo.GetManufacturer(), "auto");
+    EXPECT_EQ(ppdInfo.GetNickName(), "auto");
+}
+
 /**
  * @tc.name: SetPrinterCapabilityAndRegister_QueryPPDFailed_Error
  * @tc.desc: QueryPrinterCapabilityFromPPD returns error propagates error
@@ -5283,12 +5325,12 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_PrinterNotInAddedMap_
 }
 
 /**
- * @tc.name: CheckPrinterUriDifferent_EmptyProtocol_ShouldReturnFalse
- * @tc.desc: Test CheckPrinterUriDifferent when protocol from oldUri is empty
+ * @tc.name: CheckPrinterUriDifferent_EmptyProtocol_ShouldUseOriginalUri
+ * @tc.desc: Test CheckPrinterUriDifferent when selectedProtocol is empty or auto
  * @tc.type: FUNC
- * @tc.require: Should return false when getScheme returns empty protocol
+ * @tc.require: Should use info's original URI when protocol is empty or auto
  */
-HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldReturnFalse, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldUseOriginalUri, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
@@ -5298,19 +5340,20 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldR
     auto addedPrinterInfo = std::make_shared<PrinterInfo>();
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
-    addedPrinterInfo->SetUri("invalid_uri_without_protocol");
+    addedPrinterInfo->SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
+    addedPrinterInfo->SetSelectedProtocol("");
     service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
-    printerInfo->SetUri("ipp://test.local:631/printers/TestPrinter_001");
+    printerInfo->SetUri("ipp://192.168.1.200:631/printers/TestPrinter_001");
 
     bool result = service->CheckPrinterUriDifferent(printerInfo);
 #ifdef PHONE_ISOLATION_ENABLE
     EXPECT_TRUE(result);
 #else
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 #endif
 }
 
@@ -5869,89 +5912,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninst
     EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
 }
 
-
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_EmptyOption_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    capability.SetOption("");
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_InvalidJson_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    capability.SetOption("invalid json");
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_NoCupsOptions_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    optionJson["key"] = "value";
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest,
-    GetCustomOptionKeysFromCapability_AdvanceOptionsNotString_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    Json::Value cupsOptions;
-    cupsOptions["advanceOptions"] = 123;
-    optionJson["cupsOptions"] = cupsOptions;
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_ValidAdvanceOptions_ReturnsKeys, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    Json::Value cupsOptions;
-    Json::Value advanceOptions;
-    Json::Value opt1;
-    opt1["keyword"] = "CustomPin";
-    opt1["customParamType"] = 2;
-    advanceOptions.append(opt1);
-    Json::Value opt2;
-    opt2["keyword"] = "CustomPassword";
-    opt2["customParamType"] = 3;
-    advanceOptions.append(opt2);
-    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
-    optionJson["cupsOptions"] = cupsOptions;
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_EQ(result.size(), 2);
-    EXPECT_TRUE(result.find("CustomPin") != result.end());
-    EXPECT_TRUE(result.find("CustomPassword") != result.end());
-}
-
 HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_EmptyKeys_ReturnsWithoutModify, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -6055,26 +6015,22 @@ HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_KeyNotInOp
     EXPECT_TRUE(updatedJson.isMember("OtherKey"));
 }
 
-HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptions_NoUserPrefs_ReturnsWithoutModify, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, FillCustomOptionsToJson_OptNotSet_SkipsOption, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterUserPreferences userPrefs;
-    Json::Value opsJson;
-    opsJson["key"] = "value";
-
-    service->DecryptAndFillCustomOptions(userPrefs, opsJson);
-    EXPECT_TRUE(opsJson.isMember("key"));
-}
-
-HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptions_ValidCustomOptions_FillsOptions, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterUserPreferences userPrefs;
+    userPrefs.SetCustomOptionUnset("UnsetCustomPin");
+    SecureBlob value;
+    std::string valueStr = "test";
+    value.SetData(reinterpret_cast<const uint8_t*>(valueStr.c_str()), valueStr.size());
+    userPrefs.SetCustomOption("SetCustomPin", value);
     Json::Value opsJson;
     opsJson["existingKey"] = "existingValue";
 
-    service->DecryptAndFillCustomOptions(userPrefs, opsJson);
+    service->FillCustomOptionsToJson(userPrefs, opsJson);
     EXPECT_TRUE(opsJson.isMember("existingKey"));
+    EXPECT_FALSE(opsJson.isMember("UnsetCustomPin"));
+    EXPECT_TRUE(opsJson.isMember("SetCustomPin"));
 }
 
 HWTEST_F(PrintServiceAbilityTest,
@@ -6087,81 +6043,6 @@ HWTEST_F(PrintServiceAbilityTest,
 
     service->ExtractCustomOptionsFromPreferences(printerInfo, preferences, userPrefs);
     EXPECT_TRUE(userPrefs.GetAllCustomOptions().empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest,
-    GetCustomOptionKeysFromCapability_AdvanceOptionsParseFail_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    Json::Value cupsOptions;
-    cupsOptions["advanceOptions"] = "invalid advance options json";
-    optionJson["cupsOptions"] = cupsOptions;
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest,
-    GetCustomOptionKeysFromCapability_AdvanceOptionsNotArray_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    Json::Value cupsOptions;
-    Json::Value advanceOptions;
-    advanceOptions["key"] = "value";
-    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
-    optionJson["cupsOptions"] = cupsOptions;
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_OptNotObject_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    Json::Value cupsOptions;
-    Json::Value advanceOptions;
-    advanceOptions.append("string_value");
-    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
-    optionJson["cupsOptions"] = cupsOptions;
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(PrintServiceAbilityTest, GetCustomOptionKeysFromCapability_NoCustomParamType_ReturnsEmpty, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterInfo printerInfo;
-    PrinterCapability capability;
-    Json::Value optionJson;
-    Json::Value cupsOptions;
-    Json::Value advanceOptions;
-    Json::Value opt;
-    opt["keyword"] = "CustomPin";
-    opt["otherField"] = "value";
-    advanceOptions.append(opt);
-    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
-    optionJson["cupsOptions"] = cupsOptions;
-    capability.SetOption(PrintJsonUtil::WriteString(optionJson));
-    printerInfo.SetCapability(capability);
-
-    auto result = service->GetCustomOptionKeysFromCapability(printerInfo);
-    EXPECT_TRUE(result.empty());
 }
 
 HWTEST_F(PrintServiceAbilityTest,
@@ -6202,19 +6083,6 @@ HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_OptionJ
     Json::Value updatedJson;
     PrintJsonUtil::Parse(preferences.GetOption(), updatedJson);
     EXPECT_FALSE(updatedJson.isMember("CustomPin"));
-}
-
-HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptions_OptNotSet_SkipsOption, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterUserPreferences userPrefs;
-    userPrefs.SetCustomOptionUnset("CustomPin");
-    Json::Value opsJson;
-    opsJson["existingKey"] = "existingValue";
-
-    service->DecryptAndFillCustomOptions(userPrefs, opsJson);
-    EXPECT_TRUE(opsJson.isMember("existingKey"));
-    EXPECT_FALSE(opsJson.isMember("CustomPin"));
 }
 
 HWTEST_F(PrintServiceAbilityTest, ConvertModifiedPreferencesToJson_UserDataNull_ReturnsWithoutDecrypt, TestSize.Level1)
@@ -6276,305 +6144,38 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_TRUE(updatedJson.isMember("OtherKey"));
 }
 
-HWTEST_F(PrintServiceAbilityTest, EncryptCustomOptionValue_InitParamSetFail_ReturnsError, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    ExtractCustomOptionsFromPreferences_CustomOptionKeysNotEmpty_EmptyPreferenceOption, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetInitParamSetResult(HKS_FAILURE);
 
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    int32_t ret = service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
+    Json::Value advanceOptionsArr;
+    Json::Value advanceOption1;
+    advanceOption1["keyword"] = "CustomPin";
+    advanceOption1["customParamType"] = 1;
+    advanceOptionsArr.append(advanceOption1);
 
-HWTEST_F(PrintServiceAbilityTest, EncryptCustomOptionValue_GenerateKeyFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetGenerateKeyResult(HKS_FAILURE);
+    Json::Value cupsOptions;
+    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptionsArr);
 
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    int32_t ret = service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
+    Json::Value capOptionJson;
+    capOptionJson["cupsOptions"] = cupsOptions;
 
-HWTEST_F(PrintServiceAbilityTest, EncryptCustomOptionValue_InitCipherParamSetFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetInitParamSetResult(HKS_SUCCESS);
-    MockHksApi::Instance().SetGenerateKeyResult(HKS_SUCCESS);
-    MockHksApi::Instance().SetBuildParamSetResult(HKS_FAILURE);
+    PrinterCapability capability;
+    capability.SetOption(PrintJsonUtil::WriteString(capOptionJson));
 
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    int32_t ret = service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
+    PrinterInfo printerInfo;
+    printerInfo.SetCapability(capability);
 
-HWTEST_F(PrintServiceAbilityTest, EncryptCustomOptionValue_EncryptFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetEncryptResult(HKS_FAILURE);
+    PrinterPreferences preferences;
+    preferences.SetOption("");
 
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    int32_t ret = service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, EncryptCustomOptionValue_Success_ReturnsCipherText, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    int32_t ret = service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    EXPECT_TRUE(cipherBlob.data == nullptr);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DecryptCustomOptionValue_InitParamSetFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetInitParamSetResult(HKS_FAILURE);
-
-    struct HksBlob cipherBlob = { 8, (uint8_t *)"encrypted" };
-    struct HksBlob plainBlob = { 0, nullptr };
-    int32_t ret = service->DecryptCustomOptionValue(cipherBlob, plainBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DecryptCustomOptionValue_DecryptFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetDecryptResult(HKS_FAILURE);
-
-    struct HksBlob cipherBlob = { 8, (uint8_t *)"encrypted" };
-    struct HksBlob plainBlob = { 0, nullptr };
-    int32_t ret = service->DecryptCustomOptionValue(cipherBlob, plainBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DecryptCustomOptionValue_Success_ReturnsPlainText, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-
-    struct HksBlob decryptedBlob = { 0, nullptr };
-    int32_t ret = service->DecryptCustomOptionValue(cipherBlob, decryptedBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-    if (decryptedBlob.data != nullptr) {
-        (void)memset_s(decryptedBlob.data, decryptedBlob.size, 0, decryptedBlob.size);
-        delete[] decryptedBlob.data;
-    }
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptions_DecryptSuccess_FillsOptions, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
     PrinterUserPreferences userPrefs;
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-    SecureBlob encryptedValue;
-    if (cipherBlob.data != nullptr) {
-        encryptedValue.SetData(cipherBlob.data, cipherBlob.size);
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-    userPrefs.SetCustomOption("CustomPin", encryptedValue);
-    Json::Value opsJson;
 
-    service->DecryptAndFillCustomOptions(userPrefs, opsJson);
-    EXPECT_FALSE(opsJson.isMember("CustomPin"));
-    MockHksApi::Instance().Reset();
-}
+    service->ExtractCustomOptionsFromPreferences(printerInfo, preferences, userPrefs);
 
-HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptions_DecryptFail_SkipsOption, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetDecryptResult(HKS_FAILURE);
-    PrinterUserPreferences userPrefs;
-    SecureBlob encryptedValue;
-    encryptedValue.SetData((const uint8_t *)"encrypted_value", 14);
-    userPrefs.SetCustomOption("CustomPin", encryptedValue);
-    Json::Value opsJson;
-
-    service->DecryptAndFillCustomOptions(userPrefs, opsJson);
-    EXPECT_FALSE(opsJson.isMember("CustomPin"));
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, InitGenParamSet_InitFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetInitParamSetResult(HKS_FAILURE);
-
-    struct HksParamSet *paramSet = nullptr;
-    int32_t ret = service->InitGenParamSet(&paramSet);
-    EXPECT_EQ(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, InitGenParamSet_AddParamsFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetAddParamsResult(HKS_FAILURE);
-
-    struct HksParamSet *paramSet = nullptr;
-    int32_t ret = service->InitGenParamSet(&paramSet);
-    EXPECT_EQ(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, InitGenParamSet_BuildFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetBuildParamSetResult(HKS_FAILURE);
-
-    struct HksParamSet *paramSet = nullptr;
-    int32_t ret = service->InitGenParamSet(&paramSet);
-    EXPECT_EQ(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, InitGenParamSet_Success_ReturnsParamSet, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-
-    struct HksParamSet *paramSet = nullptr;
-    int32_t ret = service->InitGenParamSet(&paramSet);
-    EXPECT_EQ(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, InitCipherParamSet_InitFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetInitParamSetResult(HKS_FAILURE);
-
-    struct HksParamSet *paramSet = nullptr;
-    int32_t ret = service->InitCipherParamSet(&paramSet, HKS_KEY_PURPOSE_ENCRYPT);
-    EXPECT_EQ(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, InitCipherParamSet_Success_ReturnsParamSet, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-
-    struct HksParamSet *paramSet = nullptr;
-    int32_t ret = service->InitCipherParamSet(&paramSet, HKS_KEY_PURPOSE_ENCRYPT);
-    EXPECT_EQ(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DoEncrypt_EncryptFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetEncryptResult(HKS_FAILURE);
-
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    struct HksParamSet *paramSet = nullptr;
-    service->InitCipherParamSet(&paramSet, HKS_KEY_PURPOSE_ENCRYPT);
-    static const std::string KEY_ALIAS = "print_custom_option_key";
-    struct HksBlob keyAlias = { .size = KEY_ALIAS.size(), .data = (uint8_t *)KEY_ALIAS.data() };
-    int32_t ret = service->DoEncrypt(&keyAlias, paramSet, plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DoEncrypt_Success_ReturnsCipherText, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    struct HksParamSet *paramSet = nullptr;
-    service->InitCipherParamSet(&paramSet, HKS_KEY_PURPOSE_ENCRYPT);
-    static const std::string KEY_ALIAS = "print_custom_option_key";
-    struct HksBlob keyAlias = { .size = KEY_ALIAS.size(), .data = (uint8_t *)KEY_ALIAS.data() };
-    int32_t ret = service->DoEncrypt(&keyAlias, paramSet, plainBlob, cipherBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DoDecrypt_DecryptFail_ReturnsError, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-    MockHksApi::Instance().SetDecryptResult(HKS_FAILURE);
-
-    struct HksBlob cipherBlob = { 8, (uint8_t *)"encrypted" };
-    struct HksBlob plainBlob = { 0, nullptr };
-    struct HksParamSet *paramSet = nullptr;
-    service->InitCipherParamSet(&paramSet, HKS_KEY_PURPOSE_DECRYPT);
-    static const std::string KEY_ALIAS = "print_custom_option_key";
-    struct HksBlob keyAlias = { .size = KEY_ALIAS.size(), .data = (uint8_t *)KEY_ALIAS.data() };
-    int32_t ret = service->DoDecrypt(&keyAlias, paramSet, cipherBlob, plainBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    MockHksApi::Instance().Reset();
-}
-
-HWTEST_F(PrintServiceAbilityTest, DoDecrypt_Success_ReturnsPlainText, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    MockHksApi::Instance().Reset();
-
-    struct HksBlob plainBlob = { 4, (uint8_t *)"test" };
-    struct HksBlob cipherBlob = { 0, nullptr };
-    service->EncryptCustomOptionValue(plainBlob, cipherBlob);
-
-    struct HksBlob decryptedBlob = { 0, nullptr };
-    struct HksParamSet *paramSet = nullptr;
-    service->InitCipherParamSet(&paramSet, HKS_KEY_PURPOSE_DECRYPT);
-    static const std::string KEY_ALIAS = "print_custom_option_key";
-    struct HksBlob keyAlias = { .size = KEY_ALIAS.size(), .data = (uint8_t *)KEY_ALIAS.data() };
-    int32_t ret = service->DoDecrypt(&keyAlias, paramSet, cipherBlob, decryptedBlob);
-    EXPECT_NE(ret, HKS_SUCCESS);
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-    if (decryptedBlob.data != nullptr) {
-        (void)memset_s(decryptedBlob.data, decryptedBlob.size, 0, decryptedBlob.size);
-        delete[] decryptedBlob.data;
-    }
-    MockHksApi::Instance().Reset();
+    std::string option = preferences.GetOption();
+    EXPECT_TRUE(option.empty());
 }
 
 HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_ValidVendorOptions_SplitsCorrectly, TestSize.Level1)
@@ -6846,5 +6447,81 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterOption_PrinterNotFound_NoOp, Test
     EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("non_existent_printer_id"), nullptr);
 }
 
+#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
+HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterInAddedList_NotifySuccess, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    std::string printerId = "123";
+    std::string jobId = "job_001";
+    uint32_t subState = 1;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName("Printer123");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo));
+
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(printerId);
+    printJob->SetJobState(PRINT_JOB_BLOCKED);
+    printJob->SetSubState(subState);
+
+    PrintFailureAiNotifier::GetInstance().jobStateMap_.clear();
+    service->HandleJobBlockedState(printJob, subState);
+
+    auto &notifier = PrintFailureAiNotifier::GetInstance();
+    EXPECT_EQ(notifier.jobStateMap_.size(), 1);
+    EXPECT_NE(notifier.jobStateMap_.find(jobId), notifier.jobStateMap_.end());
+    EXPECT_NE(notifier.jobStateMap_[jobId].find(subState), notifier.jobStateMap_[jobId].end());
+}
+
+HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterNotInAddedList_NoNotify, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    std::string printerId = "123";
+    std::string jobId = "job_001";
+    uint32_t subState = 1;
+
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(printerId);
+    printJob->SetJobState(PRINT_JOB_BLOCKED);
+    printJob->SetSubState(subState);
+
+    PrintFailureAiNotifier::GetInstance().jobStateMap_.clear();
+    service->HandleJobBlockedState(printJob, subState);
+
+    auto &notifier = PrintFailureAiNotifier::GetInstance();
+    EXPECT_EQ(notifier.jobStateMap_.size(), 0);
+}
+
+HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_Eprint_SkipNotify, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    std::string printerId = EPRINTID;
+    std::string jobId = "job_001";
+    uint32_t subState = 1;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName("Eprint");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo));
+
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(printerId);
+    printJob->SetJobState(PRINT_JOB_BLOCKED);
+    printJob->SetSubState(subState);
+
+    PrintFailureAiNotifier::GetInstance().jobStateMap_.clear();
+    service->HandleJobBlockedState(printJob, subState);
+
+    auto &notifier = PrintFailureAiNotifier::GetInstance();
+    EXPECT_EQ(notifier.jobStateMap_.size(), 0);
+}
+#endif
 }  // namespace Print
 }  // namespace OHOS

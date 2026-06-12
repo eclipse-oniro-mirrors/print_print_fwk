@@ -14,6 +14,7 @@
  */
 
 #include "scanner_info.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS::Scan {
@@ -165,29 +166,29 @@ const uint32_t& ScanDeviceInfoTCP::GetDeviceState() const
 
 bool ScanDeviceInfoTCP::ReadFromParcel(Parcel &parcel)
 {
-    SetDeviceName(parcel.ReadString());
-    SetUuid(parcel.ReadString());
-    SetModel(parcel.ReadString());
-    SetManufacturer(parcel.ReadString());
-    SetDeviceType(parcel.ReadString());
-    SetPort(parcel.ReadString());
-    SetAddr(parcel.ReadString());
-    SetButton(parcel.ReadString());
-    SetFeeder(parcel.ReadString());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceName), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(uuid), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(model), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(manufacturer), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceType), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(port), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(addr), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(button), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(feeder), false);
     return true;
 }
 
 bool ScanDeviceInfoTCP::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetDeviceName());
-    parcel.WriteString(GetUuid());
-    parcel.WriteString(GetModel());
-    parcel.WriteString(GetManufacturer());
-    parcel.WriteString(GetDeviceType());
-    parcel.WriteString(GetPort());
-    parcel.WriteString(GetAddr());
-    parcel.WriteString(GetButton());
-    parcel.WriteString(GetFeeder());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceName), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(uuid), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(model), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(manufacturer), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceType), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(port), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(addr), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(button), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(feeder), false);
     return true;
 }
 
@@ -363,27 +364,27 @@ bool ScanDeviceInfo::GetDeviceAvailable() const
 
 bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
 {
-    SetDeviceId(parcel.ReadString());
-    SetManufacturer(parcel.ReadString());
-    SetModel(parcel.ReadString());
-    SetDeviceType(parcel.ReadString());
-    SetDiscoverMode(parcel.ReadString());
-    SetSerialNumber(parcel.ReadString());
-    SetDeviceName(parcel.ReadString());
-    SetUniqueId(parcel.ReadString());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(manufacturer), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(model), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceType), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(discoverMode), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(serialNumber), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceName), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(uniqueId), false);
     return true;
 }
 
 bool ScanDeviceInfo::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(deviceId);
-    parcel.WriteString(manufacturer);
-    parcel.WriteString(model);
-    parcel.WriteString(deviceType);
-    parcel.WriteString(discoverMode);
-    parcel.WriteString(serialNumber);
-    parcel.WriteString(deviceName);
-    parcel.WriteString(uniqueId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(manufacturer), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(model), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceType), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(discoverMode), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(serialNumber), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceName), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(uniqueId), false);
     return true;
 }
 
@@ -517,29 +518,33 @@ const std::string& ScanDeviceInfoSync::GetUniqueId() const
     return uniqueId;
 }
 
-void ScanDeviceInfoSync::ReadFromParcel(Parcel &parcel)
+bool ScanDeviceInfoSync::ReadFromParcel(Parcel &parcel)
 {
-    SetDeviceId(parcel.ReadString());
-    SetDiscoverMode(parcel.ReadString());
-    SetUniqueId(parcel.ReadString());
-    SetSyncMode(parcel.ReadString());
-    SetOldDeviceId(parcel.ReadString());
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(discoverMode), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(uniqueId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(syncMode), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(oldDeviceId), false);
+    return true;
 }
 
 bool ScanDeviceInfoSync::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(deviceId);
-    parcel.WriteString(discoverMode);
-    parcel.WriteString(uniqueId);
-    parcel.WriteString(syncMode);
-    parcel.WriteString(oldDeviceId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(discoverMode), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(uniqueId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(syncMode), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(oldDeviceId), false);
     return true;
 }
 
 std::shared_ptr<ScanDeviceInfoSync> ScanDeviceInfoSync::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanDeviceInfoSync>();
-    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->ReadFromParcel(parcel)) {
+        SCAN_HILOGE("Failed to unmarshalling scaner info sync");
+        return nullptr;
+    }
     return nativeObj;
 }
 

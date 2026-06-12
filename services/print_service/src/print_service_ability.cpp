@@ -95,8 +95,6 @@ const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
 const uint32_t SERIAL_LENGTH = 6;
 
-const size_t AUTH_TAG_SIZE = 16;
-
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
@@ -210,8 +208,14 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
       isJobQueueBlocked_(false),
       currentUserId_(-1),
       enterLowPowerCount_(0),
-      isLowPowerMode_(false)
+      isLowPowerMode_(false),
+      hksAdapter_(std::make_shared<HksAdapter>())
 {}
+
+std::shared_ptr<IHksAdapter> PrintServiceAbility::GetHksAdapter()
+{
+    return hksAdapter_;
+}
 
 PrintServiceAbility::~PrintServiceAbility()
 {
@@ -565,34 +569,6 @@ int32_t PrintServiceAbility::StartPrint(
     return CallSpooler(fileList, fdList, taskId);
 }
 
-void PrintServiceAbility::CalculateFileAuditInfo(const std::shared_ptr<PrintJob> &printJob)
-{
-    if (printJob == nullptr) {
-        return;
-    }
-    std::string jobId = printJob->GetJobId();
-    std::vector<std::string> fileList = securityGuardManager_.GetFileList(jobId);
-    if (fileList.empty()) {
-        PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
-        return;
-    }
-    std::vector<FileAuditInfo> fileInfos;
-    for (const auto &fileName : fileList) {
-        FileAuditInfo info;
-        info.fileName = fileName;
-        info.md5 = "";
-        info.size = 0;
-        fileInfos.push_back(info);
-    }
-    if (!fileInfos.empty()) {
-        securityGuardManager_.SetFileAuditInfo(jobId, fileInfos);
-        PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
-            jobId.c_str(), fileInfos.size());
-    } else {
-        PRINT_HILOGW("CalculateFileAuditInfo empty result, jobId: %{public}s", jobId.c_str());
-    }
-}
-
 int32_t PrintServiceAbility::CallSpooler(
     const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId)
 {
@@ -617,7 +593,10 @@ int32_t PrintServiceAbility::CallSpooler(
     printJob->SetJobId(taskId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
+    auto ret = KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("RegisterCallerAppId failed.");
+    }
     ingressPackage = callerPkg;
     AddToPrintJobList(taskId, printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
@@ -1333,7 +1312,9 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
 void PrintServiceAbility::ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo,
     PrinterPreferences &preferences, PrinterUserPreferences &userPrefs)
 {
-    std::set<std::string> customOptionKeys = GetCustomOptionKeysFromCapability(printerInfo);
+    PrinterCapability capability;
+    printerInfo.GetCapability(capability);
+    std::set<std::string> customOptionKeys = capability.GetCustomOptionKeys();
     if (customOptionKeys.empty()) {
         PRINT_HILOGW("no custom options found");
         return;
@@ -1342,63 +1323,12 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferences(const PrinterInfo 
     ExtractCustomOptionsFromPreferenceJson(customOptionKeys, preferences, userPrefs);
 }
 
-std::set<std::string> PrintServiceAbility::GetCustomOptionKeysFromCapability(const PrinterInfo &printerInfo)
-{
-    std::set<std::string> customOptionKeys;
-    PrinterCapability capability;
-    printerInfo.GetCapability(capability);
-    std::string capOption = capability.GetOption();
-
-    Json::Value capJson;
-    if (!PrintJsonUtil::Parse(capOption, capJson)) {
-        PRINT_HILOGE("failed to parse capability option json");
-        return customOptionKeys;
-    }
-
-    if (!capJson.isObject()) {
-        PRINT_HILOGE("capability option json is not an object");
-        return customOptionKeys;
-    }
-
-    if (!capJson["cupsOptions"].isObject()) {
-        PRINT_HILOGE("capability option is not valid cupsOptions json");
-        return customOptionKeys;
-    }
-
-    Json::Value cupsOptions = capJson["cupsOptions"];
-    if (!cupsOptions["advanceOptions"].isString()) {
-        PRINT_HILOGE("advanceOptions is not a string");
-        return customOptionKeys;
-    }
-
-    std::string advanceOptionsStr = cupsOptions["advanceOptions"].asString();
-    Json::Value advanceOptionsJson;
-    if (!PrintJsonUtil::Parse(advanceOptionsStr, advanceOptionsJson) || !advanceOptionsJson.isArray()) {
-        PRINT_HILOGE("failed to parse advanceOptions json or not an array");
-        return customOptionKeys;
-    }
-
-    for (const auto &opt : advanceOptionsJson) {
-        if (opt.isObject() && opt["customParamType"].isInt()) {
-            std::string keyword = opt["keyword"].asString();
-            customOptionKeys.insert(keyword);
-        }
-    }
-    return customOptionKeys;
-}
-
 void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
     PrinterPreferences &preferences, PrinterUserPreferences &userPrefs)
 {
-    std::string prefOptionStr = preferences.GetOption();
-    if (prefOptionStr.empty()) {
-        PRINT_HILOGW("preferences option is empty");
-        return;
-    }
-
     Json::Value prefOptionsJson;
-    if (!PrintJsonUtil::Parse(prefOptionStr, prefOptionsJson) || !prefOptionsJson.isObject()) {
-        PRINT_HILOGE("failed to parse preferences option json or not an object");
+    if (!preferences.GetOptionJson(prefOptionsJson)) {
+        PRINT_HILOGE("failed to get option json from preferences");
         return;
     }
 
@@ -1451,9 +1381,10 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
     }
 
     struct HksBlob cipherBlob = { 0, nullptr };
-    if (plainBlob.data != nullptr && EncryptCustomOptionValue(plainBlob, cipherBlob) == HKS_SUCCESS) {
-        SecureBlob secureValue;
-        secureValue.SetData(cipherBlob.data, cipherBlob.size);
+    SecureBlob secureValue;
+    if (plainBlob.data != nullptr && hksAdapter_ != nullptr &&
+        hksAdapter_->EncryptCustomOption(GetCurrentUserId(), plainBlob, cipherBlob) == HKS_SUCCESS &&
+        hksAdapter_->Base64Encode(cipherBlob, secureValue)) {
         userPrefs.SetCustomOption(key, secureValue);
         PRINT_HILOGI("extracted and encrypted custom option: %{public}s", key.c_str());
     } else {
@@ -1461,191 +1392,8 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
         PRINT_HILOGE("failed to encrypt custom option: %{public}s", key.c_str());
     }
 
-    if (cipherBlob.data != nullptr) {
-        (void)memset_s(cipherBlob.data, cipherBlob.size, 0, cipherBlob.size);
-        delete[] cipherBlob.data;
-    }
-    if (plainBlob.data != nullptr) {
-        (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
-        delete[] plainBlob.data;
-    }
-}
-
-int32_t PrintServiceAbility::EncryptCustomOptionValue(struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
-{
-    static const std::string keyAliasStr = "print_custom_option_key";
-    struct HksBlob keyAlias = {
-        .size = keyAliasStr.size(),
-        .data = (uint8_t *)keyAliasStr.data()
-    };
-
-    struct HksParamSet *genParamSet = nullptr;
-    int32_t ret = InitGenParamSet(&genParamSet);
-    if (ret != HKS_SUCCESS) {
-        return ret;
-    }
-
-    ret = HksKeyExist(&keyAlias, genParamSet);
-    if (ret == HKS_SUCCESS) {
-        PRINT_HILOGI("key already exists, skip generate");
-    } else if (ret == HKS_ERROR_NOT_EXIST) {
-        ret = HksGenerateKey(&keyAlias, genParamSet, nullptr);
-        if (ret != HKS_SUCCESS) {
-            PRINT_HILOGE("HksGenerateKey failed, ret: %{public}d", ret);
-            HksFreeParamSet(&genParamSet);
-            return ret;
-        }
-    } else {
-        PRINT_HILOGE("HksKeyExist failed, ret: %{public}d", ret);
-        HksFreeParamSet(&genParamSet);
-        return ret;
-    }
-
-    struct HksParamSet *encryptParamSet = nullptr;
-    ret = InitCipherParamSet(&encryptParamSet, HKS_KEY_PURPOSE_ENCRYPT);
-    if (ret != HKS_SUCCESS) {
-        HksFreeParamSet(&genParamSet);
-        return ret;
-    }
-
-    ret = DoEncrypt(&keyAlias, encryptParamSet, plainBlob, cipherBlob);
-    HksFreeParamSet(&genParamSet);
-    HksFreeParamSet(&encryptParamSet);
-    return ret;
-}
-
-int32_t PrintServiceAbility::DecryptCustomOptionValue(struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
-{
-    static const std::string keyAliasStr = "print_custom_option_key";
-    struct HksBlob keyAlias = {
-        .size = keyAliasStr.size(),
-        .data = (uint8_t *)keyAliasStr.data()
-    };
-
-    struct HksParamSet *decryptParamSet = nullptr;
-    int32_t ret = InitCipherParamSet(&decryptParamSet, HKS_KEY_PURPOSE_DECRYPT);
-    if (ret != HKS_SUCCESS) {
-        return ret;
-    }
-
-    ret = DoDecrypt(&keyAlias, decryptParamSet, cipherBlob, plainBlob);
-    HksFreeParamSet(&decryptParamSet);
-    return ret;
-}
-
-int32_t PrintServiceAbility::InitGenParamSet(struct HksParamSet **paramSet)
-{
-    int32_t ret = HksInitParamSet(paramSet);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksInitParamSet failed, ret: %{public}d", ret);
-        return ret;
-    }
-
-    struct HksParam genParams[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT | HKS_KEY_PURPOSE_DECRYPT },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_SPECIFIC_USER_ID, .uint32Param = GetCurrentUserId() }
-    };
-
-    ret = HksAddParams(*paramSet, genParams, sizeof(genParams) / sizeof(genParams[0]));
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksAddParams failed, ret: %{public}d", ret);
-        HksFreeParamSet(paramSet);
-        return ret;
-    }
-
-    ret = HksBuildParamSet(paramSet);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksBuildParamSet failed, ret: %{public}d", ret);
-        HksFreeParamSet(paramSet);
-    }
-    return ret;
-}
-
-int32_t PrintServiceAbility::InitCipherParamSet(struct HksParamSet **paramSet, uint32_t purpose)
-{
-    int32_t ret = HksInitParamSet(paramSet);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksInitParamSet failed, ret: %{public}d", ret);
-        return ret;
-    }
-
-    uint8_t nonceData[12] = {0};
-    struct HksBlob nonce = { .size = sizeof(nonceData), .data = nonceData };
-    struct HksParam cipherParams[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = purpose },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_SPECIFIC_USER_ID, .uint32Param = GetCurrentUserId() },
-        { .tag = HKS_TAG_NONCE, .blob = nonce }
-    };
-
-    ret = HksAddParams(*paramSet, cipherParams, sizeof(cipherParams) / sizeof(cipherParams[0]));
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksAddParams failed, ret: %{public}d", ret);
-        HksFreeParamSet(paramSet);
-        return ret;
-    }
-
-    ret = HksBuildParamSet(paramSet);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksBuildParamSet failed, ret: %{public}d", ret);
-        HksFreeParamSet(paramSet);
-    }
-    return ret;
-}
-
-int32_t PrintServiceAbility::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-    struct HksBlob &plainBlob, struct HksBlob &cipherBlob)
-{
-    size_t bufferSize = plainBlob.size + AUTH_TAG_SIZE;
-    cipherBlob.data = new (std::nothrow) uint8_t[bufferSize];
-    if (cipherBlob.data == nullptr) {
-        PRINT_HILOGE("failed to allocate cipher buffer");
-        return HKS_ERROR_MALLOC_FAIL;
-    }
-
-    cipherBlob.size = bufferSize;
-    int32_t ret = HksEncrypt(keyAlias, paramSet, &plainBlob, &cipherBlob);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksEncrypt failed, ret: %{public}d", ret);
-        (void)memset_s(cipherBlob.data, bufferSize, 0, bufferSize);
-        delete[] cipherBlob.data;
-        cipherBlob.data = nullptr;
-        cipherBlob.size = 0;
-        return ret;
-    }
-
-    return HKS_SUCCESS;
-}
-
-int32_t PrintServiceAbility::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *paramSet,
-    struct HksBlob &cipherBlob, struct HksBlob &plainBlob)
-{
-    size_t bufferSize = cipherBlob.size;
-    plainBlob.data = new (std::nothrow) uint8_t[bufferSize];
-    if (plainBlob.data == nullptr) {
-        PRINT_HILOGE("failed to allocate plain buffer");
-        return HKS_ERROR_MALLOC_FAIL;
-    }
-
-    plainBlob.size = bufferSize;
-    int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherBlob, &plainBlob);
-    if (ret != HKS_SUCCESS) {
-        PRINT_HILOGE("HksDecrypt failed, ret: %{public}d", ret);
-        (void)memset_s(plainBlob.data, bufferSize, 0, bufferSize);
-        delete[] plainBlob.data;
-        plainBlob.data = nullptr;
-        plainBlob.size = 0;
-        return ret;
-    }
-
-    return HKS_SUCCESS;
+    PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
+    PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
 }
 
 bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
@@ -1673,7 +1421,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
         return false;
     }
     std::string oldOption = printJob.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
+    PRINT_HILOGD("Print job option: %{public}s",  PrintUtils::AnonymizeJobOption(oldOption).c_str());
     Json::Value infoJson;
     if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
@@ -1692,7 +1440,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
     printJob.SetPageSize(pageSize);
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
-    PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
+    PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob.SetOption(updatedOption);
     return true;
 }
@@ -1780,20 +1528,23 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
     }
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(
+        nativePrintJob->GetOption());
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+    std::string option = nativePrintJob->GetOption();
+    securityGuardManager_.InjectFileListIntoOption(jobId, option);
+    nativePrintJob->SetOption(option);
     UpdateQueuedJobList(jobId, nativePrintJob);
     auto printerId = nativePrintJob->GetPrinterId();
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     ingressPackage = callerPkg;
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
-
-    std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(nativePrintJob->GetOption());
     std::vector<uint32_t> fdList;
     nativePrintJob->GetFdList(fdList);
     PRINT_HILOGI("StartNativePrintJob jobName as fileName");
-    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
 
     return StartPrintJobInternal(nativePrintJob);
 }
@@ -1866,6 +1617,9 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
+    std::string option = printJob->GetOption();
+    securityGuardManager_.InjectFileListIntoOption(jobId, option);
+    printJob->SetOption(option);
     PRINT_HILOGI("[Job Id: %{public}s] set job state to PRINT_JOB_QUEUED, [Printer: %{public}s]",
         jobId.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
     printJob->SetJobState(PRINT_JOB_QUEUED);
@@ -1909,15 +1663,31 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         return E_PRINT_KIA_INTERCEPTED;
     }
 
+    return DoRestartPrintJob(jobId, printJob);
+}
+
+int32_t PrintServiceAbility::DoRestartPrintJob(const std::string &oldJobId,
+    std::shared_ptr<PrintJob> &printJob)
+{
     if (!CreateNewJobWhenRestart(printJob)) {
         return E_PRINT_FILE_IO;
     }
-
-    ret = StartPrintJobInternal(printJob);
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<std::string> fileList = securityGuardManager_.GetFileList(oldJobId);
+    if (fileList.empty()) {
+        fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(printJob->GetOption());
+        PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob fileList from option, count: %{public}zu",
+            printJob->GetJobId().c_str(), fileList.size());
+    } else {
+        PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob fileList from old securityMap, count: %{public}zu",
+            printJob->GetJobId().c_str(), fileList.size());
+    }
+    securityGuardManager_.receiveBaseInfo(printJob->GetJobId(), callerPkg, fileList);
+    int32_t ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob success, oldJobId: %{public}s",
-            printJob->GetJobId().c_str(), jobId.c_str());
-        CancelPrintJob(jobId);
+            printJob->GetJobId().c_str(), oldJobId.c_str());
+        CancelPrintJob(oldJobId);
     }
     return ret;
 }
@@ -2304,14 +2074,14 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
 #ifdef PHONE_ISOLATION_ENABLE
     std::string newUri = info->GetUri();
 #else
-    std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(oldUri);
-    if (protocol.empty()) {
-        PRINT_HILOGW("Cannot parse uri");
-        return false;
+    std::string protocol = addedPrinter.GetSelectedProtocol();
+    std::string newUri;
+    if (!protocol.empty() && protocol != "auto") {
+        newUri = GetConnectUri(*info, protocol);
+        info->SetUri(newUri);
+    } else {
+        newUri = info->GetUri();
     }
-    
-    std::string newUri = GetConnectUri(*info, protocol);
-    info->SetUri(newUri);
 #endif
 
     PRINT_HILOGD("CheckPrinterUriDifferent, old = %{public}s, new = %{public}s",
@@ -2520,7 +2290,6 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
-    securityGuardManager_.AddBlockedSubState(printJob->GetJobId(), subState);
     AddPrintJobToHistoryList(printJob);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     if (isEprint(printJob->GetPrinterId())) {
@@ -2528,10 +2297,10 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
         return;
     }
     auto printerId = printJob->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo) {
+    PrinterInfo printerInfo;
+    if (QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
-            printerInfo->GetPrinterName());
+            printerInfo.GetPrinterName());
     } else {
         PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
     }
@@ -2569,15 +2338,6 @@ void PrintServiceAbility::HandleJobCompletedState(const std::string &jobId, cons
     PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
 }
 
-void PrintServiceAbility::SendJobAuditInfo(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
-{
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
-    if (printerInfo != nullptr) {
-        auto fileInfos = securityGuardManager_.GetFileAuditInfo(jobId);
-        securityGuardManager_.receiveAuditInfo(jobId, *printerInfo, *printJob, fileInfos);
-    }
-}
-
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     PRINT_HILOGI("[Job Id: %{public}s, state: %{public}u, subState: %{public}u] CheckAndSendQueuePrintJob start",
@@ -2612,7 +2372,9 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
-    SendJobAuditInfo(jobId, printJob);
+    auto printerInfo = securityGuardManager_.ResolvePrinterInfo(
+        printJob->GetPrinterId(), printJob->GetOption(), printSystemData_);
+    securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
 
     SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
@@ -3360,12 +3122,12 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     // notify securityGuard
     uint32_t jobState = jobInfo.GetJobState();
     if (jobState == PRINT_JOB_COMPLETED || jobState == PRINT_JOB_BLOCKED) {
-        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
-        if (printerInfo != nullptr) {
-            securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
-        } else {
-            PRINT_HILOGD("receiveJobStateUpdate printer is empty");
-        }
+        auto printerInfo = securityGuardManager_.ResolvePrinterInfo(
+            jobInfo.GetPrinterId(), jobInfo.GetOption(), printSystemData_);
+        securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
+    } else {
+        PRINT_HILOGD("[Job Id: %{public}s] state %{public}u not COMPLETED/BLOCKED, audit event skipped",
+            jobId.c_str(), jobState);
     }
     if (stateInfo != "") {
         cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(stateInfo);
@@ -4318,7 +4080,7 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
         std::string make = printerInfo->GetPrinterMake();
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
-        
+
         if (!ppdName.empty()) {
             PrinterCapability printerCaps;
             auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
@@ -4427,10 +4189,10 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
 {
     PRINT_HILOGD("HandleNewPrinterDiscovery start");
     info.DumpInfo();
-    
+
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>(info);
     PRINT_CHECK_NULL_AND_RETURN(printerInfo, nullptr);
-    
+
     PrinterInfo printer;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
@@ -4440,10 +4202,10 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
             printerInfo->SetAlias(printer.GetAlias());
         }
     }
-    
+
     printerInfo->SetPrinterId(globalPrinterId);
     printSystemData_.AddPrinterToDiscovery(printerInfo);
-    
+
     PRINT_HILOGD("HandleNewPrinterDiscovery completed");
     return printerInfo;
 }
@@ -4509,15 +4271,6 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
 std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol)
 {
     std::string printerUri = printerInfo.GetUri();
-    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
-    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
-    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
-    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
-    int port = 0; /* Port portion of URI */
-    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
-        host, sizeof(host), &port, resource, sizeof(resource));
-    std::string printerIp;
-    printerIp.assign(host);
     std::string optionStr = printerInfo.GetOption();
     Json::Value option;
     if (!PrintJsonUtil::Parse(optionStr, option)) {
@@ -4572,7 +4325,18 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         return false;
     }
 #endif  // CUPS_ENABLE
+    PpdInfo ppdInfo = GetPpdInfoFromPpdName(ppdName);
+    std::string finalProtocol = connectProtocol.empty() ? "auto" : connectProtocol;
     printerInfo->SetPrinterName(printerName);
+    printerInfo->SetSelectedDriver(ppdInfo);
+    printerInfo->SetSelectedProtocol(finalProtocol);
+    PRINT_HILOGI("[Printer: %{public}s] DoAddPrinterToCups success, protocol: %{public}s",
+        printerName.c_str(), finalProtocol.c_str());
+    return true;
+}
+
+PpdInfo PrintServiceAbility::GetPpdInfoFromPpdName(const std::string &ppdName)
+{
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     PpdInfo ppdInfo;
     if (ppdName == BSUNI_PPD_NAME) {
@@ -4586,14 +4350,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
         ppdInfo.SetPpdInfo("auto", "auto", ppdName);
     }
-    printerInfo->SetSelectedDriver(ppdInfo);
-    if (printCupsClient != nullptr) {
-        std::string protocol = printCupsClient->getScheme(printerUri);
-        if (!protocol.empty()) {
-            printerInfo->SetSelectedProtocol(protocol);
-        }
-    }
-    return true;
+    return ppdInfo;
 }
 
 bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
@@ -4868,7 +4625,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
         PRINT_HILOGW("Flush cache file failed");
     }
-    CalculateFileAuditInfo(printJob);
+    securityGuardManager_.CalculateFileAuditInfo(printJob->GetJobId());
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
@@ -5289,7 +5046,7 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
     const PrinterPreferences &preferences, const PrinterInfo &printerInfo)
 {
     std::string option = preferences.GetOption();
-    PRINT_HILOGD("Print job option: %{public}s", option.c_str());
+    PRINT_HILOGD("Print job option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     Json::Value opsJson;
     if (!PrintJsonUtil::Parse(option, opsJson)) {
         PRINT_HILOGW("parse preferences options error");
@@ -5307,34 +5064,21 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(
     if (!userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs)) {
         return opsJson;
     }
-    DecryptAndFillCustomOptions(userPrefs, opsJson);
+    FillCustomOptionsToJson(userPrefs, opsJson);
     return opsJson;
 }
 
-void PrintServiceAbility::DecryptAndFillCustomOptions(const PrinterUserPreferences &userPrefs, Json::Value &opsJson)
+void PrintServiceAbility::FillCustomOptionsToJson(const PrinterUserPreferences &userPrefs, Json::Value &opsJson)
 {
     for (const auto &opt : userPrefs.GetAllCustomOptions()) {
         if (!opt.isSet) {
             continue;
         }
-        struct HksBlob cipherBlob = {
-            .size = opt.value.size,
-            .data = opt.value.data
-        };
-        struct HksBlob plainBlob = { 0, nullptr };
-        int32_t ret = DecryptCustomOptionValue(cipherBlob, plainBlob);
-        if (ret == HKS_SUCCESS && plainBlob.data != nullptr) {
-            opsJson[opt.key] = "Custom." + std::string((char *)plainBlob.data, plainBlob.size);
-            PRINT_HILOGI("decrypted custom option: %{public}s", opt.key.c_str());
-        } else {
-            PRINT_HILOGW("failed to decrypt custom option: %{public}s, ret: %{public}d", opt.key.c_str(), ret);
-        }
-        if (plainBlob.data != nullptr) {
-            (void)memset_s(plainBlob.data, plainBlob.size, 0, plainBlob.size);
-            delete[] plainBlob.data;
-            plainBlob.data = nullptr;
-            plainBlob.size = 0;
-        }
+        Json::Value optValue;
+        optValue["choice"] = "Custom";
+        optValue["value"] = opt.value.ToString();
+        opsJson[opt.key] = optValue;
+        PRINT_HILOGI("custom option stored with cipher: %{public}s", opt.key.c_str());
     }
 }
 
@@ -5749,7 +5493,7 @@ int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPp
 
 bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 {
-    PRINT_HILOGI("Start CallBack Printerinfo");
+    PRINT_HILOGI("Start CallBack PrinterInfo");
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINT_QUERY_INFO_EVENT_TYPE);
     cbInfo.printerInfo = std::make_shared<PrinterInfo>(info);
@@ -6083,7 +5827,7 @@ int32_t PrintServiceAbility::StartSharedHostDiscovery()
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    
+
     if (EventListenerMgr::GetInstance()->IsPrinterListenerEmpty(
         CallbackEventType::PRINTER_SHARED_HOST_DISCOVER)) {
         PRINT_HILOGE("No registration event");
@@ -6095,10 +5839,10 @@ int32_t PrintServiceAbility::StartSharedHostDiscovery()
         PRINT_HILOGW("Discovery already in progress");
         return E_PRINT_NONE;
     }
-    
+
     std::thread discoveryThread([this]() {
         PRINT_HILOGI("SMBPrinter Discovery thread started");
-        
+
         SmbHostSearchHelper helper;
         auto hosts = helper.GetSharedHosts();
         PRINT_HILOGI("Discovery completed, found %{public}zu hosts", hosts.size());
@@ -6109,7 +5853,7 @@ int32_t PrintServiceAbility::StartSharedHostDiscovery()
         EventListenerMgr::GetInstance()->Execute(cbInfo);
         isSmbHostDiscovering_.store(false);
     });
-    
+
     discoveryThread.detach();
 #endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;

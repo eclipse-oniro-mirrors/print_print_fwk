@@ -99,6 +99,7 @@ public:
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
     static std::string AnonymizeJobName(const std::string &jobName);
+    static std::string AnonymizeFilePath(const std::string &filePath);
 
     static void BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
     static void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
@@ -127,7 +128,11 @@ public:
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
     {
-        uint32_t vecSize = parcel.ReadUint32();
+        uint32_t vecSize = 0;
+        if (!parcel.ReadUint32(vecSize)) {
+            PRINT_HILOGE("ReadUint32 for vecSize failed");
+            return false;
+        }
         CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
         supportedList.clear();
         supportedList.reserve(vecSize);  // Allocate the required memory all at once to speed up processing efficiency.
@@ -147,7 +152,10 @@ public:
                                    bool *hasSupportedPtr)
     {
         if (hasSupportedPtr) {
-            *hasSupportedPtr = parcel.ReadBool();
+            if (!parcel.ReadBool(*hasSupportedPtr)) {
+                PRINT_HILOGE("ReadBool for hasSupportedPtr failed");
+                return false;
+            }
             if (*hasSupportedPtr) {
                 return readListFromParcel(parcel, supportedList, readFunc);
             }
@@ -159,28 +167,41 @@ public:
     }
 
     template <typename T, typename WriteFunc>
-    static void WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc)
+    static bool WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc)
     {
         uint32_t vecSize = static_cast<uint32_t>(list.size());
-        parcel.WriteUint32(vecSize);
-        for (uint32_t index = 0; index < vecSize; index++) {
-            writeFunc(parcel, list[index]);
+        if (!parcel.WriteUint32(vecSize)) {
+            PRINT_HILOGE("WriteUint32 for vecSize failed");
+            return false;
         }
+        for (uint32_t index = 0; index < vecSize; index++) {
+            if (!writeFunc(parcel, list[index])) {
+                PRINT_HILOGE("WriteListToParcel element %{public}u failed", index);
+                return false;
+            }
+        }
+        return true;
     }
     template <typename T, typename WriteFunc>
-    static void WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc, bool hasFlag)
+    static bool WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc, bool hasFlag)
     {
-        parcel.WriteBool(hasFlag);
-        if (hasFlag) {
-            WriteListToParcel(parcel, list, writeFunc);
+        if (!parcel.WriteBool(hasFlag)) {
+            PRINT_HILOGE("WriteBool for hasFlag failed");
+            return false;
         }
+        if (hasFlag) {
+            return WriteListToParcel(parcel, list, writeFunc);
+        }
+        return true;
     }
 
     template<typename T>
     static bool CheckJsonType(const Json::Value &j)
     {
-        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, unsigned int> || std::is_same_v<T, uint32_t>) {
+        if constexpr (std::is_same_v<T, int>) {
             return j.isInt();
+        } else if constexpr (std::is_same_v<T, unsigned int> || std::is_same_v<T, uint32_t>) {
+            return j.isUInt();
         } else if constexpr (std::is_same_v<T, std::string>) {
             return j.isString();
         } else if constexpr (std::is_same_v<T, bool>) {

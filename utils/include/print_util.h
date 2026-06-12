@@ -27,6 +27,9 @@
 #include <securec.h>
 
 #include "print_log.h"
+#ifdef PRINT_API_METRICS_ENABLE
+#include "histogram_plugin_macros.h"
+#endif
 
 namespace OHOS::Print {
 const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
@@ -59,6 +62,10 @@ public:
     static void SafeDeleteAuthInfo(char *userPasswd);
 
     static bool ValidatePrinterName(const char *name);
+
+    static void PrintHistogramBoolean(const std::string& apiName, bool counted);
+
+    static void SecureDeleteBlob(uint8_t *&data, uint32_t &size);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -202,6 +209,26 @@ inline void PrintUtil::SafeDeleteAuthInfo(char *userPasswd)
     memset_s(userPasswd, MAX_AUTH_LENGTH_SIZE, '\0', MAX_AUTH_LENGTH_SIZE);
     delete []userPasswd;
     userPasswd = nullptr;
+}
+
+inline void PrintUtil::PrintHistogramBoolean(const std::string& apiName, bool counted)
+{
+#ifdef PRINT_API_METRICS_ENABLE
+    HISTOGRAM_BOOLEAN(apiName.c_str(), counted);
+#endif
+}
+
+inline void PrintUtil::SecureDeleteBlob(uint8_t *&data, uint32_t &size)
+{
+    if (data == nullptr) {
+        return;
+    }
+    if (size > 0 && memset_s(data, size, 0, size) != EOK) {
+        PRINT_HILOGE("memset_s failed");
+    }
+    delete[] data;
+    data = nullptr;
+    size = 0;
 }
 
 } // namespace OHOS::Print

@@ -27,7 +27,6 @@ static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensi
 static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 static const std::string ABILITY_PARAMS_STREAM = "ability.params.stream";
-static const int32_t MAX_FILE_LIST_SIZE = 100;
 AniPrintTask::AniPrintTask(ani_env *env)
 {
     if (env == nullptr) {
@@ -60,6 +59,10 @@ int32_t AniPrintTask::StartPrint(const std::vector<std::string>& files)
         PRINT_HILOGD("list type: fdlist");
         for (auto fdPath : files) {
             uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
+            if (fd <= FdListWrapper::STD_FD_MAX) {  // fd 0/1/2 are stdin/stdout/stderr - skip them
+                PRINT_HILOGE("invalid fd: %{public}u", fd);
+                continue;
+            }
             fdList.Add(fd);
         }
     } else if (files.begin()->find("file://") == 0) {
@@ -95,6 +98,10 @@ int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& file
         PRINT_HILOGD("list type: fdlist");
         for (auto fdPath : files) {
             uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
+            if (fd <= FdListWrapper::STD_FD_MAX) {
+                PRINT_HILOGE("invalid fd: %{public}u", fd);
+                continue;
+            }
             fdList.Add(fd);
         }
     } else if (files.begin()->find("file://") == 0) {
@@ -162,7 +169,7 @@ uint32_t AniPrintTask::CallSpooler(const std::shared_ptr<AdapterParam>& adapterP
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, adapterParam->jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, files);
-    if (!files.empty() && files.size() <= MAX_FILE_LIST_SIZE) {
+    if (!files.empty() && files.size() <= PRINT_MAX_FILE_LIST_SIZE) {
         want.SetParam(LAUNCH_PARAMETER_FILE_LIST, files);
         want.SetParam(ABILITY_PARAMS_STREAM, files);
     }
@@ -229,12 +236,12 @@ bool AniPrintTask::CheckPermission(const std::string &name)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType == TOKEN_INVALID) {
-        PRINT_HILOGE("invalid token id %{public}d", tokenId);
+        PRINT_HILOGE("invalid token id");
         return false;
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, name);
     if (result != PERMISSION_GRANTED) {
-        PRINT_HILOGE("Current tokenId permission is %{public}d", result);
+        PRINT_HILOGE("Current tokenId permission check failed");
     }
     return result == PERMISSION_GRANTED;
 }

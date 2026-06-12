@@ -16,20 +16,20 @@
 #include "sane_control_param.h"
 #include "scan_log.h"
 #include "message_parcel.h"
+#include "scan_constant.h"
 
 namespace OHOS::Scan {
 SaneControlParam::SaneControlParam() : option_(0), action_(SANE_ACTION_GET_VALUE),
     valueType_(0), valueSize_(0), valueNumber_(0) {}
 bool SaneControlParam::Marshalling(Parcel &parcel) const
 {
-    bool status = true;
-    status &= parcel.WriteInt32(option_);
-    status &= parcel.WriteInt32(static_cast<int32_t>(action_));
-    status &= parcel.WriteInt32(valueType_);
-    status &= parcel.WriteInt32(valueSize_);
-    status &= parcel.WriteInt32(valueNumber_);
-    status &= parcel.WriteString(valueStr_);
-    return status;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(option_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(static_cast<int32_t>(action_)), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueType_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueSize_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(valueNumber_), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(valueStr_), false);
+    return true;
 }
 
 SaneControlParam* SaneControlParam::Unmarshalling(Parcel &parcel)
@@ -39,12 +39,14 @@ SaneControlParam* SaneControlParam::Unmarshalling(Parcel &parcel)
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
     }
-    obj->option_ = parcel.ReadInt32();
-    obj->action_ = static_cast<SaneAction>(parcel.ReadInt32());
-    obj->valueType_ = parcel.ReadInt32();
-    obj->valueSize_ = parcel.ReadInt32();
-    obj->valueNumber_ = parcel.ReadInt32();
-    obj->valueStr_ = parcel.ReadString();
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->option_), nullptr);
+    int32_t action = 0;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(action), nullptr);
+    obj->action_ = static_cast<SaneAction>(action);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueType_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueSize_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueNumber_), nullptr);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->valueStr_), nullptr);
     return obj;
 }
 }   // namespace OHOS::Scan

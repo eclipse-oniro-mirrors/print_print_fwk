@@ -156,8 +156,12 @@ private:
     bool ReadFromParcel(Parcel &parcel);
 
     bool ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel);
+    bool ReadBasicInfoFromParcel(PrinterInfo& right, Parcel& parcel);
+    bool ReadCapabilityAndUriFromParcel(PrinterInfo& right, Parcel& parcel);
+    bool ReadDriverAndPrefsFromParcel(PrinterInfo& right, Parcel& parcel);
+    bool ReadFlagsFromParcel(PrinterInfo& right, Parcel& parcel);
 
-    void MarshallingInnerProperty(Parcel &parcel) const;
+    bool MarshallingInnerProperty(Parcel &parcel) const;
 
     bool ValidateAll();
 

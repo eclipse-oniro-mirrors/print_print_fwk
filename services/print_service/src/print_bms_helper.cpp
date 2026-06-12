@@ -65,7 +65,9 @@ std::string PrintBMSHelper::QueryCallerBundleName()
     }
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     std::string bundleName = "";
-    helper_->QueryNameForUid(sptrBundleMgr_, callerUid, bundleName);
+    if (!helper_->QueryNameForUid(sptrBundleMgr_, callerUid, bundleName)) {
+        PRINT_HILOGE("QueryNameForUid failed.");
+    }
     PRINT_HILOGD("callerUid = %{private}d, bundleName = %{private}s", callerUid, bundleName.c_str());
     return bundleName;
 }

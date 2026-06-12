@@ -57,14 +57,10 @@ void TestReceiveAuditInfo(const uint8_t *data, size_t size, FuzzedDataProvider *
     printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_DUPLEX_MODE));
     printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SUB_STATE));
 
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     int fileCount = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
     for (int i = 0; i < fileCount; ++i) {
-        FileAuditInfo info;
-        info.fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.md5 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.size = dataProvider->ConsumeIntegral<uint64_t>();
-        fileInfos.push_back(info);
+        fileInfos.push_back(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     }
     manager.receiveAuditInfo(jobId, printerInfo, printJob, fileInfos);
 }
@@ -106,14 +102,10 @@ void TestFullAuditFlow(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     printJob.SetDuplexMode(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_DUPLEX_MODE));
     printJob.SetSubState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SUB_STATE));
 
-    std::vector<FileAuditInfo> fileInfos;
+    std::vector<std::string> fileInfos;
     int fileCount = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
     for (int i = 0; i < fileCount; ++i) {
-        FileAuditInfo info;
-        info.fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.md5 = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        info.size = dataProvider->ConsumeIntegral<uint64_t>();
-        fileInfos.push_back(info);
+        fileInfos.push_back(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     }
     manager.receiveAuditInfo(jobId, printerInfo, printJob, fileInfos);
     manager.receiveJobStateUpdate(jobId, printerInfo, printJob);
