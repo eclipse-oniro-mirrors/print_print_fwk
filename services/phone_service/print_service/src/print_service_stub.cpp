@@ -109,6 +109,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS] = &PrintServiceStub::OnCheckPrintJobConflicts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERDEFAULTPREFERENCES] =
         &PrintServiceStub::OnGetPrinterDefaultPreferences;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] = &PrintServiceStub::OnGetPrinterPreference;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS] = &PrintServiceStub::OnGetSharedHosts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_SHARED_HOST_DISCOVERY] =
         &PrintServiceStub::OnStartSharedHostDiscovery;
@@ -121,7 +122,6 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnNotifyWatermarkComplete;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_KIA_INTERCEPTOR_CB] =
                &PrintServiceStub::OnRegisterKiaInterceptorCallback;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] = &PrintServiceStub::OnGetPrinterPreference;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(

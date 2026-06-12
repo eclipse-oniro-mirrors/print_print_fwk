@@ -305,7 +305,7 @@ HWTEST_F(PrintVendorOptionsUtilTest, SplitAndMergeRoundTrip_RestoresOriginal, Te
         EXPECT_EQ(originalJson[key], mergedJson[key]);
     }
 }
-}
+
 HWTEST_F(PrintVendorOptionsUtilTest, ClassifyFields_MixedFields_ClassifiedCorrectly, TestSize.Level1)
 {
     Json::Value vendorJson;
