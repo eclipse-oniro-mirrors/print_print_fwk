@@ -19,6 +19,7 @@
 #include "print_log.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <unordered_set>
 
 namespace OHOS::Print {
@@ -130,7 +131,32 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     } else if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
         fileList.push_back(optionJson["jobName"].asString());
     }
+    for (auto &file : fileList) {
+        file = UrlDecode(file);
+    }
     return fileList;
+}
+
+std::string PrintSecurityGuardUtil::UrlDecode(const std::string &str)
+{
+    std::string result;
+    result.reserve(str.size());
+    for (size_t i = 0; i < str.size(); i++) {
+        if (str[i] == '%' && i + 2 < str.size()) {
+            int hex = 0;
+            if (sscanf(str.c_str() + i + 1, "%2x", &hex) == 1) {
+                result += static_cast<char>(hex);
+                i += 2;
+            } else {
+                result += str[i];
+            }
+        } else if (str[i] == '+') {
+            result += ' ';
+        } else {
+            result += str[i];
+        }
+    }
+    return result;
 }
 
 static const std::unordered_set<std::string> PRINTABLE_EXTENSIONS = {
