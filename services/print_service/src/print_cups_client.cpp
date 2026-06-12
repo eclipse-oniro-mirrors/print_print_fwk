@@ -188,7 +188,7 @@ static const std::string JOB_STATE_MESSAGE_UPLOADING_FILES = "uploading-files";
 static const std::string JOB_STATE_MESSAGE_CONVERTING_FILES = "converting-files";
 static const std::string JOB_STATE_MESSAGE_LARGE_FILE_ERROR = "large-file-error";
 static const std::string JOB_STATE_MESSAGE_FILE_PARSING_ERROR = "file-parsing-error";
-static const std::string JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION = "slow-file-convertion";
+static const std::string JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION = "slow-file-conversion";
 static const std::string JOB_STATE_MESSAGE_PORT_ERROR = "port-error";
 
 static const std::map<std::string, PrintJobSubState> JOB_PRINTER_STATE_MESSAGE_LIST{

@@ -4485,18 +4485,6 @@ HWTEST_F(PrintCupsClientTest, FillVendorOptions_MixedValidInvalidTypes_SkipsInva
 }
 
 /**
- * @tc.name: ParseStateMessage_NullParams_Test
- * @tc.desc: ParseStateMessage with null params should not crash
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, ParseStateMessage_NullParams_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.ParseStateMessage(nullptr);
-}
-
-/**
  * @tc.name: ParseStateMessage_RunningTokens_Test
  * @tc.desc: ParseStateMessage hits the 3 RUNNING-semantic tokens, isBlock stays false
  * @tc.type: FUNC
@@ -4510,6 +4498,8 @@ HWTEST_F(PrintCupsClientTest, ParseStateMessage_RunningTokens_Test, TestSize.Lev
             TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
             PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
     };
+    
+    printCupsClient.ParseStateMessage(nullptr);
 
     auto param = makeParam();
     std::string msg = "uploading-files";
