@@ -20,6 +20,12 @@
 namespace OHOS::Scan {
 static const long HTTP_STATUS_OK = 200;
 static const long HTTP_REQUEST_TIMEOUT = 1;
+static const char* SECURE_CIPHER_LIST =
+    "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
+    "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
+    "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305";
+static const char* TLS13_CIPHER_LIST =
+    "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256";
 
 CurlHttpClient::CurlGlobalInitializer::CurlGlobalInitializer()
 {
@@ -63,6 +69,11 @@ bool CurlHttpClient::PerformHttpRequest(const std::string& url, std::string& res
     curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &responseBuffer);
     curl_easy_setopt(curlHandle, CURLOPT_TIMEOUT, HTTP_REQUEST_TIMEOUT);
+    // Enforce TLS 1.2 or higher
+    curl_easy_setopt(curlHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+     // Allow only AEAD ciphers with forward secrecy
+    curl_easy_setopt(curlHandle, CURLOPT_SSL_CIPHER_LIST, SECURE_CIPHER_LIST);
+    curl_easy_setopt(curlHandle, CURLOPT_TLS13_CIPHERS, TLS13_CIPHER_LIST);
 
     CURLcode curlResult = curl_easy_perform(curlHandle);
     if (curlResult != CURLE_OK) {
