@@ -139,15 +139,16 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
 namespace {
 constexpr size_t URL_HEX_DIGITS = 2;
 constexpr int HEX_RADIX = 16;
+constexpr int HEX_ALPHA_OFFSET = 10;
 
 bool HexCharToInt(char c, int &value)
 {
     if (c >= '0' && c <= '9') {
         value = c - '0';
     } else if (c >= 'a' && c <= 'f') {
-        value = c - 'a' + 10;
+        value = c - 'a' + HEX_ALPHA_OFFSET;
     } else if (c >= 'A' && c <= 'F') {
-        value = c - 'A' + 10;
+        value = c - 'A' + HEX_ALPHA_OFFSET;
     } else {
         return false;
     }
