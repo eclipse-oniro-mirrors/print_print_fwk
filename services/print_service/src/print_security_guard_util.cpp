@@ -19,7 +19,6 @@
 #include "print_log.h"
 
 #include <algorithm>
-#include <cstdio>
 #include <unordered_set>
 
 namespace OHOS::Print {
@@ -137,16 +136,36 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     return fileList;
 }
 
+namespace {
+constexpr size_t URL_HEX_DIGITS = 2;
+constexpr int HEX_RADIX = 16;
+
+bool HexCharToInt(char c, int &value)
+{
+    if (c >= '0' && c <= '9') {
+        value = c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        value = c - 'a' + 10;
+    } else if (c >= 'A' && c <= 'F') {
+        value = c - 'A' + 10;
+    } else {
+        return false;
+    }
+    return true;
+}
+} // namespace
+
 std::string PrintSecurityGuardUtil::UrlDecode(const std::string &str)
 {
     std::string result;
     result.reserve(str.size());
     for (size_t i = 0; i < str.size(); i++) {
-        if (str[i] == '%' && i + 2 < str.size()) {
-            int hex = 0;
-            if (sscanf(str.c_str() + i + 1, "%2x", &hex) == 1) {
-                result += static_cast<char>(hex);
-                i += 2;
+        if (str[i] == '%' && i + URL_HEX_DIGITS < str.size()) {
+            int high = 0;
+            int low = 0;
+            if (HexCharToInt(str[i + 1], high) && HexCharToInt(str[i + URL_HEX_DIGITS], low)) {
+                result += static_cast<char>(high * HEX_RADIX + low);
+                i += URL_HEX_DIGITS;
             } else {
                 result += str[i];
             }
