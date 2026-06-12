@@ -38,6 +38,8 @@ public:
     static void TearDownTestCase(void);
     void SetUpProxy(void);
     void TearDownProxy(void);
+private:
+    sptr<MockRemoteObject> proxyObj_ = nullptr;
 };
 
 void JsPrintExtensionTest::SetUpTestCase(void)
@@ -51,23 +53,26 @@ void JsPrintExtensionTest::SetUpProxy(void)
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
-    EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).WillRepeatedly(
+    proxyObj_ = new (std::nothrow) MockRemoteObject();
+    EXPECT_NE(proxyObj_, nullptr);
+    EXPECT_CALL(*proxyObj_, IsProxyObject()).WillRepeatedly(Return(true));
+    EXPECT_CALL(*proxyObj_, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*proxyObj_, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*proxyObj_, SendRequest(_, _, _, _)).WillRepeatedly(
         [service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    PrintManagerClient::GetInstance()->SetProxy(obj);
+    PrintManagerClient::GetInstance()->SetProxy(proxyObj_);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
 }
 
 void JsPrintExtensionTest::TearDownProxy(void)
 {
-    PrintManagerClient::GetInstance()->ResetProxy();
+    if (PrintManagerClient::GetInstance()->deathRecipient_ != nullptr && proxyObj_ != nullptr) {
+        PrintManagerClient::GetInstance()->deathRecipient_->OnRemoteDied(proxyObj_);
+    }
+    proxyObj_ = nullptr;
 }
 
 /**

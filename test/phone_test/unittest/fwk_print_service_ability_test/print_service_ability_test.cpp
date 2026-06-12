@@ -538,7 +538,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0010_NeedRename, TestS
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<std::string> extensionIds;
-    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_NONE);
+    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_EXTENSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0011_NeedRename, TestSize.Level1)
