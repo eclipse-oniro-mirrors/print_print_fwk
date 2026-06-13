@@ -2046,14 +2046,14 @@ bool PrintCupsClient::HandleProcessingState(std::shared_ptr<JobMonitorParam> mon
         PRINT_HILOGI("Job canceled by user, waiting for CUPS job cancellation to complete");
         return true;
     }
-    
+
     if (monitorParams->isBlock) {
         PRINT_HILOGI("job is blocked");
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
         return true;
     }
-    
+
     PRINT_HILOGI("job is running");
     monitorParams->serviceAbility->UpdatePrintJobState(
         monitorParams->serviceJobId, PRINT_JOB_RUNNING, monitorParams->substate);
@@ -2067,7 +2067,7 @@ bool PrintCupsClient::HandleHeldState(std::shared_ptr<JobMonitorParam> monitorPa
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SMB_PRINTER);
         return true;
     }
-    
+
     if (monitorParams->job_state_reasons == JOB_STATE_REASON_AUTHENTICATION) {
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_AUTHENTICATION);
@@ -3471,6 +3471,12 @@ int32_t PrintCupsClient::CheckPreferencesConflicts(const std::string &ppdName, c
         PRINT_HILOGE("Open ppd file failed! Path=%{private}s", ppdFilePath.c_str());
         return E_PRINT_FILE_IO;
     }
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    if (ppd->cache == nullptr) {
+        PRINT_HILOGE("Create ppd cache failed!");
+        ppdClose(ppd);
+        return E_PRINT_FILE_IO;
+    }
 
     StdStringMap cupsOptinosMap;
     ppdMarkDefaults(ppd);
@@ -3627,7 +3633,7 @@ int32_t PrintCupsClient::DeleteExtraJobsFromCups()
 
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, "ipp://localhost/");
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
-    
+
     response = printAbility_->DoRequest(http, request, "/");
     httpClose(http);
     http = nullptr;
