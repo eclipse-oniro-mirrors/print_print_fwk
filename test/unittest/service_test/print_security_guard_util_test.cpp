@@ -581,6 +581,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_005, T
 HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_006, TestSize.Level1)
 {
     EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("file%GGname"), "file%GGname");
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("file%5Gname"), "file%5Gname");
 }
 
 /**
@@ -600,7 +601,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_007, T
 
 /**
  * @tc.name: PrintSecurityGuardUtilTest_ExtractFileListFromOption_006
- * @tc.desc: Verify ExtractFileListFromOption decodes URL-encoded Chinese in fileList.
+ * @tc.desc: Verify ExtractFileListFromOption preserves URL-encoded fileList as-is.
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -614,7 +615,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListF
 
 /**
  * @tc.name: PrintSecurityGuardUtilTest_ExtractFileListFromOption_007
- * @tc.desc: Verify ExtractFileListFromOption decodes URL-encoded Chinese in jobName.
+ * @tc.desc: Verify ExtractFileListFromOption preserves URL-encoded jobName as-is.
  * @tc.type: FUNC
  * @tc.require:
  */
