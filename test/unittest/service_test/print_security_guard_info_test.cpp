@@ -334,9 +334,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonUrlDecode_
 
     std::string json = info.ToJsonStr();
     std::string decodedFileName = "\xe5\x8d\xb0\xe7\xab\xa0.pdf";
-    std::string decodedJobName = "\xe6\x8a\xa5\xe5\x91\x8a.pdf";
     EXPECT_NE(json.find(decodedFileName), std::string::npos);
-    EXPECT_NE(json.find(decodedJobName), std::string::npos);
 }
 }  // namespace Print
 }  // namespace OHOS

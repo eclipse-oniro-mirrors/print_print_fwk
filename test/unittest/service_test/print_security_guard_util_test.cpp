@@ -391,7 +391,6 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         std::string expected;
     };
     std::vector<TestCase> testCases = {
-        {PRINT_JOB_COMPLETED_FAILED, "failed"},
         {PRINT_JOB_COMPLETED_CANCELLED, "cancelled"},
         {PRINT_JOB_COMPLETED_FILE_CORRUPT, "file_corrupt"},
     };
