@@ -5128,53 +5128,6 @@ HWTEST_F(PrintServiceAbilityTest, SetPrinterCapabilityAndRegister_FindMakeFailed
 }
 
 /**
- * @tc.name: CheckNumberUpArgs_ValidValue_ReturnTrue
- * @tc.desc: Test CheckNumberUpArgs with valid numberUp values
- * @tc.type: FUNC
- * @tc.require: NumberUp parameter validation
- */
-HWTEST_F(PrintServiceAbilityTest, CheckNumberUpArgs_ValidValue_ReturnTrue, TestSize.Level1)
-{
-    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
-    ASSERT_NE(service, nullptr);
-
-    std::vector<uint32_t> validValues = {
-        NUMBER_UP_MIN_VALUE, NUMBER_UP_2_PAGES, NUMBER_UP_4_PAGES,
-        NUMBER_UP_6_PAGES, NUMBER_UP_9_PAGES, NUMBER_UP_16_PAGES
-    };
-
-    for (uint32_t value : validValues) {
-        auto printJob = std::make_shared<PrintJob>();
-        NumberUpArgs args;
-        args.numberUp = value;
-        printJob->SetNumberUpArgs(args);
-        EXPECT_TRUE(service->CheckNumberUpArgs(printJob)) << "Expected true for numberUp=" << value;
-    }
-}
-
-/**
- * @tc.name: CheckNumberUpArgs_InvalidValue_ReturnFalse
- * @tc.desc: Test CheckNumberUpArgs with invalid numberUp values
- * @tc.type: FUNC
- * @tc.require: NumberUp parameter validation
- */
-HWTEST_F(PrintServiceAbilityTest, CheckNumberUpArgs_InvalidValue_ReturnFalse, TestSize.Level1)
-{
-    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
-    ASSERT_NE(service, nullptr);
-
-    std::vector<uint32_t> invalidValues = {0, 3, 5, 7, 8, 10, 15, 100};
-
-    for (uint32_t value : invalidValues) {
-        auto printJob = std::make_shared<PrintJob>();
-        NumberUpArgs args;
-        args.numberUp = value;
-        printJob->SetNumberUpArgs(args);
-        EXPECT_FALSE(service->CheckNumberUpArgs(printJob)) << "Expected false for numberUp=" << value;
-    }
-}
-
-/**
 * @tc.name: UpdatePrinterInSystem_EmptyPrinterInfo
 * @tc.desc: Test UpdatePrinterInSystem with empty printer info
 * @tc.type: FUNC

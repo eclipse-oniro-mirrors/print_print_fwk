@@ -105,8 +105,6 @@ private:
     PrintPreviewAttribute ParseJsonObjectToPrintPreviewAttribute(const Json::Value &jsonObject);
     void ParseOptionalJsonObjectToPrintJob(
         const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
-    void ParseNumberUpOptionsToPrintJob(
-        const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void ParseBasicOptionsToPrintJob(
         const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void ParsePrintModeOptionsToPrintJob(
