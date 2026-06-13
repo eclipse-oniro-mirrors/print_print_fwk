@@ -268,5 +268,34 @@ HWTEST_F(PrinterPreferencesTest, GetOptionJson_ValidJsonObject_ReturnTrue, TestS
     EXPECT_EQ("value", prefOptionsJson["key"].asString());
     EXPECT_EQ(123, prefOptionsJson["number"].asInt());
 }
+
+HWTEST_F(PrinterPreferencesTest, DumpInfo_NoValueSet_CoverFalseBranch, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    EXPECT_EQ(false, preferences.HasDefaultDuplexMode());
+    EXPECT_EQ(false, preferences.HasDefaultPrintQuality());
+    EXPECT_EQ(false, preferences.HasDefaultMediaType());
+    EXPECT_EQ(false, preferences.HasDefaultPageSizeId());
+    preferences.DumpInfo();
+}
+
+HWTEST_F(PrinterPreferencesTest, DumpInfo_AllValueSet_CoverTrueBranch, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    preferences.SetDefaultDuplexMode(0);
+    preferences.SetDefaultPrintQuality(4);
+    preferences.SetDefaultMediaType("stationery");
+    preferences.SetDefaultPageSizeId("ISO_A4");
+    preferences.SetDefaultOrientation(0);
+    preferences.SetDefaultColorMode(0);
+    preferences.SetBorderless(true);
+    preferences.SetDefaultCollate(true);
+    preferences.SetDefaultReverse(true);
+    preferences.SetOption("test");
+    preferences.SetVendorOptions("vendorTest");
+    preferences.DumpInfo();
+    EXPECT_EQ(true, preferences.HasVendorOptions());
+    EXPECT_EQ("vendorTest", preferences.GetVendorOptions());
+}
 }  // namespace Print
 }  // namespace OHOS

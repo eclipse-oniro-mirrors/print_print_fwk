@@ -238,25 +238,45 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t QueryPrinterInfoByIp(const std::string &printerIp)
+    int32_t QueryPrinterInfoByIp(const std::string &printerIp) override
     {
         return E_PRINT_NONE;
     }
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName)
+        const std::string &ppdName) override
     {
         return E_PRINT_NONE;
     }
-    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds) override
     {
         return E_PRINT_NONE;
     }
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
-        const std::string &ppdName)
+        const std::string &ppdName) override
     {
         return E_PRINT_NONE;
     }
-    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd)
+    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t CheckPrintJobConflicts(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t GetPrinterDefaultPreferences(const std::string &printerId,
+        PrinterPreferences &defaultPreferences) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName,
+        char *userPasswd, std::vector<PrinterInfo>& printerInfos) override
     {
         return E_PRINT_NONE;
     }
@@ -278,6 +298,10 @@ public:
         return E_PRINT_NONE;
     }
     int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override
     {
         return E_PRINT_NONE;
     }
@@ -348,6 +372,20 @@ public:
     MOCK_METHOD0(StartSharedHostDiscovery, int32_t());
     MOCK_METHOD4(AddPrinter, int32_t(const std::string &printerName, const std::string &uri, const std::string &ppdName,
         const std::string &options));
+    MOCK_METHOD2(SetPrinterPreference, int32_t(const std::string &, const PrinterPreferences &));
+    MOCK_METHOD2(RegisterPrinterCallback, int32_t(const std::string &, const sptr<IPrintCallback> &));
+    MOCK_METHOD1(UnregisterPrinterCallback, int32_t(const std::string &));
+    MOCK_METHOD3(StartGetPrintFile, int32_t(const std::string &, const PrintAttributes &, const uint32_t));
+    MOCK_METHOD2(QueryRecommendDriversById, int32_t(const std::string &, std::vector<PpdInfo> &));
+    MOCK_METHOD2(NotifyPrintService, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD0(StartService, int32_t());
+    MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t(const std::string &, PrinterInfo &));
+    MOCK_METHOD1(QueryAddedPrinter, int32_t(std::vector<std::string> &));
+    MOCK_METHOD3(QueryPrinterProperties, int32_t(const std::string &, const std::vector<std::string> &,
+        std::vector<std::string> &));
+    MOCK_METHOD1(StartNativePrintJob, int32_t(PrintJob &));
+    MOCK_METHOD3(AnalyzePrintEvents, int32_t(const std::string &, const std::string &, std::string &));
+    MOCK_METHOD3(ConnectPrinterByIdAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS

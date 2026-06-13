@@ -274,8 +274,26 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017_NeedRename, TestSize.Level2)
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
     info.SetPrinterName("OpenHarmony");
-    info.SetPrinterState(0);
-    info.SetPrinterIcon(0);
+    info.SetPrinterState(3);
+    info.SetPrinterIcon(100);
+    info.SetDescription("test_desc");
+    info.SetPrinterStatus(5);
+    OHOS::Print::PrinterCapability capability;
+    info.SetCapability(capability);
+    info.SetUri("ipp://test_uri");
+    info.SetPrinterMake("TestMaker");
+    PpdInfo ppd;
+    ppd.SetPpdInfo("TestManu", "TestNick", "Test.ppd");
+    info.SetSelectedDriver(ppd);
+    info.SetSelectedProtocol("ipp");
+    info.SetPrinterUuid("test_uuid");
+    OHOS::Print::PrinterPreferences prefs;
+    prefs.SetDefaultDuplexMode(1);
+    info.SetPreferences(prefs);
+    info.SetAlias("test_alias");
+    info.SetOption("test_option");
+    info.SetIsDefaultPrinter(true);
+    info.SetIsLastUsedPrinter(true);
     Parcel parcel;
     info.Marshalling(parcel);
     auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
@@ -306,17 +324,44 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    info.SetDescription("test_desc");
     info.SetPrinterStatus(1);
-    OHOS::Print::PrinterInfo copyInfo = info;
-    EXPECT_EQ(copyInfo.GetPrinterId(), info.GetPrinterId());
-    info.SetIsLastUsedPrinter(true);
+    OHOS::Print::PrinterCapability capability;
+    info.SetCapability(capability);
+    info.SetUri("ipp://test_uri");
+    info.SetPrinterMake("TestMaker");
+    OHOS::Print::PrinterPreferences prefs;
+    info.SetPreferences(prefs);
+    info.SetAlias("test_alias");
+    info.SetPrinterUuid("test_uuid");
+    info.SetOption("test_option");
     info.SetIsDefaultPrinter(true);
-    EXPECT_TRUE(info.HasIsDefaultPrinter());
-    EXPECT_TRUE(info.GetIsDefaultPrinter());
-    EXPECT_TRUE(info.HasIsLastUsedPrinter());
-    EXPECT_TRUE(info.GetIsLastUsedPrinter());
-    EXPECT_TRUE(info.HasPrinterStatus());
+    info.SetIsLastUsedPrinter(false);
+    PpdInfo ppd;
+    ppd.SetPpdInfo("TestManu", "TestNick", "Test.ppd");
+    info.SetSelectedDriver(ppd);
+    info.SetSelectedProtocol("ipp");
+    info.SetOriginId("origin_001");
+    EXPECT_EQ(info.GetPrinterId(), "001");
+    EXPECT_EQ(info.GetPrinterName(), "OpenHarmony");
+    EXPECT_EQ(info.GetPrinterState(), 0);
+    EXPECT_EQ(info.GetPrinterIcon(), 0);
+    EXPECT_EQ(info.GetDescription(), "test_desc");
+    EXPECT_EQ(info.GetPrinterStatus(), 1);
+    EXPECT_EQ(info.GetUri(), "ipp://test_uri");
+    EXPECT_EQ(info.GetPrinterMake(), "TestMaker");
+    EXPECT_EQ(info.GetAlias(), "test_alias");
+    EXPECT_EQ(info.GetPrinterUuid(), "test_uuid");
+    EXPECT_EQ(info.GetOption(), "test_option");
+    EXPECT_EQ(info.GetIsDefaultPrinter(), true);
+    EXPECT_EQ(info.GetIsLastUsedPrinter(), false);
+    EXPECT_EQ(info.GetSelectedProtocol(), "ipp");
+    EXPECT_EQ(info.GetOriginId(), "origin_001");
     info.Dump();
+    info.DumpInfo();
 }
 
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020_NeedRename, TestSize.Level2)
@@ -457,13 +502,28 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027_NeedRename, TestSize.Level2)
     info.SetPrinterState(0);
     info.SetPrinterIcon(0);
     info.SetDescription("test");
+    info.SetPrinterStatus(0);
+    OHOS::Print::PrinterCapability capability;
+    info.SetCapability(capability);
+    info.SetUri("ipp://test");
+    info.SetPrinterMake("test_maker");
+    OHOS::Print::PrinterPreferences prefs;
+    info.SetPreferences(prefs);
+    info.SetAlias("test_alias");
+    info.SetPrinterUuid("test_uuid");
+    info.SetOption("test_option");
+    info.SetIsDefaultPrinter(true);
+    info.SetIsLastUsedPrinter(true);
     info.SetSelectedProtocol("ipp");
     PpdInfo ppd;
     ppd.SetPpdInfo("TestManu", "TestNick", "Test.ppd");
     info.SetSelectedDriver(ppd);
+    info.SetOriginId("origin_001");
+    info.SetPpdHashCode("hash123");
     info.Dump();
+    info.DumpInfo();
     Parcel parcel;
-    EXPECT_EQ(true, info.Marshalling(parcel));
+    info.Marshalling(parcel);
     auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
 }
@@ -495,6 +555,13 @@ HWTEST_F(PrinterInfoTest, SetOptionField_ShouldHaveOption_WhenAddOption, TestSiz
     value = "test value 2";
     info.SetOptionField(key, value);
     EXPECT_TRUE(info.HasOption());
+}
+
+HWTEST_F(PrinterInfoTest, ReadFromParcel_EmptyParcel, TestSize.Level1)
+{
+    Parcel parcel;
+    auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
+    EXPECT_EQ(nullptr, result);
 }
 }  // namespace Print
 }  // namespace OHOS

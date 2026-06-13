@@ -14,9 +14,14 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "iservice_registry.h"
 #define private public
+#define protected public
 #include "print_utils.h"
+#undef protected
 #undef private
 #include "print_constant.h"
 #include "print_extension_callback_stub.h"
@@ -25,8 +30,11 @@
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
 #include "print_json_util.h"
+#include "print_util.h"
+#include "mock_application_context.h"
 
 using namespace testing::ext;
+using namespace testing;
 
 namespace OHOS {
 namespace Print {
@@ -588,6 +596,73 @@ HWTEST_F(PrintUtilsTest, CreateTempFileWithData_Test, TestSize.Level2)
     std::string tmpPath;
     int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
     EXPECT_EQ(fd, -1);
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_FilesDirEmpty
+ * @tc.desc: Verify the CreateTempFileWithData function when appContext != nullptr but filesDir is empty.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, CreateTempFileWithData_FilesDirEmpty, TestSize.Level2)
+{
+    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
+    AbilityRuntime::Context::applicationContext_ = mockContext;
+    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return(""));
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_EQ(fd, -1);
+    EXPECT_TRUE(tmpPath.empty());
+    AbilityRuntime::Context::applicationContext_ = nullptr;
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_InvalidPath
+ * @tc.desc: Verify the CreateTempFileWithData function when filesDir is a non-existent path.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, CreateTempFileWithData_InvalidPath, TestSize.Level2)
+{
+    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
+    AbilityRuntime::Context::applicationContext_ = mockContext;
+    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return("/nonexistent_dir_for_test"));
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_EQ(fd, -1);
+    AbilityRuntime::Context::applicationContext_ = nullptr;
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_Success
+ * @tc.desc: Verify the CreateTempFileWithData function success path with valid writable filesDir.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, CreateTempFileWithData_Success, TestSize.Level2)
+{
+    std::string testDir = "/data/local/tmp/print_test";
+    mkdir(testDir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
+    AbilityRuntime::Context::applicationContext_ = mockContext;
+    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return(testDir));
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_GE(fd, 0);
+    EXPECT_FALSE(tmpPath.empty());
+    if (fd >= 0) {
+        close(fd);
+    }
+    if (!tmpPath.empty()) {
+        std::remove(tmpPath.c_str());
+    }
+    AbilityRuntime::Context::applicationContext_ = nullptr;
 }
 
 /**

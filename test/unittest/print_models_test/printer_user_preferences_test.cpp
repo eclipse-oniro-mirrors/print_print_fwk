@@ -425,5 +425,288 @@ HWTEST_F(PrinterUserPreferencesTest, IsEmpty_MixedCustomOptions_HasSet_ReturnsFa
     EXPECT_FALSE(userPrefs.IsEmpty());
 }
 
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_ValidSrc_DataCopied, TestSize.Level1)
+{
+    SecureBlob blob;
+    uint8_t src[] = {0x41, 0x42, 0x43};
+    blob.SetData(src, sizeof(src));
+    EXPECT_NE(blob.data, nullptr);
+    EXPECT_EQ(blob.size, sizeof(src));
+    EXPECT_EQ(blob.data[0], 0x41);
+    EXPECT_EQ(blob.data[1], 0x42);
+    EXPECT_EQ(blob.data[2], 0x43);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_NullSrc_NoDataAllocated, TestSize.Level1)
+{
+    SecureBlob blob;
+    blob.SetData(nullptr, 10);
+    EXPECT_EQ(blob.data, nullptr);
+    EXPECT_EQ(blob.size, 0);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_ZeroSize_NoDataAllocated, TestSize.Level1)
+{
+    SecureBlob blob;
+    uint8_t src[] = {0x01};
+    blob.SetData(src, 0);
+    EXPECT_EQ(blob.data, nullptr);
+    EXPECT_EQ(blob.size, 0);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_OverwritePrevious_NewDataSet, TestSize.Level1)
+{
+    SecureBlob blob;
+    uint8_t src1[] = {0x01, 0x02};
+    blob.SetData(src1, sizeof(src1));
+    EXPECT_EQ(blob.size, sizeof(src1));
+
+    uint8_t src2[] = {0x03, 0x04, 0x05};
+    blob.SetData(src2, sizeof(src2));
+    EXPECT_EQ(blob.size, sizeof(src2));
+    EXPECT_EQ(blob.data[0], 0x03);
+    EXPECT_EQ(blob.data[1], 0x04);
+    EXPECT_EQ(blob.data[2], 0x05);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_Allocate_PositiveSize_DataAllocated, TestSize.Level1)
+{
+    SecureBlob blob;
+    blob.Allocate(16);
+    EXPECT_NE(blob.data, nullptr);
+    EXPECT_EQ(blob.size, 16);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_Allocate_ZeroSize_NoDataAllocated, TestSize.Level1)
+{
+    SecureBlob blob;
+    blob.Allocate(0);
+    EXPECT_EQ(blob.data, nullptr);
+    EXPECT_EQ(blob.size, 0);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_Allocate_OverwritePrevious_NewAllocated, TestSize.Level1)
+{
+    SecureBlob blob;
+    uint8_t src[] = {0x01, 0x02};
+    blob.SetData(src, sizeof(src));
+    EXPECT_EQ(blob.size, sizeof(src));
+
+    blob.Allocate(32);
+    EXPECT_NE(blob.data, nullptr);
+    EXPECT_EQ(blob.size, 32);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_ToString_ValidData_ReturnsString, TestSize.Level1)
+{
+    SecureBlob blob;
+    const char *str = "hello";
+    blob.SetData(reinterpret_cast<const uint8_t *>(str), strlen(str));
+    EXPECT_EQ(blob.ToString(), "hello");
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_ToString_NullData_ReturnsEmpty, TestSize.Level1)
+{
+    SecureBlob blob;
+    EXPECT_EQ(blob.ToString(), "");
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SecureBlob_ToString_ZeroSize_ReturnsEmpty, TestSize.Level1)
+{
+    SecureBlob blob;
+    uint8_t src[] = {0x01};
+    blob.SetData(src, 0);
+    EXPECT_EQ(blob.ToString(), "");
+}
+
+HWTEST_F(PrinterUserPreferencesTest, GetCustomOption_KeyExists_ReturnsTrueAndValue, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x61, 0x62, 0x63};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+
+    SecureBlob result;
+    bool found = userPrefs.GetCustomOption("key1", result);
+    EXPECT_TRUE(found);
+    EXPECT_EQ(result.size, sizeof(data));
+}
+
+HWTEST_F(PrinterUserPreferencesTest, GetCustomOption_KeyNotFound_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+
+    SecureBlob result;
+    bool found = userPrefs.GetCustomOption("nonexistent", result);
+    EXPECT_FALSE(found);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsCustomOptionSet_OptionIsSet_ReturnsTrue, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+
+    EXPECT_TRUE(userPrefs.IsCustomOptionSet("key1"));
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsCustomOptionSet_OptionUnset_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+    userPrefs.SetCustomOptionUnset("key1");
+
+    EXPECT_FALSE(userPrefs.IsCustomOptionSet("key1"));
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsCustomOptionSet_KeyNotFound_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+
+    EXPECT_FALSE(userPrefs.IsCustomOptionSet("nonexistent"));
+}
+
+HWTEST_F(PrinterUserPreferencesTest, RemoveCustomOption_KeyExists_OptionRemoved, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+    userPrefs.SetCustomOption("key2", value);
+
+    EXPECT_TRUE(userPrefs.IsCustomOptionSet("key1"));
+    userPrefs.RemoveCustomOption("key1");
+    EXPECT_FALSE(userPrefs.IsCustomOptionSet("key1"));
+    EXPECT_TRUE(userPrefs.IsCustomOptionSet("key2"));
+}
+
+HWTEST_F(PrinterUserPreferencesTest, RemoveCustomOption_KeyNotFound_NoChange, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", value);
+
+    userPrefs.RemoveCustomOption("nonexistent");
+    EXPECT_TRUE(userPrefs.IsCustomOptionSet("key1"));
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsValidObject_AllFieldsSet, TestSize.Level1)
+{
+    Json::Value json;
+    json["userId"] = 100;
+    json["printerId"] = "printer_001";
+
+    Json::Value optJson;
+    optJson["key"] = "color";
+    optJson["isSet"] = true;
+    optJson["value"] = "red";
+    json["customOptions"].append(optJson);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    EXPECT_TRUE(userPrefs.IsCustomOptionSet("color"));
+    SecureBlob result;
+    EXPECT_TRUE(userPrefs.GetCustomOption("color", result));
+    EXPECT_EQ(result.ToString(), "red");
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsNonObjectElement_Skipped, TestSize.Level1)
+{
+    Json::Value json;
+    json["userId"] = 100;
+    json["customOptions"].append(42);
+
+    Json::Value validOpt;
+    validOpt["key"] = "size";
+    validOpt["isSet"] = false;
+    validOpt["value"] = "";
+    json["customOptions"].append(validOpt);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    EXPECT_FALSE(userPrefs.IsCustomOptionSet("size"));
+    const auto &opts = userPrefs.GetAllCustomOptions();
+    EXPECT_EQ(opts.size(), 1);
+    EXPECT_EQ(opts[0].key, "size");
+    EXPECT_FALSE(opts[0].isSet);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsKeyNotString_DefaultKey, TestSize.Level1)
+{
+    Json::Value json;
+    Json::Value optJson;
+    optJson["key"] = 123;
+    optJson["isSet"] = true;
+    optJson["value"] = "val";
+    json["customOptions"].append(optJson);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    const auto &opts = userPrefs.GetAllCustomOptions();
+    EXPECT_EQ(opts.size(), 1);
+    EXPECT_EQ(opts[0].key, "");
+    EXPECT_TRUE(opts[0].isSet);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsIsSetNotBool_DefaultIsSet, TestSize.Level1)
+{
+    Json::Value json;
+    Json::Value optJson;
+    optJson["key"] = "duplex";
+    optJson["isSet"] = "yes";
+    optJson["value"] = "on";
+    json["customOptions"].append(optJson);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    const auto &opts = userPrefs.GetAllCustomOptions();
+    EXPECT_EQ(opts.size(), 1);
+    EXPECT_EQ(opts[0].key, "duplex");
+    EXPECT_FALSE(opts[0].isSet);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsValueNotString_NoValueSet, TestSize.Level1)
+{
+    Json::Value json;
+    Json::Value optJson;
+    optJson["key"] = "media";
+    optJson["isSet"] = true;
+    optJson["value"] = 999;
+    json["customOptions"].append(optJson);
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    const auto &opts = userPrefs.GetAllCustomOptions();
+    EXPECT_EQ(opts.size(), 1);
+    EXPECT_EQ(opts[0].key, "media");
+    EXPECT_TRUE(opts[0].isSet);
+    EXPECT_TRUE(opts[0].value.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsNotArray_NotParsed, TestSize.Level1)
+{
+    Json::Value json;
+    json["userId"] = 100;
+    json["customOptions"] = "not_an_array";
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    EXPECT_EQ(userPrefs.GetUserId(), 100);
+    EXPECT_TRUE(userPrefs.GetAllCustomOptions().empty());
+}
+
 } // namespace Print
 } // namespace OHOS
