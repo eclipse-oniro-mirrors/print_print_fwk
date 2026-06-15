@@ -69,7 +69,6 @@ struct PrintJobParams {
     int32_t isSequential = PARAM_NOT_SET;
     std::string cupsOptions;
     std::string vendorOptions;
-
 };
 
 class PrintUtils {
