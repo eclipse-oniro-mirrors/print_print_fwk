@@ -322,8 +322,8 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0019, TestSize.Level2)
 {
     PrinterCapability capability;
     std::vector<PrintPageSize> pagesize, getPagesize;
-    pagesize.emplace_back("page1", "Custom.A4", 1, 1);
-    pagesize.emplace_back("page2", "Custom.Letter", 2, 2);
+    pagesize.emplace_back("page1", "Custom.A4", 4000, 5000);
+    pagesize.emplace_back("page2", "Custom.Letter", 5000, 4000);
     capability.SetSupportedPageSize(pagesize);
     capability.GetSupportedPageSize(getPagesize);
     EXPECT_EQ(getPagesize.size(), 2);

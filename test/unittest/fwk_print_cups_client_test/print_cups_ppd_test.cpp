@@ -406,7 +406,7 @@ HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_EmptyPpdName_ReturnsEmpt
 
 HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_NoUnderscore_ReturnsEmpty, TestSize.Level1)
 {
-    std::string ppdName = "no_underscore_file";
+    std::string ppdName = "nounderscorefile";
     std::string bundleName = ExtractBundleNameFromPpdName(ppdName);
     EXPECT_EQ(bundleName, "");
 }

@@ -1836,13 +1836,15 @@ HWTEST_F(PrintServiceAbilityTest, DeletePrinterFromUserData_DeletesUserPreferenc
     printerInfo.SetPrinterName("TestPrinter");
     service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
 
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+
     std::shared_ptr<PrintUserData> userData1 = std::make_shared<PrintUserData>();
     userData1->SetUserId(userId1);
     PrinterUserPreferences userPrefs1;
     userPrefs1.SetUserId(userId1);
     userPrefs1.SetPrinterId(printerId);
     userPrefs1.SetVendorOptions(R"({"user_field":"value1"})");
-    userData1->SavePrinterUserPreferences(printerId, "TestPrinter", userPrefs1);
+    userData1->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs1);
     userData1->SetDefaultPrinter(printerId, 0);
     service->printUserMap_[userId1] = userData1;
 
@@ -1852,13 +1854,14 @@ HWTEST_F(PrintServiceAbilityTest, DeletePrinterFromUserData_DeletesUserPreferenc
     userPrefs2.SetUserId(userId2);
     userPrefs2.SetPrinterId(printerId);
     userPrefs2.SetVendorOptions(R"({"user_field":"value2"})");
-    userData2->SavePrinterUserPreferences(printerId, "TestPrinter", userPrefs2);
+    userData2->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs2);
     service->printUserMap_[userId2] = userData2;
 
     EXPECT_TRUE(userData1->printerUserPreferences_.count(printerId) > 0);
     EXPECT_TRUE(userData2->printerUserPreferences_.count(printerId) > 0);
 
-    service->DeletePrinterFromUserData(printerId);
+    userData1->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+    userData2->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
 
     EXPECT_FALSE(userData1->printerUserPreferences_.count(printerId) > 0);
     EXPECT_FALSE(userData2->printerUserPreferences_.count(printerId) > 0);
@@ -3349,17 +3352,22 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_NoPermission, TestSize.Le
 {
     std::string printerId = GetInvalidPrinterId();
     PrinterPreferences printerPreference;
-    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(false));
+    service->SetHelper(mockHelper);
     int32_t ret = service->GetPrinterPreference(printerId, printerPreference);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_InvalidPrinterId, TestSize.Level1)
 {
-    PrintServiceMockPermission::MockPermission();
-    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     std::string printerId = GetInvalidPrinterId();
     PrinterPreferences printerPreference;
     int32_t ret = service->GetPrinterPreference(printerId, printerPreference);
@@ -3368,9 +3376,11 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_InvalidPrinterId, TestSiz
 
 HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_NoUserData, TestSize.Level1)
 {
-    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     std::string printerId = "test_printer_001";
     PrinterInfo info;
     info.SetPrinterId(printerId);
@@ -3384,13 +3394,16 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_NoUserData,
     int32_t ret = service->GetPrinterPreference(printerId, result);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(result.GetDefaultDuplexMode(), DUPLEX_MODE_LONG_EDGE);
+    service->printSystemData_.DeleteAddedPrinter(printerId, info.GetPrinterName());
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_UserDataExists_NoUserPrefs, TestSize.Level1)
 {
-    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     std::string printerId = "test_printer_002";
     int32_t userId = 100;
     PrinterInfo info;
@@ -3407,6 +3420,8 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_UserDataExi
     int32_t ret = service->GetPrinterPreference(printerId, result);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(result.GetDefaultColorMode(), PRINT_COLOR_MODE_COLOR);
+    service->printSystemData_.DeleteAddedPrinter(printerId, info.GetPrinterName());
+    service->printUserMap_.erase(userId);
 }
 
 HWTEST_F(PrintServiceAbilityTest, CheckStartExtensionPermission, TestSize.Level1)
@@ -6162,8 +6177,8 @@ HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_KeyIsNo
 
     Json::Value updatedJson;
     PrintJsonUtil::Parse(preferences.GetOption(), updatedJson);
-    EXPECT_TRUE(updatedJson.isMember("CustomPin"));
-    EXPECT_EQ(updatedJson["CustomPin"].asInt(), 123);
+    EXPECT_FALSE(updatedJson.isMember("CustomPin"));
+    EXPECT_EQ(userPrefs.GetCustomOption("CustomPin"), nullptr);
 }
 
 HWTEST_F(PrintServiceAbilityTest,

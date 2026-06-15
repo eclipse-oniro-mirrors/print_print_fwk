@@ -1602,6 +1602,10 @@ int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, Pr
     }
 
     ret = GetResult(ret, reply);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("GetPrinterPreference GetResult failed, ret = %{public}d", ret);
+        return ret;
+    }
     auto preferencesPtr = PrinterPreferences::Unmarshalling(reply);
     if (preferencesPtr == nullptr) {
         PRINT_HILOGE("wrong preferences from data");
