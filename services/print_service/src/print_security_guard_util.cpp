@@ -133,6 +133,49 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     return fileList;
 }
 
+namespace {
+constexpr size_t URL_HEX_DIGITS = 2;
+constexpr int HEX_RADIX = 16;
+constexpr int HEX_ALPHA_OFFSET = 10;
+
+bool HexCharToInt(char c, int &value)
+{
+    if (c >= '0' && c <= '9') {
+        value = c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        value = c - 'a' + HEX_ALPHA_OFFSET;
+    } else if (c >= 'A' && c <= 'F') {
+        value = c - 'A' + HEX_ALPHA_OFFSET;
+    } else {
+        return false;
+    }
+    return true;
+}
+} // namespace
+
+std::string PrintSecurityGuardUtil::UrlDecode(const std::string &str)
+{
+    std::string result;
+    result.reserve(str.size());
+    for (size_t i = 0; i < str.size(); i++) {
+        if (str[i] == '%' && i + URL_HEX_DIGITS < str.size()) {
+            int high = 0;
+            int low = 0;
+            if (HexCharToInt(str[i + 1], high) && HexCharToInt(str[i + URL_HEX_DIGITS], low)) {
+                result += static_cast<char>(high * HEX_RADIX + low);
+                i += URL_HEX_DIGITS;
+            } else {
+                result += str[i];
+            }
+        } else if (str[i] == '+') {
+            result += ' ';
+        } else {
+            result += str[i];
+        }
+    }
+    return result;
+}
+
 static const std::unordered_set<std::string> PRINTABLE_EXTENSIONS = {
     ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg", ".ico", ".dng",
     ".jpg", ".jpe", ".jfif", ".jif",

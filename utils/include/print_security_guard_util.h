@@ -45,6 +45,7 @@ public:
     static std::string ExtractFileName(const std::string& filePath);
     static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
     static bool IsPrintableFile(const std::string &fileName);
+    static std::string UrlDecode(const std::string &str);
 };
 
 std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSubStates);

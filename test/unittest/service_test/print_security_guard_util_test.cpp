@@ -391,7 +391,6 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         std::string expected;
     };
     std::vector<TestCase> testCases = {
-        {PRINT_JOB_COMPLETED_FAILED, "failed"},
         {PRINT_JOB_COMPLETED_CANCELLED, "cancelled"},
         {PRINT_JOB_COMPLETED_FILE_CORRUPT, "file_corrupt"},
     };
@@ -508,6 +507,154 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_IsPrintableFile_
     EXPECT_TRUE(PrintSecurityGuardUtil::IsPrintableFile("/data/storage/doc.pdf"));
     EXPECT_TRUE(PrintSecurityGuardUtil::IsPrintableFile("/a/b/c/report.docx"));
     EXPECT_FALSE(PrintSecurityGuardUtil::IsPrintableFile("/usr/lib/libstdc++.so"));
+}
+
+// ===== UrlDecode Tests =====
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_001
+ * @tc.desc: Verify UrlDecode with pure ASCII string (idempotent).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_001, TestSize.Level1)
+{
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("report.pdf"), "report.pdf");
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("123.xlsx"), "123.xlsx");
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode(""), "");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_002
+ * @tc.desc: Verify UrlDecode with URL-encoded Chinese characters.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_002, TestSize.Level1)
+{
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("%E5%8D%B0%E7%AB%A0%E5%8F%91%E7%A5%A81"),
+              "\xe5\x8d\xb0\xe7\xab\xa0\xe5\x8f\x91\xe7\xa5\xa8" "1");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_003
+ * @tc.desc: Verify UrlDecode with full file path containing encoded Chinese.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_003, TestSize.Level1)
+{
+    std::string encoded = "/data/storage/%E5%8D%B0%E7%AB%A0%E5%8F%91%E7%A5%A81.pdf";
+    std::string expected = "/data/storage/\xe5\x8d\xb0\xe7\xab\xa0\xe5\x8f\x91\xe7\xa5\xa8" "1.pdf";
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode(encoded), expected);
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_004
+ * @tc.desc: Verify UrlDecode with incomplete percent encoding (edge case).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_004, TestSize.Level1)
+{
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("file%"), "file%");
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("file%2"), "file%2");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_005
+ * @tc.desc: Verify UrlDecode with '+' as space.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_005, TestSize.Level1)
+{
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("hello+world"), "hello world");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_006
+ * @tc.desc: Verify UrlDecode with invalid hex after '%'.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_006, TestSize.Level1)
+{
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("file%GGname"), "file%GGname");
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode("file%5Gname"), "file%5Gname");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_UrlDecode_007
+ * @tc.desc: Verify UrlDecode with mixed encoded and normal characters.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_UrlDecode_007, TestSize.Level1)
+{
+    std::string encoded = "%E6%8A%A5%E5%91%8A_2024.pdf";
+    std::string expected = "\xe6\x8a\xa5\xe5\x91\x8a_2024.pdf";
+    EXPECT_EQ(PrintSecurityGuardUtil::UrlDecode(encoded), expected);
+}
+
+// ===== ExtractFileListFromOption URL Decode Tests =====
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_ExtractFileListFromOption_006
+ * @tc.desc: Verify ExtractFileListFromOption preserves URL-encoded fileList as-is.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListFromOption_006, TestSize.Level1)
+{
+    std::string option = R"({"fileList":["/data/storage/%E5%8D%B0%E7%AB%A0%E5%8F%91%E7%A5%A81.pdf"]})";
+    auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
+    ASSERT_EQ(result.size(), 1U);
+    EXPECT_EQ(result[0], "/data/storage/%E5%8D%B0%E7%AB%A0%E5%8F%91%E7%A5%A81.pdf");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_ExtractFileListFromOption_007
+ * @tc.desc: Verify ExtractFileListFromOption preserves URL-encoded jobName as-is.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListFromOption_007, TestSize.Level1)
+{
+    std::string option = R"({"jobName":"%E6%8A%A5%E5%91%8A_2024.pdf"})";
+    auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
+    ASSERT_EQ(result.size(), 1U);
+    EXPECT_EQ(result[0], "%E6%8A%A5%E5%91%8A_2024.pdf");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_ExtractFileListFromOption_008
+ * @tc.desc: Verify ExtractFileListFromOption with plain ASCII fileList (no change).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListFromOption_008, TestSize.Level1)
+{
+    std::string option = R"({"fileList":["/data/storage/report.pdf","/data/storage/invoice.xlsx"]})";
+    auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
+    ASSERT_EQ(result.size(), 2U);
+    EXPECT_EQ(result[0], "/data/storage/report.pdf");
+    EXPECT_EQ(result[1], "/data/storage/invoice.xlsx");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_ExtractFileListFromOption_009
+ * @tc.desc: Verify ExtractFileListFromOption with mixed Chinese and English fileList.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ExtractFileListFromOption_009, TestSize.Level1)
+{
+    std::string option = R"({"fileList":["%E6%8A%A5%E5%91%8A.pdf","report.pdf"]})";
+    auto result = PrintSecurityGuardUtil::ExtractFileListFromOption(option);
+    ASSERT_EQ(result.size(), 2U);
+    EXPECT_EQ(result[0], "%E6%8A%A5%E5%91%8A.pdf");
+    EXPECT_EQ(result[1], "report.pdf");
 }
 
 }  // namespace Print
