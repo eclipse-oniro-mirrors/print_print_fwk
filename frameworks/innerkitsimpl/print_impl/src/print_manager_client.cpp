@@ -567,6 +567,19 @@ int32_t PrintManagerClient::GetPrinterDefaultPreferences(
     return ret;
 }
 
+int32_t PrintManagerClient::GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference)
+{
+    PRINT_HILOGD("PrintManagerClient GetPrinterPreference start.");
+    auto proxy = GetPrintServiceProxy();
+    if (proxy == nullptr) {
+        PRINT_HILOGE("GetPrintServiceProxy failed.");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = proxy->GetPrinterPreference(printerId, printerPreference);
+    PRINT_HILOGD("PrintManagerClient GetPrinterPreference out ret = [%{public}d].", ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
     std::string &detail)
 {
@@ -1130,11 +1143,7 @@ void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)
     }
     printServiceProxy_ = iface_cast<IPrintService>(obj);
 }
-void PrintManagerClient::ResetProxy()
-{
-    std::unique_lock<std::shared_mutex> lock(proxyLock_);
-    printServiceProxy_ = nullptr;
-}
+
 
 int32_t PrintManagerClient::Init()
 {

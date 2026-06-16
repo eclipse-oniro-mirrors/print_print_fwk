@@ -58,6 +58,8 @@ HWTEST_F(PrintHksAdapterTest, EncryptCustomOption_EncryptSuccess_ReturnsSuccess,
     
     EXPECT_CALL(*mockAdapter_, HksKeyExist(_, _))
         .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksGenerateRandom(_, _))
+        .WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter_, HksEncrypt(_, _, _, _))
         .WillOnce(Return(HKS_SUCCESS));
     
@@ -73,6 +75,8 @@ HWTEST_F(PrintHksAdapterTest, EncryptCustomOption_KeyNotExist_GeneratesKeyAndEnc
     EXPECT_CALL(*mockAdapter_, HksKeyExist(_, _))
         .WillOnce(Return(HKS_ERROR_NOT_EXIST));
     EXPECT_CALL(*mockAdapter_, HksGenerateKey(_, _, _))
+        .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksGenerateRandom(_, _))
         .WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter_, HksEncrypt(_, _, _, _))
         .WillOnce(Return(HKS_SUCCESS));
@@ -182,6 +186,8 @@ HWTEST_F(PrintHksAdapterTest, EncryptCustomOption_InitCipherParamSetFail_Returns
         .WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter_, HksKeyExist(_, _))
         .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksGenerateRandom(_, _))
+        .WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter_, HksFreeParamSet(_))
         .Times(1);
     
@@ -205,6 +211,8 @@ HWTEST_F(PrintHksAdapterTest, EncryptCustomOption_HksEncryptFail_ReturnsError, T
         .WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter_, HksKeyExist(_, _))
         .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksGenerateRandom(_, _))
+        .WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter_, HksEncrypt(_, _, _, _))
         .WillOnce(Return(HKS_FAILURE));
     EXPECT_CALL(*mockAdapter_, HksFreeParamSet(_))
@@ -212,6 +220,37 @@ HWTEST_F(PrintHksAdapterTest, EncryptCustomOption_HksEncryptFail_ReturnsError, T
     
     int32_t ret = mockAdapter_->EncryptCustomOption(0, plainBlob, cipherBlob);
     EXPECT_NE(ret, HKS_SUCCESS);
+}
+
+HWTEST_F(PrintHksAdapterTest, EncryptCustomOption_HksGenerateRandomFail_ReturnsError, TestSize.Level1)
+{
+    struct HksBlob plainBlob = { .size = 9, .data = (uint8_t*)"test_data" };
+    struct HksBlob cipherBlob = { 0, nullptr };
+    
+    EXPECT_CALL(*mockAdapter_, HksInitParamSet(_))
+        .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksAddParams(_, _, _))
+        .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksBuildParamSet(_))
+        .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksKeyExist(_, _))
+        .WillOnce(Return(HKS_SUCCESS));
+    EXPECT_CALL(*mockAdapter_, HksGenerateRandom(_, _))
+        .WillOnce(Return(HKS_FAILURE));
+    EXPECT_CALL(*mockAdapter_, HksFreeParamSet(_))
+        .Times(1);
+    
+    int32_t ret = mockAdapter_->EncryptCustomOption(0, plainBlob, cipherBlob);
+    EXPECT_NE(ret, HKS_SUCCESS);
+}
+
+HWTEST_F(PrintHksAdapterTest, DecryptCustomOption_CipherBlobSizeTooSmall_ReturnsError, TestSize.Level1)
+{
+    struct HksBlob cipherBlob = { .size = 8, .data = (uint8_t*)"short" };
+    struct HksBlob plainBlob = { 0, nullptr };
+    
+    int32_t ret = mockAdapter_->DecryptCustomOption(0, cipherBlob, plainBlob);
+    EXPECT_EQ(ret, HKS_FAILURE);
 }
 
 HWTEST_F(PrintHksAdapterTest, DecryptCustomOption_InvalidUserId_ReturnsError, TestSize.Level1)

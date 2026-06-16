@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <cups/ppd.h>
 #include <cups/ppd-private.h>
+#include <cups/cups.h>
 #include <fstream>
 #include <unistd.h>
 #include "print_cups_ppd.h"
@@ -73,7 +74,63 @@ protected:
 
         return CreateTempPpdFile(content);
     }
+
+    std::string CreatePpdWithAllOptions()
+    {
+        std::string content = "*PPD-Adobe: \"4.3\"\n"
+            "*FileVersion: \"1.0\"\n"
+            "*LanguageEncoding: ISOLatin1\n"
+            "*LanguageLevel: \"2\"\n"
+            "*Manufacturer: \"Test\"\n"
+            "*ModelName: \"Test Printer\"\n"
+            "*NickName: \"Test Printer\"\n"
+            "*ColorDevice: True\n"
+            "*DefaultColor: Color\n"
+            "*OpenUI PageSize: PickOne\n"
+            "*OrderDependency: 10 AnySetup PageSize\n"
+            "*DefaultPageSize: A4\n"
+            "*PageSize A4/A4: \"<</PageSize[595 842]/ImagingBBox null>>setpagedevice\"\n"
+            "*PageSize Letter/US Letter: \"<</PageSize[612 792]/ImagingBBox null>>setpagedevice\"\n"
+            "*CloseUI: PageSize\n"
+            "*OpenUI ColorModel: PickOne\n"
+            "*OrderDependency: 20 AnySetup ColorModel\n"
+            "*DefaultColorModel: RGB\n"
+            "*ColorModel RGB/Color: \"<<cupsColorModel 1>>setpagedevice\"\n"
+            "*ColorModel Gray/Grayscale: \"<<cupsColorModel 0>>setpagedevice\"\n"
+            "*ColorModel CMYK/CMYK: \"<<cupsColorModel 2>>setpagedevice\"\n"
+            "*CloseUI: ColorModel\n"
+            "*OpenUI cupsPrintQuality: PickOne\n"
+            "*OrderDependency: 30 AnySetup cupsPrintQuality\n"
+            "*DefaultcupsPrintQuality: Normal\n"
+            "*cupsPrintQuality Draft/Draft: \"<<cupsPrintQuality 3>>setpagedevice\"\n"
+            "*cupsPrintQuality Normal/Normal: \"<<cupsPrintQuality 4>>setpagedevice\"\n"
+            "*cupsPrintQuality High/High: \"<<cupsPrintQuality 5>>setpagedevice\"\n"
+            "*CloseUI: cupsPrintQuality\n"
+            "*OpenUI Duplex: PickOne\n"
+            "*OrderDependency: 40 AnySetup Duplex\n"
+            "*DefaultDuplex: None\n"
+            "*Duplex None/Off: \"<<Duplex false>>setpagedevice\"\n"
+            "*Duplex DuplexNoTumble/Long Edge: \"<<Duplex true/Tumble false>>setpagedevice\"\n"
+            "*Duplex DuplexTumble/Short Edge: \"<<Duplex true/Tumble true>>setpagedevice\"\n"
+            "*CloseUI: Duplex\n"
+            "*OpenUI MediaType: PickOne\n"
+            "*OrderDependency: 50 AnySetup MediaType\n"
+            "*DefaultMediaType: Plain\n"
+            "*MediaType Plain/Plain Paper: \"<<MediaType(Plain)>>setpagedevice\"\n"
+            "*MediaType Photo/Photo Paper: \"<<MediaType(Photo)>>setpagedevice\"\n"
+            "*CloseUI: MediaType\n";
+
+        return CreateTempPpdFile(content);
+    }
 };
+
+bool FindDuplexChoiceByPwg(ppd_file_t *ppd, const std::string &duplexId,
+    std::string &optName, std::string &choiceName);
+bool FindPageSizeChoiceByPwg(ppd_file_t *ppd, const std::string &pageSizeId, std::string &ppdChoiceName);
+bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType, std::string &ppdChoiceName);
+bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val, std::string &choiceName);
+bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
+    std::string &optName, std::string &choiceName);
 
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_InvalidPath_ReturnsFileIOError, TestSize.Level1)
 {
@@ -406,7 +463,7 @@ HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_EmptyPpdName_ReturnsEmpt
 
 HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFromPpdName_NoUnderscore_ReturnsEmpty, TestSize.Level1)
 {
-    std::string ppdName = "no_underscore_file";
+    std::string ppdName = "nounderscorefile";
     std::string bundleName = ExtractBundleNameFromPpdName(ppdName);
     EXPECT_EQ(bundleName, "");
 }
@@ -459,6 +516,233 @@ HWTEST_F(PrintCupsPpdTest, ExtractBundleNameFunctions_EdgeCases_HandleCorrectly,
     EXPECT_EQ(ExtractBundleNameFromAbilityName(".Ability"), "");
     EXPECT_EQ(ExtractBundleNameFromPpdName("a_b.ppd"), "a");
     EXPECT_EQ(ExtractBundleNameFromAbilityName("a.Ability"), "a");
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_ExpandedQualityMappings_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_DRAFT);
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Draft"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_NORMAL);
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Normal"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_HIGH);
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "High"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_ExpandedColorMappings_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_COLOR_MODE, CUPS_PRINT_COLOR_MODE_MONOCHROME);
+    EXPECT_TRUE(ppdIsMarked(ppd, "ColorModel", "Gray"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_COLOR_MODE, CUPS_PRINT_COLOR_MODE_COLOR);
+    EXPECT_TRUE(ppdIsMarked(ppd, "ColorModel", "RGB"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_DuplexPWGLookup_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+
+    if (ppd->cache != nullptr && ppd->cache->sides_option != nullptr) {
+        MarkPpdOption(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE, CUPS_SIDES_ONE_SIDED);
+        EXPECT_TRUE(ppdIsMarked(ppd, ppd->cache->sides_option, ppd->cache->sides_1sided));
+        MarkPpdOption(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE, CUPS_SIDES_TWO_SIDED_PORTRAIT);
+        EXPECT_TRUE(ppdIsMarked(ppd, ppd->cache->sides_option, ppd->cache->sides_2sided_long));
+    }
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_CaseInsensitiveChoiceFallback_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, "draft");
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Draft"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, "normal");
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Normal"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_COLOR_MODE, "color");
+    EXPECT_TRUE(ppdIsMarked(ppd, "ColorModel", "RGB"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_UnknownType_NotMarked, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    MarkPpdOption(ppd, "unknownType", "someValue");
+    EXPECT_EQ(ppdConflicts(ppd), 0);
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_PageSizePWGLookup_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_PAGE_SIZE, PAGE_SIZE_ID_ISO_A4);
+    EXPECT_TRUE(ppdIsMarked(ppd, "PageSize", "A4"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_MediaTypePWGLookup_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN);
+    EXPECT_TRUE(ppdIsMarked(ppd, "MediaType", "Plain"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_DuplexPWGLookup_TwoSidedLandscape, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+
+    if (ppd->cache != nullptr && ppd->cache->sides_option != nullptr) {
+        MarkPpdOption(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE, CUPS_SIDES_TWO_SIDED_LANDSCAPE);
+        EXPECT_TRUE(ppdIsMarked(ppd, ppd->cache->sides_option, ppd->cache->sides_2sided_short));
+    }
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_DuplexUnrecognizedId_AllFallbacksFail, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+
+    std::string optName, choiceName;
+    bool ret = ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE,
+        "custom-duplex", optName, choiceName);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(choiceName, "custom-duplex");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_NoCache_PwgFallsThroughToMap, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE, CUPS_SIDES_ONE_SIDED);
+    EXPECT_TRUE(ppdIsMarked(ppd, "Duplex", "None"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_PAGE_SIZE, PAGE_SIZE_ID_ISO_A4);
+    EXPECT_TRUE(ppdIsMarked(ppd, "PageSize", "A4"));
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN);
+    EXPECT_TRUE(ppdIsMarked(ppd, "MediaType", "Plain"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_AllFallbacksFail_ReturnsFalse, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    std::string optName, choiceName;
+    bool ret = ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_QUALITY,
+        "superhigh", optName, choiceName);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(optName, "cupsPrintQuality");
+    EXPECT_EQ(choiceName, "superhigh");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, MarkPpdOption_MatchByText_Succeeds, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+
+    MarkPpdOption(ppd, PRINT_PARAM_TYPE_PAGE_SIZE, "US Letter");
+    EXPECT_TRUE(ppdIsMarked(ppd, "PageSize", "Letter"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, SubFunctions_NullParams_ReturnFalse, TestSize.Level1)
+{
+    std::string optName, choiceName;
+    EXPECT_FALSE(FindDuplexChoiceByPwg(nullptr, CUPS_SIDES_ONE_SIDED, optName, choiceName));
+    EXPECT_FALSE(FindPageSizeChoiceByPwg(nullptr, PAGE_SIZE_ID_ISO_A4, choiceName));
+    EXPECT_FALSE(FindMediaTypeChoiceByPwg(nullptr, CUPS_MEDIA_TYPE_PLAIN, choiceName));
+    EXPECT_FALSE(FindChoiceInPpdOption(nullptr, "test", choiceName));
+}
+
+HWTEST_F(PrintCupsPpdTest, FindDuplexChoiceByPwg_UnrecognizedId_ReturnsFalse, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+
+    if (ppd->cache != nullptr && ppd->cache->sides_option != nullptr) {
+        std::string optName, choiceName;
+        EXPECT_FALSE(FindDuplexChoiceByPwg(ppd, "custom-duplex", optName, choiceName));
+    }
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
 }
 
 }  // namespace Print

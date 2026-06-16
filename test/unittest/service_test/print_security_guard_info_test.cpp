@@ -311,5 +311,52 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     EXPECT_NE(json.find("errorCode"), std::string::npos);
     EXPECT_NE(json.find("printerName"), std::string::npos);
 }
+
+/**
+ * @tc.name: PrintSecurityGuardInfoTest_ToJsonUrlDecode_001
+ * @tc.desc: Verify ToJsonStr decodes URL-encoded Chinese in fileName with file:// prefix.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonUrlDecode_001, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {"file:///data/storage/%E5%8D%B0%E7%AB%A0.pdf"};
+    PrintSecurityGuardInfo info("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("HP LaserJet Pro");
+    PrintJob printJob;
+    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
+    printJob.SetOption(R"({"jobName":"report.pdf","printPages":1})");
+
+    std::vector<std::string> fileInfos = {"file:///data/storage/%E5%8D%B0%E7%AB%A0.pdf"};
+    info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    info.SetPrintTypeInfo(printerInfo, printJob);
+
+    std::string json = info.ToJsonStr();
+    std::string decodedFileName = "\xe5\x8d\xb0\xe7\xab\xa0.pdf";
+    EXPECT_NE(json.find(decodedFileName), std::string::npos);
+}
+
+/**
+ * @tc.name: PrintSecurityGuardInfoTest_ToJsonUrlDecode_002
+ * @tc.desc: Verify ToJsonStr does NOT decode fileName without file:// prefix (CAPI path).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonUrlDecode_002, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {"report.pdf"};
+    PrintSecurityGuardInfo info("callPkg", fileList);
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
+
+    std::vector<std::string> fileInfos = {"report.pdf"};
+    info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
+    info.SetPrintTypeInfo(printerInfo, printJob);
+
+    std::string json = info.ToJsonStr();
+    EXPECT_NE(json.find("report.pdf"), std::string::npos);
+}
 }  // namespace Print
 }  // namespace OHOS

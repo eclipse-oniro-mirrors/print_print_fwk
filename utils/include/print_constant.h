@@ -201,6 +201,8 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING = 39,  // Input tray is missing or not properly installed
     PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 40, // print job restricted by security policy.
     PRINT_JOB_BLOCKED_INVALID_NUMBER_UP = 41, // n-in-1 print with invalid number-up parameter.
+    PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION = 42, // slow file conversion
+    PRINT_JOB_BLOCKED_PORT_ERROR = 43, // port error
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -413,6 +415,7 @@ const std::string RAW_PPD_NAME = "raw";
 const std::string RAW_PPD_DRIVER = "driver.raw";
 const std::string WEBPRINTER_BUNDLE_NAME = "com.ohos.spooler";
 const std::string VENDOR_CUSTOM_DRIVER = "driver.printer.driver";
+const std::string CUSTOM_OPTION_CHOICE = "Custom";
 
 const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;

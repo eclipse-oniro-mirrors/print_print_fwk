@@ -16,7 +16,7 @@ import("//build/test.gni")
 
 module_output_path = unit_test_output_path
 
-ohos_unittest("fwk_print_vendor_options_util_test") {
+ohos_unittest("fwk_print_models_test") {
   module_out_path = module_output_path
   include_dirs = [
     "${print_path}/frameworks/models/print_models/include",
@@ -30,42 +30,16 @@ ohos_unittest("fwk_print_vendor_options_util_test") {
     blocklist = "${print_path}/cfi_blocklist.txt"
   }
 
-  sources = [ "print_vendor_options_util_test.cpp" ]
+  sources = [
+    "${print_path}/test/unittest/fwk_print_models_test/print_vendor_options_util_test.cpp",
+    "${print_path}/test/unittest/fwk_print_models_test/printer_user_preferences_test.cpp",
+  ]
 
   deps = [
     "${print_path}/frameworks/models/print_models:print_models",
   ]
 
   external_deps = [
-    "cJSON:cjson",
-    "c_utils:utils",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-  ]
-}
-
-ohos_unittest("fwk_print_user_preferences_test") {
-  module_out_path = module_output_path
-  include_dirs = [
-    "${print_path}/frameworks/models/print_models/include",
-    "${print_utils_path}/include",
-  ]
-
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "${print_path}/cfi_blocklist.txt"
-  }
-
-  sources = [ "printer_user_preferences_test.cpp" ]
-
-  deps = [
-    "${print_path}/frameworks/models/print_models:print_models",
-  ]
-
-  external_deps = [
-    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -79,7 +53,6 @@ group("unittest") {
   deps = []
 
   deps += [
-    ":fwk_print_vendor_options_util_test",
-    ":fwk_print_user_preferences_test",
+    ":fwk_print_models_test",
   ]
 }

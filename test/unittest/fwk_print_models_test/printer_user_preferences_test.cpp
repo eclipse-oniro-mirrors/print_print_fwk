@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include "printer_user_preferences.h"
+#include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
 
@@ -401,8 +402,8 @@ HWTEST_F(PrinterUserPreferencesTest, IsEmpty_OnlyUnsetCustomOptions_ReturnsTrue,
 {
     PrinterUserPreferences userPrefs;
     SecureBlob value;
-    userPrefs.SetCustomOption("key1", value);
-    userPrefs.SetCustomOptionUnset("key1");
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
+    userPrefs.SetCustomOption("key1", "");
     EXPECT_TRUE(userPrefs.IsEmpty());
 }
 
@@ -411,7 +412,7 @@ HWTEST_F(PrinterUserPreferencesTest, IsEmpty_HasSetCustomOption_ReturnsFalse, Te
     PrinterUserPreferences userPrefs;
     uint8_t data[] = {0x01, 0x02, 0x03};
     SecureBlob value(sizeof(data), data);
-    userPrefs.SetCustomOption("key1", value);
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
     EXPECT_FALSE(userPrefs.IsEmpty());
 }
 
@@ -420,9 +421,151 @@ HWTEST_F(PrinterUserPreferencesTest, IsEmpty_MixedCustomOptions_HasSet_ReturnsFa
     PrinterUserPreferences userPrefs;
     uint8_t data[] = {0x01, 0x02, 0x03};
     SecureBlob value(sizeof(data), data);
-    userPrefs.SetCustomOption("key1", value);
-    userPrefs.SetCustomOptionUnset("key2");
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
+    userPrefs.SetCustomOption("key2", "");
     EXPECT_FALSE(userPrefs.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, IsEmpty_NonCustomChoice_ReturnsFalse, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetCustomOption("key1", "Standard");
+    EXPECT_FALSE(userPrefs.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SetCustomOption_NonCustomChoice_ClearsValue, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01, 0x02, 0x03};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
+    userPrefs.SetCustomOption("key1", "Standard");
+    auto opt = userPrefs.GetCustomOption("key1");
+    ASSERT_NE(opt, nullptr);
+    EXPECT_EQ(opt->choice, "Standard");
+    EXPECT_TRUE(opt->value.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, GetCustomOption_ExistingKey_ReturnsCorrectData, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x0A, 0x0B};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
+
+    auto opt = userPrefs.GetCustomOption("key1");
+    ASSERT_NE(opt, nullptr);
+    EXPECT_EQ(opt->key, "key1");
+    EXPECT_EQ(opt->choice, CUSTOM_OPTION_CHOICE);
+    EXPECT_EQ(opt->value.size, 2u);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, GetCustomOption_NonExistentKey_ReturnsNullptr, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    EXPECT_EQ(userPrefs.GetCustomOption("nonexistent"), nullptr);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, GetCustomOption_EmptyChoice_ReturnsNullptr, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetCustomOption("key1", "");
+    EXPECT_EQ(userPrefs.GetCustomOption("key1"), nullptr);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, RemoveCustomOption_ExistingKey_RemovesEntry, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
+    userPrefs.RemoveCustomOption("key1");
+    EXPECT_EQ(userPrefs.GetCustomOption("key1"), nullptr);
+    EXPECT_TRUE(userPrefs.GetAllCustomOptionKeys().empty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, GetAllCustomOptionKeys_ReturnsAllKeys, TestSize.Level1)
+{
+    PrinterUserPreferences userPrefs;
+    uint8_t data[] = {0x01};
+    SecureBlob value(sizeof(data), data);
+    userPrefs.SetCustomOption("key1", CUSTOM_OPTION_CHOICE, value);
+    userPrefs.SetCustomOption("key2", "");
+    userPrefs.SetCustomOption("key3", "Standard");
+
+    auto keys = userPrefs.GetAllCustomOptionKeys();
+    EXPECT_EQ(keys.size(), 3u);
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ConvertToJsonAndFromJson_WithCustomOptions_RoundTripPreserved,
+    TestSize.Level1)
+{
+    PrinterUserPreferences original;
+    original.SetUserId(100);
+    original.SetPrinterId("printer_001");
+    uint8_t data[] = {0x01, 0x02, 0x03};
+    SecureBlob value(sizeof(data), data);
+    original.SetCustomOption("opt1", CUSTOM_OPTION_CHOICE, value);
+    original.SetCustomOption("opt2", "Standard");
+
+    Json::Value json = original.ConvertToJson();
+
+    PrinterUserPreferences restored;
+    restored.ConvertFromJson(json);
+
+    EXPECT_EQ(restored.GetUserId(), 100);
+    EXPECT_EQ(restored.GetPrinterId(), "printer_001");
+
+    auto opt1 = restored.GetCustomOption("opt1");
+    ASSERT_NE(opt1, nullptr);
+    EXPECT_EQ(opt1->choice, CUSTOM_OPTION_CHOICE);
+    EXPECT_EQ(opt1->value.size, 3u);
+
+    auto opt2 = restored.GetCustomOption("opt2");
+    ASSERT_NE(opt2, nullptr);
+    EXPECT_EQ(opt2->choice, "Standard");
+    EXPECT_TRUE(opt2->value.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SetData_NullPtr_RemainsEmpty, TestSize.Level1)
+{
+    SecureBlob blob;
+    blob.SetData(nullptr, 5);
+    EXPECT_TRUE(blob.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, SetData_ZeroSize_RemainsEmpty, TestSize.Level1)
+{
+    uint8_t data[] = {0x01, 0x02};
+    SecureBlob blob;
+    blob.SetData(data, 0);
+    EXPECT_TRUE(blob.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, MoveAssign_TransfersOwnership, TestSize.Level1)
+{
+    uint8_t data[] = {0x01, 0x02, 0x03};
+    SecureBlob blob1;
+    blob1.SetData(data, sizeof(data));
+    EXPECT_EQ(blob1.size, 3u);
+
+    SecureBlob blob2;
+    blob2 = std::move(blob1);
+    EXPECT_EQ(blob2.size, 3u);
+    EXPECT_TRUE(blob1.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, Allocate_ZeroSize_RemainsEmpty, TestSize.Level1)
+{
+    SecureBlob blob;
+    blob.Allocate(0);
+    EXPECT_TRUE(blob.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, ToString_EmptyBlob_ReturnsEmpty, TestSize.Level1)
+{
+    SecureBlob blob;
+    EXPECT_EQ(blob.ToString(), "");
 }
 
 HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_ValidSrc_DataCopied, TestSize.Level1)
@@ -503,12 +646,6 @@ HWTEST_F(PrinterUserPreferencesTest, SecureBlob_ToString_ValidData_ReturnsString
     const char *str = "hello";
     blob.SetData(reinterpret_cast<const uint8_t *>(str), strlen(str));
     EXPECT_EQ(blob.ToString(), "hello");
-}
-
-HWTEST_F(PrinterUserPreferencesTest, SecureBlob_ToString_NullData_ReturnsEmpty, TestSize.Level1)
-{
-    SecureBlob blob;
-    EXPECT_EQ(blob.ToString(), "");
 }
 
 HWTEST_F(PrinterUserPreferencesTest, SecureBlob_ToString_ZeroSize_ReturnsEmpty, TestSize.Level1)

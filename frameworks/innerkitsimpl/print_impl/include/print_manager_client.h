@@ -125,7 +125,6 @@ public:
     void LoadServerSuccess(const sptr<IRemoteObject> &remoteObject = nullptr);
     void LoadServerFail();
     void SetProxy(const sptr<IRemoteObject> &obj);
-    void ResetProxy();
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
     int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &infos);
     int32_t QueryPrinterInfoByIp(const std::string &printerIp);
@@ -140,6 +139,7 @@ public:
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences);
+    int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference);
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts);
     int32_t StartSharedHostDiscovery();
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,

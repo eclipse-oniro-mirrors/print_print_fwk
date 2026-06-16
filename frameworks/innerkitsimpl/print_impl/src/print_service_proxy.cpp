@@ -1578,6 +1578,44 @@ int32_t PrintServiceProxy::GetPrinterDefaultPreferences(
     return ret;
 }
 
+int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference)
+{
+    PRINT_HILOGI("PrintServiceProxy GetPrinterPreference started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), E_PRINT_RPC_FAILURE);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy GetPrinterPreference remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE,
+                                      data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("GetPrinterPreference failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    ret = GetResult(ret, reply);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("GetPrinterPreference GetResult failed, ret = %{public}d", ret);
+        return ret;
+    }
+    auto preferencesPtr = PrinterPreferences::Unmarshalling(reply);
+    if (preferencesPtr == nullptr) {
+        PRINT_HILOGE("wrong preferences from data");
+        return E_PRINT_GENERIC_FAILURE;
+    }
+    printerPreference = *preferencesPtr;
+    PRINT_HILOGD("GetPrinterPreference out.");
+    return ret;
+}
+
 int32_t PrintServiceProxy::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)
 {
     PRINT_HILOGI("PrintServiceProxy GetSharedHosts started.");
