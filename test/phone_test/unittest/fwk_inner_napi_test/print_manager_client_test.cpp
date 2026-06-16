@@ -3028,6 +3028,14 @@ HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, GetPrinterPreference, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences printerPreference;
+    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 
 HWTEST_F(PrintManagerClientTest, GetSharedHosts_Test, TestSize.Level1)
 {

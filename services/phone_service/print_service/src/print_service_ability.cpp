@@ -5373,6 +5373,24 @@ int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
 #endif
 }
 
+int32_t PrintServiceAbility::GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("GetPrinterPreference start.");
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("cannot find printer info by printerId");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    printerInfo.GetPreferences(printerPreference);
+    PRINT_HILOGI("GetPrinterPreference end.");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName)
 {
     PrinterInfo printerInfo;

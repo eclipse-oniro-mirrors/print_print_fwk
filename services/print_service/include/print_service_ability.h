@@ -133,6 +133,7 @@ public:
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences) override;
+    int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference) override;
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
     int32_t StartSharedHostDiscovery() override;
     int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName, char *userPasswd,
@@ -260,22 +261,26 @@ private:
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::shared_ptr<PrintUserData> userData,
         const std::string& extensionId, const std::string &jobId);
-    void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
+    void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions,
+                                                    const PrinterPreferences &preferences,
+                                                    const PrinterUserPreferences &userPrefs);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
-    bool ProcessVendorOptionsForPreference(const std::string &printerId,
-                                           const PrinterPreferences &preferences,
-                                           PrinterPreferences &printerPrefs);
-    void MergeVendorOptionsForPrintJob(const PrinterInfo &printerInfo,
-                                       const PrinterPreferences &preferences,
-                                       PrintJob &printJob);
-    Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences, const PrinterInfo &printerInfo);
+    int32_t ProcessVendorOptionsForPreference(const std::string &printerId,
+                                              const PrinterPreferences &preferences,
+                                              PrinterPreferences &printerPrefs);
+    void MergeVendorOptionsForPrintJob(const PrinterPreferences &preferences,
+                                       const PrinterUserPreferences &userPrefs, PrintJob &printJob);
+    Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences,
+                                                    const PrinterUserPreferences &userPrefs);
     void FillCustomOptionsToJson(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);
+    void DecryptAndFillCustomOptionsToJson(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);
+    bool DecryptCustomOptionValue(const SecureBlob &cipherValue, struct HksBlob &plainBlob);
     void ExtractCustomOptionsFromPreferences(const PrinterInfo &printerInfo, PrinterPreferences &preferences,
         PrinterUserPreferences &userPrefs);
     void ExtractCustomOptionsFromPreferenceJson(std::set<std::string> &customOptionKeys,
         PrinterPreferences &preferences, PrinterUserPreferences &userPrefs);
     void ProcessSingleCustomOption(const std::string &key,
-        const std::string &optionJsonStr, PrinterUserPreferences &userPrefs);
+        const Json::Value &optionJson, PrinterUserPreferences &userPrefs);
     std::string GetCallerBundleName() override;
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,

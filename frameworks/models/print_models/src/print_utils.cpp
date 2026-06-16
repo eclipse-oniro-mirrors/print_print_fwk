@@ -24,6 +24,7 @@
 #include <sstream>
 #include "ability.h"
 #include "print_util.h"
+#include "print_constant.h"
 #include "securec.h"
 
 namespace OHOS::Print {
@@ -407,7 +408,23 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
         }
         optionJson["files"] = filesArr;
     }
+    if (PrintJsonUtil::IsMember(optionJson, "advancedOptions") && optionJson["advancedOptions"].isObject()) {
+        Json::Value advancedOptions = optionJson["advancedOptions"];
+        AnonymizeAdvancedOptions(advancedOptions);
+        optionJson["advancedOptions"] = advancedOptions;
+    }
     return PrintJsonUtil::WriteString(optionJson);
+}
+
+void PrintUtils::AnonymizeAdvancedOptions(Json::Value &advancedOptions)
+{
+    for (const auto &key : advancedOptions.getMemberNames()) {
+        Json::Value &optValue = advancedOptions[key];
+        if (optValue.isObject() && PrintJsonUtil::IsMember(optValue, "choice") &&
+            optValue["choice"].isString() && optValue["choice"].asString() == CUSTOM_OPTION_CHOICE) {
+            optValue["value"] = "***";
+        }
+    }
 }
 
 std::string PrintUtils::AnonymizeJobName(const std::string &jobName)
@@ -670,9 +687,6 @@ std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobPara
         return nullptr;
     }
     SetAttributesToPrintJob(params, nativeObj);
-    if (!params.vendorOptions.empty()) {
-        nativeObj->SetVendorOptions(params.vendorOptions);
-    }
     SetOptionInPrintJob(params, nativeObj);
     return nativeObj;
 }

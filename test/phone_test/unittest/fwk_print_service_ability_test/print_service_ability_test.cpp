@@ -3278,6 +3278,54 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterDefaultPreferences_InvalidPrinterId,
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_NoPermission, TestSize.Level1)
+{
+    std::string printerId = GetInvalidPrinterId();
+    PrinterPreferences printerPreference;
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(false));
+    service->SetHelper(mockHelper);
+    int32_t ret = service->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_InvalidPrinterId, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    std::string printerId = GetInvalidPrinterId();
+    PrinterPreferences printerPreference;
+    int32_t ret = service->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    std::string printerId = "test_printer_001";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName("Test Printer");
+    PrinterPreferences prefs;
+    prefs.SetDefaultDuplexMode(DUPLEX_MODE_LONG_EDGE);
+    info.SetPreferences(prefs);
+    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    PrinterPreferences result;
+    int32_t ret = service->GetPrinterPreference(printerId, result);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(result.GetDefaultDuplexMode(), DUPLEX_MODE_LONG_EDGE);
+    service->printSystemData_.DeleteAddedPrinter(printerId, info.GetPrinterName());
+}
+
 HWTEST_F(PrintServiceAbilityTest, CheckStartExtensionPermission, TestSize.Level1)
 {
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);

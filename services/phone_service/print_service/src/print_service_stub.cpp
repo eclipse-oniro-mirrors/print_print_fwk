@@ -109,6 +109,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS] = &PrintServiceStub::OnCheckPrintJobConflicts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERDEFAULTPREFERENCES] =
         &PrintServiceStub::OnGetPrinterDefaultPreferences;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] = &PrintServiceStub::OnGetPrinterPreference;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS] = &PrintServiceStub::OnGetSharedHosts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_SHARED_HOST_DISCOVERY] =
         &PrintServiceStub::OnStartSharedHostDiscovery;
@@ -1114,6 +1115,18 @@ bool PrintServiceStub::OnGetPrinterDefaultPreferences(MessageParcel &data, Messa
     reply.WriteInt32(ret);
     defaultPreferences.Marshalling(reply);
     PRINT_HILOGI("PrintServiceStub::OnGetPrinterDefaultPreferences out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference in");
+    std::string printerId = data.ReadString();
+    PrinterPreferences printerPreference;
+    int32_t ret = GetPrinterPreference(printerId, printerPreference);
+    reply.WriteInt32(ret);
+    printerPreference.Marshalling(reply);
+    PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference out");
     return ret == E_PRINT_NONE;
 }
 

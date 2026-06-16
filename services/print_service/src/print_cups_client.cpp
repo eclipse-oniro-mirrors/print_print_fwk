@@ -1418,7 +1418,7 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
         }
         Json::Value optValue = jobParams->advancedOpsJson[keyStr];
         if (optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
-            && optValue["choice"].asString() == "Custom" && optValue.isMember("value")
+            && optValue["choice"].asString() == CUSTOM_OPTION_CHOICE && optValue.isMember("value")
             && optValue["value"].isString()) {
             const char *valueData = optValue["value"].asCString();
             if (valueData == nullptr) {

@@ -18,6 +18,8 @@
 
 #include <string>
 #include <cstdint>
+#include <memory>
+#include <vector>
 #include "json/json.h"
 
 namespace OHOS::Print {
@@ -27,7 +29,7 @@ struct SecureBlob {
     uint8_t *data = nullptr;
 
     SecureBlob() : size(0), data(nullptr) {}
-    SecureBlob(uint32_t s, uint8_t *d) : size(s), data(d) {}
+    SecureBlob(uint32_t s, uint8_t *d);
     SecureBlob(const SecureBlob &other);
     SecureBlob& operator=(const SecureBlob &other);
     SecureBlob(SecureBlob &&other) noexcept;
@@ -43,7 +45,7 @@ struct SecureBlob {
 
 struct CustomOption {
     std::string key;
-    bool isSet = false;
+    std::string choice;
     SecureBlob value;
 };
 
@@ -63,12 +65,10 @@ public:
     bool HasVendorOptions() const;
     std::string GetVendorOptions() const;
 
-    void SetCustomOption(const std::string &key, const SecureBlob &value);
-    void SetCustomOptionUnset(const std::string &key);
-    bool GetCustomOption(const std::string &key, SecureBlob &value) const;
-    bool IsCustomOptionSet(const std::string &key) const;
+    void SetCustomOption(const std::string &key, const std::string &choice, const SecureBlob &value = {});
+    std::shared_ptr<CustomOption> GetCustomOption(const std::string &key) const;
     void RemoveCustomOption(const std::string &key);
-    const std::vector<CustomOption>& GetAllCustomOptions() const;
+    std::vector<std::string> GetAllCustomOptionKeys() const;
     bool IsEmpty() const;
 
     Json::Value ConvertToJson() const;

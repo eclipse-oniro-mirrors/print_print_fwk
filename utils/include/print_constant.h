@@ -415,6 +415,7 @@ const std::string RAW_PPD_NAME = "raw";
 const std::string RAW_PPD_DRIVER = "driver.raw";
 const std::string WEBPRINTER_BUNDLE_NAME = "com.ohos.spooler";
 const std::string VENDOR_CUSTOM_DRIVER = "driver.printer.driver";
+const std::string CUSTOM_OPTION_CHOICE = "Custom";
 
 const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
