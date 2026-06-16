@@ -45,7 +45,6 @@ private:
     static void FillBoolOptionalParams(napi_env env, napi_value jsValue, PrintJobParams &params);
     static void FillBoolParamIfExists(napi_env env, napi_value jsValue,
         const std::string &paramName, int32_t &paramValue);
-    static void FillNumberUpParams(napi_env env, napi_value jsValue, PrintJobParams &params);
     static bool GetPrintPageRange(napi_env env, napi_value jsValue, PrintJobParams &params);
     static bool GetPrintMargin(napi_env env, napi_value jsValue, PrintJobParams &params);
     static bool GetPrintPreview(napi_env env, napi_value jsValue, PrintJobParams &params);
@@ -54,7 +53,6 @@ private:
 
     static bool FillFdListFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj);
     static void FillBasicJobProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj);
-    static void FillNumberUpProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj);
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_JOB_HELPER_H

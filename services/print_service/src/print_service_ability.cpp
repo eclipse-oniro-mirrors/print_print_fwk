@@ -4634,10 +4634,6 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
-    if (!CheckNumberUpArgs(printJob)) {
-        CallStatusBar();
-        return PRINT_JOB_BLOCKED_INVALID_NUMBER_UP;
-    }
     if (isEprint(printJob->GetPrinterId())) {
         return StartEprintJobInternal(printJob);
     }
@@ -4682,22 +4678,6 @@ int32_t PrintServiceAbility::StartCupsPrintJob(const std::shared_ptr<PrintJob> &
     KiaInterceptorManager::GetInstance().RemoveCallerAppId(printJob->GetJobId());
     PRINT_HILOGI("StartNativePrintJob end.");
     return E_PRINT_NONE;
-}
-
-bool PrintServiceAbility::CheckNumberUpArgs(const std::shared_ptr<PrintJob> &printJob)
-{
-    NumberUpArgs numberUpArgs = printJob->GetNumberUpArgs();
-    uint32_t numberUp = numberUpArgs.numberUp;
-    static constexpr std::array<uint32_t, 6> validNumberUpValues = {
-        NUMBER_UP_MIN_VALUE, NUMBER_UP_2_PAGES, NUMBER_UP_4_PAGES,
-        NUMBER_UP_6_PAGES, NUMBER_UP_9_PAGES, NUMBER_UP_16_PAGES
-    };
-    if (std::find(validNumberUpValues.begin(), validNumberUpValues.end(), numberUp) == validNumberUpValues.end()) {
-        PRINT_HILOGE("Invalid numberUp value: %{public}d", numberUp);
-        UpdatePrintJobState(printJob->GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_INVALID_NUMBER_UP);
-        return false;
-    }
-    return true;
 }
 
 bool PrintServiceAbility::CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob)

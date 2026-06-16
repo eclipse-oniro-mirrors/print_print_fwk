@@ -69,10 +69,6 @@ struct PrintJobParams {
     int32_t isSequential = PARAM_NOT_SET;
     std::string cupsOptions;
     std::string vendorOptions;
-    uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
-    uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
-    uint32_t mirror = MIRROR_DEFAULT_VALUE;
-    uint32_t pageBorder = PAGE_BORDER_DEFAULT_VALUE;
 };
 
 class PrintUtils {
