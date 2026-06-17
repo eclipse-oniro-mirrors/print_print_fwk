@@ -2045,6 +2045,10 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
 
 void PrintCupsClient::HandleAbortedState(std::shared_ptr<JobMonitorParam> monitorParams)
 {
+    if (monitorParams->isCanceled) {
+        PRINT_HILOGI("Job canceled by user");
+        return;
+    }
     PRINT_HILOGI("job is aborted");
     monitorParams->serviceAbility->UpdatePrintJobState(
         monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
