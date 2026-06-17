@@ -232,6 +232,7 @@ private:
     bool HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleStoppedState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleCompletedState(std::shared_ptr<JobMonitorParam> monitorParams);
+    void HandleAbortedState(std::shared_ptr<JobMonitorParam> monitorParams);
 
     int32_t StartCupsdService();
     JobParameters *GetNextJob();

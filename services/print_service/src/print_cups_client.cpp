@@ -2034,10 +2034,20 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
             return HandleStoppedState(monitorParams);
         case IPP_JOB_COMPLETED:
             return HandleCompletedState(monitorParams);
+        case IPP_JOB_ABORTED:
+            HandleAbortedState(monitorParams);
+            return false;
         default:
             SpecialJobStatusCallback(monitorParams);
             return false;
     }
+}
+
+void PrintCupsClient::HandleAbortedState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    PRINT_HILOGI("job is aborted");
+    monitorParams->serviceAbility->UpdatePrintJobState(
+        monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 bool PrintCupsClient::HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams)
