@@ -93,7 +93,6 @@ struct JobMonitorParam {
     std::atomic<bool> isCanceled{false};
     std::atomic<bool> isInterrupt{false};
     uint64_t uploadingFilesStartTime = 0;
-    bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,
@@ -165,9 +164,9 @@ public:
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
     bool ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri);
     std::string GetPpdHashCode(const std::string& ppdName);
+    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     bool AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri, const std::string &userName,
         char *userPasswd);
-    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     int32_t StartCupsdServiceNotAlive();
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
@@ -176,13 +175,13 @@ public:
 #ifdef VIRTUAL_PRINTER_ENABLE
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
 #endif
+    int32_t DeleteExtraJobsFromCups();
+    std::string getScheme(const std::string &printerUri);
+    bool IsIpAddress(const char* host);
     int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
-    int32_t DeleteExtraJobsFromCups();
-    std::string getScheme(const std::string &printerUri);
-    bool IsIpAddress(const char* host);
     IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
     std::string GetCurCupsModelDir();

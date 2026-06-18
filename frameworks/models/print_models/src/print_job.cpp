@@ -357,7 +357,6 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
 {
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(colorMode_), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(duplexMode_), false);
-
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasMargin_), false);
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
@@ -381,7 +380,7 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
     }
     return true;
 }
-
+ 	 
 bool PrintJob::ReadVendorOptionsFromParcel(Parcel &parcel)
 {
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasVendorOptions_), false);
@@ -450,7 +449,7 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorOptions()), false);
     }
 
-    return true;
+   return true;
 }
 
 std::shared_ptr<PrintJob> PrintJob::Unmarshalling(Parcel &parcel)
@@ -533,7 +532,6 @@ Json::Value PrintJob::ConvertToJsonObject() const
     jsonObject["isLandscape"] = isLandscape_;
     jsonObject["colorMode"] = colorMode_;
     jsonObject["duplexMode"] = duplexMode_;
-
     jsonObject["hasMargin"] = hasMargin_;
     if (hasMargin_) {
         jsonObject["margin"] = margin_.ConvertToJsonObject();

@@ -33,6 +33,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
     void CallRemoteObject(const sptr<MockBundleMgr> &obj, sptr<IRemoteObject::DeathRecipient> &dr);
 };
 
@@ -47,6 +48,9 @@ void PrintBMSHelperTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintBMSHelperTest_%{public}d", ++testNo);
 }
+
+void PrintBMSHelperTest::TearDown(void)
+{}
 
 void PrintBMSHelperTest::CallRemoteObject(const sptr<MockBundleMgr> &obj, sptr<IRemoteObject::DeathRecipient> &dr)
 {

@@ -194,8 +194,10 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "printerState is not a number", napi_number_expected);
+
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         uint32_t printerState = NapiPrintUtils::GetUint32FromValue(env, argv[1]);
+
         if (printerId == "" || !IsValidPrinterState(printerState)) {
             PRINT_HILOGE("invalid printer id or printer state");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);

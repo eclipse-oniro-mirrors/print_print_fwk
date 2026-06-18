@@ -1,0 +1,53 @@
+# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+
+_test_base_path = "//base/print/print_fwk/test/phone_test/fuzztest"
+
+if (print_fwk_feature_device_isolation) {
+  group("fuzztest") {
+    testonly = true
+    deps = [
+      "${_test_base_path}/printcupsattribute_fuzzer:fuzztest",
+      "${_test_base_path}/printcupsclient_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceability_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceabilityprintjob_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceabilityprinterppd_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceaddprinterfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceconnectfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printservicefunction_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceprinterupdatefunction_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceppdqueryfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printservicenotpublicfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceprintdiscoverfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceprintjobfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceprintjobstatefunction_fuzzer:fuzztest",
+      "${_test_base_path}/printservicequeryprinter_fuzzer:fuzztest",
+      "${_test_base_path}/printserviceupdateprinterfunction_fuzzer:fuzztest",
+      "${_test_base_path}/scancallback_fuzzer:fuzztest",
+      "${_test_base_path}/scancallbackproxy_fuzzer:fuzztest",
+      "${_test_base_path}/scancallbackstub_fuzzer:fuzztest",
+      "${_test_base_path}/scancapi_fuzzer:fuzztest",
+      "${_test_base_path}/scanhelper_fuzzer:fuzztest",
+      "${_test_base_path}/scanmanagerclient_fuzzer:fuzztest",
+      "${_test_base_path}/scanpicturedata_fuzzer:fuzztest",
+      "${_test_base_path}/scanserviceability_fuzzer:fuzztest",
+      "${_test_base_path}/scanservicestub_fuzzer:fuzztest",
+      "${_test_base_path}/scanusbmanager_fuzzer:fuzztest",
+      "${_test_base_path}/vendormanager_fuzzer:fuzztest",
+    ]
+  }
+} else {
+  group("fuzztest") { }
+}

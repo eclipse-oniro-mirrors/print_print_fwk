@@ -1,0 +1,330 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos.gni")
+
+
+if (print_fwk_feature_device_isolation) {
+  cflags_cc = []
+
+  _service_path = "${print_path}/services/print_service_phone"
+
+  config("print_service_config") {
+    visibility = [ ":*" ]
+    include_dirs = [
+      "${_service_path}/include",
+      "${print_path}/frameworks/models/print_models/include",
+    ]
+    cflags_cc += [
+      "-fno-exceptions",
+      "-fdata-sections",
+      "-ffunction-sections",
+      "-fno-asynchronous-unwind-tables",
+      "-fno-unwind-tables",
+      "-flto",
+      "-Os",
+    ]
+  }
+
+  _sources = [
+    "${_service_path}/src/event_callback/extension_event_callback.cpp",
+    "${_service_path}/src/event_callback/printer_event_callback.cpp",
+    "${_service_path}/src/event_callback/print_job_event_callback.cpp",
+    "${_service_path}/src/event_listener_mgr.cpp",
+    "${_service_path}/src/hisys_event_util.cpp",
+    "${_service_path}/src/operation_queue.cpp",
+    "${_service_path}/src/print_bms_death_recipient.cpp",
+    "${_service_path}/src/print_bms_helper.cpp",
+    "${_service_path}/src/print_callback_proxy.cpp",
+    "${_service_path}/src/print_caller_app_monitor.cpp",
+    "${_service_path}/src/print_common_death_recipient.cpp",
+    "${_service_path}/src/print_event_container.cpp",
+    "${_service_path}/src/print_event_subscriber.cpp",
+    "${_service_path}/src/print_extension_callback_proxy.cpp",
+    "${_service_path}/src/print_resource_manager.cpp",
+    "${_service_path}/src/print_security_guard_info.cpp",
+    "${_service_path}/src/print_security_guard_manager.cpp",
+    "${_service_path}/src/print_service_ability.cpp",
+    "${_service_path}/src/print_service_converter.cpp",
+    "${_service_path}/src/print_service_helper.cpp",
+    "${_service_path}/src/print_service_stub.cpp",
+    "${_service_path}/src/print_setting_data_helper.cpp",
+    "${_service_path}/src/print_system_data.cpp",
+    "${_service_path}/src/print_user_data.cpp",
+    "${_service_path}/src/thread_sync_wait.cpp",
+    "${_service_path}/src/vendor_bsuni_driver.cpp",
+    "${_service_path}/src/vendor_driver_base.cpp",
+    "${_service_path}/src/vendor_driver_group.cpp",
+    "${_service_path}/src/vendor_helper.cpp",
+    "${_service_path}/src/vendor_ipp_everywhere.cpp",
+    "${_service_path}/src/vendor_manager.cpp",
+    "${_service_path}/src/vendor_ppd_driver.cpp",
+    "${_service_path}/src/vendor_wlan_group.cpp",
+    "${_service_path}/src/watermark_callback_proxy.cpp",
+  ]
+
+  _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
+
+  _external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_connect_callback_stub",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_manager",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "data_share:datashare_consumer",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "distributed_notification_service:ans_innerkits",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "huks:libhukssdk",
+    "init:libbegetutil",
+    "i18n:intl_util",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "napi:ace_napi",
+    "openssl:libcrypto_shared",
+    "openssl:libssl_shared",
+    "os_account:os_account_innerkits",
+    "resource_management:global_resmgr",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "usb_manager:usbsrv_client",
+    "udmf:udmf_client",
+    "udmf:utd_client",
+    "udmf:libudmf",
+    "wifi:wifi_sdk",
+  ]
+
+  _public_configs = [ ":print_service_config" ]
+
+  _include_dirs = [
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
+    "${_service_path}/include/event_callback",
+    "${_service_path}/enterprise/include",
+    "${print_utils_path}/include",
+  ]
+
+  _branch_protector_ret = "pac_ret"
+  _sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  ohos_shared_library("print_service") {
+    sources = _sources
+    branch_protector_ret = _branch_protector_ret
+    sanitize = _sanitize
+    public_configs = _public_configs
+    include_dirs = _include_dirs
+    deps = _deps
+    external_deps = _external_deps
+
+    cflags_cc += [ "-fvisibility=hidden" ]
+    if (cups_enable) {
+      sources += [
+        "${_service_path}/src/print_cups_attribute.cpp",
+        "${_service_path}/src/print_cups_ppd.cpp",
+        "${_service_path}/src/print_cups_client.cpp",
+        "${_service_path}/src/print_cups_wrapper.cpp",
+      ]
+      cflags_cc += [ "-DCUPS_ENABLE" ]
+      external_deps += [
+        "cJSON:cjson",
+        "cups:cups",
+        "cups-filters:cupsfilters",
+      ]
+    }
+
+    if (security_guard_enabled) {
+      external_deps += [
+        "security_guard:libsg_collect_sdk",
+        "time_service:time_client",
+      ]
+      cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
+    }
+
+    if (print_fwk_feature_enterprise) {
+      cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    }
+
+    if (print_fwk_feature_edm_service) {
+      cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+      external_deps += [
+        "enterprise_device_management:edmservice_kits",
+        "security_guard:libsg_collect_sdk"
+      ]
+    }
+
+    if (print_fwk_feature_kia_interceptor) {
+      cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+      sources += [
+        "${_service_path}/enterprise/src/kia_interceptor_callback_proxy.cpp",
+        "${_service_path}/enterprise/src/kia_interceptor_manager.cpp",
+      ]
+    }
+
+    if (print_fwk_feature_virtual_printer) {
+      cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+    }
+
+    if (build_variant == "user") {
+      cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+    }
+
+    if (print_fwk_feature_smb_printer) {
+      sources += [
+        "${_service_path}/src/smb_host_search_helper.cpp",
+        "${_service_path}/src/smb_printer_discoverer.cpp",
+        "${_service_path}/src/smb_printer_state_monitor.cpp",
+        "${_service_path}/src/smb_library.cpp"
+      ]
+      cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+    }
+
+    if (print_fwk_feature_watermark_enforcing) {
+      sources += [
+        "${_service_path}/src/watermark_manager.cpp",
+        "${_service_path}/src/watermark_death_recipient.cpp",
+      ]
+      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+    }
+
+    if (print_fwk_feature_print_failure_ai_notifier) {
+      sources += [
+        "${_service_path}/src/print_failure_ai_notifier.cpp",
+        "${_service_path}/src/print_notification_builder.cpp",
+      ]
+      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+    }
+
+    if (print_fwk_feature_device_isolation) {
+        cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+    }
+
+    subsystem_name = "print"
+    part_name = "print_fwk"
+  }
+
+  ohos_static_library("print_service_test") {
+    sources = _sources
+    branch_protector_ret = _branch_protector_ret
+    sanitize = _sanitize
+    public_configs = _public_configs
+    include_dirs = _include_dirs
+    deps = _deps
+    external_deps = _external_deps
+
+    cflags_cc += [ "-DUNIT_TEST" ]
+
+    if (print_fwk_feature_enterprise) {
+      cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    }
+
+    if (cups_enable) {
+      sources += [
+        "${_service_path}/src/print_cups_attribute.cpp",
+        "${_service_path}/src/print_cups_ppd.cpp",
+        "${_service_path}/src/print_cups_client.cpp",
+        "${_service_path}/src/print_cups_wrapper.cpp",
+      ]
+      cflags_cc += [ "-DCUPS_ENABLE" ]
+      external_deps += [
+        "cJSON:cjson",
+        "cups:cups",
+        "cups-filters:cupsfilters",
+      ]
+    }
+
+    if (security_guard_enabled) {
+      external_deps += [
+        "security_guard:libsg_collect_sdk",
+        "time_service:time_client",
+      ]
+      cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
+    }
+
+    if (build_variant == "user") {
+      cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+    }
+
+    if (print_fwk_feature_enterprise) {
+      cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    }
+
+    if (print_fwk_feature_edm_service) {
+      cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+      external_deps += [
+        "enterprise_device_management:edmservice_kits"
+      ]
+    }
+
+    if (print_fwk_feature_kia_interceptor) {
+      cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+      sources += [
+        "${_service_path}/enterprise/src/kia_interceptor_callback_proxy.cpp",
+        "${_service_path}/enterprise/src/kia_interceptor_manager.cpp",
+      ]
+    }
+
+    if (print_fwk_feature_virtual_printer) {
+      cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+    }
+
+    if (print_fwk_feature_smb_printer) {
+      sources += [
+        "${_service_path}/src/smb_host_search_helper.cpp",
+        "${_service_path}/src/smb_printer_discoverer.cpp",
+        "${_service_path}/src/smb_printer_state_monitor.cpp",
+        "${_service_path}/src/smb_library.cpp"
+      ]
+      cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+    }
+
+    if (print_fwk_feature_watermark_enforcing) {
+      sources += [
+        "${_service_path}/src/watermark_manager.cpp",
+        "${_service_path}/src/watermark_death_recipient.cpp",
+      ]
+      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+    }
+
+    if (print_fwk_feature_print_failure_ai_notifier) {
+      sources += [
+        "${_service_path}/src/print_failure_ai_notifier.cpp",
+        "${_service_path}/src/print_notification_builder.cpp",
+      ]
+      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+    }
+
+    if (print_fwk_feature_device_isolation) {
+        cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+    }
+
+    subsystem_name = "print"
+    part_name = "print_fwk"
+  }
+}

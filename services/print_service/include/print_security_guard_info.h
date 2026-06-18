@@ -50,7 +50,7 @@ public:
     std::string ToJsonStr();
     void SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
     void SetPrintAuditInfo(const PrinterInfo &printerInfo, const PrintJob &printJob,
-        const std::vector<std::string> &fileInfos);
+    const std::vector<std::string> &fileInfos);
     const std::vector<std::string> &GetFileList() const;
     void SetFileAuditInfo(const std::vector<std::string> &fileInfos);
     const std::vector<std::string> &GetFileAuditInfo() const;

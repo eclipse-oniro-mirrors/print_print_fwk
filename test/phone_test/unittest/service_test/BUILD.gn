@@ -1,0 +1,222 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/test.gni")
+
+_test_path = "${print_path}/test/phone_test"
+
+module_output_path = unit_test_output_path
+
+ohos_unittest("print_service_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "mock",
+    "../fwk_inner_napi_test/mock",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/services/print_service_phone/include",
+    "${print_path}/services/print_service_phone/enterprise/include",
+    "${print_path}/services/print_service_phone/include/event_callback",
+    "${print_utils_path}/include",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${print_path}/cfi_blocklist.txt"
+  }
+
+  sources = [
+    "${_test_path}/unittest/service_test/event_listener_mgr_test.cpp",
+    "${_test_path}/unittest/service_test/print_bms_death_recipient_test.cpp",
+    "${_test_path}/unittest/service_test/print_cups_attribute_test.cpp",
+    "${_test_path}/unittest/service_test/print_caller_app_monitor_test.cpp",
+    "${_test_path}/unittest/service_test/print_resource_manager_test.cpp",
+    "${_test_path}/unittest/service_test/print_security_guard_info_test.cpp",
+    "${_test_path}/unittest/service_test/print_security_guard_manager_test.cpp",
+    "${_test_path}/unittest/service_test/print_service_converter_test.cpp",
+    "${_test_path}/unittest/service_test/print_service_helper_test.cpp",
+    "${_test_path}/unittest/service_test/print_system_data_test.cpp",
+    "${_test_path}/unittest/service_test/print_user_data_test.cpp",
+    "${_test_path}/unittest/service_test/watermark_callback_proxy_test.cpp",
+    "${_test_path}/unittest/service_test/print_callback_proxy_test.cpp"
+  ]
+
+  deps = [
+    "${print_path}/etc/init:printservice.rc",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/kits/extension:print_extension_framework",
+    "${print_path}/frameworks/kits/extension:print_extension_module",
+    "${print_path}/frameworks/models/print_models:print_models",
+    "${print_path}/profile:print_sa_profiles",
+    "${print_path}/services/print_service_phone:print_service_test",
+  ]
+
+  cflags_cc = [
+    "-DUNIT_TEST",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "distributed_notification_service:ans_innerkits",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+    "i18n:intl_util",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "napi:ace_napi",
+    "resource_management:global_resmgr",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "udmf:udmf_client",
+    "udmf:utd_client",
+    "udmf:libudmf",
+    "usb_manager:usbsrv_client",
+  ]
+
+  if (cups_enable) {
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
+
+  if (print_fwk_feature_watermark_enforcing) {
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+    sources += [
+      "${_test_path}/unittest/service_test/kia_interceptor_callback_proxy_test.cpp",
+      "${_test_path}/unittest/service_test/kia_interceptor_manager_test.cpp",
+    ]
+  }
+
+  if (print_fwk_feature_print_failure_ai_notifier) {
+    sources += [
+      "${_test_path}/unittest/service_test/print_failure_ai_notifier_test.cpp",
+      "${_test_path}/unittest/service_test/print_notification_builder_test.cpp",
+    ]
+    cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
+}
+
+ohos_unittest("scan_service_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "mock",
+    "../fwk_inner_napi_test/mock",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/services/scan_service/include",
+    "${print_utils_path}/include",
+  ]
+
+  sources = [
+    "${_test_path}/unittest/service_test/scan_callback_proxy_test.cpp",
+    "${_test_path}/unittest/service_test/scan_mdns_service_test.cpp",
+    "${_test_path}/unittest/service_test/scan_service_ability_test.cpp",
+    "${_test_path}/unittest/service_test/scan_service_stub_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/etc/init:scanservice.rc",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
+    "${print_path}/profile:scan_sa_profiles",
+    "${print_path}/services/scan_service:scan_service_test",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "napi:ace_napi",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
+    "usb_manager:usbsrv_client",
+  ]
+}
+
+ohos_unittest("scan_task_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/frameworks/models/scan_models/include",
+    "${print_path}/services/scan_service/include",
+    "${print_utils_path}/include",
+  ]
+
+  sources = [
+    "${_test_path}/unittest/service_test/scan_task_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/services/scan_service:scan_service_test",
+  ]
+
+  external_deps = [
+    "image_framework:image_ndk",
+    "image_framework:image_native",
+    "googletest:gtest_main",
+    "googletest:gmock_main",
+  ]
+
+  cflags = [
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+
+  deps = []
+
+  deps += [ ":print_service_test" ]
+  deps += [ ":scan_service_test" ]
+  deps += [ ":scan_task_test" ]
+}

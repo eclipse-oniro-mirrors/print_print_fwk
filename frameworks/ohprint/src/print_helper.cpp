@@ -582,10 +582,6 @@ void SetPrintOrientationInPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     } else if (ori == ORIENTATION_MODE_LANDSCAPE || ori == ORIENTATION_MODE_REVERSE_LANDSCAPE) {
         printJob.SetIsLandscape(true);
         printJob.SetIsSequential(false);
-    } else {
-        // ORIENTATION_MODE_NONE or other invalid values: use default (PORTRAIT)
-        printJob.SetIsLandscape(false);
-        printJob.SetIsSequential(true);
     }
 }
 
@@ -672,6 +668,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
         }
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
+
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
     PRINT_HILOGD("SetOptionInPrintJob %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     printJob.SetOption(option);

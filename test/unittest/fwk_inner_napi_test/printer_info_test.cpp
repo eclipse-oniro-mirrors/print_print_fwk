@@ -24,6 +24,8 @@ class PrinterInfoTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrinterInfoTest::SetUpTestCase(void)
@@ -32,13 +34,19 @@ void PrinterInfoTest::SetUpTestCase(void)
 void PrinterInfoTest::TearDownTestCase(void)
 {}
 
+void PrinterInfoTest::SetUp(void)
+{}
+
+void PrinterInfoTest::TearDown(void)
+{}
+
 /**
  * @tc.name: PrinterInfoTest_0002
  * @tc.desc: Verify settings and obtain id function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002_NeedRename, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -51,7 +59,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002_NeedRename, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0003_NeedRename, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0003, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterName("OpenHarmony");
@@ -64,7 +72,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0003_NeedRename, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterIcon(0);
@@ -77,7 +85,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005_NeedRename, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterState(0);
@@ -90,7 +98,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005_NeedRename, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0006_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0006, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetDescription("normal");
@@ -103,7 +111,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0006_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007_NeedRename, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetOption("运行成功:success");
@@ -116,7 +124,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007_NeedRename, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     OHOS::Print::PrinterCapability capability, getCapabillity;
@@ -131,7 +139,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     OHOS::Print::PrinterCapability capability;
@@ -145,7 +153,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetOption("运行成功:success");
@@ -158,7 +166,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -175,7 +183,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -192,7 +200,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -210,7 +218,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -228,7 +236,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -248,7 +256,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -269,7 +277,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -288,7 +296,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -302,7 +310,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -319,7 +327,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019_NeedRename, TestSize.Level2)
     info.Dump();
 }
 
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterUuid("001");
@@ -333,7 +341,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -350,7 +358,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -381,7 +389,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_SetAndMarshalling_DriverAndProtocol, T
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -398,7 +406,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -415,7 +423,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -432,7 +440,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -449,7 +457,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027, TestSize.Level2)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");

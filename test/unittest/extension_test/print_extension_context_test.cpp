@@ -27,12 +27,20 @@ class PrintExtensionContextTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintExtensionContextTest::SetUpTestCase(void)
 {}
 
 void PrintExtensionContextTest::TearDownTestCase(void)
+{}
+
+void PrintExtensionContextTest::SetUp(void)
+{}
+
+void PrintExtensionContextTest::TearDown(void)
 {}
 
 /**

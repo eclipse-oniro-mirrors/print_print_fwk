@@ -16,11 +16,7 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
-if (print_fwk_feature_device_isolation) {
-  _service_path = "${print_path}/services/phone_service/scan_service"
-} else {
-  _service_path = "${print_path}/services/scan_service"
-}
+_service_path = "${print_path}/services/scan_service"
 
 config("scan_service_config") {
   visibility = [ ":*" ]
@@ -58,11 +54,8 @@ _sources = [
   "${_service_path}/src/escl_driver_manager.cpp",
   "${_service_path}/src/escl_scanner_status.cpp",
   "${_service_path}/src/curl_http_client.cpp",
+  "${_service_path}/src/image_exporter.cpp",
 ]
-
-if (!print_fwk_feature_device_isolation) {
-  _sources += [ "${_service_path}/src/image_exporter.cpp" ]
-}
 
 _branch_protector_ret = "pac_ret"
 _sanitize = {

@@ -272,12 +272,12 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t AddPrinter(const std::string &printerName, const std::string &uri, const std::string &ppdName,
-        const std::string &options) override
+    int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override
     {
         return E_PRINT_NONE;
     }
-    int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri, const std::string &ppdName,
+        const std::string &options) override
     {
         return E_PRINT_NONE;
     }
@@ -340,12 +340,12 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions));
     MOCK_METHOD3(CheckPrintJobConflicts, int32_t(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions));
-    MOCK_METHOD1(GetSharedHosts, int32_t(std::vector<PrintSharedHost> &sharedHosts));
-    MOCK_METHOD4(AuthSmbDevice, int32_t(const PrintSharedHost& sharedHost, const std::string &userName,
-        char *userPasswd, std::vector<PrinterInfo>& printerInfos));
     MOCK_METHOD2(GetPrinterDefaultPreferences, int32_t(const std::string &printerId,
         PrinterPreferences &defaultPreferences));
     MOCK_METHOD2(GetPrinterPreference, int32_t(const std::string &printerId, PrinterPreferences &printerPreference));
+    MOCK_METHOD1(GetSharedHosts, int32_t(std::vector<PrintSharedHost> &sharedHosts));
+    MOCK_METHOD4(AuthSmbDevice, int32_t(const PrintSharedHost& sharedHost, const std::string &userName,
+        char *userPasswd, std::vector<PrinterInfo>& printerInfos));
     MOCK_METHOD1(RegisterWatermarkCallback, int32_t(const sptr<IWatermarkCallback> &callback));
     MOCK_METHOD0(UnregisterWatermarkCallback, int32_t());
     MOCK_METHOD2(NotifyWatermarkComplete, int32_t(const std::string &jobId, int32_t result));

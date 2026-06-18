@@ -421,7 +421,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::ScanServiceAbilityMock::MockPermission();
     const int cntFuncs = 36;
     const int rndInt = dataProvider.ConsumeIntegralInRange(0, cntFuncs - 1);
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     if (rndInt == cntFuncs - 1) {
         OHOS::Scan::TestCleanUpAfterScan(&dataProvider);
         return 0;
@@ -465,7 +465,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         &OHOS::Scan::TestMdnsLossResolveHandleResolveResult,
         &OHOS::Scan::TestHandDiscoveryleStopDiscover
     };
-
+    
     tasks[rndInt](data, size, &dataProvider);
     return 0;
 }

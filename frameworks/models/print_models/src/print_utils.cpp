@@ -159,7 +159,7 @@ std::string PrintUtils::GetBundleName(const std::string &printerId)
         return "";
     }
     std::string bundleName = printerId.substr(0, userIdPos);
-    PRINT_HILOGD("bundleName: %{private}s", bundleName.c_str());
+    PRINT_HILOGD("bundleName: %{public}s", bundleName.c_str());
     return bundleName;
 }
 
@@ -488,7 +488,7 @@ void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &
     PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", (PrintJsonUtil::WriteString(attrJson)).c_str());
 }
 
-Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetPageRangeForJson(const PrintAttributes &attrParam)
 {
     Json::Value pageRangeJson;
     PrintRange printRangeAttr;
@@ -511,7 +511,7 @@ Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
     return pageRangeJson;
 }
 
-Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetPageSizeForJson(const PrintAttributes &attrParam)
 {
     Json::Value pageSizeJson;
     PrintPageSize pageSizeAttr;
@@ -523,7 +523,7 @@ Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
     return pageSizeJson;
 }
 
-Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetMarginForJson(const PrintAttributes &attrParam)
 {
     Json::Value marginJson;
     PrintMargin marginAttr;
@@ -546,13 +546,13 @@ Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
 void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson)
 {
     if (attrParam.HasPageRange()) {
-        attrJson["pageRange"] = CreatePageRangeJson(attrParam);
+        attrJson["pageRange"] = GetPageRangeForJson(attrParam);
     }
     if (attrParam.HasPageSize()) {
-        attrJson["pageSize"] = CreatePageSizeJson(attrParam);
+        attrJson["pageSize"] = GetPageSizeForJson(attrParam);
     }
     if (attrParam.HasMargin()) {
-        attrJson["margin"] = CreateMarginJson(attrParam);
+        attrJson["margin"] = GetMarginForJson(attrParam);
     }
 }
 
@@ -621,38 +621,13 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     return uri.substr(startPos, endPos - startPos);
 }
 
-bool PrintUtils::SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
-{
-    if (params.docFlavor == PRINT_BYTES) {
-        if (params.binaryData == nullptr || params.dataLength == 0) {
-            PRINT_HILOGE("Invalid binary data: data is null or empty.");
-            return false;
-        }
-        std::string tmpPath;
-        int fd = CreateTempFileWithData(params.binaryData, params.dataLength, tmpPath);
-        if (fd == -1) {
-            return false;
-        }
-        std::vector<uint32_t> printFdList;
-        printFdList.emplace_back(fd);
-        nativeObj->SetFdList(printFdList);
-        unlink(tmpPath.c_str());
-    } else {
-        if (params.printFdList.empty()) {
-            PRINT_HILOGE("Invalid fdList data: fdList is empty.");
-            return false;
-        }
-        nativeObj->SetFdList(params.printFdList);
-    }
-    return true;
-}
-
 void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
 {
     nativeObj->SetCopyNumber(params.copyNumber);
     nativeObj->SetColorMode(params.colorMode);
     nativeObj->SetDuplexMode(params.duplexMode);
     nativeObj->SetPageSize(params.pageSize);
+
     nativeObj->SetJobId(params.jobId);
     nativeObj->SetPageRange(params.pageRange);
     if (params.hasMargin) {
@@ -664,7 +639,6 @@ void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shar
     if (params.isSequential != PARAM_NOT_SET) {
         nativeObj->SetIsSequential(static_cast<bool>(params.isSequential));
     }
-
     if (!params.vendorOptions.empty()) {
         nativeObj->SetVendorOptions(params.vendorOptions);
     }
@@ -672,14 +646,32 @@ void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shar
 
 std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
 {
+    auto nativeObj = std::make_shared<PrintJob>();
     if (params.printerId.empty()) {
         PRINT_HILOGE("printerId is empty.");
         return nullptr;
     }
-    auto nativeObj = std::make_shared<PrintJob>();
     nativeObj->SetPrinterId(params.printerId);
-    if (!SetFdListToPrintJob(params, nativeObj)) {
-        return nullptr;
+    if (params.docFlavor == PRINT_BYTES) {
+        if (params.binaryData == nullptr || params.dataLength == 0) {
+            PRINT_HILOGE("Invalid binary data: data is null or empty.");
+            return nullptr;
+        }
+        std::string tmpPath;
+        int fd = CreateTempFileWithData(params.binaryData, params.dataLength, tmpPath);
+        if (fd == -1) {
+            return nullptr;
+        }
+        std::vector<uint32_t> printFdList;
+        printFdList.emplace_back(fd);
+        nativeObj->SetFdList(printFdList);
+        unlink(tmpPath.c_str());
+    } else {
+        if (params.printFdList.empty()) {
+            PRINT_HILOGE("Invalid fdList data: fdList is empty.");
+            return nullptr;
+        }
+        nativeObj->SetFdList(params.printFdList);
     }
     SetAttributesToPrintJob(params, nativeObj);
     SetOptionInPrintJob(params, nativeObj);

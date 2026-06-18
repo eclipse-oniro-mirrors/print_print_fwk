@@ -88,12 +88,12 @@ namespace OHOS::Print {
         PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
         return;                                         \
     }
-
+    
 #define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
-    if (!(parcelOpExp)) { \
-        PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
-        return retVal; \
-    }
+        if (!(parcelOpExp)) { \
+            PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+            return retVal; \
+        }
 
 #define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
     if ((ptr) == nullptr) {                                                         \
@@ -384,6 +384,7 @@ const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
+constexpr uint32_t INVALID_FD = -1;
 const int32_t PRINT_API_COUNTED = 1;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";

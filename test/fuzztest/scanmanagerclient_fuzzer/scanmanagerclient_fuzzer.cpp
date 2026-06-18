@@ -207,7 +207,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
         &OHOS::Scan::TestGetScannerList,
@@ -223,9 +223,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         &OHOS::Scan::TestGetAddedScanner,
         &OHOS::Scan::TestExportScanPicture
     };
-
+    
     TestHandler handler = dataProvider.PickValueInArray(tasks);
-    handler(data, size, &dataProvider);
+    handler(data, size, &dataProvider);    
     return 0;
 }
 

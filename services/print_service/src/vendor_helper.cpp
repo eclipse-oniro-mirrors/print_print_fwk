@@ -89,7 +89,8 @@ std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJ
 bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::string> &list)
 {
     Json::Value jsonObject;
-    if (!PrintJsonUtil::Parse(jsonString, jsonObject)) {
+    std::istringstream iss(jsonString);
+    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
         PRINT_HILOGW("invalid jsonString");
         return false;
     }
@@ -477,6 +478,7 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         if (discoveryItem->printerUuid != nullptr) {
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);
         }
+
         if (discoveryItem->detailInfo != nullptr) {
             if (!UpdatePrinterDetailInfoToJson(option, std::string(discoveryItem->detailInfo))) {
                 return false;

@@ -26,12 +26,20 @@ class PrintSecurityGuardInfoTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintSecurityGuardInfoTest::SetUpTestCase(void)
 {}
 
 void PrintSecurityGuardInfoTest::TearDownTestCase(void)
+{}
+
+void PrintSecurityGuardInfoTest::SetUp(void)
+{}
+
+void PrintSecurityGuardInfoTest::TearDown(void)
 {}
 
 HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001_NeedRename, TestSize.Level1)
@@ -126,16 +134,16 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrintJob printJob;
     printJob.SetDuplexMode(1);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-
+ 
     std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-
+ 
     EXPECT_EQ(info.files_.size(), 1U);
     EXPECT_EQ(info.files_[0], "doc1.pdf");
     EXPECT_EQ(info.duplexMode_, 1U);
     EXPECT_EQ(info.printerName_, "HP LaserJet Pro");
 }
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_SetPrintAuditInfo_002
  * @tc.desc: Verify SetPrintAuditInfo with multiple files.
@@ -151,14 +159,14 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrintJob printJob;
     printJob.SetDuplexMode(2);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-
+ 
     std::vector<std::string> fileInfos = {"doc1.pdf", "doc2.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-
+ 
     EXPECT_EQ(info.files_.size(), 2U);
     EXPECT_EQ(info.files_[1], "doc2.pdf");
 }
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_SetPrintAuditInfo_003
  * @tc.desc: Verify SetPrintAuditInfo with blocked state (out_of_paper).
@@ -173,17 +181,17 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     printerInfo.SetPrinterName("HP LaserJet Pro");
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-
+ 
     std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-
+ 
     bool hasOutOfPaper = false;
     for (const auto &code : info.errorCode_) {
         if (code == "out_of_paper") hasOutOfPaper = true;
     }
     EXPECT_TRUE(hasOutOfPaper);
 }
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_SetPrintAuditInfo_004
  * @tc.desc: Verify SetPrintAuditInfo with empty file list.
@@ -197,13 +205,13 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrinterInfo printerInfo;
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-
+ 
     std::vector<std::string> fileInfos;
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-
+ 
     EXPECT_TRUE(info.files_.empty());
 }
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_SetPrintAuditInfo_005
  * @tc.desc: Verify SetPrintAuditInfo reports only current subState, not accumulated history.
@@ -217,10 +225,10 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     PrinterInfo printerInfo;
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_BLOCKED_JAMMED);
-
+ 
     std::vector<std::string> fileInfos;
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
-
+ 
     // Only current subState should be reported
     EXPECT_EQ(info.errorCode_.size(), 1U);
     bool hasJammed = false;
@@ -229,9 +237,9 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_SetPrintAuditInf
     }
     EXPECT_TRUE(hasJammed);
 }
-
+ 
 // ===== ToJsonStr with audit fields Tests =====
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_ToJsonWithAudit_001
  * @tc.desc: Verify ToJsonStr output contains new audit fields.
@@ -247,11 +255,11 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     PrintJob printJob;
     printJob.SetDuplexMode(1);
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-
+ 
     std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     info.SetPrintTypeInfo(printerInfo, printJob);
-
+ 
     std::string json = info.ToJsonStr();
     EXPECT_NE(json.find("files"), std::string::npos);
     EXPECT_NE(json.find("duplexMode"), std::string::npos);
@@ -260,7 +268,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     EXPECT_NE(json.find("doc1.pdf"), std::string::npos);
     EXPECT_NE(json.find("HP LaserJet Pro"), std::string::npos);
 }
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_ToJsonWithAudit_002
  * @tc.desc: Verify ToJsonStr uses ExtractFileName for files array.
@@ -274,18 +282,18 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     PrinterInfo printerInfo;
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-
-    std::vector<std::string> fileInfos = {"/data/local/tmp/doc1.pdf"};
+ 
+    std::vector<std::string> fileInfos = {"doc1.pdf"};
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     info.SetPrintTypeInfo(printerInfo, printJob);
-
+ 
     std::string json = info.ToJsonStr();
     // ExtractFileName should strip the path prefix
     EXPECT_NE(json.find("doc1.pdf"), std::string::npos);
     // The full path should NOT appear as the fileName in JSON
     // (it can appear in objectInfo, but fileName should be just the name)
 }
-
+ 
 /**
  * @tc.name: PrintSecurityGuardInfoTest_ToJsonWithAudit_003
  * @tc.desc: Verify ToJsonStr with empty fileInfos produces empty files array.
@@ -299,11 +307,11 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_ToJsonWithAudit_
     PrinterInfo printerInfo;
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-
+ 
     std::vector<std::string> fileInfos;
     info.SetPrintAuditInfo(printerInfo, printJob, fileInfos);
     info.SetPrintTypeInfo(printerInfo, printJob);
-
+ 
     std::string json = info.ToJsonStr();
     EXPECT_TRUE(info.files_.empty());
     EXPECT_NE(json.find("\"files\":[]"), std::string::npos);

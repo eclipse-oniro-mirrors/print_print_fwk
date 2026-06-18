@@ -248,6 +248,7 @@ bool PrintSystemData::GetJsonObjectFromFile(Json::Value &jsonObject, const std::
         return false;
     }
     ifs.close();
+
     if (fileName.find(PRINTER_PREFERENCE_FILE) != std::string::npos) {
         return true;
     }
@@ -298,7 +299,8 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
             BuildPrinterPreference(capability, preferences);
             UpdatePrinterPreferences(printerId, preferences);
             Json::Value printPreferenceJson = object[printerId];
-            if (!PrintJsonUtil::IsMember(jsonObject, "setting") || !printPreferenceJson["setting"].isObject()) {
+            if (!PrintJsonUtil::IsMember(printPreferenceJson, "setting") ||
+                !printPreferenceJson["setting"].isObject()) {
                 PRINT_HILOGW("can not find setting");
                 continue;
             }
@@ -517,7 +519,7 @@ void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterS
     if (info != nullptr) {
         info->SetPrinterStatus(printerStatus);
         PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterStatus success, printerName: %{public}s, status: %{public}d",
-            info->GetPrinterId().c_str(), info->GetPrinterName().c_str(), info->GetPrinterStatus());
+ 	        info->GetPrinterId().c_str(), info->GetPrinterName().c_str(), info->GetPrinterStatus());
     }
 }
 
@@ -643,6 +645,8 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertPrintMarginToJson(printerCapability, capsJson);
     }
 
+    ConvertPageSizeToJson(printerCapability, capsJson);
+
     if (printerCapability.HasResolution()) {
         ConvertPrintResolutionToJson(printerCapability, capsJson);
     }
@@ -667,7 +671,8 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
 
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
-        if (!PrintJsonUtil::Parse(options, capsJson["options"])) {
+        std::istringstream iss(options);
+        if (!PrintJsonUtil::ParseFromStream(iss, capsJson["options"])) {
             PRINT_HILOGE("json accept capability options fail");
             return;
         }

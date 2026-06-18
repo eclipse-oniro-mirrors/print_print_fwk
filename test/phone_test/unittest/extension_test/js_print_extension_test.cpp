@@ -347,7 +347,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_V
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterDiscoveryCb();
 
@@ -370,7 +370,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_V
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterDiscoveryCb();
 
@@ -393,7 +393,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterConnectionCb();
 
@@ -416,7 +416,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterConnectionCb();
 
@@ -439,7 +439,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Va
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterPrintJobCb();
 
@@ -463,7 +463,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Va
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterPrintJobCb();
 
@@ -487,7 +487,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPreviewCb_Lambda_Val
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterPreviewCb();
 
@@ -511,7 +511,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterQueryCapCb_Lambda_Va
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterQueryCapCb();
 
@@ -534,7 +534,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterExtensionCb_Lambda_V
 {
     SetUpProxy();
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    std::shared_ptr<JsPrintExtension> extPtr = std::make_shared<JsPrintExtension>(static_cast<JsRuntime &>(*runtime));
+    std::shared_ptr<JsPrintExtension> extPtr(new JsPrintExtension(static_cast<JsRuntime &>(*runtime)));
     JsPrintExtension::jsExtension_ = extPtr;
     extPtr->RegisterExtensionCb();
 

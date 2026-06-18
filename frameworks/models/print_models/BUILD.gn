@@ -17,11 +17,11 @@ cflags_cc = []
 
 config("print_models_config") {
   visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-    "${print_utils_path}/include",
-  ]
+  include_dirs = [ "include" ]
+  cflags_cc += [ "-fno-exceptions" ]
+}
 
+config("print_models_config_private") {
   cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
@@ -32,9 +32,11 @@ config("print_models_config") {
     "-Os",
   ]
 }
+
 ohos_shared_library("print_models") {
   include_dirs = [ "${print_utils_path}/include" ]
   public_configs = [ ":print_models_config" ]
+  configs = [ ":print_models_config_private" ]
 
   branch_protector_ret = "pac_ret"
   sanitize = {

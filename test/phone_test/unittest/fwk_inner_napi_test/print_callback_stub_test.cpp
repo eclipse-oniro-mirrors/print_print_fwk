@@ -29,12 +29,20 @@ class PrintCallbackStubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintCallbackStubTest::SetUpTestCase(void)
 {}
 
 void PrintCallbackStubTest::TearDownTestCase(void)
+{}
+
+void PrintCallbackStubTest::SetUp(void)
+{}
+
+void PrintCallbackStubTest::TearDown(void)
 {}
 
 /**
@@ -203,10 +211,6 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0008, TestSize.Level1)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_JOB_ADAPTER);
-
-    std::string jobId = "job:1234";
-    PrintAttributes oldAttrs;
-    PrintAttributes newAttrs;
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     auto callback = std::make_shared<MockPrintCallbackStub>();

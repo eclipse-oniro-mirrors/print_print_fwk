@@ -19,6 +19,7 @@ c_utils_path = "//commonlibrary/c_utils"
 print_path = "//base/print/print_fwk"
 print_utils_path = "${print_path}/utils"
 
+
 if (!defined(global_parts_info) ||
     defined(global_parts_info.security_security_guard)) {
   security_guard_enabled = true
@@ -27,6 +28,7 @@ if (!defined(global_parts_info) ||
 }
 cups_enable = true
 debug_enable = false
+
 
 declare_args() {
   print_fwk_feature_enterprise = false

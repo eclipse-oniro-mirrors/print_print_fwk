@@ -287,7 +287,6 @@ private:
                     task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
                 return;
             }
-            PRINT_HILOGD("context->ConnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
             PRINT_HILOGD("context->ConnectAbility connection:%{public}" PRId64, connectId);
             if (!context->ConnectAbility(want, connection)) {
                     connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
@@ -305,7 +304,7 @@ private:
     }
 
     static void CompleteConnectAbilityWithAccount(napi_env engine, NapiAsyncTask &task,
-        std::weak_ptr<PrintExtensionContext> weak, const ConnectAbilityParams &params)
+ 	         std::weak_ptr<PrintExtensionContext> weak, const ConnectAbilityParams &params)
     {
         PRINT_HILOGD("OnConnectAbilityWithAccount begin");
         auto context = weak.lock();
@@ -323,6 +322,7 @@ private:
         napi_get_undefined(engine, &undefineResult);
         task.Resolve(engine, undefineResult);
     }
+ 	
 
     napi_value OnConnectAbilityWithAccount(napi_env &engine, napi_callback_info &info)
     {

@@ -1,0 +1,37 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos.gni")
+
+_test_base_path = "//base/print/print_fwk/test/unittest"
+
+if (!print_fwk_feature_device_isolation) {
+  group("unittest") {
+    testonly = true
+    deps = [
+      "${_test_base_path}/fwk_inner_napi_test:print_fwk_inner_napi_test",
+      "${_test_base_path}/fwk_print_cups_client_test:fwk_print_cups_client_test",
+      "${_test_base_path}/fwk_print_helper_test:fwk_print_helper_test",
+      "${_test_base_path}/fwk_print_models_test:fwk_print_models_test",
+      "${_test_base_path}/fwk_print_service_ability_test:fwk_print_service_ability_test",
+      "${_test_base_path}/service_test:print_service_test",
+      "${_test_base_path}/service_test:scan_task_test",
+      "${_test_base_path}/extension_test:print_ext_test",
+      "${_test_base_path}/fwk_vendor_manager_test:fwk_vendor_manager_test",
+      "${_test_base_path}/fwk_print_smb_printer_test:fwk_print_smb_printer_test",
+    ]
+  }
+} else {
+  group("unittest") { }
+}

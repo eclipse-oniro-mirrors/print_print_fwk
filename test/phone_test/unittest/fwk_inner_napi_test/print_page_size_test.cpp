@@ -30,12 +30,20 @@ class PrintPageSizeTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintPageSizeTest::SetUpTestCase(void)
 {}
 
 void PrintPageSizeTest::TearDownTestCase(void)
+{}
+
+void PrintPageSizeTest::SetUp(void)
+{}
+
+void PrintPageSizeTest::TearDown(void)
 {}
 
 /**

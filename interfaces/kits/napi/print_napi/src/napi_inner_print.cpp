@@ -60,9 +60,6 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
             PRINT_HILOGD("VendorIcon = %{public}d", extInfo.GetVendorIcon());
             PRINT_HILOGD("Version = %{public}s", extInfo.GetVersion().c_str());
             status = napi_set_element(env, *result, index++, PrintExtensionInfoHelper::MakeJsObject(env, extInfo));
-            if (status != napi_ok) {
-                PRINT_HILOGE("napi_set_element failed");
-            }
         }
         return napi_ok;
     };
@@ -1545,9 +1542,9 @@ napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_
         int32_t ret =
             PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(context->printerId,
                 context->fileUri, context->type);
-        context->result = ret == E_PRINT_NONE;
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to connect printer");
+            context->result = ret == E_PRINT_NONE;
+            if (ret != E_PRINT_NONE) {
+                PRINT_HILOGE("Failed to connect printer");
             context->SetErrorIndex(ret);
         }
     };
@@ -1621,6 +1618,7 @@ napi_value NapiInnerPrint::QueryRecommendDriversById(napi_env env, napi_callback
         if (status != napi_ok) { return status; }
         uint32_t index = 0;
         for (auto &ppdInfo : context->allPpdInfos) {
+            PRINT_HILOGD("ppdName = %{public}s", ppdInfo.GetPpdName().c_str());
             status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
             if (status != napi_ok) { return status; }
         }

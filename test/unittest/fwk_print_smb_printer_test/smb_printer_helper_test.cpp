@@ -42,12 +42,20 @@ class SmbPrinterHelperTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void SmbPrinterHelperTest::SetUpTestCase(void)
 {}
 
 void SmbPrinterHelperTest::TearDownTestCase(void)
+{}
+
+void SmbPrinterHelperTest::SetUp(void)
+{}
+
+void SmbPrinterHelperTest::TearDown(void)
 {}
 
 /**

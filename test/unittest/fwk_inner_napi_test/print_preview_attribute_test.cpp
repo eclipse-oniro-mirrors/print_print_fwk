@@ -27,12 +27,20 @@ class PrintPreviewAttributeTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintPreviewAttributeTest::SetUpTestCase(void)
 {}
 
 void PrintPreviewAttributeTest::TearDownTestCase(void)
+{}
+
+void PrintPreviewAttributeTest::SetUp(void)
+{}
+
+void PrintPreviewAttributeTest::TearDown(void)
 {}
 
 /**

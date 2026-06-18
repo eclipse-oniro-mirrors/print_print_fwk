@@ -846,7 +846,7 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
 Print_ErrorCode OH_Print_RestorePrinterProperties(const char *printerId, const Print_StringList *propertyKeyList);
 
 /**
- * @brief This API provides capacity to start print service.
+ * @brief This API provide capacity to start print dialog.
  *
  * @permission {@code ohos.permission.PRINT}
  * @param printJobName The name of this print job.

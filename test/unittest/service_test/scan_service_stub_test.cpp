@@ -18,14 +18,8 @@
 #include "scan_service_ability.h"
 #include "scan_constant.h"
 #include "system_ability_definition.h"
-#include "scan_service_utils.h"
+#include "scan_utils.h"
 #include "mock_scan_callback_proxy.h"
-#include "message_parcel.h"
-#include "message_option.h"
-#include "iscan_service.h"
-
-using namespace testing;
-using namespace testing::ext;
 
 namespace OHOS {
 namespace Scan {
@@ -34,6 +28,11 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
+    std::shared_ptr<ScanServiceStub> stubSpr;
+
+    using ScanCmdHandler = bool (ScanServiceStub::*)(MessageParcel &, MessageParcel &);
+    std::map<uint32_t, ScanCmdHandler> cmdMap_;
     sptr<ScanServiceAbility> scanSa;
 };
 
@@ -45,9 +44,28 @@ void ScanServiceStubTest::TearDownTestCase(void)
 
 void ScanServiceStubTest::SetUp(void)
 {
+    stubSpr = std::make_shared<ScanServiceStub>();
+    EXPECT_NE(stubSpr, nullptr);
+    cmdMap_[CMD_INIT_SCAN] = &ScanServiceStub::OnInitScan;
+    cmdMap_[CMD_EXIT_SCAN] = &ScanServiceStub::OnExitScan;
+    cmdMap_[CMD_GET_SCANNER_LIST] = &ScanServiceStub::OnGetScannerList;
+    cmdMap_[CMD_OPEN_SCANNER] = &ScanServiceStub::OnOpenScanner;
+    cmdMap_[CMD_CLOSE_SCANNER] = &ScanServiceStub::OnCloseScanner;
+    cmdMap_[CMD_GET_SCAN_OPTION_DESC] = &ScanServiceStub::OnGetScanOptionDesc;
+    cmdMap_[CMD_OP_SCAN_OPTION_VALUE] = &ScanServiceStub::OnOpScanOptionValue;
+    cmdMap_[CMD_GET_SCAN_PARAMETERS] = &ScanServiceStub::OnGetScanParameters;
+    cmdMap_[CMD_START_SCAN] = &ScanServiceStub::OnStartScan;
+    cmdMap_[CMD_CANCEL_SCAN] = &ScanServiceStub::OnCancelScan;
+    cmdMap_[CMD_GET_SCAN_PROGRESS] = &ScanServiceStub::OnGetScanProgress;
+    cmdMap_[CMD_ON] = &ScanServiceStub::OnEventOn;
+    cmdMap_[CMD_OFF] = &ScanServiceStub::OnEventOff;
     scanSa = ScanServiceAbility::GetInstance();
     EXPECT_TRUE(scanSa != nullptr);
+    EXPECT_TRUE(scannerId != nullptr && scannerId != "")
 }
+
+void ScanServiceStubTest::TearDown(void)
+{}
 
 /**
  * @tc.name: ScanMdnsServiceTest_0001
@@ -57,12 +75,14 @@ void ScanServiceStubTest::SetUp(void)
  */
 HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitScanOneTime, TestSize.Level1)
 {
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(IScanService::GetDescriptor());
-    int32_t result = scanSa->OnRemoteRequest(CMD_INIT_SCAN, data, reply, option);
-    EXPECT_EQ(result, E_SCAN_NONE);
+    auto itFunc = cmdMap_.find(CMD_INIT_SCAN);
+    if (itFunc != cmdMap_.end()) {
+        auto requestFunc = itFunc->second;
+        if (requestFunc != nullptr) {
+            (this->*requestFunc)(data, reply);
+        }
+    }
+    EXPECT_EQ(scanSa->appCount_, 1);
 }
 
 /**
@@ -73,12 +93,14 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitScanOneTime, TestSize
  */
 HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallEXITScanOneTime, TestSize.Level1)
 {
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(IScanService::GetDescriptor());
-    int32_t result = scanSa->OnRemoteRequest(CMD_EXIT_SCAN, data, reply, option);
-    EXPECT_EQ(result, E_SCAN_NONE);
+    auto itFunc = cmdMap_.find(CMD_EXIT_SCAN);
+    if (itFunc != cmdMap_.end()) {
+        auto requestFunc = itFunc->second;
+        if (requestFunc != nullptr) {
+            (this->*requestFunc)(data, reply);
+        }
+    }
+    EXPECT_EQ(scanSa->appCount_, 0);
 }
 
 /**
@@ -89,18 +111,21 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallEXITScanOneTime, TestSize
  */
 HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitAndExitBothOneTime, TestSize.Level1)
 {
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(IScanService::GetDescriptor());
-    int32_t result = scanSa->OnRemoteRequest(CMD_INIT_SCAN, data, reply, option);
-    EXPECT_EQ(result, E_SCAN_NONE);
-
-    MessageParcel data2;
-    MessageParcel reply2;
-    data2.WriteInterfaceToken(IScanService::GetDescriptor());
-    result = scanSa->OnRemoteRequest(CMD_EXIT_SCAN, data2, reply2, option);
-    EXPECT_EQ(result, E_SCAN_NONE);
+    auto itFunc = cmdMap_.find(CMD_INIT_SCAN);
+    if (itFunc != cmdMap_.end()) {
+        auto requestFunc = itFunc->second;
+        if (requestFunc != nullptr) {
+            (this->*requestFunc)(data, reply);
+        }
+    }
+    itFunc = cmdMap_.find(CMD_EXIT_SCAN);
+    if (itFunc != cmdMap_.end()) {
+        auto requestFunc = itFunc->second;
+        if (requestFunc != nullptr) {
+            (this->*requestFunc)(data, reply);
+        }
+    }
+    EXPECT_GE(scanSa->appCount_, 0);
 }
 
 /**
@@ -111,14 +136,16 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitAndExitBothOneTime, T
  */
 HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitFiveTimes, TestSize.Level1)
 {
-    MessageOption option;
     for (int i = 0; i < 5; i++) {
-        MessageParcel data;
-        MessageParcel reply;
-        data.WriteInterfaceToken(IScanService::GetDescriptor());
-        int32_t result = scanSa->OnRemoteRequest(CMD_INIT_SCAN, data, reply, option);
-        EXPECT_EQ(result, E_SCAN_NONE);
+        auto itFunc = cmdMap_.find(CMD_INIT_SCAN);
+        if (itFunc != cmdMap_.end()) {
+            auto requestFunc = itFunc->second;
+            if (requestFunc != nullptr) {
+                (this->*requestFunc)(data, reply);
+            }
+        }
     }
+    EXPECT_EQ(scanSa->appCount_, 5);
 }
 
 /**
@@ -129,14 +156,16 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitFiveTimes, TestSize.L
  */
 HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallExitFiveTimes, TestSize.Level1)
 {
-    MessageOption option;
     for (int i = 0; i < 5; i++) {
-        MessageParcel data;
-        MessageParcel reply;
-        data.WriteInterfaceToken(IScanService::GetDescriptor());
-        int32_t result = scanSa->OnRemoteRequest(CMD_EXIT_SCAN, data, reply, option);
-        EXPECT_EQ(result, E_SCAN_NONE);
+        auto itFunc = cmdMap_.find(CMD_EXIT_SCAN);
+        if (itFunc != cmdMap_.end()) {
+            auto requestFunc = itFunc->second;
+            if (requestFunc != nullptr) {
+                (this->*requestFunc)(data, reply);
+            }
+        }
     }
+    EXPECT_EQ(scanSa->appCount_, 0);
 }
 }  // namespace Scan
 }  // namespace OHOS

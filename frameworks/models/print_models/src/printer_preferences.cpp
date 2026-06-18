@@ -549,7 +549,8 @@ Json::Value PrinterPreferences::ConvertToJson()
     }
 
     if (hasOption_) {
-        if (!PrintJsonUtil::Parse(option_, preferencesJson["options"])) {
+        std::istringstream iss(option_);
+        if (!PrintJsonUtil::ParseFromStream(iss, preferencesJson["options"])) {
             PRINT_HILOGE("json accept preferences options fail");
         }
     }
