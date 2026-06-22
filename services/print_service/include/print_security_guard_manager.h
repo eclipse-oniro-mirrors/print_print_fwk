@@ -40,7 +40,6 @@ public:
     void CalculateFileAuditInfo(const std::string &jobId);
     void SendJobAuditInfo(const std::string &jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
     void InjectFileListIntoOption(const std::string &jobId, std::string &option);
-
     // Resolve PrinterInfo with fallback chain: discovered -> added -> option JSON
     std::shared_ptr<PrinterInfo> ResolvePrinterInfo(
         const std::string &printerId, const std::string &option, PrintSystemData &printSystemData);

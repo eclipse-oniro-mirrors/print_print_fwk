@@ -113,7 +113,7 @@ private:
     void InitPrintHistoryJobList(const std::string &printerId);
     bool CheckOptionalParam(const Json::Value &jsonObject, const std::string &param);
     void DeleteOldestHistoryPrintJob();
-    
+
     std::string GetUserPreferencesFilePath(const std::string &standardizedPrinterName);
 
 public:

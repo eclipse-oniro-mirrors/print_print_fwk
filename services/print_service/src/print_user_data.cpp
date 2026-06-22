@@ -28,7 +28,6 @@
 
 #include "print_log.h"
 #include "print_constant.h"
-#include "print_utils.h"
 #include "print_json_util.h"
 #include "print_utils.h"
 
@@ -475,7 +474,8 @@ bool PrintUserData::SetUserDataToFile()
 
 bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject)
 {
-    if (!PrintJsonUtil::Parse(fileData, jsonObject)) {
+    std::istringstream iss(fileData);
+    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
         PRINT_HILOGW("json accept fail");
         return false;
     }

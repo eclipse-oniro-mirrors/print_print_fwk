@@ -68,8 +68,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider dataProvider(data, size);
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
+    PRINT_HILOGI("Multithreading is running in function LLVMFuzzerTestOneInput.");
     TestHandler tasks[] = {
         &OHOS::Print::TestParsePrinterStatusAttributes,
         &OHOS::Print::TestParsePrinterAttributes

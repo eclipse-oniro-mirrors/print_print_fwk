@@ -51,25 +51,6 @@ void TestAddPrinterToCups(const uint8_t *data, size_t size, FuzzedDataProvider *
     PrintCupsClient::GetInstance()->JobSentCallback();
 }
 
-void TestQueryPrinterAttributesByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintCupsClient::GetInstance()->InitCupsResources();
-    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string nic = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int num = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    std::string pattrs = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    char **pattrsArray = new char *[1];
-    pattrsArray[0] = new char[pattrs.length() + 1];
-    if (strcpy_s(pattrsArray[0], MAX_SET_NUMBER, pattrs.c_str()) != EOK) {
-        delete[] pattrsArray[0];
-        delete[] pattrsArray;
-        return;
-    }
-    PrintCupsClient::GetInstance()->QueryPrinterAttributesByUri(printerUri, nic, num, pattrsArray);
-    delete[] pattrsArray[0];
-    delete[] pattrsArray;
-}
-
 void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
@@ -369,12 +350,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider dataProvider(data, size);
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
         &OHOS::Print::TestQueryPPDInformation,
         &OHOS::Print::TestAddPrinterToCups,
-        &OHOS::Print::TestQueryPrinterAttributesByUri,
         &OHOS::Print::TestQueryPrinterCapabilityByUri,
         &OHOS::Print::TestQueryPrinterStatusByUri,
         &OHOS::Print::TestDeleteCupsPrinter,

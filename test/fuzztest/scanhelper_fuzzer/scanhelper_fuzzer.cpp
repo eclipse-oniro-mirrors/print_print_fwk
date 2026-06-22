@@ -92,7 +92,7 @@ void TestSetOptionConstraintString(const uint8_t* data, size_t size, FuzzedDataP
     ScanOptionDescriptor scanOptDes;
     std::vector<std::string> optionConstraintString;
     int32_t vectorSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    for (int i = 0; i < vectorSize; i++) {
+    for (int i = 0; i< vectorSize; i++) {
         std::string teststr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         optionConstraintString.emplace_back(teststr);
     }
@@ -105,7 +105,7 @@ void TestSetOptionConstraintNumber(const uint8_t* data, size_t size, FuzzedDataP
     ScanOptionDescriptor scanOptDes;
     std::vector<int32_t> optionConstraintNumber;
     int32_t vectorSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    for (int i = 0; i < vectorSize; i++) {
+    for (int i = 0; i< vectorSize; i++) {
         int32_t testNumber = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
         optionConstraintNumber.emplace_back(testNumber);
     }
@@ -687,8 +687,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     if (size < OHOS::Scan::U32_AT_SIZE || size > OHOS::Scan::FOO_MAX_LEN) {
         return 0;
     }
-
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     FuzzedDataProvider dataProvider(data, size);
     TestHandler tasks[] = {

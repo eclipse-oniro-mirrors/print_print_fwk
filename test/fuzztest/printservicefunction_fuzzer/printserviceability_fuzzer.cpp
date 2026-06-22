@@ -96,7 +96,7 @@ void TestBlockPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PRINT_HILOGI("multithreading is running at function TestPrintFunction.");
+    PRINT_HILOGI("Multithreading is running at function TestPrintFunction.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
         &TestChangeDefaultPrinterForDelete,
@@ -112,6 +112,7 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);
     handler(data, size, dataProvider);
+
 }
 
 }  // namespace Print

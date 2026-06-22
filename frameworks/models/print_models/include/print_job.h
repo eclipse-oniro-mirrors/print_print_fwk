@@ -27,7 +27,6 @@
 #include "print_preview_attribute.h"
 #include "print_range.h"
 #include "print_attributes.h"
-#include "print_constant.h"
 #include <json/json.h>
 
 namespace OHOS::Print {

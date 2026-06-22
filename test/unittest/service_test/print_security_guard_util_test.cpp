@@ -457,6 +457,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         EXPECT_EQ(result[0], tc.expected) << "Failed for subState " << tc.subState;
     }
 }
+
 /**
  * @tc.name: PrintSecurityGuardUtilTest_IsPrintableFile_001
  * @tc.desc: Verify IsPrintableFile with known printable extensions.

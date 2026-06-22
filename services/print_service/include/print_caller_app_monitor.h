@@ -34,8 +34,7 @@ public:
         count_.fetch_add(1, std::memory_order_relaxed);
         Value();
     }
-    bool Decrement(int num = 1)
-    {
+    bool Decrement(int num = 1) {
         if (num <= 0) {
             return false;
         }

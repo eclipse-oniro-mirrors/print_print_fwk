@@ -103,22 +103,13 @@ void TestWlanGroupOtherFunction(const uint8_t *data, size_t size, FuzzedDataProv
     vendorWlanGroup->GetGroupPrinterId(printerId);
     vendorWlanGroup->UpdateGroupPrinter(printerId, printerBsuriId);
     vendorWlanGroup->ExtractPrinterIdByPrinterInfo(printerInfo);
-
-    // other function without vendorManager
-    vendorWlanGroup->vendorManager = nullptr;
-    vendorWlanGroup->parentVendorManager = nullptr;
-    vendorWlanGroup->OnPrinterPpdQueried(DEFAULT_VENDOR_NAME, printerId, ppdName, ppdData);
-    vendorWlanGroup->ConvertGroupDriver(printerId, vendorName);
-    vendorWlanGroup->ConvertGroupGlobalPrinterId(printerId);
-    vendorWlanGroup->GetGroupPrinterId(printerId);
-    vendorWlanGroup->UpdateGroupPrinter(printerId, printerBsuriId);
-    vendorWlanGroup->ExtractPrinterIdByPrinterInfo(printerInfo);
 }
 
 void TestWlanGroupWithoutVendorManager(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(nullptr);
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerBsuriId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -135,6 +126,17 @@ void TestWlanGroupWithoutVendorManager(const uint8_t *data, size_t size, FuzzedD
     vendorWlanGroup->IsGroupDriver(printerId);
     vendorWlanGroup->IsConnectingPrinter(printerId, printerUri);
     vendorWlanGroup->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
+    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL, "");
+
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string vendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    vendorWlanGroup->OnPrinterPpdQueried(DEFAULT_VENDOR_NAME, printerId, ppdName, ppdData);
+    vendorWlanGroup->ConvertGroupDriver(printerId, vendorName);
+    vendorWlanGroup->ConvertGroupGlobalPrinterId(printerId);
+    vendorWlanGroup->GetGroupPrinterId(printerId);
+    vendorWlanGroup->UpdateGroupPrinter(printerId, printerBsuriId);
+    vendorWlanGroup->ExtractPrinterIdByPrinterInfo(printerInfo);
     vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL, "");
 }
 
@@ -158,10 +160,6 @@ void TestPpdDriverConnectPrinterActions(const uint8_t *data, size_t size, Fuzzed
     vendorWlanGroup->OnPrinterDiscovered(DEFAULT_VENDOR_NAME, printerInfo);
 
     auto propertyKeys = std::vector<std::string>(1, printerInfo.GetPrinterMake());
-    vendorPpdDriver->OnQueryProperties(printerId, propertyKeys);
-    vendorPpdDriver->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
-
-    vendorPpdDriver->vendorManager = nullptr;
     vendorPpdDriver->OnQueryProperties(printerId, propertyKeys);
     vendorPpdDriver->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
 }
@@ -189,9 +187,17 @@ void TestPpdDriverOtherFunction(const uint8_t *data, size_t size, FuzzedDataProv
     std::string value;
     vendorPpdDriver->OnPrinterDiscovered(vendorName, printerInfo);
     vendorPpdDriver->QueryProperty(printerId, key, value);
+}
 
-    // other function without vendorManager
-    vendorPpdDriver->vendorManager = nullptr;
+void TestPpdDriverWithoutVendorManager(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto propertyKeys = std::vector<std::string>(1, dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string value;
+    vendorPpdDriver->OnQueryProperties(printerId, propertyKeys);
+    vendorPpdDriver->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
     vendorPpdDriver->QueryProperty(printerId, key, value);
 }
 }  // namespace Print
@@ -214,7 +220,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::PrintServiceAbility::GetInstance()->vendorManager.Init(
         OHOS::Print::PrintServiceAbility::GetInstance());
 
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
         &OHOS::Print::TestWlanGroupDiscoverPrinterActions,
@@ -223,8 +229,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestWlanGroupWithoutVendorManager,
         &OHOS::Print::TestPpdDriverConnectPrinterActions,
         &OHOS::Print::TestPpdDriverOtherFunction,
+        &OHOS::Print::TestPpdDriverWithoutVendorManager
     };
-
+    
     TestHandler handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);
     return 0;

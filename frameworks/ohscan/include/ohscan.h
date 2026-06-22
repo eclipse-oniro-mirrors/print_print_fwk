@@ -287,7 +287,7 @@ int32_t OH_Scan_CancelScan(const char* scannerId);
  *
  * @permission {@code ohos.permission.PRINT}
  * @param scannerId The id for querying the image scanning progress of the scanner.
- * @param prog The {@link Scan_PictureScanProgress} of scanning pictures, must be a non-null value.
+ * @param prog The {@link Scan_ScanPictureProgress} of scanning pictures, must be a non-null value.
  * @return {@link Scan_ERROR_NONE} Indicates the scanner has successfully queried the progress of the scanned image.
  *         {@link SCAN_ERROR_NO_PERMISSION} Indicates have no permission to use this interface.
  *         {@link SCAN_ERROR_INVALID_PARAMETER} Indicates if the pointer is null or the character string is null.

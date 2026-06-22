@@ -39,6 +39,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 };
 
 void PrintServiceHelperTest::SetUpTestCase(void)
@@ -52,6 +53,9 @@ void PrintServiceHelperTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintServiceHelperTest_%{public}d", ++testNo);
 }
+
+void PrintServiceHelperTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintServiceHelperTest_0002
@@ -239,6 +243,7 @@ INSTANTIATE_TEST_SUITE_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest,
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP, 0},
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED, 0},
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN, 0},
+        BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED, 0},
         BuildSubscribeInfoParam{"unknown.event", 0},
         BuildSubscribeInfoParam{"", 0}
     ));

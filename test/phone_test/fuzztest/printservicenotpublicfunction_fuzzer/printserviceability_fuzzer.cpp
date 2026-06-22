@@ -181,9 +181,10 @@ void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PRINT_HILOGI("multithreading is running at function TestNotPublicFunction.");
+    
+    PRINT_HILOGI("Multithreading is running at function TestNotPublicFunction.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
-    TestHandler tasks[] = {
+    TestHandler tasks[] = {      
         &TestCheckIsDefaultPrinter,
         &TestCheckIsLastUsedPrinter,
         &TestSetLastUsedPrinter,
@@ -200,9 +201,9 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
         &TestUpdatePrintJobOptionWithPrinterPreferences,
         &TestConnectUsbPrinter,
         &TestClosePrintJobFd,
-        &TestNoParmFuncs,
+        &TestNoParmFuncs
     };
-
+    
     TestHandler handler = dataProvider->PickValueInArray(tasks);
     handler(data, size, dataProvider);
 }

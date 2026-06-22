@@ -42,6 +42,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 };
 
 void VendorIppEverywhereTest::SetUpTestCase(void)
@@ -55,6 +56,9 @@ void VendorIppEverywhereTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("VendorIppEverywhereTest_%{public}d", ++testNo);
 }
+
+void VendorIppEverywhereTest::TearDown(void)
+{}
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0001, TestSize.Level1)
 {

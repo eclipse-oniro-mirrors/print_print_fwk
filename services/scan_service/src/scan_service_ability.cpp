@@ -268,13 +268,13 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     constexpr size_t STRING_POS_TWO = 2;
     constexpr size_t STRING_POS_THREE = 3;
     if (tokens[STRING_POS_ONE] != "libusb") {
-        SCAN_HILOGE("parse [%{private}s] fail since no libusb", deviceId.c_str());
+        SCAN_HILOGE("parse [%{private}s] fail", deviceId.c_str());
         return false;
     }
     static const std::regex pattern(R"(([0-9]{3}))");
     if (!std::regex_match(tokens[STRING_POS_TWO], pattern) ||
         !std::regex_match(tokens[STRING_POS_THREE], pattern)) {
-        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", tokens[STRING_POS_TWO].c_str(),
+        SCAN_HILOGE("parse [%{private}s]:[%{private}s] fail", tokens[STRING_POS_TWO].c_str(),
                     tokens[STRING_POS_THREE].c_str());
         return false;
     }
@@ -284,7 +284,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     const std::string secondIdTmp = tokens[STRING_POS_THREE];
     if (!ScanUtil::ConvertToInt(firstIdTmp, firstNumTmp) ||
         !ScanUtil::ConvertToInt(secondIdTmp, secondNumTmp)) {
-        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
+        SCAN_HILOGE("parse [%{private}s]:[%{private}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
         return false;
     }
     firstId = std::to_string(firstNumTmp);
@@ -766,7 +766,7 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     constexpr int32_t MAX_LISTENERS_COUNT = 1000;
-    if (registeredListeners_.size() >= MAX_LISTENERS_COUNT) {
+    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
         SCAN_HILOGE("Exceeded the maximum number of registration.");
         return E_SCAN_GENERIC_FAILURE;
     }

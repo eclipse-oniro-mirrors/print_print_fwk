@@ -38,6 +38,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 };
 
 void PrintUserDataTest::SetUpTestCase(void)
@@ -51,6 +52,9 @@ void PrintUserDataTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintUserDataTest_%{public}d", ++testNo);
 }
+
+void PrintUserDataTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintServiceStubTest_0001
@@ -218,7 +222,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013_NeedRename, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-0105";
     userData->SetLastUsedPrinter(printerId);
     std::string printerId2 = "";
     userData->SetLastUsedPrinter(printerId2);
@@ -259,7 +263,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0019_NeedRename, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-0105";
     userData->SetDefaultPrinter(printerId, 0);
     std::string printerId2 = "";
     auto ret = userData->SetDefaultPrinter(printerId2, 0);
@@ -1353,7 +1357,8 @@ HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_UpdatesCache, TestSize.Le
 
     userData->printerUserPreferences_.clear();
 
-    userData->SavePrinterUserPreferences("test_printer", "test_printer", userPrefs);
+    bool result = userData->SavePrinterUserPreferences("test_printer", "test_printer", userPrefs);
+    EXPECT_TRUE(result);
 
     EXPECT_EQ(userData->printerUserPreferences_.size(), 1);
     EXPECT_TRUE(userData->printerUserPreferences_.count("test_printer"));
@@ -1381,7 +1386,8 @@ HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_OverwritesExistingPrefs, 
     newPrefs.SetPrinterId("printer_id");
     newPrefs.SetVendorOptions(R"({"new_value":"updated"})");
 
-    userData->SavePrinterUserPreferences("printer_id", "printer_id", newPrefs);
+    bool result = userData->SavePrinterUserPreferences("printer_id", "printer_id", newPrefs);
+    EXPECT_TRUE(result);
 
     EXPECT_EQ(userData->printerUserPreferences_.size(), 1);
     auto savedPrefs = userData->printerUserPreferences_["printer_id"];
