@@ -438,7 +438,7 @@ SaneStatus SaneServerManager::SetControlOption(
             return SANE_STATUS_INVAL;
         }
         std::string value = controlParam.valueStr_;
-        if (value.size() >= saneDesc->size) {
+        if (saneDesc->size < 0 || value.size() >= static_cast<size_t>(saneDesc->size)) {
             SCAN_HILOGE("String value too long for option %{public}d", option);
             return SANE_STATUS_INVAL;
         }
