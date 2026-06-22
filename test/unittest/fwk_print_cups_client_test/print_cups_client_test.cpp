@@ -4231,5 +4231,91 @@ HWTEST_F(PrintCupsClientTest, ParseStateMessage_NoMatchButStartTimeSet_SlowConve
             PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION));
 }
 
+/**
+ * @tc.name: TestHandleAbortedState_IsCanceled
+ * @tc.desc: HandleAbortedState when isCanceled is true (if branch, early return)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, TestHandleAbortedState_IsCanceled, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isCanceled = true;
+    PrintCupsClient printCupsClient;
+    printCupsClient.HandleAbortedState(param);
+    EXPECT_TRUE(param->isCanceled);
+}
+
+/**
+ * @tc.name: TestHandleAbortedState_NotCanceled
+ * @tc.desc: HandleAbortedState when isCanceled is false (else branch, calls UpdatePrintJobState)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, TestHandleAbortedState_NotCanceled, TestSize.Level1)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->isCanceled = false;
+    PrintCupsClient printCupsClient;
+    printCupsClient.HandleAbortedState(param);
+    EXPECT_FALSE(param->isCanceled);
+}
+
+/**
+ * @tc.name: JobStatusCallback_IPP_JOB_ABORTED_IsCanceled
+ * @tc.desc: JobStatusCallback IPP_JOB_ABORTED case with isCanceled true triggers HandleAbortedState if branch
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, JobStatusCallback_IPP_JOB_ABORTED_IsCanceled, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->job_state = IPP_JOB_ABORTED;
+    param->isCanceled = true;
+    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
+    EXPECT_TRUE(param->isCanceled);
+}
+
+/**
+ * @tc.name: JobStatusCallback_IPP_JOB_ABORTED_NotCanceled
+ * @tc.desc: JobStatusCallback IPP_JOB_ABORTED case with isCanceled false triggers HandleAbortedState else branch
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, JobStatusCallback_IPP_JOB_ABORTED_NotCanceled, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    param->job_state = IPP_JOB_ABORTED;
+    param->isCanceled = false;
+    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
+    EXPECT_FALSE(param->isCanceled);
+}
+
 }  // namespace Print
 }  // namespace OHOS
