@@ -694,7 +694,7 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     MessageParcel reply;
     MessageOption option;
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
-    data.WriteString(printJobId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printJobId), E_PRINT_RPC_FAILURE);
     PRINT_HILOGD("PrintServiceProxy QueryPrintJobById started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -931,7 +931,7 @@ int32_t PrintServiceProxy::Off(const std::string taskId, const std::string &type
     MessageOption option;
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
-    data.WriteString(taskId);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(taskId), E_PRINT_RPC_FAILURE);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(type), E_PRINT_RPC_FAILURE);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
