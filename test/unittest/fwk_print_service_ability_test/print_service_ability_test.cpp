@@ -6733,7 +6733,7 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_eprint, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string cid = PRINT_EXTENSION_BUNDLE_NAME;
     cid = cid + ":1";
-    EXPECT_TRUE(service->IsExtensionPrintJob("com.huawei.hmos.ailife:1"));
+    EXPECT_TRUE(service->IsExtensionPrintJob("com.ohos.remote:1"));
 }
 
 HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)

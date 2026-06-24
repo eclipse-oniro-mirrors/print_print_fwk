@@ -103,7 +103,8 @@ HWTEST_F(RemoteServiceAdapterTest, BindService_001, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, SendData_002, TestSize.Level1)
 {
     RemoteServiceAdapter client;
-    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), "test_msg");
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
+        "test_msg");
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
 }
 

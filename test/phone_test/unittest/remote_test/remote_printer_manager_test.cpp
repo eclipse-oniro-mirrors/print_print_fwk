@@ -94,7 +94,7 @@ HWTEST_F(RemotePrinterManagerTest, StopPrinterDiscovery_001, TestSize.Level1)
  */
 HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_001, TestSize.Level1)
 {
-    EXPECT_EQ(PRINTER_STATUS_IDLE, 
+    EXPECT_EQ(PRINTER_STATUS_IDLE,
         RemotePrinterManager::ConvertStatusToPrinterStatus("online"));
 }
 
@@ -106,7 +106,7 @@ HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_001, TestSize.Le
  */
 HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_002, TestSize.Level1)
 {
-    EXPECT_EQ(PRINTER_STATUS_UNAVAILABLE, 
+    EXPECT_EQ(PRINTER_STATUS_UNAVAILABLE,
         RemotePrinterManager::ConvertStatusToPrinterStatus("offline"));
 }
 
@@ -118,7 +118,7 @@ HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_002, TestSize.Le
  */
 HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_003, TestSize.Level1)
 {
-    EXPECT_EQ(PRINTER_STATUS_UNAVAILABLE, 
+    EXPECT_EQ(PRINTER_STATUS_UNAVAILABLE,
         RemotePrinterManager::ConvertStatusToPrinterStatus("unknown"));
 }
 

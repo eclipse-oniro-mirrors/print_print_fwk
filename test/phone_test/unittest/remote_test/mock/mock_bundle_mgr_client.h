@@ -27,7 +27,7 @@ public:
     MockBundleMgrClient() = default;
     virtual ~MockBundleMgrClient() = default;
 
-    MOCK_METHOD4(GetBundleInfo, bool(const std::string &bundleName, const int32_t flags, 
+    MOCK_METHOD4(GetBundleInfo, bool(const std::string &bundleName, const int32_t flags,
                                       BundleInfo &bundleInfo, int32_t userId));
 };
 
