@@ -1393,5 +1393,17 @@ HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_OverwritesExistingPrefs, 
     auto savedPrefs = userData->printerUserPreferences_["printer_id"];
     EXPECT_NE(savedPrefs, nullptr);
 }
+
+HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_InvalidUserId_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.SetPrinterId("test_printer");
+    userPrefs.SetVendorOptions(R"({"setting":"value"})");
+
+    bool result = userData->SavePrinterUserPreferences("test_printer", "test_printer", userPrefs);
+    EXPECT_FALSE(result);
+}
 }  // namespace Print
 }  // namespace OHOS

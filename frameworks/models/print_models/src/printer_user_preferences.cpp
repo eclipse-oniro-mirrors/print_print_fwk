@@ -255,8 +255,6 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
             }
             if (optJson["choice"].isString()) {
                 opt.choice = optJson["choice"].asString();
-            } else if (optJson["isSet"].isBool()) {
-                opt.choice = optJson["isSet"].asBool() ? CUSTOM_OPTION_CHOICE : "";
             }
             if (optJson["value"].isString()) {
                 opt.value.SetData(reinterpret_cast<const uint8_t *>(

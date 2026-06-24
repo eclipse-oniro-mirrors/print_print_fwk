@@ -1345,14 +1345,7 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
         if (!prefOptionsJson.isMember(key)) {
             continue;
         }
-        if (prefOptionsJson[key].isString()) {
-            Json::Value parsedJson;
-            if (PrintJsonUtil::Parse(prefOptionsJson[key].asString(), parsedJson) && parsedJson.isObject()) {
-                ProcessSingleCustomOption(key, parsedJson, userPrefs);
-            } else {
-                userPrefs.SetCustomOption(key, "");
-            }
-        } else if (prefOptionsJson[key].isObject()) {
+        if (prefOptionsJson[key].isObject()) {
             ProcessSingleCustomOption(key, prefOptionsJson[key], userPrefs);
         }
         prefOptionsJson.removeMember(key);
