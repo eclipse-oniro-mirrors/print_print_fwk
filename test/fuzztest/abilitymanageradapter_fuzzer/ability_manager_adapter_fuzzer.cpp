@@ -102,11 +102,6 @@ Want CreateFuzzedWant(FuzzedDataProvider *dataProvider)
     return want;
 }
 
-void TestConnect(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    AbilityManagerAdapter::GetInstance().Connect();
-}
-
 void TestStartAbility(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     Want want = CreateFuzzedWant(dataProvider);
@@ -156,7 +151,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     using TestHandler = std::function<void(const uint8_t *, size_t, FuzzedDataProvider *)>;
     PRINT_HILOGI("Multithreading is running in function LLVMFuzzerTestOneInput.");
     TestHandler tasks[] = {
-        &OHOS::Print::TestConnect,
         &OHOS::Print::TestStartAbility,
         &OHOS::Print::TestConnectAbility,
         &OHOS::Print::TestConnectAbilityWithExtensionType,

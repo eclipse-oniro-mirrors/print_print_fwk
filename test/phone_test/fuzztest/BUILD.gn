@@ -19,7 +19,7 @@ if (print_fwk_feature_device_isolation) {
   group("fuzztest") {
     testonly = true
     deps = [
-      "abilitymanageradapter_fuzzer:fuzztest",
+      "${_test_base_path}/abilitymanageradapter_fuzzer:fuzztest",
       "${_test_base_path}/printcupsattribute_fuzzer:fuzztest",
       "${_test_base_path}/printcupsclient_fuzzer:fuzztest",
       "${_test_base_path}/printserviceability_fuzzer:fuzztest",

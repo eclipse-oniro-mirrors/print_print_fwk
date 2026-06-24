@@ -37,8 +37,6 @@ private:
 public:
     static AbilityManagerAdapter &GetInstance();
 
-    ErrCode Connect();
-
     ErrCode StartAbility(const Want &want, int requestCode = DEFAULT_INVAL_VALUE, int32_t userId = DEFAULT_INVAL_VALUE,
         uint64_t specifiedFullTokenId = 0);
 
@@ -79,10 +77,11 @@ private:
         DISALLOW_COPY_AND_MOVE(AbilityMgrDeathRecipient);
     };
 
+    ErrCode Connect();
     sptr<IRemoteObject> GetAbilityManagerProxy();
     void ResetProxy(const wptr<IRemoteObject> &remote);
 
-    std::mutex proxyMutex_;
+    std::recursive_mutex proxyMutex_;
     sptr<IRemoteObject> proxy_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_;
 };

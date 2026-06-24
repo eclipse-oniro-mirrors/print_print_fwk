@@ -59,7 +59,6 @@ bool PrintServiceHelper::CheckPermission(const std::string &name)
 bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
 {
     AppExecFwk::ElementName element = want.GetElement();
-    OHOS::Print::AbilityManagerAdapter::GetInstance().Connect();
     uint32_t retry = 0;
     while (retry++ < MAX_RETRY_TIMES) {
         PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}s %{public}s",
@@ -84,7 +83,6 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
     PRINT_HILOGD("enter PrintServiceHelper::StartExtensionAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
-    OHOS::Print::AbilityManagerAdapter::GetInstance().Connect();
     uint32_t retry = 0;
     sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection(deathCallback);
     PRINT_CHECK_NULL_AND_RETURN(printAbilityConnection, false);
@@ -114,7 +112,6 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
     PRINT_HILOGD("enter PrintServiceHelper::StartPluginPrintExtAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
-    OHOS::Print::AbilityManagerAdapter::GetInstance().Connect();
     uint32_t retry = 0;
     sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection();
     if (printAbilityConnection == nullptr) {
@@ -144,7 +141,6 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
 bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbilityType)
 {
     PRINT_HILOGD("enter PrintServiceHelper::DisconnectAbility");
-    OHOS::Print::AbilityManagerAdapter::GetInstance().Connect();
     uint32_t retry = 0;
     std::lock_guard<std::mutex> connectionLock(connectionListLock_);
     auto connectionListIt = extConnectionMap_.find(extensionAbilityType);

@@ -65,7 +65,10 @@ void AbilityManagerAdapterTest::SetUp()
 {}
 
 void AbilityManagerAdapterTest::TearDown()
-{}
+{
+    AbilityManagerAdapter::GetInstance().proxy_ = nullptr;
+    AbilityManagerAdapter::GetInstance().deathRecipient_ = nullptr;
+}
 
 HWTEST_F(AbilityManagerAdapterTest, Connect_CallSucceeds, TestSize.Level1)
 {

@@ -41,7 +41,7 @@ AbilityManagerAdapter::~AbilityManagerAdapter()
 
 ErrCode AbilityManagerAdapter::Connect()
 {
-    std::lock_guard<std::mutex> lock(proxyMutex_);
+    std::lock_guard<std::recursive_mutex> lock(proxyMutex_);
     if (proxy_ != nullptr) {
         PRINT_HILOGI("[AbilityManagerAdapter] Connect exit, proxy already exists, return ERR_OK");
         return ERR_OK;
@@ -171,7 +171,7 @@ ErrCode AbilityManagerAdapter::DisconnectAbility(sptr<IAbilityConnection> connec
 
 sptr<IRemoteObject> AbilityManagerAdapter::GetAbilityManagerProxy()
 {
-    std::lock_guard<std::mutex> lock(proxyMutex_);
+    std::lock_guard<std::recursive_mutex> lock(proxyMutex_);
     if (!proxy_) {
         PRINT_HILOGI("[AbilityManagerAdapter] GetAbilityManagerProxy proxy is nullptr, calling Connect()");
         Connect();
@@ -181,7 +181,7 @@ sptr<IRemoteObject> AbilityManagerAdapter::GetAbilityManagerProxy()
 
 void AbilityManagerAdapter::ResetProxy(const wptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(proxyMutex_);
+    std::lock_guard<std::recursive_mutex> lock(proxyMutex_);
     if ((proxy_ != nullptr) && (proxy_ == remote.promote())) {
         PRINT_HILOGI("[AbilityManagerAdapter] ResetProxy removing death recipient and clearing proxy");
         proxy_->RemoveDeathRecipient(deathRecipient_);
