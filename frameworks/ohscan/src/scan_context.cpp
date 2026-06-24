@@ -330,20 +330,12 @@ Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
         SCAN_HILOGE("scannerOptions is a nullptr");
         return nullptr;
     }
-    scannerOptions->titles = new (std::nothrow) char *[optionCount];
-    scannerOptions->descriptions = new (std::nothrow) char *[optionCount];
-    scannerOptions->ranges = new (std::nothrow) char *[optionCount];
+    scannerOptions->titles = new (std::nothrow) char *[optionCount]();
+    scannerOptions->descriptions = new (std::nothrow) char *[optionCount]();
+    scannerOptions->ranges = new (std::nothrow) char *[optionCount]();
     scannerOptions->optionCount = optionCount;
     if (scannerOptions->titles == nullptr || scannerOptions->descriptions == nullptr ||
         scannerOptions->ranges == nullptr) {
-        FreeScannerOptionsMemory(scannerOptions);
-        return nullptr;
-    }
-    int32_t stringMemSize = optionCount * sizeof(char *);
-    if (memset_s(scannerOptions->titles, stringMemSize, 0, stringMemSize) != 0 ||
-        memset_s(scannerOptions->descriptions, stringMemSize, 0, stringMemSize) != 0 ||
-        memset_s(scannerOptions->ranges, stringMemSize, 0, stringMemSize) != 0) {
-        SCAN_HILOGW("memset_s fail");
         FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
