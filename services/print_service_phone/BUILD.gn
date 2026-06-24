@@ -24,6 +24,7 @@ if (print_fwk_feature_device_isolation) {
     visibility = [ ":*" ]
     include_dirs = [
       "${_service_path}/include",
+      "${_service_path}/include/remote",
       "${print_path}/frameworks/models/print_models/include",
     ]
     cflags_cc += [
@@ -121,6 +122,7 @@ if (print_fwk_feature_device_isolation) {
     "${print_path}/frameworks/ohprint/include",
     "${_service_path}/include/event_callback",
     "${_service_path}/enterprise/include",
+    "${_service_path}/include/remote",
     "${print_utils_path}/include",
   ]
 
@@ -225,6 +227,16 @@ if (print_fwk_feature_device_isolation) {
         cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
     }
 
+    if (print_fwk_feature_remote_service) {
+      sources += [
+        "${_service_path}/src/remote/remote_service_adapter.cpp",
+        "${_service_path}/src/remote/print_ipc_connection.cpp",
+        "${_service_path}/src/remote/remote_printer_manager.cpp",
+        "${_service_path}/src/remote/remote_callback_stub.cpp",
+      ]
+      cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
+    }
+
     subsystem_name = "print"
     part_name = "print_fwk"
   }
@@ -319,6 +331,14 @@ if (print_fwk_feature_device_isolation) {
       ]
       cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
     }
+
+    sources += [
+      "${_service_path}/src/remote/remote_printer_manager.cpp",
+      "${_service_path}/src/remote/remote_service_adapter.cpp",
+      "${_service_path}/src/remote/remote_callback_stub.cpp",
+      "${_service_path}/src/remote/print_ipc_connection.cpp",
+    ]
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
 
     if (print_fwk_feature_device_isolation) {
         cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
