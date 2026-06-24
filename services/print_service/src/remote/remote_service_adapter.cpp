@@ -23,7 +23,6 @@
 #include "iremote_callback.h"
 #include "print_json_util.h"
 #include "print_utils.h"
-#include "singleton.h"
 #include <mutex>
 
 namespace OHOS::Print {
@@ -75,7 +74,7 @@ bool RemoteServiceAdapter::BindService()
     PRINT_HILOGI("active userId = %{public}d", userId);
     
     AAFwk::Want want;
-    want.SetElementName(REMOTE_BUNDLE_NAME, REMOTE_ABILITY_NAME);
+    want.SetElementName(REMOTE_SERVICE_BUNDLE_NAME, REMOTE_ABILITY_NAME);
     
     AAFwk::ExtensionManagerClient extensionManager;
     int32_t result = extensionManager.ConnectServiceExtensionAbility(
@@ -87,9 +86,7 @@ bool RemoteServiceAdapter::BindService()
         return false;
     }
 
-    bool waitResult = connection_->WaitForConnection();
-    PRINT_HILOGI("WaitForConnection result = %{public}d", waitResult);
-    return waitResult;
+    return true;
 }
 
 bool RemoteServiceAdapter::IsConnected()

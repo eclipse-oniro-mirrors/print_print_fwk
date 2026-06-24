@@ -41,10 +41,16 @@ int32_t RemoteCallbackStub::OnRemoteRequest(
         return E_PRINT_RPC_FAILURE;
     }
 
-    int32_t errorCode = 0;
+int32_t errorCode = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(errorCode), E_PRINT_RPC_FAILURE);
-    if (errorCode == -5) {
-        PRINT_HILOGE("RemoteCallbackStub account error: %{public}d", errorCode);
+    if (errorCode == E_PRINT_ACCOUNT_ERROR || errorCode == E_PRINT_NETWORK_ERROR) {
+        PRINT_HILOGE("RemoteCallbackStub read errorCode failed: %{public}d, remote unreachable", errorCode);
+        DelayedSingleton<RemotePrinterManager>::GetInstance()->ClearAllPrinters();
+        return errorCode;
+    }
+
+    if (errorCode != E_PRINT_NONE) {
+        PRINT_HILOGE("RemoteCallbackStub read errorCode failed: %{public}d, remote unreachable", errorCode);
         return errorCode;
     }
     if (errorCode == -3) {

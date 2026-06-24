@@ -24,12 +24,14 @@
 #include "noncopyable.h"
 #include "print_log.h"
 #include "refbase.h"
-#include "singleton.h"
 
 namespace OHOS::Print {
 
-class RemoteServiceAdapter : public NoCopyable {
+class RemoteServiceAdapter : public NoCopyable, public RefBase {
 public:
+    RemoteServiceAdapter();
+    ~RemoteServiceAdapter();
+
     static sptr<RemoteServiceAdapter> GetInstance();
     
     bool BindService();
@@ -43,13 +45,10 @@ public:
     int32_t RequestPrinterList();
 
 private:
-    RemoteServiceAdapter();
-    ~RemoteServiceAdapter();
-    
     sptr<PrintIpcConnection> connection_;
     sptr<RemoteCallbackStub> callbackStub_;
     std::mutex bindMutex_;
-    
+
     static sptr<RemoteServiceAdapter> instance_;
 };
 

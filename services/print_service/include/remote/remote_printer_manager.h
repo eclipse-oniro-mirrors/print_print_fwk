@@ -26,7 +26,6 @@
 #include "printer_capability.h"
 #include "print_constant.h"
 #include "json/json.h"
-#include "refbase.h"
 #include "remote_service_adapter.h"
 
 namespace OHOS::Print {
