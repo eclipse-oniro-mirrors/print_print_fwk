@@ -74,6 +74,7 @@ ohos_shared_library("print_helper") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "access_token:libaccesstoken_sdk",
@@ -86,6 +87,7 @@ ohos_shared_library("print_helper") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
+    "jsoncpp:jsoncpp",
   ]
 
   if (build_variant == "user") {

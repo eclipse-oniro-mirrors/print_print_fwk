@@ -53,7 +53,7 @@ struct PrintJobParams {
     PrintPageSize pageSize;
     std::string jobId;
     std::vector<uint32_t> printFdList;
-    void* binaryData = nullptr;
+    void *binaryData = nullptr;
     size_t dataLength = 0;
     int32_t printQuality = PARAM_NOT_SET;
     std::string mediaType;
@@ -109,17 +109,10 @@ public:
     static bool CheckUserIdInEventType(const std::string &type, int32_t callerUserId);
     static bool IsUsbPrinter(const std::string &printerId);
     static std::string ExtractHostFromUri(const std::string &uri);
-    static std::shared_ptr<PrintJob> ConvertParamsToPrintJob(const PrintJobParams &params);
-    static std::string GetDocumentFormatToString(uint32_t format);
-    static int CreateTempFileWithData(void* data, size_t length, std::string &tmpPath);
-    static std::string GenerateTempFilePath(const std::string &filesDir);
-    static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
-    
-    static std::string MakeExtensionStateKey(int32_t userId, const std::string& bundleName);
-    static int32_t GetUserIdFromKey(const std::string& key);
-    static std::string GetBundleNameFromKey(const std::string& key);
 
-    static void SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+    static std::string MakeExtensionStateKey(int32_t userId, const std::string &bundleName);
+    static int32_t GetUserIdFromKey(const std::string &key);
+    static std::string GetBundleNameFromKey(const std::string &key);
 
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
@@ -144,8 +137,8 @@ public:
         return true;
     }
     template <typename T, typename ReadFunc>
-    static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc,
-                                   bool *hasSupportedPtr)
+    static bool readListFromParcel(
+        Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc, bool *hasSupportedPtr)
     {
         if (hasSupportedPtr) {
             if (!parcel.ReadBool(*hasSupportedPtr)) {
@@ -191,7 +184,7 @@ public:
         return true;
     }
 
-    template<typename T>
+    template <typename T>
     static bool CheckJsonType(const Json::Value &j)
     {
         if constexpr (std::is_same_v<T, int>) {
@@ -203,7 +196,7 @@ public:
         } else if constexpr (std::is_same_v<T, bool>) {
             return j.isBool();
         } else {
-            return true; // For complex types, we'll do the check in the conversion function
+            return true;  // For complex types, we'll do the check in the conversion function
         }
     }
 
