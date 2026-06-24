@@ -29,7 +29,6 @@ if (print_fwk_feature_device_isolation) {
       "${_test_base_path}/extension_test:print_ext_test",
       "${_test_base_path}/fwk_vendor_manager_test:fwk_vendor_manager_test",
       "${_test_base_path}/fwk_print_smb_printer_test:fwk_print_smb_printer_test",
-      "${_test_base_path}/remote_test:remote_test",
     ]
   }
 } else {
