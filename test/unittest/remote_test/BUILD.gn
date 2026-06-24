@@ -1,0 +1,89 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/test.gni")
+
+if (print_fwk_feature_device_isolation) {
+  _test_path = "${print_path}/test/phone_test"
+  _service_path = "${print_path}/services/phone_service/print_service"
+} else {
+  _test_path = "${print_path}/test"
+  _service_path = "${print_path}/services/print_service"
+}
+
+module_output_path = unit_test_output_path
+
+ohos_unittest("remote_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "mock",
+    "${print_path}/frameworks/models/print_models/include",
+    "${_service_path}/include",
+    "${_service_path}/include/remote",
+    "${print_utils_path}/include",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${print_path}/cfi_blocklist.txt"
+  }
+
+  sources = [
+    "${_test_path}/unittest/remote_test/remote_printer_manager_test.cpp",
+    "${_test_path}/unittest/remote_test/remote_service_adapter_test.cpp",
+    "${_test_path}/unittest/remote_test/remote_callback_stub_test.cpp",
+    "${_test_path}/unittest/remote_test/print_ipc_connection_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/etc/init:printservice.rc",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/models/print_models:print_models",
+    "${print_path}/profile:print_sa_profiles",
+    "${print_path}/services/print_service:print_service_test",
+  ]
+
+  cflags_cc = [
+    "-DUNIT_TEST",
+    "-Dprivate=public",
+    "-Dprotected=public",
+    "-DREMOTE_SERVICE_ENABLE",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "os_account:os_account_innerkits",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+
+  deps = []
+
+  deps += [ ":remote_test" ]
+}
