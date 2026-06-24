@@ -29,7 +29,7 @@ public:
     MockRemoteService() = default;
     virtual ~MockRemoteService() = default;
 
-    MOCK_METHOD4(OnRemoteRequest, int32_t(uint32_t code, MessageParcel &data, 
+    MOCK_METHOD4(OnRemoteRequest, int32_t(uint32_t code, MessageParcel &data,
                                            MessageParcel &reply, MessageOption &option));
 };
 
