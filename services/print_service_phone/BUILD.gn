@@ -332,13 +332,15 @@ if (print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
     }
 
-    sources += [
-      "${_service_path}/src/remote/remote_printer_manager.cpp",
-      "${_service_path}/src/remote/remote_service_adapter.cpp",
-      "${_service_path}/src/remote/remote_callback_stub.cpp",
-      "${_service_path}/src/remote/print_ipc_connection.cpp",
-    ]
-    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
+    if (print_fwk_feature_remote_service) {
+      sources += [
+        "${_service_path}/src/remote/remote_printer_manager.cpp",
+        "${_service_path}/src/remote/remote_service_adapter.cpp",
+        "${_service_path}/src/remote/remote_callback_stub.cpp",
+        "${_service_path}/src/remote/print_ipc_connection.cpp",
+      ]
+      cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
+    }
 
     if (print_fwk_feature_device_isolation) {
         cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
