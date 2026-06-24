@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#define private public
 #include "print_ipc_connection.h"
+#undef private
 #include "print_constant.h"
 #include "message_parcel.h"
 #include "message_option.h"
@@ -191,7 +193,9 @@ HWTEST_F(PrintIpcConnectionTest, SendData_001, TestSize.Level1)
  */
 HWTEST_F(PrintIpcConnectionTest, SendData_002, TestSize.Level1)
 {
+    sptr<IRemoteObject> remoteObject;
     PrintIpcConnection connection;
+    connection.remoteObject_ = remoteObject;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

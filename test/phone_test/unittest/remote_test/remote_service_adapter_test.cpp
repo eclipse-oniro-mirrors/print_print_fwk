@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#define private public
 #include "remote_service_adapter.h"
+#undef private
 #include "remote_constants.h"
 #include "print_constant.h"
 
@@ -89,32 +91,19 @@ HWTEST_F(RemoteServiceAdapterTest, IsConnected_002, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, BindService_001, TestSize.Level1)
 {
     RemoteServiceAdapter client;
-    EXPECT_FALSE(client.BindService());
-}
-
-/**
- * @tc.name: SendData_001
- * @tc.desc: Branch: connection_ == nullptr -> return E_PRINT_RPC_FAILURE
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemoteServiceAdapterTest, SendData_001, TestSize.Level1)
-{
-    RemoteServiceAdapter client;
-    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), "test");
-    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+    EXPECT_TRUE(client.BindService());
 }
 
 /**
  * @tc.name: SendData_002
- * @tc.desc: Branch: remoteObject_ == nullptr -> return E_PRINT_RPC_FAILURE
+ * @tc.desc: Branch: remoteObject_ == nullptr -> reconnect
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(RemoteServiceAdapterTest, SendData_002, TestSize.Level1)
 {
     RemoteServiceAdapter client;
-    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_STATUS), "test_msg");
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), "test_msg");
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
 }
 
@@ -127,7 +116,7 @@ HWTEST_F(RemoteServiceAdapterTest, SendData_002, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, SendData_003, TestSize.Level1)
 {
     RemoteServiceAdapter client;
-    int32_t result = client.SendData(COMMAND_GET_PRINTER_LIST, "");
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), "");
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
 }
 

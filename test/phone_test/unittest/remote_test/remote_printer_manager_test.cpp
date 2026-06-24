@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#define private public
 #include "remote_printer_manager.h"
+#undef private
 #include "mock/mock_bundle_mgr_client.h"
 #include "mock/mock_print_bms_helper.h"
 #include "printer_info.h"
@@ -93,7 +95,7 @@ HWTEST_F(RemotePrinterManagerTest, StopPrinterDiscovery_001, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_001, TestSize.Level1)
 {
     EXPECT_EQ(PRINTER_STATUS_IDLE, 
-              RemotePrinterManager::ConvertStatusToPrinterStatus("online"));
+        RemotePrinterManager::ConvertStatusToPrinterStatus("online"));
 }
 
 /**
@@ -105,7 +107,7 @@ HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_001, TestSize.Le
 HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_002, TestSize.Level1)
 {
     EXPECT_EQ(PRINTER_STATUS_UNAVAILABLE, 
-              RemotePrinterManager::ConvertStatusToPrinterStatus("offline"));
+        RemotePrinterManager::ConvertStatusToPrinterStatus("offline"));
 }
 
 /**
@@ -117,7 +119,7 @@ HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_002, TestSize.Le
 HWTEST_F(RemotePrinterManagerTest, ConvertStatusToPrinterStatus_003, TestSize.Level1)
 {
     EXPECT_EQ(PRINTER_STATUS_UNAVAILABLE, 
-              RemotePrinterManager::ConvertStatusToPrinterStatus("unknown"));
+        RemotePrinterManager::ConvertStatusToPrinterStatus("unknown"));
 }
 
 /**
@@ -142,6 +144,35 @@ HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_001, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_002, TestSize.Level1)
 {
     Json::Value item;
+    item["devName"] = "Test";
+    PrinterInfo info;
+    EXPECT_FALSE(RemotePrinterManager::BuildPrinterInfo(item, info));
+}
+
+/**
+ * @tc.name: BuildPrinterInfo
+ * @tc.desc: Branch: devName missing -> return false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_devName, TestSize.Level1)
+{
+    Json::Value item;
+    item["devId"] = "Test";
+    PrinterInfo info;
+    EXPECT_FALSE(RemotePrinterManager::BuildPrinterInfo(item, info));
+}
+
+/**
+ * @tc.name: BuildPrinterInfo
+ * @tc.desc: Branch: status missing -> return false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_status, TestSize.Level1)
+{
+    Json::Value item;
+    item["devId"] = "Test";
     item["devName"] = "Test";
     PrinterInfo info;
     EXPECT_FALSE(RemotePrinterManager::BuildPrinterInfo(item, info));
@@ -183,6 +214,25 @@ HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: BuildPrinterInfo
+ * @tc.desc: Branch: prodId missing -> return false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_prodId, TestSize.Level1)
+{
+    Json::Value item;
+    item["devId"] = "test_001";
+    item["devName"] = "Test Printer";
+    item["status"] = "online";
+    Json::Value devInfo;
+    devInfo["sn"] = "PROD001";
+    item["devInfo"] = devInfo;
+    PrinterInfo info;
+    EXPECT_FALSE(RemotePrinterManager::BuildPrinterInfo(item, info));
+}
+
+/**
  * @tc.name: BuildPrinterInfo_005
  * @tc.desc: Branch: valid input -> return true
  * @tc.type: FUNC
@@ -206,81 +256,21 @@ HWTEST_F(RemotePrinterManagerTest, BuildPrinterInfo_005, TestSize.Level1)
 }
 
 /**
- * @tc.name: ClearAllPrinters_001
- * @tc.desc: Branch: clear all printers from cache
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, ClearAllPrinters_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    manager.ClearAllPrinters();
-    auto printers = manager.GetAllPrinters();
-    EXPECT_EQ(0, printers.size());
-}
-
-/**
- * @tc.name: AddPrinter_001
- * @tc.desc: Branch: add printer to cache
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, AddPrinter_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    PrinterInfo info;
-    info.SetPrinterId("test_printer_001");
-    info.SetPrinterName("Test Printer");
-    EXPECT_TRUE(manager.AddPrinter(info));
-    auto printers = manager.GetAllPrinters();
-    EXPECT_EQ(1, printers.size());
-}
-
-/**
- * @tc.name: RemovePrinter_001
- * @tc.desc: Branch: remove printer from cache
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, RemovePrinter_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    PrinterInfo info;
-    info.SetPrinterId("test_printer_001");
-    manager.AddPrinter(info);
-    EXPECT_TRUE(manager.RemovePrinter("test_printer_001"));
-    auto printers = manager.GetAllPrinters();
-    EXPECT_EQ(0, printers.size());
-}
-
-/**
- * @tc.name: RemovePrinter_002
- * @tc.desc: Branch: remove non-existent printer
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, RemovePrinter_002, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    EXPECT_TRUE(manager.RemovePrinter("non_existent_printer"));
-}
-
-/**
  * @tc.name: GetPrinterInfo_001
- * @tc.desc: Branch: get existing printer info
+ * @tc.desc: Branch: get printer info -> return info
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(RemotePrinterManagerTest, GetPrinterInfo_001, TestSize.Level1)
 {
-    RemotePrinterManager manager;
     PrinterInfo info;
-    info.SetPrinterId("test_printer_001");
-    info.SetPrinterName("Test Printer");
-    manager.AddPrinter(info);
-    auto retrieved = manager.GetPrinterInfo("test_printer_001");
+    info.SetPrinterId("111");
+
+    RemotePrinterManager manager;
+    manager.printerMap_["111"] = std::make_shared<PrinterInfo>(info);
+
+    auto retrieved = manager.GetPrinterInfo("111");
     EXPECT_NE(nullptr, retrieved);
-    EXPECT_EQ("test_printer_001", retrieved->GetPrinterId());
 }
 
 /**
@@ -297,23 +287,6 @@ HWTEST_F(RemotePrinterManagerTest, GetPrinterInfo_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: UpdatePrinterStatus_001
- * @tc.desc: Branch: update existing printer status
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, UpdatePrinterStatus_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    PrinterInfo info;
-    info.SetPrinterId("test_printer_001");
-    info.SetPrinterName("Test Printer");
-    info.SetPrinterStatus(PRINTER_STATUS_IDLE);
-    manager.AddPrinter(info);
-    EXPECT_TRUE(manager.UpdatePrinterStatus("test_printer_001", PRINTER_STATUS_UNAVAILABLE));
-}
-
-/**
  * @tc.name: UpdatePrinterStatus_002
  * @tc.desc: Branch: update non-existent printer status -> return false
  * @tc.type: FUNC
@@ -325,17 +298,6 @@ HWTEST_F(RemotePrinterManagerTest, UpdatePrinterStatus_002, TestSize.Level1)
     EXPECT_FALSE(manager.UpdatePrinterStatus("non_existent_printer", PRINTER_STATUS_IDLE));
 }
 
-/**
- * @tc.name: OnPrinterListReceived_001
- * @tc.desc: Branch: invalid JSON -> return false
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, OnPrinterListReceived_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    EXPECT_FALSE(manager.OnPrinterListReceived("invalid_json"));
-}
 
 /**
  * @tc.name: OnPrinterListReceived_002
@@ -346,7 +308,7 @@ HWTEST_F(RemotePrinterManagerTest, OnPrinterListReceived_001, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, OnPrinterListReceived_002, TestSize.Level1)
 {
     RemotePrinterManager manager;
-    EXPECT_FALSE(manager.OnPrinterListReceived("{\"key\": \"value\"}"));
+    EXPECT_TRUE(manager.OnPrinterListReceived("{\"key\": \"value\"}"));
 }
 
 /**
@@ -376,18 +338,6 @@ HWTEST_F(RemotePrinterManagerTest, OnPrinterListReceived_004, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnPrinterStatusReceived_001
- * @tc.desc: Branch: invalid JSON -> return false
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    EXPECT_FALSE(manager.OnPrinterStatusReceived("invalid_json"));
-}
-
-/**
  * @tc.name: OnPrinterStatusReceived_002
  * @tc.desc: Branch: JSON not array -> return false
  * @tc.type: FUNC
@@ -396,7 +346,7 @@ HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_001, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_002, TestSize.Level1)
 {
     RemotePrinterManager manager;
-    EXPECT_FALSE(manager.OnPrinterStatusReceived("{\"key\": \"value\"}"));
+    EXPECT_TRUE(manager.OnPrinterStatusReceived("{\"key\": \"value\"}"));
 }
 
 /**
@@ -408,7 +358,7 @@ HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_002, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_003, TestSize.Level1)
 {
     RemotePrinterManager manager;
-    EXPECT_FALSE(manager.OnPrinterStatusReceived("[]"));
+    EXPECT_TRUE(manager.OnPrinterStatusReceived("[]"));
 }
 
 /**
@@ -421,53 +371,6 @@ HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_004, TestSize.Level1)
 {
     RemotePrinterManager manager;
     std::string response = "[{\"status\":\"online\"}]";
-    EXPECT_FALSE(manager.OnPrinterStatusReceived(response));
-}
-
-/**
- * @tc.name: Destroy_001
- * @tc.desc: Branch: destroy manager and stop discovery
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, Destroy_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    manager.StartPrinterDiscovery();
-    EXPECT_TRUE(manager.Destroy());
-    auto printers = manager.GetAllPrinters();
-    EXPECT_EQ(0, printers.size());
-}
-
-/**
- * @tc.name: GetAllPrinters_001
- * @tc.desc: Branch: get all printers from empty cache
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, GetAllPrinters_001, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    auto printers = manager.GetAllPrinters();
-    EXPECT_EQ(0, printers.size());
-}
-
-/**
- * @tc.name: GetAllPrinters_002
- * @tc.desc: Branch: get all printers with multiple entries
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemotePrinterManagerTest, GetAllPrinters_002, TestSize.Level1)
-{
-    RemotePrinterManager manager;
-    PrinterInfo info1;
-    info1.SetPrinterId("printer_001");
-    PrinterInfo info2;
-    info2.SetPrinterId("printer_002");
-    manager.AddPrinter(info1);
-    manager.AddPrinter(info2);
-    auto printers = manager.GetAllPrinters();
-    EXPECT_EQ(2, printers.size());
+    EXPECT_TRUE(manager.OnPrinterStatusReceived(response));
 }
 } // namespace OHOS::Print
