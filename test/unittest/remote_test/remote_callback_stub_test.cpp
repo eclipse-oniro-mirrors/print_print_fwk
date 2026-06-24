@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#define private public
 #include "remote_callback_stub.h"
+#undef private
 #include "remote_constants.h"
 #include "print_constant.h"
 #include "message_parcel.h"
@@ -71,8 +73,9 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_001, TestSize.Level1)
     MessageParcel reply;
     MessageOption option;
     
-    data.WriteInterfaceToken("invalid_descriptor");
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), data, reply, option);
+    std::u16string invalidDescriptor = u"OHOS.Drive.iunvalidCallbackAbility";
+    data.WriteInterfaceToken(invalidDescriptor);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), data, reply, option);
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
 }
 
@@ -91,7 +94,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_002, TestSize.Level1)
     
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_SERVER_FAILURE);
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), data, reply, option);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), data, reply, option);
     EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
 }
 
@@ -111,7 +114,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_003, TestSize.Level1)
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(-1);
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), data, reply, option);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), data, reply, option);
     EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
 }
 
@@ -131,7 +134,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_004, TestSize.Level1)
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(10);
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), data, reply, option);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), data, reply, option);
     EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
 }
 
@@ -151,13 +154,13 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_005, TestSize.Level1)
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(0);
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), data, reply, option);
-    EXPECT_EQ(E_PRINT_NONE, result);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), data, reply, option);
+    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
 }
 
 /**
  * @tc.name: OnRemoteRequest_006
- * @tc.desc: Branch: code == COMMAND_GET_PRINTER_STATUS -> HandleGetPrinterStatus
+ * @tc.desc: Branch: code == COMMAND_REQUEST_PRINTER_STATUS -> HandleGetPrinterStatus
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -171,8 +174,8 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_006, TestSize.Level1)
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(0);
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_STATUS), data, reply, option);
-    EXPECT_EQ(E_PRINT_NONE, result);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
+    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
 }
 
 /**
@@ -213,8 +216,8 @@ HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterStatus_001, TestSize.Level1)
     std::string msg = "[]";
     data.WriteInt64(static_cast<int64_t>(msg.size()));
     data.WriteRawData(msg.c_str(), msg.size());
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_STATUS), data, reply, option);
-    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
+    EXPECT_EQ(E_PRINT_NONE, result);
 }
 
 /**
@@ -235,7 +238,7 @@ HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterList_001, TestSize.Level1)
     std::string msg = "[]";
     data.WriteInt64(static_cast<int64_t>(msg.size()));
     data.WriteRawData(msg.c_str(), msg.size());
-    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_GET_PRINTER_LIST), data, reply, option);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), data, reply, option);
     EXPECT_EQ(E_PRINT_NONE, result);
 }
 
