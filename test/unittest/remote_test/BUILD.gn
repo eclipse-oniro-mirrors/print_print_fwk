@@ -14,13 +14,8 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service/print_service"
-} else {
-  _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services/print_service"
-}
+_test_path = "${print_path}/test"
+_service_path = "${print_path}/services/print_service"
 
 module_output_path = unit_test_output_path
 
@@ -29,7 +24,10 @@ ohos_unittest("remote_test") {
   include_dirs = [
     "mock",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/ohprint/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${_service_path}/include",
+    "${_service_path}/include/event_callback",
     "${_service_path}/include/remote",
     "${print_utils_path}/include",
   ]
@@ -48,19 +46,51 @@ ohos_unittest("remote_test") {
     "${_test_path}/unittest/remote_test/print_ipc_connection_test.cpp",
   ]
 
-  deps = [
-    "${print_path}/etc/init:printservice.rc",
-    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
-    "${print_path}/frameworks/models/print_models:print_models",
-    "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service_test",
-  ]
-
   cflags_cc = [
     "-DUNIT_TEST",
     "-Dprivate=public",
     "-Dprotected=public",
-    "-DREMOTE_SERVICE_ENABLE",
+  ]
+
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+
+  if (print_fwk_feature_virtual_printer) {
+    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
+
+  if (print_fwk_feature_watermark_enforcing) {
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
+  if (print_fwk_feature_kia_interceptor) {
+    cflags_cc += [ "-DKIA_INTERCEPTOR_ENABLE" ]
+  }
+
+  if (print_fwk_feature_device_isolation) {
+    cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
+  if (print_fwk_feature_print_failure_ai_notifier) {
+    cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
+  if (print_fwk_feature_remote_service) {
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
+  }
+
+  deps = [
+    "${print_path}/etc/init:printservice.rc",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/kits/extension:print_extension_framework",
+    "${print_path}/frameworks/kits/extension:print_extension_module",
+    "${print_path}/frameworks/models/print_models:print_models",
+    "${print_path}/interfaces/kits/jsnapi/print_extension:printextensionability_napi",
+    "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
+    "${print_path}/interfaces/kits/napi/print_napi:print_napi",
+    "${print_path}/profile:print_sa_profiles",
+    "${print_path}/services/print_service:print_service_test",
   ]
 
   external_deps = [
@@ -78,6 +108,19 @@ ohos_unittest("remote_test") {
     "jsoncpp:jsoncpp",
     "os_account:os_account_innerkits",
   ]
+
+  if (cups_enable) {
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "openssl:libssl_shared",
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
+
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+  }
 }
 
 group("unittest") {
