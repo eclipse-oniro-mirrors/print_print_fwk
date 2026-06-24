@@ -661,6 +661,14 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     }
     printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
+    
+    int32_t result = ConnectPrinterByType(printerId);
+    PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter end", PrintUtils::AnonymizePrinterId(printerId).c_str());
+    return result;
+}
+
+int32_t PrintServiceAbility::ConnectPrinterByType(const std::string &printerId)
+{
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     if (!vendorManager.ExtractVendorName(extensionId).empty()) {
         if (!vendorManager.ConnectPrinterByIdAndPpd(printerId, "auto", "auto")) {
@@ -680,9 +688,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         return ConnectRemotePrinter(printerId);
     }
 #endif  // REMOTE_SERVICE_ENABLE
-    int32_t result = HandleExtensionConnectPrinter(printerId);
-    PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter end", PrintUtils::AnonymizePrinterId(printerId).c_str());
-    return result;
+    return HandleExtensionConnectPrinter(printerId);
 }
 
 int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)

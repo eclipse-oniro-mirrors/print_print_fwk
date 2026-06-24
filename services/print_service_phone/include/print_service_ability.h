@@ -171,6 +171,7 @@ private:
     int32_t Init();
     void InitServiceHandler();
     void ManualStart();
+    int32_t ConnectPrinterByType(const std::string &printerId);
     std::string GetPrintJobOrderId();
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
