@@ -165,6 +165,8 @@ public:
     void HandleWebPrinterUninstall();
     std::shared_ptr<IHksAdapter> GetHksAdapter();
     int32_t GetCurrentUserId();
+    bool GetBundleInfo(AppExecFwk::BundleInfo &bundleInfo);
+    bool IsExtensionPrintJob(const std::string &cid);
 
 protected:
     void OnStart() override;
@@ -174,6 +176,7 @@ private:
     int32_t Init();
     void InitServiceHandler();
     void ManualStart();
+    int32_t ConnectPrinterByType(const std::string &printerId);
     std::string GetPrintJobOrderId();
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
@@ -344,6 +347,8 @@ private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
+    int32_t StartExtPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
+    int32_t StartCupsPrintJob(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
@@ -427,6 +432,15 @@ public:
     bool IsDisablePrint();
     void ReportEventAndUpdateJobState(std::string option, std::string jobId);
 #endif // EDM_SERVICE_ENABLE
+
+#ifdef REMOTE_SERVICE_ENABLE
+public:
+    int32_t AddRemotePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
+    bool RemoveRemotePrinterInfo(const std::string &printerId);
+private:
+    bool IsRemotePrinter(const std::string &printerId);
+    int32_t ConnectRemotePrinter(const std::string &printerId);
+#endif // REMOTE_SERVICE_ENABLE
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H
