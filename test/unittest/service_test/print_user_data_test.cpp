@@ -1393,5 +1393,42 @@ HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_OverwritesExistingPrefs, 
     auto savedPrefs = userData->printerUserPreferences_["printer_id"];
     EXPECT_NE(savedPrefs, nullptr);
 }
+
+HWTEST_F(PrintUserDataTest, ObtainUserPreferencesDirectory_ReturnsCorrectPath, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+    std::string dir = userData->ObtainUserPreferencesDirectory();
+    EXPECT_EQ(dir, PRINTER_SERVICE_FILE_PATH + "/100/printer_user_prefs");
+}
+
+HWTEST_F(PrintUserDataTest, ObtainUserPreferencesDirectory_DifferentUsers_DifferentPaths, TestSize.Level1)
+{
+    auto user1 = std::make_shared<OHOS::Print::PrintUserData>();
+    user1->SetUserId(100);
+    auto user2 = std::make_shared<OHOS::Print::PrintUserData>();
+    user2->SetUserId(200);
+    EXPECT_NE(user1->ObtainUserPreferencesDirectory(), user2->ObtainUserPreferencesDirectory());
+}
+
+HWTEST_F(PrintUserDataTest, LoadPrinterUserPreferences_NeitherPathExists_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(99913);
+
+    PrinterUserPreferences loadPrefs;
+    bool loaded = userData->LoadPrinterUserPreferences("nonexistent", "nonexistent", loadPrefs);
+    EXPECT_FALSE(loaded);
+}
+
+HWTEST_F(PrintUserDataTest, DeletePrinterUserPreferences_NeitherPath_NoError, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(99918);
+
+    userData->DeletePrinterUserPreferences("no_file", "no_file");
+    EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+}
+
 }  // namespace Print
 }  // namespace OHOS
