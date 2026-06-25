@@ -58,6 +58,7 @@ struct JobParameters {
     std::string vendorOptions;
     bool isReverse = false;
     bool isCollate = true;
+    std::string bsuniOutputFormat;
 };
 
 enum StatePolicy {

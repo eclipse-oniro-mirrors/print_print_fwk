@@ -52,6 +52,7 @@
 #include "print_json_util.h"
 #include "print_setting_data_helper.h"
 #include "print_vendor_options_util.h"
+#include "print_cloud_config_manager.h"
 #include "parameters.h"
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
@@ -1452,6 +1453,13 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    std::string outputFormat =
+        PrintCloudConfigManager::GetInstance().MatchPrinterMakeInCloudConfig(printerInfo.GetPrinterMake());
+    if (!outputFormat.empty()) {
+        infoJson["bsuniOutputFormat"] = outputFormat;
+        PRINT_HILOGI("printerMake %{public}s matched cloud config, set bsuniOutputFormat to %{public}s",
+            printerInfo.GetPrinterMake().c_str(), outputFormat.c_str());
+    }
 
     PrinterPreferences preferences;
     printerInfo.GetPreferences(preferences);
