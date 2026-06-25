@@ -53,6 +53,26 @@ struct BaseContext {
     PrintRequestType requestType = PrintRequestType::REQUEST_TYPE_INVALID;
     ErrorMessage errorMessage;
 
+    BaseContext() = default;
+
+    BaseContext(const BaseContext &other)
+    {
+        env = other.env;
+        deferred = nullptr;
+        sessionId = other.sessionId;
+        context = other.context;
+        uiExtensionContext = other.uiExtensionContext;
+        requestType = other.requestType;
+        errorMessage = other.errorMessage;
+        if (other.callback != nullptr) {
+            napi_value cb = nullptr;
+            napi_status status = napi_get_reference_value(other.env, other.callback, &cb);
+            if (status == napi_ok && cb != nullptr) {
+                napi_create_reference(other.env, cb, 1, &callback);
+            }
+        }
+    }
+
     ~BaseContext()
     {
         PRINT_HILOGI("release enter");

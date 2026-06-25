@@ -451,7 +451,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     ParseInfoToPrinterJson(info, printerJson);
     std::string jsonString = PrintJsonUtil::WriteString(printerJson);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close File Failure.");
@@ -1422,7 +1422,7 @@ void PrintSystemData::SaveJsonFile(const std::string &fileName, const std::strin
         return;
     }
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close file failure.");

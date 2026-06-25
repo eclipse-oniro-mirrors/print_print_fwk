@@ -226,7 +226,7 @@ bool SmbHostSearchHelper::HandleReceive()
         return false;
     }
     uint32_t ip = destAddr.sin_addr.s_addr;
-    std::string hostName = GetFileServerName();
+    std::string hostName = GetFileServerName(size);
     if (!hostName.empty() && !scannedHosts_->Contains(ip)) {
         scannedHosts_->Add(ip, hostName);
     }
@@ -486,11 +486,11 @@ bool SmbHostSearchHelper::TestSmbHostAlive(const std::string& ip, int32_t timeou
     return false;
 }
 
-std::string SmbHostSearchHelper::GetFileServerName()
+std::string SmbHostSearchHelper::GetFileServerName(ssize_t recvSize)
 {
     int32_t offset = 0;
     char* buff = recvBuffer_.data();
-    int32_t buffsize = static_cast<int32_t>(recvBuffer_.size());
+    int32_t buffsize = static_cast<int32_t>(recvSize);
     if (buffsize < HEADER_SKIP_SIZE + 1) {
         PRINT_HILOGW("Head error");
         return "";

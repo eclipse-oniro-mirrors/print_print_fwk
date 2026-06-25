@@ -39,6 +39,10 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.print", PRINT_API_COUNTED);
     napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
+    if (paramCount < NapiPrintUtils::ARGC_ONE || argv[0] == nullptr) {
+        PRINT_HILOGE("Invalid parameter count.");
+        return nullptr;
+    }
     napi_valuetype type;
     PRINT_CALL(env, napi_typeof(env, argv[0], &type));
     if ((paramCount > NapiPrintUtils::ARGC_THREE) && type == napi_string) {
@@ -68,6 +72,7 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
         if ((proxy == nullptr) || (status != napi_ok)) {
             PRINT_HILOGE("Failed to create print task");
             context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
+            return napi_generic_failure;
         }
 
         PrintTask *task;
@@ -158,6 +163,10 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         }
 
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
+        if (adapterRef == nullptr) {
+            PRINT_HILOGE("Failed to create callback reference");
+            return nullptr;
+        }
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
         if (callback == nullptr) {
             PRINT_HILOGE("callback parameter error");

@@ -265,7 +265,8 @@ HWTEST_F(SmbPrinterHelperTest, SetQuestionName_001, TestSize.Level1)
 HWTEST_F(SmbPrinterHelperTest, GetFileServerName_001, TestSize.Level1)
 {
     SmbHostSearchHelper helper;
-    std::string serverName = helper.GetFileServerName();
+    ssize_t recvSize = 10;
+    std::string serverName = helper.GetFileServerName(recvSize);
     EXPECT_TRUE(serverName.empty());
 }
 

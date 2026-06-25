@@ -689,7 +689,12 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
         for (auto printJob : context->allPrintJobs) {
             PRINT_HILOGD("PrinterId = %{public}s", printJob.GetPrinterId().c_str());
             PRINT_HILOGD("JobId = %{public}s", printJob.GetJobId().c_str());
-            status = napi_set_element(env, *result, index++, PrintJobHelper::MakeJsObject(env, printJob));
+            napi_value jsObj = PrintJobHelper::MakeJsObject(env, printJob);
+            if (jsObj == nullptr) {
+                PRINT_HILOGW("Failed to create print job js object");
+                continue;
+            }
+            status = napi_set_element(env, *result, index++, jsObj);
         }
         return napi_ok;
     };
@@ -730,7 +735,12 @@ napi_value NapiInnerPrint::QueryAllActivePrintJob(napi_env env, napi_callback_in
         for (auto printJob : context->allPrintJobs) {
             PRINT_HILOGD("PrinterId = %{public}s", printJob.GetPrinterId().c_str());
             PRINT_HILOGD("JobId = %{public}s", printJob.GetJobId().c_str());
-            status = napi_set_element(env, *result, index++, PrintJobHelper::MakeJsObject(env, printJob));
+            napi_value jsObj = PrintJobHelper::MakeJsObject(env, printJob);
+            if (jsObj == nullptr) {
+                PRINT_HILOGW("Failed to create print job js object");
+                continue;
+            }
+            status = napi_set_element(env, *result, index++, jsObj);
         }
         return napi_ok;
     };
@@ -881,6 +891,10 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
+    if (callbackRef == nullptr) {
+        PRINT_HILOGE("Failed to create callback reference");
+        return nullptr;
+    }
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
         NapiPrintUtils::DeleteReference(env, callbackRef);
@@ -963,6 +977,10 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
 
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
+        if (callbackRef == nullptr) {
+            PRINT_HILOGE("Failed to create callback reference");
+            return nullptr;
+        }
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
         if (callback == nullptr) {
             NapiPrintUtils::DeleteReference(env, callbackRef);
@@ -2019,6 +2037,10 @@ napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info i
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    if (callbackRef == nullptr) {
+        PRINT_HILOGE("Failed to create callback reference");
+        return nullptr;
+    }
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
         NapiPrintUtils::DeleteReference(env, callbackRef);

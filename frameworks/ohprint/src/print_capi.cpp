@@ -262,10 +262,19 @@ Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList)
         PRINT_HILOGW("memset_s fail");
         return PRINT_ERROR_GENERIC_FAILURE;
     }
+    uint32_t validCount = 0;
     for (size_t i = 0; i < count; ++i) {
-        printerIdList->list[i] = CopyString(printerNameList[i]);
+        char *copy = CopyString(printerNameList[i]);
+        if (copy != nullptr) {
+            printerIdList->list[validCount] = copy;
+            validCount++;
+        }
     }
-    printerIdList->count = count;
+    if (validCount == 0) {
+        OH_Print_ReleasePrinterList(printerIdList);
+        return PRINT_ERROR_GENERIC_FAILURE;
+    }
+    printerIdList->count = validCount;
     return PRINT_ERROR_NONE;
 }
 
@@ -432,10 +441,19 @@ Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
         PRINT_HILOGW("memset_s fail");
         return PRINT_ERROR_GENERIC_FAILURE;
     }
+    uint32_t validCount = 0;
     for (size_t i = 0; i < count; ++i) {
-        printerIdList->list[i] = CopyString(printerNameList[i]);
+        char *copy = CopyString(printerNameList[i]);
+        if (copy != nullptr) {
+            printerIdList->list[validCount] = copy;
+            validCount++;
+        }
     }
-    printerIdList->count = count;
+    if (validCount == 0) {
+        OH_Print_ReleasePrinterList(printerIdList);
+        return PRINT_ERROR_GENERIC_FAILURE;
+    }
+    printerIdList->count = validCount;
     return PRINT_ERROR_NONE;
 }
 
@@ -580,7 +598,8 @@ Print_ErrorCode OH_Print_RestorePrinterProperties(const char *printerId, const P
 }
 
 namespace {
-class PrintDocumentAdapterWrapper : public PrintDocumentAdapter {
+class PrintDocumentAdapterWrapper : public PrintDocumentAdapter,
+    public std::enable_shared_from_this<PrintDocumentAdapterWrapper> {
 public:
     explicit PrintDocumentAdapterWrapper(Print_PrintDocCallback PrintCallback);
     void onStartLayoutWrite(const std::string &jobId, const PrintAttributes &oldAttrs, const PrintAttributes &newAttrs,
@@ -595,11 +614,11 @@ private:
     Print_PrintDocCallback printCb_;
     std::function<void(std::string, uint32_t)> writeResultCb_;
     static std::mutex printDocMutex_;
-    static std::map<std::string, PrintDocumentAdapterWrapper *> printDocAdapterMap_;
+    static std::map<std::string, std::shared_ptr<PrintDocumentAdapterWrapper>> printDocAdapterMap_;
 };
 
 std::mutex PrintDocumentAdapterWrapper::printDocMutex_;
-std::map<std::string, PrintDocumentAdapterWrapper *> PrintDocumentAdapterWrapper::printDocAdapterMap_;
+std::map<std::string, std::shared_ptr<PrintDocumentAdapterWrapper>> PrintDocumentAdapterWrapper::printDocAdapterMap_;
 
 PrintDocumentAdapterWrapper::PrintDocumentAdapterWrapper(Print_PrintDocCallback PrintCallback)
 {
@@ -616,7 +635,7 @@ void PrintDocumentAdapterWrapper::onStartLayoutWrite(const std::string &jobId, c
     {
         std::lock_guard<std::mutex> lock(printDocMutex_);
         if (printDocAdapterMap_.find(jobId) == printDocAdapterMap_.end()) {
-            printDocAdapterMap_.insert({jobId, this});
+            printDocAdapterMap_.insert({jobId, shared_from_this()});
         }
     }
     writeResultCb_ = writeResultCallback;
@@ -651,7 +670,7 @@ void PrintDocumentAdapterWrapper::WriteResultCallback(const char *jobId, uint32_
         return;
     }
     std::string jobIdStr = jobId;
-    PrintDocumentAdapterWrapper *wrapper = nullptr;
+    std::shared_ptr<PrintDocumentAdapterWrapper> wrapper = nullptr;
     {
         std::lock_guard<std::mutex> lock(printDocMutex_);
         auto iter = printDocAdapterMap_.find(jobId);

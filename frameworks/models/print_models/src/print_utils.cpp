@@ -49,7 +49,8 @@ const uint32_t ANONYMIZE_IPV6_LEN = 2;
 std::string PrintUtils::ToLower(const std::string &s)
 {
     std::string res = s;
-    std::transform(res.begin(), res.end(), res.begin(), tolower);
+    std::transform(res.begin(), res.end(), res.begin(),
+        [](unsigned char c) { return std::tolower(c); });
     return res;
 }
 
