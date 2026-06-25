@@ -2870,6 +2870,15 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
     struct in6_addr addr6;
     
     if (inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) {
+        // Check if it's a link-local address (169.254.x.x)
+        // These addresses are DHCP failure fallback addresses (RFC 3927)
+        // and cannot be used for TCP communication, making print delivery impossible
+        if (hostStr.find("169.254.") == 0) {
+            PRINT_HILOGW("[Uri: %{public}s] IPv4 address 169.254.x.x is invalid "
+                "(link-local/DHCP failure address, cannot perform TCP communication)",
+                printerUri.c_str());
+            return IP_ADDRESS_TYPE_INVALID;
+        }
         PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
         return IP_ADDRESS_TYPE_IPV4;
     }
