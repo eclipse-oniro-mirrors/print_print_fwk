@@ -59,12 +59,20 @@ std::vector<PrintPageSize> BuildDefaultPageSizeList()
 }
 
 const std::vector<PrintPageSize> DEFAULT_PAGE_SIZE_LIST = BuildDefaultPageSizeList();
+
+constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
 }
 
 RemotePrinterManager::RemotePrinterManager()
 {
     PRINT_HILOGI("RemotePrinterManager constructor");
     serviceAdapter_ = RemoteServiceAdapter::GetInstance();
+    
+    PRINT_CHECK_NULL_RETURN_VOID(serviceAdapter_);
+    serviceAdapter_->SetOnServiceDiedCallback([this]() {
+        PRINT_HILOGI("Remote service died, clearing all printers");
+        this->ClearAllPrinters();
+    });
     
     std::call_once(initFlag_, [this]() {
         PRINT_CHECK_NULL_RETURN_VOID(serviceAdapter_);

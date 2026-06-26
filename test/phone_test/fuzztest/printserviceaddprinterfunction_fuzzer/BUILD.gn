@@ -103,6 +103,10 @@ ohos_fuzztest("PrintServiceAddPrinterFunctionFuzzTest") {
       "time_service:time_client",
     ]
   }
+
+  if (print_fwk_feature_remote_service) {
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
+  }
 }
 
 ###############################################################################

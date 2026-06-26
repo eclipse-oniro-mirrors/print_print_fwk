@@ -24,8 +24,14 @@
 #include "print_json_util.h"
 #include "print_utils.h"
 #include <mutex>
+#include <thread>
+#include <chrono>
 
 namespace OHOS::Print {
+
+namespace {
+constexpr int32_t RECONNECT_DELAY_MS = 1000;
+}
 
 sptr<RemoteServiceAdapter> RemoteServiceAdapter::instance_ = nullptr;
 
@@ -95,6 +101,35 @@ bool RemoteServiceAdapter::IsConnected()
     return connection_->GetRemoteObject() != nullptr;
 }
 
+void RemoteServiceAdapter::OnRemoteServiceDied()
+{
+    PRINT_HILOGI("RemoteServiceAdapter::OnRemoteServiceDied");
+    
+    std::lock_guard<std::mutex> lock(bindMutex_);
+    
+    PRINT_CHECK_NULL_RETURN_VOID(connection_);
+    
+    auto remoteObject = connection_->GetRemoteObject();
+    if (remoteObject != nullptr && deathRecipient_ != nullptr) {
+        remoteObject->RemoveDeathRecipient(deathRecipient_);
+    }
+    
+    deathRecipient_ = nullptr;
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(RECONNECT_DELAY_MS));
+    
+    if (BindService()) {
+        PRINT_HILOGI("Remote service reconnected successfully");
+        return;
+    }
+    
+    PRINT_HILOGE("Remote service reconnect failed");
+    
+    PRINT_CHECK_NULL_RETURN_VOID(onServiceDiedCb_);
+    PRINT_HILOGI("Calling onServiceDiedCallback to clear printers");
+    onServiceDiedCb_();
+}
+
 int32_t RemoteServiceAdapter::SendData(uint32_t code, const std::string &msg)
 {
     PRINT_HILOGI("RemoteServiceAdapter::SendData code = %{public}d, msg = %{public}s", code, msg.c_str());
@@ -155,6 +190,12 @@ int32_t RemoteServiceAdapter::RequestPrinterList()
     std::string msg = PrintJsonUtil::WriteString(jsonArray);
     PRINT_HILOGD("RequestPrinterList request: %{public}s", msg.c_str());
     return SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), msg);
+}
+
+void RemoteServiceAdapter::SetOnServiceDiedCallback(std::function<void()> cb)
+{
+    PRINT_HILOGI("RemoteServiceAdapter::SetOnServiceDiedCallback");
+    onServiceDiedCb_ = cb;
 }
 
 } // namespace OHOS::Print

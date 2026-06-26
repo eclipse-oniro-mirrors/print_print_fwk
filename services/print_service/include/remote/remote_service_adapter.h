@@ -19,6 +19,7 @@
 #include <string>
 #include <mutex>
 #include <atomic>
+#include <functional>
 #include "print_ipc_connection.h"
 #include "remote_callback_stub.h"
 #include "noncopyable.h"
@@ -43,10 +44,16 @@ public:
     int32_t RequestPrinterStatus(const std::string &devId);
     
     int32_t RequestPrinterList();
+    
+    void SetOnServiceDiedCallback(std::function<void()> cb);
+    
+    void OnRemoteServiceDied();
 
 private:
     sptr<PrintIpcConnection> connection_;
     sptr<RemoteCallbackStub> callbackStub_;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_;
+    std::function<void()> onServiceDiedCb_;
     std::mutex bindMutex_;
 
     static sptr<RemoteServiceAdapter> instance_;

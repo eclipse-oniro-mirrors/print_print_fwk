@@ -17,6 +17,8 @@
 #include "print_constant.h"
 #include "refbase.h"
 #include "ipc_object_stub.h"
+#include "print_common_death_recipient.h"
+#include "remote_service_adapter.h"
 
 namespace OHOS::Print {
 
@@ -28,9 +30,28 @@ void PrintIpcConnection::OnAbilityConnectDone(
     PRINT_HILOGI("PrintIpcConnection::OnAbilityConnectDone resultCode = %{public}d", resultCode);
     if (resultCode == ERR_OK && remoteObject != nullptr) {
         std::lock_guard<std::mutex> lock(mutex_);
+        
+        if (remoteObject_ != nullptr && deathRecipient_ != nullptr) {
+            remoteObject_->RemoveDeathRecipient(deathRecipient_);
+        }
+        
         remoteObject_ = remoteObject;
+        deathRecipient_ = sptr<IRemoteObject::DeathRecipient>(
+            new PrintCommonDeathRecipient([this](const sptr<IRemoteObject> &remote) {
+                PRINT_HILOGI("Remote service died, attempting reconnect");
+                std::lock_guard<std::mutex> lock(mutex_);
+                remoteObject_ = nullptr;
+                deathRecipient_ = nullptr;
+                
+                auto adapter = RemoteServiceAdapter::GetInstance();
+                if (adapter != nullptr) {
+                    adapter->OnRemoteServiceDied();
+                }
+            }));
+        remoteObject_->AddDeathRecipient(deathRecipient_);
+        
         cv_.notify_one();
-        PRINT_HILOGI("ipc service connected successfully");
+        PRINT_HILOGI("ipc service connected successfully with death recipient");
     } else {
         PRINT_HILOGE("ipc service connect failed, resultCode = %{public}d", resultCode);
     }
@@ -43,7 +64,13 @@ void PrintIpcConnection::OnAbilityDisconnectDone(
     PRINT_HILOGI("PrintIpcConnection::OnAbilityDisconnectDone resultCode = %{public}d", resultCode);
     if (resultCode == ERR_OK) {
         std::lock_guard<std::mutex> lock(mutex_);
+        
+        if (remoteObject_ != nullptr && deathRecipient_ != nullptr) {
+            remoteObject_->RemoveDeathRecipient(deathRecipient_);
+        }
+        
         remoteObject_ = nullptr;
+        deathRecipient_ = nullptr;
         PRINT_HILOGI("ipc service disconnected successfully");
     } else {
         PRINT_HILOGE("ipc service disconnect failed, resultCode = %{public}d", resultCode);

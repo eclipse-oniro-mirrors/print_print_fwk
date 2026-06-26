@@ -203,4 +203,31 @@ HWTEST_F(PrintIpcConnectionTest, SendData_002, TestSize.Level1)
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
 }
 
+/**
+ * @tc.name: DeathRecipient_001
+ * @tc.desc: Branch: OnAbilityConnectDone with ERR_OK -> deathRecipient_ created
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintIpcConnectionTest, DeathRecipient_001, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    EXPECT_EQ(nullptr, connection.deathRecipient_);
+}
+
+/**
+ * @tc.name: OnAbilityDisconnectDone_003
+ * @tc.desc: Branch: disconnect with deathRecipient_ -> removed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_003, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    AppExecFwk::ElementName element;
+    connection.OnAbilityDisconnectDone(element, ERR_OK);
+    EXPECT_EQ(nullptr, connection.deathRecipient_);
+    EXPECT_EQ(nullptr, connection.remoteObject_);
+}
+
 } // namespace OHOS::Print

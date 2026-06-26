@@ -66,8 +66,6 @@ private:
     std::once_flag initFlag_;
     
     std::atomic<bool> isDiscoveryRunning_{false};
-    
-    static constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
 };
 
 } // namespace OHOS::Print

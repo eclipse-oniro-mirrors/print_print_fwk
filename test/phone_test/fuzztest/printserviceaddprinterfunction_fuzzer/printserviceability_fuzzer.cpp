@@ -124,6 +124,49 @@ void TestisEprint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
     PrintServiceAbility::GetInstance()->GetPrintJobOrderId();
 }
 
+void TestConnectPrinterByType(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectPrinterByType(printerId);
+}
+
+void TestGetBundleInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    AppExecFwk::BundleInfo bundleInfo;
+    PrintServiceAbility::GetInstance()->GetBundleInfo(bundleInfo);
+}
+
+void TestIsExtensionPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string cid = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->IsExtensionPrintJob(cid);
+}
+
+#ifdef REMOTE_SERVICE_ENABLE
+void TestIsRemotePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->IsRemotePrinter(printerId);
+}
+
+void TestConnectRemotePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectRemotePrinter(printerId);
+}
+
+void TestAddRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddRemotePrinterInfo(printerInfo, extensionId);
+}
+#endif
+
 void TestAddPrinterByPrinterDriver(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_DRIVER_PRINTER_NAME_LENGTH + 1);
@@ -156,6 +199,14 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestAddIpPrinterToCupsWithPpd,
         &TestNotifyAdapterJobChanged,
         &TestisEprint,
+        &TestConnectPrinterByType,
+        &TestGetBundleInfo,
+        &TestIsExtensionPrintJob,
+#ifdef REMOTE_SERVICE_ENABLE
+        &TestIsRemotePrinter,
+        &TestConnectRemotePrinter,
+        &TestAddRemotePrinterInfo,
+#endif
         &TestAddPrinterByPrinterDriver
     };
     TestHandler handler = dataProvider->PickValueInArray(tasks);
