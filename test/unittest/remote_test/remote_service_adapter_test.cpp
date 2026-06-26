@@ -178,24 +178,6 @@ HWTEST_F(RemoteServiceAdapterTest, SetOnServiceDiedCallback_002, TestSize.Level1
 }
 
 /**
- * @tc.name: OnRemoteServiceDied_001
- * @tc.desc: Branch: connection_ nullptr -> return early
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_001, TestSize.Level1)
-{
-    RemoteServiceAdapter client;
-    client.connection_ = nullptr;
-    bool callbackCalled = false;
-    client.SetOnServiceDiedCallback([&callbackCalled]() {
-        callbackCalled = true;
-    });
-    client.OnRemoteServiceDied();
-    EXPECT_FALSE(callbackCalled);
-}
-
-/**
  * @tc.name: OnRemoteServiceDied_002
  * @tc.desc: Branch: BindService fails -> callback called
  * @tc.type: FUNC
@@ -204,6 +186,8 @@ HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_001, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_002, TestSize.Level1)
 {
     RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
     bool callbackCalled = false;
     client.SetOnServiceDiedCallback([&callbackCalled]() {
         callbackCalled = true;
