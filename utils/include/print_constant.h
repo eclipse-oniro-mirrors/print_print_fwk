@@ -23,7 +23,7 @@ namespace OHOS::Print {
 #define PRINT_RET_NONE
 
 #define PRINT_MAX_PRINT_COUNT 1000
-#define PRINT_MAX_FILE_LIST_SIZE 1000
+#define PRINT_MAX_FILE_LIST_SIZE 100
 #define PRINT_MAX_PPD_COUNT 4096
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"

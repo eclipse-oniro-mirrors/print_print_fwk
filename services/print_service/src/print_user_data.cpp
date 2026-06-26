@@ -460,7 +460,7 @@ bool PrintUserData::SetUserDataToFile()
         }
         std::string jsonString = PrintJsonUtil::WriteString(jsonObject);
         size_t jsonLength = jsonString.length();
-        size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
+        size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
         int fcloseResult = fclose(file);
         if (fcloseResult != 0) {
             PRINT_HILOGE("File Operation Failure.");
@@ -777,7 +777,7 @@ void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
     }
     std::string jsonString = ParsePrintHistoryJobListToJsonString(printerId);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, printHistoryJobFile);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), printHistoryJobFile);
     int fcloseResult = fclose(printHistoryJobFile);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close File Failure.");

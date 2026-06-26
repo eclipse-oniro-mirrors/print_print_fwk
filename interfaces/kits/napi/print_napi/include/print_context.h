@@ -53,9 +53,6 @@ struct BaseContext {
     PrintRequestType requestType = PrintRequestType::REQUEST_TYPE_INVALID;
     ErrorMessage errorMessage;
 
-    BaseContext() = default;
-
-
     ~BaseContext()
     {
         PRINT_HILOGI("release enter");

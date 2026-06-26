@@ -163,10 +163,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         }
 
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
-        if (adapterRef == nullptr) {
-            PRINT_HILOGE("Failed to create callback reference");
-            return nullptr;
-        }
+        PRINT_CHECK_NULL_AND_RETURN(adapterRef, nullptr);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
         if (callback == nullptr) {
             PRINT_HILOGE("callback parameter error");
