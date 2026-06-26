@@ -204,27 +204,33 @@ HWTEST_F(PrintIpcConnectionTest, SendData_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: DeathRecipient_001
- * @tc.desc: Branch: OnAbilityConnectDone with ERR_OK -> deathRecipient_ created
+ * @tc.name: OnAbilityConnectDone_004
+ * @tc.desc: Branch: connect success -> deathRecipient created and added
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintIpcConnectionTest, DeathRecipient_001, TestSize.Level1)
+HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
 {
     PrintIpcConnection connection;
-    EXPECT_EQ(nullptr, connection.deathRecipient_);
+    sptr<IRemoteObject> remoteObject = new MockRemoteObject();
+    AppExecFwk::ElementName element;
+    connection.OnAbilityConnectDone(element, remoteObject, ERR_OK);
+    EXPECT_NE(nullptr, connection.deathRecipient_);
+    EXPECT_NE(nullptr, connection.remoteObject_);
 }
 
 /**
- * @tc.name: OnAbilityDisconnectDone_003
- * @tc.desc: Branch: disconnect with deathRecipient_ -> removed
+ * @tc.name: OnAbilityDisconnectDone_004
+ * @tc.desc: Branch: disconnect success -> deathRecipient removed
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_003, TestSize.Level1)
+HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_004, TestSize.Level1)
 {
     PrintIpcConnection connection;
+    sptr<IRemoteObject> remoteObject = new MockRemoteObject();
     AppExecFwk::ElementName element;
+    connection.OnAbilityConnectDone(element, remoteObject, ERR_OK);
     connection.OnAbilityDisconnectDone(element, ERR_OK);
     EXPECT_EQ(nullptr, connection.deathRecipient_);
     EXPECT_EQ(nullptr, connection.remoteObject_);
