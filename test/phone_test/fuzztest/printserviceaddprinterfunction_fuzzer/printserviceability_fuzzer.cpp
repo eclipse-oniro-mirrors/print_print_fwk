@@ -143,18 +143,6 @@ void TestIsExtensionPrintJob(const uint8_t *data, size_t size, FuzzedDataProvide
 }
 
 #ifdef REMOTE_SERVICE_ENABLE
-void TestIsRemotePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->IsRemotePrinter(printerId);
-}
-
-void TestConnectRemotePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->ConnectRemotePrinter(printerId);
-}
-
 void TestAddRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrinterInfo printerInfo;
@@ -165,13 +153,13 @@ void TestAddRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvid
     std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->AddRemotePrinterInfo(printerInfo, extensionId);
 }
-#endif
 
 void TestRemoveRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(printerId);
 }
+#endif
 
 void TestAddPrinterByPrinterDriver(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
