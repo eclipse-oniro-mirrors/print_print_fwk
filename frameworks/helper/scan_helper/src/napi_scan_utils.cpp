@@ -408,8 +408,7 @@ void NapiScanUtils::DefineProperties(
 std::string NapiScanUtils::ToLower(const std::string &s)
 {
     std::string res = s;
-    std::transform(res.begin(), res.end(), res.begin(),
-        [](unsigned char c) { return std::tolower(c); });
+    std::transform(res.begin(), res.end(), res.begin(), tolower);
     return res;
 }
 

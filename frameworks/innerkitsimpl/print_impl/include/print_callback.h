@@ -88,7 +88,7 @@ private:
     napi_env env_ = nullptr;
     napi_ref ref_ = nullptr;
     std::shared_ptr<std::mutex> mutex_;
-    std::shared_ptr<PrintDocumentAdapter> adapter_ = nullptr;
+    PrintDocumentAdapter *adapter_ = nullptr;
     NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
     NativePrintJobChangeCallback nativePrintJobChange_cb = nullptr;
 };

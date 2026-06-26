@@ -347,7 +347,7 @@ bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &reso
         return false;
     }
     int yDpi = jsonObject["verticalDpi"].asInt();
-    if (xDpi <= 0 || yDpi <= 0) {
+    if (xDpi < 0 || yDpi < 0) {
         PRINT_HILOGW("Invalid DPI value, xDpi = %{public}d, yDpi = %{public}d", xDpi, yDpi);
         return false;
     }
@@ -377,12 +377,10 @@ void ParsePrinterOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinte
     if (PrintJsonUtil::IsMember(cupsOpt, keyword) && cupsOpt[keyword].isString()) {
         std::string resolutionString = cupsOpt[keyword].asString();
         Json::Value resolutionJson;
-        if (PrintJsonUtil::Parse(resolutionString, resolutionJson)) {
+        if (!PrintJsonUtil::Parse(resolutionString, resolutionJson)) {
             if (!ParseResolutionObject(resolutionJson, nativePrinterInfo.defaultValue.defaultResolution)) {
                 PRINT_HILOGW("ParseResolutionObject fail");
             }
-        } else {
-            PRINT_HILOGW("Parse resolution Json fail.");
         }
     }
 }

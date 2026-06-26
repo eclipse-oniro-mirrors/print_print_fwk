@@ -28,14 +28,14 @@ PrintCallback::PrintCallback(napi_env env, napi_ref ref)
 }
 
 PrintCallback::PrintCallback(PrintDocumentAdapter *adapter)
-    : env_(nullptr), ref_(nullptr), mutex_(std::make_shared<std::mutex>()),
-    adapter_(std::shared_ptr<PrintDocumentAdapter>(adapter))
+    : env_(nullptr), ref_(nullptr), mutex_(std::make_shared<std::mutex>()), adapter_(adapter)
 {
 }
 
 PrintCallback::~PrintCallback()
 {
     if (adapter_ != nullptr) {
+        delete adapter_;
         adapter_ = nullptr;
     } else if (nativePrinterChange_cb != nullptr) {
         nativePrinterChange_cb = nullptr;
