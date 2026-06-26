@@ -22,6 +22,7 @@
 #include "message_parcel.h"
 #include "message_option.h"
 #include "element_name.h"
+#include "mock_remote_object.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -212,10 +213,10 @@ HWTEST_F(PrintIpcConnectionTest, SendData_002, TestSize.Level1)
 HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
 {
     PrintIpcConnection connection;
-    sptr<IRemoteObject> remoteObject = new MockRemoteObject();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
     AppExecFwk::ElementName element;
-    connection.OnAbilityConnectDone(element, remoteObject, ERR_OK);
-    connection.OnAbilityConnectDone(element, remoteObject, ERR_OK);
+    connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
     EXPECT_NE(nullptr, connection.deathRecipient_);
     EXPECT_NE(nullptr, connection.remoteObject_);
 }
@@ -229,10 +230,10 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
 HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_004, TestSize.Level1)
 {
     PrintIpcConnection connection;
-    sptr<IRemoteObject> remoteObject = new MockRemoteObject();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
     AppExecFwk::ElementName element;
     connection.OnAbilityDisconnectDone(element, ERR_OK);
-    connection.OnAbilityConnectDone(element, remoteObject, ERR_OK);
+    connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
     connection.OnAbilityDisconnectDone(element, ERR_OK);
     EXPECT_EQ(nullptr, connection.deathRecipient_);
     EXPECT_EQ(nullptr, connection.remoteObject_);
