@@ -179,7 +179,7 @@ HWTEST_F(RemoteServiceAdapterTest, SetOnServiceDiedCallback_002, TestSize.Level1
 
 /**
  * @tc.name: OnRemoteServiceDied_001
- * @tc.desc: Branch: connection_ == nullptr -> return early
+ * @tc.desc: Branch: connection_ nullptr -> return early
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -187,8 +187,12 @@ HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_001, TestSize.Level1)
 {
     RemoteServiceAdapter client;
     client.connection_ = nullptr;
+    bool callbackCalled = false;
+    client.SetOnServiceDiedCallback([&callbackCalled]() {
+        callbackCalled = true;
+    });
     client.OnRemoteServiceDied();
-    EXPECT_EQ(nullptr, client.deathRecipient_);
+    EXPECT_FALSE(callbackCalled);
 }
 
 /**
@@ -206,24 +210,6 @@ HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_002, TestSize.Level1)
     });
     client.OnRemoteServiceDied();
     EXPECT_TRUE(callbackCalled);
-}
-
-/**
- * @tc.name: OnRemoteServiceDied_003
- * @tc.desc: Branch: connection_ nullptr -> callback not called
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_003, TestSize.Level1)
-{
-    RemoteServiceAdapter client;
-    client.connection_ = nullptr;
-    bool callbackCalled = false;
-    client.SetOnServiceDiedCallback([&callbackCalled]() {
-        callbackCalled = true;
-    });
-    client.OnRemoteServiceDied();
-    EXPECT_FALSE(callbackCalled);
 }
 
 } // namespace OHOS::Print

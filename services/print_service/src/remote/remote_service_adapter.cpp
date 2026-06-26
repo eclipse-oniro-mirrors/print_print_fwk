@@ -107,11 +107,6 @@ void RemoteServiceAdapter::OnRemoteServiceDied()
     
     PRINT_CHECK_NULL_RETURN_VOID(connection_);
     
-    auto remoteObject = connection_->GetRemoteObject();
-    if (remoteObject != nullptr && deathRecipient_ != nullptr) {
-        remoteObject->RemoveDeathRecipient(deathRecipient_);
-    }
-    
     deathRecipient_ = nullptr;
     
     std::this_thread::sleep_for(std::chrono::milliseconds(RECONNECT_DELAY_MS));
