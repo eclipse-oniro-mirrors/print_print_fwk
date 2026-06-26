@@ -29,11 +29,38 @@ namespace OHOS::Print {
 constexpr const char CFG_DIR[] = "etc/com.huawei.hmos.spooler/PRINTER";
 constexpr const char CONFIG_FILE_NAME[] = "bsuni_output_format.json";
 
+#ifdef UNIT_TEST
+PrintCloudConfigManager *PrintCloudConfigManager::instance_ = nullptr;
+std::mutex PrintCloudConfigManager::instanceLock_;
+
+PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
+{
+    std::lock_guard<std::mutex> lock(instanceLock_);
+    if (instance_ == nullptr) {
+        static PrintCloudConfigManager defaultInstance;
+        instance_ = &defaultInstance;
+    }
+    return *instance_;
+}
+
+void PrintCloudConfigManager::SetInstance(PrintCloudConfigManager *instance)
+{
+    std::lock_guard<std::mutex> lock(instanceLock_);
+    instance_ = instance;
+}
+
+void PrintCloudConfigManager::ResetInstance()
+{
+    std::lock_guard<std::mutex> lock(instanceLock_);
+    instance_ = nullptr;
+}
+#else
 PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
 {
     static PrintCloudConfigManager instance;
     return instance;
 }
+#endif // UNIT_TEST
 
 std::string PrintCloudConfigManager::GetCloudConfigFilePath()
 {
@@ -81,18 +108,19 @@ std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::st
         return "";
     }
 
-    if (!LoadCloudConfigFile(filePath)) {
+    std::string cloudConfigContent;
+    if (!LoadCloudConfigFile(filePath, cloudConfigContent)) {
         PRINT_HILOGW("load cloud config file failed");
         return "";
     }
 
-    if (cloudConfigContent_.empty()) {
+    if (cloudConfigContent.empty()) {
         PRINT_HILOGW("cloud config content is empty");
         return "";
     }
 
     Json::Value root;
-    if (!PrintJsonUtil::Parse(cloudConfigContent_, root)) {
+    if (!PrintJsonUtil::Parse(cloudConfigContent, root)) {
         PRINT_HILOGW("parse cloud config json failed");
         return "";
     }
@@ -122,7 +150,7 @@ std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::st
     return "";
 }
 
-bool PrintCloudConfigManager::LoadCloudConfigFile(const std::string &filePath)
+bool PrintCloudConfigManager::LoadCloudConfigFile(const std::string &filePath, std::string &cloudConfigContent)
 {
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -132,10 +160,10 @@ bool PrintCloudConfigManager::LoadCloudConfigFile(const std::string &filePath)
 
     std::stringstream buffer;
     buffer << file.rdbuf();
-    cloudConfigContent_ = buffer.str();
+    cloudConfigContent = buffer.str();
     file.close();
 
-    PRINT_HILOGI("load cloud config file success, content length: %{public}zu", cloudConfigContent_.size());
+    PRINT_HILOGI("load cloud config file success, content length: %{public}zu", cloudConfigContent.size());
     return true;
 }
 } // namespace OHOS::Print

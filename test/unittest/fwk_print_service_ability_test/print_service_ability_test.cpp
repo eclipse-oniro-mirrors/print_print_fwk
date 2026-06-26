@@ -54,6 +54,7 @@
 #include "mock_print_callback_proxy.h"
 #include "mock_hks_adapter.h"
 #include "mock_print_extension_callback_proxy.h"
+#include "mock_print_cloud_config_manager.h"
 #include "parameter.h"
 
 using namespace testing;
@@ -6517,6 +6518,73 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_DecryptSucce
 
     service->DecryptAndFillCustomOptionsToJson(userPrefs, opsJson);
     EXPECT_TRUE(opsJson.isMember("CustomPin"));
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_BsuniOutputFormatNotEmpty_SetInOption, TestSize.Level1)
+{
+    MockPrintCloudConfigManager mockCloudConfigManager;
+    PrintCloudConfigManager::SetInstance(&mockCloudConfigManager);
+    EXPECT_CALL(mockCloudConfigManager, MatchPrinterMakeInCloudConfig("testMaker"))
+        .WillOnce(Return("PDF"));
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    std::string printerId = "testPrinterId";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterName("testName");
+    printerInfo->SetUri("testUri");
+    printerInfo->SetPrinterMake("testMaker");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+
+    PrintJob printJob;
+    printJob.SetPrinterId(printerId);
+    Json::Value infoJson;
+    infoJson["printerName"] = "testPrinterName";
+    printJob.SetOption(PrintJsonUtil::WriteString(infoJson));
+
+    EXPECT_EQ(service->UpdatePrintJobOptionByPrinterId(printJob), true);
+
+    Json::Value resultJson;
+    EXPECT_TRUE(PrintJsonUtil::Parse(printJob.GetOption(), resultJson));
+    EXPECT_TRUE(resultJson.isMember("bsuniOutputFormat"));
+    EXPECT_EQ(resultJson["bsuniOutputFormat"].asString(), "PDF");
+
+    PrintCloudConfigManager::ResetInstance();
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_BsuniOutputFormatEmpty_NotSetInOption, TestSize.Level1)
+{
+    MockPrintCloudConfigManager mockCloudConfigManager;
+    PrintCloudConfigManager::SetInstance(&mockCloudConfigManager);
+    EXPECT_CALL(mockCloudConfigManager, MatchPrinterMakeInCloudConfig("testMaker"))
+        .WillOnce(Return(""));
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    std::string printerId = "testPrinterId";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterName("testName");
+    printerInfo->SetUri("testUri");
+    printerInfo->SetPrinterMake("testMaker");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+
+    PrintJob printJob;
+    printJob.SetPrinterId(printerId);
+    Json::Value infoJson;
+    infoJson["printerName"] = "testPrinterName";
+    printJob.SetOption(PrintJsonUtil::WriteString(infoJson));
+
+    EXPECT_EQ(service->UpdatePrintJobOptionByPrinterId(printJob), true);
+
+    Json::Value resultJson;
+    EXPECT_TRUE(PrintJsonUtil::Parse(printJob.GetOption(), resultJson));
+    EXPECT_FALSE(resultJson.isMember("bsuniOutputFormat"));
+
+    PrintCloudConfigManager::ResetInstance();
 }
 
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER

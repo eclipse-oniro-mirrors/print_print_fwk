@@ -25,20 +25,32 @@ class PrintCloudConfigManager {
 public:
     static PrintCloudConfigManager &GetInstance();
 
-    std::string GetCloudConfigFilePath();
-    std::string MatchPrinterMakeInCloudConfig(const std::string &printerMake);
+#ifdef UNIT_TEST
+    static void SetInstance(PrintCloudConfigManager *instance);
+    static void ResetInstance();
+#endif // UNIT_TEST
 
+    virtual std::string GetCloudConfigFilePath();
+    virtual std::string MatchPrinterMakeInCloudConfig(const std::string &printerMake);
+    virtual bool LoadCloudConfigFile(const std::string &filePath, std::string &cloudConfigContent);
+
+#ifdef UNIT_TEST
+protected:
+#else
 private:
+#endif // UNIT_TEST
     PrintCloudConfigManager() = default;
     ~PrintCloudConfigManager() = default;
     PrintCloudConfigManager(const PrintCloudConfigManager &) = delete;
     PrintCloudConfigManager &operator=(const PrintCloudConfigManager &) = delete;
 
-    bool LoadCloudConfigFile(const std::string &filePath);
-    std::string cloudConfigContent_;
     std::mutex mutex_;
+
+#ifdef UNIT_TEST
+    static PrintCloudConfigManager *instance_;
+    static std::mutex instanceLock_;
+#endif // UNIT_TEST
 };
 
 } // namespace OHOS::Print
-
 #endif // PRINT_CLOUD_CONFIG_MANAGER_H

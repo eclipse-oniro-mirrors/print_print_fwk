@@ -146,6 +146,7 @@ ohos_unittest("print_service_test") {
     sources += [
       "${print_path}/test/unittest/service_test/print_security_guard_util_test.cpp",
       "${print_path}/test/unittest/service_test/print_hks_adapter_test.cpp",
+      "${print_path}/test/unittest/service_test/print_cloud_config_manager_test.cpp",
     ]
   }
 

@@ -4395,5 +4395,104 @@ HWTEST_F(PrintCupsClientTest, JobStatusCallback_IPP_JOB_ABORTED_NotCanceled, Tes
     EXPECT_FALSE(param->isCanceled);
 }
 
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_BsuniOutputFormatString_SetsValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    optionJson["bsuniOutputFormat"] = "PDF";
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->bsuniOutputFormat, "PDF");
+    delete jobParams;
+}
+
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_BsuniOutputFormatNotString_SkipsSetting, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    optionJson["bsuniOutputFormat"] = 123;
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->bsuniOutputFormat, "");
+    delete jobParams;
+}
+
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_BsuniOutputFormatMissing_SkipsSetting, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->bsuniOutputFormat, "");
+    delete jobParams;
+}
+
+HWTEST_F(PrintCupsClientTest, FillJobOptions_BsuniOutputFormatNotEmpty_AddsCupsOption, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    testJob.SetColorMode(1);
+    testJob.SetCopyNumber(1);
+    testJob.SetDuplexMode(0);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->bsuniOutputFormat = "PCL";
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillJobOptions(jobParams, numOptions, &options);
+    EXPECT_GT(ret, 0);
+    bool found = false;
+    for (int i = 0; i < ret; i++) {
+        if (strcmp(options[i].name, "bsuniOutputFormat") == 0) {
+            EXPECT_STREQ(options[i].value, "PCL");
+            found = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(found);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+HWTEST_F(PrintCupsClientTest, FillJobOptions_BsuniOutputFormatEmpty_SkipsCupsOption, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    testJob.SetColorMode(1);
+    testJob.SetCopyNumber(1);
+    testJob.SetDuplexMode(0);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->bsuniOutputFormat = "";
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillJobOptions(jobParams, numOptions, &options);
+    EXPECT_GT(ret, 0);
+    bool found = false;
+    for (int i = 0; i < ret; i++) {
+        if (strcmp(options[i].name, "bsuniOutputFormat") == 0) {
+            found = true;
+            break;
+        }
+    }
+    EXPECT_FALSE(found);
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
 }  // namespace Print
 }  // namespace OHOS
