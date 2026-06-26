@@ -107,8 +107,6 @@ void RemoteServiceAdapter::OnRemoteServiceDied()
     
     PRINT_CHECK_NULL_RETURN_VOID(connection_);
     
-    deathRecipient_ = nullptr;
-    
     std::this_thread::sleep_for(std::chrono::milliseconds(RECONNECT_DELAY_MS));
     
     if (BindService()) {
