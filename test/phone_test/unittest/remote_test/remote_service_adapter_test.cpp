@@ -205,6 +205,24 @@ HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_002, TestSize.Level1)
         callbackCalled = true;
     });
     client.OnRemoteServiceDied();
+    EXPECT_TRUE(callbackCalled);
+}
+
+/**
+ * @tc.name: OnRemoteServiceDied_003
+ * @tc.desc: Branch: connection_ nullptr -> callback not called
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_003, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    client.connection_ = nullptr;
+    bool callbackCalled = false;
+    client.SetOnServiceDiedCallback([&callbackCalled]() {
+        callbackCalled = true;
+    });
+    client.OnRemoteServiceDied();
     EXPECT_FALSE(callbackCalled);
 }
 
