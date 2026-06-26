@@ -105,8 +105,6 @@ void RemoteServiceAdapter::OnRemoteServiceDied()
 {
     PRINT_HILOGI("RemoteServiceAdapter::OnRemoteServiceDied");
     
-    std::lock_guard<std::mutex> lock(bindMutex_);
-    
     PRINT_CHECK_NULL_RETURN_VOID(connection_);
     
     auto remoteObject = connection_->GetRemoteObject();
