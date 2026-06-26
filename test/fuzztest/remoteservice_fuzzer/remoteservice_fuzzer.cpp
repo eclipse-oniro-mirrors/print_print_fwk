@@ -20,6 +20,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "remote_constants.h"
+#include "singleton.h"
 #include <functional>
 
 namespace OHOS::Print {
