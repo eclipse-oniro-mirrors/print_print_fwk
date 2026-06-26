@@ -143,6 +143,18 @@ void TestIsExtensionPrintJob(const uint8_t *data, size_t size, FuzzedDataProvide
 }
 
 #ifdef REMOTE_SERVICE_ENABLE
+void TestIsRemotePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->IsRemotePrinter(printerId);
+}
+
+void TestConnectRemotePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectRemotePrinter(printerId);
+}
+
 void TestAddRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrinterInfo printerInfo;
