@@ -52,7 +52,6 @@ public:
 private:
     sptr<PrintIpcConnection> connection_;
     sptr<RemoteCallbackStub> callbackStub_;
-    sptr<IRemoteObject::DeathRecipient> deathRecipient_;
     std::function<void()> onServiceDiedCb_;
     std::mutex bindMutex_;
 
