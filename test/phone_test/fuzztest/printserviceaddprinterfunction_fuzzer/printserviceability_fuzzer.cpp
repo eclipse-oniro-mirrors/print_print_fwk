@@ -167,6 +167,12 @@ void TestAddRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvid
 }
 #endif
 
+void TestRemoveRemotePrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(printerId);
+}
+
 void TestAddPrinterByPrinterDriver(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_DRIVER_PRINTER_NAME_LENGTH + 1);
@@ -206,6 +212,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestIsRemotePrinter,
         &TestConnectRemotePrinter,
         &TestAddRemotePrinterInfo,
+        &TestRemoveRemotePrinterInfo,
 #endif
         &TestAddPrinterByPrinterDriver
     };
