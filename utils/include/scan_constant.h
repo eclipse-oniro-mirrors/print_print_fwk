@@ -229,6 +229,7 @@ constexpr int32_t JPEG_QUALITY_SEVENTY_FIVE = 75;
 constexpr uint32_t IMAGE_COMPRESS_QUALITY_MAX = 100;
 constexpr int32_t BUFFER_SIZE = 1024 * 100; // 100KB
 constexpr int32_t MAX_IMAGE_DIMENSION = 65535; // Maximum dimension for scanned images
+constexpr int32_t MAX_FD_COUNT = 1000;
 
 enum ExportImageFormat {
     EXPORT_FORMAT_PNG = 0,
