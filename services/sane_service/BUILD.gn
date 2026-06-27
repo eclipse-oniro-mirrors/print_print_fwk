@@ -55,6 +55,8 @@ _external_deps = [
   "ipc:ipc_napi",
   "ipc:ipc_single",
   "napi:ace_napi",
+  "node:node_header_notice",
+  "libuv:uv",
   "safwk:system_ability_fwk",
   "samgr:samgr_proxy",
 ]

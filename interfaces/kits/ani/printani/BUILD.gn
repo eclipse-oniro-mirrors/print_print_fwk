@@ -100,6 +100,8 @@ ohos_shared_library("print_ani") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "runtime_core:ani",
     "runtime_core:libarkruntime",
     "samgr:samgr_proxy",

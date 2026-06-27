@@ -78,6 +78,8 @@ ohos_unittest("fwk_vendor_manager_test") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "os_account:os_account_innerkits",
     "selinux_adapter:librestorecon",
     "safwk:system_ability_fwk",

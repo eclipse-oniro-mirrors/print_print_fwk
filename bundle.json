@@ -76,7 +76,9 @@
         "enterprise_device_management",
         "huks",
         "api_metrics",
-        "ets_frontend"
+        "ets_frontend",
+        "node",
+        "libuv"
       ],
       "third_party": [
         "zlib"

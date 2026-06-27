@@ -69,6 +69,8 @@ ohos_unittest("fwk_print_helper_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
