@@ -214,6 +214,8 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
 {
     PrintIpcConnection connection;
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
     AppExecFwk::ElementName element;
     connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
     connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
@@ -231,6 +233,8 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_004, TestSize.Level1)
 {
     PrintIpcConnection connection;
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
     AppExecFwk::ElementName element;
     connection.OnAbilityDisconnectDone(element, ERR_OK);
     connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);

@@ -24,14 +24,8 @@
 #include "print_json_util.h"
 #include "print_utils.h"
 #include <mutex>
-#include <thread>
-#include <chrono>
 
 namespace OHOS::Print {
-
-namespace {
-constexpr int32_t RECONNECT_DELAY_MS = 1000;
-}
 
 sptr<RemoteServiceAdapter> RemoteServiceAdapter::instance_ = nullptr;
 
@@ -104,17 +98,6 @@ bool RemoteServiceAdapter::IsConnected()
 void RemoteServiceAdapter::OnRemoteServiceDied()
 {
     PRINT_HILOGI("RemoteServiceAdapter::OnRemoteServiceDied");
-    
-    PRINT_CHECK_NULL_RETURN_VOID(connection_);
-    
-    std::this_thread::sleep_for(std::chrono::milliseconds(RECONNECT_DELAY_MS));
-    
-    if (BindService()) {
-        PRINT_HILOGI("Remote service reconnected successfully");
-        return;
-    }
-    
-    PRINT_HILOGE("Remote service reconnect failed");
     
     PRINT_CHECK_NULL_RETURN_VOID(onServiceDiedCb_);
     PRINT_HILOGI("Calling onServiceDiedCallback to clear printers");

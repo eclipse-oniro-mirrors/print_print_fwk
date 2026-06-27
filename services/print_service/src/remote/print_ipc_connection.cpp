@@ -32,23 +32,26 @@ void PrintIpcConnection::OnAbilityConnectDone(
         std::lock_guard<std::mutex> lock(mutex_);
         
         if (remoteObject_ != nullptr && deathRecipient_ != nullptr) {
-            remoteObject_->RemoveDeathRecipient(deathRecipient_);
+            if (!remoteObject_->RemoveDeathRecipient(deathRecipient_)) {
+                PRINT_HILOGW("RemoveDeathRecipient failed during connect");
+            }
         }
         
         remoteObject_ = remoteObject;
         deathRecipient_ = sptr<IRemoteObject::DeathRecipient>(
-            new PrintCommonDeathRecipient([this](const sptr<IRemoteObject> &remote) {
+            new (std::nothrow) PrintCommonDeathRecipient([this](const sptr<IRemoteObject> &remote) {
                 PRINT_HILOGI("Remote service died, attempting reconnect");
                 std::lock_guard<std::mutex> lock(mutex_);
                 remoteObject_ = nullptr;
                 deathRecipient_ = nullptr;
                 
-                auto adapter = RemoteServiceAdapter::GetInstance();
-                if (adapter != nullptr) {
-                    adapter->OnRemoteServiceDied();
-                }
+                RemoteServiceAdapter::GetInstance()->OnRemoteServiceDied();
             }));
-        remoteObject_->AddDeathRecipient(deathRecipient_);
+        
+        PRINT_CHECK_NULL_RETURN_VOID(deathRecipient_);
+        if (!remoteObject_->AddDeathRecipient(deathRecipient_)) {
+            PRINT_HILOGW("AddDeathRecipient failed during connect");
+        }
         
         cv_.notify_one();
         PRINT_HILOGI("ipc service connected successfully with death recipient");
@@ -66,7 +69,9 @@ void PrintIpcConnection::OnAbilityDisconnectDone(
         std::lock_guard<std::mutex> lock(mutex_);
         
         if (remoteObject_ != nullptr && deathRecipient_ != nullptr) {
-            remoteObject_->RemoveDeathRecipient(deathRecipient_);
+            if (!remoteObject_->RemoveDeathRecipient(deathRecipient_)) {
+                PRINT_HILOGW("RemoveDeathRecipient failed during disconnect");
+            }
         }
         
         remoteObject_ = nullptr;
