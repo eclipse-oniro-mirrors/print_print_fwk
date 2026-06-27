@@ -30,7 +30,7 @@ bool SaneDevice::Marshalling(Parcel &parcel) const
 
 SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
 {
-    SaneDevice* obj = new (std::nothrow) SaneDevice();
+    auto obj = std::make_unique<SaneDevice>();
     if (obj == nullptr) {
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
@@ -39,7 +39,7 @@ SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->vendor_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->model_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->type_), nullptr);
-    return obj;
+    return obj.release();
 }
 
 void SaneDevice::Dump()
