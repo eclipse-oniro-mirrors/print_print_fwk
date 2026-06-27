@@ -1157,11 +1157,15 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
     auto userPrefsPtr = std::make_shared<PrinterUserPreferences>(userPrefs);
     printerUserPreferences_[printerId] = userPrefsPtr;
 
-    std::string dirPath = ObtainUserPreferencesDirectory();
-    std::error_code ec;
-    std::filesystem::create_directories(dirPath, ec);
-    if (ec) {
-        PRINT_HILOGE("Failed to create user preferences directory: %{public}s", ec.message().c_str());
+    std::string basePath = PRINTER_SERVICE_FILE_PATH;
+    std::string userIdDir = basePath + "/" + std::to_string(userId_);
+    if (access(userIdDir.c_str(), F_OK) != 0 && mkdir(userIdDir.c_str(), S_IRWXU | S_IRWXG) != 0 && errno != EEXIST) {
+        PRINT_HILOGE("Failed to create userId directory, errno=%{public}d", errno);
+        return false;
+    }
+    std::string dirPath = userIdDir + "/printer_user_prefs";
+    if (access(dirPath.c_str(), F_OK) != 0 && mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG) != 0 && errno != EEXIST) {
+        PRINT_HILOGE("Failed to create printer_user_prefs directory, errno=%{public}d", errno);
         return false;
     }
 
