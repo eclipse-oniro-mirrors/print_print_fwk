@@ -307,6 +307,10 @@ bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &re
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(scannerId), false);
     int32_t fdCount = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(fdCount), false);
+    if (fdCount < 0 || fdCount > MAX_FD_COUNT) {
+        SCAN_HILOGE("fdCount %{public}d exceeds range [0, %{public}d]", fdCount, MAX_FD_COUNT);
+        return false;
+    }
     std::vector<int32_t> pictureFdList;
     for (int32_t i = 0; i < fdCount; i++) {
         int fd = data.ReadFileDescriptor();

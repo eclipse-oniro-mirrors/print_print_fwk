@@ -65,6 +65,13 @@ ohos_shared_library("sane_service") {
   deps = _deps
   public_configs = _public_configs
   external_deps = _external_deps
+  branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   subsystem_name = "print"
   part_name = "print_fwk"
@@ -76,6 +83,12 @@ ohos_static_library("sane_service_test") {
   deps = _deps
   public_configs = _public_configs
   external_deps = _external_deps
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   subsystem_name = "print"
   part_name = "print_fwk"

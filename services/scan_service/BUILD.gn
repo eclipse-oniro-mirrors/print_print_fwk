@@ -58,6 +58,7 @@ _sources = [
 ]
 
 _branch_protector_ret = "pac_ret"
+_stack_protector_ret = true
 _sanitize = {
   cfi = true
   cfi_cross_dso = true
@@ -111,12 +112,13 @@ _external_deps = [
   "image_framework:image_ndk",
   "image_framework:image_native",
   "curl:curl_shared",
-  "libxml2:libxml2"
+  "libxml2:libxml2",
 ]
 
 ohos_shared_library("scan_service") {
   sources = _sources
   branch_protector_ret = _branch_protector_ret
+  stack_protector_ret = _stack_protector_ret
   sanitize = _sanitize
   public_configs = _public_configs
   include_dirs = _include_dirs
