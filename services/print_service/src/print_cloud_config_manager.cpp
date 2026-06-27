@@ -29,38 +29,11 @@ namespace OHOS::Print {
 constexpr const char CFG_DIR[] = "etc/com.huawei.hmos.spooler/PRINTER";
 constexpr const char CONFIG_FILE_NAME[] = "bsuni_output_format.json";
 
-#ifdef UNIT_TEST
-PrintCloudConfigManager *PrintCloudConfigManager::instance_ = nullptr;
-std::mutex PrintCloudConfigManager::instanceLock_;
-
-PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
-{
-    std::lock_guard<std::mutex> lock(instanceLock_);
-    if (instance_ == nullptr) {
-        static PrintCloudConfigManager defaultInstance;
-        instance_ = &defaultInstance;
-    }
-    return *instance_;
-}
-
-void PrintCloudConfigManager::SetInstance(PrintCloudConfigManager *instance)
-{
-    std::lock_guard<std::mutex> lock(instanceLock_);
-    instance_ = instance;
-}
-
-void PrintCloudConfigManager::ResetInstance()
-{
-    std::lock_guard<std::mutex> lock(instanceLock_);
-    instance_ = nullptr;
-}
-#else
 PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
 {
     static PrintCloudConfigManager instance;
     return instance;
 }
-#endif // UNIT_TEST
 
 std::string PrintCloudConfigManager::GetCloudConfigFilePath()
 {
@@ -68,10 +41,7 @@ std::string PrintCloudConfigManager::GetCloudConfigFilePath()
     HwCustSetDataSourceType(HW_CUST_TYPE_SYSTEM);
 
     ParamVersionFileInfo *paramVersionFileInfo = GetDownloadCfgFile(CFG_DIR, CFG_DIR);
-    if (paramVersionFileInfo == nullptr) {
-        PRINT_HILOGE("GetDownloadCfgFile failed, paramVersionFileInfo is null");
-        return "";
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(paramVersionFileInfo, "");
 
     if (!paramVersionFileInfo->found) {
         PRINT_HILOGE("Can not find version txt in cfg dir");
@@ -152,6 +122,10 @@ std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::st
 
 bool PrintCloudConfigManager::LoadCloudConfigFile(const std::string &filePath, std::string &cloudConfigContent)
 {
+    if (!PrintUtils::IsPathValid(filePath)) {
+        PRINT_HILOGE("Invalid cloud config file path!");
+        return false;
+    }
     std::ifstream file(filePath);
     if (!file.is_open()) {
         PRINT_HILOGE("Failed to open file: %{public}s, error: %{public}s", filePath.c_str(), strerror(errno));

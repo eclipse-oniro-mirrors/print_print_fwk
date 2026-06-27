@@ -24,9 +24,8 @@ namespace OHOS::Print {
 
 class MockPrintCloudConfigManager : public PrintCloudConfigManager {
 public:
-    MOCK_METHOD(std::string, GetCloudConfigFilePath, (), (override));
-    MOCK_METHOD(std::string, MatchPrinterMakeInCloudConfig, (const std::string &printerMake), (override));
-    MOCK_METHOD(bool, LoadCloudConfigFile, (const std::string &filePath, std::string &cloudConfigContent), (override));
+    MOCK_METHOD0(GetCloudConfigFilePath, std::string());
+    MOCK_METHOD2(LoadCloudConfigFile, bool(const std::string &filePath, std::string &cloudConfigContent));
 };
 
 } // namespace OHOS::Print

@@ -45,7 +45,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "${_test_path}/unittest/fwk_print_service_ability_test/print_service_mock_permission.cpp",
   ]
 
-  cflags_cc = [ "-DUNIT_TEST" ]
+  cflags_cc = []
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
   }

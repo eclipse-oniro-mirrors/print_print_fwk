@@ -20,7 +20,7 @@
 namespace OHOS::Print {
 bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &res)
 {
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
     ani_ref arrayObj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -112,7 +112,7 @@ bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, st
 
 bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res)
 {
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -153,8 +153,8 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
 
 bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool &value)
 {
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false, __func__);
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
