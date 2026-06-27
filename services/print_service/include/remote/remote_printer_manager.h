@@ -61,7 +61,7 @@ private:
     std::map<std::string, std::shared_ptr<PrinterInfo>> printerMap_;
     std::mutex printerMapLock_;
     std::mutex controlMutex_;
-    sptr<RemoteServiceAdapter> serviceAdapter_;
+    RemoteServiceAdapter* serviceAdapter_;
     std::thread discoveryThread_;
     std::once_flag initFlag_;
     

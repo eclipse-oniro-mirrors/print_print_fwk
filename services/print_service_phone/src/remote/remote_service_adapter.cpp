@@ -27,13 +27,10 @@
 
 namespace OHOS::Print {
 
-sptr<RemoteServiceAdapter> RemoteServiceAdapter::instance_ = nullptr;
+RemoteServiceAdapter RemoteServiceAdapter::instance_;
 
-sptr<RemoteServiceAdapter> RemoteServiceAdapter::GetInstance()
+RemoteServiceAdapter& RemoteServiceAdapter::GetInstance()
 {
-    if (instance_ == nullptr) {
-        instance_ = sptr<RemoteServiceAdapter>::MakeSptr();
-    }
     return instance_;
 }
 

@@ -33,7 +33,7 @@ public:
     RemoteServiceAdapter();
     ~RemoteServiceAdapter();
 
-    static sptr<RemoteServiceAdapter> GetInstance();
+    static RemoteServiceAdapter& GetInstance();
     
     bool BindService();
     
@@ -55,7 +55,7 @@ private:
     std::function<void()> onServiceDiedCb_;
     std::mutex bindMutex_;
 
-    static sptr<RemoteServiceAdapter> instance_;
+    static RemoteServiceAdapter instance_;
 };
 
 } // namespace OHOS::Print

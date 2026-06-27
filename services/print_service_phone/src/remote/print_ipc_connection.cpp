@@ -45,7 +45,7 @@ void PrintIpcConnection::OnAbilityConnectDone(
                 remoteObject_ = nullptr;
                 deathRecipient_ = nullptr;
                 
-                RemoteServiceAdapter::GetInstance()->OnRemoteServiceDied();
+                RemoteServiceAdapter::GetInstance().OnRemoteServiceDied();
             }));
         
         PRINT_CHECK_NULL_RETURN_VOID(deathRecipient_);

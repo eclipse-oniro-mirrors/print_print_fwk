@@ -66,7 +66,7 @@ constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
 RemotePrinterManager::RemotePrinterManager()
 {
     PRINT_HILOGI("RemotePrinterManager constructor");
-    serviceAdapter_ = RemoteServiceAdapter::GetInstance();
+    serviceAdapter_ = &RemoteServiceAdapter::GetInstance();
     
     PRINT_CHECK_NULL_RETURN_VOID(serviceAdapter_);
     serviceAdapter_->SetOnServiceDiedCallback([this]() {

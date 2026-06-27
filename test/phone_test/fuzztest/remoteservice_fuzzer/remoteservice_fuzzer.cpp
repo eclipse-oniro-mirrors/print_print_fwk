@@ -31,50 +31,50 @@ constexpr size_t U32_AT_SIZE = 4;
 
 void TestRemoteServiceAdapterBindService(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
-    adapter->BindService();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
+    adapter.BindService();
 }
 
 void TestRemoteServiceAdapterIsConnected(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
-    adapter->IsConnected();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
+    adapter.IsConnected();
 }
 
 void TestRemoteServiceAdapterSendData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
     uint32_t code = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     std::string msg = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    adapter->SendData(code, msg);
+    adapter.SendData(code, msg);
 }
 
 void TestRemoteServiceAdapterRequestPrinterStatus(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
     std::string devId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    adapter->RequestPrinterStatus(devId);
+    adapter.RequestPrinterStatus(devId);
 }
 
 void TestRemoteServiceAdapterRequestPrinterList(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
-    adapter->RequestPrinterList();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
+    adapter.RequestPrinterList();
 }
 
 void TestRemoteServiceAdapterSetOnServiceDiedCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
     bool callbackCalled = false;
-    adapter->SetOnServiceDiedCallback([&callbackCalled]() {
+    adapter.SetOnServiceDiedCallback([&callbackCalled]() {
         callbackCalled = true;
     });
 }
 
 void TestRemoteServiceAdapterOnRemoteServiceDied(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto adapter = RemoteServiceAdapter::GetInstance();
-    adapter->OnRemoteServiceDied();
+    auto& adapter = RemoteServiceAdapter::GetInstance();
+    adapter.OnRemoteServiceDied();
 }
 
 void TestRemotePrinterManagerStartDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
