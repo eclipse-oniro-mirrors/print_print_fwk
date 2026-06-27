@@ -64,19 +64,17 @@ constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
 }
 
 RemotePrinterManager::RemotePrinterManager()
+    : serviceAdapter_(RemoteServiceAdapter::GetInstance())
 {
     PRINT_HILOGI("RemotePrinterManager constructor");
-    serviceAdapter_ = &RemoteServiceAdapter::GetInstance();
     
-    PRINT_CHECK_NULL_RETURN_VOID(serviceAdapter_);
-    serviceAdapter_->SetOnServiceDiedCallback([this]() {
+    serviceAdapter_.SetOnServiceDiedCallback([this]() {
         PRINT_HILOGI("Remote service died, clearing all printers");
         this->ClearAllPrinters();
     });
     
     std::call_once(initFlag_, [this]() {
-        PRINT_CHECK_NULL_RETURN_VOID(serviceAdapter_);
-        if (serviceAdapter_->BindService()) {
+        if (serviceAdapter_.BindService()) {
             PRINT_HILOGI("RemotePrinterManager initialized successfully");
         } else {
             PRINT_HILOGE("BindService failed in constructor");

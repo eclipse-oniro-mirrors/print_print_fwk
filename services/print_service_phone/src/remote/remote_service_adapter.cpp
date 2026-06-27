@@ -27,11 +27,10 @@
 
 namespace OHOS::Print {
 
-RemoteServiceAdapter RemoteServiceAdapter::instance_;
-
 RemoteServiceAdapter& RemoteServiceAdapter::GetInstance()
 {
-    return instance_;
+    static RemoteServiceAdapter instance;
+    return instance;
 }
 
 RemoteServiceAdapter::RemoteServiceAdapter()

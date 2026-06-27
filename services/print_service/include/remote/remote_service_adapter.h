@@ -54,8 +54,6 @@ private:
     sptr<RemoteCallbackStub> callbackStub_;
     std::function<void()> onServiceDiedCb_;
     std::mutex bindMutex_;
-
-    static RemoteServiceAdapter instance_;
 };
 
 } // namespace OHOS::Print
