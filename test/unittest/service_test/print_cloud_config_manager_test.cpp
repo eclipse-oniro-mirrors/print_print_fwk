@@ -180,7 +180,8 @@ HWTEST_F(PrintCloudConfigManagerTest, MatchPrinterMakeInCloudConfig_MissingBsuni
     EXPECT_EQ(result, "");
 }
 
-HWTEST_F(PrintCloudConfigManagerTest, MatchPrinterMakeInCloudConfig_BsuniOutputFormatNotString_SkipItem, TestSize.Level1)
+HWTEST_F(PrintCloudConfigManagerTest,
+    MatchPrinterMakeInCloudConfig_BsuniOutputFormatNotString_SkipItem, TestSize.Level1)
 {
     ON_CALL(mock_, GetCloudConfigFilePath()).WillByDefault(Return("/some/path/config.json"));
     ON_CALL(mock_, LoadCloudConfigFile(_, _))
@@ -261,7 +262,8 @@ HWTEST_F(PrintCloudConfigManagerTest, MatchPrinterMakeInCloudConfig_MultipleItem
     EXPECT_EQ(result, "PCL");
 }
 
-HWTEST_F(PrintCloudConfigManagerTest, MatchPrinterMakeInCloudConfig_InvalidItemThenValidItem_ReturnFormat, TestSize.Level1)
+HWTEST_F(PrintCloudConfigManagerTest,
+    MatchPrinterMakeInCloudConfig_InvalidItemThenValidItem_ReturnFormat, TestSize.Level1)
 {
     ON_CALL(mock_, GetCloudConfigFilePath()).WillByDefault(Return("/some/path/config.json"));
     ON_CALL(mock_, LoadCloudConfigFile(_, _))
