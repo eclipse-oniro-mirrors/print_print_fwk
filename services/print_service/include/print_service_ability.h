@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <json/json.h>
 
-#include "ability_manager_client.h"
 #include "event_handler.h"
 #include "extension_ability_info.h"
 #include "hks_api.h"
