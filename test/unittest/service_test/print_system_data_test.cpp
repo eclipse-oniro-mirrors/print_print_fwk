@@ -2010,7 +2010,8 @@ static void CreateFileInIppDir(const std::string &fileName)
     std::string filePath = PRINTER_SERVICE_IPP_RAW_DATA_PATH + "/" + fileName;
     FILE *file = fopen(filePath.c_str(), "w+");
     if (file != nullptr) {
-        fwrite("data", 1, 4, file);
+        const char *testData = "data";
+        fwrite(testData, sizeof(char), strlen(testData), file);
         fclose(file);
     }
 }

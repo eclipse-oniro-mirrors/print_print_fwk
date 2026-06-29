@@ -39,9 +39,9 @@ public:
     void InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo);
     void SavePrinterFile(const std::string &printerId);
     void SaveIppRawDataFile(const std::string &printerId, const std::string &rawData);
- 	void CleanIppRawDataFiles();
- 	bool HasIppRawDataFile(const std::string &printerId);
- 	void UpdateIppRawDataFileTimestamp(const std::string &printerId);
+    void CleanIppRawDataFiles();
+    bool HasIppRawDataFile(const std::string &printerId);
+    void UpdateIppRawDataFileTimestamp(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     bool IsPrinterAdded(const std::string &printerId);

@@ -6789,7 +6789,8 @@ HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_HasIppRawDataFileTrue
     CleanupIppRawDataDirForAbilityTest();
 }
 
-HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_HasIppRawDataFileFalse_ShouldQueryIppRawData, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    CheckAndUpdateIppRawData_HasIppRawDataFileFalse_ShouldQueryIppRawData, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     CleanupIppRawDataDirForAbilityTest();

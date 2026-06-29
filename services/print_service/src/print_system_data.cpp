@@ -532,7 +532,7 @@ void PrintSystemData::CleanIppRawDataFiles()
         std::string timestampStr = fileName.substr(underscorePos + 1);
         uint64_t fileTimestamp = 0;
         char *endPtr = nullptr;
-        fileTimestamp = std::strtoull(timestampStr.c_str(), &endPtr, 10);
+        fileTimestamp = std::strtoull(timestampStr.c_str(), &endPtr, DECIMAL_BASE);
         if (endPtr == timestampStr.c_str() || *endPtr != '\0') {
             PRINT_HILOGW("Invalid timestamp in file: %{public}s", fileName.c_str());
             continue;

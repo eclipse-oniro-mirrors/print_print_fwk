@@ -247,14 +247,14 @@ int32_t VendorBsuniDriver::OnPropertiesQueried(const char *printerId, const Prin
         }
     }
     key = PRINTER_PROPERTY_KEY_IPP_RAW_DATA;
- 	auto ippRawData = FindPropertyFromPropertyList(propertyList, key);
- 	if (ippRawData != nullptr) {
- 	    auto op = std::bind(&VendorBsuniDriver::OnIppRawDataQueried, g_driverWrapper, vendorPrinterId, ippRawData);
- 	    if (!g_driverWrapper->opQueue.Push(op)) {
- 	        PRINT_HILOGW("fail to queue ipp raw data");
- 	        return EXTENSION_ERROR_CALLBACK_FAIL;
- 	    }
- 	}
+    auto ippRawData = FindPropertyFromPropertyList(propertyList, key);
+    if (ippRawData != nullptr) {
+        auto op = std::bind(&VendorBsuniDriver::OnIppRawDataQueried, g_driverWrapper, vendorPrinterId, ippRawData);
+        if (!g_driverWrapper->opQueue.Push(op)) {
+            PRINT_HILOGW("fail to queue ipp raw data");
+            return EXTENSION_ERROR_CALLBACK_FAIL;
+        }
+    }
     return EXTENSION_ERROR_NONE;
 }
 
