@@ -62,7 +62,8 @@ void TestRemoteServiceAdapterRequestPrinterList(const uint8_t *data, size_t size
     adapter.RequestPrinterList();
 }
 
-void TestRemoteServiceAdapterSetOnServiceDiedCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestRemoteServiceAdapterSetOnServiceDiedCallback(
+    const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     auto& adapter = RemoteServiceAdapter::GetInstance();
     bool callbackCalled = false;
