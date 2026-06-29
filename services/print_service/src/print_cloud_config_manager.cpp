@@ -17,6 +17,7 @@
 #include "print_log.h"
 #include "print_constant.h"
 #include "print_json_util.h"
+#include "print_util.h"
 
 #include "config_policy_param_upgrade_path.h"
 
@@ -26,7 +27,7 @@
 
 namespace OHOS::Print {
 
-constexpr const char CFG_DIR[] = "etc/com.huawei.hmos.spooler/PRINTER";
+constexpr const char CFG_DIR[] = "etc/com.ohos.spooler/PRINTER";
 constexpr const char CONFIG_FILE_NAME[] = "bsuni_output_format.json";
 
 PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
