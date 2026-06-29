@@ -69,7 +69,7 @@ HWTEST_F(PrintCloudConfigManagerTest, GetCloudConfigFilePath_ReturnResult, TestS
 {
     PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
     std::string result = instance.GetCloudConfigFilePath();
-    EXPECT_TRUE(result.empty() || !result.empty());
+    EXPECT_TRUE(!result.empty());
 }
 
 HWTEST_F(PrintCloudConfigManagerTest, LoadCloudConfigFile_InvalidPath_ReturnFalse, TestSize.Level1)
@@ -109,7 +109,6 @@ HWTEST_F(PrintCloudConfigManagerTest, LoadCloudConfigFile_FileNotExist_ReturnFal
 
 HWTEST_F(PrintCloudConfigManagerTest, LoadCloudConfigFile_Success_ReturnTrueAndContent, TestSize.Level1)
 {
-    mkdir(PRINTER_SERVICE_PRINTERS_PATH.c_str(), 0755);
     std::ofstream file(tempFilePath_);
     file << "[{\"bsuniOutputFormat\":\"PDF\",\"printerMakes\":[\"HP\"]}]";
     file.close();
