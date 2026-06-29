@@ -60,6 +60,8 @@ public:
     virtual bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdName, const std::string &ppdData) = 0;
+    virtual bool OnPrinterIppRawDataQueried(const std::string &printerId, const std::string &rawData) = 0;
+ 	virtual bool QueryIppRawData(const std::string &printerId) = 0;
     virtual bool IsConnectingPrinter(const std::string &id, const std::string &uri) = 0;
     virtual void SetConnectingPrinter(ConnectMethod method, const std::string &printer) = 0;
     virtual void ClearConnectingPrinter() = 0;

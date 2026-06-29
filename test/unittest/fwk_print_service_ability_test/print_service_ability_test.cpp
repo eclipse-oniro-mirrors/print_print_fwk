@@ -51,6 +51,7 @@
 #include "hisys_event_util.h"
 #include <json/json.h>
 #include <algorithm>
+#include <filesystem>
 #include "mock_print_callback_proxy.h"
 #include "mock_hks_adapter.h"
 #include "mock_print_extension_callback_proxy.h"
@@ -6741,6 +6742,63 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string cid = ":1";
     EXPECT_FALSE(service->IsExtensionPrintJob(cid));
+}
+
+static std::string CreateIppRawDataDirForAbilityTest()
+{
+    std::string dirPath = PRINTER_SERVICE_IPP_RAW_DATA_PATH;
+    std::filesystem::path dir(dirPath);
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec) || ec) {
+        std::filesystem::create_directories(dir, ec);
+    }
+    return dirPath;
+}
+
+static void CleanupIppRawDataDirForAbilityTest()
+{
+    std::error_code ec;
+    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
+}
+
+static void CreateFileInIppDirForAbilityTest(const std::string &fileName)
+{
+    std::string filePath = PRINTER_SERVICE_IPP_RAW_DATA_PATH + "/" + fileName;
+    std::ofstream ofs(filePath);
+    ofs << "test_data";
+    ofs.close();
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_NullPtr_ShouldReturnEarly, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->CheckAndUpdateIppRawData(nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_HasIppRawDataFileTrue_ShouldUpdateTimestamp, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string originId = "fwk.driver:testPrinter";
+    std::string vendorPrinterId = VendorManager::ExtractPrinterId(originId);
+    CreateIppRawDataDirForAbilityTest();
+    CreateFileInIppDirForAbilityTest(vendorPrinterId + "_1234567890");
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetOriginId(originId);
+    EXPECT_TRUE(service->printSystemData_.HasIppRawDataFile(vendorPrinterId));
+    service->CheckAndUpdateIppRawData(printerInfo);
+    CleanupIppRawDataDirForAbilityTest();
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_HasIppRawDataFileFalse_ShouldQueryIppRawData, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    CleanupIppRawDataDirForAbilityTest();
+    std::string originId = "fwk.driver:testPrinter";
+    std::string vendorPrinterId = VendorManager::ExtractPrinterId(originId);
+    EXPECT_FALSE(service->printSystemData_.HasIppRawDataFile(vendorPrinterId));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetOriginId(originId);
+    service->CheckAndUpdateIppRawData(printerInfo);
 }
 }  // namespace Print
 }  // namespace OHOS

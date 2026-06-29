@@ -4373,6 +4373,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = QueryConnectingPrinterInfoById(globalPrinterId);
+    CheckAndUpdateIppRawData(printerInfo);
     if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
@@ -4601,6 +4602,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
         PRINT_HILOGW("printerInfo is null");
         return false;
     }
+    CheckAndUpdateIppRawData(printerInfo);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCups fail.");
@@ -4622,6 +4624,24 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     vendorManager.ClearConnectingPrinter();
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
+}
+
+void PrintServiceAbility::SaveIppRawData(const std::string &printerId, const std::string &rawData)
+{
+    PRINT_HILOGI("SaveIppRawData printerId: %{public}s", PrintUtils::AnonymizePrinterId(printerId).c_str());
+    printSystemData_.SaveIppRawDataFile(printerId, rawData);
+}
+
+void PrintServiceAbility::CheckAndUpdateIppRawData(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(printerInfo);
+    std::string originId = printerInfo->GetOriginId();
+    std::string vendorPrinterId = vendorManager.ExtractPrinterId(originId);
+    if (printSystemData_.HasIppRawDataFile(vendorPrinterId)) {
+        printSystemData_.UpdateIppRawDataFileTimestamp(vendorPrinterId);
+    } else {
+        vendorManager.QueryIppRawData(originId);
+    }
 }
 
 std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByOriginId(const std::string &originId)

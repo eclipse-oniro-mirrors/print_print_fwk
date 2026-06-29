@@ -246,6 +246,15 @@ int32_t VendorBsuniDriver::OnPropertiesQueried(const char *printerId, const Prin
             return EXTENSION_ERROR_CALLBACK_FAIL;
         }
     }
+    key = PRINTER_PROPERTY_KEY_IPP_RAW_DATA;
+ 	auto ippRawData = FindPropertyFromPropertyList(propertyList, key);
+ 	if (ippRawData != nullptr) {
+ 	    auto op = std::bind(&VendorBsuniDriver::OnIppRawDataQueried, g_driverWrapper, vendorPrinterId, ippRawData);
+ 	    if (!g_driverWrapper->opQueue.Push(op)) {
+ 	        PRINT_HILOGW("fail to queue ipp raw data");
+ 	        return EXTENSION_ERROR_CALLBACK_FAIL;
+ 	    }
+ 	}
     return EXTENSION_ERROR_NONE;
 }
 
@@ -539,6 +548,20 @@ void VendorBsuniDriver::OnStateQueried(std::shared_ptr<std::string> printerId, s
     if (ConvertStringToPrinterState(*stateData, state)) {
         OnPrinterStateQueried(*printerId, state);
     }
+}
+
+void VendorBsuniDriver::OnIppRawDataQueried(std::shared_ptr<std::string> printerId,
+    std::shared_ptr<std::string> rawData)
+{
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(printerId);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(rawData);
+    if (rawData->empty()) {
+        PRINT_HILOGW("invalid parameters");
+        return;
+    }
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(vendorManager);
+    PRINT_HILOGI("IPP raw data queried");
+    vendorManager->OnPrinterIppRawDataQueried(*printerId, *rawData);
 }
 
 std::string VendorBsuniDriver::CreateUriByIpAndProtocol(const std::string &ip, const std::string &protocol)

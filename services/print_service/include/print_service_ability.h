@@ -338,6 +338,7 @@ public:
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
+    void SaveIppRawData(const std::string &printerId, const std::string &rawData) override;
     std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) override;
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
@@ -368,6 +369,7 @@ private:
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
     PpdInfo GetPpdInfoFromPpdName(const std::string &ppdName);
+    void CheckAndUpdateIppRawData(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
