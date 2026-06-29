@@ -65,6 +65,8 @@ ohos_shared_library("printextensioncontext_napi") {
 
   external_deps = [
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
   ]
 
   if (build_variant == "user") {
