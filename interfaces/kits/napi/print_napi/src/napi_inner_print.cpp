@@ -881,6 +881,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
+    PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
         NapiPrintUtils::DeleteReference(env, callbackRef);
@@ -963,6 +964,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
 
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
+        PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
         if (callback == nullptr) {
             NapiPrintUtils::DeleteReference(env, callbackRef);
@@ -2019,6 +2021,7 @@ napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info i
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
         NapiPrintUtils::DeleteReference(env, callbackRef);

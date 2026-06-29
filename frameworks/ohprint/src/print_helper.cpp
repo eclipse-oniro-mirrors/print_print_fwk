@@ -347,6 +347,10 @@ bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &reso
         return false;
     }
     int yDpi = jsonObject["verticalDpi"].asInt();
+    if (xDpi < 0 || yDpi < 0) {
+        PRINT_HILOGW("Invalid DPI value, xDpi = %{public}d, yDpi = %{public}d", xDpi, yDpi);
+        return false;
+    }
     resolution.horizontalDpi = static_cast<uint32_t>(xDpi);
     resolution.verticalDpi = static_cast<uint32_t>(yDpi);
     return true;
@@ -746,6 +750,10 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     }
     if (!IsValidString(nativePrintJob.printerId)) {
         PRINT_HILOGW("ConvertNativeJobToPrintJob string empty error.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    if (nativePrintJob.fdListCount > PRINT_MAX_FILE_LIST_SIZE) {
+        PRINT_HILOGW("ConvertNativeJobToPrintJob fdListCount exceeds max limit.");
         return E_PRINT_INVALID_PARAMETER;
     }
     std::vector<uint32_t> fdList;
