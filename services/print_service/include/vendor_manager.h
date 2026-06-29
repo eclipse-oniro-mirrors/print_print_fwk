@@ -89,7 +89,7 @@ public:
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
     bool OnPrinterIppRawDataQueried(const std::string &printerId, const std::string &rawData) override;
-    bool QueryIppRawData(const std::string &globalPrinterId) override;
+    bool QueryIppRawData(const std::string &printerId) override;
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIP, const std::string &uri) override;
     ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
