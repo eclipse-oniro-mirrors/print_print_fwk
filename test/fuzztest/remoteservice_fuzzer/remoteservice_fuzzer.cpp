@@ -100,7 +100,8 @@ void TestRemotePrinterManagerUpdateStatus(const uint8_t *data, size_t size, Fuzz
 {
     auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrinterStatus status = static_cast<PrinterStatus>(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrinterStatus status =
+        static_cast<PrinterStatus>(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
     manager->UpdatePrinterStatus(printerId, status);
 }
 
