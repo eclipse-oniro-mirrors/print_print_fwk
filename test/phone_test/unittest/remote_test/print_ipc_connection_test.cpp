@@ -213,15 +213,15 @@ HWTEST_F(PrintIpcConnectionTest, SendData_002, TestSize.Level1)
 */
 HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
 {
-    PrintIpcConnection connection;
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
     EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
     AppExecFwk::ElementName element;
-    connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
-    connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
-    EXPECT_NE(nullptr, connection.deathRecipient_);
-    EXPECT_NE(nullptr, connection.remoteObject_);
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    EXPECT_NE(nullptr, connection->deathRecipient_);
+    EXPECT_NE(nullptr, connection->remoteObject_);
 }
  
 /**
@@ -232,16 +232,16 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
 */
 HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_004, TestSize.Level1)
 {
-    PrintIpcConnection connection;
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
     EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
     AppExecFwk::ElementName element;
-    connection.OnAbilityDisconnectDone(element, ERR_OK);
-    connection.OnAbilityConnectDone(element, mockRemote, ERR_OK);
-    connection.OnAbilityDisconnectDone(element, ERR_OK);
-    EXPECT_EQ(nullptr, connection.deathRecipient_);
-    EXPECT_EQ(nullptr, connection.remoteObject_);
+    connection->OnAbilityDisconnectDone(element, ERR_OK);
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    connection->OnAbilityDisconnectDone(element, ERR_OK);
+    EXPECT_EQ(nullptr, connection->deathRecipient_);
+    EXPECT_EQ(nullptr, connection->remoteObject_);
 }
 
 } // namespace OHOS::Print
