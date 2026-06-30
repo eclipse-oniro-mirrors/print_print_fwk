@@ -311,13 +311,11 @@ bool PrintUtils::IsPrivateIpv4(const std::string &ip)
         return false;
     }
     int first = 0;
-    auto [ptr1, ec1] = std::from_chars(ip.data(), ip.data() + firstDot, first);
-    if (ec1 != std::errc{} || ptr1 != ip.data() + firstDot) {
+    if (!PrintUtil::ConvertToInt(ip.substr(0, firstDot), first)) {
         return false;
     }
     int second = 0;
-    auto [ptr2, ec2] = std::from_chars(ip.data() + firstDot + 1, ip.data() + secondDot, second);
-    if (ec2 != std::errc{} || ptr2 != ip.data() + secondDot) {
+    if (!PrintUtil::ConvertToInt(ip.substr(firstDot + 1, secondDot - firstDot - 1), second)) {
         return false;
     }
     if ((first == PRIVATE_IPV4_CLASS_A_FIRST) ||
