@@ -301,7 +301,6 @@ HWTEST_F(PrintUtilsExtTest, AnonymizePrinterId_003, TestSize.Level2)
 struct AnonymizePrinterUriTestParam {
     std::string inputUri;
     std::string expectedResult;
-    std::string testName;
 };
 
 class AnonymizePrinterUriTest : public testing::TestWithParam<AnonymizePrinterUriTestParam> {};
@@ -315,20 +314,17 @@ HWTEST_P(AnonymizePrinterUriTest, AnonymizePrinterUri, TestSize.Level2)
 {
     AnonymizePrinterUriTestParam param = GetParam();
     std::string result = PrintUtils::AnonymizePrinterUri(param.inputUri);
-    if (param.expectedResult.empty()) {
-        EXPECT_EQ(result, param.inputUri);
-    } else {
-        EXPECT_TRUE(result.find(param.expectedResult) != std::string::npos);
-    }
+    EXPECT_EQ(result, param.expectedResult);
 }
 
 INSTANTIATE_TEST_SUITE_P(AnonymizePrinterUriCases, AnonymizePrinterUriTest, testing::Values(
-    AnonymizePrinterUriTestParam{"123456789abc", "*", "sn"},
-    AnonymizePrinterUriTestParam{"", "", "empty_string"},
-    AnonymizePrinterUriTestParam{"ipp://49.4.22.46:16631/ipp/print", "49.4.22.xxx", "public_ipv4"},
-    AnonymizePrinterUriTestParam{"ipp://192.168.1.100:631/ipp/print", "", "private_ipv4"},
-    AnonymizePrinterUriTestParam{"ipp://[2001:0db8:85a3:0000:0000:0000:0000:0000]:631/print", "xxxx", "ipv6"},
-    AnonymizePrinterUriTestParam{"ipp://localhost:631/ipp/print", "", "localhost"}
+    AnonymizePrinterUriTestParam{"123456789abc", "************"},
+    AnonymizePrinterUriTestParam{"", ""},
+    AnonymizePrinterUriTestParam{"ipp://49.4.22.46:16631/ipp/print", "ipp://49.4.22.xxx:16631/ipp/print"},
+    AnonymizePrinterUriTestParam{"ipp://192.168.1.100:631/ipp/print", "ipp://192.168.1.100:631/ipp/print"},
+    AnonymizePrinterUriTestParam{"ipp://[2001:0db8:85a3:0000:0000:0000:0000:0000]:631/print",
+        "ipp://[2001:0db8:85xx:xxxx:xxxx:xxxx:xxxx:xxxx]:631/print"},
+    AnonymizePrinterUriTestParam{"ipp://localhost:631/ipp/print", "ipp://localhost:631/ipp/print"}
 ));
 
 // ==================== AnonymizeIp Test ====================
@@ -381,69 +377,47 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIp_004, TestSize.Level2)
 }
 
 // ==================== IsPrivateIpv4 Test ====================
-/**
- * @tc.name: IsPrivateIpv4_001
- * @tc.desc: Verify IsPrivateIpv4 with 10.x private IP.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, IsPrivateIpv4_001, TestSize.Level2)
-{
-    EXPECT_TRUE(PrintUtils::IsPrivateIpv4("10.0.0.1"));
-    EXPECT_TRUE(PrintUtils::IsPrivateIpv4("10.255.255.255"));
-}
+struct IsPrivateIpv4TestParam {
+    std::string ip;
+    bool expected;
+};
+
+class IsPrivateIpv4Test : public testing::TestWithParam<IsPrivateIpv4TestParam> {};
 
 /**
- * @tc.name: IsPrivateIpv4_002
- * @tc.desc: Verify IsPrivateIpv4 with 172.16-31.x private IP.
+ * @tc.name: IsPrivateIpv4
+ * @tc.desc: Verify IsPrivateIpv4 with various IP addresses.
  * @tc.type: FUNC
  */
-HWTEST_F(PrintUtilsExtTest, IsPrivateIpv4_002, TestSize.Level2)
+HWTEST_P(IsPrivateIpv4Test, IsPrivateIpv4, TestSize.Level2)
 {
-    EXPECT_TRUE(PrintUtils::IsPrivateIpv4("172.16.0.1"));
-    EXPECT_TRUE(PrintUtils::IsPrivateIpv4("172.31.255.255"));
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4("172.15.255.255"));
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4("172.32.0.1"));
+    IsPrivateIpv4TestParam param = GetParam();
+    bool result = PrintUtils::IsPrivateIpv4(param.ip);
+    EXPECT_EQ(result, param.expected);
 }
 
-/**
- * @tc.name: IsPrivateIpv4_003
- * @tc.desc: Verify IsPrivateIpv4 with 192.168.x private IP.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, IsPrivateIpv4_003, TestSize.Level2)
-{
-    EXPECT_TRUE(PrintUtils::IsPrivateIpv4("192.168.0.1"));
-    EXPECT_TRUE(PrintUtils::IsPrivateIpv4("192.168.255.255"));
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4("192.167.255.255"));
-}
-
-/**
- * @tc.name: IsPrivateIpv4_004
- * @tc.desc: Verify IsPrivateIpv4 with public IP.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, IsPrivateIpv4_004, TestSize.Level2)
-{
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4("49.4.22.46"));
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4("8.8.8.8"));
-}
-
-/**
- * @tc.name: IsPrivateIpv4_005
- * @tc.desc: Verify IsPrivateIpv4 with invalid IP format.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, IsPrivateIpv4_005, TestSize.Level2)
-{
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4("invalid"));
-    EXPECT_FALSE(PrintUtils::IsPrivateIpv4(""));
-}
+INSTANTIATE_TEST_SUITE_P(IsPrivateIpv4Cases, IsPrivateIpv4Test, testing::Values(
+    IsPrivateIpv4TestParam{"", false},
+    IsPrivateIpv4TestParam{"10.0", false},
+    IsPrivateIpv4TestParam{"123a.123.0.1", false},
+    IsPrivateIpv4TestParam{"a123.123.0.1", false},
+    IsPrivateIpv4TestParam{"123.a123.0.1", false},
+    IsPrivateIpv4TestParam{"123.123a.0.1", false},
+    IsPrivateIpv4TestParam{"8.8.8.8", false},
+    IsPrivateIpv4TestParam{"10.0.0.1", true},
+    IsPrivateIpv4TestParam{"10.255.255.255", true},
+    IsPrivateIpv4TestParam{"172.15.255.255", false},
+    IsPrivateIpv4TestParam{"172.16.0.1", true},
+    IsPrivateIpv4TestParam{"172.31.255.255", true},
+    IsPrivateIpv4TestParam{"172.32.0.1", false},
+    IsPrivateIpv4TestParam{"192.167.255.255", false},
+    IsPrivateIpv4TestParam{"192.168.0.1", true}
+));
 
 // ==================== AnonymizeJobOption Test ====================
 struct AnonymizeJobOptionTestParam {
     std::string inputOption;
     std::string expectedResult;
-    std::string testName;
 };
 
 class AnonymizeJobOptionTest : public testing::TestWithParam<AnonymizeJobOptionTestParam> {};
@@ -457,23 +431,20 @@ HWTEST_P(AnonymizeJobOptionTest, AnonymizeJobOption, TestSize.Level2)
 {
     AnonymizeJobOptionTestParam param = GetParam();
     std::string result = PrintUtils::AnonymizeJobOption(param.inputOption);
-    if (param.expectedResult.empty()) {
-        EXPECT_EQ(result, "");
-    } else {
-        EXPECT_TRUE(result.find(param.expectedResult) != std::string::npos);
-    }
+    EXPECT_EQ(result, param.expectedResult);
 }
 
 INSTANTIATE_TEST_SUITE_P(AnonymizeJobOptionCases, AnonymizeJobOptionTest, testing::Values(
-    AnonymizeJobOptionTestParam{"invalid json", "", "invalid_json"},
-    AnonymizeJobOptionTestParam{"", "", "empty_string"},
-    AnonymizeJobOptionTestParam{R"({"jobName":"test.pdf"})", "xxx.pdf", "jobName"},
-    AnonymizeJobOptionTestParam{R"({"jobDesArr":["test.pdf","0","1"]})", "xxx.pdf", "jobDesArr_valid"},
-    AnonymizeJobOptionTestParam{R"({"jobDesArr":[]})", "jobDesArr", "jobDesArr_empty"},
-    AnonymizeJobOptionTestParam{R"({"jobDesArr":[123]})", "jobDesArr", "jobDesArr_invalid"},
+    AnonymizeJobOptionTestParam{"invalid json", ""},
+    AnonymizeJobOptionTestParam{"", ""},
+    AnonymizeJobOptionTestParam{R"({"jobName":"test.pdf"})", R"({"jobName":"xxx.pdf"})"},
+    AnonymizeJobOptionTestParam{R"({"jobDesArr":["test.pdf","0","1"]})", R"({"jobDesArr":["xxx.pdf","0","1"]})"},
+    AnonymizeJobOptionTestParam{R"({"jobDesArr":[]})", R"({"jobDesArr":""})"},
+    AnonymizeJobOptionTestParam{R"({"jobDesArr":[123]})", R"({"jobDesArr":""})"},
     AnonymizeJobOptionTestParam{R"({"printerId":"com.ext:550e8400-e29b-41d4-a716-446655440000"})",
-        "550e8400-e29b-41d4-a716-x", "printerId"},
-    AnonymizeJobOptionTestParam{R"({"printerUri":"ipp://49.4.22.46:16631/ipp/printers"})", "49.4.22.xx", "printerUri"}
+        R"({"printerId":"com.ext:550e8400-e29b-41d4-a716-x"})"},
+    AnonymizeJobOptionTestParam{R"({"printerUri":"ipp://49.4.22.46:16631/ipp/printers"})",
+        R"({"printerUri":"ipp://49.4.22.xxx:16631/ipp/printers"})"}
 ));
 
 // ==================== AnonymizeAlias Test ====================
