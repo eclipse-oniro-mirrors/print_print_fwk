@@ -2002,7 +2002,11 @@ static std::string CreateIppRawDataDir()
 static void CleanupIppRawDataDir()
 {
     std::error_code ec;
-    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
+    for (const auto &entry : std::filesystem::directory_iterator(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec)) {
+        if (entry.is_regular_file()) {
+            std::filesystem::remove(entry.path(), ec);
+        }
+    }
 }
 
 static void CreateFileInIppDir(const std::string &fileName)

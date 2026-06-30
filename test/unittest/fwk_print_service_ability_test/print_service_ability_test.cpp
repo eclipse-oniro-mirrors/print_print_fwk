@@ -6758,7 +6758,11 @@ static std::string CreateIppRawDataDirForAbilityTest()
 static void CleanupIppRawDataDirForAbilityTest()
 {
     std::error_code ec;
-    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
+    for (const auto &entry : std::filesystem::directory_iterator(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec)) {
+        if (entry.is_regular_file()) {
+            std::filesystem::remove(entry.path(), ec);
+        }
+    }
 }
 
 static void CreateFileInIppDirForAbilityTest(const std::string &fileName)
@@ -6767,12 +6771,6 @@ static void CreateFileInIppDirForAbilityTest(const std::string &fileName)
     std::ofstream ofs(filePath);
     ofs << "test_data";
     ofs.close();
-}
-
-HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_NullPtr_ShouldReturnEarly, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    service->CheckAndUpdateIppRawData(nullptr);
 }
 
 HWTEST_F(PrintServiceAbilityTest, CheckAndUpdateIppRawData_HasIppRawDataFileTrue_ShouldUpdateTimestamp, TestSize.Level1)

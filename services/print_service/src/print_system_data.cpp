@@ -529,6 +529,12 @@ void PrintSystemData::CleanIppRawDataFiles()
         if (underscorePos == std::string::npos) {
             continue;
         }
+        std::string printerIp = fileName.substr(0, underscorePos);
+        if (IsPrinterIpInAddedList(printerIp)) {
+            PRINT_HILOGI("Printer ip %{public}s still in added list, skip file: %{public}s",
+                PrintUtils::AnonymizePrinterId(printerIp).c_str(), fileName.c_str());
+            continue;
+        }
         std::string timestampStr = fileName.substr(underscorePos + 1);
         uint64_t fileTimestamp = 0;
         char *endPtr = nullptr;
@@ -539,10 +545,25 @@ void PrintSystemData::CleanIppRawDataFiles()
         }
         if (nowEpochSeconds - fileTimestamp > IPP_RAW_DATA_EXPIRE_SECONDS) {
             if (std::filesystem::remove(entry.path(), ec)) {
-                PRINT_HILOGI("Cleaned expired IPP raw data file: %{public}s", fileName.c_str());
+                PRINT_HILOGI("Cleaned expired IPP raw data file for removed printer: %{public}s", fileName.c_str());
             }
         }
     }
+}
+
+bool PrintSystemData::IsPrinterIpInAddedList(const std::string &printerIp)
+{
+    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+    for (const auto &printerId : addedPrinterList) {
+        auto info = GetAddedPrinterMap().Find(printerId);
+        if (info != nullptr && info->HasUri()) {
+            std::string uri = info->GetUri();
+            if (uri.find(printerIp) != std::string::npos) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 bool PrintSystemData::HasIppRawDataFile(const std::string &printerId)
@@ -550,6 +571,7 @@ bool PrintSystemData::HasIppRawDataFile(const std::string &printerId)
     std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
     std::error_code ec;
     if (!std::filesystem::exists(dir, ec) || ec) {
+        PRINT_HILOGW("IPP raw data directory does not exist");
         return false;
     }
     std::string prefix = printerId + "_";

@@ -40,6 +40,7 @@ public:
     void SavePrinterFile(const std::string &printerId);
     void SaveIppRawDataFile(const std::string &printerId, const std::string &rawData);
     void CleanIppRawDataFiles();
+    bool IsPrinterIpInAddedList(const std::string &printerIp);
     bool HasIppRawDataFile(const std::string &printerId);
     void UpdateIppRawDataFileTimestamp(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
