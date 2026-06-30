@@ -651,4 +651,39 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0023_NeedRename, TestSiz
     };
     DoTestResponse(preFunc, postFunc);
 }
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0024
+ * @tc.desc: ParseAttributeToValue when attribute not found (ippFindAttribute returns nullptr)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0024_NeedRename, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-name", nullptr, "Test printer");
+    };
+    PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
+        EXPECT_STREQ(printerCaps.GetPrinterAttrValue("sides-default"), "");
+    };
+    DoTest(preFunc, postFunc);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0025
+ * @tc.desc: ParseAttributeToValue when convertAttr fails (invalid value)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0025_NeedRename, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "sides-default", nullptr, "invalid-sides-value");
+    };
+    PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
+        EXPECT_STREQ(printerCaps.GetPrinterAttrValue("sides-default"), "");
+    };
+    DoTest(preFunc, postFunc);
+}
+
 }  // namespace OHOS::Print

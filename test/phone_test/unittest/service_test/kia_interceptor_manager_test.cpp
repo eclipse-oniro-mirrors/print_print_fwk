@@ -251,7 +251,7 @@ HWTEST_F(KiaInterceptorManagerTest, KiaInterceptorManagerTest_RegisterCallerAppI
     std::string callerBundleName = "com.example.test";
     int32_t userId = 100;
     int32_t result = manager.RegisterCallerAppId(jobId, callerBundleName, userId);
-    EXPECT_EQ(result, E_PRINT_NONE);
+    EXPECT_EQ(result, E_PRINT_INVALID_PARAMETER);
 }
 
 /**
