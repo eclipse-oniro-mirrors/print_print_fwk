@@ -27,14 +27,10 @@
 
 namespace OHOS::Print {
 
-sptr<RemoteServiceAdapter> RemoteServiceAdapter::instance_ = nullptr;
-
-sptr<RemoteServiceAdapter> RemoteServiceAdapter::GetInstance()
+RemoteServiceAdapter& RemoteServiceAdapter::GetInstance()
 {
-    if (instance_ == nullptr) {
-        instance_ = sptr<RemoteServiceAdapter>::MakeSptr();
-    }
-    return instance_;
+    static RemoteServiceAdapter instance;
+    return instance;
 }
 
 RemoteServiceAdapter::RemoteServiceAdapter()
@@ -93,6 +89,15 @@ bool RemoteServiceAdapter::IsConnected()
 {
     PRINT_CHECK_NULL_AND_RETURN(connection_, false);
     return connection_->GetRemoteObject() != nullptr;
+}
+
+void RemoteServiceAdapter::OnRemoteServiceDied()
+{
+    PRINT_HILOGI("RemoteServiceAdapter::OnRemoteServiceDied");
+    
+    PRINT_CHECK_NULL_RETURN_VOID(onServiceDiedCb_);
+    PRINT_HILOGI("Calling onServiceDiedCallback to clear printers");
+    onServiceDiedCb_();
 }
 
 int32_t RemoteServiceAdapter::SendData(uint32_t code, const std::string &msg)
@@ -155,6 +160,12 @@ int32_t RemoteServiceAdapter::RequestPrinterList()
     std::string msg = PrintJsonUtil::WriteString(jsonArray);
     PRINT_HILOGD("RequestPrinterList request: %{public}s", msg.c_str());
     return SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), msg);
+}
+
+void RemoteServiceAdapter::SetOnServiceDiedCallback(std::function<void()> cb)
+{
+    PRINT_HILOGI("RemoteServiceAdapter::SetOnServiceDiedCallback");
+    onServiceDiedCb_ = cb;
 }
 
 } // namespace OHOS::Print
