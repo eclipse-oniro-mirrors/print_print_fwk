@@ -3864,7 +3864,8 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
     int32_t ret = E_PRINT_NONE;
     if (!PrintUtil::startsWith(extensionId, PRINT_EXTENSION_BUNDLE_NAME)) {
         std::string printerMake = printerInfo.GetPrinterMake();
-        if (printerInfo.GetPrinterId().find(IPPOVERUSB_PREFIX) != std::string::npos) {
+        // IPPOverUSB printer does not need PPD query, use default PPD directly
+        if (PrintUtil::startsWith(printerInfo.GetPrinterId(), SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
             printerMake = DEFAULT_PPD_NAME;
         }
         ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerMake);
