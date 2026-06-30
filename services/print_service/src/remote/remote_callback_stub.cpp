@@ -34,7 +34,7 @@ RemoteCallbackStub::RemoteCallbackStub()
 int32_t RemoteCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    PRINT_HILOGD("RemoteCallbackStub::OnRemoteRequest started, code = %{public}d", code);
+    PRINT_HILOGI("RemoteCallbackStub::OnRemoteRequest started, code = %{public}d", code);
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
         PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
@@ -43,7 +43,8 @@ int32_t RemoteCallbackStub::OnRemoteRequest(
 
     int32_t errorCode = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(errorCode), E_PRINT_RPC_FAILURE);
-    if (errorCode == E_PRINT_NETWORK_ERROR || errorCode == E_PRINT_ACCOUNT_ERROR) {
+    if (errorCode == E_PRINT_NETWORK_ERROR || errorCode == E_PRINT_ACCOUNT_ERROR ||
+        errorCode == E_PRINT_INVALID_PARAMETER) {
         PRINT_HILOGE("RemoteCallbackStub error: %{public}d, clear printers", errorCode);
         DelayedSingleton<RemotePrinterManager>::GetInstance()->ClearAllPrinters();
         return errorCode;

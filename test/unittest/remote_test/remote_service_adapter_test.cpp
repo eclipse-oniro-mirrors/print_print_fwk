@@ -148,4 +148,52 @@ HWTEST_F(RemoteServiceAdapterTest, RequestPrinterList_001, TestSize.Level1)
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
 }
 
+/**
+ * @tc.name: SetOnServiceDiedCallback_001
+ * @tc.desc: Branch: set callback -> callback stored
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, SetOnServiceDiedCallback_001, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    bool callbackCalled = false;
+    client.SetOnServiceDiedCallback([&callbackCalled]() {
+        callbackCalled = true;
+    });
+    EXPECT_NE(nullptr, client.onServiceDiedCb_);
+}
+
+/**
+ * @tc.name: SetOnServiceDiedCallback_002
+ * @tc.desc: Branch: set nullptr callback -> callback nullptr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, SetOnServiceDiedCallback_002, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    client.SetOnServiceDiedCallback(nullptr);
+    EXPECT_EQ(nullptr, client.onServiceDiedCb_);
+}
+
+/**
+ * @tc.name: OnRemoteServiceDied_002
+ * @tc.desc: Branch: BindService fails -> callback called
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_002, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
+    bool callbackCalled = false;
+    client.SetOnServiceDiedCallback([&callbackCalled]() {
+        callbackCalled = true;
+    });
+    client.OnRemoteServiceDied();
+    EXPECT_TRUE(callbackCalled);
+}
+
 } // namespace OHOS::Print

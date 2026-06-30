@@ -61,13 +61,11 @@ private:
     std::map<std::string, std::shared_ptr<PrinterInfo>> printerMap_;
     std::mutex printerMapLock_;
     std::mutex controlMutex_;
-    sptr<RemoteServiceAdapter> serviceAdapter_;
+    RemoteServiceAdapter& serviceAdapter_;
     std::thread discoveryThread_;
     std::once_flag initFlag_;
     
     std::atomic<bool> isDiscoveryRunning_{false};
-    
-    static constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
 };
 
 } // namespace OHOS::Print

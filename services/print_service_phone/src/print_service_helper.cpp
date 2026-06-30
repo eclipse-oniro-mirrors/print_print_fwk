@@ -25,6 +25,7 @@
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "ability_manager_adapter.h"
 
 namespace OHOS::Print {
 const uint32_t MAX_RETRY_TIMES = 2;
@@ -58,12 +59,11 @@ bool PrintServiceHelper::CheckPermission(const std::string &name)
 bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
 {
     AppExecFwk::ElementName element = want.GetElement();
-    AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
     while (retry++ < MAX_RETRY_TIMES) {
         PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}s %{public}s",
             element.GetBundleName().c_str(), element.GetAbilityName().c_str());
-        auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+        auto ret = OHOS::Print::AbilityManagerAdapter::GetInstance().StartAbility(want);
         if (!ret) {
             break;
         } else {
@@ -83,9 +83,6 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
     PRINT_HILOGD("enter PrintServiceHelper::StartExtensionAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
-    auto abilityManagerClient = AAFwk::AbilityManagerClient::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(abilityManagerClient, false);
-    abilityManagerClient->Connect();
     uint32_t retry = 0;
     sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection(deathCallback);
     PRINT_CHECK_NULL_AND_RETURN(printAbilityConnection, false);
@@ -93,7 +90,7 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
     while (retry++ < MAX_RETRY_TIMES) {
-        if (abilityManagerClient->ConnectAbilityWithExtensionType(
+        if (OHOS::Print::AbilityManagerAdapter::GetInstance().ConnectAbilityWithExtensionType(
             want, printAbilityConnection, nullptr, -1, AppExecFwk::ExtensionAbilityType::PRINT) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
             break;
@@ -115,7 +112,6 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
     PRINT_HILOGD("enter PrintServiceHelper::StartPluginPrintExtAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
-    AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
     sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection();
     if (printAbilityConnection == nullptr) {
@@ -126,7 +122,7 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
     while (retry++ < MAX_RETRY_TIMES) {
-        if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
+        if (OHOS::Print::AbilityManagerAdapter::GetInstance().ConnectAbility(want, printAbilityConnection, -1) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartPluginPrintExtAbility ConnectAbility success");
             break;
         }
@@ -145,7 +141,6 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
 bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbilityType)
 {
     PRINT_HILOGD("enter PrintServiceHelper::DisconnectAbility");
-    AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
     std::lock_guard<std::mutex> connectionLock(connectionListLock_);
     auto connectionListIt = extConnectionMap_.find(extensionAbilityType);
@@ -160,7 +155,7 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
             break;
         }
         for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
-            if (AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(*connIt) == 0) {
+            if (OHOS::Print::AbilityManagerAdapter::GetInstance().DisconnectAbility(*connIt) == 0) {
                 PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
                 connIt = connectionListIt->second.erase(connIt);
             } else {

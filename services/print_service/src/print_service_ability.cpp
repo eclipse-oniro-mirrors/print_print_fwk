@@ -1206,7 +1206,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("[Printer: %{public}s] AddPrinterToCups start, printerUri: %{public}s, printerMake: %{public}s.",
-        printerName.c_str(), printerUri.c_str(), printerMake.c_str());
+        printerName.c_str(), PrintUtils::AnonymizePrinterUri(printerUri).c_str(), printerMake.c_str());
 #ifdef CUPS_ENABLE
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
     if (ret != E_PRINT_NONE) {
@@ -3910,7 +3910,7 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
         PRINT_HILOGD("printer is online, do not remove.");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{public}s", printerUri.c_str());
+    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{private}s", printerUri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     bool result = RemoveSinglePrinterInfo(PrintUtils::GetGlobalId(extensionId, printerId));
     return result ? E_PRINT_NONE : E_PRINT_INVALID_PRINTER;

@@ -17,6 +17,7 @@ if (!print_fwk_feature_device_isolation) {
   group("fuzztest") {
     testonly = true
     deps = [
+      "abilitymanageradapter_fuzzer:fuzztest",
       "eventlistenermgr_fuzzer:fuzztest",
       "printcupsattribute_fuzzer:fuzztest",
       "printcupsclient_fuzzer:fuzztest",
