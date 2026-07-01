@@ -5764,6 +5764,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninst
 HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_AliasUpdatedInAddedAndDiscoveredList, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     auto mockHelper = std::make_shared<MockPrintServiceHelper>();
     service->SetHelper(mockHelper);
     EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
@@ -5796,6 +5797,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_AliasUpdatedInAddedAndDi
 HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_AliasNotInDiscoveredList, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     auto mockHelper = std::make_shared<MockPrintServiceHelper>();
     service->SetHelper(mockHelper);
     EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
