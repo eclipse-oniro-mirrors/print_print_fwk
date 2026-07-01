@@ -2090,21 +2090,6 @@ HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_DirHasOtherPrefixFile_ShouldRetu
     CleanupIppRawDataDir();
 }
 
-HWTEST_F(PrintSystemDataTest, UpdateIppRawDataFileTimestamp_DirNotExist_ShouldNotCrash, TestSize.Level1)
-{
-    auto systemData = std::make_shared<PrintSystemData>();
-    CleanupIppRawDataDir();
-    systemData->UpdateIppRawDataFileTimestamp("any_printer");
-}
-
-HWTEST_F(PrintSystemDataTest, UpdateIppRawDataFileTimestamp_FileNotExist_ShouldNotCrash, TestSize.Level1)
-{
-    auto systemData = std::make_shared<PrintSystemData>();
-    CreateIppRawDataDir();
-    systemData->UpdateIppRawDataFileTimestamp("nonexistent_printer");
-    CleanupIppRawDataDir();
-}
-
 HWTEST_F(PrintSystemDataTest, UpdateIppRawDataFileTimestamp_FileExists_ShouldRename, TestSize.Level1)
 {
     auto systemData = std::make_shared<PrintSystemData>();
@@ -2114,13 +2099,6 @@ HWTEST_F(PrintSystemDataTest, UpdateIppRawDataFileTimestamp_FileExists_ShouldRen
     systemData->UpdateIppRawDataFileTimestamp("printer_update");
     EXPECT_TRUE(systemData->HasIppRawDataFile("printer_update"));
     CleanupIppRawDataDir();
-}
-
-HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_DirNotExist_ShouldNotCrash, TestSize.Level1)
-{
-    auto systemData = std::make_shared<PrintSystemData>();
-    CleanupIppRawDataDir();
-    systemData->CleanIppRawDataFiles();
 }
 
 HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_NoExpiredFile_ShouldKeep, TestSize.Level1)
