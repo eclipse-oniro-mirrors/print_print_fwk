@@ -4154,6 +4154,8 @@ HWTEST_F(PrintCupsClientTest, ParseStateMessage_RunningTokens_Test, TestSize.Lev
             TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
             PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
     };
+    
+    printCupsClient.ParseStateMessage(nullptr);
 
     printCupsClient.ParseStateMessage(nullptr);
 
