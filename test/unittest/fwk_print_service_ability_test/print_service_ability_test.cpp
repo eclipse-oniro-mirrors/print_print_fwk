@@ -6742,5 +6742,67 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)
     std::string cid = ":1";
     EXPECT_FALSE(service->IsExtensionPrintJob(cid));
 }
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_AliasUpdatedInAddedAndDiscoveredList, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    service->SetHelper(mockHelper);
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+
+    std::string printerId = "com.example.ext:TestPrinter";
+    PrinterInfo addedInfo;
+    addedInfo.SetPrinterId(printerId);
+    addedInfo.SetPrinterName("TestPrinter");
+    addedInfo.SetAlias("OldAlias");
+    service->printSystemData_.InsertAddedPrinter(printerId, addedInfo);
+
+    auto discoveredInfo = std::make_shared<PrinterInfo>(addedInfo);
+    service->printSystemData_.AddPrinterToDiscovery(discoveredInfo);
+
+    PrinterInfo updateInfo;
+    updateInfo.SetPrinterId(printerId);
+    updateInfo.SetAlias("NewAlias");
+
+    EXPECT_EQ(service->UpdatePrinterInSystem(updateInfo), E_PRINT_NONE);
+
+    auto queriedDiscovered = service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_NE(queriedDiscovered, nullptr);
+    EXPECT_EQ(queriedDiscovered->GetAlias(), "NewAlias");
+
+    PrinterInfo queriedAdded;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, queriedAdded));
+    EXPECT_EQ(queriedAdded.GetAlias(), "NewAlias");
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_AliasNotInDiscoveredList, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    service->SetHelper(mockHelper);
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+
+    std::string printerId = "com.example.ext:TestPrinter";
+    PrinterInfo addedInfo;
+    addedInfo.SetPrinterId(printerId);
+    addedInfo.SetPrinterName("TestPrinter");
+    addedInfo.SetAlias("OldAlias");
+    service->printSystemData_.InsertAddedPrinter(printerId, addedInfo);
+
+    PrinterInfo updateInfo;
+    updateInfo.SetPrinterId(printerId);
+    updateInfo.SetAlias("NewAlias");
+    updateInfo.SetOption("NewOption");
+
+    EXPECT_EQ(service->UpdatePrinterInSystem(updateInfo), E_PRINT_NONE);
+
+    PrinterInfo queriedAdded;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, queriedAdded));
+    EXPECT_EQ(queriedAdded.GetAlias(), "NewAlias");
+    EXPECT_EQ(queriedAdded.GetOption(), "NewOption");
+    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
+}
 }  // namespace Print
 }  // namespace OHOS
