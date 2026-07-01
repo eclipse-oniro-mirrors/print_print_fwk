@@ -310,8 +310,14 @@ bool PrintUtils::IsPrivateIpv4(const std::string &ip)
     if (secondDot == std::string::npos) {
         return false;
     }
-    int first = std::stoi(ip.substr(0, firstDot));
-    int second = std::stoi(ip.substr(firstDot + 1, secondDot - firstDot - 1));
+    int first = 0;
+    if (!PrintUtil::ConvertToInt(ip.substr(0, firstDot), first)) {
+        return false;
+    }
+    int second = 0;
+    if (!PrintUtil::ConvertToInt(ip.substr(firstDot + 1, secondDot - firstDot - 1), second)) {
+        return false;
+    }
     if ((first == PRIVATE_IPV4_CLASS_A_FIRST) ||
         (first == PRIVATE_IPV4_CLASS_B_FIRST && second >= PRIVATE_IPV4_CLASS_B_SECOND_MIN &&
          second <= PRIVATE_IPV4_CLASS_B_SECOND_MAX) ||
