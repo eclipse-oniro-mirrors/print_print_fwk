@@ -95,6 +95,12 @@ const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
 const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
 const uint32_t SLOW_FILE_CONVERSION_THRESHOLD_TIME = 5000;
+#ifdef UNIT_TEST
+const uint32_t GET_OPTION_TIMES = 2;
+#else
+const uint32_t GET_OPTION_TIMES = 40;
+#endif
+
 static bool g_isFirstQueryState = false;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
@@ -1534,7 +1540,6 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
         PRINT_HILOGW("printAbility_ is null");
         return isMakeModelRight;
     }
-    const uint32_t GET_OPTION_TIMES = 40;
     while (retryCount < GET_OPTION_TIMES) {
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), nullptr);
         if (dest != nullptr) {
