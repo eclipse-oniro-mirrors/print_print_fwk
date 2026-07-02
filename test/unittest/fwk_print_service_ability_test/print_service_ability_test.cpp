@@ -6745,5 +6745,16 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)
     std::string cid = ":1";
     EXPECT_FALSE(service->IsExtensionPrintJob(cid));
 }
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInDiscovery_IppOverUsbPrinter_UsesDefaultPpdName, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    info.SetPrinterId("com.ohos.spooler:IPP-testPrinter");
+    info.SetPrinterName("IPPOverUsbPrinter");
+    info.SetPrinterMake("Custom Printer Model");
+    info.SetUri("usb://serial=12345");
+    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
+}
 }  // namespace Print
 }  // namespace OHOS

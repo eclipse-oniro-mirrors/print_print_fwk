@@ -3856,7 +3856,13 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
     int32_t ret = E_PRINT_NONE;
     if (!PrintUtil::startsWith(extensionId, PRINT_EXTENSION_BUNDLE_NAME)) {
-        ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerInfo.GetPrinterMake());
+        std::string printerMake = printerInfo.GetPrinterMake();
+        // IPPOverUSB printer uses IPP Everywhere standard, no need to query PPD
+        std::string printerId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
+        if (PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
+            printerMake = DEFAULT_PPD_NAME;
+        }
+        ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerMake);
     }
     if (ret == E_PRINT_NONE) {
         UpdateSinglePrinterInfo(printerInfo, extensionId);
