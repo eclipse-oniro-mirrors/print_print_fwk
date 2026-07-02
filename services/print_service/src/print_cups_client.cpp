@@ -2229,7 +2229,7 @@ void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitor
                     // Check slow file conversion timeout
                     uint64_t elapsedTime = GetNowTime() - monitorParams->uploadingFilesStartTime;
                     if (elapsedTime >= SLOW_FILE_CONVERSION_THRESHOLD_TIME) {
-                        PRINT_HILOGI("uploading/converting files exceeded %{public}d ms, add slow file conversion substate",
+                        PRINT_HILOGI("uploading/converting files exceeded %{public}d ms, add slow conversion substate",
                             SLOW_FILE_CONVERSION_THRESHOLD_TIME);
                         monitorParams->substate = GetNewSubstate(monitorParams->substate,
                         PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION);
