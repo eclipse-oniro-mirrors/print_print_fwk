@@ -337,7 +337,6 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_DoNothing_When_NullInQueue, TestSize.
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
@@ -364,7 +363,6 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_Succeed_When_OnePrintJobInQueue, Test
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
@@ -382,7 +380,6 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_ClearQueue_When_NullptrPrintJobInQueu
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
@@ -4154,6 +4151,8 @@ HWTEST_F(PrintCupsClientTest, ParseStateMessage_RunningTokens_Test, TestSize.Lev
             TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
             PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
     };
+    
+    printCupsClient.ParseStateMessage(nullptr);
 
     printCupsClient.ParseStateMessage(nullptr);
 

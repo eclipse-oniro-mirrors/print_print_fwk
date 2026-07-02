@@ -80,7 +80,10 @@ if (!print_fwk_feature_device_isolation) {
   ]
 }
 
-_deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
+_deps = [
+  "${print_path}/frameworks/models/print_models:print_models",
+  "${print_path}/frameworks/ability_manager_adapter:print_ability_manager_adapter",
+]
 
 _external_deps = [
   "ability_base:base",

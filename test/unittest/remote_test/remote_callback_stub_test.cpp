@@ -250,4 +250,67 @@ HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterList_001, TestSize.Level1)
     EXPECT_EQ(E_PRINT_NONE, result);
 }
 
+/**
+ * @tc.name: OnRemoteRequest_ErrorCode_401
+ * @tc.desc: Branch: errorCode == E_PRINT_INVALID_PARAMETER (401) -> ClearAllPrinters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_401, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_INVALID_PARAMETER);
+    
+    int32_t result = stub.OnRemoteRequest(
+        static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
+    EXPECT_EQ(E_PRINT_INVALID_PARAMETER, result);
+}
+
+/**
+ * @tc.name: OnRemoteRequest_ErrorCode_NetworkError
+ * @tc.desc: Branch: errorCode == E_PRINT_NETWORK_ERROR -> ClearAllPrinters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_NetworkError, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_NETWORK_ERROR);
+    
+    int32_t result = stub.OnRemoteRequest(
+        static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
+    EXPECT_EQ(E_PRINT_NETWORK_ERROR, result);
+}
+
+/**
+ * @tc.name: OnRemoteRequest_ErrorCode_AccountError
+ * @tc.desc: Branch: errorCode == E_PRINT_ACCOUNT_ERROR -> ClearAllPrinters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_AccountError, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_ACCOUNT_ERROR);
+    
+    int32_t result = stub.OnRemoteRequest(
+        static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
+    EXPECT_EQ(E_PRINT_ACCOUNT_ERROR, result);
+}
+
 } // namespace OHOS::Print

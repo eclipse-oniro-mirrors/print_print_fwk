@@ -22,6 +22,7 @@
 #include "message_parcel.h"
 #include "message_option.h"
 #include "element_name.h"
+#include "mock_remote_object.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -201,6 +202,45 @@ HWTEST_F(PrintIpcConnectionTest, SendData_002, TestSize.Level1)
     MessageOption option;
     int32_t result = connection.SendData(99999, data, reply, option);
     EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+}
+
+/**
+* @tc.name: OnAbilityConnectDone_004
+* @tc.desc: Branch: connect success -> deathRecipient created and added
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
+{
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    AppExecFwk::ElementName element;
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    EXPECT_NE(nullptr, connection->deathRecipient_);
+    EXPECT_NE(nullptr, connection->remoteObject_);
+}
+ 
+/**
+* @tc.name: OnAbilityDisconnectDone_004
+* @tc.desc: Branch: disconnect success -> deathRecipient removed
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_004, TestSize.Level1)
+{
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    AppExecFwk::ElementName element;
+    connection->OnAbilityDisconnectDone(element, ERR_OK);
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    connection->OnAbilityDisconnectDone(element, ERR_OK);
+    EXPECT_EQ(nullptr, connection->deathRecipient_);
+    EXPECT_EQ(nullptr, connection->remoteObject_);
 }
 
 } // namespace OHOS::Print

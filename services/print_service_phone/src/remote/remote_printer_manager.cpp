@@ -59,16 +59,22 @@ std::vector<PrintPageSize> BuildDefaultPageSizeList()
 }
 
 const std::vector<PrintPageSize> DEFAULT_PAGE_SIZE_LIST = BuildDefaultPageSizeList();
+
+constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
 }
 
 RemotePrinterManager::RemotePrinterManager()
+    : serviceAdapter_(RemoteServiceAdapter::GetInstance())
 {
     PRINT_HILOGI("RemotePrinterManager constructor");
-    serviceAdapter_ = RemoteServiceAdapter::GetInstance();
+    
+    serviceAdapter_.SetOnServiceDiedCallback([this]() {
+        PRINT_HILOGI("Remote service died, clearing all printers");
+        this->ClearAllPrinters();
+    });
     
     std::call_once(initFlag_, [this]() {
-        PRINT_CHECK_NULL_RETURN_VOID(serviceAdapter_);
-        if (serviceAdapter_->BindService()) {
+        if (serviceAdapter_.BindService()) {
             PRINT_HILOGI("RemotePrinterManager initialized successfully");
         } else {
             PRINT_HILOGE("BindService failed in constructor");
@@ -171,7 +177,7 @@ bool RemotePrinterManager::StartPrinterDiscovery()
     std::lock_guard<std::mutex> lock(controlMutex_);
     if (isDiscoveryRunning_) {
         PRINT_HILOGW("Discovery already running, trigger immediate query");
-        int32_t result = serviceAdapter_->RequestPrinterList();
+        int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("Immediate RequestPrinterList result: %{public}d", result);
         return true;
     }
@@ -199,7 +205,7 @@ void RemotePrinterManager::DiscoveryLoop()
 {
     PRINT_HILOGI("RemotePrinterManager DiscoveryLoop started");
     while (isDiscoveryRunning_) {
-        int32_t result = serviceAdapter_->RequestPrinterList();
+        int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("RequestPrinterList result: %{public}d", result);
         std::this_thread::sleep_for(std::chrono::milliseconds(DISCOVERY_INTERVAL_MS));
     }
@@ -253,7 +259,7 @@ bool RemotePrinterManager::OnPrinterListReceived(const Json::Value &jsonArray)
     }
 
     for (const auto &devId : currentDevIds) {
-        int32_t result = serviceAdapter_->RequestPrinterStatus(devId);
+        int32_t result = serviceAdapter_.RequestPrinterStatus(devId);
         PRINT_HILOGI("RequestPrinterStatus for %{public}s result: %{public}d", devId.c_str(), result);
     }
     

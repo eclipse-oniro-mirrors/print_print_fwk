@@ -50,6 +50,7 @@ public:
 
 private:
     sptr<IRemoteObject> remoteObject_;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_;
     std::mutex mutex_;
     std::condition_variable cv_;
 };

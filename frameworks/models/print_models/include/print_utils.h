@@ -87,6 +87,7 @@ public:
     static std::string GetJobStateChar(const uint32_t state);
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
     static bool ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos);
+    static bool IsPrivateIpv4(const std::string &ip);
     static std::string AnonymizeIpv4(const std::string &ip);
     static std::string AnonymizeIpv6(const std::string &ip);
     static std::string AnonymizeUUid(const std::string &uuid);
@@ -95,6 +96,8 @@ public:
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
     static void AnonymizeAdvancedOptions(Json::Value &advancedOptions);
+    static void AnonymizeAlias(Json::Value &optionJson);
+    static void AnonymizeFileArray(Json::Value &optionJson, const std::string &key);
     static std::string AnonymizeJobName(const std::string &jobName);
     static std::string AnonymizeFilePath(const std::string &filePath);
 

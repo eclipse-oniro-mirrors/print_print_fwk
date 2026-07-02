@@ -1206,7 +1206,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("[Printer: %{public}s] AddPrinterToCups start, printerUri: %{public}s, printerMake: %{public}s.",
-        printerName.c_str(), printerUri.c_str(), printerMake.c_str());
+        printerName.c_str(), PrintUtils::AnonymizePrinterUri(printerUri).c_str(), printerMake.c_str());
 #ifdef CUPS_ENABLE
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
     if (ret != E_PRINT_NONE) {
@@ -1368,14 +1368,7 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
         if (!prefOptionsJson.isMember(key)) {
             continue;
         }
-        if (prefOptionsJson[key].isString()) {
-            Json::Value parsedJson;
-            if (PrintJsonUtil::Parse(prefOptionsJson[key].asString(), parsedJson) && parsedJson.isObject()) {
-                ProcessSingleCustomOption(key, parsedJson, userPrefs);
-            } else {
-                userPrefs.SetCustomOption(key, "");
-            }
-        } else if (prefOptionsJson[key].isObject()) {
+        if (prefOptionsJson[key].isObject()) {
             ProcessSingleCustomOption(key, prefOptionsJson[key], userPrefs);
         }
         prefOptionsJson.removeMember(key);
@@ -3863,7 +3856,13 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
     int32_t ret = E_PRINT_NONE;
     if (!PrintUtil::startsWith(extensionId, PRINT_EXTENSION_BUNDLE_NAME)) {
-        ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerInfo.GetPrinterMake());
+        std::string printerMake = printerInfo.GetPrinterMake();
+        // IPPOverUSB printer uses IPP Everywhere standard, no need to query PPD
+        std::string printerId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
+        if (PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
+            printerMake = DEFAULT_PPD_NAME;
+        }
+        ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerMake);
     }
     if (ret == E_PRINT_NONE) {
         UpdateSinglePrinterInfo(printerInfo, extensionId);
@@ -3906,7 +3905,7 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
         PRINT_HILOGD("printer is online, do not remove.");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{public}s", printerUri.c_str());
+    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{private}s", printerUri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     bool result = RemoveSinglePrinterInfo(PrintUtils::GetGlobalId(extensionId, printerId));
     return result ? E_PRINT_NONE : E_PRINT_INVALID_PRINTER;

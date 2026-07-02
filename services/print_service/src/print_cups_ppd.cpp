@@ -320,8 +320,7 @@ ppd_cparam_t *FindCustomParam(ppd_coption_t *coption)
         cparam != nullptr; cparam = (ppd_cparam_t *)cupsArrayNext(coption->params)) {
         PRINT_HILOGD("name=%{public}s order=%{public}d type=%{public}d minimum=%{public}d maximum=%{public}d",
             cparam->name, cparam->order, cparam->type, cparam->minimum.custom_int, cparam->maximum.custom_int);
-        if (cparam->type == PPD_CUSTOM_PASSCODE || cparam->type == PPD_CUSTOM_PASSWORD ||
-            cparam->type == PPD_CUSTOM_STRING) {
+        if (cparam->type == PPD_CUSTOM_STRING) {
             break;
         }
     }
@@ -336,14 +335,6 @@ Json::Value FindCustomParamLimit(ppd_cparam_t *cparam)
     }
     Json::Value customParamLimitJs;
     switch (cparam->type) {
-        case PPD_CUSTOM_PASSCODE:
-            customParamLimitJs["minimum"] = cparam->minimum.custom_passcode;
-            customParamLimitJs["maximum"] = cparam->maximum.custom_passcode;
-            break;
-        case PPD_CUSTOM_PASSWORD:
-            customParamLimitJs["minimum"] = cparam->minimum.custom_password;
-            customParamLimitJs["maximum"] = cparam->maximum.custom_password;
-            break;
         case PPD_CUSTOM_STRING:
             customParamLimitJs["minimum"] = cparam->minimum.custom_string;
             customParamLimitJs["maximum"] = cparam->maximum.custom_string;
@@ -372,9 +363,12 @@ void GetAdvanceOptJsSingleJSFromOption(ppd_file_t *ppd, ppd_option_t *opt, Json:
             break;
         }
         ppd_coption_t *coption = nullptr;
-        ppd_cparam_t *cparam = nullptr;
-        if (!strcmp(choices[k].choice, "Custom") && (coption = ppdFindCustomOption(ppd, opt->keyword)) &&
-            (cparam = FindCustomParam(coption))) {
+        if (!strcmp(choices[k].choice, "Custom") && (coption = ppdFindCustomOption(ppd, opt->keyword))) {
+            ppd_cparam_t *cparam = nullptr;
+            if ((cparam = FindCustomParam(coption)) == nullptr) {
+                PRINT_HILOGW("Unsupported custom param type.");
+                continue;
+            }
             advanceOptJsSingle["customParamType"] = cparam->type;
             advanceOptJsSingle["customParamLimit"] = FindCustomParamLimit(cparam);
             hasCustomParam = true;

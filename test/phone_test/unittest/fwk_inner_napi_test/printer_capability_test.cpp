@@ -289,6 +289,71 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0016, TestSize.Level2)
     EXPECT_EQ(getPagesize.size(), 1);
 }
 
+/**
+ * @tc.name: PrinterCapabilityTest_0017
+ * @tc.desc: Verify empty pageSize list returns empty.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0017, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 0);
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0018
+ * @tc.desc: Verify single pageSize with no duplicate.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0018, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "A4", 210000, 297000);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 1);
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0019
+ * @tc.desc: Verify all custom pageSize handled correctly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0019, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "Custom.A4", 4000, 5000);
+    pagesize.emplace_back("page2", "Custom.Letter", 5000, 4000);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 2);
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0020
+ * @tc.desc: Verify mixed custom and standard pageSize with duplicate dimensions.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0020, TestSize.Level2)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "A4", 1, 1);
+    pagesize.emplace_back("page2", "Custom.A4", 1, 1);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 1);
+}
+
 HWTEST_F(PrinterCapabilityTest, GetAdvanceOptionsJson_HasOptionFalse_ReturnFalse, TestSize.Level2)
 {
     PrinterCapability capability;
