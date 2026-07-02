@@ -39,6 +39,7 @@ ohos_shared_library("print_napi") {
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -80,6 +81,8 @@ ohos_shared_library("print_napi") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "samgr:samgr_proxy",
   ]
 

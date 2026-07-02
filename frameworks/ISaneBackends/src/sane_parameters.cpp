@@ -34,7 +34,7 @@ bool SaneParameters::Marshalling(Parcel &parcel) const
 
 SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
 {
-    SaneParameters* obj = new (std::nothrow) SaneParameters();
+    auto obj = std::make_unique<SaneParameters>();
     if (obj == nullptr) {
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
@@ -49,6 +49,6 @@ SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->pixelsPerLine_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->lines_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->depth_), nullptr);
-    return obj;
+    return obj.release();
 }
 }   // namespace OHOS::Scan

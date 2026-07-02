@@ -43,8 +43,15 @@ const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
 const uint32_t URI_HOST_START_STR_LEN = 3;
+const uint32_t ANONYMIZE_ALIAS_LEN = 3;
 const uint32_t ANONYMIZE_IPV4_LEN = 3;
 const uint32_t ANONYMIZE_IPV6_LEN = 2;
+const int32_t PRIVATE_IPV4_CLASS_A_FIRST = 10;
+const int32_t PRIVATE_IPV4_CLASS_B_FIRST = 172;
+const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MIN = 16;
+const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MAX = 31;
+const int32_t PRIVATE_IPV4_CLASS_C_FIRST = 192;
+const int32_t PRIVATE_IPV4_CLASS_C_SECOND = 168;
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -293,6 +300,63 @@ bool PrintUtils::ExtractIpv6(const std::string &str, std::string &ip, size_t &st
     return false;
 }
 
+bool PrintUtils::IsPrivateIpv4(const std::string &ip)
+{
+    size_t firstDot = ip.find('.');
+    if (firstDot == std::string::npos) {
+        return false;
+    }
+    size_t secondDot = ip.find('.', firstDot + 1);
+    if (secondDot == std::string::npos) {
+        return false;
+    }
+    int first = 0;
+    if (!PrintUtil::ConvertToInt(ip.substr(0, firstDot), first)) {
+        return false;
+    }
+    int second = 0;
+    if (!PrintUtil::ConvertToInt(ip.substr(firstDot + 1, secondDot - firstDot - 1), second)) {
+        return false;
+    }
+    if ((first == PRIVATE_IPV4_CLASS_A_FIRST) ||
+        (first == PRIVATE_IPV4_CLASS_B_FIRST && second >= PRIVATE_IPV4_CLASS_B_SECOND_MIN &&
+         second <= PRIVATE_IPV4_CLASS_B_SECOND_MAX) ||
+        (first == PRIVATE_IPV4_CLASS_C_FIRST && second == PRIVATE_IPV4_CLASS_C_SECOND)) {
+        return true;
+    }
+    return false;
+}
+
+void PrintUtils::AnonymizeAlias(Json::Value &optionJson)
+{
+    if (PrintJsonUtil::IsMember(optionJson, "alias") && optionJson["alias"].isString()) {
+        std::string alias = optionJson["alias"].asString();
+        if (alias.length() > ANONYMIZE_ALIAS_LEN) {
+            optionJson["alias"] = alias.substr(0, alias.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
+        } else {
+            optionJson["alias"] = "xxx";
+        }
+    }
+}
+
+void PrintUtils::AnonymizeFileArray(Json::Value &optionJson, const std::string &key)
+{
+    if (PrintJsonUtil::IsMember(optionJson, key) && optionJson[key].isArray()) {
+        Json::Value fileArr = optionJson[key];
+        if (fileArr.size() > PRINT_MAX_FILE_LIST_SIZE) {
+            PRINT_HILOGE("fileArr size %{public}u exceeds max limit.", fileArr.size());
+            optionJson.removeMember(key);
+            return;
+        }
+        for (Json::Value::ArrayIndex i = 0; i < fileArr.size(); i++) {
+            if (fileArr[i].isString()) {
+                fileArr[i] = AnonymizeFilePath(fileArr[i].asString());
+            }
+        }
+        optionJson[key] = fileArr;
+    }
+}
+
 std::string PrintUtils::AnonymizeIpv4(const std::string &ip)
 {
     size_t lastDot = ip.find_last_of('.');
@@ -350,17 +414,27 @@ std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
 
 std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
 {
-    std::string ip;
-    size_t startPos;
-    std::string result = printerUri;
-    if (ExtractIpv4(printerUri, ip, startPos)) {
-        std::string anonymizeIpv4 = AnonymizeIpv4(ip);
-        return result.replace(startPos, ip.length(), anonymizeIpv4);
-    } else if (ExtractIpv6(printerUri, ip, startPos)) {
-        std::string anonymizeIpv6 = AnonymizeIpv6(ip);
-        return result.replace(startPos, ip.length(), anonymizeIpv6);
+    // The URI for remote printing is an SN (composed entirely of letters and digits), which needs to be anonymized.
+    if (std::all_of(printerUri.begin(), printerUri.end(), [](unsigned char c) { return std::isalnum(c); })) {
+        return std::string(printerUri.length(), '*');
     }
-    return result;
+    std::string host = ExtractHostFromUri(printerUri);
+    if (host.empty()) {
+        return printerUri;
+    }
+    size_t hostPos = printerUri.find(host);
+    if (host.find('.') != std::string::npos) {
+        if (IsPrivateIpv4(host)) {
+            return printerUri;
+        }
+        std::string result = printerUri;
+        return result.replace(hostPos, host.length(), AnonymizeIpv4(host));
+    }
+    if (host.find(':') != std::string::npos) {
+        std::string result = printerUri;
+        return result.replace(hostPos, host.length(), AnonymizeIpv6(host));
+    }
+    return printerUri;
 }
 
 std::string PrintUtils::AnonymizeIp(const std::string &ip)
@@ -395,24 +469,12 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
         optionJson["printerId"] = AnonymizePrinterId(optionJson["printerId"].asString());
     }
-    if (PrintJsonUtil::IsMember(optionJson, "files") && optionJson["files"].isArray()) {
-        Json::Value filesArr = optionJson["files"];
-        if (filesArr.size() > PRINT_MAX_FILE_LIST_SIZE) {
-            PRINT_HILOGE("filesArr size %{public}u exceeds max limit.", filesArr.size());
-            return "";
-        }
-        for (Json::Value::ArrayIndex i = 0; i < filesArr.size(); i++) {
-            if (filesArr[i].isString()) {
-                filesArr[i] = AnonymizeFilePath(filesArr[i].asString());
-            }
-        }
-        optionJson["files"] = filesArr;
+    if (PrintJsonUtil::IsMember(optionJson, "printerUri") && optionJson["printerUri"].isString()) {
+        optionJson["printerUri"] = AnonymizePrinterUri(optionJson["printerUri"].asString());
     }
-    if (PrintJsonUtil::IsMember(optionJson, "advancedOptions") && optionJson["advancedOptions"].isObject()) {
-        Json::Value advancedOptions = optionJson["advancedOptions"];
-        AnonymizeAdvancedOptions(advancedOptions);
-        optionJson["advancedOptions"] = advancedOptions;
-    }
+    AnonymizeAlias(optionJson);
+    AnonymizeFileArray(optionJson, "files");
+    AnonymizeFileArray(optionJson, "fileList");
     return PrintJsonUtil::WriteString(optionJson);
 }
 
@@ -621,183 +683,4 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     return uri.substr(startPos, endPos - startPos);
 }
 
-void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
-{
-    nativeObj->SetCopyNumber(params.copyNumber);
-    nativeObj->SetColorMode(params.colorMode);
-    nativeObj->SetDuplexMode(params.duplexMode);
-    nativeObj->SetPageSize(params.pageSize);
-
-    nativeObj->SetJobId(params.jobId);
-    nativeObj->SetPageRange(params.pageRange);
-    if (params.hasMargin) {
-        nativeObj->SetMargin(params.margin);
-    }
-    if (params.hasPreview) {
-        nativeObj->SetPreview(params.preview);
-    }
-    if (params.isSequential != PARAM_NOT_SET) {
-        nativeObj->SetIsSequential(static_cast<bool>(params.isSequential));
-    }
-    if (!params.vendorOptions.empty()) {
-        nativeObj->SetVendorOptions(params.vendorOptions);
-    }
-}
-
-std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
-{
-    auto nativeObj = std::make_shared<PrintJob>();
-    if (params.printerId.empty()) {
-        PRINT_HILOGE("printerId is empty.");
-        return nullptr;
-    }
-    nativeObj->SetPrinterId(params.printerId);
-    if (params.docFlavor == PRINT_BYTES) {
-        if (params.binaryData == nullptr || params.dataLength == 0) {
-            PRINT_HILOGE("Invalid binary data: data is null or empty.");
-            return nullptr;
-        }
-        std::string tmpPath;
-        int fd = CreateTempFileWithData(params.binaryData, params.dataLength, tmpPath);
-        if (fd == -1) {
-            return nullptr;
-        }
-        std::vector<uint32_t> printFdList;
-        printFdList.emplace_back(fd);
-        nativeObj->SetFdList(printFdList);
-        unlink(tmpPath.c_str());
-    } else {
-        if (params.printFdList.empty()) {
-            PRINT_HILOGE("Invalid fdList data: fdList is empty.");
-            return nullptr;
-        }
-        nativeObj->SetFdList(params.printFdList);
-    }
-    SetAttributesToPrintJob(params, nativeObj);
-    SetOptionInPrintJob(params, nativeObj);
-    return nativeObj;
-}
-
-std::string PrintUtils::GetDocumentFormatToString(uint32_t format)
-{
-    switch (format) {
-        case PRINT_DOCUMENT_FORMAT_AUTO:
-            return "application/octet-stream";
-        case PRINT_DOCUMENT_FORMAT_JPEG:
-            return "image/jpeg";
-        case PRINT_DOCUMENT_FORMAT_PDF:
-            return "application/pdf";
-        case PRINT_DOCUMENT_FORMAT_POSTSCRIPT:
-            return "application/postscript";
-        case PRINT_DOCUMENT_FORMAT_TEXT:
-            return "text/plain";
-        case PRINT_DOCUMENT_FORMAT_RAW:
-            return "application/vnd.cups-raw";
-        default:
-            return "application/octet-stream";
-    }
-}
-
-int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &tmpPath)
-{
-    const auto appContext = AbilityRuntime::Context::GetApplicationContext();
-    if (appContext == nullptr) {
-        PRINT_HILOGE("appContext is null.");
-        return -1;
-    }
-    const std::string filesDir = appContext->GetFilesDir();
-    if (filesDir.empty()) {
-        PRINT_HILOGE("filesDir is empty.");
-        return -1;
-    }
-
-    tmpPath = GenerateTempFilePath(filesDir);
-    if (tmpPath.empty()) {
-        PRINT_HILOGE("Failed to generate valid temp file path.");
-        return -1;
-    }
-    std::ofstream tempFile(tmpPath, std::ios::binary);
-    if (!tempFile) {
-        PRINT_HILOGE("Failed to create temporary file.");
-        return -1;
-    }
-    if (!tempFile.write(static_cast<const char*>(data), length)) {
-        PRINT_HILOGE("Failed to write to temporary file: %{public}s", tmpPath.c_str());
-        tempFile.close();
-        std::remove(tmpPath.c_str());
-        return -1;
-    }
-    tempFile.close();
-
-    int fd = OpenFile(tmpPath);
-    if (fd == -1) {
-        PRINT_HILOGE("Failed to open temp file.");
-        std::remove(tmpPath.c_str());
-    }
-
-    return fd;
-}
-
-std::string PrintUtils::GenerateTempFilePath(const std::string &filesDir)
-{
-    auto now = std::chrono::system_clock::now();
-    auto now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm now_tm{};
-    localtime_r(&now_time_t, &now_tm);
-
-    std::ostringstream oss;
-    oss << "job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
-    std::string fileName = oss.str();
-    if (!IsPathValidForCreate(filesDir, fileName)) {
-        PRINT_HILOGE("Invalid temp file path!");
-        return "";
-    }
-
-    return filesDir + "/" + fileName;
-}
-
-void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
-{
-    PRINT_HILOGI("PrintUtils::SetOptionInPrintJob enter.");
-    Json::Value jsonOptions;
-    if (!params.jobName.empty()) {
-        jsonOptions["jobName"] = params.jobName;
-        Json::Value jobDesArr;
-        jobDesArr.append(params.jobName);
-        jobDesArr.append("0");
-        jobDesArr.append("1");
-        jsonOptions["jobDesArr"] = jobDesArr;
-    }
-    if (params.docFlavor == PRINT_FILE_DESCRIPTOR) {
-        jsonOptions["isDocument"] = true;
-    }
-    jsonOptions["documentFormat"] = GetDocumentFormatToString(params.documentFormat);
-    int printQuality = params.printQuality;
-    if (printQuality > static_cast<int32_t>(PRINT_QUALITY_HIGH) ||
-        printQuality < static_cast<int32_t>(PRINT_QUALITY_DRAFT)) {
-        printQuality = static_cast<int32_t>(PRINT_QUALITY_NORMAL);
-    }
-    jsonOptions["printQuality"] = printQuality;
-    if (!params.mediaType.empty()) {
-        jsonOptions["mediaType"] = params.mediaType;
-    }
-    if (params.isBorderless != PARAM_NOT_SET) {
-        jsonOptions["borderless"] = static_cast<bool>(params.isBorderless);
-    }
-    if (params.isAutoRotate != PARAM_NOT_SET) {
-        jsonOptions["isAutoRotate"] = static_cast<bool>(params.isAutoRotate);
-    }
-    if (params.isReverse != PARAM_NOT_SET) {
-        jsonOptions["isReverse"] = static_cast<bool>(params.isReverse);
-    }
-    if (params.isCollate != PARAM_NOT_SET) {
-        jsonOptions["isCollate"] = static_cast<bool>(params.isCollate);
-    }
-    if (!params.cupsOptions.empty()) {
-        jsonOptions["cupsOptions"] = params.cupsOptions;
-    }
-    std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", AnonymizeJobOption(option).c_str());
-    nativeObj->SetOption(option);
-}
 }  // namespace OHOS::Print

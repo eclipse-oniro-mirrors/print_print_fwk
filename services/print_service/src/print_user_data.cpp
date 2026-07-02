@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <dirent.h>
 #include <cstdlib>
+#include <filesystem>
 #include <iomanip>
 #include <json/json.h>
 
@@ -667,6 +668,13 @@ std::string PrintUserData::ObtainUserCacheDirectory()
     return oss.str();
 }
 
+std::string PrintUserData::ObtainUserPreferencesDirectory()
+{
+    std::ostringstream oss;
+    oss << PRINTER_SERVICE_FILE_PATH << "/" << userId_ << "/printer_user_prefs";
+    return oss.str();
+}
+
 int32_t PrintUserData::QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob)
 {
     PRINT_HILOGI("QueryQueuedPrintJobById Start.");
@@ -1126,19 +1134,13 @@ bool PrintUserData::ContainsHistoryPrintJob(const std::vector<std::string> &prin
 
 std::string PrintUserData::GetUserPreferencesFilePath(const std::string &standardizedPrinterName)
 {
-    std::string baseDir = ObtainUserCacheDirectory();
-    if (!PrintUtils::IsPathValid(baseDir)) {
-        PRINT_HILOGE("Invalid base directory");
+    std::string dirPath = ObtainUserPreferencesDirectory();
+    if (dirPath.empty()) {
+        PRINT_HILOGE("Failed to obtain user preferences directory");
         return "";
     }
 
-    char realBaseDir[PATH_MAX] = {0};
-    if (realpath(baseDir.c_str(), realBaseDir) == nullptr) {
-        PRINT_HILOGE("Failed to canonicalize base directory, errno=%{public}d", errno);
-        return "";
-    }
-
-    std::string filePath = std::string(realBaseDir) + "/printer_user_prefs/" + standardizedPrinterName + ".json";
+    std::string filePath = dirPath + "/" + standardizedPrinterName + ".json";
     if (!PrintUtils::IsPathValid(filePath)) {
         PRINT_HILOGE("Invalid file path: potential path injection");
         return "";
@@ -1155,18 +1157,16 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
     auto userPrefsPtr = std::make_shared<PrinterUserPreferences>(userPrefs);
     printerUserPreferences_[printerId] = userPrefsPtr;
 
-    std::string baseDir = ObtainUserCacheDirectory();
-    if (!PrintUtils::IsPathValid(baseDir)) {
-        PRINT_HILOGE("Invalid base directory");
+    std::string basePath = PRINTER_SERVICE_FILE_PATH;
+    std::string userIdDir = basePath + "/" + std::to_string(userId_);
+    if (access(userIdDir.c_str(), F_OK) != 0 && mkdir(userIdDir.c_str(), S_IRWXU | S_IRWXG) != 0 && errno != EEXIST) {
+        PRINT_HILOGE("Failed to create userId directory, errno=%{public}d", errno);
         return false;
     }
-
-    std::string dirPath = baseDir + "/printer_user_prefs";
-    if (access(dirPath.c_str(), F_OK) != 0) {
-        if (mkdir(dirPath.c_str(), DIR_MODE) != 0) {
-            PRINT_HILOGE("Failed to create user preferences directory, errno=%{public}d", errno);
-            return false;
-        }
+    std::string dirPath = userIdDir + "/printer_user_prefs";
+    if (access(dirPath.c_str(), F_OK) != 0 && mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG) != 0 && errno != EEXIST) {
+        PRINT_HILOGE("Failed to create printer_user_prefs directory, errno=%{public}d", errno);
+        return false;
     }
 
     std::string fileName = standardizedPrinterName + ".json";
@@ -1189,7 +1189,7 @@ bool PrintUserData::SavePrinterUserPreferences(const std::string &printerId,
         PRINT_HILOGE("Failed to close user preferences file, errno=%{public}d", errno);
         return false;
     }
-    if (static_cast<size_t>(writeLength) != jsonLength) {
+    if (writeLength < 0 || static_cast<size_t>(writeLength) != jsonLength) {
         PRINT_HILOGE("Failed to write user preferences file, writeLength=%{public}zd, jsonLength=%{public}zu",
             writeLength, jsonLength);
         return false;

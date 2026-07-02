@@ -40,6 +40,7 @@ ohos_shared_library("ohscan") {
   public_configs = [ ":scan_ndk_config" ]
 
   branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -76,6 +77,8 @@ ohos_shared_library("ohscan") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

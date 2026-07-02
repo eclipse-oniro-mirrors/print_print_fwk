@@ -298,53 +298,34 @@ HWTEST_F(PrintUtilsExtTest, AnonymizePrinterId_003, TestSize.Level2)
 }
 
 // ==================== AnonymizePrinterUri Test ====================
-/**
- * @tc.name: AnonymizePrinterUri_001
- * @tc.desc: Verify AnonymizePrinterUri with IPv4 address.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizePrinterUri_001, TestSize.Level2)
-{
-    std::string uri = "ipp://192.168.1.100:631/ipp/print";
-    std::string result = PrintUtils::AnonymizePrinterUri(uri);
-    EXPECT_TRUE(result.find("192.168.1.xxx") != std::string::npos);
-}
+struct AnonymizePrinterUriTestParam {
+    std::string inputUri;
+    std::string expectedResult;
+};
+
+class AnonymizePrinterUriTest : public testing::TestWithParam<AnonymizePrinterUriTestParam> {};
 
 /**
- * @tc.name: AnonymizePrinterUri_002
- * @tc.desc: Verify AnonymizePrinterUri with IPv6 address.
+ * @tc.name: AnonymizePrinterUri
+ * @tc.desc: Verify AnonymizePrinterUri with various URI formats.
  * @tc.type: FUNC
  */
-HWTEST_F(PrintUtilsExtTest, AnonymizePrinterUri_002, TestSize.Level2)
+HWTEST_P(AnonymizePrinterUriTest, AnonymizePrinterUri, TestSize.Level2)
 {
-    std::string uri = "ipp://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:631/ipp/print";
-    std::string result = PrintUtils::AnonymizePrinterUri(uri);
-    EXPECT_TRUE(result.find("2001:0db8:") != std::string::npos);
+    AnonymizePrinterUriTestParam param = GetParam();
+    std::string result = PrintUtils::AnonymizePrinterUri(param.inputUri);
+    EXPECT_EQ(result, param.expectedResult);
 }
 
-/**
- * @tc.name: AnonymizePrinterUri_003
- * @tc.desc: Verify AnonymizePrinterUri with no IP address.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizePrinterUri_003, TestSize.Level2)
-{
-    std::string uri = "ipp://localhost:631/ipp/print";
-    std::string result = PrintUtils::AnonymizePrinterUri(uri);
-    EXPECT_EQ(result, uri);
-}
-
-/**
- * @tc.name: AnonymizePrinterUri_004
- * @tc.desc: Verify AnonymizePrinterUri with empty string.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizePrinterUri_004, TestSize.Level2)
-{
-    std::string uri = "";
-    std::string result = PrintUtils::AnonymizePrinterUri(uri);
-    EXPECT_EQ(result, "");
-}
+INSTANTIATE_TEST_SUITE_P(AnonymizePrinterUriCases, AnonymizePrinterUriTest, testing::Values(
+    AnonymizePrinterUriTestParam{"123456789abc", "************"},
+    AnonymizePrinterUriTestParam{"", ""},
+    AnonymizePrinterUriTestParam{"ipp://49.4.22.46:16631/ipp/print", "ipp://49.4.22.xxx:16631/ipp/print"},
+    AnonymizePrinterUriTestParam{"ipp://192.168.1.100:631/ipp/print", "ipp://192.168.1.100:631/ipp/print"},
+    AnonymizePrinterUriTestParam{"ipp://[2001:0db8:85a3:0000:0000:0000:0000:0000]:631/print",
+        "ipp://[2001:0db8:85xx:xxxx:xxxx:xxxx:xxxx:xxxx]:631/print"},
+    AnonymizePrinterUriTestParam{"ipp://localhost:631/ipp/print", "ipp://localhost:631/ipp/print"}
+));
 
 // ==================== AnonymizeIp Test ====================
 /**
@@ -395,145 +376,146 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIp_004, TestSize.Level2)
     EXPECT_EQ(result, "");
 }
 
+// ==================== IsPrivateIpv4 Test ====================
+struct IsPrivateIpv4TestParam {
+    std::string ip;
+    bool expected;
+};
+
+class IsPrivateIpv4Test : public testing::TestWithParam<IsPrivateIpv4TestParam> {};
+
+/**
+ * @tc.name: IsPrivateIpv4
+ * @tc.desc: Verify IsPrivateIpv4 with various IP addresses.
+ * @tc.type: FUNC
+ */
+HWTEST_P(IsPrivateIpv4Test, IsPrivateIpv4, TestSize.Level2)
+{
+    IsPrivateIpv4TestParam param = GetParam();
+    bool result = PrintUtils::IsPrivateIpv4(param.ip);
+    EXPECT_EQ(result, param.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(IsPrivateIpv4Cases, IsPrivateIpv4Test, testing::Values(
+    IsPrivateIpv4TestParam{"", false},
+    IsPrivateIpv4TestParam{"10.0", false},
+    IsPrivateIpv4TestParam{"123a.123.0.1", false},
+    IsPrivateIpv4TestParam{"a123.123.0.1", false},
+    IsPrivateIpv4TestParam{"123.a123.0.1", false},
+    IsPrivateIpv4TestParam{"123.123a.0.1", false},
+    IsPrivateIpv4TestParam{"8.8.8.8", false},
+    IsPrivateIpv4TestParam{"10.0.0.1", true},
+    IsPrivateIpv4TestParam{"10.255.255.255", true},
+    IsPrivateIpv4TestParam{"172.15.255.255", false},
+    IsPrivateIpv4TestParam{"172.16.0.1", true},
+    IsPrivateIpv4TestParam{"172.31.255.255", true},
+    IsPrivateIpv4TestParam{"172.32.0.1", false},
+    IsPrivateIpv4TestParam{"192.167.255.255", false},
+    IsPrivateIpv4TestParam{"192.168.0.1", true}
+));
+
 // ==================== AnonymizeJobOption Test ====================
-/**
- * @tc.name: AnonymizeJobOption_001
- * @tc.desc: Verify AnonymizeJobOption with valid JSON.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_001, TestSize.Level2)
-{
-    std::string option = R"({"jobName":"test.pdf","printerId":"com.ext:550e8400-e29b-41d4-a716-446655440000"})";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_TRUE(result.find("xxx.pdf") != std::string::npos);
-}
+struct AnonymizeJobOptionTestParam {
+    std::string inputOption;
+    std::string expectedResult;
+};
+
+class AnonymizeJobOptionTest : public testing::TestWithParam<AnonymizeJobOptionTestParam> {};
 
 /**
- * @tc.name: AnonymizeJobOption_002
- * @tc.desc: Verify AnonymizeJobOption with invalid JSON.
+ * @tc.name: AnonymizeJobOption
+ * @tc.desc: Verify AnonymizeJobOption with various options.
  * @tc.type: FUNC
  */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_002, TestSize.Level2)
+HWTEST_P(AnonymizeJobOptionTest, AnonymizeJobOption, TestSize.Level2)
 {
-    std::string option = "invalid json";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_EQ(result, "");
+    AnonymizeJobOptionTestParam param = GetParam();
+    std::string result = PrintUtils::AnonymizeJobOption(param.inputOption);
+    EXPECT_EQ(result, param.expectedResult);
 }
 
-/**
- * @tc.name: AnonymizeJobOption_003
- * @tc.desc: Verify AnonymizeJobOption with jobDesArr.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_003, TestSize.Level2)
-{
-    std::string option = R"({"jobDesArr":["test.pdf","0","1"]})";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_TRUE(result.find("xxx.pdf") != std::string::npos);
-}
+INSTANTIATE_TEST_SUITE_P(AnonymizeJobOptionCases, AnonymizeJobOptionTest, testing::Values(
+    AnonymizeJobOptionTestParam{"invalid json", ""},
+    AnonymizeJobOptionTestParam{"", ""},
+    AnonymizeJobOptionTestParam{R"({"jobName":"test.pdf"})", R"({"jobName":"xxx.pdf"})"},
+    AnonymizeJobOptionTestParam{R"({"jobDesArr":["test.pdf","0","1"]})", R"({"jobDesArr":["xxx.pdf","0","1"]})"},
+    AnonymizeJobOptionTestParam{R"({"jobDesArr":[]})", R"({"jobDesArr":""})"},
+    AnonymizeJobOptionTestParam{R"({"jobDesArr":[123]})", R"({"jobDesArr":""})"},
+    AnonymizeJobOptionTestParam{R"({"printerId":"com.ext:550e8400-e29b-41d4-a716-446655440000"})",
+        R"({"printerId":"com.ext:550e8400-e29b-41d4-a716-x"})"},
+    AnonymizeJobOptionTestParam{R"({"printerUri":"ipp://49.4.22.46:16631/ipp/printers"})",
+        R"({"printerUri":"ipp://49.4.22.xxx:16631/ipp/printers"})"}
+));
+
+// ==================== AnonymizeAlias Test ====================
+struct AnonymizeAliasTestParam {
+    std::string inputAlias;
+    std::string expectedResult;
+};
+
+class AnonymizeAliasTest : public testing::TestWithParam<AnonymizeAliasTestParam> {};
 
 /**
- * @tc.name: AnonymizeJobOption_004
- * @tc.desc: Verify AnonymizeJobOption with empty string.
+ * @tc.name: AnonymizeAlias
+ * @tc.desc: Verify AnonymizeAlias with various alias.
  * @tc.type: FUNC
  */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_004, TestSize.Level2)
+HWTEST_P(AnonymizeAliasTest, AnonymizeAlias, TestSize.Level2)
 {
-    std::string option = "";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_EQ(result, "");
+    AnonymizeAliasTestParam param = GetParam();
+    Json::Value optionJson;
+    optionJson["alias"] = param.inputAlias;
+    PrintUtils::AnonymizeAlias(optionJson);
+    EXPECT_EQ(optionJson["alias"].asString(), param.expectedResult);
 }
 
+INSTANTIATE_TEST_SUITE_P(AnonymizeAliasCases, AnonymizeAliasTest, testing::Values(
+    AnonymizeAliasTestParam{"test001", "testxxx"},
+    AnonymizeAliasTestParam{"ab", "xxx"},
+    AnonymizeAliasTestParam{"abc", "xxx"}
+));
+
+// ==================== AnonymizeFileArray Test ====================
+struct AnonymizeFileArrayTestParam {
+    std::string key;
+    std::vector<std::string> inputFiles;
+    std::vector<std::string> expectedFiles;
+    bool isExceedLimit;
+};
+
+class AnonymizeFileArrayTest : public testing::TestWithParam<AnonymizeFileArrayTestParam> {};
 /**
- * @tc.name: AnonymizeJobOption_005
- * @tc.desc: Verify AnonymizeJobOption with files array size equal to PRINT_MAX_FILE_LIST_SIZE.
+ * @tc.name: AnonymizeFileArray
+ * @tc.desc: Verify AnonymizeFileArray with various file array.
  * @tc.type: FUNC
  */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_005, TestSize.Level2)
+HWTEST_P(AnonymizeFileArrayTest, AnonymizeFileArray, TestSize.Level2)
 {
+    AnonymizeFileArrayTestParam param = GetParam();
     Json::Value optionJson;
     Json::Value filesArr(Json::arrayValue);
-    for (int32_t i = 0; i < PRINT_MAX_FILE_LIST_SIZE; i++) {
-        filesArr.append("/data/test/file_" + std::to_string(i) + ".pdf");
+    for (const auto& file : param.inputFiles) {
+        filesArr.append(file);
     }
-    optionJson["files"] = filesArr;
-    std::string option = PrintJsonUtil::WriteString(optionJson);
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_NE(result, "");
-    Json::Value resultJson;
-    PrintJsonUtil::Parse(result, resultJson);
-    EXPECT_EQ(resultJson["files"].size(), static_cast<Json::UInt>(PRINT_MAX_FILE_LIST_SIZE));
-    EXPECT_EQ(resultJson["files"][0].asString(), "/xxx/xxx.pdf");
-}
-
-/**
- * @tc.name: AnonymizeJobOption_006
- * @tc.desc: Verify AnonymizeJobOption with files array size exceeding PRINT_MAX_FILE_LIST_SIZE.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_006, TestSize.Level2)
-{
-    Json::Value optionJson;
-    Json::Value filesArr(Json::arrayValue);
-    for (int32_t i = 0; i <= PRINT_MAX_FILE_LIST_SIZE; i++) {
-        filesArr.append("/data/test/file_" + std::to_string(i) + ".pdf");
+    optionJson[param.key] = filesArr;
+    PrintUtils::AnonymizeFileArray(optionJson, param.key);
+    if (param.isExceedLimit) {
+        EXPECT_FALSE(optionJson.isMember(param.key));
+    } else {
+        Json::Value resultArr = optionJson[param.key];
+        EXPECT_EQ(resultArr.size(), static_cast<Json::UInt>(param.expectedFiles.size()));
+        for (size_t i = 0; i < param.expectedFiles.size(); i++) {
+            EXPECT_EQ(resultArr[static_cast<Json::ArrayIndex>(i)].asString(), param.expectedFiles[i]);
+        }
     }
-    optionJson["files"] = filesArr;
-    std::string option = PrintJsonUtil::WriteString(optionJson);
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_EQ(result, "");
 }
 
-/**
- * @tc.name: AnonymizeJobOption_007
- * @tc.desc: Verify AnonymizeJobOption with files array within limit and correctly anonymized.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_007, TestSize.Level2)
-{
-    std::string option = R"({"files":["/data/local/tmp/doc.pdf","/data/local/tmp/img.jpg"]})";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_NE(result, "");
-    Json::Value resultJson;
-    PrintJsonUtil::Parse(result, resultJson);
-    EXPECT_EQ(resultJson["files"].size(), static_cast<Json::UInt>(2));
-    EXPECT_EQ(resultJson["files"][0].asString(), "/xxx/xxx.pdf");
-    EXPECT_EQ(resultJson["files"][1].asString(), "/xxx/xxx.jpg");
-}
-
-/**
- * @tc.name: AnonymizeJobOption_CustomOptionValueAnonymized_StandardOptionPreserved
- * @tc.desc: Verify advancedOptions with custom option anonymized.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_CustomOptionValueAnonymized_StandardOptionPreserved, TestSize.Level2)
-{
-    std::string option = "{\"advancedOptions\":{\"CustomPin\":{\"choice\":\"Custom\","
-        "\"value\":\"secret123\"},\"media-size\":\"A4\"}}";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_NE(result, "");
-    Json::Value resultJson;
-    EXPECT_TRUE(PrintJsonUtil::Parse(result, resultJson));
-    EXPECT_EQ(resultJson["advancedOptions"]["CustomPin"]["choice"].asString(), "Custom");
-    EXPECT_EQ(resultJson["advancedOptions"]["CustomPin"]["value"].asString(), "***");
-    EXPECT_EQ(resultJson["advancedOptions"]["media-size"].asString(), "A4");
-}
-
-/**
- * @tc.name: AnonymizeJobOption_StandardOptionsPreserved_NoSensitiveData
- * @tc.desc: Verify advancedOptions with standard options preserved.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, AnonymizeJobOption_StandardOptionsPreserved_NoSensitiveData, TestSize.Level2)
-{
-    std::string option = R"({"advancedOptions":{"media-size":"A4", "colorMode":"color"}})";
-    std::string result = PrintUtils::AnonymizeJobOption(option);
-    EXPECT_NE(result, "");
-    Json::Value resultJson;
-    EXPECT_TRUE(PrintJsonUtil::Parse(result, resultJson));
-    EXPECT_EQ(resultJson["advancedOptions"]["media-size"].asString(), "A4");
-    EXPECT_EQ(resultJson["advancedOptions"]["colorMode"].asString(), "color");
-}
+INSTANTIATE_TEST_SUITE_P(AnonymizeFileArrayTestCases, AnonymizeFileArrayTest, testing::Values(
+    AnonymizeFileArrayTestParam{"files", {"/data/test/file.pdf"}, {"/xxx/xxx.pdf"}, false},
+    AnonymizeFileArrayTestParam{"files", {"/data/test/doc.pdf", "/data/test/img.jpg"},
+        {"/xxx/xxx.pdf", "/xxx/xxx.jpg"}, false},
+    AnonymizeFileArrayTestParam{"fileList", {"/data/test/file.pdf"}, {"/xxx/xxx.pdf"}, false}
+));
 
 // ==================== AnonymizeJobName Test ====================
 /**
@@ -902,65 +884,6 @@ HWTEST_F(PrintUtilsExtTest, ToLower_004, TestSize.Level2)
 {
     std::string result = PrintUtils::ToLower("already lowercase");
     EXPECT_EQ(result, "already lowercase");
-}
-
-// ==================== SetOptionInPrintJob Extended Tests ====================
-/**
- * @tc.name: SetOptionInPrintJob_002
- * @tc.desc: Verify SetOptionInPrintJob with printQuality out of range.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, SetOptionInPrintJob_002, TestSize.Level2)
-{
-    PrintJobParams params;
-    auto printJob = std::make_shared<PrintJob>();
-
-    params.printQuality = 100; // Out of range
-    PrintUtils::SetOptionInPrintJob(params, printJob);
-    std::string option = printJob->GetOption();
-    Json::Value json;
-    Json::Reader reader;
-    ASSERT_TRUE(reader.parse(option, json));
-    EXPECT_EQ(json["printQuality"].asInt(), 4); // Should be normalized to PRINT_QUALITY_NORMAL
-}
-
-/**
- * @tc.name: SetOptionInPrintJob_003
- * @tc.desc: Verify SetOptionInPrintJob with negative printQuality.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, SetOptionInPrintJob_003, TestSize.Level2)
-{
-    PrintJobParams params;
-    auto printJob = std::make_shared<PrintJob>();
-
-    params.printQuality = -10; // Negative value
-    PrintUtils::SetOptionInPrintJob(params, printJob);
-    std::string option = printJob->GetOption();
-    Json::Value json;
-    Json::Reader reader;
-    ASSERT_TRUE(reader.parse(option, json));
-    EXPECT_EQ(json["printQuality"].asInt(), 4); // Should be normalized to PRINT_QUALITY_NORMAL
-}
-
-/**
- * @tc.name: SetOptionInPrintJob_004
- * @tc.desc: Verify SetOptionInPrintJob with PRINT_FILE_DESCRIPTOR docFlavor.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, SetOptionInPrintJob_004, TestSize.Level2)
-{
-    PrintJobParams params;
-    auto printJob = std::make_shared<PrintJob>();
-
-    params.docFlavor = PRINT_FILE_DESCRIPTOR;
-    PrintUtils::SetOptionInPrintJob(params, printJob);
-    std::string option = printJob->GetOption();
-    Json::Value json;
-    Json::Reader reader;
-    ASSERT_TRUE(reader.parse(option, json));
-    EXPECT_TRUE(json.isMember("isDocument"));
-    EXPECT_EQ(json["isDocument"].asBool(), true);
 }
 
 }  // namespace Print

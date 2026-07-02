@@ -55,7 +55,7 @@ print_print_fwk/
 ├── figures/         # Architecture diagrams
 ├── frameworks/      # Framework code
 │   ├── ISaneBackends/   # SANE backend interfaces
-│   ├── ani_util/        # Animation utilities
+│   ├── ani_util/        # ArkTS Native Interface utilities
 │   ├── helper/          # Helper utilities
 │   ├── innerkitsimpl/   # Internal implementation
 │   ├── kits/            # Development kits

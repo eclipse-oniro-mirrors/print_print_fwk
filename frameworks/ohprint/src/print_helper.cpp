@@ -347,6 +347,10 @@ bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &reso
         return false;
     }
     int yDpi = jsonObject["verticalDpi"].asInt();
+    if (xDpi < 0 || yDpi < 0) {
+        PRINT_HILOGW("Invalid DPI value, xDpi = %{public}d, yDpi = %{public}d", xDpi, yDpi);
+        return false;
+    }
     resolution.horizontalDpi = static_cast<uint32_t>(xDpi);
     resolution.verticalDpi = static_cast<uint32_t>(yDpi);
     return true;
@@ -429,6 +433,31 @@ void ParseCupsOptions(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrint
     std::string keyword = "multiple-document-handling-supported";
     AddJsonFieldStringToJsonObject(cupsOpt, keyword, advancedCapJson);
     nativePrinterInfo.capability.advancedCapability = CopyString((PrintJsonUtil::WriteString(advancedCapJson)).c_str());
+}
+
+void ParseAdvanceOptions(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    if (!cap.HasOption()) {
+        return;
+    }
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(cap.GetOption(), capJson) ||
+        !PrintJsonUtil::IsMember(capJson, "cupsOptions") || !capJson["cupsOptions"].isObject()) {
+        return;
+    }
+    Json::Value cupsOpt = capJson["cupsOptions"];
+    if (PrintJsonUtil::IsMember(cupsOpt, "advanceOptions") && cupsOpt["advanceOptions"].isString()) {
+        Json::Value advancedCapJson;
+        if (nativePrinterInfo.capability.advancedCapability != nullptr) {
+            PrintJsonUtil::Parse(std::string(nativePrinterInfo.capability.advancedCapability), advancedCapJson);
+        }
+        advancedCapJson["advanceOptions"] = cupsOpt["advanceOptions"].asString();
+        SAFE_DELETE_ARRAY(nativePrinterInfo.capability.advancedCapability);
+        nativePrinterInfo.capability.advancedCapability = CopyString(PrintJsonUtil::WriteString(advancedCapJson));
+    }
+    if (PrintJsonUtil::IsMember(cupsOpt, "advanceDefault") && cupsOpt["advanceDefault"].isString()) {
+        nativePrinterInfo.defaultValue.otherDefaultValues = CopyString(cupsOpt["advanceDefault"].asString());
+    }
 }
 
 int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &nativePrinterInfo)
@@ -570,6 +599,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     }
     nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
     nativePrinterInfo->printerUri = CopyString(info.GetUri());
+    ParseAdvanceOptions(cap, *nativePrinterInfo);
     return nativePrinterInfo;
 }
 
@@ -720,6 +750,10 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     }
     if (!IsValidString(nativePrintJob.printerId)) {
         PRINT_HILOGW("ConvertNativeJobToPrintJob string empty error.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    if (nativePrintJob.fdListCount > PRINT_MAX_FILE_LIST_SIZE) {
+        PRINT_HILOGW("ConvertNativeJobToPrintJob fdListCount exceeds max limit.");
         return E_PRINT_INVALID_PARAMETER;
     }
     std::vector<uint32_t> fdList;

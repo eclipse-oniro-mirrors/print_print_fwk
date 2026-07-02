@@ -42,6 +42,7 @@ ohos_shared_library("print_helper") {
   configs = [ ":print_interfaces_kits_napi_config_private" ]
 
   branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -74,6 +75,7 @@ ohos_shared_library("print_helper") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "access_token:libaccesstoken_sdk",
@@ -85,7 +87,10 @@ ohos_shared_library("print_helper") {
     "input:libmmi-client",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "samgr:samgr_proxy",
+    "jsoncpp:jsoncpp",
   ]
 
   if (build_variant == "user") {

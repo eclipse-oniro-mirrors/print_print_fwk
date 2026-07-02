@@ -73,7 +73,7 @@ namespace OHOS::Print {
 
 #define PRINT_CHECK_NULL_AND_RETURN(ptr, retVal)        \
     if ((ptr) == nullptr) {                             \
-        PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
+        PRINT_HILOGE("[%{public}s] %{public}s is nullptr.", __func__, (#ptr)); \
         return (retVal);                                \
     }
 

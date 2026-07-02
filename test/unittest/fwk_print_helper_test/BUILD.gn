@@ -36,7 +36,10 @@ ohos_unittest("fwk_print_helper_test") {
     blocklist = "${print_path}/cfi_blocklist.txt"
   }
 
-  sources = [ "${_test_path}/unittest/fwk_print_helper_test/print_bms_helper_test.cpp" ]
+  sources = [
+    "${_test_path}/unittest/fwk_print_helper_test/print_bms_helper_test.cpp",
+    "${_test_path}/unittest/fwk_print_helper_test/print_job_helper_test.cpp",
+  ]
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
@@ -48,6 +51,7 @@ ohos_unittest("fwk_print_helper_test") {
     "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
+    "${print_path}/frameworks/helper/print_helper:print_helper",
     "${print_path}/services/print_service:print_service_test",
   ]
 
@@ -69,6 +73,8 @@ ohos_unittest("fwk_print_helper_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",

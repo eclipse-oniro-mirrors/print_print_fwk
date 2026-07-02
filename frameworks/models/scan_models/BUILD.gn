@@ -34,6 +34,7 @@ ohos_shared_library("scan_models") {
   public_configs = [ ":scan_models_config" ]
 
   branch_protector_ret = "pac_ret"
+  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -68,6 +69,8 @@ ohos_shared_library("scan_models") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "samgr:samgr_proxy",
   ]
 

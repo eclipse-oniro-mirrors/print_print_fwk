@@ -22,6 +22,7 @@ config("print_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "${_service_path}/include",
+    "${_service_path}/include/remote",
     "${print_path}/frameworks/models/print_models/include",
   ]
   cflags_cc += [
@@ -79,7 +80,10 @@ if (!print_fwk_feature_device_isolation) {
   ]
 }
 
-_deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
+_deps = [
+  "${print_path}/frameworks/models/print_models:print_models",
+  "${print_path}/frameworks/ability_manager_adapter:print_ability_manager_adapter",
+]
 
 _external_deps = [
   "ability_base:base",
@@ -106,6 +110,8 @@ _external_deps = [
   "ipc:ipc_core",
   "jsoncpp:jsoncpp",
   "napi:ace_napi",
+  "node:node_header_notice",
+  "libuv:uv",
   "openssl:libcrypto_shared",
   "openssl:libssl_shared",
   "os_account:os_account_innerkits",
@@ -126,10 +132,12 @@ _include_dirs = [
   "${print_path}/frameworks/ohprint/include",
   "${_service_path}/include/event_callback",
   "${_service_path}/enterprise/include",
+  "${_service_path}/include/remote",
   "${print_utils_path}/include",
 ]
 
 _branch_protector_ret = "pac_ret"
+_stack_protector_ret = true
 _sanitize = {
   cfi = true
   cfi_cross_dso = true
@@ -142,6 +150,7 @@ _sanitize = {
 ohos_shared_library("print_service") {
   sources = _sources
   branch_protector_ret = _branch_protector_ret
+  stack_protector_ret = _stack_protector_ret
   sanitize = _sanitize
   public_configs = _public_configs
   include_dirs = _include_dirs
@@ -228,6 +237,16 @@ ohos_shared_library("print_service") {
 
   if (print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
+  if (print_fwk_feature_remote_service) {
+    sources += [
+      "${_service_path}/src/remote/remote_service_adapter.cpp",
+      "${_service_path}/src/remote/print_ipc_connection.cpp",
+      "${_service_path}/src/remote/remote_printer_manager.cpp",
+      "${_service_path}/src/remote/remote_callback_stub.cpp",
+    ]
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }
 
   subsystem_name = "print"
@@ -327,6 +346,16 @@ ohos_static_library("print_service_test") {
 
   if (print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
+  if (print_fwk_feature_remote_service) {
+    sources += [
+      "${_service_path}/src/remote/remote_printer_manager.cpp",
+      "${_service_path}/src/remote/remote_service_adapter.cpp",
+      "${_service_path}/src/remote/remote_callback_stub.cpp",
+      "${_service_path}/src/remote/print_ipc_connection.cpp",
+    ]
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }
 
   subsystem_name = "print"
