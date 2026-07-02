@@ -4827,6 +4827,97 @@ HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_NoPrinterMake_IsEprint
 }
 
 /**
+ * @tc.name: RemoveSinglePrinterInfo_DiscoveredNotFound_ShouldReturnFalse
+ * @tc.desc: Test RemoveSinglePrinterInfo when printer is not in discovery list
+ * @tc.type: FUNC
+ * @tc.require: Should return false when QueryDiscoveredPrinterInfoById returns nullptr
+ */
+HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_DiscoveredNotFound_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.test.ext:TestPrinter_001";
+    EXPECT_FALSE(service->RemoveSinglePrinterInfo(printerId));
+}
+
+/**
+ * @tc.name: RemoveSinglePrinterInfo_NotAddedPrinter_ShouldNotUpdateStatus
+ * @tc.desc: Test RemoveSinglePrinterInfo when printer is in discovery but not added
+ * @tc.type: FUNC
+ * @tc.require: Should not call UpdatePrinterStatus when QueryAddedPrinterInfoByPrinterId returns false
+ */
+HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_NotAddedPrinter_ShouldNotUpdateStatus, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.test.ext:TestPrinter_001";
+
+    auto discoveredInfo = std::make_shared<PrinterInfo>();
+    discoveredInfo->SetPrinterId(printerId);
+    discoveredInfo->SetPrinterName("TestPrinter");
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = discoveredInfo;
+
+    EXPECT_TRUE(service->RemoveSinglePrinterInfo(printerId));
+
+    auto addedInfo = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    EXPECT_EQ(addedInfo, nullptr);
+}
+
+/**
+ * @tc.name: RemoveSinglePrinterInfo_AddedWithoutIP_ShouldSetUnavailable
+ * @tc.desc: Test RemoveSinglePrinterInfo when added printer name is not IP
+ * @tc.type: FUNC
+ * @tc.require: Should set PRINTER_STATUS_UNAVAILABLE when added printer name is not an IP address
+ */
+HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_AddedWithoutIP_ShouldSetUnavailable, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.test.ext:TestPrinter_001";
+
+    auto discoveredInfo = std::make_shared<PrinterInfo>();
+    discoveredInfo->SetPrinterId(printerId);
+    discoveredInfo->SetPrinterName("TestPrinter");
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = discoveredInfo;
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(printerId);
+    addedPrinter.SetPrinterName("TestPrinter");
+    service->printSystemData_.InsertAddedPrinter(printerId, addedPrinter);
+
+    EXPECT_TRUE(service->RemoveSinglePrinterInfo(printerId));
+
+    auto addedInfo = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    ASSERT_NE(addedInfo, nullptr);
+    EXPECT_EQ(addedInfo->GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+}
+
+/**
+ * @tc.name: RemoveSinglePrinterInfo_AddedWithIpv4_ShouldNotSetUnavailable
+ * @tc.desc: Test RemoveSinglePrinterInfo when added printer name is an IPv4 address
+ * @tc.type: FUNC
+ * @tc.require: Should not set PRINTER_STATUS_UNAVAILABLE when added printer name is an IPv4 address
+ */
+HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_AddedWithIpv4_ShouldNotSetUnavailable, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.test.ext:TestPrinter_001";
+
+    auto discoveredInfo = std::make_shared<PrinterInfo>();
+    discoveredInfo->SetPrinterId(printerId);
+    discoveredInfo->SetPrinterName("192.168.1.100");
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = discoveredInfo;
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(printerId);
+    addedPrinter.SetPrinterName("192.168.1.100");
+    service->printSystemData_.InsertAddedPrinter(printerId, addedPrinter);
+
+    EXPECT_TRUE(service->RemoveSinglePrinterInfo(printerId));
+
+    auto addedInfo = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    ASSERT_NE(addedInfo, nullptr);
+    EXPECT_NE(addedInfo->GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+}
+
+/**
 * @tc.name: RenamePrinterWhenAdded_ExistingPrinterId_ReturnStoredName
 * @tc.desc: When printerId already exists in addedPrinterMap, return the previously stored printer name
 * @tc.type: FUNC
