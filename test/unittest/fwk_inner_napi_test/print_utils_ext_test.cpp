@@ -324,6 +324,8 @@ INSTANTIATE_TEST_SUITE_P(AnonymizePrinterUriCases, AnonymizePrinterUriTest, test
     AnonymizePrinterUriTestParam{"ipp://192.168.1.100:631/ipp/print", "ipp://192.168.1.100:631/ipp/print"},
     AnonymizePrinterUriTestParam{"ipp://[2001:0db8:85a3:0000:0000:0000:0000:0000]:631/print",
         "ipp://[2001:0db8:85xx:xxxx:xxxx:xxxx:xxxx:xxxx]:631/print"},
+    AnonymizePrinterUriTestParam{"ipp://[v1.2001:::0000:0000:0000:0000:0000+wlan0]:631/print",
+        "ipp://[v1.2001::xx:xxxx:xxxx:xxxx:xxxx:xxxx]:631/print"},
     AnonymizePrinterUriTestParam{"ipp://localhost:631/ipp/print", "ipp://localhost:631/ipp/print"}
 ));
 
