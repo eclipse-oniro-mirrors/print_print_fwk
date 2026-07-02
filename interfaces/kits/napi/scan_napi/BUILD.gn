@@ -39,7 +39,6 @@ ohos_shared_library("scan_napi") {
   public_configs = [ ":scan_interfaces_kits_napi_config" ]
 
   branch_protector_ret = "pac_ret"
-  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true

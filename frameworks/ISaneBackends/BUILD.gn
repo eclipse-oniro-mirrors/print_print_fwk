@@ -50,7 +50,6 @@ config("sane_config") {
 ohos_shared_library("sane_backends") {
   public_configs = [ ":sane_config" ]
   branch_protector_ret = "pac_ret"
-  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
