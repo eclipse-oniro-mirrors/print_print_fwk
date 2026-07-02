@@ -4880,6 +4880,7 @@ HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_AddedWithoutIP_ShouldS
     PrinterInfo addedPrinter;
     addedPrinter.SetPrinterId(printerId);
     addedPrinter.SetPrinterName("TestPrinter");
+    addedPrinter.SetPrinterStatus(PRINTER_STATUS_IDLE);
     service->printSystemData_.InsertAddedPrinter(printerId, addedPrinter);
 
     EXPECT_TRUE(service->RemoveSinglePrinterInfo(printerId));
@@ -4908,6 +4909,7 @@ HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_AddedWithIpv4_ShouldNo
     PrinterInfo addedPrinter;
     addedPrinter.SetPrinterId(printerId);
     addedPrinter.SetPrinterName("192.168.1.100");
+    addedPrinter.SetPrinterStatus(PRINTER_STATUS_IDLE);
     service->printSystemData_.InsertAddedPrinter(printerId, addedPrinter);
 
     EXPECT_TRUE(service->RemoveSinglePrinterInfo(printerId));
