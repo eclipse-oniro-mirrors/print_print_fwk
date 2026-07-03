@@ -258,7 +258,7 @@ void ScanServiceAbility::CleanupScanService()
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
-    constexpr int32_t TOKEN_SIZE_FOUR = 4;
+    constexpr size_t TOKEN_SIZE_FOUR = 4;
     std::vector<std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
@@ -294,7 +294,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
-    constexpr int32_t TOKEN_SIZE_TWO = 2;
+    constexpr size_t TOKEN_SIZE_TWO = 2;
     std::vector <std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
