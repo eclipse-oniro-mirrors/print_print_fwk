@@ -4236,7 +4236,9 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
     SendPrinterEvent(*printerInfo);
     printSystemData_.RemovePrinterFromDiscovery(printerId);
 
-    if (printSystemData_.IsPrinterAdded(printerId)) {
+    PrinterInfo addedPrinter;
+    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
+        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
         UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_UNAVAILABLE);
     }
     return true;
