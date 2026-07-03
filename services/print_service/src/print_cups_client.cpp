@@ -2211,7 +2211,6 @@ void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitor
         PRINT_HILOGE("parse state message failed, monitorParams is nullptr");
         return;
     }
-    bool isUploadingOrConvertingState = false;
     for (auto messageItem = JOB_PRINTER_STATE_MESSAGE_LIST.begin();
          messageItem != JOB_PRINTER_STATE_MESSAGE_LIST.end(); messageItem++) {
         if (strstr(monitorParams->job_printer_state_message, messageItem->first.c_str()) == nullptr) {
@@ -2228,23 +2227,23 @@ void PrintCupsClient::ParseStateMessage(std::shared_ptr<JobMonitorParam> monitor
                 break;
             case PRINT_JOB_RUNNING_UPLOADING_FILES:
             case PRINT_JOB_RUNNING_CONVERTING_FILES:
-                isUploadingOrConvertingState = true;
                 if (monitorParams->uploadingFilesStartTime == 0) {
                     monitorParams->uploadingFilesStartTime = GetNowTime();
+                }
+                {
+                    // Check slow file conversion timeout
+                    uint64_t elapsedTime = GetNowTime() - monitorParams->uploadingFilesStartTime;
+                    if (elapsedTime >= SLOW_FILE_CONVERSION_THRESHOLD_TIME) {
+                        PRINT_HILOGI("uploading/converting files exceeded %{public}d ms, add slow conversion substate",
+                            SLOW_FILE_CONVERSION_THRESHOLD_TIME);
+                        monitorParams->substate = GetNewSubstate(monitorParams->substate,
+                        PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION);
+                    }
                 }
                 break;
             default:
                 monitorParams->uploadingFilesStartTime = 0;
                 break;
-        }
-    }
-    // Check slow file conversion timeout
-    if (monitorParams->uploadingFilesStartTime > 0) {
-        uint64_t elapsedTime = GetNowTime() - monitorParams->uploadingFilesStartTime;
-        if (elapsedTime >= SLOW_FILE_CONVERSION_THRESHOLD_TIME) {
-            PRINT_HILOGI("uploading/converting files exceeded %{public}d ms, add slow file conversion substate",
-                SLOW_FILE_CONVERSION_THRESHOLD_TIME);
-            monitorParams->substate = GetNewSubstate(monitorParams->substate, PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION);
         }
     }
 }
