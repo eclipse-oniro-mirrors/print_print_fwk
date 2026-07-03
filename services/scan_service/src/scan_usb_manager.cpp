@@ -274,6 +274,12 @@ void ScanUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isAt
     }
     UsbDevice *dev = new UsbDevice(devJson);
     std::string usbDevicePort = dev->GetName();
+    if (usbDevicePort.empty()) {
+        SCAN_HILOGE("USB device name is empty");
+        cJSON_Delete(devJson);
+        delete dev;
+        return;
+    }
     if (!isAttach) {
         DisConnectUsbScanner(usbDevicePort);
     } else {

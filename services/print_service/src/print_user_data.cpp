@@ -540,7 +540,7 @@ bool PrintUserData::FlushCacheFile(int32_t fd, const std::string jobId, uint32_t
         return false;
     }
     std::string cacheFilePath = cacheDir + "/" + fileName;
-    int32_t cacheFileFd = open(cacheFilePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int32_t cacheFileFd = open(cacheFilePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0640);
     if (cacheFileFd == -1) {
         PRINT_HILOGE("Open file failed");
         return false;

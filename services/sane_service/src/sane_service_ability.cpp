@@ -244,6 +244,10 @@ void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor *sane
     } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_WORD_LIST && saneDesc->constraint.word_list != nullptr) {
         saneOptDes.optionConstraintNumber_.clear();
         int32_t sizeNumber = saneDesc->constraint.word_list[0];
+        if (sizeNumber < 0 || sizeNumber > 1000) {
+            SCAN_HILOGE("Invalid word_list size: %{public}d", sizeNumber);
+            return;
+        }
         for (int32_t i = 1; i <= sizeNumber; i++) {
             SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", saneDesc->constraint.word_list[i]);
             saneOptDes.optionConstraintNumber_.push_back(saneDesc->constraint.word_list[i]);
@@ -271,7 +275,7 @@ ErrCode SaneServerManager::SaneGetParameters(const std::string &scannerId, SaneP
         status = SANE_STATUS_INVAL;
         return ERR_OK;
     }
-    SANE_Parameters params;
+    SANE_Parameters params = {};
     SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneGetParameters(handle, &params);
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);

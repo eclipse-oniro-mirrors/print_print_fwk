@@ -1432,13 +1432,20 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
             return E_SCAN_INVALID_PARAMETER;
         }
         
+        char realPath[PATH_MAX] = {0};
+        if (realpath(jpegPath.c_str(), realPath) == nullptr) {
+            SCAN_HILOGE("realpath failed for jpegPath");
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        std::string normalizedPath(realPath);
+        
         std::string cachePrefix = "/data/service/el2/" + std::to_string(GetCurrentUserId()) + "/print_service/";
-        if (jpegPath.find(cachePrefix) != 0) {
+        if (normalizedPath.find(cachePrefix) != 0) {
             SCAN_HILOGE("Invalid jpegPath %{private}s, not in cache directory", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
         }
         
-        std::string baseName = ScanServiceUtils::ExtractBaseName(jpegPath);
+        std::string baseName = ScanServiceUtils::ExtractBaseName(normalizedPath);
         if (baseName.empty() || baseName == jpegPath) {
             SCAN_HILOGE("ExtractBaseName failed for %{private}s", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;

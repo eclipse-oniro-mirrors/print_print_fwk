@@ -107,6 +107,12 @@ bool ImageExporter::LoadImageSizeFromMetadata(const std::string& metaPath, int32
         return false;
     }
 
+    constexpr int64_t MAX_TOTAL = static_cast<int64_t>(INT32_MAX) / CHANNEL_THREE;
+    if (static_cast<int64_t>(width) > MAX_TOTAL || static_cast<int64_t>(height) > MAX_TOTAL) {
+        SCAN_HILOGE("Image dimension too large: %{public}dx%{public}d", width, height);
+        return false;
+    }
+
     int64_t totalSize = static_cast<int64_t>(width) * height * CHANNEL_THREE;
     if (totalSize > INT32_MAX) {
         SCAN_HILOGE("Image size would overflow: %{public}dx%{public}d", width, height);

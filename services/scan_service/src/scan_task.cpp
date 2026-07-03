@@ -287,7 +287,7 @@ int32_t ScanTask::WriteGreyData(const std::vector<uint8_t>& dataBuffer)
 
 int32_t ScanTask::WriteMonoData(const std::vector<uint8_t>& dataBuffer)
 {
-    const size_t srcPixelStride = static_cast<size_t>(scanParams_.GetBytesPerLine() * BYTE_BITS);
+    const size_t srcPixelStride = static_cast<size_t>(scanParams_.GetBytesPerLine()) * BYTE_BITS;
     const size_t dstStride = static_cast<size_t>(pixMap_->GetRowStride());
     const size_t dstPixelBytes = static_cast<size_t>(pixMap_->GetPixelBytes());
     const size_t dstRowPaddingBytes = dstStride - static_cast<size_t>(pixMap_->GetRowBytes());
