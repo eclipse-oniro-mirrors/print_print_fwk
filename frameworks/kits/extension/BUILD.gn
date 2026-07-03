@@ -63,7 +63,6 @@ ohos_shared_library("print_extension_framework") {
   ]
 
   branch_protector_ret = "pac_ret"
-  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -147,7 +146,6 @@ ohos_shared_library("print_extension_module") {
   public_configs = [ ":ability_public_config" ]
 
   branch_protector_ret = "pac_ret"
-  stack_protector_ret = true
   sanitize = {
     cfi = true
     cfi_cross_dso = true
