@@ -4706,12 +4706,19 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_UpdateAliasAndOption, Te
     addedInfo.SetAlias("OldAlias");
     service->printSystemData_.InsertAddedPrinter(printerId, addedInfo);
 
+    auto discoveredInfo = std::make_shared<PrinterInfo>(addedInfo);
+    service->printSystemData_.AddPrinterToDiscovery(discoveredInfo);
+
     PrinterInfo updateInfo;
     updateInfo.SetPrinterId(printerId);
     updateInfo.SetAlias("NewAlias");
     updateInfo.SetOption("NewOption");
 
     EXPECT_EQ(service->UpdatePrinterInSystem(updateInfo), E_PRINT_NONE);
+
+    auto queriedDiscovered = service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_NE(queriedDiscovered, nullptr);
+    EXPECT_EQ(queriedDiscovered->GetAlias(), "NewAlias");
 
     PrinterInfo queriedAdded;
     EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, queriedAdded));
