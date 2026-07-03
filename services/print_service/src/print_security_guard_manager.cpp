@@ -125,7 +125,7 @@ void PrintSecurityGuardManager::CalculateFileAuditInfo(const std::string &jobId)
     std::vector<std::string> fileNames;
     for (const auto &fileName : fileList) {
         if (!PrintSecurityGuardUtil::IsPrintableFile(fileName)) {
-            PRINT_HILOGW("Skip non-printable file: %{public}s", fileName.c_str());
+            PRINT_HILOGW("Skip non-printable file: %{public}s", PrintUtils::AnonymizeJobName(fileName).c_str());
             continue;
         }
         fileNames.push_back(fileName);
