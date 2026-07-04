@@ -102,13 +102,6 @@ bool EsclDriverManager::CreateAirscanConfigFile()
 
 bool EsclDriverManager::GenerateEsclScannerInfo(const ScanDeviceInfoTCP& rawInfo, ScanDeviceInfo& info)
 {
-    constexpr size_t MAX_ADDR_LENGTH = 256;
-    constexpr size_t MAX_PORT_LENGTH = 8;
-    if (rawInfo.addr.length() > MAX_ADDR_LENGTH || rawInfo.port.length() > MAX_PORT_LENGTH) {
-        SCAN_HILOGE("addr or port too long: addr=%{public}zu, port=%{public}zu",
-            rawInfo.addr.length(), rawInfo.port.length());
-        return false;
-    }
     constexpr int32_t MAX_DEVICE_ID_LENGTH = 1024;
     char deviceId[MAX_DEVICE_ID_LENGTH] = {0};
     if (sprintf_s(deviceId, sizeof(deviceId), "airscan:eSCL:scanner:http://%s:%s/eSCL/",
