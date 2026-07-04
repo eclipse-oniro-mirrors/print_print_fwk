@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "scan_service_ability.h"
+#include "napi_scan_utils.h"
 
 #include <cerrno>
 #include <ctime>
@@ -1432,20 +1433,18 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
             return E_SCAN_INVALID_PARAMETER;
         }
         
-        char realPath[PATH_MAX] = {0};
-        if (realpath(jpegPath.c_str(), realPath) == nullptr) {
-            SCAN_HILOGE("realpath failed for jpegPath");
+        if (!NapiScanUtils::IsPathValid(jpegPath)) {
+            SCAN_HILOGE("Invalid jpegPath %{private}s, path traversal detected", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
         }
-        std::string normalizedPath(realPath);
         
         std::string cachePrefix = "/data/service/el2/" + std::to_string(GetCurrentUserId()) + "/print_service/";
-        if (normalizedPath.find(cachePrefix) != 0) {
+        if (jpegPath.find(cachePrefix) != 0) {
             SCAN_HILOGE("Invalid jpegPath %{private}s, not in cache directory", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
         }
         
-        std::string baseName = ScanServiceUtils::ExtractBaseName(normalizedPath);
+        std::string baseName = ScanServiceUtils::ExtractBaseName(jpegPath);
         if (baseName.empty() || baseName == jpegPath) {
             SCAN_HILOGE("ExtractBaseName failed for %{private}s", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
