@@ -19,6 +19,7 @@ if (print_fwk_feature_device_isolation) {
   group("fuzztest") {
     testonly = true
     deps = [
+      "${_test_base_path}/abilitymanageradapter_fuzzer:fuzztest",
       "${_test_base_path}/printcupsattribute_fuzzer:fuzztest",
       "${_test_base_path}/printcupsclient_fuzzer:fuzztest",
       "${_test_base_path}/printserviceability_fuzzer:fuzztest",
@@ -31,7 +32,6 @@ if (print_fwk_feature_device_isolation) {
       "${_test_base_path}/printserviceppdqueryfunction_fuzzer:fuzztest",
       "${_test_base_path}/printservicenotpublicfunction_fuzzer:fuzztest",
       "${_test_base_path}/printserviceprintdiscoverfunction_fuzzer:fuzztest",
-      "${_test_base_path}/printserviceprintjobfunction_fuzzer:fuzztest",
       "${_test_base_path}/printserviceprintjobstatefunction_fuzzer:fuzztest",
       "${_test_base_path}/printservicequeryprinter_fuzzer:fuzztest",
       "${_test_base_path}/printserviceupdateprinterfunction_fuzzer:fuzztest",
@@ -45,7 +45,6 @@ if (print_fwk_feature_device_isolation) {
       "${_test_base_path}/scanserviceability_fuzzer:fuzztest",
       "${_test_base_path}/scanservicestub_fuzzer:fuzztest",
       "${_test_base_path}/scanusbmanager_fuzzer:fuzztest",
-      "${_test_base_path}/vendormanager_fuzzer:fuzztest",
     ]
   }
 } else {

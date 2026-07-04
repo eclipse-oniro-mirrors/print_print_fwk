@@ -4735,6 +4735,48 @@ HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_NoPrinterMake_IsEprint
 }
 
 /**
+ * @tc.name: RemoveSinglePrinterInfo_DiscoveredNotFound_ShouldReturnFalse
+ * @tc.desc: Test RemoveSinglePrinterInfo when printer is not in discovery list
+ * @tc.type: FUNC
+ * @tc.require: Should return false when QueryDiscoveredPrinterInfoById returns nullptr
+ */
+HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_DiscoveredNotFound_ShouldReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.test.ext:TestPrinter_001";
+    EXPECT_FALSE(service->RemoveSinglePrinterInfo(printerId));
+}
+
+/**
+ * @tc.name: RemoveSinglePrinterInfo_AddedPrinter_ShouldSetUnavailable
+ * @tc.desc: Test RemoveSinglePrinterInfo when printer is added
+ * @tc.type: FUNC
+ * @tc.require: Should set PRINTER_STATUS_UNAVAILABLE when printer is added
+ */
+HWTEST_F(PrintServiceAbilityTest, RemoveSinglePrinterInfo_AddedPrinter_ShouldSetUnavailable, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.test.ext:TestPrinter_001";
+
+    auto discoveredInfo = std::make_shared<PrinterInfo>();
+    discoveredInfo->SetPrinterId(printerId);
+    discoveredInfo->SetPrinterName("TestPrinter");
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = discoveredInfo;
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(printerId);
+    addedPrinter.SetPrinterName("TestPrinter");
+    addedPrinter.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    service->printSystemData_.InsertAddedPrinter(printerId, addedPrinter);
+
+    EXPECT_TRUE(service->RemoveSinglePrinterInfo(printerId));
+
+    auto addedInfo = service->printSystemData_.addedPrinterMap_.Find(printerId);
+    ASSERT_NE(addedInfo, nullptr);
+    EXPECT_EQ(addedInfo->GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+}
+
+/**
 * @tc.name: RenamePrinterWhenAdded_ExistingPrinterId_ReturnStoredName
 * @tc.desc: When printerId already exists in addedPrinterMap, return the previously stored printer name
 * @tc.type: FUNC

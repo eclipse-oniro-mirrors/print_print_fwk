@@ -90,7 +90,7 @@ private:
     bool HandleSend();
     bool HandleReceive();
     void SetQuestionName(struct NbnameRequest &request);
-    std::string GetFileServerName();
+    std::string GetFileServerName(ssize_t recvSize);
     
     int32_t sock_;
     std::unique_ptr<NetworkIpRange> ipRange_;

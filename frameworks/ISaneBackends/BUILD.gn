@@ -49,6 +49,12 @@ config("sane_config") {
 
 ohos_shared_library("sane_backends") {
   public_configs = [ ":sane_config" ]
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   output_values = get_target_outputs(":sane_backends_interface")
   sources = [
     "src/sane_control_param.cpp",

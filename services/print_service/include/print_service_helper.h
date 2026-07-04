@@ -19,7 +19,6 @@
 #include <string>
 #include <atomic>
 #include <list>
-#include "ability_manager_client.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_client.h"
 #include "ability_connect_callback_stub.h"

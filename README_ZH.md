@@ -57,7 +57,7 @@ print_print_fwk/
 ├── figures/         # 架构图
 ├── frameworks/      # 框架代码
 │   ├── ISaneBackends/   # SANE 后端接口
-│   ├── ani_util/        # 动画工具
+│   ├── ani_util/        # ArkTS Native Interface相关工具
 │   ├── helper/          # 辅助工具
 │   ├── innerkitsimpl/   # 内部实现
 │   ├── kits/            # 开发套件

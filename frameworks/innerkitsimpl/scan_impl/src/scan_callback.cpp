@@ -62,6 +62,7 @@ ScanCallback::~ScanCallback()
     };
     if (napi_send_event(env_, task, napi_eprio_low) != napi_ok) {
         SCAN_HILOGE("Failed to send event");
+        NapiScanUtils::DeleteReference(env_, ref_);
         delete param;
     }
 }

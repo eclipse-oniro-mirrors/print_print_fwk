@@ -247,7 +247,7 @@ int32_t OH_Scan_CancelScan(const char *scannerId)
 
 int32_t OH_Scan_GetPictureScanProgress(const char *scannerId, Scan_PictureScanProgress *prog)
 {
-    if (prog == nullptr) {
+    if (prog == nullptr || scannerId == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
         return SCAN_ERROR_INVALID_PARAMETER;
     }

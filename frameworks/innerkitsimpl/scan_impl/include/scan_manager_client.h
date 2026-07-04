@@ -82,7 +82,11 @@ private:
     std::condition_variable_any syncCon_;
     bool ready_ = false;
     std::shared_mutex proxyLock_;
+#ifdef UNIT_TEST
+    static constexpr int LOAD_SA_TIMEOUT_MS = 1000;
+#else
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
+#endif
 };
 } // namespace OHOS::Scan
 #endif // SCAN_MANAGER_CLIENT_H

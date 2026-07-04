@@ -434,9 +434,11 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
     }
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
+    PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
         PRINT_HILOGE("create print callback object fail");
+        NapiPrintUtils::DeleteReference(env, callbackRef);
         return nullptr;
     }
     int32_t ret = PrintManagerClient::GetInstance()->On(task->taskId_, type, callback);

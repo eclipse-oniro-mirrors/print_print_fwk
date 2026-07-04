@@ -77,6 +77,8 @@
         "huks",
         "api_metrics",
         "ets_frontend",
+        "node",
+        "libuv",
         "config_policy"
       ],
       "third_party": [
@@ -102,7 +104,8 @@
           "//base/print/print_fwk/frameworks/models/print_models:print_models",
           "//base/print/print_fwk/frameworks/models/scan_models:scan_models",
           "//base/print/print_fwk/frameworks/ohprint:ohprint",
-          "//base/print/print_fwk/frameworks/ohscan:ohscan"
+          "//base/print/print_fwk/frameworks/ohscan:ohscan",
+          "//base/print/print_fwk/frameworks/ability_manager_adapter:print_ability_manager_adapter"
       ],
       "service_group":[
          "//base/print/print_fwk/services:print_service",

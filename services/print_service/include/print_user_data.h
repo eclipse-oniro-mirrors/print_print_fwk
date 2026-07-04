@@ -93,6 +93,7 @@ private:
     void ConvertUsedPrinterListToJson(Json::Value &usedPrinterListJson);
     void DeletePrinterFromUsedPrinterList(const std::string &printerId);
     std::string ObtainUserCacheDirectory();
+    std::string ObtainUserPreferencesDirectory();
     bool FlushCacheFile(int32_t fd, const std::string jobId, uint32_t index);
     void FlushPrintHistoryJobFile(const std::string &printerId);
     std::string ParsePrintHistoryJobListToJsonString(const std::string &printerId);

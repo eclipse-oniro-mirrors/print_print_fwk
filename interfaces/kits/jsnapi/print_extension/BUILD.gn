@@ -62,7 +62,11 @@ ohos_shared_library("printextensionability_napi") {
     ":print_extension_js",
   ]
 
-  external_deps = [ "napi:ace_napi" ]
+  external_deps = [
+    "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
+  ]
 
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
