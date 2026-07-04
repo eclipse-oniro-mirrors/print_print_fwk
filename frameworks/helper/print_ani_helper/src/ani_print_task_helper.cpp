@@ -23,8 +23,8 @@
 namespace OHOS::Print {
 ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativePrintTask)
 {
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, nullptr, __func__);
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(nativePrintTask, nullptr, __func__);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, nullptr);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(nativePrintTask, nullptr);
 
     static const char *className = "@ohos.print.print.PrintTaskImpl";
     ani_class cls;

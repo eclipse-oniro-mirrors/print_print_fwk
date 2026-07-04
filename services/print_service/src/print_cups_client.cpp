@@ -1250,6 +1250,9 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     if (IsIpConflict(jobParams->printerId, nic)) {
         num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
     }
+    if (!jobParams->bsuniOutputFormat.empty()) {
+        num_options = cupsAddOption("bsuniOutputFormat", jobParams->bsuniOutputFormat.c_str(), num_options, options);
+    }
     num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
     num_options = FillVendorOptions(jobParams, num_options, options);
@@ -2673,6 +2676,10 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value &optionJson, JobPar
 
     if (PrintJsonUtil::IsMember(optionJson, "advancedOptions") && optionJson["advancedOptions"].isObject()) {
         params->advancedOpsJson = optionJson["advancedOptions"];
+    }
+
+    if (PrintJsonUtil::IsMember(optionJson, "bsuniOutputFormat") && optionJson["bsuniOutputFormat"].isString()) {
+        params->bsuniOutputFormat = optionJson["bsuniOutputFormat"].asString();
     }
 }
 
