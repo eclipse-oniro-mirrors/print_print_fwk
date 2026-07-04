@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "scan_service_ability.h"
-#include "napi_scan_utils.h"
 
 #include <cerrno>
 #include <ctime>
@@ -1433,13 +1432,15 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
             return E_SCAN_INVALID_PARAMETER;
         }
         
-        if (!NapiScanUtils::IsPathValid(jpegPath)) {
-            SCAN_HILOGE("Invalid jpegPath %{private}s, path traversal detected", jpegPath.c_str());
+        char canonicalPath[PATH_MAX] = {0};
+        if (realpath(jpegPath.c_str(), canonicalPath) == nullptr) {
+            SCAN_HILOGE("Invalid jpegPath %{private}s, realpath failed", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
         }
+        std::string normalizedPath(canonicalPath);
         
         std::string cachePrefix = "/data/service/el2/" + std::to_string(GetCurrentUserId()) + "/print_service/";
-        if (jpegPath.find(cachePrefix) != 0) {
+        if (normalizedPath.find(cachePrefix) != 0) {
             SCAN_HILOGE("Invalid jpegPath %{private}s, not in cache directory", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
         }

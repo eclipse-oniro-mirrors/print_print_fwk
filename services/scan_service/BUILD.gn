@@ -22,7 +22,6 @@ config("scan_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "${_service_path}/include",
-    "${print_path}/frameworks/helper/scan_helper/include",
   ]
 
   cflags_cc += [
@@ -79,7 +78,6 @@ _deps = [
   "${print_path}/frameworks/ISaneBackends:sane_backends",
   "${print_path}/frameworks/models/scan_models:scan_models",
   "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
-  "${print_path}/frameworks/helper/scan_helper:scan_helper",
 ]
 
 _external_deps = [
