@@ -46,7 +46,7 @@ std::string PrintCloudConfigManager::GetCloudConfigFilePath()
     }
 
     PRINT_HILOGI("GetCloudConfigFilePath result: %{public}s", cfgPath.c_str());
-    return dirPath;
+    return cfgPath;
 }
 
 std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::string &printerMake)
