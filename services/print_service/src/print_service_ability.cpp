@@ -3951,6 +3951,10 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     if (printerInfo.HasAlias()) {
         printer.SetAlias(printerInfo.GetAlias());
         printSystemData_.UpdatePrinterAlias(printerId, printerInfo.GetAlias());
+        auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        if (discoveredInfo != nullptr) {
+            discoveredInfo->SetAlias(printerInfo.GetAlias());
+        }
         printSystemData_.SavePrinterFile(printerId);
     }
 

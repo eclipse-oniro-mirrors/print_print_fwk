@@ -4784,6 +4784,40 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_EmptyPrinterInfo, TestSi
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PRINTER);
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInSystem_UpdateAliasAndOption, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    service->SetHelper(mockHelper);
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+
+    std::string printerId = "com.example.ext:TestPrinter";
+    PrinterInfo addedInfo;
+    addedInfo.SetPrinterId(printerId);
+    addedInfo.SetPrinterName("TestPrinter");
+    addedInfo.SetAlias("OldAlias");
+    service->printSystemData_.InsertAddedPrinter(printerId, addedInfo);
+
+    auto discoveredInfo = std::make_shared<PrinterInfo>(addedInfo);
+    service->printSystemData_.AddPrinterToDiscovery(discoveredInfo);
+
+    PrinterInfo updateInfo;
+    updateInfo.SetPrinterId(printerId);
+    updateInfo.SetAlias("NewAlias");
+    updateInfo.SetOption("NewOption");
+
+    EXPECT_EQ(service->UpdatePrinterInSystem(updateInfo), E_PRINT_NONE);
+
+    auto queriedDiscovered = service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_NE(queriedDiscovered, nullptr);
+    EXPECT_EQ(queriedDiscovered->GetAlias(), "NewAlias");
+
+    PrinterInfo queriedAdded;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, queriedAdded));
+    EXPECT_EQ(queriedAdded.GetAlias(), "NewAlias");
+}
+
 /**
 * @tc.name: UpdateSinglePrinterInfo_HasPrinterMake_IsEprint
 * @tc.desc: Test UpdateSinglePrinterInfo when printer is eprint, should skip PPd query
