@@ -77,7 +77,7 @@
         "huks",
         "api_metrics",
         "ets_frontend",
-        "config_policy_ext"
+        "config_policy"
       ],
       "third_party": [
         "zlib"

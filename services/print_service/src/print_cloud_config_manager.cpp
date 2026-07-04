@@ -19,7 +19,7 @@
 #include "print_json_util.h"
 #include "print_utils.h"
 
-#include "config_policy_param_upgrade_path.h"
+#include "config_policy_utils.h"
 
 #include <securec.h>
 #include <fstream>
@@ -27,8 +27,7 @@
 
 namespace OHOS::Print {
 
-constexpr const char CFG_DIR[] = "etc/com.ohos.spooler/PRINTER";
-constexpr const char CONFIG_FILE_NAME[] = "bsuni_output_format.json";
+constexpr const char CFG_FILE[] = "etc/com.ohos.spooler/PRINTER/bsuni_output_format.json";
 
 PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
 {
@@ -39,30 +38,14 @@ PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
 std::string PrintCloudConfigManager::GetCloudConfigFilePath()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    HwCustSetDataSourceType(HW_CUST_TYPE_SYSTEM);
-
-    ParamVersionFileInfo *paramVersionFileInfo = GetDownloadCfgFile(CFG_DIR, CFG_DIR);
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(paramVersionFileInfo, "");
-
-    if (!paramVersionFileInfo->found) {
-        PRINT_HILOGE("Can not find version txt in cfg dir");
-        free(paramVersionFileInfo);
-        return "";
+    std::string cfgPath = "";
+    char buf[MAX_PATH_LEN] = {0};
+    char *path = GetOneCfgFile(CFG_FILE, buf, MAX_PATH_LEN);
+    if (path != nullptr && *path != '\0') {
+        cfgPath = path;
     }
 
-    std::string dirPath = std::string(paramVersionFileInfo->path);
-    free(paramVersionFileInfo);
-
-    if (dirPath.empty()) {
-        return "";
-    }
-
-    if (dirPath.back() != '/') {
-        dirPath += "/";
-    }
-    dirPath += CONFIG_FILE_NAME;
-
-    PRINT_HILOGI("GetCloudConfigFilePath result: %{public}s", dirPath.c_str());
+    PRINT_HILOGI("GetCloudConfigFilePath result: %{public}s", cfgPath.c_str());
     return dirPath;
 }
 
