@@ -17,7 +17,7 @@
 #define SANE_INFO_H
 
 namespace OHOS::Scan {
-constexpr int32_t MAX_BUFLEN = 64 * 1024 * 1024; // 64MB，覆盖高分辨率扫描（如 4800 DPI A4 幅面 RGB 图像约 928KB）
+constexpr int32_t MAX_BUFLEN = 1024 * 1024 * 1024; // 1G
 enum SaneReadRet {
     SANE_READ_OK = 0,
     SANE_READ_FAIL = 1,
