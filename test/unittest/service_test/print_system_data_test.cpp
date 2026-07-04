@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include <map>
 #include "printer_info.h"
 #define private public
@@ -1985,6 +1986,164 @@ HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_SelectedProtocol_Test, Test
     
     EXPECT_TRUE(printerJson.isMember("selectedProtocol"));
     EXPECT_EQ(printerJson["selectedProtocol"].asString(), "ipps");
+}
+
+static std::string CreateIppRawDataDir()
+{
+    std::string dirPath = PRINTER_SERVICE_IPP_RAW_DATA_PATH;
+    std::filesystem::path dir(dirPath);
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec) || ec) {
+        std::filesystem::create_directories(dir, ec);
+    }
+    return dirPath;
+}
+
+static void CleanupIppRawDataDir()
+{
+    std::error_code ec;
+    for (const auto &entry : std::filesystem::directory_iterator(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec)) {
+        if (entry.is_regular_file()) {
+            std::filesystem::remove(entry.path(), ec);
+        }
+    }
+}
+
+static void CreateFileInIppDir(const std::string &fileName)
+{
+    std::string filePath = PRINTER_SERVICE_IPP_RAW_DATA_PATH + "/" + fileName;
+    FILE *file = fopen(filePath.c_str(), "w+");
+    if (file != nullptr) {
+        const char *testData = "data";
+        fwrite(testData, sizeof(char), strlen(testData), file);
+        fclose(file);
+    }
+}
+
+HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_EmptyRawData_ShouldNotSave, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer1", "");
+    EXPECT_FALSE(systemData->HasIppRawDataFile("printer1"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_DirNotExist_ShouldNotSave, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CleanupIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer1", "raw_data");
+    EXPECT_FALSE(systemData->HasIppRawDataFile("printer1"));
+}
+
+HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_NormalSave_ShouldCreateFile, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer_save", "raw_data_content");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_save"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_ReplaceOldFile_ShouldHaveOnlyOne, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer_replace", "old_data");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_replace"));
+    systemData->SaveIppRawDataFile("printer_replace", "new_data");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_replace"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_DirNotExist_ShouldReturnFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CleanupIppRawDataDir();
+    EXPECT_FALSE(systemData->HasIppRawDataFile("any_printer"));
+}
+
+HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_FileNotExist_ShouldReturnFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    EXPECT_FALSE(systemData->HasIppRawDataFile("nonexistent"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_FileExists_ShouldReturnTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer_has", "data");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_has"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_DirHasOtherPrefixFile_ShouldReturnFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    CreateFileInIppDir("otherprinter_1000");
+    EXPECT_FALSE(systemData->HasIppRawDataFile("targetprinter"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, UpdateIppRawDataFileTimestamp_FileExists_ShouldRename, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer_update", "data");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_update"));
+    systemData->UpdateIppRawDataFileTimestamp("printer_update");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_update"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_NoExpiredFile_ShouldKeep, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    systemData->SaveIppRawDataFile("printer_recent", "data");
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_recent"));
+    systemData->CleanIppRawDataFiles();
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_recent"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_HasSubDir_ShouldSkipDir, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string dirPath = CreateIppRawDataDir();
+    std::error_code ec;
+    std::filesystem::create_directories(dirPath + "/subdir", ec);
+    systemData->SaveIppRawDataFile("printer_with_subdir", "data");
+    systemData->CleanIppRawDataFiles();
+    EXPECT_TRUE(systemData->HasIppRawDataFile("printer_with_subdir"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_FileNoUnderscore_ShouldSkip, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    CreateFileInIppDir("nounderscoretimestamp");
+    systemData->CleanIppRawDataFiles();
+    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
+    EXPECT_TRUE(std::filesystem::exists(dir / "nounderscoretimestamp"));
+    CleanupIppRawDataDir();
+}
+
+HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_FileInvalidTimestamp_ShouldSkip, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    CreateIppRawDataDir();
+    CreateFileInIppDir("printer_invalid_abcd");
+    systemData->CleanIppRawDataFiles();
+    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
+    EXPECT_TRUE(std::filesystem::exists(dir / "printer_invalid_abcd"));
+    CleanupIppRawDataDir();
 }
 }  // namespace Print
 }  // namespace OHOS

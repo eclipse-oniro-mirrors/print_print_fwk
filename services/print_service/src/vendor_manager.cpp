@@ -360,6 +360,26 @@ bool VendorManager::OnPrinterPpdQueried(
     return true;
 }
 
+bool VendorManager::OnPrinterIppRawDataQueried(const std::string &printerId, const std::string &rawData)
+{
+    PRINT_HILOGI("OnPrinterIppRawDataQueried enter for [Printer: %{public}s]",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(printServiceAbility, false);
+    printServiceAbility->SaveIppRawData(printerId, rawData);
+    PRINT_HILOGI("OnPrinterIppRawDataQueried quit");
+    return true;
+}
+
+bool VendorManager::QueryIppRawData(const std::string &printerId)
+{
+    PRINT_HILOGI("QueryIppRawData enter for [Printer: %{public}s]",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    auto driver = FindDriverByPrinterId(printerId);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(driver, false);
+    auto vendorPrinterId = ExtractPrinterId(printerId);
+    return driver->OnQueryProperties(vendorPrinterId, {PRINTER_PROPERTY_KEY_IPP_RAW_DATA});
+}
+
 bool VendorManager::OnPrinterStatusChanged(
     const std::string &vendorName, const std::string &printerId, const PrinterVendorStatus &status)
 {

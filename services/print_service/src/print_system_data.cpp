@@ -212,6 +212,7 @@ bool PrintSystemData::Init()
         DeleteFile(preferencesFilePath);
         DeleteFile(printerListFilePath);
     }
+    CleanIppRawDataFiles();
     return true;
 }
 
@@ -461,6 +462,164 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     if (writeLength != jsonLength) {
         PRINT_HILOGE("SavePrinterFile error");
     }
+}
+
+void PrintSystemData::SaveIppRawDataFile(const std::string &printerId, const std::string &rawData)
+{
+    if (rawData.empty()) {
+        PRINT_HILOGW("rawData is empty");
+        return;
+    }
+    auto now = std::chrono::system_clock::now();
+    auto epochSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    std::string fileName = printerId + "_" + std::to_string(epochSeconds);
+    std::string dirPath = PRINTER_SERVICE_IPP_RAW_DATA_PATH;
+    if (!PrintUtils::IsPathValidForCreate(dirPath, fileName)) {
+        PRINT_HILOGE("Invalid IPP raw data file path!");
+        return;
+    }
+    std::filesystem::path dir(dirPath);
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec) || ec) {
+        PRINT_HILOGW("IPP raw data directory does not exist");
+        return;
+    }
+    std::string prefix = printerId + "_";
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+        if (!entry.is_directory() && entry.path().filename().string().find(prefix) == 0) {
+            std::filesystem::remove(entry.path(), ec);
+            PRINT_HILOGI("Removed old IPP raw data file: %{public}s", entry.path().filename().string().c_str());
+        }
+    }
+    std::string filePath = dirPath + "/" + fileName;
+    FILE *file = fopen(filePath.c_str(), "w+");
+    if (file == nullptr) {
+        PRINT_HILOGW("Failed to open IPP raw data file errno: %{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    size_t dataLength = rawData.length();
+    size_t writeLength = fwrite(rawData.c_str(), 1, dataLength, file);
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close IPP raw data file failure.");
+        return;
+    }
+    PRINT_HILOGI("SaveIppRawDataFile finished");
+    if (writeLength != dataLength) {
+        PRINT_HILOGE("SaveIppRawDataFile write error");
+    }
+}
+
+void PrintSystemData::CleanIppRawDataFiles()
+{
+    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec) || ec) {
+        PRINT_HILOGW("IPP raw data directory does not exist");
+        return;
+    }
+    auto now = std::chrono::system_clock::now();
+    auto nowEpochSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+        if (entry.is_directory()) {
+            continue;
+        }
+        std::string fileName = entry.path().filename().string();
+        size_t underscorePos = fileName.rfind('_');
+        if (underscorePos == std::string::npos) {
+            continue;
+        }
+        std::string printerIp = fileName.substr(0, underscorePos);
+        if (IsPrinterIpInAddedList(printerIp)) {
+            PRINT_HILOGI("Printer ip %{public}s still in added list, skip file: %{public}s",
+                PrintUtils::AnonymizePrinterId(printerIp).c_str(), fileName.c_str());
+            continue;
+        }
+        std::string timestampStr = fileName.substr(underscorePos + 1);
+        uint64_t fileTimestamp = 0;
+        char *endPtr = nullptr;
+        fileTimestamp = std::strtoull(timestampStr.c_str(), &endPtr, DECIMAL_BASE);
+        if (endPtr == timestampStr.c_str() || *endPtr != '\0') {
+            PRINT_HILOGW("Invalid timestamp in file: %{public}s", fileName.c_str());
+            continue;
+        }
+        if (nowEpochSeconds - fileTimestamp > IPP_RAW_DATA_EXPIRE_SECONDS) {
+            if (std::filesystem::remove(entry.path(), ec)) {
+                PRINT_HILOGI("Cleaned expired IPP raw data file for removed printer: %{public}s", fileName.c_str());
+            }
+        }
+    }
+}
+
+bool PrintSystemData::IsPrinterIpInAddedList(const std::string &printerIp)
+{
+    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+    for (const auto &printerId : addedPrinterList) {
+        auto info = GetAddedPrinterMap().Find(printerId);
+        if (info != nullptr && info->HasUri()) {
+            std::string uri = info->GetUri();
+            if (uri.find(printerIp) != std::string::npos) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool PrintSystemData::HasIppRawDataFile(const std::string &printerId)
+{
+    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec) || ec) {
+        PRINT_HILOGW("IPP raw data directory does not exist");
+        return false;
+    }
+    std::string prefix = printerId + "_";
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+        if (!entry.is_directory() && entry.path().filename().string().find(prefix) == 0) {
+            PRINT_HILOGI("ipp raw data file exists for [Printer: %{public}s]",
+                PrintUtils::AnonymizePrinterId(printerId).c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+void PrintSystemData::UpdateIppRawDataFileTimestamp(const std::string &printerId)
+{
+    if (!PrintUtils::IsPathValid(PRINTER_SERVICE_IPP_RAW_DATA_PATH)) {
+        PRINT_HILOGE("Invalid ipp raw data path!");
+        return;
+    }
+    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
+    std::error_code ec;
+    if (!std::filesystem::exists(dir, ec) || ec) {
+        PRINT_HILOGW("IPP raw data directory does not exist");
+        return;
+    }
+    std::string prefix = printerId + "_";
+    std::filesystem::path oldPath;
+    for (const auto &entry : std::filesystem::directory_iterator(dir)) {
+        if (!entry.is_directory() && entry.path().filename().string().find(prefix) == 0) {
+            oldPath = entry.path();
+            break;
+        }
+    }
+    if (oldPath.empty()) {
+        PRINT_HILOGW("No IPP raw data file found for %{public}s", printerId.c_str());
+        return;
+    }
+    auto now = std::chrono::system_clock::now();
+    auto epochSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    std::string newFileName = printerId + "_" + std::to_string(epochSeconds);
+    std::filesystem::path newPath = dir / newFileName;
+    std::filesystem::rename(oldPath, newPath, ec);
+    if (ec) {
+        PRINT_HILOGW("Failed to rename IPP raw data file: %{public}s", ec.message().c_str());
+        return;
+    }
+    PRINT_HILOGI("Updated IPP raw data file timestamp: %{public}s -> %{public}s",
+        oldPath.filename().string().c_str(), newFileName.c_str());
 }
 
 std::string PrintSystemData::QueryPrinterIdByStandardizeName(const std::string &printerName)

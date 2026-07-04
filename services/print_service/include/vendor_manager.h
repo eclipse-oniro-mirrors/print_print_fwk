@@ -46,6 +46,7 @@ public:
     virtual bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) = 0;
     virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
                                            const std::string &ppdName, const std::string &ppdData) = 0;
+    virtual void SaveIppRawData(const std::string &printerId, const std::string &rawData) = 0;
     virtual int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) = 0;
     virtual void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode) = 0;
     virtual std::string GetCallerBundleName() = 0;
@@ -87,6 +88,8 @@ public:
     bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
+    bool OnPrinterIppRawDataQueried(const std::string &printerId, const std::string &rawData) override;
+    bool QueryIppRawData(const std::string &printerId) override;
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIP, const std::string &uri) override;
     ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;

@@ -95,9 +95,9 @@ namespace OHOS::Print {
             return retVal; \
         }
 
-#define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
+#define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr)                       \
     if ((ptr) == nullptr) {                                                         \
-        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), __func__);   \
         return;                                                                     \
     }
 
@@ -339,6 +339,9 @@ const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_se
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =
     "/data/service/el2/public/print_service/printers_enterprise";
+const std::string PRINTER_SERVICE_IPP_RAW_DATA_PATH = "/data/service/el2/public/print_service/ipp_raw_data";
+constexpr uint64_t IPP_RAW_DATA_EXPIRE_SECONDS = 604800; // 7 * 24 * 3600
+constexpr int DECIMAL_BASE = 10;
 const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION_FILE = "version.json";
 const std::string PRINTER_LIST_VERSION_V1 = "v1";
