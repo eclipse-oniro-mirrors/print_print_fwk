@@ -22,6 +22,7 @@ config("scan_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "${_service_path}/include",
+    "${print_path}/frameworks/helper/scan_helper/include",
   ]
 
   cflags_cc += [
