@@ -423,16 +423,16 @@ std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
         return printerUri;
     }
     size_t hostPos = printerUri.find(host);
+    if (host.find(':') != std::string::npos) {
+        std::string result = printerUri;
+        return result.replace(hostPos, host.length(), AnonymizeIpv6(host));
+    }
     if (host.find('.') != std::string::npos) {
         if (IsPrivateIpv4(host)) {
             return printerUri;
         }
         std::string result = printerUri;
         return result.replace(hostPos, host.length(), AnonymizeIpv4(host));
-    }
-    if (host.find(':') != std::string::npos) {
-        std::string result = printerUri;
-        return result.replace(hostPos, host.length(), AnonymizeIpv6(host));
     }
     return printerUri;
 }

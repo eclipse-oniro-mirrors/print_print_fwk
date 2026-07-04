@@ -594,7 +594,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     ParsePrinterPreference(info, *nativePrinterInfo);
     if (info.HasOption()) {
         std::string infoOpt = info.GetOption();
-        PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
+        PRINT_HILOGW("infoOpt json object: %{public}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
         ParseInfoOption(infoOpt, *nativePrinterInfo);
     }
     nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
