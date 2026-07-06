@@ -5875,8 +5875,13 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     }
     PpdInfo ppdInfo;
     printerInfo.GetSelectedDriver(ppdInfo);
-    std::string makeModel = ppdInfo.GetNickName() == "auto" ? printerInfo.GetPrinterMake() : ppdInfo.GetNickName();
-    PRINT_HILOGI("makeModel=%{public}s", makeModel.c_str());
+    if (!ppdInfo.GetPpdName().empty() && ppdInfo.GetPpdName() != "auto") {
+        ppdName = ppdInfo.GetPpdName();
+        PRINT_HILOGI("Manual driver selection mode, ppdName=%{public}s", ppdName.c_str());
+        return E_PRINT_NONE;
+    }
+    std::string makeModel = printerInfo.GetPrinterMake();
+    PRINT_HILOGI("Auto driver selection mode, makeModel=%{public}s", makeModel.c_str());
     if (!QueryPPDInformation(makeModel, ppdName)) {
         PRINT_HILOGE("Query printer ppd info failed! Id=%{public}s", printerId.c_str());
         return E_PRINT_INVALID_PRINTER;
