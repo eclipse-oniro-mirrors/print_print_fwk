@@ -228,7 +228,13 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
         }
     }
     std::string taskId;
-    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(taskId), false);
+    if (!data.ReadString(taskId)) {
+        for (auto fd : fdList) {
+            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+        }
+        PRINT_HILOGE("%{public}s data.ReadString(taskId) failed", __func__);
+        return false;
+    }
     int32_t ret = StartPrint(fileList, fdList, taskId);
     if (ret != E_PRINT_NONE) {
         for (auto fd : fdList) {

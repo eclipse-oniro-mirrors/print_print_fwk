@@ -31,6 +31,7 @@ namespace Scan {
 namespace {
 const int32_t VALUE_BUFFER_LEN = 1024;
 constexpr int32_t SANE_SERVICE_ID = 3709;
+constexpr int32_t MAX_WORD_LIST_SIZE = 1000;
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 } //namespace
 
@@ -244,6 +245,10 @@ void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor *sane
     } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_WORD_LIST && saneDesc->constraint.word_list != nullptr) {
         saneOptDes.optionConstraintNumber_.clear();
         int32_t sizeNumber = saneDesc->constraint.word_list[0];
+        if (sizeNumber < 0 || sizeNumber > MAX_WORD_LIST_SIZE) {
+            SCAN_HILOGE("Invalid word_list size: %{public}d", sizeNumber);
+            return;
+        }
         for (int32_t i = 1; i <= sizeNumber; i++) {
             SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", saneDesc->constraint.word_list[i]);
             saneOptDes.optionConstraintNumber_.push_back(saneDesc->constraint.word_list[i]);
@@ -271,7 +276,7 @@ ErrCode SaneServerManager::SaneGetParameters(const std::string &scannerId, SaneP
         status = SANE_STATUS_INVAL;
         return ERR_OK;
     }
-    SANE_Parameters params;
+    SANE_Parameters params = {};
     SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneGetParameters(handle, &params);
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);

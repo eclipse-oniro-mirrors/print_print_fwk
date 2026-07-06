@@ -258,7 +258,7 @@ void ScanServiceAbility::CleanupScanService()
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
-    constexpr int32_t TOKEN_SIZE_FOUR = 4;
+    constexpr size_t TOKEN_SIZE_FOUR = 4;
     std::vector<std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
@@ -294,7 +294,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
-    constexpr int32_t TOKEN_SIZE_TWO = 2;
+    constexpr size_t TOKEN_SIZE_TWO = 2;
     std::vector <std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
@@ -1432,8 +1432,15 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
             return E_SCAN_INVALID_PARAMETER;
         }
         
+        char canonicalPath[PATH_MAX] = {0};
+        if (realpath(jpegPath.c_str(), canonicalPath) == nullptr) {
+            SCAN_HILOGE("Invalid jpegPath %{private}s, realpath failed", jpegPath.c_str());
+            return E_SCAN_INVALID_PARAMETER;
+        }
+        std::string normalizedPath(canonicalPath);
+        
         std::string cachePrefix = "/data/service/el2/" + std::to_string(GetCurrentUserId()) + "/print_service/";
-        if (jpegPath.find(cachePrefix) != 0) {
+        if (normalizedPath.find(cachePrefix) != 0) {
             SCAN_HILOGE("Invalid jpegPath %{private}s, not in cache directory", jpegPath.c_str());
             return E_SCAN_INVALID_PARAMETER;
         }

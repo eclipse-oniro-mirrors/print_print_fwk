@@ -107,7 +107,15 @@ bool ImageExporter::LoadImageSizeFromMetadata(const std::string& metaPath, int32
         return false;
     }
 
-    int64_t totalSize = static_cast<int64_t>(width) * height * CHANNEL_THREE;
+    // 第一次乘法：计算像素总数
+    int64_t pixelCount = static_cast<int64_t>(width) * height;
+    if (pixelCount > INT32_MAX) {
+        SCAN_HILOGE("Pixel count would overflow: %{public}dx%{public}d", width, height);
+        return false;
+    }
+
+    // 第二次乘法：计算总字节数
+    int64_t totalSize = pixelCount * CHANNEL_THREE;
     if (totalSize > INT32_MAX) {
         SCAN_HILOGE("Image size would overflow: %{public}dx%{public}d", width, height);
         return false;
