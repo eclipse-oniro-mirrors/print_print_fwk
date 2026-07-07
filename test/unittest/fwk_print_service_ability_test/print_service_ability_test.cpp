@@ -6940,5 +6940,118 @@ HWTEST_F(PrintServiceAbilityTest,
     printerInfo->SetOriginId(originId);
     service->CheckAndUpdateIppRawData(printerInfo);
 }
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_ManualDriverSelection, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "test_printer";
+    std::string ppdName;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterMake("HP");
+
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdName("manual_ppd_name");
+    printerInfo.SetSelectedDriver(ppdInfo);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerInfo), Return(E_PRINT_NONE)));
+
+    EXPECT_CALL(*service, QueryPPDInformation(_, _)).Times(0);
+
+    int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ppdName, "manual_ppd_name");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_AutoDriverSelection, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "test_printer";
+    std::string ppdName;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterMake("HP");
+
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdName("auto");
+    printerInfo.SetSelectedDriver(ppdInfo);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerInfo), Return(E_PRINT_NONE)));
+
+    EXPECT_CALL(*service, QueryPPDInformation("HP", _))
+        .WillOnce(DoAll(SetArgReferee<1>("auto_ppd"), Return(true)));
+
+    int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ppdName, "auto_ppd");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_EmptyPpdName, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "test_printer";
+    std::string ppdName;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterMake("Canon");
+
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdName("");
+    printerInfo.SetSelectedDriver(ppdInfo);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerInfo), Return(E_PRINT_NONE)));
+
+    EXPECT_CALL(*service, QueryPPDInformation("Canon", _))
+        .WillOnce(DoAll(SetArgReferee<1>("canon_ppd"), Return(true)));
+
+    int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ppdName, "canon_ppd");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_QueryPPDInformationFailed, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "test_printer";
+    std::string ppdName;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterMake("Epson");
+
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdName("auto");
+    printerInfo.SetSelectedDriver(ppdInfo);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerInfo), Return(E_PRINT_NONE)));
+
+    EXPECT_CALL(*service, QueryPPDInformation("Epson", _))
+        .WillOnce(Return(false));
+
+    int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_QueryPrinterInfoFailed, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "test_printer";
+    std::string ppdName;
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
+        .WillOnce(Return(E_PRINT_INVALID_PRINTER));
+
+    EXPECT_CALL(*service, QueryPPDInformation(_, _)).Times(0);
+
+    int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+}
 }  // namespace Print
 }  // namespace OHOS
