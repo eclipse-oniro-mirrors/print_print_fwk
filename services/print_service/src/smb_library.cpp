@@ -29,7 +29,7 @@ static bool LoadOneSymbol(void *handle, const char *name, FuncPtr &funcPtr)
     if (sym == nullptr) {
         return false;
     }
-    if (memcpy_s(&funcPtr, sizeof(funcPtr), &sym, sizeof(sym)) != EOK) {
+    if (memcpy_s(&funcPtr, sizeof(FuncPtr), &sym, sizeof(void*)) != EOK) {
         PRINT_HILOGE("memcpy_s %{public}s failed", name);
         return false;
     }
