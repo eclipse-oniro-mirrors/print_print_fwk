@@ -316,8 +316,12 @@ bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &re
         int fd = data.ReadFileDescriptor();
         if (fd < 0) {
             SCAN_HILOGE("ReadFileDescriptor failed at index %{public}d", i);
+            for (int32_t prevFd : pictureFdList) {
+                fdsan_close_with_tag(prevFd, SCAN_LOG_DOMAIN);
+            }
             return false;
         }
+        fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
         pictureFdList.push_back(fd);
     }
     int32_t format = 0;
@@ -326,11 +330,20 @@ bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &re
     std::vector<int32_t> exportedFdList;
     int32_t ret = ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
 
+    for (int32_t fd : pictureFdList) {
+        fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
+    }
+
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     if (ret == E_SCAN_NONE) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(static_cast<int32_t>(exportedFdList.size())), false);
         for (int32_t fd : exportedFdList) {
             CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteFileDescriptor(fd), false);
+            fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
+        }
+    } else {
+        for (int32_t fd : exportedFdList) {
+            fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
         }
     }
     SCAN_HILOGI("ScanServiceStub::OnExportScanPicture end");
