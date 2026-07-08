@@ -21,6 +21,7 @@
 #include "scan_log.h"
 #include "scanner_info.h"
 #include "scan_service_ability.h"
+#include "scan_util.h"
 
 namespace OHOS::Scan {
 using namespace OHOS::HiviewDFX;
@@ -316,38 +317,40 @@ bool ScanServiceStub::OnExportScanPicture(MessageParcel &data, MessageParcel &re
         int fd = data.ReadFileDescriptor();
         if (fd < 0) {
             SCAN_HILOGE("ReadFileDescriptor failed at index %{public}d", i);
-            for (int32_t prevFd : pictureFdList) {
-                fdsan_close_with_tag(prevFd, SCAN_LOG_DOMAIN);
-            }
+            ScanUtil::CloseFdListWithTag(pictureFdList);
             return false;
         }
         fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
         pictureFdList.push_back(fd);
     }
     int32_t format = 0;
-    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadInt32(format), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL_WITH_CLEANUP(data.ReadInt32(format), false,
+        ScanUtil::CloseFdListWithTag(pictureFdList));
 
     std::vector<int32_t> exportedFdList;
     int32_t ret = ExportScanPicture(scannerId, pictureFdList, format, exportedFdList);
 
-    for (int32_t fd : pictureFdList) {
-        fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
-    }
+    ScanUtil::CloseFdListWithTag(pictureFdList);
 
-    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
-    if (ret == E_SCAN_NONE) {
-        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(static_cast<int32_t>(exportedFdList.size())), false);
-        for (int32_t fd : exportedFdList) {
-            CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteFileDescriptor(fd), false);
-            fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
+    CHECK_PARCEL_OP_AND_RETURN_VAL_WITH_CLEANUP(reply.WriteInt32(ret), false,
+        ScanUtil::CloseFdListWithTag(exportedFdList));
+    if (ret != E_SCAN_NONE) {
+        ScanUtil::CloseFdListWithTag(exportedFdList);
+        return false;
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL_WITH_CLEANUP(
+        reply.WriteInt32(static_cast<int32_t>(exportedFdList.size())), false,
+        ScanUtil::CloseFdListWithTag(exportedFdList));
+    for (size_t i = 0; i < exportedFdList.size(); i++) {
+        if (!reply.WriteFileDescriptor(exportedFdList[i])) {
+            SCAN_HILOGE("WriteFileDescriptor failed for fd");
+            ScanUtil::CloseFdListWithTag(exportedFdList, i);
+            return false;
         }
-    } else {
-        for (int32_t fd : exportedFdList) {
-            fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
-        }
+        fdsan_close_with_tag(exportedFdList[i], SCAN_LOG_DOMAIN);
     }
     SCAN_HILOGI("ScanServiceStub::OnExportScanPicture end");
-    return ret == E_SCAN_NONE;
+    return true;
 }
 
 }  // namespace OHOS::Scan

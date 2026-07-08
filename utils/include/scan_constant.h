@@ -101,6 +101,13 @@ namespace OHOS::Scan {
         return retVal; \
     }
 
+#define CHECK_PARCEL_OP_AND_RETURN_VAL_WITH_CLEANUP(parcelOpExp, retVal, cleanupExp) \
+    if (!(parcelOpExp)) { \
+        SCAN_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        cleanupExp; \
+        return retVal; \
+    }
+
 #define SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                 \
     if ((ptr) == nullptr) {                                                         \
         SCAN_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));     \
