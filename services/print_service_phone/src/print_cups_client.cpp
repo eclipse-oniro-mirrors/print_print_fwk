@@ -2877,19 +2877,22 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
         if (hostStr.find("169.254.") == 0) {
             PRINT_HILOGW("[Uri: %{public}s] IPv4 address 169.254.x.x is invalid "
                 "(link-local/DHCP failure address, cannot perform TCP communication)",
-                printerUri.c_str());
+                PrintUtils::AnonymizePrinterUri(printerUri).c_str());
             return IP_ADDRESS_TYPE_INVALID;
         }
-        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address",
+            PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_IPV4;
     }
     
     if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1) {
-        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address", printerUri.c_str());
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address",
+            PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_IPV6;
     }
     
-    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address", printerUri.c_str(), host);
+    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address",
+        PrintUtils::AnonymizePrinterUri(printerUri).c_str(), host);
     return IP_ADDRESS_TYPE_INVALID;
 }
 
