@@ -444,7 +444,9 @@ INSTANTIATE_TEST_SUITE_P(AnonymizeJobOptionCases, AnonymizeJobOptionTest, testin
     AnonymizeJobOptionTestParam{R"({"printerId":"com.ext:550e8400-e29b-41d4-a716-446655440000"})",
         R"({"printerId":"com.ext:550e8400-e29b-41d4-a716-x"})"},
     AnonymizeJobOptionTestParam{R"({"printerUri":"ipp://49.4.22.46:16631/ipp/printers"})",
-        R"({"printerUri":"ipp://49.4.22.xxx:16631/ipp/printers"})"}
+        R"({"printerUri":"ipp://49.4.22.xxx:16631/ipp/printers"})"},
+    AnonymizeJobOptionTestParam{R"({"ipp":"ipp://49.4.22.46:16631/ipp/printers"})",
+        R"({"ipp":"ipp://49.4.22.xxx:16631/ipp/printers"})"}
 ));
 
 // ==================== AnonymizeAlias Test ====================

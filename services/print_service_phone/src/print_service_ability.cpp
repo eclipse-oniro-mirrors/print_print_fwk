@@ -4219,7 +4219,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         "[Printer: %{public}s] DoAddPrinterToCups start, printerMake: %{public}s, "
         "printerUri: %{public}s, ppdName: %{public}s",
         printerName.c_str(), printerInfo->GetPrinterMake().c_str(),
-        printerUri.c_str(), ppdName.c_str());
+        PrintUtils::AnonymizePrinterUri(printerUri).c_str(), ppdName.c_str());
 #ifdef CUPS_ENABLE
     if (!DoAddPrinterToCupsEnable(printerUri, printerName, printerInfo, ppdName, ppdData)) {
         return false;
