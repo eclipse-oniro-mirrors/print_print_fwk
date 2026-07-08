@@ -75,7 +75,6 @@ public:
 private:
     bool InitializeLibrary();
     bool LoadSymbols();
-    bool ValidateSymbols() const;
     void CleanupLibrary();
     void* smbLibHandle_;
 

@@ -21,35 +21,8 @@
 #include "print_log.h"
 #include "singleton.h"
 
-struct smb2_context;
-
-// NOLINTNEXTLINE(readability/enum) - must match libsmb2 C API for CFI Type ID
-enum SHARE_INFO_enum {
-    SHARE_INFO_0 = 0,
-    SHARE_INFO_1 = 1,
-};
-
-extern "C" {
-typedef struct smb2_context* (*smb2_init_context_func_t)(void);
-typedef void (*smb2_close_context_func_t)(struct smb2_context*);
-typedef void (*smb2_destroy_context_func_t)(struct smb2_context*);
-typedef int (*smb2_connect_share_func_t)(struct smb2_context*, const char*, const char*, const char*);
-typedef int (*smb2_disconnect_share_func_t)(struct smb2_context*);
-typedef void (*smb2_set_user_func_t)(struct smb2_context*, const char*);
-typedef void (*smb2_set_password_func_t)(struct smb2_context*, const char*);
-typedef void (*smb2_set_domain_func_t)(struct smb2_context*, const char*);
-typedef const char* (*smb2_get_error_func_t)(struct smb2_context*);
-typedef void (*smb2_set_security_mode_func_t)(struct smb2_context*, uint16_t);
-typedef void (*smb2_set_timeout_func_t)(struct smb2_context*, int);
-typedef int (*smb2_share_enum_async_func_t)(struct smb2_context*, enum SHARE_INFO_enum,
-    void (*)(struct smb2_context*, int, void*, void*), void*);
-typedef void (*smb2_free_data_func_t)(struct smb2_context*, void*);
-typedef int (*smb2_get_fd_func_t)(struct smb2_context*);
-typedef int (*smb2_which_events_func_t)(struct smb2_context*);
-typedef int (*smb2_service_func_t)(struct smb2_context*, int);
-}
-
 namespace OHOS::Print {
+struct smb2_context;
 class SmbLibrary : public DelayedSingleton<SmbLibrary> {
 public:
     SmbLibrary();
@@ -71,30 +44,45 @@ public:
     void SetPassword(struct smb2_context* ctx, const char* password) const;
     void SetSecurityMode(struct smb2_context* ctx, uint16_t mode) const;
     void SetTimeout(struct smb2_context* ctx, int timeout) const;
-
+    
 private:
     bool InitializeLibrary();
-    bool LoadSymbols();
-    bool ValidateSymbols() const;
     void CleanupLibrary();
     void* smbLibHandle_;
+    using smb2_init_context_t = struct smb2_context* (*)();
+    using smb2_close_context_t = void (*)(struct smb2_context*);
+    using smb2_destroy_context_t = void (*)(struct smb2_context*);
+    using smb2_connect_share_t = int (*)(struct smb2_context*, const char*, const char*, const char*);
+    using smb2_disconnect_share_t = int (*)(struct smb2_context*);
+    using smb2_set_user_t = void (*)(struct smb2_context*, const char*);
+    using smb2_set_password_t = void (*)(struct smb2_context*, const char*);
+    using smb2_set_domain_t = void (*)(struct smb2_context*, const char*);
+    using smb2_get_error_t = const char* (*)(struct smb2_context*);
+    using smb2_set_security_mode_t = void (*)(struct smb2_context*, uint16_t);
+    using smb2_set_timeout_t = void (*)(struct smb2_context*, int);
+    using smb2_share_enum_async_t = int (*)(struct smb2_context*, int,
+        void (*)(struct smb2_context*, int, void*, void*), void*);
+    using smb2_free_data_t = void (*)(struct smb2_context*, void*);
+    using smb2_get_fd_t = int (*)(struct smb2_context*);
+    using smb2_which_events_t = int (*)(struct smb2_context*);
+    using smb2_service_t = int (*)(struct smb2_context*, int);
 
-    smb2_init_context_func_t smb2_init_context_;
-    smb2_close_context_func_t smb2_close_context_;
-    smb2_destroy_context_func_t smb2_destroy_context_;
-    smb2_connect_share_func_t smb2_connect_share_;
-    smb2_disconnect_share_func_t smb2_disconnect_share_;
-    smb2_set_user_func_t smb2_set_user_;
-    smb2_set_password_func_t smb2_set_password_;
-    smb2_set_domain_func_t smb2_set_domain_;
-    smb2_get_error_func_t smb2_get_error_;
-    smb2_set_security_mode_func_t smb2_set_security_mode_;
-    smb2_set_timeout_func_t smb2_set_timeout_;
-    smb2_share_enum_async_func_t smb2_share_enum_async_;
-    smb2_free_data_func_t smb2_free_data_;
-    smb2_get_fd_func_t smb2_get_fd_;
-    smb2_which_events_func_t smb2_which_events_;
-    smb2_service_func_t smb2_service_;
+    smb2_init_context_t smb2_init_context_;
+    smb2_close_context_t smb2_close_context_;
+    smb2_destroy_context_t smb2_destroy_context_;
+    smb2_connect_share_t smb2_connect_share_;
+    smb2_disconnect_share_t smb2_disconnect_share_;
+    smb2_set_user_t smb2_set_user_;
+    smb2_set_password_t smb2_set_password_;
+    smb2_set_domain_t smb2_set_domain_;
+    smb2_get_error_t smb2_get_error_;
+    smb2_set_security_mode_t smb2_set_security_mode_;
+    smb2_set_timeout_t smb2_set_timeout_;
+    smb2_share_enum_async_t smb2_share_enum_async_;
+    smb2_free_data_t smb2_free_data_;
+    smb2_get_fd_t smb2_get_fd_;
+    smb2_which_events_t smb2_which_events_;
+    smb2_service_t smb2_service_;
 };
 
 // import from libsmb2-dcerpc.h

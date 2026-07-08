@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <securec.h>
 #include <dlfcn.h>
 #include "print_log.h"
 #include "print_constant.h"
@@ -21,20 +20,6 @@
 namespace OHOS::Print {
 static constexpr int32_t INVALID_EVENT = -1;
 const char* LIB_SMB2_SO_PATH = "print.libsmb2.so.path";
-
-template <typename FuncPtr>
-static bool LoadOneSymbol(void *handle, const char *name, FuncPtr &funcPtr)
-{
-    void *sym = dlsym(handle, name);
-    if (sym == nullptr) {
-        return false;
-    }
-    if (memcpy_s(&funcPtr, sizeof(FuncPtr), &sym, sizeof(void*)) != EOK) {
-        PRINT_HILOGE("memcpy_s %{public}s failed", name);
-        return false;
-    }
-    return true;
-}
 SmbLibrary::SmbLibrary() :smbLibHandle_(nullptr), smb2_init_context_(nullptr),
     smb2_close_context_(nullptr), smb2_destroy_context_(nullptr),
     smb2_connect_share_(nullptr), smb2_disconnect_share_(nullptr), smb2_set_user_(nullptr),
@@ -65,50 +50,38 @@ bool SmbLibrary::InitializeLibrary()
     }
     smbLibHandle_ = dlopen(realValue, RTLD_LAZY);
     if (!smbLibHandle_) {
-        PRINT_HILOGE("Failed to load SMB library: %{public}s", dlerror());
+        PRINT_HILOGE("Failed to load SMB library: %s", dlerror());
         return false;
     }
-    if (!LoadSymbols()) {
+    dlerror();
+    smb2_init_context_ = reinterpret_cast<smb2_init_context_t>(dlsym(smbLibHandle_, "smb2_init_context"));
+    smb2_close_context_ = reinterpret_cast<smb2_close_context_t>(dlsym(smbLibHandle_, "smb2_close_context"));
+    smb2_destroy_context_ = reinterpret_cast<smb2_destroy_context_t>(dlsym(smbLibHandle_, "smb2_destroy_context"));
+    smb2_connect_share_ = reinterpret_cast<smb2_connect_share_t>(dlsym(smbLibHandle_, "smb2_connect_share"));
+    smb2_disconnect_share_ = reinterpret_cast<smb2_disconnect_share_t>(dlsym(smbLibHandle_, "smb2_disconnect_share"));
+    smb2_set_user_ = reinterpret_cast<smb2_set_user_t>(dlsym(smbLibHandle_, "smb2_set_user"));
+    smb2_set_password_ = reinterpret_cast<smb2_set_password_t>(dlsym(smbLibHandle_, "smb2_set_password"));
+    smb2_set_domain_ = reinterpret_cast<smb2_set_domain_t>(dlsym(smbLibHandle_, "smb2_set_domain"));
+    smb2_get_error_ = reinterpret_cast<smb2_get_error_t>(dlsym(smbLibHandle_, "smb2_get_error"));
+    smb2_set_security_mode_ = reinterpret_cast<smb2_set_security_mode_t>(dlsym(smbLibHandle_,
+        "smb2_set_security_mode"));
+    smb2_set_timeout_ = reinterpret_cast<smb2_set_timeout_t>(dlsym(smbLibHandle_, "smb2_set_timeout"));
+    smb2_share_enum_async_ = reinterpret_cast<smb2_share_enum_async_t>(dlsym(smbLibHandle_, "smb2_share_enum_async"));
+    smb2_free_data_ = reinterpret_cast<smb2_free_data_t>(dlsym(smbLibHandle_, "smb2_free_data"));
+    smb2_get_fd_ = reinterpret_cast<smb2_get_fd_t>(dlsym(smbLibHandle_, "smb2_get_fd"));
+    smb2_which_events_ = reinterpret_cast<smb2_which_events_t>(dlsym(smbLibHandle_, "smb2_which_events"));
+    smb2_service_ = reinterpret_cast<smb2_service_t>(dlsym(smbLibHandle_, "smb2_service"));
+    if (!smb2_init_context_ || !smb2_close_context_ || !smb2_destroy_context_ ||
+        !smb2_connect_share_ || !smb2_disconnect_share_ || !smb2_set_user_ ||
+        !smb2_set_password_ || !smb2_get_error_ || !smb2_set_security_mode_ ||
+        !smb2_set_timeout_ || !smb2_share_enum_async_ || !smb2_free_data_ ||
+        !smb2_get_fd_ || !smb2_which_events_ || !smb2_service_) {
+        PRINT_HILOGE("Failed to load required SMB functions");
         CleanupLibrary();
         return false;
     }
     PRINT_HILOGI("SMB library initialized successfully");
     return true;
-}
-
-bool SmbLibrary::LoadSymbols()
-{
-    dlerror();
-    LoadOneSymbol(smbLibHandle_, "smb2_init_context", smb2_init_context_);
-    LoadOneSymbol(smbLibHandle_, "smb2_close_context", smb2_close_context_);
-    LoadOneSymbol(smbLibHandle_, "smb2_destroy_context", smb2_destroy_context_);
-    LoadOneSymbol(smbLibHandle_, "smb2_connect_share", smb2_connect_share_);
-    LoadOneSymbol(smbLibHandle_, "smb2_disconnect_share", smb2_disconnect_share_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_user", smb2_set_user_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_password", smb2_set_password_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_domain", smb2_set_domain_);
-    LoadOneSymbol(smbLibHandle_, "smb2_get_error", smb2_get_error_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_security_mode", smb2_set_security_mode_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_timeout", smb2_set_timeout_);
-    LoadOneSymbol(smbLibHandle_, "smb2_share_enum_async", smb2_share_enum_async_);
-    LoadOneSymbol(smbLibHandle_, "smb2_free_data", smb2_free_data_);
-    LoadOneSymbol(smbLibHandle_, "smb2_get_fd", smb2_get_fd_);
-    LoadOneSymbol(smbLibHandle_, "smb2_which_events", smb2_which_events_);
-    LoadOneSymbol(smbLibHandle_, "smb2_service", smb2_service_);
-    if (!ValidateSymbols()) {
-        PRINT_HILOGE("Failed to load required SMB functions");
-        return false;
-    }
-    return true;
-}
-
-bool SmbLibrary::ValidateSymbols() const
-{
-    return smb2_init_context_ && smb2_close_context_ && smb2_destroy_context_ &&
-        smb2_connect_share_ && smb2_disconnect_share_ && smb2_set_user_ &&
-        smb2_set_password_ && smb2_set_domain_ && smb2_get_error_ &&
-        smb2_set_security_mode_ && smb2_set_timeout_ && smb2_share_enum_async_ &&
-        smb2_free_data_ && smb2_get_fd_ && smb2_which_events_ && smb2_service_;
 }
 
 void SmbLibrary::CleanupLibrary()
@@ -198,7 +171,7 @@ int32_t SmbLibrary::ShareEnumAsync(struct smb2_context* ctx, int32_t level,
         PRINT_HILOGE("smb2_share_enum_async_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return smb2_share_enum_async_(ctx, static_cast<enum SHARE_INFO_enum>(level), callback, privateData);
+    return smb2_share_enum_async_(ctx, level, callback, privateData);
 }
 
 void SmbLibrary::FreeData(struct smb2_context* ctx, void* data) const

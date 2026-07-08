@@ -27,6 +27,7 @@ static bool LoadOneSymbol(void *handle, const char *name, FuncPtr &funcPtr)
 {
     void *sym = dlsym(handle, name);
     if (sym == nullptr) {
+        PRINT_HILOGE("dlsym %{public}s failed: %{public}s", name, dlerror());
         return false;
     }
     if (memcpy_s(&funcPtr, sizeof(FuncPtr), &sym, sizeof(void*)) != EOK) {
@@ -35,6 +36,12 @@ static bool LoadOneSymbol(void *handle, const char *name, FuncPtr &funcPtr)
     }
     return true;
 }
+
+#define CHECK_LOAD_SYMBOL(handle, name, funcPtr) \
+    if (!LoadOneSymbol((handle), (name), (funcPtr))) { \
+        return false; \
+    }
+
 SmbLibrary::SmbLibrary() :smbLibHandle_(nullptr), smb2_init_context_(nullptr),
     smb2_close_context_(nullptr), smb2_destroy_context_(nullptr),
     smb2_connect_share_(nullptr), smb2_disconnect_share_(nullptr), smb2_set_user_(nullptr),
@@ -79,36 +86,23 @@ bool SmbLibrary::InitializeLibrary()
 bool SmbLibrary::LoadSymbols()
 {
     dlerror();
-    LoadOneSymbol(smbLibHandle_, "smb2_init_context", smb2_init_context_);
-    LoadOneSymbol(smbLibHandle_, "smb2_close_context", smb2_close_context_);
-    LoadOneSymbol(smbLibHandle_, "smb2_destroy_context", smb2_destroy_context_);
-    LoadOneSymbol(smbLibHandle_, "smb2_connect_share", smb2_connect_share_);
-    LoadOneSymbol(smbLibHandle_, "smb2_disconnect_share", smb2_disconnect_share_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_user", smb2_set_user_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_password", smb2_set_password_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_domain", smb2_set_domain_);
-    LoadOneSymbol(smbLibHandle_, "smb2_get_error", smb2_get_error_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_security_mode", smb2_set_security_mode_);
-    LoadOneSymbol(smbLibHandle_, "smb2_set_timeout", smb2_set_timeout_);
-    LoadOneSymbol(smbLibHandle_, "smb2_share_enum_async", smb2_share_enum_async_);
-    LoadOneSymbol(smbLibHandle_, "smb2_free_data", smb2_free_data_);
-    LoadOneSymbol(smbLibHandle_, "smb2_get_fd", smb2_get_fd_);
-    LoadOneSymbol(smbLibHandle_, "smb2_which_events", smb2_which_events_);
-    LoadOneSymbol(smbLibHandle_, "smb2_service", smb2_service_);
-    if (!ValidateSymbols()) {
-        PRINT_HILOGE("Failed to load required SMB functions");
-        return false;
-    }
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_init_context", smb2_init_context_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_close_context", smb2_close_context_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_destroy_context", smb2_destroy_context_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_connect_share", smb2_connect_share_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_disconnect_share", smb2_disconnect_share_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_set_user", smb2_set_user_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_set_password", smb2_set_password_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_set_domain", smb2_set_domain_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_get_error", smb2_get_error_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_set_security_mode", smb2_set_security_mode_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_set_timeout", smb2_set_timeout_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_share_enum_async", smb2_share_enum_async_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_free_data", smb2_free_data_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_get_fd", smb2_get_fd_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_which_events", smb2_which_events_);
+    CHECK_LOAD_SYMBOL(smbLibHandle_, "smb2_service", smb2_service_);
     return true;
-}
-
-bool SmbLibrary::ValidateSymbols() const
-{
-    return smb2_init_context_ && smb2_close_context_ && smb2_destroy_context_ &&
-        smb2_connect_share_ && smb2_disconnect_share_ && smb2_set_user_ &&
-        smb2_set_password_ && smb2_set_domain_ && smb2_get_error_ &&
-        smb2_set_security_mode_ && smb2_set_timeout_ && smb2_share_enum_async_ &&
-        smb2_free_data_ && smb2_get_fd_ && smb2_which_events_ && smb2_service_;
 }
 
 void SmbLibrary::CleanupLibrary()
