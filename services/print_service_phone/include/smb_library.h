@@ -23,6 +23,7 @@
 
 struct smb2_context;
 
+// NOLINTNEXTLINE(readability/enum) - must match libsmb2 C API for CFI Type ID
 enum SHARE_INFO_enum {
     SHARE_INFO_0 = 0,
     SHARE_INFO_1 = 1,
