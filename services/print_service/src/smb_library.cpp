@@ -39,6 +39,7 @@ static bool LoadOneSymbol(void *handle, const char *name, FuncPtr &funcPtr)
 
 #define CHECK_LOAD_SYMBOL(handle, name, funcPtr) \
     if (!LoadOneSymbol((handle), (name), (funcPtr))) { \
+        PRINT_HILOGE("%{public}s load %{public}s failed", __func__, (name)); \
         return false; \
     }
 
