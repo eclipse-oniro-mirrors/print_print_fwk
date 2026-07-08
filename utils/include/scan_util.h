@@ -62,6 +62,10 @@ inline std::string ScanUtil::ReplaceIpAddress(const std::string& deviceId, const
 inline void ScanUtil::CloseFdListWithTag(std::vector<int32_t> &fdList, size_t startIndex)
 {
     for (size_t i = startIndex; i < fdList.size(); i++) {
+        if (fdList[i] < 0) {
+            SCAN_HILOGW("skip invalid fd: %{public}d", fdList[i]);
+            continue;
+        }
         fdsan_close_with_tag(fdList[i], SCAN_LOG_DOMAIN);
     }
 }
