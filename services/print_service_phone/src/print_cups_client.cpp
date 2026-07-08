@@ -1371,7 +1371,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
         PRINT_HILOGD("the printerInfo option");
         PrinterCapability printerCaps;
         std::string infoOpt = info.GetOption();
-        PRINT_HILOGD("the printerInfo option %{public}s", infoOpt.c_str());
+        PRINT_HILOGD("the printerInfo option %{public}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
         Json::Value infoJson;
         if (!PrintJsonUtil::Parse(infoOpt, infoJson)) {
             PRINT_HILOGE("infoOpt can not parse to json object");
@@ -2849,7 +2849,7 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
         host, sizeof(host), &port, resource, sizeof(resource));
     
     if (host[0] == '\0') {
-        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", printerUri.c_str());
+        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_INVALID;
     }
     

@@ -899,7 +899,7 @@ int32_t PrintServiceAbility::AddRawPrinter(PrinterInfo &info)
     int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(
         info.GetUri(), printerName, RAW_PPD_NAME);
     std::string option = PrintJsonUtil::WriteString(optionJson);
-    PRINT_HILOGD("AddRawPrinter option: %{public}s", option.c_str());
+    PRINT_HILOGD("AddRawPrinter option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     info.SetOption(option);
 
     if (ret != E_PRINT_NONE) {
@@ -1905,7 +1905,7 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     info->SetUri(newUri);
 #endif
 
-    PRINT_HILOGD("CheckPrinterUriDifferent, old = %{public}s, new = %{public}s",
+    PRINT_HILOGD("CheckPrinterUriDifferent, old = %{private}s, new = %{private}s",
         oldUri.c_str(), newUri.c_str());
     if (oldUri != newUri) {
         PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success", info->GetPrinterName().c_str());
@@ -2588,7 +2588,7 @@ int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const
     std::string globalPrinterId = PrintUtils::GetGlobalId(extensionId, info.GetPrinterId());
     if (QueryAddedPrinterInfoByPrinterId(globalPrinterId, addedInfo) &&
         addedInfo.GetAlias() != info.GetAlias()) {
-        PRINT_HILOGI("PrinterAlias Modify %{public}s -> %{public}s",
+        PRINT_HILOGI("PrinterAlias Modify %{private}s -> %{private}s",
             addedInfo.GetAlias().c_str(), info.GetAlias().c_str());
         
         addedInfo.SetAlias(info.GetAlias());

@@ -1492,7 +1492,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
         PRINT_HILOGD("the printerInfo option");
         PrinterCapability printerCaps;
         std::string infoOpt = info.GetOption();
-        PRINT_HILOGD("the printerInfo option %{public}s", infoOpt.c_str());
+        PRINT_HILOGD("the printerInfo option %{public}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
         Json::Value infoJson;
         if (!PrintJsonUtil::Parse(infoOpt, infoJson)) {
             PRINT_HILOGE("infoOpt can not parse to json object");
