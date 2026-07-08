@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstring>
 #include <dlfcn.h>
 #include "print_log.h"
 #include "print_constant.h"
@@ -50,38 +51,67 @@ bool SmbLibrary::InitializeLibrary()
     }
     smbLibHandle_ = dlopen(realValue, RTLD_LAZY);
     if (!smbLibHandle_) {
-        PRINT_HILOGE("Failed to load SMB library: %s", dlerror());
+        PRINT_HILOGE("Failed to load SMB library: %{public}s", dlerror());
         return false;
     }
-    dlerror();
-    smb2_init_context_ = reinterpret_cast<smb2_init_context_t>(dlsym(smbLibHandle_, "smb2_init_context"));
-    smb2_close_context_ = reinterpret_cast<smb2_close_context_t>(dlsym(smbLibHandle_, "smb2_close_context"));
-    smb2_destroy_context_ = reinterpret_cast<smb2_destroy_context_t>(dlsym(smbLibHandle_, "smb2_destroy_context"));
-    smb2_connect_share_ = reinterpret_cast<smb2_connect_share_t>(dlsym(smbLibHandle_, "smb2_connect_share"));
-    smb2_disconnect_share_ = reinterpret_cast<smb2_disconnect_share_t>(dlsym(smbLibHandle_, "smb2_disconnect_share"));
-    smb2_set_user_ = reinterpret_cast<smb2_set_user_t>(dlsym(smbLibHandle_, "smb2_set_user"));
-    smb2_set_password_ = reinterpret_cast<smb2_set_password_t>(dlsym(smbLibHandle_, "smb2_set_password"));
-    smb2_set_domain_ = reinterpret_cast<smb2_set_domain_t>(dlsym(smbLibHandle_, "smb2_set_domain"));
-    smb2_get_error_ = reinterpret_cast<smb2_get_error_t>(dlsym(smbLibHandle_, "smb2_get_error"));
-    smb2_set_security_mode_ = reinterpret_cast<smb2_set_security_mode_t>(dlsym(smbLibHandle_,
-        "smb2_set_security_mode"));
-    smb2_set_timeout_ = reinterpret_cast<smb2_set_timeout_t>(dlsym(smbLibHandle_, "smb2_set_timeout"));
-    smb2_share_enum_async_ = reinterpret_cast<smb2_share_enum_async_t>(dlsym(smbLibHandle_, "smb2_share_enum_async"));
-    smb2_free_data_ = reinterpret_cast<smb2_free_data_t>(dlsym(smbLibHandle_, "smb2_free_data"));
-    smb2_get_fd_ = reinterpret_cast<smb2_get_fd_t>(dlsym(smbLibHandle_, "smb2_get_fd"));
-    smb2_which_events_ = reinterpret_cast<smb2_which_events_t>(dlsym(smbLibHandle_, "smb2_which_events"));
-    smb2_service_ = reinterpret_cast<smb2_service_t>(dlsym(smbLibHandle_, "smb2_service"));
-    if (!smb2_init_context_ || !smb2_close_context_ || !smb2_destroy_context_ ||
-        !smb2_connect_share_ || !smb2_disconnect_share_ || !smb2_set_user_ ||
-        !smb2_set_password_ || !smb2_get_error_ || !smb2_set_security_mode_ ||
-        !smb2_set_timeout_ || !smb2_share_enum_async_ || !smb2_free_data_ ||
-        !smb2_get_fd_ || !smb2_which_events_ || !smb2_service_) {
-        PRINT_HILOGE("Failed to load required SMB functions");
+    if (!LoadSymbols()) {
         CleanupLibrary();
         return false;
     }
     PRINT_HILOGI("SMB library initialized successfully");
     return true;
+}
+
+bool SmbLibrary::LoadSymbols()
+{
+    dlerror();
+    void *sym = nullptr;
+    sym = dlsym(smbLibHandle_, "smb2_init_context");
+    if (sym != nullptr) { memcpy(&smb2_init_context_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_close_context");
+    if (sym != nullptr) { memcpy(&smb2_close_context_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_destroy_context");
+    if (sym != nullptr) { memcpy(&smb2_destroy_context_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_connect_share");
+    if (sym != nullptr) { memcpy(&smb2_connect_share_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_disconnect_share");
+    if (sym != nullptr) { memcpy(&smb2_disconnect_share_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_set_user");
+    if (sym != nullptr) { memcpy(&smb2_set_user_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_set_password");
+    if (sym != nullptr) { memcpy(&smb2_set_password_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_set_domain");
+    if (sym != nullptr) { memcpy(&smb2_set_domain_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_get_error");
+    if (sym != nullptr) { memcpy(&smb2_get_error_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_set_security_mode");
+    if (sym != nullptr) { memcpy(&smb2_set_security_mode_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_set_timeout");
+    if (sym != nullptr) { memcpy(&smb2_set_timeout_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_share_enum_async");
+    if (sym != nullptr) { memcpy(&smb2_share_enum_async_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_free_data");
+    if (sym != nullptr) { memcpy(&smb2_free_data_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_get_fd");
+    if (sym != nullptr) { memcpy(&smb2_get_fd_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_which_events");
+    if (sym != nullptr) { memcpy(&smb2_which_events_, &sym, sizeof(sym)); }
+    sym = dlsym(smbLibHandle_, "smb2_service");
+    if (sym != nullptr) { memcpy(&smb2_service_, &sym, sizeof(sym)); }
+    if (!ValidateSymbols()) {
+        PRINT_HILOGE("Failed to load required SMB functions");
+        return false;
+    }
+    return true;
+}
+
+bool SmbLibrary::ValidateSymbols() const
+{
+    return smb2_init_context_ && smb2_close_context_ && smb2_destroy_context_ &&
+        smb2_connect_share_ && smb2_disconnect_share_ && smb2_set_user_ &&
+        smb2_set_password_ && smb2_set_domain_ && smb2_get_error_ &&
+        smb2_set_security_mode_ && smb2_set_timeout_ && smb2_share_enum_async_ &&
+        smb2_free_data_ && smb2_get_fd_ && smb2_which_events_ && smb2_service_;
 }
 
 void SmbLibrary::CleanupLibrary()
@@ -171,7 +201,7 @@ int32_t SmbLibrary::ShareEnumAsync(struct smb2_context* ctx, int32_t level,
         PRINT_HILOGE("smb2_share_enum_async_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return smb2_share_enum_async_(ctx, level, callback, privateData);
+    return smb2_share_enum_async_(ctx, static_cast<enum SHARE_INFO_enum>(level), callback, privateData);
 }
 
 void SmbLibrary::FreeData(struct smb2_context* ctx, void* data) const
