@@ -36,6 +36,7 @@ public:
     static bool ConvertToInt(const std::string& str, int32_t& value);
     static bool ExtractIpAddresses(const std::string& str, std::string& ip);
     static std::string ReplaceIpAddress(const std::string& deviceId, const std::string& newIp);
+    static void CloseFdListWithTag(std::vector<int32_t> &fdList, size_t startIndex = 0);
 };
 inline bool ScanUtil::ConvertToInt(const std::string& str, int32_t& value)
 {
@@ -57,6 +58,16 @@ inline std::string ScanUtil::ReplaceIpAddress(const std::string& deviceId, const
 {
     std::regex ipRegex(R"((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b))");
     return std::regex_replace(deviceId, ipRegex, newIp);
+}
+inline void ScanUtil::CloseFdListWithTag(std::vector<int32_t> &fdList, size_t startIndex)
+{
+    for (size_t i = startIndex; i < fdList.size(); i++) {
+        if (fdList[i] < 0) {
+            SCAN_HILOGW("skip invalid fd: %{public}d", fdList[i]);
+            continue;
+        }
+        fdsan_close_with_tag(fdList[i], SCAN_LOG_DOMAIN);
+    }
 }
 } // namespace OHOS::Scan
 
