@@ -477,6 +477,7 @@ const std::string PAGE_SIZE_ID_PRC6 = "PRC6";
 const std::string PAGE_SIZE_ID_PRC7 = "PRC7";
 const std::string PAGE_SIZE_ID_PRC8 = "PRC8";
 const std::string PAGE_SIZE_ID_PRC16 = "PRC16";
+const std::string PAGE_SIZE_ID_PRC_16K = "PRC_16K";
 const std::string PAGE_SIZE_ID_ROC_16K = "ROC_16K";
 const std::string PAGE_SIZE_ID_ROC_8K = "ROC_8K";
 

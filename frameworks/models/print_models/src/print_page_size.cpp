@@ -173,6 +173,8 @@ const uint32_t PRC8_WIDTH = 4724;
 const uint32_t PRC8_HEIGHT = 12165;
 const uint32_t PRC16_WIDTH = 5749;
 const uint32_t PRC16_HEIGHT = 8465;
+const uint32_t PRC_16K_WIDTH = 7278;
+const uint32_t PRC_16K_HEIGHT = 10236;
 const uint32_t NA_EXECUTIVE_WIDTH = 7250;
 const uint32_t NA_EXECUTIVE_HEIGHT = 10500;
 }  // namespace
@@ -230,6 +232,7 @@ void UpdatePageSizeMapPRC(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>
     pageSize_["PRC7"] = std::make_shared<PrintPageSize>("PRC7", "prc_7_160x230mm", PRC7_WIDTH, PRC7_HEIGHT);
     pageSize_["PRC8"] = std::make_shared<PrintPageSize>("PRC8", "prc_8_120x309mm", PRC8_WIDTH, PRC8_HEIGHT);
     pageSize_["PRC16"] = std::make_shared<PrintPageSize>("PRC16", "prc_16k_146x215mm", PRC16_WIDTH, PRC16_HEIGHT);
+    pageSize_["PRC_16K"] = std::make_shared<PrintPageSize>("PRC_16K", "prc_16k_184x260mm", PRC_16K_WIDTH, PRC_16K_HEIGHT);
     pageSize_["ROC_16K"] =
         std::make_shared<PrintPageSize>("ROC_16K", "roc_16k_7.75x10.75in", ROC_16K_WIDTH, ROC_16K_HEIGHT);
     pageSize_["ROC_8K"] = std::make_shared<PrintPageSize>("ROC_8K", "roc_8k_10.75x15.5in", ROC_8K_WIDTH, ROC_8K_HEIGHT);

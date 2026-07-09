@@ -192,6 +192,8 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
     {PAGE_SIZE_ID_PRC7, "EnvPRC7"},
     {PAGE_SIZE_ID_PRC8, "EnvPRC8"},
     {PAGE_SIZE_ID_PRC16, "PRC16K"},
+    {PAGE_SIZE_ID_PRC_16K, "16K"},
+    {PAGE_SIZE_ID_PRC_16K, "184x260mm"},
     {PAGE_SIZE_ID_ROC_16K, "roc16k"},
     {PAGE_SIZE_ID_ROC_16K, "K16A"},
     {PAGE_SIZE_ID_ROC_16K, "197x273mm"},

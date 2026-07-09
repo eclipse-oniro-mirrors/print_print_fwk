@@ -48,7 +48,7 @@ std::vector<PrintPageSize> BuildDefaultPageSizeList()
     const PAGE_SIZE_ID pageSizeIds[] = {
         PAGE_SIZE_ID_ISO_A4, PAGE_SIZE_ID_ISO_A5, PAGE_SIZE_ID_ISO_A6,
         PAGE_SIZE_ID_JIS_B5, PAGE_SIZE_ID_JIS_B6,
-        PAGE_SIZE_ID_NA_LETTER, PAGE_SIZE_ID_ROC_16K
+        PAGE_SIZE_ID_NA_LETTER, PAGE_SIZE_ID_PRC_16K
     };
     for (const auto &id : pageSizeIds) {
         if (PrintPageSize::FindPageSizeById(id, pageSize)) {
