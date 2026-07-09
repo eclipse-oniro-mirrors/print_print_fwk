@@ -472,6 +472,10 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     if (PrintJsonUtil::IsMember(optionJson, "printerUri") && optionJson["printerUri"].isString()) {
         optionJson["printerUri"] = AnonymizePrinterUri(optionJson["printerUri"].asString());
     }
+    // The strato webprinter uses the IPP protocol, and its Uri contains the public IP address.
+    if (PrintJsonUtil::IsMember(optionJson, "ipp") && optionJson["ipp"].isString()) {
+        optionJson["ipp"] = AnonymizePrinterUri(optionJson["ipp"].asString());
+    }
     AnonymizeAlias(optionJson);
     AnonymizeFileArray(optionJson, "files");
     AnonymizeFileArray(optionJson, "fileList");
