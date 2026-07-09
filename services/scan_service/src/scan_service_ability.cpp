@@ -216,21 +216,21 @@ void ScanServiceAbility::UnloadSystemAbility()
 
 int32_t ScanServiceAbility::InitScan()
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     return E_SCAN_NONE;
 }
 
 int32_t ScanServiceAbility::ExitScan()
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     return E_SCAN_NONE;
 }
 
@@ -465,10 +465,10 @@ void ScanServiceAbility::SaneGetScanner()
 
 int32_t ScanServiceAbility::GetScannerList()
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
     auto exec_sane_getscaner = [=]() {
         SaneGetScanner();
@@ -481,12 +481,12 @@ int32_t ScanServiceAbility::GetScannerList()
 
 int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility OpenScanner start");
     if (scannerId.empty()) {
         SCAN_HILOGE("OpenScanner scannerId is empty");
@@ -512,12 +512,12 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
 
 int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility CloseScanner start");
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
@@ -537,12 +537,12 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
 int32_t ScanServiceAbility::GetScanOptionDesc(
     const std::string scannerId, const int32_t optionIndex, ScanOptionDescriptor &desc)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc start");
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
@@ -654,12 +654,12 @@ int32_t ScanServiceAbility::ActionSetValue(
 int32_t ScanServiceAbility::OpScanOptionValue(
     const std::string scannerId, const int32_t optionIndex, const ScanOptionOpType op, ScanOptionValue &value)
 {
-    ManualStart();
-    SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start");
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start");
     std::lock_guard<std::mutex> autoLock(lock_);
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
@@ -695,12 +695,12 @@ int32_t ScanServiceAbility::OpScanOptionValue(
 
 int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanParameters &para)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
@@ -725,12 +725,12 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
 
 int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
@@ -751,7 +751,6 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
 
 int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    ManualStart();
     const std::string &permission = (SCAN_PERMISSION_MAP.find(type) != SCAN_PERMISSION_MAP.end())
                                         ? SCAN_PERMISSION_MAP.at(type)
                                         : PERMISSION_NAME_PRINT_JOB;
@@ -759,6 +758,7 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     int32_t userId = GetCurrentUserId();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::string eventType = ScanServiceUtils::GetTaskEventId(taskId, type, userId, callerPid);
@@ -787,7 +787,6 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
 int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    ManualStart();
     const std::string &permission = (SCAN_PERMISSION_MAP.find(type) != SCAN_PERMISSION_MAP.end())
                                         ? SCAN_PERMISSION_MAP.at(type)
                                         : PERMISSION_NAME_PRINT_JOB;
@@ -795,6 +794,7 @@ int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &typ
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     int32_t userId = GetCurrentUserId();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::string eventType = ScanServiceUtils::GetTaskEventId(taskId, type, userId, callerPid);
@@ -958,12 +958,12 @@ bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
 
 int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanProgress &prog)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
@@ -978,11 +978,11 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
 
 int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::string &discoverMode)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     if (discoverMode != ScannerDiscoveryMode::USB_MODE && discoverMode != ScannerDiscoveryMode::TCP_MODE) {
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
@@ -1047,11 +1047,11 @@ void ScanServiceAbility::AddUsbScanner(const std::string& uniqueId, const std::s
 
 int32_t ScanServiceAbility::DeleteScanner(const std::string &serialNumber, const std::string &discoverMode)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     SCAN_HILOGI("ScanServiceAbility DeleteScanner start");
 
     std::string uniqueId = discoverMode + serialNumber;
@@ -1075,11 +1075,11 @@ int32_t ScanServiceAbility::DeleteScanner(const std::string &serialNumber, const
 
 int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAddedScanner)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetAddedScanner start");
     ScanSystemData::GetInstance().GetAddedScannerInfoList(allAddedScanner);
     SCAN_HILOGI("ScanServiceAbility GetAddedScanner end");
@@ -1088,11 +1088,11 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAdde
 
 int32_t ScanServiceAbility::StartScanOnce(const std::string scannerId)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
     if (scannerState_.load() == SCANNER_CANCELING) {
@@ -1408,12 +1408,12 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
     const std::vector<int32_t>& pictureFdList, const int32_t format,
     std::vector<int32_t>& exportedFdList)
 {
-    ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    ManualStart();
+    std::lock_guard<std::mutex> autoLock(lock_);
 
     if (pictureFdList.empty()) {
         SCAN_HILOGE("pictureFdList is empty");
