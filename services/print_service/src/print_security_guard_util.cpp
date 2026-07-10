@@ -19,7 +19,6 @@
 #include "print_log.h"
 
 #include <algorithm>
-#include <charconv>
 #include <unordered_set>
 
 namespace OHOS::Print {
@@ -94,18 +93,9 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
     
     for (uint32_t subState : blockedSubStates) {
         if (subState > maxSingleSubStateCode) {
-            std::string codeStr = std::to_string(subState);
-            while (codeStr.length() % subStateCodeDigits != 0) {
-                codeStr = "0" + codeStr;
-            }
-            for (size_t i = 0; i < codeStr.length(); i += subStateCodeDigits) {
-                std::string chunk = codeStr.substr(i, subStateCodeDigits);
-                uint32_t singleState = 0;
-                auto [ptr, ec] = std::from_chars(chunk.data(), chunk.data() + chunk.size(), singleState);
-                if (ec != std::errc{}) {
-                    continue;
-                }
-                addErrorCode(singleState);
+            constexpr uint32_t base = maxSingleSubStateCode + 1;
+            for (uint32_t tmp = subState; tmp > 0; tmp /= base) {
+                addErrorCode(tmp % base);
             }
         } else {
             addErrorCode(subState);
