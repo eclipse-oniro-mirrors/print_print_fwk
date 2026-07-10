@@ -70,6 +70,10 @@ public:
 
     void SetOriginId(const std::string &originId);
 
+    void SetDeviceId(const std::string &deviceId);
+
+    [[nodiscard]] const std::string &GetDeviceId() const;
+
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
@@ -235,6 +239,8 @@ private:
     bool hasOriginId_;
 
     std::string originId_;
+
+    std::string deviceId_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H
