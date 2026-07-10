@@ -175,6 +175,9 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
     if (PrintJsonUtil::IsMember(object, "option") && object["option"].isString()) {
         info.SetOption(object["option"].asString());
     }
+    if (PrintJsonUtil::IsMember(object, "deviceId") && object["deviceId"].isString()) {
+        info.SetDeviceId(object["deviceId"].asString());
+    }
 }
 
 bool PrintSystemData::Init()
@@ -428,6 +431,7 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
     if (info->HasOption()) {
         printerJson["option"] = info->GetOption();
     }
+    printerJson["deviceId"] = info->GetDeviceId();
 }
 
 void PrintSystemData::SavePrinterFile(const std::string &printerId)
