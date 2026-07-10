@@ -19,6 +19,7 @@
 #include "print_log.h"
 
 #include <algorithm>
+#include <charconv>
 #include <unordered_set>
 
 namespace OHOS::Print {
@@ -98,7 +99,12 @@ std::vector<std::string> GenerateErrorCodes(const std::set<uint32_t> &blockedSub
                 codeStr = "0" + codeStr;
             }
             for (size_t i = 0; i < codeStr.length(); i += subStateCodeDigits) {
-                uint32_t singleState = std::stoul(codeStr.substr(i, subStateCodeDigits));
+                std::string chunk = codeStr.substr(i, subStateCodeDigits);
+                uint32_t singleState = 0;
+                auto [ptr, ec] = std::from_chars(chunk.data(), chunk.data() + chunk.size(), singleState);
+                if (ec != std::errc{}) {
+                    continue;
+                }
                 addErrorCode(singleState);
             }
         } else {
