@@ -53,6 +53,7 @@ public:
     void GetRawAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string &printerId, const std::string &printerAlias);
+    bool UpdatePrinterDeviceId(const std::string &printerId, const std::string &deviceId);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
     void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);

@@ -698,6 +698,22 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
     return false;
 }
 
+bool PrintSystemData::UpdatePrinterDeviceId(const std::string &printerId, const std::string &deviceId)
+{
+    auto info = GetAddedPrinterMap().Find(printerId);
+    if (info != nullptr) {
+        if (info->GetDeviceId() != deviceId) {
+            info->SetDeviceId(deviceId);
+            PRINT_HILOGI("UpdatePrinterDeviceId success, deviceId: %{private}s", deviceId.c_str());
+            return true;
+        }
+        PRINT_HILOGW("DeviceId is the same, no update needed.");
+        return false;
+    }
+    PRINT_HILOGE("Unable to find the corresponding printId.");
+    return false;
+}
+
 void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo)
 {
     auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
