@@ -395,9 +395,11 @@ void ScanServiceAbility::UpdateScanSystemData(const ScanDeviceInfo &info)
     if (info.discoverMode == ScannerDiscoveryMode::USB_MODE) {
         ScanDeviceInfo scannerInfo;
         if (scanData.QueryScannerInfoByUniqueId(uniqueId, scannerInfo)) {
-            scanDeviceInfoSync.oldDeviceId = scannerInfo.deviceId;
             scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
-            SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
+            if (scannerInfo.deviceId != info.deviceId) {
+                scanDeviceInfoSync.oldDeviceId = scannerInfo.deviceId;
+                SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
+            }
         }
     } else {
         auto updateResult = scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
