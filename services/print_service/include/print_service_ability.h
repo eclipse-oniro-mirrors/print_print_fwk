@@ -190,6 +190,7 @@ private:
     bool SendQueuePrintJob(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
     bool isEprint(const std::string &printerId);
+    bool ShouldUpdateCapabilityByPPD(const std::string &printerId);
     int32_t ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);

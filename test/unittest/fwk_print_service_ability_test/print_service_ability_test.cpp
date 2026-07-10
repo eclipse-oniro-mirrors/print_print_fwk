@@ -101,6 +101,8 @@ static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.ent
 static const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string IPPOVERUSB_PREFIX = ":IPP-";
 
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,
@@ -4859,6 +4861,67 @@ HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_NoPrinterMake_IsEprint
     service->printSystemData_.AddPrinterToDiscovery(info);
     bool result = service->UpdateSinglePrinterInfo(*info, PRINT_EXTENSION_BUNDLE_NAME);
     EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name: UpdateSinglePrinterInfo_HasPrinterMake_IsIPPOverUSB
+* @tc.desc: Test UpdateSinglePrinterInfo when printer is IPPOverUSB, should skip PPD query
+* @tc.type: FUNC
+* @tc.require: should skip PPD query for IPPOverUSB printer
+*/
+HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_IsIPPOverUSB, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, QueryPPDInformation(_, _)).Times(0);
+
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterName("TestPrinter");
+    std::string ippOverUsbPrinterId = SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX + "TestPrinter";
+    info->SetPrinterId(ippOverUsbPrinterId);
+    info->SetPrinterMake("TestMake");
+    service->printSystemData_.AddPrinterToDiscovery(info);
+    bool result = service->UpdateSinglePrinterInfo(*info, SPOOLER_BUNDLE_NAME);
+    EXPECT_FALSE(result);
+}
+
+/**
+* @tc.name: ShouldUpdateCapabilityByPPD_IsEprint_ReturnFalse
+* @tc.desc: Test ShouldUpdateCapabilityByPPD when printer is eprint, should return false
+* @tc.type: FUNC
+* @tc.require: eprint printers do not have PPD files
+*/
+HWTEST_F(PrintServiceAbilityTest, ShouldUpdateCapabilityByPPD_IsEprint_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string eprintPrinterId = PrintUtils::GetGlobalId(PRINT_EXTENSION_BUNDLE_NAME, EPRINTID);
+    EXPECT_FALSE(service->ShouldUpdateCapabilityByPPD(eprintPrinterId));
+}
+
+/**
+* @tc.name: ShouldUpdateCapabilityByPPD_IsIPPOverUSB_ReturnFalse
+* @tc.desc: Test ShouldUpdateCapabilityByPPD when printer is IPPOverUSB, should return false
+* @tc.type: FUNC
+* @tc.require: IPPOverUSB printers use driverless printing without PPD files
+*/
+HWTEST_F(PrintServiceAbilityTest, ShouldUpdateCapabilityByPPD_IsIPPOverUSB_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string ippOverUsbPrinterId = SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX + "TestPrinter";
+    EXPECT_FALSE(service->ShouldUpdateCapabilityByPPD(ippOverUsbPrinterId));
+}
+
+/**
+* @tc.name: ShouldUpdateCapabilityByPPD_IsLocalPrinter_ReturnTrue
+* @tc.desc: Test ShouldUpdateCapabilityByPPD when printer is local printer, should return true
+* @tc.type: FUNC
+* @tc.require: local printers should use PPD files
+*/
+HWTEST_F(PrintServiceAbilityTest, ShouldUpdateCapabilityByPPD_IsLocalPrinter_ReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string localPrinterId = "com.test.ext:LocalPrinter_001";
+    EXPECT_TRUE(service->ShouldUpdateCapabilityByPPD(localPrinterId));
 }
 
 /**

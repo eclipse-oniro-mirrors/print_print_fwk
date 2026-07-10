@@ -2510,6 +2510,21 @@ bool PrintServiceAbility::isEprint(const std::string &printerId)
     return std::equal(ePrintID.rbegin(), ePrintID.rend(), printerId.rbegin());
 }
 
+bool PrintServiceAbility::ShouldUpdateCapabilityByPPD(const std::string &printerId)
+{
+    // eprint printers are cloud printers without PPD files
+    if (isEprint(printerId)) {
+        return false;
+    }
+    
+    // IPPOverUSB printers use driverless printing without PPD files
+    if (PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
+        return false;
+    }
+    
+    return true;
+}
+
 int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extInfo)
 {
     ManualStart();
@@ -3865,7 +3880,8 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
     int32_t ret = E_PRINT_NONE;
     if (!PrintUtil::startsWith(extensionId, PRINT_EXTENSION_BUNDLE_NAME)) {
         std::string printerMake = printerInfo.GetPrinterMake();
-        // IPPOverUSB printer uses IPP Everywhere standard, no need to query PPD
+        // IPPOverUSB优先使用无驱，此处如果传入原有printerMake可能导致cups匹配了厂商驱动的ppd。
+        // 设为非法值，使cups无法匹配任何厂商驱动，走默认无驱
         std::string printerId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
         if (PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
             printerMake = DEFAULT_PPD_NAME;
@@ -4199,8 +4215,7 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     // Query complete printer capability from PPD file to fix incomplete capability issue.
     // External applications may provide incomplete printer capability information,
     // so we need to query complete capability from PPD file to ensure all advanced options are included.
-    // Note: Eprint printers do not have a PPD file.
-    if (printerInfo->HasPrinterMake() && !isEprint(printExtId)) {
+    if (printerInfo->HasPrinterMake() && ShouldUpdateCapabilityByPPD(printExtId)) {
         std::string make = printerInfo->GetPrinterMake();
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
@@ -5258,7 +5273,7 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
         PrinterCapability printerCaps;
         std::string ppdName;
         QueryPPDInformation(printerInfo.GetPrinterMake(), ppdName);
-        if (ppdName.empty() || printerId.find(EPRINTID) != std::string::npos) {
+        if (ppdName.empty() || !ShouldUpdateCapabilityByPPD(printerId)) {
             RefreshPrinterPageSize(printerInfo);
             BuildPrinterPreference(printerInfo);
         } else {
