@@ -161,6 +161,11 @@ void ScanAsyncCall::DeleteContext(napi_env env, AsyncContext *context)
     if (context == nullptr) {
         return;
     }
+    if (context->ctx != nullptr) {
+        context->ctx->input_ = nullptr;
+        context->ctx->output_ = nullptr;
+        context->ctx->exec_ = nullptr;
+    }
     if (context->work != nullptr) {
         napi_delete_async_work(env, context->work);
     }

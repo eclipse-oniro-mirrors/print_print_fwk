@@ -180,12 +180,21 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 
 void PrintAsyncCall::DeleteContext(napi_env env, AsyncContext *context)
 {
+    if (context == nullptr) {
+        return;
+    }
+    if (context->ctx != nullptr) {
+        context->ctx->input_ = nullptr;
+        context->ctx->output_ = nullptr;
+        context->ctx->exec_ = nullptr;
+    }
     if (env != nullptr) {
         napi_delete_reference(env, context->callback);
         napi_delete_reference(env, context->self);
         napi_delete_async_work(env, context->work);
     }
     delete context;
+    context = nullptr;
 }
 
 std::string PrintAsyncCall::GetErrorText(uint32_t code)
