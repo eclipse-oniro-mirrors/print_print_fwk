@@ -159,6 +159,7 @@ bool RemotePrinterManager::BuildPrinterInfo(const Json::Value &item, PrinterInfo
     printerInfo.SetUri(sn);
     printerInfo.SetPrinterUuid(sn);
     printerInfo.SetPrinterMake(prodId);
+    printerInfo.SetDeviceId(devId);
 
     PrinterCapability capability;
     SetDefaultCapability(capability);
