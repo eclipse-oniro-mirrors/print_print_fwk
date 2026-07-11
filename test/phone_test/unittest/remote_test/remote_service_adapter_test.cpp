@@ -106,7 +106,8 @@ HWTEST_F(RemoteServiceAdapterTest, SendData_002, TestSize.Level1)
     RemoteServiceAdapter client;
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
     client.connection_->remoteObject_ = mockRemote;
-    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), "test_msg");
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
+        "test_msg");
     EXPECT_EQ(E_PRINT_NONE, result);
 }
 
