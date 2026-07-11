@@ -3882,8 +3882,8 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
         std::string printerMake = printerInfo.GetPrinterMake();
         // IPPOverUSB优先使用无驱，此处如果传入原有printerMake可能导致cups匹配了厂商驱动的ppd。
         // 设为非法值，使cups无法匹配任何厂商驱动，走默认无驱
-        std::string printerId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
-        if (PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
+        if (PrintUtil::startsWith(PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId()),
+            SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
             printerMake = DEFAULT_PPD_NAME;
         }
         ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerMake);

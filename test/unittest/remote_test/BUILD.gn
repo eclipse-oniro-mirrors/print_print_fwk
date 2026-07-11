@@ -47,9 +47,6 @@ ohos_unittest("remote_test") {
   ]
 
   cflags_cc = [
-    "-DUNIT_TEST",
-    "-Dprivate=public",
-    "-Dprotected=public",
   ]
 
   if (print_fwk_feature_enterprise) {

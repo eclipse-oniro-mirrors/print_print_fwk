@@ -50,7 +50,7 @@ int32_t RemoteCallbackStub::OnRemoteRequest(
         return errorCode;
     }
     if (errorCode != E_PRINT_NONE) {
-        PRINT_HILOGE("RemoteCallbackStub error: %{public}d", errorCode);
+        PRINT_HILOGE("RemoteCallbackStub read errorCode failed: %{public}d, remote unreachable", errorCode);
         return errorCode;
     }
 

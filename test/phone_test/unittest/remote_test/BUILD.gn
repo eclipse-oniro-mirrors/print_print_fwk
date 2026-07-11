@@ -14,7 +14,7 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-_test_path = "${print_path}/test/phone_test"
+_test_path = "${print_path}/test"
 _service_path = "${print_path}/services/print_service_phone"
 
 module_output_path = unit_test_output_path
@@ -40,16 +40,13 @@ ohos_unittest("remote_test") {
   }
 
   sources = [
-    "${_test_path}/unittest/remote_test/remote_printer_manager_test.cpp",
-    "${_test_path}/unittest/remote_test/remote_service_adapter_test.cpp",
-    "${_test_path}/unittest/remote_test/remote_callback_stub_test.cpp",
-    "${_test_path}/unittest/remote_test/print_ipc_connection_test.cpp",
+    "${_test_path}/phone_test/unittest/remote_test/remote_printer_manager_test.cpp",
+    "${_test_path}/phone_test/unittest/remote_test/remote_service_adapter_test.cpp",
+    "${_test_path}/phone_test/unittest/remote_test/remote_callback_stub_test.cpp",
+    "${_test_path}/phone_test/unittest/remote_test/print_ipc_connection_test.cpp",
   ]
 
   cflags_cc = [
-    "-DUNIT_TEST",
-    "-Dprivate=public",
-    "-Dprotected=public",
   ]
 
   if (print_fwk_feature_enterprise) {
