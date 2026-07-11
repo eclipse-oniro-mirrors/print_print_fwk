@@ -662,7 +662,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     }
     printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
-    
+
     int32_t result = ConnectPrinterByType(printerId);
     PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter end", PrintUtils::AnonymizePrinterId(printerId).c_str());
     return result;
@@ -2516,12 +2516,12 @@ bool PrintServiceAbility::ShouldUpdateCapabilityByPPD(const std::string &printer
     if (isEprint(printerId)) {
         return false;
     }
-    
+
     // IPPOverUSB printers use driverless printing without PPD files
     if (PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME + IPPOVERUSB_PREFIX)) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -2781,19 +2781,19 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
 {
     PRINT_HILOGI("[Printer: %{public}s] Remote printer connect",
         PrintUtils::AnonymizePrinterId(printerId).c_str());
-    
+
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("[Printer: %{public}s] not found in discovery list",
             PrintUtils::AnonymizePrinterId(printerId).c_str());
         return E_PRINT_INVALID_PRINTER;
     }
-    
+
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetSelectedProtocol("auto");
     BuildPrinterPreference(*printerInfo);
-    
+
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printSystemData_.IsPrinterAdded(printerId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
@@ -2804,13 +2804,13 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
-    
+
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
     SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
     SendPrinterEvent(*printerInfo);
     SetLastUsedPrinter(printerId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
-    
+
     return E_PRINT_NONE;
 }
 
@@ -2825,7 +2825,7 @@ int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const
         addedInfo.GetAlias() != info.GetAlias()) {
         PRINT_HILOGI("PrinterAlias Modify %{private}s -> %{private}s",
             addedInfo.GetAlias().c_str(), info.GetAlias().c_str());
-        
+
         addedInfo.SetAlias(info.GetAlias());
         printSystemData_.UpdatePrinterAlias(globalPrinterId, info.GetAlias());
         printSystemData_.SavePrinterFile(globalPrinterId);
@@ -4190,7 +4190,7 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
         SyncAddedPrinterUri(infoPtr);
         UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
     }
-    
+
     // Background: spooler cannot associate the inserted USB device through VID and PID after OTA
     UpdateAddedUsbPrinterInfoWithoutOption(infoPtr);
 
@@ -5767,12 +5767,15 @@ int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printe
     std::string ppdName;
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t ret = GetPpdNameByPrinterId(printerId, ppdName);
-    if (ret != E_PRINT_NONE) {
-        return ret == E_PRINT_INVALID_PRINTER ? E_PRINT_NONE : ret;
+    if (ret == E_PRINT_NONE) {
+        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPreferencesConflicts(
+            ppdName, printerPreference, changedType, conflictingOptions);
     }
-
-    return DelayedSingleton<PrintCupsClient>::GetInstance()->
-        CheckPreferencesConflicts(ppdName, printerPreference, changedType, conflictingOptions);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGW("conflicts check error, skip! ret=%{public}d", ret); // 优先保障修改参数这一基本功能
+        return E_PRINT_NONE;
+    }
+    return ret;
 #else
     return E_PRINT_NONE;
 #endif
@@ -5890,8 +5893,9 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     }
     PpdInfo ppdInfo;
     printerInfo.GetSelectedDriver(ppdInfo);
-    if (!ppdInfo.GetPpdName().empty() && ppdInfo.GetPpdName() != "auto") {
-        ppdName = ppdInfo.GetPpdName();
+    std::string tempPpdName = ppdInfo.GetPpdName();
+    if (!tempPpdName.empty() && tempPpdName != "auto" && IsPpdNameValid(tempPpdName)) {
+        ppdName = tempPpdName;
         PRINT_HILOGI("Manual driver selection mode, ppdName=%{public}s", ppdName.c_str());
         return E_PRINT_NONE;
     }
@@ -6325,20 +6329,20 @@ bool PrintServiceAbility::GetBundleInfo(AppExecFwk::BundleInfo &bundleInfo)
 {
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGI("GetBundleInfo for bundle: %{private}s", bundleName.c_str());
-    
+
     int32_t userId = GetCurrentUserId();
     if (userId < 0) {
         PRINT_HILOGE("GetCurrentUserId failed");
         return false;
     }
-    
+
     AppExecFwk::BundleMgrClient bundleMgrClient;
     if (!bundleMgrClient.GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
         bundleInfo, userId)) {
         PRINT_HILOGW("user [%{private}d] has not installed [%{private}s]", userId, bundleName.c_str());
         return false;
     }
-    
+
     PRINT_HILOGI("GetBundleInfo success, appIdentifier: %{private}s", bundleInfo.signatureInfo.appIdentifier.c_str());
     return true;
 }
