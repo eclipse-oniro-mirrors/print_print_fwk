@@ -1213,28 +1213,7 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
         PRINT_HILOGE("FillJobOptions Params is nullptr");
         return num_options;
     }
-    if (jobParams->numCopies >= 1) {
-        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
-    } else {
-        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
-    }
-
-    if (!jobParams->duplex.empty()) {
-        num_options = cupsAddOption(CUPS_SIDES, jobParams->duplex.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_SIDES, CUPS_SIDES_ONE_SIDED, num_options, options);
-    }
-    if (!jobParams->printQuality.empty()) {
-        num_options = cupsAddOption(CUPS_PRINT_QUALITY, jobParams->printQuality.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
-    }
-    if (!jobParams->color.empty()) {
-        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, jobParams->color.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
-    }
-
+    num_options = FillBasicOptions(jobParams, num_options, options);
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
@@ -1256,7 +1235,37 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
     num_options = FillVendorOptions(jobParams, num_options, options);
+    num_options = FillTextSmoothOption(num_options, options);
     PRINT_HILOGI("FillJobOptions end.");
+    return num_options;
+}
+
+int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams == nullptr) {
+        return num_options;
+    }
+    if (jobParams->numCopies >= 1) {
+        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
+    } else {
+        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
+    }
+
+    if (!jobParams->duplex.empty()) {
+        num_options = cupsAddOption(CUPS_SIDES, jobParams->duplex.c_str(), num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_SIDES, CUPS_SIDES_ONE_SIDED, num_options, options);
+    }
+    if (!jobParams->printQuality.empty()) {
+        num_options = cupsAddOption(CUPS_PRINT_QUALITY, jobParams->printQuality.c_str(), num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
+    }
+    if (!jobParams->color.empty()) {
+        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, jobParams->color.c_str(), num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
+    }
     return num_options;
 }
 
@@ -1309,6 +1318,14 @@ int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
         PRINT_HILOGD("vendor option: %{public}s=%{private}s", key.c_str(), valueStr.c_str());
     }
 
+    return num_options;
+}
+
+int PrintCupsClient::FillTextSmoothOption(int num_options, cups_option_t **options)
+{
+    if (cupsGetOption(TEXT_SMOOTH_OPTION.c_str(), num_options, *options) == nullptr) {
+        num_options = cupsAddOption(TEXT_SMOOTH_OPTION.c_str(), TEXT_SMOOTH_DEFAULT.c_str(), num_options, options);
+    }
     return num_options;
 }
 
