@@ -56,6 +56,9 @@
 #include "mock_hks_adapter.h"
 #include "mock_print_extension_callback_proxy.h"
 #include "parameter.h"
+#ifdef REMOTE_SERVICE_ENABLE
+#include "remote_constants.h"
+#endif // REMOTE_SERVICE_ENABLE
 
 using namespace testing;
 using namespace testing::ext;

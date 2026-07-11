@@ -102,6 +102,8 @@ namespace OHOS::Print {
     }
 
 enum PrintErrorCode {
+    E_PRINT_ACCOUNT_ERROR = -5,
+    E_PRINT_NETWORK_ERROR = -3,
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,
     E_PRINT_ILLEGAL_USE_OF_SYSTEM_API = 202,

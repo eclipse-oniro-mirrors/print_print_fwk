@@ -24,6 +24,8 @@ config("print_service_config") {
     "${_service_path}/include",
     "${_service_path}/include/remote",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_utils_path}/include",
   ]
   cflags_cc += [
     "-fno-exceptions",
@@ -94,6 +96,7 @@ _external_deps = [
   "ability_runtime:ability_manager",
   "ability_runtime:abilitykit_native",
   "ability_runtime:app_manager",
+  "ability_runtime:extension_manager",
   "access_token:libaccesstoken_sdk",
   "bundle_framework:appexecfwk_base",
   "bundle_framework:appexecfwk_core",
@@ -350,10 +353,10 @@ ohos_static_library("print_service_test") {
 
   if (print_fwk_feature_remote_service) {
     sources += [
-      "${_service_path}/src/remote/remote_printer_manager.cpp",
       "${_service_path}/src/remote/remote_service_adapter.cpp",
-      "${_service_path}/src/remote/remote_callback_stub.cpp",
       "${_service_path}/src/remote/print_ipc_connection.cpp",
+      "${_service_path}/src/remote/remote_printer_manager.cpp",
+      "${_service_path}/src/remote/remote_callback_stub.cpp",
     ]
     cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }

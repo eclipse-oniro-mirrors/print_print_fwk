@@ -242,6 +242,8 @@ private:
     bool RemoveSinglePrinterInfo(const std::string &printerId);
     void HandlePrinterStateChangeRegister(const std::string &eventType);
     void HandlePrinterChangeRegister(const std::string &eventType);
+    bool GetBundleInfo(AppExecFwk::BundleInfo &bundleInfo);
+    bool IsExtensionPrintJob(const std::string &cid);
 #ifdef HAVE_SMB_PRINTER
     void TryStartSmbPrinterStatusMonitor();
     int32_t ConnectSmbPrinter(PrinterInfo& printerInfo, const std::string &ppdNameInput = "");

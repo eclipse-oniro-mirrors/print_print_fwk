@@ -30,6 +30,7 @@ ohos_fuzztest("PrintServiceAddPrinterFunctionFuzzTest") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
     "${_service_path}/include/event_callback",
+    "${_service_path}/include/remote",
     "${print_utils_path}/include",
   ]
 
