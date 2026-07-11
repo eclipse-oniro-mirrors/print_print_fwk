@@ -1469,6 +1469,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    infoJson["deviceId"] = printerInfo.GetDeviceId();
     std::string outputFormat =
         PrintCloudConfigManager::GetInstance().MatchPrinterMakeInCloudConfig(printerInfo.GetPrinterMake());
     if (!outputFormat.empty()) {

@@ -1318,6 +1318,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    infoJson["deviceId"] = printerInfo.GetDeviceId();
     UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
 
     PrintPageSize pageSize;
