@@ -5941,7 +5941,8 @@ int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const
     return AddSinglePrinterInfo(info, extensionId);
 }
 
-bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri, std::string &matchedPrinterId, PrinterInfo &matchedPrinter)
+bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
+    std::string &matchedPrinterId, PrinterInfo &matchedPrinter)
 {
     std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
     
