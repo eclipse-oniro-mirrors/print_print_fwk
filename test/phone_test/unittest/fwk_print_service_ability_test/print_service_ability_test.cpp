@@ -5861,6 +5861,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectRemotePrinter_not_added, TestSize.Level
     PrinterInfo info;
     info.SetPrinterId(printerId);
     info.SetPrinterName(printerId);
+    info.SetUri("test_uri");
 
     EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_NONE);
     EXPECT_EQ(service->ConnectRemotePrinter(globalId), E_PRINT_NONE);
@@ -5877,6 +5878,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectRemotePrinter_printer_added, TestSize.L
     PrinterInfo info;
     info.SetPrinterId(printerId);
     info.SetPrinterName(printerId);
+    info.SetUri("test_uri");
 
     EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_NONE);
     service->printSystemData_.addedPrinterMap_.Insert(globalId, std::make_shared<PrinterInfo>(info));
