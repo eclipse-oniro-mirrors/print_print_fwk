@@ -1371,10 +1371,8 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
         }
         Json::Value optValue = prefOptionsJson[key];
         if (!optValue.isObject()) {
-            userPrefs.SetCustomOption(key, "");
             PRINT_HILOGW("option value is not a json object for key: %{public}s", key.c_str());
         } else if (!optValue.isMember("choice") || !optValue["choice"].isString()) {
-            userPrefs.SetCustomOption(key, "");
             PRINT_HILOGW("option choice is not a string for key: %{public}s", key.c_str());
         } else if (optValue["choice"].asString() != CUSTOM_OPTION_CHOICE) {
             userPrefs.SetCustomOption(key, optValue["choice"].asString());
