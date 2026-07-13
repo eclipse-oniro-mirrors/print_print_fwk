@@ -2145,5 +2145,79 @@ HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_FileInvalidTimestamp_ShouldSk
     EXPECT_TRUE(std::filesystem::exists(dir / "printer_invalid_abcd"));
     CleanupIppRawDataDir();
 }
+
+HWTEST_F(PrintSystemDataTest, UpdatePrinterDeviceId_Success, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string printerId = "test_printer";
+    std::string deviceId = "test_device_id";
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName("TestPrinter");
+    systemData->addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(info));
+
+    EXPECT_TRUE(systemData->UpdatePrinterDeviceId(printerId, deviceId));
+    
+    PrinterInfo retrievedInfo;
+    systemData->QueryAddedPrinterInfoByPrinterId(printerId, retrievedInfo);
+    EXPECT_EQ(retrievedInfo.GetDeviceId(), deviceId);
+}
+
+HWTEST_F(PrintSystemDataTest, UpdatePrinterDeviceId_SameDeviceId, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string printerId = "test_printer";
+    std::string deviceId = "test_device_id";
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName("TestPrinter");
+    info.SetDeviceId(deviceId);
+    systemData->addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(info));
+
+    EXPECT_FALSE(systemData->UpdatePrinterDeviceId(printerId, deviceId));
+}
+
+HWTEST_F(PrintSystemDataTest, UpdatePrinterDeviceId_NotFound, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string printerId = "test_printer";
+    std::string deviceId = "test_device_id";
+
+    EXPECT_FALSE(systemData->UpdatePrinterDeviceId(printerId, deviceId));
+}
+
+HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_WithDeviceId, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string deviceId = "test_device_id";
+
+    PrinterInfo info;
+    info.SetPrinterId("test_printer");
+    info.SetPrinterName("TestPrinter");
+    info.SetDeviceId(deviceId);
+
+    Json::Value printerJson;
+    systemData->ParseInfoToPrinterJson(std::make_shared<PrinterInfo>(info), printerJson);
+    
+    EXPECT_TRUE(printerJson.isMember("deviceId"));
+    EXPECT_EQ(printerJson["deviceId"].asString(), deviceId);
+}
+
+HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_EmptyDeviceId, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+
+    PrinterInfo info;
+    info.SetPrinterId("test_printer");
+    info.SetPrinterName("TestPrinter");
+
+    Json::Value printerJson;
+    systemData->ParseInfoToPrinterJson(std::make_shared<PrinterInfo>(info), printerJson);
+    
+    EXPECT_TRUE(printerJson.isMember("deviceId"));
+    EXPECT_EQ(printerJson["deviceId"].asString(), "");
+}
 }  // namespace Print
 }  // namespace OHOS
