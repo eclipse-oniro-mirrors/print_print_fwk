@@ -4658,6 +4658,8 @@ void PrintServiceAbility::SaveIppRawData(const std::string &printerId, const std
 {
     PRINT_HILOGI("SaveIppRawData printerId: %{public}s", PrintUtils::AnonymizePrinterId(printerId).c_str());
     printSystemData_.SaveIppRawDataFile(printerId, rawData);
+    HisysEventUtil::ReportIppRawData(rawData);
+    PRINT_HILOGI("SaveIppRawData completed");
 }
 
 void PrintServiceAbility::CheckAndUpdateIppRawData(std::shared_ptr<PrinterInfo> printerInfo)

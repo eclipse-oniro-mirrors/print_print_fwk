@@ -38,6 +38,7 @@ namespace OHOS::Print {
     public:
         static void reportBehaviorEvent(std::string name, int behaviorCode, const std::string &msg);
         static void ReportFailureEvent(const HisysEventParams &params);
+        static void ReportIppRawData(const std::string &msg);
         static const int SEND_TASK = 1007;
     private:
         static void ReportPrintFailure(uint32_t subState, const std::string &resourceKey);
@@ -49,6 +50,7 @@ namespace OHOS::Print {
         static constexpr char CONNECT_EXCEPTION_FAULT_EVENT[] = "CONNECT_EXCEPTION";
         static constexpr char PRINT_DOMAIN[] = "PRINT";
         static constexpr char PRINT_EXCEPTION_FAULT_EVENT[] = "PRINT_EXCEPTION";
+        static constexpr char FAULT_CONNECT_PRINT_EVENT[] = "FAULT_CONNECT_PRINT";
         static constexpr char PACKAGE_NAME[] = "PACKAGE_NAME";
         static constexpr char PROCESS_NAME[] = "PROCESS_NAME";
         static constexpr char BEHAVIOR_CODE[] = "BEHAVIOR_CODE";
