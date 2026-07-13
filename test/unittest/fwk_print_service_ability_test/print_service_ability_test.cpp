@@ -3190,7 +3190,43 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, Test
     EXPECT_EQ(ret, E_PRINT_NONE);
     ret = service->CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+    // CUPS conflict check error is now swallowed to prioritize basic parameter modification
+    EXPECT_EQ(ret, E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: CheckPreferencesConflicts_CupsCheckError
+ * @tc.desc: GetPpdNameByPrinterId succeeds but CUPS conflict check returns error, expect E_PRINT_NONE
+ * @tc.type: FUNC
+ * @tc.require: Conflict check errors should be swallowed to ensure basic parameter modification works
+ */
+HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_CupsCheckError, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string printerId = GetDefaultPrinterId();;
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
+        .WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(*service, QueryPPDInformation(_, _))
+        .WillRepeatedly([](const std::string &makeModel, std::string &ppdName) {
+            ppdName = "NonExistent.ppd";
+            return true;
+        });
+
+    // GetPpdNameByPrinterId succeeds, but CUPS CheckPreferencesConflicts fails with non-existent PPD.
+    // New behavior: error is swallowed, returns E_PRINT_NONE to ensure basic parameter modification.
+    int32_t ret = service->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 #endif
 }
 
@@ -7023,12 +7059,43 @@ HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_ManualDriverSelection, T
 
     EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
         .WillOnce(DoAll(SetArgReferee<1>(printerInfo), Return(E_PRINT_NONE)));
-
+    EXPECT_CALL(*service, IsPpdNameValid("manual_ppd_name")).WillOnce(Return(true));
     EXPECT_CALL(*service, QueryPPDInformation(_, _)).Times(0);
 
     int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(ppdName, "manual_ppd_name");
+}
+
+/**
+ * @tc.name: GetPpdNameByPrinterId_ManualDriverInvalidPpdName
+ * @tc.desc: Non-empty, non-"auto" ppdName that fails IsPpdNameValid falls through to auto selection
+ * @tc.type: FUNC
+ * @tc.require: Invalid manual PPD name should fall back to auto driver selection
+ */
+HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_ManualDriverInvalidPpdName, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "test_printer";
+    std::string ppdName;
+
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterMake("HP");
+
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdName("stale_ppd_name");
+    printerInfo.SetSelectedDriver(ppdInfo);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(printerId, _))
+        .WillOnce(DoAll(SetArgReferee<1>(printerInfo), Return(E_PRINT_NONE)));
+    EXPECT_CALL(*service, IsPpdNameValid("stale_ppd_name")).WillOnce(Return(false));
+    EXPECT_CALL(*service, QueryPPDInformation("HP", _))
+        .WillOnce(DoAll(SetArgReferee<1>("auto_ppd"), Return(true)));
+
+    int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ppdName, "auto_ppd");
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_AutoDriverSelection, TestSize.Level1)
