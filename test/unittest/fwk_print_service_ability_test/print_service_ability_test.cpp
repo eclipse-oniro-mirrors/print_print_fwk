@@ -6282,6 +6282,82 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_TRUE(updatedJson.isMember("OtherKey"));
 }
 
+HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_ChoiceNotMember_SetsEmptyOption, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterPreferences preferences;
+    Json::Value prefJson;
+    Json::Value pinOption;
+    pinOption["value"] = "1234";
+    prefJson["CustomPin"] = pinOption;
+    preferences.SetOption(PrintJsonUtil::WriteString(prefJson));
+    PrinterUserPreferences userPrefs;
+
+    std::set<std::string> keys;
+    keys.insert("CustomPin");
+    service->ExtractCustomOptionsFromPreferenceJson(keys, preferences, userPrefs);
+
+    Json::Value updatedJson;
+    PrintJsonUtil::Parse(preferences.GetOption(), updatedJson);
+    EXPECT_FALSE(updatedJson.isMember("CustomPin"));
+    auto extractedOpt = userPrefs.GetCustomOption("CustomPin");
+    ASSERT_NE(extractedOpt, nullptr);
+    EXPECT_TRUE(extractedOpt->choice.empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferenceJson_ChoiceNotString_SetsEmptyOption, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterPreferences preferences;
+    Json::Value prefJson;
+    Json::Value pinOption;
+    pinOption["choice"] = 123;
+    pinOption["value"] = "1234";
+    prefJson["CustomPin"] = pinOption;
+    preferences.SetOption(PrintJsonUtil::WriteString(prefJson));
+    PrinterUserPreferences userPrefs;
+
+    std::set<std::string> keys;
+    keys.insert("CustomPin");
+    service->ExtractCustomOptionsFromPreferenceJson(keys, preferences, userPrefs);
+
+    Json::Value updatedJson;
+    PrintJsonUtil::Parse(preferences.GetOption(), updatedJson);
+    EXPECT_FALSE(updatedJson.isMember("CustomPin"));
+    auto extractedOpt = userPrefs.GetCustomOption("CustomPin");
+    ASSERT_NE(extractedOpt, nullptr);
+    EXPECT_TRUE(extractedOpt->choice.empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, ProcessSingleCustomOption_ValueNotMember_SetsEmptyOption, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    Json::Value optionJson;
+    optionJson["choice"] = CUSTOM_OPTION_CHOICE;
+    PrinterUserPreferences userPrefs;
+
+    service->ProcessSingleCustomOption("CustomPin", optionJson, userPrefs);
+
+    auto extractedOpt = userPrefs.GetCustomOption("CustomPin");
+    ASSERT_NE(extractedOpt, nullptr);
+    EXPECT_TRUE(extractedOpt->choice.empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, ProcessSingleCustomOption_ValueNotString_SetsEmptyOption, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    Json::Value optionJson;
+    optionJson["choice"] = CUSTOM_OPTION_CHOICE;
+    optionJson["value"] = 123;
+    PrinterUserPreferences userPrefs;
+
+    service->ProcessSingleCustomOption("CustomPin", optionJson, userPrefs);
+
+    auto extractedOpt = userPrefs.GetCustomOption("CustomPin");
+    ASSERT_NE(extractedOpt, nullptr);
+    EXPECT_TRUE(extractedOpt->choice.empty());
+}
+
 HWTEST_F(PrintServiceAbilityTest,
     ExtractCustomOptionsFromPreferences_CustomOptionKeysNotEmpty_EmptyPreferenceOption, TestSize.Level1)
 {

@@ -1369,8 +1369,18 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
         if (!prefOptionsJson.isMember(key)) {
             continue;
         }
-        if (prefOptionsJson[key].isObject()) {
-            ProcessSingleCustomOption(key, prefOptionsJson[key], userPrefs);
+        Json::Value optValue = prefOptionsJson[key];
+        if (!optValue.isObject()) {
+            userPrefs.SetCustomOption(key, "");
+            PRINT_HILOGW("option value is not a json object for key: %{public}s", key.c_str());
+        } else if (!optValue.isMember("choice") || !optValue["choice"].isString()) {
+            userPrefs.SetCustomOption(key, "");
+            PRINT_HILOGW("option choice is not a string for key: %{public}s", key.c_str());
+        } else if (optValue["choice"].asString() != CUSTOM_OPTION_CHOICE) {
+            userPrefs.SetCustomOption(key, optValue["choice"].asString());
+            PRINT_HILOGI("non-custom option for key: %{public}s", key.c_str());
+        } else {
+            ProcessSingleCustomOption(key, optValue, userPrefs);
         }
         prefOptionsJson.removeMember(key);
         hasModified = true;
@@ -1384,16 +1394,9 @@ void PrintServiceAbility::ExtractCustomOptionsFromPreferenceJson(std::set<std::s
 void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
     const Json::Value &optionJson, PrinterUserPreferences &userPrefs)
 {
-    if (!optionJson.isObject()) {
+    if (!optionJson.isMember("value") || !optionJson["value"].isString()) {
         userPrefs.SetCustomOption(key, "");
-        PRINT_HILOGW("option value is not a json object for key: %{public}s", key.c_str());
-        return;
-    }
-
-    std::string choice = optionJson["choice"].asString();
-    if (choice != CUSTOM_OPTION_CHOICE) {
-        userPrefs.SetCustomOption(key, choice);
-        PRINT_HILOGI("non-custom option for key: %{public}s", key.c_str());
+        PRINT_HILOGW("custom option value is not a string for key: %{public}s", key.c_str());
         return;
     }
 
