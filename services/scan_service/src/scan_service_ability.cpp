@@ -252,6 +252,7 @@ void ScanServiceAbility::CleanupScanService()
     openedScannerList_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
+    rediscoverPending_.store(false);
     scannerState_.store(SCANNER_READY);
     scanPictureData_.CleanAllCache();
 }
@@ -435,14 +436,12 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info, std::vector<ScanD
 
 void ScanServiceAbility::SaneGetScanner()
 {
-    scannerState_.store(SCANNER_SEARCHING);
     ScanMdnsService::GetInstance().OnStartDiscoverService();
     SaneManagerClient::GetInstance()->SaneInit();
     std::vector<SaneDevice> saneDeviceInfos;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(saneDeviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
-        scannerState_.store(SCANNER_READY);
         return;
     }
     std::vector<ScanDeviceInfo> scanDeviceInfos;
@@ -460,7 +459,6 @@ void ScanServiceAbility::SaneGetScanner()
         SendDeviceInfo(scanDeviceInfo, SCAN_DEVICE_FOUND);
     }
     SendDeviceList(scanDeviceInfos, GET_SCANNER_DEVICE_LIST);
-    scannerState_.store(SCANNER_READY);
 }
 
 int32_t ScanServiceAbility::GetScannerList()
@@ -470,8 +468,17 @@ int32_t ScanServiceAbility::GetScannerList()
     }
     ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
+    int32_t expected = SCANNER_READY;
+    if (!scannerState_.compare_exchange_strong(expected, SCANNER_SEARCHING)) {
+        rediscoverPending_.store(true);
+        SCAN_HILOGI("discovery in progress, mark pending rediscover");
+        return E_SCAN_NONE;
+    }
     auto exec_sane_getscaner = [=]() {
-        SaneGetScanner();
+        do {
+            SaneGetScanner();
+        } while (rediscoverPending_.exchange(false));
+        scannerState_.store(SCANNER_READY);
     };
     SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
@@ -987,17 +994,13 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
-    auto addScannerExe = [uniqueId, discoverMode, this]() {
-        if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
-            AddUsbScanner(uniqueId, discoverMode);
-        } else if (discoverMode == ScannerDiscoveryMode::TCP_MODE) {
-            AddNetScanner(uniqueId, discoverMode);
-        } else {
-            SCAN_HILOGE("discoverMode is invalid.");
-        }
-    };
-    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
-    serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
+    if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
+        AddUsbScanner(uniqueId, discoverMode);
+    } else if (discoverMode == ScannerDiscoveryMode::TCP_MODE) {
+        AddNetScanner(uniqueId, discoverMode);
+    } else {
+        SCAN_HILOGE("discoverMode is invalid.");
+    }
     return E_SCAN_NONE;
 }
 
