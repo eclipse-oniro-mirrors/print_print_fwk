@@ -6952,6 +6952,63 @@ HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_changeAlias, TestSize.Lev
     EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_NONE);
 }
 
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_withoutUri, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    std::string printerId = "id";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(printerId);
+    info.SetAlias(printerId);
+
+    EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_uriMatch, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    std::string printerId1 = "device1";
+    std::string printerId2 = "device2";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId1 = PrintUtils::GetGlobalId(extensionId, printerId1);
+    std::string uri = "test_uri";
+
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId1);
+    existingPrinter.SetPrinterName(printerId1);
+    existingPrinter.SetAlias(printerId1);
+    existingPrinter.SetUri(uri);
+    existingPrinter.SetDeviceId(printerId1);
+
+    service->printSystemData_.addedPrinterMap_.Insert(globalId1, std::make_shared<PrinterInfo>(existingPrinter));
+
+    PrinterInfo newPrinter;
+    newPrinter.SetPrinterId(printerId2);
+    newPrinter.SetPrinterName(printerId2);
+    newPrinter.SetAlias(printerId2);
+    newPrinter.SetUri(uri);
+    newPrinter.SetDeviceId(printerId2);
+
+    EXPECT_EQ(service->AddRemotePrinterInfo(newPrinter, extensionId), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrinterInfo_deviceId, TestSize.Level1)
+{
+    PrinterInfo info;
+    
+    std::string deviceId = "test_device_id";
+    info.SetDeviceId(deviceId);
+    EXPECT_EQ(info.GetDeviceId(), deviceId);
+
+    std::string emptyDeviceId = "";
+    info.SetDeviceId(emptyDeviceId);
+    EXPECT_EQ(info.GetDeviceId(), emptyDeviceId);
+}
+
 HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_remoteprinter, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
