@@ -22,7 +22,6 @@
 #include <securec.h>
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <algorithm>
 
 namespace OHOS::Print {
@@ -44,7 +43,6 @@ std::string PrintCloudConfigManager::GetCloudConfigFilePath()
 {
     std::string dataVersion = GetVersionFromDir(DATA_PRINTER_DIR);
     std::string sysVersion = GetVersionFromDir(SYSTEM_PRINTER_DIR);
-
     if (dataVersion.empty() && sysVersion.empty()) {
         PRINT_HILOGW("both version files not found");
         return "";
@@ -68,24 +66,10 @@ std::string PrintCloudConfigManager::GetCloudConfigFilePath()
 
 int PrintCloudConfigManager::CompareVersion(const std::string &v1, const std::string &v2)
 {
-    auto parse = [](const std::string &v, std::vector<int> &parts) {
-        std::stringstream ss(v);
-        std::string seg;
-        while (std::getline(ss, seg, '.')) {
-            int n = 0;
-            for (char c : seg) {
-                if (c < '0' || c > '9') {
-                    break;
-                }
-                n = n * 10 + (c - '0');
-            }
-            parts.push_back(n);
-        }
-    };
     std::vector<int> parts1;
     std::vector<int> parts2;
-    parse(v1, parts1);
-    parse(v2, parts2);
+    ParseVersionSegments(v1, parts1);
+    ParseVersionSegments(v2, parts2);
     size_t maxLen = std::max(parts1.size(), parts2.size());
     for (size_t i = 0; i < maxLen; i++) {
         int a = (i < parts1.size()) ? parts1[i] : 0;
@@ -97,12 +81,32 @@ int PrintCloudConfigManager::CompareVersion(const std::string &v1, const std::st
     return 0;
 }
 
+void PrintCloudConfigManager::ParseVersionSegments(const std::string &v, std::vector<int> &parts)
+{
+    std::stringstream ss(v);
+    std::string seg;
+    while (std::getline(ss, seg, '.')) {
+        int n = 0;
+        for (char c : seg) {
+            if (c < '0' || c > '9') {
+                break;
+            }
+            n = n * 10 + (c - '0');
+        }
+        parts.push_back(n);
+    }
+}
+
 std::string PrintCloudConfigManager::GetVersionFromDir(const std::string &dir)
 {
     if (dir.empty()) {
         return "";
     }
     std::string versionPath = dir + VERSION_FILE_NAME;
+    if (!PrintUtils::IsPathValid(versionPath)) {
+        PRINT_HILOGW("version path is invalid: %{public}s", versionPath.c_str());
+        return "";
+    }
     std::ifstream file(versionPath);
     if (!file.is_open()) {
         PRINT_HILOGW("version file not found: %{public}s", versionPath.c_str());

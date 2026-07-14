@@ -17,6 +17,7 @@
 #define PRINT_CLOUD_CONFIG_MANAGER_H
 
 #include <string>
+#include <vector>
 
 namespace OHOS::Print {
 
@@ -42,6 +43,7 @@ private:
     PrintCloudConfigManager &operator=(const PrintCloudConfigManager &) = delete;
 
     int CompareVersion(const std::string &v1, const std::string &v2);
+    static void ParseVersionSegments(const std::string &v, std::vector<int> &parts);
     std::string GetVersionFromDir(const std::string &dir);
 };
 
