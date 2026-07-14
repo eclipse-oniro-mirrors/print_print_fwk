@@ -252,7 +252,11 @@ void ScanServiceAbility::CleanupScanService()
     openedScannerList_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
-    rediscoverPending_.store(false);
+    {
+        std::lock_guard<std::mutex> lock(discoverMutex_);
+        rediscoverPending_ = false;
+        discoverInProgress_ = false;
+    }
     scannerState_.store(SCANNER_READY);
     scanPictureData_.CleanAllCache();
 }
@@ -468,17 +472,26 @@ int32_t ScanServiceAbility::GetScannerList()
     }
     ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
-    int32_t expected = SCANNER_READY;
-    if (!scannerState_.compare_exchange_strong(expected, SCANNER_SEARCHING)) {
-        rediscoverPending_.store(true);
-        SCAN_HILOGI("discovery in progress, mark pending rediscover");
-        return E_SCAN_NONE;
+    {
+        std::lock_guard<std::mutex> lock(discoverMutex_);
+        if (discoverInProgress_) {
+            rediscoverPending_ = true;
+            SCAN_HILOGI("discovery in progress, mark pending rediscover");
+            return E_SCAN_NONE;
+        }
+        discoverInProgress_ = true;
     }
     auto exec_sane_getscaner = [=]() {
-        do {
+        while (true) {
             SaneGetScanner();
-        } while (rediscoverPending_.exchange(false));
-        scannerState_.store(SCANNER_READY);
+            std::lock_guard<std::mutex> lock(discoverMutex_);
+            if (rediscoverPending_) {
+                rediscoverPending_ = false;
+                continue;
+            }
+            discoverInProgress_ = false;
+            break;
+        }
     };
     SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
@@ -929,9 +942,12 @@ void ScanServiceAbility::NetScannerLossNotify(const ScanDeviceInfoSync& syncInfo
 
 void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
 {
-    if (scannerState_.load() == SCANNER_SEARCHING) {
-        SCAN_HILOGI("The manufacturer's driver is still under search");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(discoverMutex_);
+        if (discoverInProgress_) {
+            SCAN_HILOGI("discovery in progress, skip escl notification");
+            return;
+        }
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     SCAN_HILOGI("NotifyEsclScannerFound [%{private}s]", info.deviceId.c_str());
