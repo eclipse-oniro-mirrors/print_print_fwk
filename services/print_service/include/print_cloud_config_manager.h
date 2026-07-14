@@ -17,7 +17,6 @@
 #define PRINT_CLOUD_CONFIG_MANAGER_H
 
 #include <string>
-#include <mutex>
 
 namespace OHOS::Print {
 
@@ -42,7 +41,8 @@ private:
     PrintCloudConfigManager(const PrintCloudConfigManager &) = delete;
     PrintCloudConfigManager &operator=(const PrintCloudConfigManager &) = delete;
 
-    std::mutex mutex_;
+    int CompareVersion(const std::string &v1, const std::string &v2);
+    std::string GetVersionFromDir(const std::string &dir);
 };
 
 } // namespace OHOS::Print

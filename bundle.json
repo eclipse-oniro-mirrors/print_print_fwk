@@ -78,8 +78,7 @@
         "api_metrics",
         "ets_frontend",
         "node",
-        "libuv",
-        "config_policy"
+        "libuv"
       ],
       "third_party": [
         "zlib"

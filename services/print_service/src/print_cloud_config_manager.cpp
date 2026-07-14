@@ -19,15 +19,20 @@
 #include "print_json_util.h"
 #include "print_utils.h"
 
-#include "config_policy_utils.h"
-
 #include <securec.h>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <algorithm>
 
 namespace OHOS::Print {
 
-constexpr const char CFG_FILE[] = "etc/com.ohos.spooler/PRINTER/bsuni_output_format.json";
+const std::string SYSTEM_PRINTER_DIR = "/system/etc/com.ohos.spooler/PRINTER/";
+const std::string DATA_PRINTER_DIR =
+    "/data/service/el1/public/update/param_service/install/system/etc/com.ohos.spooler/PRINTER/";
+const std::string VERSION_FILE_NAME = "version.txt";
+const std::string CLOUD_CONFIG_FILE_NAME = "bsuni_output_format.json";
+const std::string VERSION_KEY = "version";
 
 PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
 {
@@ -37,16 +42,101 @@ PrintCloudConfigManager &PrintCloudConfigManager::GetInstance()
 
 std::string PrintCloudConfigManager::GetCloudConfigFilePath()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    std::string cfgPath = "";
-    char buf[MAX_PATH_LEN] = {0};
-    char *path = GetOneCfgFile(CFG_FILE, buf, MAX_PATH_LEN);
-    if (path != nullptr && *path != '\0') {
-        cfgPath = path;
+    std::string dataVersion = GetVersionFromDir(DATA_PRINTER_DIR);
+    std::string sysVersion = GetVersionFromDir(SYSTEM_PRINTER_DIR);
+
+    if (dataVersion.empty() && sysVersion.empty()) {
+        PRINT_HILOGW("both version files not found");
+        return "";
+    }
+    if (dataVersion.empty()) {
+        PRINT_HILOGI("data version not found, use system dir");
+        return SYSTEM_PRINTER_DIR + CLOUD_CONFIG_FILE_NAME;
+    }
+    if (sysVersion.empty()) {
+        PRINT_HILOGI("system version not found, use data dir");
+        return DATA_PRINTER_DIR + CLOUD_CONFIG_FILE_NAME;
     }
 
-    PRINT_HILOGI("GetCloudConfigFilePath result: %{public}s", cfgPath.c_str());
-    return cfgPath;
+    if (CompareVersion(dataVersion, sysVersion) >= 0) {
+        PRINT_HILOGI("data version >= system version, use data dir");
+        return DATA_PRINTER_DIR + CLOUD_CONFIG_FILE_NAME;
+    }
+    PRINT_HILOGI("data version < system version, use system dir");
+    return SYSTEM_PRINTER_DIR + CLOUD_CONFIG_FILE_NAME;
+}
+
+int PrintCloudConfigManager::CompareVersion(const std::string &v1, const std::string &v2)
+{
+    auto parse = [](const std::string &v, std::vector<int> &parts) {
+        std::stringstream ss(v);
+        std::string seg;
+        while (std::getline(ss, seg, '.')) {
+            int n = 0;
+            for (char c : seg) {
+                if (c < '0' || c > '9') {
+                    break;
+                }
+                n = n * 10 + (c - '0');
+            }
+            parts.push_back(n);
+        }
+    };
+    std::vector<int> parts1;
+    std::vector<int> parts2;
+    parse(v1, parts1);
+    parse(v2, parts2);
+    size_t maxLen = std::max(parts1.size(), parts2.size());
+    for (size_t i = 0; i < maxLen; i++) {
+        int a = (i < parts1.size()) ? parts1[i] : 0;
+        int b = (i < parts2.size()) ? parts2[i] : 0;
+        if (a != b) {
+            return (a > b) ? 1 : -1;
+        }
+    }
+    return 0;
+}
+
+std::string PrintCloudConfigManager::GetVersionFromDir(const std::string &dir)
+{
+    if (dir.empty()) {
+        return "";
+    }
+    std::string versionPath = dir + VERSION_FILE_NAME;
+    std::ifstream file(versionPath);
+    if (!file.is_open()) {
+        PRINT_HILOGW("version file not found: %{public}s", versionPath.c_str());
+        return "";
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        size_t pos = line.find('=');
+        if (pos == std::string::npos) {
+            continue;
+        }
+        std::string key = line.substr(0, pos);
+        size_t keyEnd = key.find_last_not_of(" \t\r\n");
+        if (keyEnd == std::string::npos) {
+            continue;
+        }
+        key = key.substr(0, keyEnd + 1);
+        if (key != VERSION_KEY) {
+            continue;
+        }
+        std::string value = line.substr(pos + 1);
+        size_t valStart = value.find_first_not_of(" \t");
+        size_t valEnd = value.find_last_not_of(" \t\r\n");
+        if (valStart == std::string::npos) {
+            file.close();
+            return "";
+        }
+        std::string version = value.substr(valStart, valEnd - valStart + 1);
+        file.close();
+        return version;
+    }
+    file.close();
+    PRINT_HILOGW("version key not found in: %{public}s", versionPath.c_str());
+    return "";
 }
 
 std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::string &printerMake)
@@ -57,6 +147,7 @@ std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::st
     }
 
     std::string filePath = GetCloudConfigFilePath();
+    PRINT_HILOGI("GetCloudConfigFilePath result: %{public}s", filePath.c_str());
     if (filePath.empty()) {
         PRINT_HILOGW("cloud config file path is empty");
         return "";
