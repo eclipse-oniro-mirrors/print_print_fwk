@@ -5945,20 +5945,18 @@ bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
     std::string &matchedPrinterId, PrinterInfo &matchedPrinter)
 {
     std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
-    auto hasMatchingUri = [this, &uri](const std::string &printerId) {
+    for (const auto &printerId : addedPrinterIdList) {
         PrinterInfo addedPrinter;
-        return printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter)
-            && addedPrinter.HasUri() && addedPrinter.GetUri() == uri;
-    };
-    auto it = std::find_if(addedPrinterIdList.begin(), addedPrinterIdList.end(), hasMatchingUri);
-    if (it == addedPrinterIdList.end()) {
-        return false;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter)
+            && addedPrinter.HasUri() && addedPrinter.GetUri() == uri) {
+            matchedPrinter = addedPrinter;
+            matchedPrinterId = printerId;
+            PRINT_HILOGI("URI matched: %{private}s, existing printerId: %{public}s",
+                uri.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
+            return true;
+        }
     }
-    matchedPrinterId = *it;
-    printSystemData_.QueryAddedPrinterInfoByPrinterId(matchedPrinterId, matchedPrinter);
-    PRINT_HILOGI("URI matched: %{private}s, existing printerId: %{public}s",
-        uri.c_str(), PrintUtils::AnonymizePrinterId(matchedPrinterId).c_str());
-    return true;
+    return false;
 }
 
 bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &printerId)
