@@ -91,7 +91,7 @@ void PrintCloudConfigManager::ParseVersionSegments(const std::string &v, std::ve
             if (c < '0' || c > '9') {
                 break;
             }
-            n = n * 10 + (c - '0');
+            n = n * DECIMAL_BASE + (c - '0');
         }
         parts.push_back(n);
     }
