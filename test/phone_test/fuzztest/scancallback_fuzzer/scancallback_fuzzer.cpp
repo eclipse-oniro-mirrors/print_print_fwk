@@ -24,6 +24,7 @@ namespace OHOS::Scan {
 constexpr int MAX_SET_NUMBER = 100;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t FUZZ_NAPI_CALLBACK_ARG_COUNT = 1;
 
 void TestSetCallbackParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
@@ -77,6 +78,26 @@ void TestOnGetDevicesList(const uint8_t* data, size_t size, FuzzedDataProvider* 
     callBack.OnGetDevicesList(infos);
 }
 
+void TestNapiCallFunctionNullParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+{
+    napi_env env = nullptr;
+    napi_ref ref = nullptr;
+    ScanCallback callBack(env, ref);
+    callBack.NapiCallFunction(nullptr, 0, nullptr);
+}
+
+void TestNapiCallFunctionWithParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+{
+    napi_env env = nullptr;
+    napi_ref ref = nullptr;
+    ScanCallback callBack(env, ref);
+    CallbackParam cbParam;
+    std::shared_ptr<std::mutex> mutex = std::make_shared<std::mutex>();
+    cbParam.InitialCallbackParam(env, ref, mutex);
+    napi_value callbackValues[FUZZ_NAPI_CALLBACK_ARG_COUNT] = { nullptr };
+    callBack.NapiCallFunction(&cbParam, FUZZ_NAPI_CALLBACK_ARG_COUNT, callbackValues);
+}
+
 }
 
 /* Fuzzer entry point */
@@ -87,10 +108,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     if (size < OHOS::Scan::U32_AT_SIZE || size > OHOS::Scan::FOO_MAX_LEN) {
-        return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    
+
     PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
@@ -98,7 +118,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         &OHOS::Scan::TestSetCallbackSyncParam,
         &OHOS::Scan::TestOnCallback,
         &OHOS::Scan::TestOnCallbackSync,
-        &OHOS::Scan::TestOnGetDevicesList
+        &OHOS::Scan::TestOnGetDevicesList,
+        &OHOS::Scan::TestNapiCallFunctionNullParam,
+        &OHOS::Scan::TestNapiCallFunctionWithParam
     };
 
     TestHandler handler = dataProvider.PickValueInArray(tasks);
