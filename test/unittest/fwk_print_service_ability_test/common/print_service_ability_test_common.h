@@ -102,7 +102,7 @@ static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.ent
 static const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
-static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string IPPOVERUSB_PREFIX = ":IPP-";
 
 enum EXTENSION_ID_TYPE {

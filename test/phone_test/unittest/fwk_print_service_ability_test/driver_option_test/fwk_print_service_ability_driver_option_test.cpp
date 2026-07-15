@@ -206,7 +206,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshThirdDriverPrinter_CustomDriverPrinter_
 HWTEST_F(PrintServiceAbilityTest, RefreshThirdDriverPrinter_RegularPrinter_NoChange, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string regularId = "com.huawei.hmos.spooler:SomePrinter";
+    std::string regularId = "com.ohos.spooler:SomePrinter";
     PrinterInfo regularInfo;
     regularInfo.SetPrinterId(regularId);
     regularInfo.SetPrinterName("SomePrinter");

@@ -43,7 +43,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     std::vector<std::string> keyList;
     std::vector<std::string> valueList;
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
@@ -58,7 +58,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     PrinterInfo info;
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_INVALID_PRINTER);
     auto printerInfo = std::make_shared<PrinterInfo>();
@@ -84,7 +84,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     PrinterInfo info;
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_INVALID_PRINTER);
     auto printerInfo = std::make_shared<PrinterInfo>();
@@ -107,7 +107,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
     std::vector<std::string> keyList;
@@ -123,7 +123,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
     std::string savePrinterPreference = "test";
@@ -140,7 +140,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
@@ -151,7 +151,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
@@ -162,7 +162,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     PrinterCapability printerCaps;
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
     service->printSystemData_.discoveredPrinterInfoList_["123"] = nullptr;
@@ -202,7 +202,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
@@ -243,19 +243,19 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0140_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:testPrinterId";
+    std::string printerId = "com.ohos.spooler:testPrinterId";
     PrinterInfo info;
     info.SetPrinterId(printerId);
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     service->printSystemData_.AddPrinterToDiscovery(infoPtr);
-    std::string extensionId = "com.huawei.hmos.spooler";
+    std::string extensionId = "com.ohos.spooler";
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:testPrinterId";
+    std::string printerId = "com.ohos.spooler:testPrinterId";
     auto printer = std::make_shared<PrinterInfo>();
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
     PrinterInfo info;
