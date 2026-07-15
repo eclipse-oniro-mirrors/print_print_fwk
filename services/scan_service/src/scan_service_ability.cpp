@@ -89,7 +89,8 @@ static const std::unordered_map<std::string, std::string> SCAN_PERMISSION_MAP = 
     {SCAN_DEVICE_FOUND, PERMISSION_NAME_PRINT},
     {SCAN_DEVICE_SYNC, PERMISSION_NAME_PRINT},
     {SCAN_DEVICE_ADD, PERMISSION_NAME_PRINT_JOB},
-    {SCAN_DEVICE_DEL, PERMISSION_NAME_PRINT_JOB}};
+    {SCAN_DEVICE_DEL, PERMISSION_NAME_PRINT_JOB},
+    {GET_SCANNER_DEVICE_LIST, PERMISSION_NAME_PRINT}};
 
 std::map<std::string, sptr<IScanCallback>> OHOS::Scan::ScanServiceAbility::registeredListeners_;
 
