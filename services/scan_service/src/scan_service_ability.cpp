@@ -472,6 +472,12 @@ int32_t ScanServiceAbility::GetScannerList()
     }
     ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
+    // USB device insertion triggers multiple USB attach events, each calling
+    // GetScannerList, causing multiple SaneGetScanner tasks to pile up in the
+    // single-threaded serviceHandler_ queue and blocking subsequent async tasks
+    // such as AddScanner. Use coalescing dedup here: if discovery is in progress,
+    // do not post a new task, just mark rediscoverPending_ and let the current
+    // round pick it up after it finishes.
     {
         std::lock_guard<std::mutex> lock(discoverMutex_);
         if (discoverInProgress_) {
@@ -484,6 +490,9 @@ int32_t ScanServiceAbility::GetScannerList()
     auto exec_sane_getscaner = [=]() {
         while (true) {
             SaneGetScanner();
+            // After the current discovery round finishes, check whether a new
+            // discovery request arrived during the round (device inserted while
+            // discovery was running).
             std::lock_guard<std::mutex> lock(discoverMutex_);
             if (rediscoverPending_) {
                 rediscoverPending_ = false;
