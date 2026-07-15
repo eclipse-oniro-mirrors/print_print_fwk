@@ -14,6 +14,7 @@
  */
 #include "print_service_ability.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <ctime>
 #include <string>
@@ -1318,6 +1319,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    infoJson["deviceId"] = printerInfo.GetDeviceId();
     UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
 
     PrintPageSize pageSize;
@@ -5907,21 +5909,56 @@ int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const
     PRINT_HILOGI("[Printer: %{public}s] AddRemotePrinterInfo start",
         PrintUtils::AnonymizePrinterId(info.GetPrinterId()).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PrinterInfo addedInfo;
-    std::string globalPrinterId = PrintUtils::GetGlobalId(extensionId, info.GetPrinterId());
-    if (QueryAddedPrinterInfoByPrinterId(globalPrinterId, addedInfo) &&
-        addedInfo.GetAlias() != info.GetAlias()) {
-        PRINT_HILOGI("PrinterAlias Modify %{public}s -> %{public}s",
-            addedInfo.GetAlias().c_str(), info.GetAlias().c_str());
-        
-        addedInfo.SetAlias(info.GetAlias());
-        printSystemData_.UpdatePrinterAlias(globalPrinterId, info.GetAlias());
-        printSystemData_.SavePrinterFile(globalPrinterId);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, addedInfo);
+
+    if (!info.HasUri()) {
+        PRINT_HILOGW("Printer has no URI, considered invalid");
+        return E_PRINT_INVALID_PRINTER;
     }
-    return AddSinglePrinterInfo(info, extensionId);
+
+    std::string matchedPrinterId;
+    PrinterInfo matchedPrinter;
+    if (!MatchPrinterByUri(info.GetUri(), matchedPrinterId, matchedPrinter)) {
+        return AddSinglePrinterInfo(info, extensionId);
+    }
+
+    bool needSave = false;
+    if (printSystemData_.UpdatePrinterAlias(matchedPrinterId, info.GetAlias())) {
+        PRINT_HILOGI("PrinterAlias Modify %{private}s -> %{private}s",
+            matchedPrinter.GetAlias().c_str(), info.GetAlias().c_str());
+        matchedPrinter.SetAlias(info.GetAlias());
+        SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, matchedPrinter);
+        needSave = true;
+    }
+    if (printSystemData_.UpdatePrinterDeviceId(matchedPrinterId, info.GetDeviceId())) {
+        needSave = true;
+    }
+    if (needSave) {
+        printSystemData_.SavePrinterFile(matchedPrinterId);
+    }
+    std::string localPrinterId = PrintUtils::GetLocalId(matchedPrinterId, extensionId);
+    PrinterInfo updatedInfo = info;
+    updatedInfo.SetPrinterId(localPrinterId);
+    return AddSinglePrinterInfo(updatedInfo, extensionId);
 }
- 
+
+bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
+    std::string &matchedPrinterId, PrinterInfo &matchedPrinter)
+{
+    std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (const auto &printerId : addedPrinterIdList) {
+        PrinterInfo addedPrinter;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter)
+            && addedPrinter.HasUri() && addedPrinter.GetUri() == uri) {
+            matchedPrinter = addedPrinter;
+            matchedPrinterId = printerId;
+            PRINT_HILOGI("URI matched: %{private}s, existing printerId: %{public}s",
+                uri.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
 bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &printerId)
 {
     PRINT_HILOGI("[Printer: %{public}s] RemoveRemotePrinterInfo start",

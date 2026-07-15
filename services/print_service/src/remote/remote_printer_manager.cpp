@@ -118,6 +118,7 @@ void RemotePrinterManager::SetDefaultCapability(PrinterCapability &capability)
     capability.SetSupportedPageSize(DEFAULT_PAGE_SIZE_LIST);
     capability.SetSupportedMediaType(DEFAULT_MEDIA_TYPE_LIST);
     capability.SetSupportedDuplexMode(DEFAULT_DUPLEX_MODE_LIST);
+    capability.SetDuplexMode(DUPLEX_MODE_SHORT_EDGE);
 }
 
 bool RemotePrinterManager::BuildPrinterInfo(const Json::Value &item, PrinterInfo &printerInfo)
@@ -159,6 +160,7 @@ bool RemotePrinterManager::BuildPrinterInfo(const Json::Value &item, PrinterInfo
     printerInfo.SetUri(sn);
     printerInfo.SetPrinterUuid(sn);
     printerInfo.SetPrinterMake(prodId);
+    printerInfo.SetDeviceId(devId);
 
     PrinterCapability capability;
     SetDefaultCapability(capability);

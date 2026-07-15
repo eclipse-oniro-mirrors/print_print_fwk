@@ -70,6 +70,8 @@ public:
 
     void SetOriginId(const std::string &originId);
 
+    void SetDeviceId(const std::string &deviceId);
+
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
@@ -141,6 +143,8 @@ public:
     [[nodiscard]] bool HasOriginId() const;
 
     [[nodiscard]] std::string GetOriginId() const;
+
+    [[nodiscard]] const std::string &GetDeviceId() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -235,6 +239,8 @@ private:
     bool hasOriginId_;
 
     std::string originId_;
+
+    std::string deviceId_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H
