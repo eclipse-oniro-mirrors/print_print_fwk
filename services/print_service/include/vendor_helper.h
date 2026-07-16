@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace Print {
 char *CopyString(const std::string &source);
+void RemoveIpFieldsFromRawData(std::string &rawData);
 bool ConvertStringToLong(const char *src, long &dst);
 bool ConvertColorMode(const Print_ColorMode &code, uint32_t &dst);
 bool ConvertDuplexMode(const Print_DuplexMode &code, uint32_t &dst);

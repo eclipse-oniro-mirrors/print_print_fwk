@@ -561,7 +561,9 @@ void VendorBsuniDriver::OnIppRawDataQueried(std::shared_ptr<std::string> printer
     }
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(vendorManager);
     PRINT_HILOGI("IPP raw data queried");
-    vendorManager->OnPrinterIppRawDataQueried(*printerId, *rawData);
+    std::string cleanedRawData = *rawData;
+    RemoveIpFieldsFromRawData(cleanedRawData);
+    vendorManager->OnPrinterIppRawDataQueried(*printerId, cleanedRawData);
 }
 
 std::string VendorBsuniDriver::CreateUriByIpAndProtocol(const std::string &ip, const std::string &protocol)

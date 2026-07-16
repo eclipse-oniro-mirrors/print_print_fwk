@@ -14,6 +14,7 @@
  */
 
 #include <securec.h>
+#include <regex>
 #include "vendor_helper.h"
 #include "print_service_converter.h"
 #include "print_log.h"
@@ -43,6 +44,35 @@ char *CopyString(const std::string &source)
     }
     dest[len] = '\0';
     return dest;
+}
+
+void RemoveIpFieldsFromRawData(std::string &rawData)
+{
+    Json::Value root;
+    if (!PrintJsonUtil::Parse(rawData, root)) {
+        PRINT_HILOGW("parse rawData json failed, keep original");
+        return;
+    }
+    static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+        R"(|(?:[0-9a-fA-F]{1,4}:)*::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)"
+        R"(|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})");
+    std::vector<std::string> keysToRemove;
+    for (const std::string &key : root.getMemberNames()) {
+        const Json::Value &value = root[key];
+        if (value.isString() && std::regex_search(value.asString(), ipRegex)) {
+            PRINT_HILOGD("remove ip field: %{public}s", key.c_str());
+            keysToRemove.push_back(key);
+        }
+    }
+    for (const std::string &key : keysToRemove) {
+        root.removeMember(key);
+    }
+    std::string cleaned = PrintJsonUtil::WriteString(root);
+    if (cleaned.empty()) {
+        PRINT_HILOGW("write rawData json failed, keep original");
+        return;
+    }
+    rawData = cleaned;
 }
 
 template <typename T1, typename T2>

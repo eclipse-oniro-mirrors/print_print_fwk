@@ -17,6 +17,7 @@
 #include "vendor_helper.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "print_json_util.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -324,6 +325,130 @@ HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
     detailInfo = PROTOCOL_JSON;
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+}
+
+static bool JsonContainsKey(const std::string &jsonStr, const std::string &key)
+{
+    Json::Value root;
+    if (!PrintJsonUtil::Parse(jsonStr, root)) {
+        return false;
+    }
+    return PrintJsonUtil::IsMember(root, key);
+}
+
+static bool JsonStringValueIs(const std::string &jsonStr, const std::string &key, const std::string &expected)
+{
+    Json::Value root;
+    if (!PrintJsonUtil::Parse(jsonStr, root)) {
+        return false;
+    }
+    std::string actual;
+    if (!PrintJsonUtil::FindJsonStringMember(root, key, actual)) {
+        return false;
+    }
+    return actual == expected;
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_InvalidJson_KeepOriginal, TestSize.Level1)
+{
+    std::string input = "";
+    std::string original = input;
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_EQ(input, original);
+
+    input = "{invalid json";
+    original = input;
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_EQ(input, original);
+
+    input = "plain text not json";
+    original = input;
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_EQ(input, original);
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_NonStringValue_KeepAllFields, TestSize.Level1)
+{
+    std::string input = "{\"port\":631,\"tls\":true,\"copies\":99,\"list\":[\"192.168.1.1\"],"
+        "\"obj\":{\"host\":\"10.0.0.1\"}}";
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_TRUE(JsonContainsKey(input, "port"));
+    EXPECT_TRUE(JsonContainsKey(input, "tls"));
+    EXPECT_TRUE(JsonContainsKey(input, "copies"));
+    EXPECT_TRUE(JsonContainsKey(input, "list"));
+    EXPECT_TRUE(JsonContainsKey(input, "obj"));
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_StringWithoutIp_KeepAllFields, TestSize.Level1)
+{
+    std::string input = "{\"printer-uuid\":\"urn:uuid:cfe92100-67c4-lld4-a45f-dccd2fbedl6e\","
+        "\"uri-security-supported\":\"tls, node\","
+        "\"printer-name\":\"Office Printer\","
+        "\"ipp-versions\":\"1.1, 2.0\","
+        "\"mac\":\"00:1a:2b:3c:4d:5e\"}";
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_TRUE(JsonStringValueIs(input, "printer-uuid", "urn:uuid:cfe92100-67c4-lld4-a45f-dccd2fbedl6e"));
+    EXPECT_TRUE(JsonStringValueIs(input, "uri-security-supported", "tls, node"));
+    EXPECT_TRUE(JsonStringValueIs(input, "printer-name", "Office Printer"));
+    EXPECT_TRUE(JsonStringValueIs(input, "ipp-versions", "1.1, 2.0"));
+    EXPECT_TRUE(JsonStringValueIs(input, "mac", "00:1a:2b:3c:4d:5e"));
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_StringWithIpv4_RemoveFields, TestSize.Level1)
+{
+    std::string input = "{\"printer-uri-supported\":\"ipps://192.168.2.106:631/ipp/print, "
+        "ipp://192.168.2.106:631/ipp/print\","
+        "\"printer-uuid\":\"urn:uui:cfe92100-67c4-lld4-a45f-dccd2fbedl6e\","
+        "\"printer=more-info\":\"http://192.168.2.106:80/PRESENTATION/BONJOUR\","
+        "\"uri-security-supported\":\"tls, node\"}";
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_FALSE(JsonContainsKey(input, "printer-uri-supported"));
+    EXPECT_FALSE(JsonContainsKey(input, "printer=more-info"));
+    EXPECT_TRUE(JsonStringValueIs(input, "printer-uuid", "urn:uui:cfe92100-67c4-lld4-a45f-dccd2fbedl6e"));
+    EXPECT_TRUE(JsonStringValueIs(input, "uri-security-supported", "tls, node"));
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_StringWithIpv6Compressed_RemoveFields, TestSize.Level1)
+{
+    std::string input = "{\"uri\":\"ipps://[fe80::1]:631/ipp/print\","
+        "\"name\":\"printerA\","
+        "\"v6\":\"2001:db8::8a2e:370:7334\","
+        "\"loopback\":\"::1\","
+        "\"trailing\":\"fe80::\","
+        "\"dual\":\"::ffff:192.168.1.1\"}";
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_FALSE(JsonContainsKey(input, "uri"));
+    EXPECT_FALSE(JsonContainsKey(input, "v6"));
+    EXPECT_FALSE(JsonContainsKey(input, "loopback"));
+    EXPECT_FALSE(JsonContainsKey(input, "trailing"));
+    EXPECT_FALSE(JsonContainsKey(input, "dual"));
+    EXPECT_TRUE(JsonStringValueIs(input, "name", "printerA"));
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_StringWithIpv6Full_RemoveFields, TestSize.Level1)
+{
+    std::string input = "{\"full\":\"2001:0db8:85a3:08d3:1319:8a2e:0370:7334\","
+        "\"mac\":\"00:1a:2b:3c:4d:5e\","
+        "\"name\":\"printerB\","
+        "\"seven\":\"1:2:3:4:5:6:7\"}";
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_FALSE(JsonContainsKey(input, "full"));
+    EXPECT_TRUE(JsonStringValueIs(input, "mac", "00:1a:2b:3c:4d:5e"));
+    EXPECT_TRUE(JsonStringValueIs(input, "name", "printerB"));
+    EXPECT_TRUE(JsonStringValueIs(input, "seven", "1:2:3:4:5:6:7"));
+}
+
+HWTEST_F(VendorHelperTest, RemoveIpFieldsFromRawData_AllFieldsMatchIp_BecomeEmptyObject, TestSize.Level1)
+{
+    std::string input = "{}";
+    RemoveIpFieldsFromRawData(input);
+    EXPECT_EQ(input, "{}");
+
+    input = "{\"a\":\"1.2.3.4\",\"b\":\"::1\",\"c\":\"2001:db8::1\"}";
+    RemoveIpFieldsFromRawData(input);
+    Json::Value root;
+    ASSERT_TRUE(PrintJsonUtil::Parse(input, root));
+    EXPECT_TRUE(root.getMemberNames().empty());
 }
 }  // namespace Print
 }  // namespace OHOS
