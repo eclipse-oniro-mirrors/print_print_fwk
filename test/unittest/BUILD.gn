@@ -24,7 +24,7 @@ if (!print_fwk_feature_device_isolation) {
       "${_test_base_path}/fwk_print_cups_client_test:fwk_print_cups_client_test",
       "${_test_base_path}/fwk_print_helper_test:fwk_print_helper_test",
       "${_test_base_path}/fwk_print_models_test:fwk_print_models_test",
-      "${_test_base_path}/fwk_print_service_ability_test:fwk_print_service_ability_test",
+      "${_test_base_path}/fwk_print_service_ability_test:unittest",
       "${_test_base_path}/service_test:print_service_test",
       "${_test_base_path}/service_test:scan_task_test",
       "${_test_base_path}/extension_test:print_ext_test",
