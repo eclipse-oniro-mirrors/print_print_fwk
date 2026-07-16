@@ -632,8 +632,6 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertSupportedOrientationToJson(printerCapability, capsJson);
     }
 
-    ConvertVendorAbilityToJson(printerCapability, capsJson);
-
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
         std::istringstream iss(options);
@@ -712,17 +710,6 @@ void PrintSystemData::ConvertSupportedOrientationToJson(PrinterCapability &print
         supportedOrientationListJson.append(iter);
     }
     capsJson["supportedOrientation"] = supportedOrientationListJson;
-}
-
-void PrintSystemData::ConvertVendorAbilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson)
-{
-    if (printerCapability.HasVendorPrinterPrefAbility()) {
-        capsJson["vendorPrinterPrefAbility"] = printerCapability.GetVendorPrinterPrefAbility();
-    }
-
-    if (printerCapability.HasVendorJobAttrAbility()) {
-        capsJson["vendorJobAttrAbility"] = printerCapability.GetVendorJobAttrAbility();
-    }
 }
 
 void PrintSystemData::ConvertPageSizeToJson(PrinterCapability &printerCapability, Json::Value &capsJson)
@@ -820,10 +807,6 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, Prin
         PRINT_HILOGD("find options");
         printerCapability.SetOption(PrintJsonUtil::WriteString(capsJson["options"]));
     }
-
-    if (!ConvertJsonToVendorAbility(capsJson, printerCapability)) {
-        PRINT_HILOGW("convert json to vendor ability failed.");
-    }
     return true;
 }
 
@@ -917,20 +900,6 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(Json::Value &capsJson, P
             orientation = item.asInt();
             return true;
         });
-}
-
-bool PrintSystemData::ConvertJsonToVendorAbility(Json::Value &capsJson, PrinterCapability &printerCapability)
-{
-    if (PrintJsonUtil::IsMember(capsJson, "vendorPrinterPrefAbility") &&
-        capsJson["vendorPrinterPrefAbility"].isString()) {
-        printerCapability.SetVendorPrinterPrefAbility(capsJson["vendorPrinterPrefAbility"].asString());
-    }
-
-    if (PrintJsonUtil::IsMember(capsJson, "vendorJobAttrAbility") &&
-        capsJson["vendorJobAttrAbility"].isString()) {
-        printerCapability.SetVendorJobAttrAbility(capsJson["vendorJobAttrAbility"].asString());
-    }
-    return true;
 }
 
 bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability)
