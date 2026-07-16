@@ -14,6 +14,9 @@
  */
 
 #include "print_service_ability_test_common.h"
+#ifdef REMOTE_SERVICE_ENABLE
+#include "remote/remote_constants.h"
+#endif
 
 namespace OHOS {
 namespace Print {
@@ -893,6 +896,7 @@ HWTEST_F(PrintServiceAbilityTest, SetPrinterCapabilityAndRegister_FindMakeFailed
     EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
 }
 
+#ifdef REMOTE_SERVICE_ENABLE
 HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_withoutUri, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -936,6 +940,7 @@ HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_uriMatch, TestSize.Level1
  
     EXPECT_EQ(service->AddRemotePrinterInfo(newPrinter, extensionId), E_PRINT_NONE);
 }
+#endif
  
 HWTEST_F(PrintServiceAbilityTest, PrinterInfo_deviceId, TestSize.Level1)
 {
@@ -949,7 +954,8 @@ HWTEST_F(PrintServiceAbilityTest, PrinterInfo_deviceId, TestSize.Level1)
     info.SetDeviceId(emptyDeviceId);
     EXPECT_EQ(info.GetDeviceId(), emptyDeviceId);
 }
- 
+
+#ifdef REMOTE_SERVICE_ENABLE
 HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_uriMatch_changeAlias, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -1063,6 +1069,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_withDeviceId, 
     EXPECT_TRUE(service->UpdatePrintJobOptionByPrinterId(printJob));
     EXPECT_NE(printJob.GetOption().find(deviceId), std::string::npos);
 }
+#endif
 
 }  // namespace Print
 }  // namespace OHOS
