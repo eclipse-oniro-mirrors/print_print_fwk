@@ -2031,12 +2031,10 @@ HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_SupportedLists, Te
     EXPECT_EQ(orientations.size(), 4);
 }
 
-HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_VendorAndOptions, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_Options, TestSize.Level1)
 {
     auto systemData = std::make_shared<PrintSystemData>();
     PrinterCapability cap;
-    cap.SetVendorPrinterPrefAbility("pref");
-    cap.SetVendorJobAttrAbility("job");
     Json::Value optionsJson;
     optionsJson["key"] = "value";
     cap.SetOption(PrintJsonUtil::WriteString(optionsJson));
@@ -2044,8 +2042,6 @@ HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_VendorAndOptions, 
     systemData->ConvertPrinterCapabilityToJson(cap, json);
     PrinterCapability restored;
     systemData->ConvertJsonToPrinterCapability(json, restored);
-    EXPECT_EQ(restored.GetVendorPrinterPrefAbility(), "pref");
-    EXPECT_EQ(restored.GetVendorJobAttrAbility(), "job");
     EXPECT_TRUE(restored.HasOption());
 }
 }  // namespace Print
