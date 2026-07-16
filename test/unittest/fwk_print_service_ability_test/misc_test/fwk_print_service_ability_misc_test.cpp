@@ -317,7 +317,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036_NeedRename, TestS
     EXPECT_EQ(service->UpdatePrintJobOptionByPrinterId(printJob1), false);
 
     PrintJob printJob2;
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     printJob2.SetPrinterId(printerId);
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterName("testName");
@@ -393,7 +393,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0063_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string extensionId = "com.ohos.spooler:0";
+    std::string extensionId = "com.huawei.hmos.spooler:0";
     int32_t userId = service->GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
@@ -736,7 +736,7 @@ HWTEST_F(PrintServiceAbilityTest,
     UpdatePrinterCapability_RegularPrinterAlreadyAdded_SkipsInsert, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:SomePrinter";
+    std::string printerId = "com.huawei.hmos.spooler:SomePrinter";
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("SomePrinter");
@@ -776,7 +776,7 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_eprint, TestSize.Level1)
     auto service = PrintServiceAbilityTest::CreateService();
     std::string cid = PRINT_EXTENSION_BUNDLE_NAME;
     cid = cid + ":1";
-    EXPECT_TRUE(service->IsExtensionPrintJob("com.ohos.remote:1"));
+    EXPECT_TRUE(service->IsExtensionPrintJob("com.huawei.hmos.ailife:1"));
 }
 
 HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)

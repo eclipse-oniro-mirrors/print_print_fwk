@@ -413,8 +413,7 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_DoAddPrinterToCupsFa
 
 HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_WhenValidPrinterInfo_ShouldReturnTrue, TestSize.Level1)
 {
-#ifdef CUPS_ENABLE
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string globalVendorName = "vendor_001";
     std::string printerId = "printer_001";
     std::string globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
@@ -430,9 +429,9 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_WhenValidPrinterInfo
     PrinterCapability capability;
     printerInfo->SetCapability(capability);
     service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = printerInfo;
+    EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(true));
     bool result = service->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
     EXPECT_EQ(result, true);
-#endif
 }
 
 HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenPrinterNotFound_ShouldReturnTrue, TestSize.Level1)
@@ -630,7 +629,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInDiscovery_IppOverUsbPrinter_Use
 {
     auto service = PrintServiceAbilityTest::CreateService();
     PrinterInfo info;
-    info.SetPrinterId("com.ohos.spooler:IPP-testPrinter");
+    info.SetPrinterId("com.huawei.hmos.spooler:IPP-testPrinter");
     info.SetPrinterName("IPPOverUsbPrinter");
     info.SetPrinterMake("Custom Printer Model");
     info.SetUri("usb://serial=12345");

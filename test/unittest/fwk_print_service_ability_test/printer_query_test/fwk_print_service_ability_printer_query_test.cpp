@@ -43,7 +43,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     std::vector<std::string> keyList;
     std::vector<std::string> valueList;
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
@@ -58,7 +58,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     PrinterInfo info;
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_INVALID_PRINTER);
     auto printerInfo = std::make_shared<PrinterInfo>();
@@ -84,7 +84,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     PrinterInfo info;
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_INVALID_PRINTER);
     auto printerInfo = std::make_shared<PrinterInfo>();
@@ -107,7 +107,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
     std::vector<std::string> keyList;
@@ -123,7 +123,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
     std::string savePrinterPreference = "test";
@@ -140,7 +140,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
@@ -151,7 +151,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
@@ -162,7 +162,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     PrinterCapability printerCaps;
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
     service->printSystemData_.discoveredPrinterInfoList_["123"] = nullptr;
@@ -202,7 +202,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
@@ -243,19 +243,19 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0140_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:testPrinterId";
+    std::string printerId = "com.huawei.hmos.spooler:testPrinterId";
     PrinterInfo info;
     info.SetPrinterId(printerId);
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     service->printSystemData_.AddPrinterToDiscovery(infoPtr);
-    std::string extensionId = "com.ohos.spooler";
+    std::string extensionId = "com.huawei.hmos.spooler";
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.ohos.spooler:testPrinterId";
+    std::string printerId = "com.huawei.hmos.spooler:testPrinterId";
     auto printer = std::make_shared<PrinterInfo>();
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
     PrinterInfo info;
@@ -891,6 +891,177 @@ HWTEST_F(PrintServiceAbilityTest, SetPrinterCapabilityAndRegister_FindMakeFailed
     int32_t ret = service->SetPrinterCapabilityAndRegister(
         "TestPrinter", "valid.ppd", "test_printer_id", printerInfo);
     EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_withoutUri, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string printerId = "id";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+ 
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(printerId);
+    info.SetAlias(printerId);
+ 
+    EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_INVALID_PRINTER);
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_uriMatch, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string printerId1 = "device1";
+    std::string printerId2 = "device2";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId1 = PrintUtils::GetGlobalId(extensionId, printerId1);
+    std::string uri = "test_uri";
+ 
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId1);
+    existingPrinter.SetPrinterName(printerId1);
+    existingPrinter.SetAlias(printerId1);
+    existingPrinter.SetUri(uri);
+    existingPrinter.SetDeviceId(printerId1);
+ 
+    service->printSystemData_.addedPrinterMap_.Insert(globalId1, std::make_shared<PrinterInfo>(existingPrinter));
+ 
+    PrinterInfo newPrinter;
+    newPrinter.SetPrinterId(printerId2);
+    newPrinter.SetPrinterName(printerId2);
+    newPrinter.SetAlias(printerId2);
+    newPrinter.SetUri(uri);
+    newPrinter.SetDeviceId(printerId2);
+ 
+    EXPECT_EQ(service->AddRemotePrinterInfo(newPrinter, extensionId), E_PRINT_NONE);
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, PrinterInfo_deviceId, TestSize.Level1)
+{
+    PrinterInfo info;
+    
+    std::string deviceId = "test_device_id";
+    info.SetDeviceId(deviceId);
+    EXPECT_EQ(info.GetDeviceId(), deviceId);
+ 
+    std::string emptyDeviceId = "";
+    info.SetDeviceId(emptyDeviceId);
+    EXPECT_EQ(info.GetDeviceId(), emptyDeviceId);
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_uriMatch_changeAlias, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string printerId1 = "device1";
+    std::string printerId2 = "device2";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId1 = PrintUtils::GetGlobalId(extensionId, printerId1);
+    std::string uri = "test_uri";
+ 
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId1);
+    existingPrinter.SetPrinterName(printerId1);
+    existingPrinter.SetAlias("old_alias");
+    existingPrinter.SetUri(uri);
+    existingPrinter.SetDeviceId(printerId1);
+ 
+    service->printSystemData_.addedPrinterMap_.Insert(globalId1, std::make_shared<PrinterInfo>(existingPrinter));
+ 
+    PrinterInfo newPrinter;
+    newPrinter.SetPrinterId(printerId2);
+    newPrinter.SetPrinterName(printerId2);
+    newPrinter.SetAlias("new_alias");
+    newPrinter.SetUri(uri);
+    newPrinter.SetDeviceId(printerId2);
+ 
+    EXPECT_EQ(service->AddRemotePrinterInfo(newPrinter, extensionId), E_PRINT_NONE);
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_uriNotMatch, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string printerId1 = "device1";
+    std::string printerId2 = "device2";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId1 = PrintUtils::GetGlobalId(extensionId, printerId1);
+ 
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId1);
+    existingPrinter.SetPrinterName(printerId1);
+    existingPrinter.SetAlias(printerId1);
+    existingPrinter.SetUri("uri1");
+    existingPrinter.SetDeviceId(printerId1);
+ 
+    service->printSystemData_.addedPrinterMap_.Insert(globalId1, std::make_shared<PrinterInfo>(existingPrinter));
+ 
+    PrinterInfo newPrinter;
+    newPrinter.SetPrinterId(printerId2);
+    newPrinter.SetPrinterName(printerId2);
+    newPrinter.SetAlias(printerId2);
+    newPrinter.SetUri("uri2");
+    newPrinter.SetDeviceId(printerId2);
+ 
+    EXPECT_EQ(service->AddRemotePrinterInfo(newPrinter, extensionId), E_PRINT_NONE);
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, MatchPrinterByUri_success, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string printerId = "device1";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId = PrintUtils::GetGlobalId(extensionId, printerId);
+    std::string uri = "test_uri";
+ 
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId);
+    existingPrinter.SetPrinterName(printerId);
+    existingPrinter.SetUri(uri);
+ 
+    service->printSystemData_.addedPrinterMap_.Insert(globalId, std::make_shared<PrinterInfo>(existingPrinter));
+ 
+    std::string matchedPrinterId;
+    PrinterInfo matchedPrinter;
+    EXPECT_TRUE(service->MatchPrinterByUri(uri, matchedPrinterId, matchedPrinter));
+    EXPECT_EQ(matchedPrinterId, globalId);
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, MatchPrinterByUri_notFound, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string uri = "test_uri";
+    std::string matchedPrinterId;
+    PrinterInfo matchedPrinter;
+    EXPECT_FALSE(service->MatchPrinterByUri(uri, matchedPrinterId, matchedPrinter));
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_withDeviceId, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+ 
+    std::string printerId = "device1";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId = PrintUtils::GetGlobalId(extensionId, printerId);
+    std::string deviceId = "test_device_id";
+ 
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName("printer");
+    printerInfo.SetUri("uri");
+    printerInfo.SetDeviceId(deviceId);
+ 
+    service->printSystemData_.addedPrinterMap_.Insert(globalId, std::make_shared<PrinterInfo>(printerInfo));
+ 
+    PrintJob printJob;
+    printJob.SetPrinterId(globalId);
+    printJob.SetOption("{}");
+ 
+    EXPECT_TRUE(service->UpdatePrintJobOptionByPrinterId(printJob));
+    EXPECT_NE(printJob.GetOption().find(deviceId), std::string::npos);
 }
 
 }  // namespace Print

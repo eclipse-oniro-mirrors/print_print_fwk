@@ -28,7 +28,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0010_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0025_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string extensionId = "com.ohos.spooler:0";
+    std::string extensionId = "com.huawei.hmos.spooler:0";
     int32_t userId = service->GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
     EXPECT_EQ(service->DelayStartDiscovery(extensionId), false);
@@ -41,7 +41,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string extensionId = "com.ohos.spooler:0";
+    std::string extensionId = "com.huawei.hmos.spooler:0";
     int32_t userId = service->GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
@@ -59,7 +59,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0062_NeedRename, TestS
     DelayedSingleton<PrintBMSHelper>::GetInstance()->hasBms = false;
     auto service = PrintServiceAbilityTest::CreateService();
     std::vector<std::string> extensionIds;
-    std::string extensionId = "com.ohos.spooler";
+    std::string extensionId = "com.huawei.hmos.spooler";
     extensionIds.push_back(extensionId);
     EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_EXTENSION);
     std::vector<PrintExtensionInfo> extensionInfos;

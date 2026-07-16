@@ -82,8 +82,8 @@ static constexpr const char *DEFAULT_EXT_PRINTER_ID2 = "https://10.10.10.10/0FDA
 static constexpr const char *DEFAULT_PRINT_FILE_A = "file://data/print/a.png";
 static constexpr const char *DEFAULT_PRINT_FILE_B = "file://data/print/b.png";
 static constexpr const char *DEFAULT_PRINT_FILE_C = "file://data/print/c.png";
-static const std::string CUSTOM_PRINTER_NAME = "CV81";
-static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
+static const std::string CUSTOM_PRINTER_NAME = "HUAWEI CV81";
+static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.huawei.hmos.hwprintext";
 static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
 static const std::string PARAMETER_CHANGE_MODE_ANIMATION_READY = "persist.sceneboard.changeModeAnimationReady";
 static const std::string CHANGE_MODE_DEFAULT_VALUE = "-1";
@@ -102,7 +102,7 @@ static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.ent
 static const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
-static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
 static const std::string IPPOVERUSB_PREFIX = ":IPP-";
 
 enum EXTENSION_ID_TYPE {
