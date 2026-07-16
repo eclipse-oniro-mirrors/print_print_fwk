@@ -75,7 +75,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038_NeedRename, TestS
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     PrintJob printJob;
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     printJob.SetPrinterId(printerId);
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterName("testName");
@@ -204,7 +204,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0044_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECTI-PixLab_V1-1620";
     EXPECT_EQ(service->SendQueuePrintJob(printerId), false);
 
     std::string jobId = GetDefaultJobId();
@@ -303,8 +303,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0061_NeedRename, TestS
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(
         EXTCB_CANCEL_PRINT, extensionId, extCb);
     service->CancelPrintJob(jobId);
-    printJob->SetPrinterId("com.huawei.hmos.spooler:p2p://DIRECT-PixLab_V1-1620");
-    std::string extensionId2 = PrintUtils::GetExtensionId("com.huawei.hmos.spooler:p2p://DIRECT-PixLab_V1-1620");
+    printJob->SetPrinterId("com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620");
+    std::string extensionId2 = PrintUtils::GetExtensionId("com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620");
     EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_NONE);
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(
         EXTCB_CANCEL_PRINT, extensionId2, extCb);
@@ -435,7 +435,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155_NeedRename, TestS
     PrintJob printJob;
     std::string jobId = "123";
     printJob.SetJobId(jobId);
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     printJob.SetPrinterId(printerId);
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterName("testName");

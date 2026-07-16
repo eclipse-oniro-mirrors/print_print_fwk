@@ -124,7 +124,7 @@ ohos_unittest("fwk_print_service_ability_job_control_test") {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
   }
 
-  if (print_fwk_feature_ailife_service) {
+  if (print_fwk_feature_remote_service) {
     cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }
 }

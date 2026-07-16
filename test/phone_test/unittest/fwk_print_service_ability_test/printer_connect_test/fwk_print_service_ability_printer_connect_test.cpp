@@ -102,7 +102,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     info->SetPrinterId("1234");
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_INVALID_PRINTER);
-    info->SetPrinterId("com.huawei.hmos.spooler:mdns://testId");
+    info->SetPrinterId("com.ohos.spooler:mdns://testId");
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_INVALID_PRINTER);
     PrinterInfo printer;
     service->printSystemData_.InsertAddedPrinter(info->GetPrinterId(), printer);
@@ -112,7 +112,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, ConnectPrinter_UsbPrinterId_InvalidPrinter, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "com.huawei.hmos.spooler:USB-printer-1";
+    std::string printerId = "com.ohos.spooler:USB-printer-1";
     PrinterInfo info;
     info.SetPrinterId(printerId);
     auto infoPtr = std::make_shared<PrinterInfo>(info);

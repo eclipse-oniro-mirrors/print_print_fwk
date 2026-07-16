@@ -629,7 +629,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterInDiscovery_IppOverUsbPrinter_Use
 {
     auto service = PrintServiceAbilityTest::CreateService();
     PrinterInfo info;
-    info.SetPrinterId("com.huawei.hmos.spooler:IPP-testPrinter");
+    info.SetPrinterId("com.ohos.spooler:IPP-testPrinter");
     info.SetPrinterName("IPPOverUsbPrinter");
     info.SetPrinterMake("Custom Printer Model");
     info.SetUri("usb://serial=12345");
