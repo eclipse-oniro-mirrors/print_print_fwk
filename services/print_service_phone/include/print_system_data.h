@@ -94,6 +94,7 @@ private:
     void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedOrientationToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertVendorAbilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     bool ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapability &printerCapability);
@@ -103,6 +104,7 @@ private:
     bool ConvertJsonToSupportedMediaType(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToSupportedQuality(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToSupportedOrientation(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToVendorAbility(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability);
     bool CheckPrinterInfoJson(Json::Value &object, std::string &printerId);
     bool GetPrinterCapabilityFromJson(
