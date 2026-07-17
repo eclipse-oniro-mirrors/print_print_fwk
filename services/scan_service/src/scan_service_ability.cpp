@@ -149,9 +149,9 @@ void ScanServiceAbility::OnStart()
     
     scanPictureData_.CleanDiskCache();
     
-    CallerAppMonitor::GetInstance().StartCallerAppMonitor([this]() {
-        this->UnloadSystemAbility();
-    });
+    CallerAppMonitor::GetInstance().StartCallerAppMonitor(
+        [this]() { this->UnloadSystemAbility(); },
+        [this](int32_t deadPid) { this->CleanupDeadCaller(deadPid); });
     int32_t ret = ServiceInit();
     if (ret != ERR_OK) {
         auto callback = [=]() { ServiceInit(); };
@@ -245,11 +245,11 @@ void ScanServiceAbility::InitializeScanService()
 void ScanServiceAbility::CleanupScanService()
 {
     std::lock_guard<std::mutex> autoLock(lock_);
-    for (const auto &scannerId : openedScannerList_) {
+    for (const auto &[scannerId, owner] : openedScannerMap_) {
         SaneManagerClient::GetInstance()->SaneCancel(scannerId);
         SaneManagerClient::GetInstance()->SaneClose(scannerId);
     }
-    openedScannerList_.clear();
+    openedScannerMap_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
     scannerState_.store(SCANNER_READY);
@@ -492,9 +492,15 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("OpenScanner scannerId is empty");
         return E_SCAN_INVALID_PARAMETER;
     }
-    if (openedScannerList_.find(scannerId) != openedScannerList_.end()) {
-        SCAN_HILOGD("scannerId %{private}s is already opened", scannerId.c_str());
-        return E_SCAN_NONE;
+    auto it = openedScannerMap_.find(scannerId);
+    if (it != openedScannerMap_.end()) {
+        if (it->second.callerPid == IPCSkeleton::GetCallingPid() &&
+            it->second.userId == GetCurrentUserId()) {
+            SCAN_HILOGD("scannerId %{private}s is already opened by same caller", scannerId.c_str());
+            return E_SCAN_NONE;
+        }
+        SCAN_HILOGE("scannerId %{private}s is already opened by another caller", scannerId.c_str());
+        return E_SCAN_DEVICE_BUSY;
     }
     SaneStatus status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
     if (status != SANE_STATUS_GOOD) {
@@ -505,7 +511,7 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
-    openedScannerList_.insert(scannerId);
+    openedScannerMap_[scannerId] = {IPCSkeleton::GetCallingPid(), GetCurrentUserId()};
     SCAN_HILOGI("ScanServiceAbility OpenScanner end");
     return E_SCAN_NONE;
 }
@@ -519,9 +525,9 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility CloseScanner start");
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
     scanPictureData_.CleanAllCache();
     SaneStatus status = SaneManagerClient::GetInstance()->SaneClose(scannerId);
@@ -529,7 +535,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
-    openedScannerList_.erase(scannerId);
+    openedScannerMap_.erase(scannerId);
     SCAN_HILOGI("ScanServiceAbility CloseScanner end");
     return E_SCAN_NONE;
 }
@@ -544,9 +550,9 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc start");
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
     SaneOptionDescriptor saneDesc;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
@@ -661,9 +667,9 @@ int32_t ScanServiceAbility::OpScanOptionValue(
     ManualStart();
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start");
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
     int32_t state = E_SCAN_NONE;
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start to dump value");
@@ -701,10 +707,15 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
     }
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
+    return GetScanParametersInternal(scannerId, para);
+}
+
+int32_t ScanServiceAbility::GetScanParametersInternal(const std::string scannerId, ScanParameters &para)
+{
     SCAN_HILOGI("ScanServiceAbility GetScanParameters start");
     SaneParameters saneParams;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetParameters(scannerId, saneParams);
@@ -731,9 +742,9 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
     }
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
     SCAN_HILOGI("ScanServiceAbility CancelScan start");
     SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneCancel(scannerId);
@@ -964,9 +975,9 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
     }
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
     int32_t status = scanPictureData_.GetPictureProgressInQueue(prog, IPCSkeleton::GetCallingPid());
     if (status != E_SCAN_NONE) {
@@ -1086,13 +1097,8 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAdde
     return E_SCAN_NONE;
 }
 
-int32_t ScanServiceAbility::StartScanOnce(const std::string scannerId)
+int32_t ScanServiceAbility::StartScanOnceInternal(const std::string scannerId)
 {
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        SCAN_HILOGE("no permission to access scan service");
-        return E_SCAN_NO_PERMISSION;
-    }
-    ManualStart();
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
     if (scannerState_.load() == SCANNER_CANCELING) {
@@ -1117,9 +1123,9 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         return E_SCAN_NO_PERMISSION;
     }
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
 
     // Check if ESCL scanner's ADF is empty before starting scan in external API call.
@@ -1138,7 +1144,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         }
     }
     
-    int32_t status = StartScanOnce(scannerId);
+    int32_t status = StartScanOnceInternal(scannerId);
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
         return status;
@@ -1246,13 +1252,13 @@ int32_t ScanServiceAbility::DoScanTask(ScanTask &scanTask)
     do {
         SCAN_HILOGI("start DoScanTask");
         if (!isFirstFrame) {
-            scanStatus = StartScanOnce(scanTask.GetScannerId());
+            scanStatus = StartScanOnceInternal(scanTask.GetScannerId());
             if (scanStatus != E_SCAN_NONE) {
                 SCAN_HILOGW("restart scanner fail");
                 break;
             }
         }
-        scanStatus = GetScanParameters(scanTask.GetScannerId(), parm);
+        scanStatus = GetScanParametersInternal(scanTask.GetScannerId(), parm);
         if (scanStatus != E_SCAN_NONE) {
             SCAN_HILOGE("DoScanTask error, after GetScanParameters");
             break;
@@ -1283,7 +1289,7 @@ int32_t ScanServiceAbility::DoScanTask(ScanTask &scanTask)
 int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
 {
     SCAN_HILOGI("RestartScan");
-    int32_t status = StartScanOnce(scannerId);
+    int32_t status = StartScanOnceInternal(scannerId);
     if (status == E_SCAN_NONE) {
         SCAN_HILOGD("ScanTask restart success");
         scanPictureData_.SetNowScanProgressFinished(false);
@@ -1362,6 +1368,40 @@ int32_t ScanServiceAbility::GetCurrentUserId()
     return userId;
 }
 
+int32_t ScanServiceAbility::CheckScannerOwner(const std::string& scannerId)
+{
+    auto it = openedScannerMap_.find(scannerId);
+    if (it == openedScannerMap_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    if (it->second.callerPid != IPCSkeleton::GetCallingPid() ||
+        it->second.userId != GetCurrentUserId()) {
+        SCAN_HILOGE("operation denied: scanner opened by another caller");
+        return E_SCAN_ACCESS_DENIED;
+    }
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::CleanupDeadCaller(int32_t deadPid)
+{
+    std::lock_guard<std::mutex> autoLock(lock_);
+    for (auto it = openedScannerMap_.begin(); it != openedScannerMap_.end();) {
+        if (it->second.callerPid == deadPid) {
+            SCAN_HILOGI("cleaning up scanner %{private}s for dead pid %{public}d",
+                        it->first.c_str(), deadPid);
+            SaneManagerClient::GetInstance()->SaneCancel(it->first);
+            SaneManagerClient::GetInstance()->SaneClose(it->first);
+            it = openedScannerMap_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    if (scannerState_.load() == SCANNER_SCANING && openedScannerMap_.empty()) {
+        scannerState_.store(SCANNER_READY);
+    }
+}
+
 int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int32_t& dpi)
 {
     SaneControlParam controlParam;
@@ -1420,9 +1460,9 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
         return E_SCAN_INVALID_PARAMETER;
     }
 
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
+    int32_t ownerRet = CheckScannerOwner(scannerId);
+    if (ownerRet != E_SCAN_NONE) {
+        return ownerRet;
     }
 
     for (int32_t jpegFd : pictureFdList) {

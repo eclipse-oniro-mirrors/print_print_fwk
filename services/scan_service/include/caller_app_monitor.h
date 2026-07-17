@@ -36,7 +36,8 @@ class CallerAppMonitor {
 public:
     static CallerAppMonitor& GetInstance();
     void QueryCallerAppAndSave();
-    void StartCallerAppMonitor(std::function<void()> unloadTask);
+    using CleanupCallback = std::function<void(int32_t)>;
+    void StartCallerAppMonitor(std::function<void()> unloadTask, CleanupCallback cleanupCallback = nullptr);
 
 private:
     CallerAppMonitor() = default;
@@ -48,6 +49,7 @@ private:
     std::map<int32_t, std::shared_ptr<CallerAppInfo>> callerMap_;
     std::mutex callerMapMutex_;
     std::atomic<bool> isMonitoring_{false};
+    CleanupCallback cleanupCallback_;
 };
 
 } // namespace OHOS::Scan

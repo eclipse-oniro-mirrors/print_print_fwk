@@ -121,6 +121,7 @@ int32_t OH_Scan_CloseScanner(const char *scannerId)
         SCAN_HILOGE("CloseScanner failed, ErrorCode: [%{public}d]", ret);
         return ScanContext::StatusConvert(ret);
     } else {
+        ScanContext::GetInstance().ClearScannerCache(std::string(scannerId));
         SCAN_HILOGI("CloseScanner successfully");
         return SCAN_ERROR_NONE;
     }

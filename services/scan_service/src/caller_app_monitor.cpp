@@ -54,13 +54,14 @@ std::string CallerAppMonitor::QueryCallerBundleName(const int32_t callerPid)
     return bundleName;
 }
 
-void CallerAppMonitor::StartCallerAppMonitor(std::function<void()> unloadTask)
+void CallerAppMonitor::StartCallerAppMonitor(std::function<void()> unloadTask, CleanupCallback cleanupCallback)
 {
     if (isMonitoring_.load()) {
         SCAN_HILOGD("The monitoring thread is running");
         return;
     }
     isMonitoring_.store(true);
+    cleanupCallback_ = cleanupCallback;
     std::thread callerAppMonitorThread(&CallerAppMonitor::MonitorCallerAppIsRunnig, this, unloadTask);
     callerAppMonitorThread.detach();
 }
@@ -81,7 +82,10 @@ void CallerAppMonitor::MonitorCallerAppIsRunnig(std::function<void()> unloadTask
                     iter++;
                     continue;
                 } else {
-                    SCAN_HILOGI("app not alive");
+                    SCAN_HILOGI("app pid=%{public}d is dead, cleaning up", iter->first);
+                    if (cleanupCallback_) {
+                        cleanupCallback_(iter->first);
+                    }
                     iter = callerMap_.erase(iter);
                 }
             }
