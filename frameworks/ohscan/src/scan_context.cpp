@@ -431,7 +431,9 @@ int32_t ScanContext::StatusConvert(int32_t status)
         {E_SCAN_COVER_OPEN, SCAN_ERROR_COVER_OPEN},
         {E_SCAN_IO_ERROR, SCAN_ERROR_IO_ERROR},
         {E_SCAN_NO_MEM, SCAN_ERROR_NO_MEMORY},
-        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID}};
+        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID},
+        {E_SCAN_NO_PERMISSION, SCAN_ERROR_NO_PERMISSION},
+        {E_SCAN_INVALID_PARAMETER, SCAN_ERROR_INVALID_PARAMETER}};
     auto it = errorCodeMap.find(status);
     if (it != errorCodeMap.end()) {
         return it->second;
