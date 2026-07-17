@@ -253,6 +253,11 @@ void ScanServiceAbility::CleanupScanService()
     openedScannerList_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
+    {
+        std::lock_guard<std::mutex> lock(discoverMutex_);
+        rediscoverPending_ = false;
+        discoverInProgress_ = false;
+    }
     scannerState_.store(SCANNER_READY);
     scanPictureData_.CleanAllCache();
 }
@@ -438,14 +443,12 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info, std::vector<ScanD
 
 void ScanServiceAbility::SaneGetScanner()
 {
-    scannerState_.store(SCANNER_SEARCHING);
     ScanMdnsService::GetInstance().OnStartDiscoverService();
     SaneManagerClient::GetInstance()->SaneInit();
     std::vector<SaneDevice> saneDeviceInfos;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(saneDeviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
-        scannerState_.store(SCANNER_READY);
         return;
     }
     std::vector<ScanDeviceInfo> scanDeviceInfos;
@@ -463,7 +466,6 @@ void ScanServiceAbility::SaneGetScanner()
         SendDeviceInfo(scanDeviceInfo, SCAN_DEVICE_FOUND);
     }
     SendDeviceList(scanDeviceInfos, GET_SCANNER_DEVICE_LIST);
-    scannerState_.store(SCANNER_READY);
 }
 
 int32_t ScanServiceAbility::GetScannerList()
@@ -473,8 +475,35 @@ int32_t ScanServiceAbility::GetScannerList()
     }
     ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
+    // USB device insertion triggers multiple USB attach events, each calling
+    // GetScannerList, causing multiple SaneGetScanner tasks to pile up in the
+    // single-threaded serviceHandler_ queue and blocking subsequent async tasks
+    // such as AddScanner. Use coalescing dedup here: if discovery is in progress,
+    // do not post a new task, just mark rediscoverPending_ and let the current
+    // round pick it up after it finishes.
+    {
+        std::lock_guard<std::mutex> lock(discoverMutex_);
+        if (discoverInProgress_) {
+            rediscoverPending_ = true;
+            SCAN_HILOGI("discovery in progress, mark pending rediscover");
+            return E_SCAN_NONE;
+        }
+        discoverInProgress_ = true;
+    }
     auto exec_sane_getscaner = [=]() {
-        SaneGetScanner();
+        while (true) {
+            SaneGetScanner();
+            // After the current discovery round finishes, check whether a new
+            // discovery request arrived during the round (device inserted while
+            // discovery was running).
+            std::lock_guard<std::mutex> lock(discoverMutex_);
+            if (rediscoverPending_) {
+                rediscoverPending_ = false;
+                continue;
+            }
+            discoverInProgress_ = false;
+            break;
+        }
     };
     SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
@@ -925,9 +954,12 @@ void ScanServiceAbility::NetScannerLossNotify(const ScanDeviceInfoSync& syncInfo
 
 void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
 {
-    if (scannerState_.load() == SCANNER_SEARCHING) {
-        SCAN_HILOGI("The manufacturer's driver is still under search");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(discoverMutex_);
+        if (discoverInProgress_) {
+            SCAN_HILOGI("discovery in progress, skip escl notification");
+            return;
+        }
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     SCAN_HILOGI("NotifyEsclScannerFound [%{private}s]", info.deviceId.c_str());
@@ -990,17 +1022,13 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
-    auto addScannerExe = [uniqueId, discoverMode, this]() {
-        if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
-            AddUsbScanner(uniqueId, discoverMode);
-        } else if (discoverMode == ScannerDiscoveryMode::TCP_MODE) {
-            AddNetScanner(uniqueId, discoverMode);
-        } else {
-            SCAN_HILOGE("discoverMode is invalid.");
-        }
-    };
-    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
-    serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
+    if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
+        AddUsbScanner(uniqueId, discoverMode);
+    } else if (discoverMode == ScannerDiscoveryMode::TCP_MODE) {
+        AddNetScanner(uniqueId, discoverMode);
+    } else {
+        SCAN_HILOGE("discoverMode is invalid.");
+    }
     return E_SCAN_NONE;
 }
 
