@@ -102,6 +102,8 @@ namespace OHOS::Print {
     }
 
 enum PrintErrorCode {
+    E_PRINT_ACCOUNT_ERROR = -5,
+    E_PRINT_NETWORK_ERROR = -3,
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,
     E_PRINT_ILLEGAL_USE_OF_SYSTEM_API = 202,
@@ -351,6 +353,8 @@ const std::string PRINT_USER_DATA_VERSION = "v1";
 const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
 const std::string DEFAULT_MEDIA_TYPE = "stationery";
+const std::string TEXT_SMOOTH_OPTION = "oh-text-smooth";
+const std::string TEXT_SMOOTH_DEFAULT = "dpi";
 const std::string DEFAULT_USER_NAME = "print";
 static const std::string P2P_PRINTER = "p2p";
 static const std::string EPRINTID = "ePrintID";
@@ -477,6 +481,7 @@ const std::string PAGE_SIZE_ID_PRC6 = "PRC6";
 const std::string PAGE_SIZE_ID_PRC7 = "PRC7";
 const std::string PAGE_SIZE_ID_PRC8 = "PRC8";
 const std::string PAGE_SIZE_ID_PRC16 = "PRC16";
+const std::string PAGE_SIZE_ID_PRC_16K = "PRC_16K";
 const std::string PAGE_SIZE_ID_ROC_16K = "ROC_16K";
 const std::string PAGE_SIZE_ID_ROC_8K = "ROC_8K";
 

@@ -135,6 +135,9 @@ private:
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
     std::atomic<int32_t> scannerState_{SCANNER_READY};
+    std::mutex discoverMutex_;
+    bool discoverInProgress_{false};
+    bool rediscoverPending_{false};
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
 };

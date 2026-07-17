@@ -200,8 +200,7 @@ enum ScanConstraintType {
 enum ScannerState {
     SCANNER_READY = 0,
     SCANNER_SCANING = 1,
-    SCANNER_SEARCHING = 2,
-    SCANNER_CANCELING = 3,
+    SCANNER_CANCELING = 2,
 };
 
 enum PhysicalUnit {

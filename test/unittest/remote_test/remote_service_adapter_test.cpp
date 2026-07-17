@@ -20,6 +20,7 @@
 #undef private
 #include "remote_constants.h"
 #include "print_constant.h"
+#include "mock_remote_object.h"
 
 using namespace testing;
 using namespace testing::ext;

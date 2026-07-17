@@ -4563,5 +4563,61 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_BsuniOutputFormatEmpty_SkipsCupsOpt
     delete jobParams;
 }
 
+HWTEST_F(PrintCupsClientTest, FillJobOptions_NoTextSmoothOption_AddsDefault, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    testJob.SetColorMode(1);
+    testJob.SetCopyNumber(1);
+    testJob.SetDuplexMode(0);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillJobOptions(jobParams, numOptions, &options);
+    EXPECT_GT(ret, 0);
+    const char *value = cupsGetOption(TEXT_SMOOTH_OPTION.c_str(), ret, options);
+    EXPECT_NE(value, nullptr);
+    EXPECT_STREQ(value, TEXT_SMOOTH_DEFAULT.c_str());
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
+HWTEST_F(PrintCupsClientTest, FillJobOptions_ExistingTextSmoothOption_NotOverwritten, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    testJob.SetColorMode(1);
+    testJob.SetCopyNumber(1);
+    testJob.SetDuplexMode(0);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    std::string jobOption = std::string(JOB_OPTIONS).substr(0, std::string(JOB_OPTIONS).size() - 1) +
+        ",\"advancedOptions\":{\"oh-text-smooth\":\"enable\"}}";
+    testJob.SetOption(jobOption);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillJobOptions(jobParams, numOptions, &options);
+    EXPECT_GT(ret, 0);
+    const char *value = cupsGetOption(TEXT_SMOOTH_OPTION.c_str(), ret, options);
+    EXPECT_NE(value, nullptr);
+    EXPECT_STREQ(value, "enable");
+    cupsFreeOptions(ret, options);
+    delete jobParams;
+}
+
 }  // namespace Print
 }  // namespace OHOS

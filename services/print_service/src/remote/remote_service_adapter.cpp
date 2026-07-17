@@ -23,6 +23,7 @@
 #include "iremote_callback.h"
 #include "print_json_util.h"
 #include "print_utils.h"
+#include "singleton.h"
 #include <mutex>
 
 namespace OHOS::Print {

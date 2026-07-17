@@ -20,6 +20,7 @@
 #undef private
 #include "remote_constants.h"
 #include "print_constant.h"
+#include "mock_remote_object.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -103,9 +104,11 @@ HWTEST_F(RemoteServiceAdapterTest, BindService_001, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, SendData_002, TestSize.Level1)
 {
     RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
     int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
         "test_msg");
-    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+    EXPECT_EQ(E_PRINT_NONE, result);
 }
 
 /**
@@ -117,8 +120,10 @@ HWTEST_F(RemoteServiceAdapterTest, SendData_002, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, SendData_003, TestSize.Level1)
 {
     RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
     int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST), "");
-    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+    EXPECT_EQ(E_PRINT_NONE, result);
 }
 
 /**
@@ -131,8 +136,10 @@ HWTEST_F(RemoteServiceAdapterTest, RequestPrinterStatus_001, TestSize.Level1)
 {
     RemoteServiceAdapter client;
     std::string devId = "test_device_001";
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
     int32_t result = client.RequestPrinterStatus(devId);
-    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+    EXPECT_EQ(E_PRINT_NONE, result);
 }
 
 /**
@@ -144,8 +151,10 @@ HWTEST_F(RemoteServiceAdapterTest, RequestPrinterStatus_001, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, RequestPrinterList_001, TestSize.Level1)
 {
     RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
     int32_t result = client.RequestPrinterList();
-    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+    EXPECT_EQ(E_PRINT_NONE, result);
 }
 
 /**
