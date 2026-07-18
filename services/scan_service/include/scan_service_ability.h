@@ -112,8 +112,8 @@ private:
     int32_t RestartScan(const std::string &scannerId);
     void InitializeScanService();
     void CleanupScanService();
-    int32_t StartScanOnceInternal(const std::string scannerId);
-    int32_t GetScanParametersInternal(const std::string scannerId, ScanParameters &para);
+    int32_t StartScanOnceInternal(const std::string &scannerId);
+    int32_t GetScanParametersInternal(const std::string &scannerId, ScanParameters &para);
     int32_t GetScannerImageDpi(const std::string& scannerId, int32_t& dpi);
     int32_t CheckScannerOwner(const std::string& scannerId);
     void CleanupDeadCaller(int32_t deadPid);

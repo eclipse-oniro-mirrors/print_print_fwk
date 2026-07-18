@@ -74,26 +74,23 @@ void CallerAppMonitor::MonitorCallerAppIsRunnig(std::function<void()> unloadTask
     }
     while (isMonitoring_.load()) {
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-        {
-            std::lock_guard<std::mutex> autoLock(callerMapMutex_);
-            for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
-                if (IsAppAlive(iter->second)) {
-                    SCAN_HILOGI("app still alive");
-                    iter++;
-                    continue;
-                } else {
-                    SCAN_HILOGI("app pid=%{public}d is dead, cleaning up", iter->first);
-                    if (cleanupCallback_) {
-                        cleanupCallback_(iter->first);
-                    }
-                    iter = callerMap_.erase(iter);
-                }
+        std::lock_guard<std::mutex> autoLock(callerMapMutex_);
+        for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
+            if (IsAppAlive(iter->second)) {
+                SCAN_HILOGI("app still alive");
+                iter++;
+                continue;
             }
-            if (callerMap_.empty()) {
-                SCAN_HILOGI("No apps use, start uninstalling scan_service");
-                isMonitoring_.store(false);
-                unloadTask();
+            SCAN_HILOGI("app pid=%{public}d is dead, cleaning up", iter->first);
+            if (cleanupCallback_) {
+                cleanupCallback_(iter->first);
             }
+            iter = callerMap_.erase(iter);
+        }
+        if (callerMap_.empty()) {
+            SCAN_HILOGI("No apps use, start uninstalling scan_service");
+            isMonitoring_.store(false);
+            unloadTask();
         }
     }
 }

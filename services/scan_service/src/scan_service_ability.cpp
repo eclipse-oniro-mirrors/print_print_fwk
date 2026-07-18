@@ -746,7 +746,7 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
     return GetScanParametersInternal(scannerId, para);
 }
 
-int32_t ScanServiceAbility::GetScanParametersInternal(const std::string scannerId, ScanParameters &para)
+int32_t ScanServiceAbility::GetScanParametersInternal(const std::string &scannerId, ScanParameters &para)
 {
     SCAN_HILOGI("ScanServiceAbility GetScanParameters start");
     SaneParameters saneParams;
@@ -1128,7 +1128,7 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAdde
     return E_SCAN_NONE;
 }
 
-int32_t ScanServiceAbility::StartScanOnceInternal(const std::string scannerId)
+int32_t ScanServiceAbility::StartScanOnceInternal(const std::string &scannerId)
 {
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
