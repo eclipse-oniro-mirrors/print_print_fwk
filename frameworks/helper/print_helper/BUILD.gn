@@ -86,6 +86,8 @@ ohos_shared_library("print_helper") {
     "input:libmmi-client",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "samgr:samgr_proxy",
     "jsoncpp:jsoncpp",
   ]

@@ -1,0 +1,71 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+_test_path = "${print_path}/test/phone_test"
+_service_path = "${print_path}/services/print_service_phone"
+
+##############################fuzztest##########################################
+ohos_fuzztest("PpdInfoFuzzTest") {
+  module_out_path = "${fuzz_test_output_path}/concurrent"
+
+  fuzz_config_file = "${_test_path}/fuzztest/ppdinfo_fuzzer"
+
+  include_dirs = [
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
+    "${_service_path}/include",
+    "${print_utils_path}/include",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  cflags_cc = []
+
+  deps = [
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/models/print_models:print_models",
+  ]
+
+  sources = [
+    "${_test_path}/fuzztest/ppdinfo_fuzzer/ppdinfo_fuzzer.cpp",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":PpdInfoFuzzTest",
+  ]
+}
+###############################################################################

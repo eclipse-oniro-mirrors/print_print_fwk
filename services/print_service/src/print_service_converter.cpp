@@ -121,7 +121,7 @@ bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
     size_t lastPartPos = pwgNameStr.find_last_of('_');
     size_t firstPartPos = pwgNameStr.find_first_of('_');
     if (lastPartPos == std::string::npos || firstPartPos == std::string::npos ||
-        lastPartPos + 1 >= pwgNameStr.size() || lastPartPos - firstPartPos - 1 < 0) {
+        lastPartPos + 1 >= pwgNameStr.size() || lastPartPos - firstPartPos < 1) {
         PRINT_HILOGE("IPP media-supported do not found \"_\"");
         return false;
     }
@@ -133,7 +133,7 @@ bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
     std::string sizeName = pwgNameStr.substr(lastPartPos + 1);
     size_t xPos = sizeName.find('x');
     if (xPos == std::string::npos || xPos + 1 >= sizeName.size() ||
-        sizeName.size() - xPos - PAGE_SIZE_UNIT_LENGTH - 1 < 0 || sizeName.size() - PAGE_SIZE_UNIT_LENGTH < 0) {
+        sizeName.size() < xPos + PAGE_SIZE_UNIT_LENGTH + 1 || sizeName.size() < PAGE_SIZE_UNIT_LENGTH) {
         PRINT_HILOGE("IPP media-supported do not found \"x\"");
         return false;
     }

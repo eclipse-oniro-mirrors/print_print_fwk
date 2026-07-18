@@ -26,7 +26,6 @@
 
 namespace OHOS::Print {
 
-constexpr int subStateCodeDigits = 2;
 constexpr int maxSingleSubStateCode = 99;
 
 constexpr const char* ERROR_CODE_UNKNOWN = "unknown";

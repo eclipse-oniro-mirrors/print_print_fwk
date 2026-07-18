@@ -77,4 +77,14 @@ namespace OHOS::Print {
             );
         }
     }
+
+    void HisysEventUtil::ReportIppRawData(const std::string &msg)
+    {
+        HiSysEventWrite(
+            PRINT_DOMAIN,
+            FAULT_CONNECT_PRINT_EVENT,
+            HiSysEvent::EventType::FAULT,
+            MSG, msg);
+    }
+
 }

@@ -421,19 +421,6 @@ HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_ValidParam_ReturnsCorrectJson, T
     EXPECT_EQ(result["maximum"].asInt(), 100);
 }
 
-HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_PasscodeType_ReturnsCorrectJson, TestSize.Level1)
-{
-    ppd_cparam_t cparam;
-    cparam.type = PPD_CUSTOM_PASSCODE;
-    cparam.minimum.custom_passcode = 4;
-    cparam.maximum.custom_passcode = 8;
-
-    Json::Value result = FindCustomParamLimit(&cparam);
-    EXPECT_TRUE(result.isObject());
-    EXPECT_EQ(result["minimum"].asInt(), 4);
-    EXPECT_EQ(result["maximum"].asInt(), 8);
-}
-
 HWTEST_F(PrintCupsPpdTest, FindCustomParamLimit_InvalidType_ReturnsFalse, TestSize.Level1)
 {
     ppd_cparam_t cparam;

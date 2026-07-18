@@ -245,7 +245,7 @@ bool ScanSystemData::QueryScannerNameByUniqueId(const std::string &uniqueId, std
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
-    if (iter != addedScannerMap_.end()) {
+    if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         deviceName = iter->second->deviceName;
         return true;
     }

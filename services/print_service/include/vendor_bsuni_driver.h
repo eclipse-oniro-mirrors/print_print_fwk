@@ -59,6 +59,7 @@ private:
     void OnCupsPrinterRemove(std::shared_ptr<std::string> printerId);
     void OnPpdQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> ppdData);
     void OnStateQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> stateData);
+    void OnIppRawDataQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> rawData);
     void OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> printerInfo);
 private:
     void *bsUniDriverHandler = nullptr;

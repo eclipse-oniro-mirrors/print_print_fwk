@@ -73,13 +73,13 @@ namespace OHOS::Print {
 
 #define PRINT_CHECK_NULL_AND_RETURN(ptr, retVal)        \
     if ((ptr) == nullptr) {                             \
-        PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
+        PRINT_HILOGE("[%{public}s] %{public}s is nullptr.", __func__, (#ptr)); \
         return (retVal);                                \
     }
 
-#define PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                \
+#define PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal)                          \
     if ((ptr) == nullptr) {                                                         \
-        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), __func__);     \
         return (retVal);                                                            \
     }
 
@@ -95,13 +95,15 @@ namespace OHOS::Print {
             return retVal; \
         }
 
-#define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
+#define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr)                       \
     if ((ptr) == nullptr) {                                                         \
-        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));   \
+        PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), __func__);   \
         return;                                                                     \
     }
 
 enum PrintErrorCode {
+    E_PRINT_ACCOUNT_ERROR = -5,
+    E_PRINT_NETWORK_ERROR = -3,
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,
     E_PRINT_ILLEGAL_USE_OF_SYSTEM_API = 202,
@@ -339,6 +341,9 @@ const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_se
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =
     "/data/service/el2/public/print_service/printers_enterprise";
+const std::string PRINTER_SERVICE_IPP_RAW_DATA_PATH = "/data/service/el2/public/print_service/ipp_raw_data";
+constexpr uint64_t IPP_RAW_DATA_EXPIRE_SECONDS = 604800; // 7 * 24 * 3600
+constexpr int DECIMAL_BASE = 10;
 const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION_FILE = "version.json";
 const std::string PRINTER_LIST_VERSION_V1 = "v1";
@@ -348,6 +353,8 @@ const std::string PRINT_USER_DATA_VERSION = "v1";
 const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
 const std::string DEFAULT_MEDIA_TYPE = "stationery";
+const std::string TEXT_SMOOTH_OPTION = "oh-text-smooth";
+const std::string TEXT_SMOOTH_DEFAULT = "dpi";
 const std::string DEFAULT_USER_NAME = "print";
 static const std::string P2P_PRINTER = "p2p";
 static const std::string EPRINTID = "ePrintID";
@@ -474,6 +481,7 @@ const std::string PAGE_SIZE_ID_PRC6 = "PRC6";
 const std::string PAGE_SIZE_ID_PRC7 = "PRC7";
 const std::string PAGE_SIZE_ID_PRC8 = "PRC8";
 const std::string PAGE_SIZE_ID_PRC16 = "PRC16";
+const std::string PAGE_SIZE_ID_PRC_16K = "PRC_16K";
 const std::string PAGE_SIZE_ID_ROC_16K = "ROC_16K";
 const std::string PAGE_SIZE_ID_ROC_8K = "ROC_8K";
 

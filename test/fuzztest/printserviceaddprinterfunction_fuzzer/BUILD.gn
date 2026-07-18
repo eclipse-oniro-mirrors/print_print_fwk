@@ -30,6 +30,7 @@ ohos_fuzztest("PrintServiceAddPrinterFunctionFuzzTest") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
     "${_service_path}/print_service/include/event_callback",
+    "${_service_path}/include/remote",
     "${print_utils_path}/include",
   ]
 
@@ -83,6 +84,8 @@ ohos_fuzztest("PrintServiceAddPrinterFunctionFuzzTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -105,6 +108,10 @@ ohos_fuzztest("PrintServiceAddPrinterFunctionFuzzTest") {
       "security_guard:libsg_collect_sdk",
       "time_service:time_client",
     ]
+  }
+
+  if (print_fwk_feature_remote_service) {
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }
 }
 

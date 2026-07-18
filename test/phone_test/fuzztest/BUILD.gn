@@ -19,8 +19,13 @@ if (print_fwk_feature_device_isolation) {
   group("fuzztest") {
     testonly = true
     deps = [
+      "${_test_base_path}/abilitymanageradapter_fuzzer:fuzztest",
+      "${_test_base_path}/escldrivermanager_fuzzer:fuzztest",
+      "${_test_base_path}/ppdinfo_fuzzer:fuzztest",
       "${_test_base_path}/printcupsattribute_fuzzer:fuzztest",
       "${_test_base_path}/printcupsclient_fuzzer:fuzztest",
+      "${_test_base_path}/printereventcallback_fuzzer:fuzztest",
+      "${_test_base_path}/printjobeventcallback_fuzzer:fuzztest",
       "${_test_base_path}/printserviceability_fuzzer:fuzztest",
       "${_test_base_path}/printserviceabilityprintjob_fuzzer:fuzztest",
       "${_test_base_path}/printserviceabilityprinterppd_fuzzer:fuzztest",
@@ -31,21 +36,23 @@ if (print_fwk_feature_device_isolation) {
       "${_test_base_path}/printserviceppdqueryfunction_fuzzer:fuzztest",
       "${_test_base_path}/printservicenotpublicfunction_fuzzer:fuzztest",
       "${_test_base_path}/printserviceprintdiscoverfunction_fuzzer:fuzztest",
-      "${_test_base_path}/printserviceprintjobfunction_fuzzer:fuzztest",
       "${_test_base_path}/printserviceprintjobstatefunction_fuzzer:fuzztest",
       "${_test_base_path}/printservicequeryprinter_fuzzer:fuzztest",
       "${_test_base_path}/printserviceupdateprinterfunction_fuzzer:fuzztest",
+      "${_test_base_path}/printsharedhost_fuzzer:fuzztest",
       "${_test_base_path}/scancallback_fuzzer:fuzztest",
       "${_test_base_path}/scancallbackproxy_fuzzer:fuzztest",
       "${_test_base_path}/scancallbackstub_fuzzer:fuzztest",
       "${_test_base_path}/scancapi_fuzzer:fuzztest",
       "${_test_base_path}/scanhelper_fuzzer:fuzztest",
       "${_test_base_path}/scanmanagerclient_fuzzer:fuzztest",
+      "${_test_base_path}/scanmanagerservice_fuzzer:fuzztest",
       "${_test_base_path}/scanpicturedata_fuzzer:fuzztest",
+      "${_test_base_path}/scantask_fuzzer:fuzztest",
       "${_test_base_path}/scanserviceability_fuzzer:fuzztest",
+      "${_test_base_path}/scanserviceproxy_fuzzer:fuzztest",
       "${_test_base_path}/scanservicestub_fuzzer:fuzztest",
       "${_test_base_path}/scanusbmanager_fuzzer:fuzztest",
-      "${_test_base_path}/vendormanager_fuzzer:fuzztest",
     ]
   }
 } else {

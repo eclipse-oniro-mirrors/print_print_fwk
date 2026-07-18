@@ -49,7 +49,9 @@ PrinterInfo::PrinterInfo()
       hasSelectedDriver_(false),
       hasSelectedProtocol_(false),
       selectedProtocol_(""),
-      hasOriginId_(false)
+      hasOriginId_(false),
+      originId_(""),
+      deviceId_("")
 {
     capability_.Reset();
     preferences_.Reset();
@@ -90,7 +92,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       hasSelectedProtocol_(right.hasSelectedProtocol_),
       selectedProtocol_(right.selectedProtocol_),
       hasOriginId_(right.hasOriginId_),
-      originId_(right.originId_)
+      originId_(right.originId_),
+      deviceId_(right.deviceId_)
 {
 }
 PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
@@ -130,6 +133,7 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         selectedProtocol_ = right.selectedProtocol_;
         hasOriginId_ = right.hasOriginId_;
         originId_ = right.originId_;
+        deviceId_ = right.deviceId_;
     }
     return *this;
 }
@@ -404,6 +408,16 @@ bool PrinterInfo::HasOriginId() const
 std::string PrinterInfo::GetOriginId() const
 {
     return originId_;
+}
+
+void PrinterInfo::SetDeviceId(const std::string &deviceId)
+{
+    deviceId_ = deviceId;
+}
+
+const std::string &PrinterInfo::GetDeviceId() const
+{
+    return deviceId_;
 }
 
 bool PrinterInfo::ReadFromParcel(Parcel &parcel)
@@ -717,7 +731,7 @@ void PrinterInfo::DumpInfo() const
         capability_.DumpInfo();
     }
     if (hasUri_) {
-        PRINT_HILOGI("uri: %{public}s", uri_.c_str());
+        PRINT_HILOGI("uri: %{public}s", PrintUtils::AnonymizePrinterUri(uri_).c_str());
     }
     if (hasPrinterMake_) {
         PRINT_HILOGI("printerMake: %{public}s", printerMake_.c_str());

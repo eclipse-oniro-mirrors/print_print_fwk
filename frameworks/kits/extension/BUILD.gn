@@ -120,6 +120,8 @@ ohos_shared_library("print_extension_framework") {
     "ipc:ipc_single",
     "ipc:rpc",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
     "runtime_core:ani",
     "runtime_core:libarkruntime",
   ]
@@ -169,6 +171,8 @@ ohos_shared_library("print_extension_module") {
     "ipc:ipc_napi",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
   ]
 
   if (build_variant == "user") {

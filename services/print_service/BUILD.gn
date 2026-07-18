@@ -22,7 +22,10 @@ config("print_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "${_service_path}/include",
+    "${_service_path}/include/remote",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_utils_path}/include",
   ]
   cflags_cc += [
     "-fno-exceptions",
@@ -46,6 +49,7 @@ _sources = [
   "${_service_path}/src/print_bms_helper.cpp",
   "${_service_path}/src/print_callback_proxy.cpp",
   "${_service_path}/src/print_caller_app_monitor.cpp",
+  "${_service_path}/src/print_cloud_config_manager.cpp",
   "${_service_path}/src/print_common_death_recipient.cpp",
   "${_service_path}/src/print_event_container.cpp",
   "${_service_path}/src/print_event_subscriber.cpp",
@@ -79,7 +83,10 @@ if (!print_fwk_feature_device_isolation) {
   ]
 }
 
-_deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
+_deps = [
+  "${print_path}/frameworks/models/print_models:print_models",
+  "${print_path}/frameworks/ability_manager_adapter:print_ability_manager_adapter",
+]
 
 _external_deps = [
   "ability_base:base",
@@ -89,11 +96,13 @@ _external_deps = [
   "ability_runtime:ability_manager",
   "ability_runtime:abilitykit_native",
   "ability_runtime:app_manager",
+  "ability_runtime:extension_manager",
   "access_token:libaccesstoken_sdk",
   "bundle_framework:appexecfwk_base",
   "bundle_framework:appexecfwk_core",
   "c_utils:utils",
   "common_event_service:cesfwk_innerkits",
+  "config_policy:configpolicy_util",
   "data_share:datashare_consumer",
   "drivers_interface_usb:libusb_proxy_1.0",
   "distributed_notification_service:ans_innerkits",
@@ -106,6 +115,8 @@ _external_deps = [
   "ipc:ipc_core",
   "jsoncpp:jsoncpp",
   "napi:ace_napi",
+  "node:node_header_notice",
+  "libuv:uv",
   "openssl:libcrypto_shared",
   "openssl:libssl_shared",
   "os_account:os_account_innerkits",
@@ -126,6 +137,7 @@ _include_dirs = [
   "${print_path}/frameworks/ohprint/include",
   "${_service_path}/include/event_callback",
   "${_service_path}/enterprise/include",
+  "${_service_path}/include/remote",
   "${print_utils_path}/include",
 ]
 
@@ -230,6 +242,16 @@ ohos_shared_library("print_service") {
       cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
   }
 
+  if (print_fwk_feature_remote_service) {
+    sources += [
+      "${_service_path}/src/remote/remote_service_adapter.cpp",
+      "${_service_path}/src/remote/print_ipc_connection.cpp",
+      "${_service_path}/src/remote/remote_printer_manager.cpp",
+      "${_service_path}/src/remote/remote_callback_stub.cpp",
+    ]
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
@@ -327,6 +349,16 @@ ohos_static_library("print_service_test") {
 
   if (print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
+  if (print_fwk_feature_remote_service) {
+    sources += [
+      "${_service_path}/src/remote/remote_service_adapter.cpp",
+      "${_service_path}/src/remote/print_ipc_connection.cpp",
+      "${_service_path}/src/remote/remote_printer_manager.cpp",
+      "${_service_path}/src/remote/remote_callback_stub.cpp",
+    ]
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }
 
   subsystem_name = "print"

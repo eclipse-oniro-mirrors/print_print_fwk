@@ -27,6 +27,19 @@
 #include "print_constant.h"
 #include "smb_printer_discoverer.h"
 #define SHARE_TYPE_PRINTQ   1
+
+namespace OHOS::Print { class SmbPrinterDiscoverer; }
+
+extern "C" void SmbShareEnumCb(struct smb2_context* smb2, int status,
+    void* commandData, void* privateData)
+{
+    if (!privateData) {
+        return;
+    }
+    auto* self = static_cast<OHOS::Print::SmbPrinterDiscoverer*>(privateData);
+    self->ShareEnumCallback(smb2, static_cast<int32_t>(status), commandData);
+}
+
 namespace OHOS::Print {
 static constexpr int32_t SMB_CONNECT_TIMEOUT_S = 2;
 static constexpr int32_t SMB_CONNECT_TIMEOUT_MS = 2000;
@@ -103,15 +116,7 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
         smbLib_->DisconnectShare(smbCtx_);
         return ParseSmbErrorCode(errorStr);
     }
-    if (smbLib_->ShareEnumAsync(smbCtx_, SHARE_INFO_1,
-        [](struct smb2_context* smb2, int32_t status, void* commandData, void* privateData) {
-            if (!privateData) {
-                PRINT_HILOGE("privateData is null");
-                return;
-            }
-            auto* self = static_cast<SmbPrinterDiscoverer*>(privateData);
-            self->ShareEnumCallback(smb2, status, commandData);
-        }, this) != 0) {
+    if (smbLib_->ShareEnumAsync(smbCtx_, SHARE_INFO_1, SmbShareEnumCb, this) != 0) {
         const char* errorReason = smbLib_->GetSmbError(smbCtx_);
         std::string errorStr = errorReason ? errorReason : "null";
         PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",

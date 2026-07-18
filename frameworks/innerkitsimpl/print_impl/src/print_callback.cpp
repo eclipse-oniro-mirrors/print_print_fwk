@@ -70,6 +70,7 @@ PrintCallback::~PrintCallback()
         napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
         if (ret != napi_ok) {
             PRINT_HILOGE("napi_send_event fail");
+            NapiPrintUtils::DeleteReference(env_, ref_);
             delete param;
         }
     }

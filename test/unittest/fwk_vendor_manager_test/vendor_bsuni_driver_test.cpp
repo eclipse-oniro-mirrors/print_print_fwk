@@ -274,6 +274,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0003, TestSize.Level2)
     std::vector<std::string> propertyKeys;
     propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
     propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
+    propertyKeys.push_back(PRINTER_PROPERTY_KEY_IPP_RAW_DATA);
     VendorBsuniDriver vendorDriver;
     vendorDriver.OnCreate();
     vendorDriver.OnDestroy();

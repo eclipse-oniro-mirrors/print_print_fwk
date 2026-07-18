@@ -588,6 +588,27 @@ HWTEST_F(PrinterUserPreferencesTest, CopyFromEmpty_RemainsEmpty, TestSize.Level1
     EXPECT_TRUE(copy.IsEmpty());
 }
 
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_IsSetInsteadOfChoice_NoFallback, TestSize.Level1)
+{
+    Json::Value json;
+    json["userId"] = 100;
+    json["printerId"] = "printer_001";
+    Json::Value customOptionsArr;
+    Json::Value optJson;
+    optJson["key"] = "CustomPin";
+    optJson["isSet"] = true;
+    customOptionsArr.append(optJson);
+    json["customOptions"] = customOptionsArr;
+
+    PrinterUserPreferences userPrefs;
+    userPrefs.ConvertFromJson(json);
+
+    auto opt = userPrefs.GetCustomOption("CustomPin");
+    ASSERT_NE(opt, nullptr);
+    EXPECT_EQ(opt->key, "CustomPin");
+    EXPECT_EQ(opt->choice, "");
+}
+
 HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_ValidSrc_DataCopied, TestSize.Level1)
 {
     SecureBlob blob;

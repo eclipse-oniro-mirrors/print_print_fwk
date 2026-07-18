@@ -31,9 +31,9 @@ public:
         char *userPasswd, std::vector<PrinterInfo> &infos);
     static std::string ParseIpFromSmbPrinterId(const std::string& printerId);
     static bool IsSmbPrinterId(const std::string& printerId);
+    void ShareEnumCallback(struct smb2_context* smb2, int32_t status, void* command_data);
 private:
     int32_t SetCredentials(const std::string &userName, char *userPasswd);
-    void ShareEnumCallback(struct smb2_context* smb2, int32_t status, void* command_data);
     int32_t SmbEventLoop();
     std::string CreatePrinterId(const std::string& ip, const std::string& name);
     void GeneratePrinterInfos(const std::string& ip, std::vector<PrinterInfo> &infos);

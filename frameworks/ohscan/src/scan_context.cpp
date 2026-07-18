@@ -330,20 +330,12 @@ Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
         SCAN_HILOGE("scannerOptions is a nullptr");
         return nullptr;
     }
-    scannerOptions->titles = new (std::nothrow) char *[optionCount];
-    scannerOptions->descriptions = new (std::nothrow) char *[optionCount];
-    scannerOptions->ranges = new (std::nothrow) char *[optionCount];
+    scannerOptions->titles = new (std::nothrow) char *[optionCount]();
+    scannerOptions->descriptions = new (std::nothrow) char *[optionCount]();
+    scannerOptions->ranges = new (std::nothrow) char *[optionCount]();
     scannerOptions->optionCount = optionCount;
     if (scannerOptions->titles == nullptr || scannerOptions->descriptions == nullptr ||
         scannerOptions->ranges == nullptr) {
-        FreeScannerOptionsMemory(scannerOptions);
-        return nullptr;
-    }
-    int32_t stringMemSize = optionCount * sizeof(char *);
-    if (memset_s(scannerOptions->titles, stringMemSize, 0, stringMemSize) != 0 ||
-        memset_s(scannerOptions->descriptions, stringMemSize, 0, stringMemSize) != 0 ||
-        memset_s(scannerOptions->ranges, stringMemSize, 0, stringMemSize) != 0) {
-        SCAN_HILOGW("memset_s fail");
         FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
@@ -439,7 +431,9 @@ int32_t ScanContext::StatusConvert(int32_t status)
         {E_SCAN_COVER_OPEN, SCAN_ERROR_COVER_OPEN},
         {E_SCAN_IO_ERROR, SCAN_ERROR_IO_ERROR},
         {E_SCAN_NO_MEM, SCAN_ERROR_NO_MEMORY},
-        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID}};
+        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID},
+        {E_SCAN_NO_PERMISSION, SCAN_ERROR_NO_PERMISSION},
+        {E_SCAN_INVALID_PARAMETER, SCAN_ERROR_INVALID_PARAMETER}};
     auto it = errorCodeMap.find(status);
     if (it != errorCodeMap.end()) {
         return it->second;

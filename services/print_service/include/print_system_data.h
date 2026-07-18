@@ -38,6 +38,11 @@ public:
     bool Init();
     void InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo);
     void SavePrinterFile(const std::string &printerId);
+    void SaveIppRawDataFile(const std::string &printerId, const std::string &rawData);
+    void CleanIppRawDataFiles();
+    bool IsPrinterIpInAddedList(const std::string &printerIp);
+    bool HasIppRawDataFile(const std::string &printerId);
+    void UpdateIppRawDataFileTimestamp(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     bool IsPrinterAdded(const std::string &printerId);
@@ -48,6 +53,7 @@ public:
     void GetRawAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string &printerId, const std::string &printerAlias);
+    bool UpdatePrinterDeviceId(const std::string &printerId, const std::string &deviceId);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
     void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);

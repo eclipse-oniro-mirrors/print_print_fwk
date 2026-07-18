@@ -127,6 +127,9 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
     if (PrintJsonUtil::IsMember(object, "option") && object["option"].isString()) {
         info.SetOption(object["option"].asString());
     }
+    if (PrintJsonUtil::IsMember(object, "deviceId") && object["deviceId"].isString()) {
+        info.SetDeviceId(object["deviceId"].asString());
+    }
 }
 
 bool PrintSystemData::Init()
@@ -378,6 +381,7 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
     if (info->HasOption()) {
         printerJson["option"] = info->GetOption();
     }
+    printerJson["deviceId"] = info->GetDeviceId();
 }
 
 void PrintSystemData::SavePrinterFile(const std::string &printerId)
@@ -485,6 +489,21 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
         }
         PRINT_HILOGW("Alias is the same, no update needed.");
         return false;
+    }
+    PRINT_HILOGE("Unable to find the corresponding printId.");
+    return false;
+}
+
+bool PrintSystemData::UpdatePrinterDeviceId(const std::string &printerId, const std::string &deviceId)
+{
+    auto info = GetAddedPrinterMap().Find(printerId);
+    if (info != nullptr) {
+        if (info->GetDeviceId() == deviceId) {
+            return false;
+        }
+        info->SetDeviceId(deviceId);
+        PRINT_HILOGI("UpdatePrinterDeviceId success, deviceId: %{public}s", deviceId.c_str());
+        return true;
     }
     PRINT_HILOGE("Unable to find the corresponding printId.");
     return false;

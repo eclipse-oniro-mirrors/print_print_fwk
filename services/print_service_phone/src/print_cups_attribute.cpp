@@ -436,13 +436,16 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
     ipp_attribute_t *attrPtr;
     Json::Value options;
     if ((attrPtr = ippFindAttribute(response, "printer-make-and-model", IPP_TAG_TEXT)) != nullptr) {
-        options["make"] = ippGetString(attrPtr, 0, nullptr);
+        const char *make = ippGetString(attrPtr, 0, nullptr);
+        options["make"] = make ? make : "";
     }
     if ((attrPtr = ippFindAttribute(response, "printer-uuid", IPP_TAG_URI)) != nullptr) {
-        options["uuid"] = ippGetString(attrPtr, 0, nullptr);
+        const char *uuid = ippGetString(attrPtr, 0, nullptr);
+        options["uuid"] = uuid ? uuid : "";
     }
     if ((attrPtr = ippFindAttribute(response, "printer-name", IPP_TAG_NAME)) != nullptr) {
-        options["printerName"] = ippGetString(attrPtr, 0, nullptr);
+        const char *printerName = ippGetString(attrPtr, 0, nullptr);
+        options["printerName"] = printerName ? printerName : "";
     }
     std::string keyword = "media-type-supported";
     std::string supportTypes;

@@ -58,6 +58,7 @@ struct JobParameters {
     std::string vendorOptions;
     bool isReverse = false;
     bool isCollate = true;
+    std::string bsuniOutputFormat;
 };
 
 enum StatePolicy {
@@ -200,7 +201,9 @@ private:
     static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillTextSmoothOption(int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);

@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <json/json.h>
 
-#include "ability_manager_client.h"
 #include "event_handler.h"
 #include "extension_ability_info.h"
 #include "hks_api.h"
@@ -165,6 +164,8 @@ public:
     void HandleWebPrinterUninstall();
     std::shared_ptr<IHksAdapter> GetHksAdapter();
     int32_t GetCurrentUserId();
+    bool GetBundleInfo(AppExecFwk::BundleInfo &bundleInfo);
+    bool IsExtensionPrintJob(const std::string &cid);
 
 protected:
     void OnStart() override;
@@ -174,6 +175,7 @@ private:
     int32_t Init();
     void InitServiceHandler();
     void ManualStart();
+    int32_t ConnectPrinterByType(const std::string &printerId);
     std::string GetPrintJobOrderId();
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
@@ -188,6 +190,7 @@ private:
     bool SendQueuePrintJob(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
     bool isEprint(const std::string &printerId);
+    bool ShouldUpdateCapabilityByPPD(const std::string &printerId);
     int32_t ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
@@ -335,6 +338,7 @@ public:
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
+    void SaveIppRawData(const std::string &printerId, const std::string &rawData) override;
     std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) override;
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
@@ -344,6 +348,8 @@ private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
+    int32_t StartExtPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
+    int32_t StartCupsPrintJob(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
@@ -363,6 +369,7 @@ private:
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
     PpdInfo GetPpdInfoFromPpdName(const std::string &ppdName);
+    void CheckAndUpdateIppRawData(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -427,6 +434,16 @@ public:
     bool IsDisablePrint();
     void ReportEventAndUpdateJobState(std::string option, std::string jobId);
 #endif // EDM_SERVICE_ENABLE
+
+#ifdef REMOTE_SERVICE_ENABLE
+public:
+    int32_t AddRemotePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
+    bool RemoveRemotePrinterInfo(const std::string &printerId);
+private:
+    bool MatchPrinterByUri(const std::string &uri, std::string &matchedPrinterId, PrinterInfo &matchedPrinter);
+    bool IsRemotePrinter(const std::string &printerId);
+    int32_t ConnectRemotePrinter(const std::string &printerId);
+#endif // REMOTE_SERVICE_ENABLE
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

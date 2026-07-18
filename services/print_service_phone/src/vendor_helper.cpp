@@ -238,7 +238,7 @@ void LogDiscoveryItem(const Print_DiscoveryItem *discoveryItem)
         PRINT_HILOGW("makeAndModel is null");
     }
     if (discoveryItem->printerUri != nullptr) {
-        PRINT_HILOGD("printerUri: %{public}s", discoveryItem->printerUri);
+        PRINT_HILOGD("printerUri: %{private}s", discoveryItem->printerUri);
     } else {
         PRINT_HILOGW("printerUri is null");
     }

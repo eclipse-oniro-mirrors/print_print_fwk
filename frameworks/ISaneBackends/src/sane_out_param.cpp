@@ -32,7 +32,7 @@ bool SaneOutParam::Marshalling(Parcel &parcel) const
 
 SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
 {
-    SaneOutParam* obj = new (std::nothrow) SaneOutParam();
+    auto obj = std::make_unique<SaneOutParam>();
     if (obj == nullptr) {
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
@@ -42,6 +42,6 @@ SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&obj->valueNumList_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->valueStr_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(obj->valueBool_), nullptr);
-    return obj;
+    return obj.release();
 }
 }   // namespace OHOS::Scan

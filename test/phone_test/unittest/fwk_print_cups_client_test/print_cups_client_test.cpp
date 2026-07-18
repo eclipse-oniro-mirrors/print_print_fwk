@@ -337,7 +337,6 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_DoNothing_When_NullInQueue, TestSize.
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
@@ -364,7 +363,6 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_Succeed_When_OnePrintJobInQueue, Test
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
@@ -382,7 +380,6 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_ClearQueue_When_NullptrPrintJobInQueu
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
@@ -3805,6 +3802,76 @@ HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6GlobalWithScope_Test, 
     std::string uri = "ipp://[2001:db8:85a3::8a2e:370:7334+wlan0]:631/printers/TestPrinter";
     IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
     EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_010
+ * @tc.desc: GetIpAddressTypeFromUri with link-local IPv4 address (169.254.x.x)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_LinkLocalAddress_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.254.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_011
+ * @tc.desc: GetIpAddressTypeFromUri with link-local IPv4 address boundary (169.254.0.1)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_LinkLocalBoundaryLow_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.254.0.1:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_012
+ * @tc.desc: GetIpAddressTypeFromUri with link-local IPv4 address boundary (169.254.255.255)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_LinkLocalBoundaryHigh_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.254.255.255:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_013
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address close to link-local range (169.253.x.x)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_NearLinkLocalLow_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.253.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_014
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address close to link-local range (169.255.x.x)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_NearLinkLocalHigh_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.255.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
 }
 
 }  // namespace Print

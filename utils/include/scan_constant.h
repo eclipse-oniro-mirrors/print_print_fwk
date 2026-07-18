@@ -101,6 +101,13 @@ namespace OHOS::Scan {
         return retVal; \
     }
 
+#define CHECK_PARCEL_OP_AND_RETURN_VAL_WITH_CLEANUP(parcelOpExp, retVal, cleanupExp) \
+    if (!(parcelOpExp)) { \
+        SCAN_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+        cleanupExp; \
+        return retVal; \
+    }
+
 #define SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(ptr, retVal, funcName)                 \
     if ((ptr) == nullptr) {                                                         \
         SCAN_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), (funcName));     \
@@ -193,8 +200,7 @@ enum ScanConstraintType {
 enum ScannerState {
     SCANNER_READY = 0,
     SCANNER_SCANING = 1,
-    SCANNER_SEARCHING = 2,
-    SCANNER_CANCELING = 3,
+    SCANNER_CANCELING = 2,
 };
 
 enum PhysicalUnit {
@@ -229,6 +235,7 @@ constexpr int32_t JPEG_QUALITY_SEVENTY_FIVE = 75;
 constexpr uint32_t IMAGE_COMPRESS_QUALITY_MAX = 100;
 constexpr int32_t BUFFER_SIZE = 1024 * 100; // 100KB
 constexpr int32_t MAX_IMAGE_DIMENSION = 65535; // Maximum dimension for scanned images
+constexpr int32_t MAX_FD_COUNT = 1000;
 
 enum ExportImageFormat {
     EXPORT_FORMAT_PNG = 0,

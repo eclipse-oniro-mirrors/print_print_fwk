@@ -41,7 +41,7 @@ bool SaneOptionDescriptor::Marshalling(Parcel &parcel) const
 
 SaneOptionDescriptor* SaneOptionDescriptor::Unmarshalling(Parcel &parcel)
 {
-    SaneOptionDescriptor* obj = new (std::nothrow) SaneOptionDescriptor();
+    auto obj = std::make_unique<SaneOptionDescriptor>();
     if (obj == nullptr) {
         SCAN_HILOGE("obj is a nullptr.");
         return nullptr;
@@ -59,7 +59,7 @@ SaneOptionDescriptor* SaneOptionDescriptor::Unmarshalling(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->minValue_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->maxValue_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->quantValue_), nullptr);
-    return obj;
+    return obj.release();
 }
 
 void SaneOptionDescriptor::Dump()

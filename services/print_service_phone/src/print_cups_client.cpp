@@ -93,6 +93,11 @@ const uint32_t PPD_EXTENSION_LENGTH = 4;
 const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
 const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
+#ifdef UNIT_TEST
+const uint32_t GET_OPTION_TIMES = 2;
+#else
+const uint32_t GET_OPTION_TIMES = 40;
+#endif
 
 static bool g_isFirstQueryState = false;
 
@@ -951,7 +956,8 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
 int32_t PrintCupsClient::QueryPrinterCapabilityByUri(
     const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps)
 {
-    PRINT_HILOGI("PrintCupsClient QueryPrinterCapabilityByUri start, printerUri: %{public}s", printerUri.c_str());
+    PRINT_HILOGI("PrintCupsClient QueryPrinterCapabilityByUri start, printerUri: %{public}s",
+        PrintUtils::AnonymizePrinterUri(printerUri).c_str());
     static const char *const pattrs[] = {"all"};
     std::string nic;
     IsIpConflict(printerId, nic);
@@ -986,7 +992,7 @@ int32_t PrintCupsClient::QueryPrinterStatusByUri(const std::string &printerUri, 
         return E_PRINT_SERVER_FAILURE;
     }
     PRINT_HILOGI("PrintCupsClient QueryPrinterStatusByUri end, printerUri: %{public}s, status: %{public}d.",
-        printerUri.c_str(), status);
+        PrintUtils::AnonymizePrinterUri(printerUri).c_str(), status);
     return E_PRINT_NONE;
 }
 
@@ -1370,7 +1376,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
         PRINT_HILOGD("the printerInfo option");
         PrinterCapability printerCaps;
         std::string infoOpt = info.GetOption();
-        PRINT_HILOGD("the printerInfo option %{public}s", infoOpt.c_str());
+        PRINT_HILOGD("the printerInfo option %{public}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
         Json::Value infoJson;
         if (!PrintJsonUtil::Parse(infoOpt, infoJson)) {
             PRINT_HILOGE("infoOpt can not parse to json object");
@@ -1381,7 +1387,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
             return E_PRINT_INVALID_PARAMETER;
         }
         std::string printerUri = infoJson["printerUri"].asString();
-        PRINT_HILOGD("QueryPrinterInfoByPrinterId in %{public}s", printerUri.c_str());
+        PRINT_HILOGD("QueryPrinterInfoByPrinterId in %{private}s", printerUri.c_str());
         if (PrintJsonUtil::IsMember(infoJson, "printerName") && infoJson["printerName"].isString()) {
             info.SetPrinterName(infoJson["printerName"].asString());
         }
@@ -1412,7 +1418,6 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
         PRINT_HILOGW("printAbility_ is null");
         return isMakeModelRight;
     }
-    const uint32_t GET_OPTION_TIMES = 40;
     while (retryCount < GET_OPTION_TIMES) {
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), nullptr);
         if (dest != nullptr) {
@@ -2282,7 +2287,7 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
 bool PrintCupsClient::ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri)
 {
     PRINT_HILOGI("[Printer: %{public}s] ModifyCupsPrinterUri enter, printerUri: %{public}s",
-        printerName.c_str(), printerUri.c_str());
+        printerName.c_str(), PrintUtils::AnonymizePrinterUri(printerUri).c_str());
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
         return false;
@@ -2538,7 +2543,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->jobOriginatingUserName: %{private}s", jobParams->jobOriginatingUserName.c_str());
     PRINT_HILOGI("jobParams->printerId: %{public}s", PrintUtils::AnonymizePrinterId(jobParams->printerId).c_str());
     PRINT_HILOGI("jobParams->printerName: %{public}s", jobParams->printerName.c_str());
-    PRINT_HILOGI("jobParams->printerUri: %{public}s", jobParams->printerUri.c_str());
+    PRINT_HILOGI("jobParams->printerUri: %{public}s", PrintUtils::AnonymizePrinterUri(jobParams->printerUri).c_str());
     PRINT_HILOGI("jobParams->documentFormat: %{public}s", jobParams->documentFormat.c_str());
     PRINT_HILOGI("jobParams->mediaSize: %{public}s", jobParams->mediaSize.c_str());
     PRINT_HILOGI("jobParams->mediaType: %{public}s", jobParams->mediaType.c_str());
@@ -2848,7 +2853,7 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
         host, sizeof(host), &port, resource, sizeof(resource));
     
     if (host[0] == '\0') {
-        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", printerUri.c_str());
+        PRINT_HILOGW("[Uri: %{public}s] No host found in URI", PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_INVALID;
     }
     
@@ -2870,16 +2875,28 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
     struct in6_addr addr6;
     
     if (inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) {
-        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address", printerUri.c_str());
+        // Check if it's a link-local address (169.254.x.x)
+        // These addresses are DHCP failure fallback addresses (RFC 3927)
+        // and cannot be used for TCP communication, making print delivery impossible
+        if (hostStr.find("169.254.") == 0) {
+            PRINT_HILOGW("[Uri: %{public}s] IPv4 address 169.254.x.x is invalid "
+                "(link-local/DHCP failure address, cannot perform TCP communication)",
+                PrintUtils::AnonymizePrinterUri(printerUri).c_str());
+            return IP_ADDRESS_TYPE_INVALID;
+        }
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv4 address",
+            PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_IPV4;
     }
     
     if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1) {
-        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address", printerUri.c_str());
+        PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address",
+            PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_IPV6;
     }
     
-    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address", printerUri.c_str(), host);
+    PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address",
+        PrintUtils::AnonymizePrinterUri(printerUri).c_str(), host);
     return IP_ADDRESS_TYPE_INVALID;
 }
 

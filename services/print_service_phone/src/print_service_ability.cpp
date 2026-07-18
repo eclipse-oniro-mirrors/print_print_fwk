@@ -14,6 +14,7 @@
  */
 #include "print_service_ability.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <ctime>
 #include <string>
@@ -47,6 +48,7 @@
 #include "hisys_event_util.h"
 #include "uri.h"
 #include "kia_interceptor_manager.h"
+
 #include <fstream>
 #include <streambuf>
 #include "print_json_util.h"
@@ -70,6 +72,10 @@
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
 #include "print_failure_ai_notifier.h"
 #endif // HAVE_PRINT_FAILURE_AI_NOTIFIER
+#ifdef REMOTE_SERVICE_ENABLE
+#include "remote_printer_manager.h"
+#include "remote_constants.h"
+#endif  // REMOTE_SERVICE_ENABLE
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -648,6 +654,14 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     }
     printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
+    
+    int32_t result = ConnectPrinterByType(printerId);
+    PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter end", PrintUtils::AnonymizePrinterId(printerId).c_str());
+    return result;
+}
+
+int32_t PrintServiceAbility::ConnectPrinterByType(const std::string &printerId)
+{
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     if (!vendorManager.ExtractVendorName(extensionId).empty()) {
         if (!vendorManager.ConnectPrinterByIdAndPpd(printerId, "auto", "auto")) {
@@ -662,9 +676,12 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
             PrintUtils::AnonymizePrinterId(printerId).c_str(), result);
         return result;
     }
-    int32_t result = HandleExtensionConnectPrinter(printerId);
-    PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter end", PrintUtils::AnonymizePrinterId(printerId).c_str());
-    return result;
+#ifdef REMOTE_SERVICE_ENABLE
+    if (IsRemotePrinter(printerId)) {
+        return ConnectRemotePrinter(printerId);
+    }
+#endif  // REMOTE_SERVICE_ENABLE
+    return HandleExtensionConnectPrinter(printerId);
 }
 
 int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
@@ -748,6 +765,13 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
     vendorManager.StartDiscovery();
+#ifdef REMOTE_SERVICE_ENABLE
+    AppExecFwk::BundleInfo bundleInfo;
+    if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
+        PRINT_HILOGI("Remote bundle detected, start printer discovery");
+        DelayedSingleton<RemotePrinterManager>::GetInstance()->StartPrinterDiscovery();
+    }
+#endif
     return StartExtensionDiscovery(extensionIds);
 }
 
@@ -876,7 +900,7 @@ int32_t PrintServiceAbility::AddRawPrinter(PrinterInfo &info)
     int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(
         info.GetUri(), printerName, RAW_PPD_NAME);
     std::string option = PrintJsonUtil::WriteString(optionJson);
-    PRINT_HILOGD("AddRawPrinter option: %{public}s", option.c_str());
+    PRINT_HILOGD("AddRawPrinter option: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     info.SetOption(option);
 
     if (ret != E_PRINT_NONE) {
@@ -1175,7 +1199,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("[Printer: %{public}s] AddPrinterToCups start, printerUri: %{public}s, printerMake: %{public}s.",
-        printerName.c_str(), printerUri.c_str(), printerMake.c_str());
+        printerName.c_str(), PrintUtils::AnonymizePrinterUri(printerUri).c_str(), printerMake.c_str());
 #ifdef CUPS_ENABLE
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
     if (ret != E_PRINT_NONE) {
@@ -1295,6 +1319,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    infoJson["deviceId"] = printerInfo.GetDeviceId();
     UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
 
     PrintPageSize pageSize;
@@ -1640,7 +1665,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
     if (printJob->GetJobState() >= PRINT_JOB_QUEUED) {
         std::string extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
         std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
-        if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) == string::npos) {
+        if (!IsExtensionPrintJob(cid)) {
 #ifdef CUPS_ENABLE
             DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(printJob->GetJobId());
 #endif  // CUPS_ENABLE
@@ -1882,7 +1907,7 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     info->SetUri(newUri);
 #endif
 
-    PRINT_HILOGD("CheckPrinterUriDifferent, old = %{public}s, new = %{public}s",
+    PRINT_HILOGD("CheckPrinterUriDifferent, old = %{private}s, new = %{private}s",
         oldUri.c_str(), newUri.c_str());
     if (oldUri != newUri) {
         PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success", info->GetPrinterName().c_str());
@@ -2483,6 +2508,13 @@ void PrintServiceAbility::StopDiscoveryInternal()
 {
     PRINT_HILOGI("StopDiscoveryInternal start.");
     vendorManager.StopDiscovery();
+#ifdef REMOTE_SERVICE_ENABLE
+    AppExecFwk::BundleInfo bundleInfo;
+    if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
+        PRINT_HILOGI("Remote bundle detected, stop printer discovery");
+        DelayedSingleton<RemotePrinterManager>::GetInstance()->StopPrinterDiscovery();
+    }
+#endif
     printSystemData_.ClearDiscoveredPrinterList();
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CallbackEventType::EXTCB_STOP_DISCOVERY;
@@ -3582,7 +3614,7 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
         PRINT_HILOGD("printer is online, do not remove.");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{public}s", printerUri.c_str());
+    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{private}s", printerUri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     bool result = RemoveSinglePrinterInfo(PrintUtils::GetGlobalId(extensionId, printerId));
     return result ? E_PRINT_NONE : E_PRINT_INVALID_PRINTER;
@@ -3620,6 +3652,10 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     if (printerInfo.HasAlias()) {
         printer.SetAlias(printerInfo.GetAlias());
         printSystemData_.UpdatePrinterAlias(printerId, printerInfo.GetAlias());
+        auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        if (discoveredInfo != nullptr) {
+            discoveredInfo->SetAlias(printerInfo.GetAlias());
+        }
         printSystemData_.SavePrinterFile(printerId);
     }
 
@@ -4078,7 +4114,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         "[Printer: %{public}s] DoAddPrinterToCups start, printerMake: %{public}s, "
         "printerUri: %{public}s, ppdName: %{public}s",
         printerName.c_str(), printerInfo->GetPrinterMake().c_str(),
-        printerUri.c_str(), ppdName.c_str());
+        PrintUtils::AnonymizePrinterUri(printerUri).c_str(), ppdName.c_str());
 #ifdef CUPS_ENABLE
     if (!DoAddPrinterToCupsEnable(printerUri, printerName, printerInfo, ppdName, ppdData)) {
         return false;
@@ -4386,36 +4422,53 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
         return E_PRINT_BANNED;
     }
     if (isEprint(printJob->GetPrinterId())) {
-        auto extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
-        int32_t userId = GetCurrentUserId();
-        if (DelayedSingleton<EventListenerMgr>::GetInstance()->IsExtensionListenerEmpty(
-            CallbackEventType::EXTCB_START_PRINT, extensionId, userId)) {
-            return E_PRINT_SERVER_FAILURE;
-        }
-        CallbackInfo cbInfo;
-        cbInfo.cbEventType = CallbackEventType::EXTCB_START_PRINT;
-        cbInfo.extensionId = extensionId;
-        cbInfo.printJobInfo = printJob;
-        cbInfo.userId = userId;
-        auto callback = [this, printJob, cbInfo]() {
-            StartPrintJobCB(printJob->GetJobId(), printJob);
-            DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
-            CallStatusBar();
-        };
-        if (helper_ != nullptr && helper_->IsSyncMode()) {
-            callback();
-        } else if (serviceHandler_ != nullptr) {
-            serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-        } else {
-            PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
-        }
-    } else {
-#ifdef CUPS_ENABLE
-        NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
-        DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(*printJob, GetCallerUserName());
-        CallStatusBar();
-#endif  // CUPS_ENABLE
+        return StartExtPrintJobInternal(printJob);
     }
+#ifdef REMOTE_SERVICE_ENABLE
+    if (IsRemotePrinter(printJob->GetPrinterId())) {
+        return StartExtPrintJobInternal(printJob);
+    }
+#endif  // REMOTE_SERVICE_ENABLE
+    return StartCupsPrintJob(printJob);
+}
+
+int32_t PrintServiceAbility::StartExtPrintJobInternal(const std::shared_ptr<PrintJob> &printJob)
+{
+    auto extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
+    int32_t userId = GetCurrentUserId();
+    if (DelayedSingleton<EventListenerMgr>::GetInstance()->IsExtensionListenerEmpty(
+        CallbackEventType::EXTCB_START_PRINT, extensionId, userId)) {
+        return E_PRINT_SERVER_FAILURE;
+    }
+    CallbackInfo cbInfo;
+    cbInfo.cbEventType = CallbackEventType::EXTCB_START_PRINT;
+    cbInfo.extensionId = extensionId;
+    cbInfo.printJobInfo = printJob;
+    cbInfo.userId = userId;
+    auto callback = [this, printJob, cbInfo]() {
+        StartPrintJobCB(printJob->GetJobId(), printJob);
+        DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
+        CallStatusBar();
+    };
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
+        callback();
+    } else if (serviceHandler_ != nullptr) {
+        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
+    }
+    KiaInterceptorManager::GetInstance().RemoveCallerAppId(printJob->GetJobId());
+    PRINT_HILOGI("StartNativePrintJob end.");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::StartCupsPrintJob(const std::shared_ptr<PrintJob> &printJob)
+{
+#ifdef CUPS_ENABLE
+    NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(*printJob, GetCallerUserName());
+    CallStatusBar();
+#endif  // CUPS_ENABLE
     KiaInterceptorManager::GetInstance().RemoveCallerAppId(printJob->GetJobId());
     PRINT_HILOGI("StartNativePrintJob end.");
     return E_PRINT_NONE;
@@ -5805,5 +5858,152 @@ void PrintServiceAbility::HandleWebPrinterUninstall()
     for (auto &printerId : printerIdList) {
         RemoveSinglePrinterInfo(printerId);
     }
+}
+
+#ifdef REMOTE_SERVICE_ENABLE
+bool PrintServiceAbility::IsRemotePrinter(const std::string &printerId)
+{
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    return extensionId == REMOTE_EXT_BUNDLE_NAME;
+}
+ 
+int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
+{
+    PRINT_HILOGI("[Printer: %{public}s] Remote printer connect",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGE("[Printer: %{public}s] not found in discovery list",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return E_PRINT_INVALID_PRINTER;
+    }
+    
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo->SetPrinterState(PRINTER_CONNECTED);
+    printerInfo->SetSelectedProtocol("auto");
+    BuildPrinterPreference(*printerInfo);
+    
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (printSystemData_.IsPrinterAdded(printerId)) {
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+    } else {
+        printSystemData_.InsertAddedPrinter(printerId, *printerInfo);
+        printSystemData_.SavePrinterFile(printerId);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
+        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
+    }
+    
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
+    SendPrinterEvent(*printerInfo);
+    SetLastUsedPrinter(printerId);
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
+    
+    return E_PRINT_NONE;
+}
+ 
+int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
+{
+    PRINT_HILOGI("[Printer: %{public}s] AddRemotePrinterInfo start",
+        PrintUtils::AnonymizePrinterId(info.GetPrinterId()).c_str());
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+    if (!info.HasUri()) {
+        PRINT_HILOGW("Printer has no URI, considered invalid");
+        return E_PRINT_INVALID_PRINTER;
+    }
+
+    std::string matchedPrinterId;
+    PrinterInfo matchedPrinter;
+    if (!MatchPrinterByUri(info.GetUri(), matchedPrinterId, matchedPrinter)) {
+        return AddSinglePrinterInfo(info, extensionId);
+    }
+
+    bool needSave = false;
+    if (printSystemData_.UpdatePrinterAlias(matchedPrinterId, info.GetAlias())) {
+        PRINT_HILOGI("PrinterAlias Modify %{private}s -> %{private}s",
+            matchedPrinter.GetAlias().c_str(), info.GetAlias().c_str());
+        matchedPrinter.SetAlias(info.GetAlias());
+        SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, matchedPrinter);
+        needSave = true;
+    }
+    if (printSystemData_.UpdatePrinterDeviceId(matchedPrinterId, info.GetDeviceId())) {
+        needSave = true;
+    }
+    if (needSave) {
+        printSystemData_.SavePrinterFile(matchedPrinterId);
+    }
+    std::string localPrinterId = PrintUtils::GetLocalId(matchedPrinterId, extensionId);
+    PrinterInfo updatedInfo = info;
+    updatedInfo.SetPrinterId(localPrinterId);
+    return AddSinglePrinterInfo(updatedInfo, extensionId);
+}
+
+bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
+    std::string &matchedPrinterId, PrinterInfo &matchedPrinter)
+{
+    std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (const auto &printerId : addedPrinterIdList) {
+        PrinterInfo addedPrinter;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter)
+            && addedPrinter.HasUri() && addedPrinter.GetUri() == uri) {
+            matchedPrinter = addedPrinter;
+            matchedPrinterId = printerId;
+            PRINT_HILOGI("URI matched: %{private}s, existing printerId: %{public}s",
+                uri.c_str(), PrintUtils::AnonymizePrinterId(printerId).c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &printerId)
+{
+    PRINT_HILOGI("[Printer: %{public}s] RemoveRemotePrinterInfo start",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    return RemoveSinglePrinterInfo(printerId);
+}
+ 
+#endif
+
+bool PrintServiceAbility::GetBundleInfo(AppExecFwk::BundleInfo &bundleInfo)
+{
+    std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    PRINT_HILOGI("GetBundleInfo for bundle: %{private}s", bundleName.c_str());
+    
+    int32_t userId = GetCurrentUserId();
+    if (userId < 0) {
+        PRINT_HILOGE("GetCurrentUserId failed");
+        return false;
+    }
+    
+    AppExecFwk::BundleMgrClient bundleMgrClient;
+    if (!bundleMgrClient.GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
+
+        bundleInfo, userId)) {
+        PRINT_HILOGW("user [%{private}d] has not installed [%{private}s]", userId, bundleName.c_str());
+        return false;
+    }
+    
+    PRINT_HILOGI("GetBundleInfo success, appIdentifier: %{private}s", bundleInfo.signatureInfo.appIdentifier.c_str());
+    return true;
+}
+
+bool PrintServiceAbility::IsExtensionPrintJob(const std::string &cid)
+{
+    if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) != string::npos) {
+        PRINT_HILOGI("eprint job enter");
+        return true;
+    }
+#ifdef REMOTE_SERVICE_ENABLE
+    if (cid.find(REMOTE_EXT_BUNDLE_NAME) != string::npos) {
+        PRINT_HILOGI("remote print job enter");
+        return true;
+    }
+#endif
+    return false;
 }
 }  // namespace OHOS::Print
