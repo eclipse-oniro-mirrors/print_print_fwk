@@ -43,7 +43,6 @@ PrintJob::PrintJob(const PrintJob &right)
     isLandscape_ = right.isLandscape_;
     colorMode_ = right.colorMode_;
     duplexMode_ = right.duplexMode_;
-    numberUpArgs_ = right.numberUpArgs_;
     hasMargin_ = right.hasMargin_;
     margin_ = right.margin_;
     hasPreview_ = right.hasPreview_;
@@ -71,7 +70,6 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         isLandscape_ = right.isLandscape_;
         colorMode_ = right.colorMode_;
         duplexMode_ = right.duplexMode_;
-        numberUpArgs_ = right.numberUpArgs_;
         hasMargin_ = right.hasMargin_;
         margin_ = right.margin_;
         hasPreview_ = right.hasPreview_;
@@ -150,11 +148,6 @@ void PrintJob::SetDuplexMode(uint32_t duplexmode)
     duplexMode_ = duplexmode;
 }
 
-void PrintJob::SetNumberUpArgs(const NumberUpArgs &numberUpArgs)
-{
-    numberUpArgs_ = numberUpArgs;
-}
-
 void PrintJob::SetMargin(const PrintMargin &margin)
 {
     hasMargin_ = true;
@@ -187,7 +180,6 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     isLandscape_ = jobInfo.isLandscape_;
     colorMode_ = jobInfo.colorMode_;
     duplexMode_ = jobInfo.duplexMode_;
-    numberUpArgs_ = jobInfo.numberUpArgs_;
     hasMargin_ = jobInfo.hasMargin_;
     margin_ = jobInfo.margin_;
     hasPreview_ = jobInfo.hasPreview_;
@@ -270,11 +262,6 @@ uint32_t PrintJob::GetColorMode() const
 uint32_t PrintJob::GetDuplexMode() const
 {
     return duplexMode_;
-}
-
-NumberUpArgs PrintJob::GetNumberUpArgs() const
-{
-    return numberUpArgs_;
 }
 
 bool PrintJob::HasMargin() const
@@ -370,12 +357,6 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
 {
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(colorMode_), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(duplexMode_), false);
-    NumberUpArgs args;
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.numberUp), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.numberUpLayout), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.mirror), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(args.pageBorder), false);
-    SetNumberUpArgs(args);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasMargin_), false);
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
@@ -399,7 +380,7 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
     }
     return true;
 }
-
+ 	 
 bool PrintJob::ReadVendorOptionsFromParcel(Parcel &parcel)
 {
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasVendorOptions_), false);
@@ -441,10 +422,6 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetIsLandscape()), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetColorMode()), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(GetDuplexMode()), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.numberUp), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.numberUpLayout), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.mirror), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(numberUpArgs_.pageBorder), false);
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasMargin_), false);
     if (hasMargin_) {
@@ -472,7 +449,7 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorOptions()), false);
     }
 
-    return true;
+   return true;
 }
 
 std::shared_ptr<PrintJob> PrintJob::Unmarshalling(Parcel &parcel)
@@ -504,10 +481,6 @@ void PrintJob::Dump()
     PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
     PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
     PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
-    PRINT_HILOGD("numberUpArgs_.numberUp = %{public}d", numberUpArgs_.numberUp);
-    PRINT_HILOGD("numberUpArgs_.numberUpLayout = %{public}d", numberUpArgs_.numberUpLayout);
-    PRINT_HILOGD("numberUpArgs_.mirror = %{public}d", numberUpArgs_.mirror);
-    PRINT_HILOGD("numberUpArgs_.pageBorder = %{public}d", numberUpArgs_.pageBorder);
 
     pageRange_.Dump();
     pageSize_.Dump();
@@ -559,10 +532,6 @@ Json::Value PrintJob::ConvertToJsonObject() const
     jsonObject["isLandscape"] = isLandscape_;
     jsonObject["colorMode"] = colorMode_;
     jsonObject["duplexMode"] = duplexMode_;
-    jsonObject["numberUp"] = numberUpArgs_.numberUp;
-    jsonObject["numberUpLayout"] = numberUpArgs_.numberUpLayout;
-    jsonObject["mirror"] = numberUpArgs_.mirror;
-    jsonObject["pageBorder"] = numberUpArgs_.pageBorder;
     jsonObject["hasMargin"] = hasMargin_;
     if (hasMargin_) {
         jsonObject["margin"] = margin_.ConvertToJsonObject();

@@ -447,7 +447,6 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         {PRINT_JOB_BLOCKED_SMB_PRINTER, "smb_printer_error"},
         {PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING, "input_tray_missing"},
         {PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED, "security_policy_restricted"},
-        {PRINT_JOB_BLOCKED_INVALID_NUMBER_UP, "invalid_number_up"},
         {PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE, "printer_unavailable"},
         {PRINT_JOB_BLOCKED_UNKNOWN, "unknown"},
     };
@@ -458,6 +457,7 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_ErrorCodeMapping
         EXPECT_EQ(result[0], tc.expected) << "Failed for subState " << tc.subState;
     }
 }
+
 /**
  * @tc.name: PrintSecurityGuardUtilTest_IsPrintableFile_001
  * @tc.desc: Verify IsPrintableFile with known printable extensions.

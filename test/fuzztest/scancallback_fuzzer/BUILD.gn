@@ -16,11 +16,7 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-} else {
-  _test_path = "${print_path}/test"
-}
+_test_path = "${print_path}/test"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("ScanCallBackFuzzTest") {

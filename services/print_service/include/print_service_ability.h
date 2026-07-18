@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <map>
 #include <json/json.h>
 
 #include "ability_manager_client.h"
@@ -138,7 +137,7 @@ public:
     int32_t StartSharedHostDiscovery() override;
     int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName, char *userPasswd,
         std::vector<PrinterInfo>& printerInfos) override;
-    
+
     int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
     int32_t UnregisterWatermarkCallback() override;
     int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
@@ -147,22 +146,20 @@ public:
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
     bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
-    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
-    void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
-    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail) override;
+    void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode) override;
+    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd) override;
     int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList);
     bool OnQueryCallBackEvent(const PrinterInfo &info);
     int32_t QueryPrinterInfoByIp(const std::string &printerIp);
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
-    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
+    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd) override;
     int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName);
-    int32_t ReportBannedEvent(std::string option);
-    bool IsDisablePrint();
-    virtual bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     void StopCupsService();
+    virtual bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
     void HandleWebPrinterUninstall();
@@ -199,7 +196,7 @@ private:
     void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
-    bool CreateNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
+    bool createNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
 
 private:
     int32_t DoRestartPrintJob(const std::string &oldJobId, std::shared_ptr<PrintJob> &printJob);
@@ -208,6 +205,7 @@ private:
         bool jobInQueue);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+    void RegisterAdapterListener(const std::string &jobId);
     int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState);
     bool UpdatePrintJobOptionByPrinterId(PrintJob &printJob);
     std::shared_ptr<PrintJob> AddNativePrintJob(const std::string &jobId, PrintJob &printJob);
@@ -241,7 +239,7 @@ private:
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
     std::shared_ptr<PrinterInfo> HandleNewPrinterDiscovery(const std::string &globalPrinterId,
         const PrinterInfo &info);
-    void SyncAddedPrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
+    void SyncAddedPrinterUri(const std::shared_ptr<PrinterInfo> printerInfo);
     int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool RemoveSinglePrinterInfo(const std::string &printerId);
@@ -346,9 +344,6 @@ private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
-    bool CheckNumberUpArgs(const std::shared_ptr<PrintJob> &printJob);
-    int32_t StartEprintJobInternal(const std::shared_ptr<PrintJob> &printJob);
-    int32_t StartCupsPrintJob(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
@@ -362,9 +357,9 @@ private:
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData) override;
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
-    void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
-    int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
+    int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
+    void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
     PpdInfo GetPpdInfoFromPpdName(const std::string &ppdName);
@@ -388,6 +383,10 @@ private:
 
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
+    std::string spoolerBundleName_;
+    std::string spoolerAbilityName_;
+
+    std::mutex lock_;
     uint64_t currentJobOrderId_;
     std::shared_ptr<PrintServiceHelper> helper_;
     std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;

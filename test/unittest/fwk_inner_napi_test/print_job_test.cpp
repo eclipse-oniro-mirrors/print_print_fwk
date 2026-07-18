@@ -35,12 +35,20 @@ class PrintJobTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintJobTest::SetUpTestCase(void)
 {}
 
 void PrintJobTest::TearDownTestCase(void)
+{}
+
+void PrintJobTest::SetUp(void)
+{}
+
+void PrintJobTest::TearDown(void)
 {}
 
 /**
@@ -92,6 +100,25 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003_NeedRename, TestSize.Level1)
     EXPECT_EQ(files.size(), getFiles.size());
     for (size_t index = 0; index < files.size(); index++) {
         EXPECT_EQ(files[index], getFiles[index]);
+    }
+}
+
+/**
+ * @tc.name: DupFdlist_ShouldReturnSameFd
+ * @tc.desc: Verify the DupFdlist function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, DupFdlist_WhenBadfd_ShouldReturnSameFd, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<uint32_t> fdList = {997, 998, 999};
+    std::vector<uint32_t> dupFdList;
+    job.SetFdList(fdList);
+    job.DupFdList(dupFdList);
+    EXPECT_EQ(fdList.size(), dupFdList.size());
+    for (size_t index = 0; index < fdList.size(); index++) {
+        EXPECT_EQ(fdList[index], dupFdList[index]);
     }
 }
 

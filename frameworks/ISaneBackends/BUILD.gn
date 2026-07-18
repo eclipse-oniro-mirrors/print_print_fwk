@@ -40,7 +40,6 @@ config("sane_config") {
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
-    "-flto",
     "-Os",
   ]
   if (target_cpu == "arm") {

@@ -1185,7 +1185,6 @@ int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::st
     return ret;
 }
 
-
 int32_t PrintManagerClient::QueryAllPrinterPpds(std::vector<PpdInfo> &infos)
 {
     auto func = [&infos](sptr<IPrintService> serviceProxy) {

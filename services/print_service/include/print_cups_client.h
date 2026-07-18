@@ -50,10 +50,6 @@ struct JobParameters {
     std::string mediaType;
     std::string color;
     std::string serviceJobId;
-    uint32_t numberUp = NUMBER_UP_DEFAULT_VALUE;
-    uint32_t numberUpLayout = NUMBER_UP_LAYOUT_DEFAULT_VALUE;
-    uint32_t mirror = MIRROR_DEFAULT_VALUE;
-    uint32_t pageBorder = PAGE_BORDER_DEFAULT_VALUE;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
@@ -97,7 +93,6 @@ struct JobMonitorParam {
     std::atomic<bool> isCanceled{false};
     std::atomic<bool> isInterrupt{false};
     uint64_t uploadingFilesStartTime = 0;
-    bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,
@@ -169,9 +164,9 @@ public:
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
     bool ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri);
     std::string GetPpdHashCode(const std::string& ppdName);
+    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     bool AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri, const std::string &userName,
         char *userPasswd);
-    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     int32_t StartCupsdServiceNotAlive();
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
@@ -180,13 +175,13 @@ public:
 #ifdef VIRTUAL_PRINTER_ENABLE
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
 #endif
+    int32_t DeleteExtraJobsFromCups();
+    std::string getScheme(const std::string &printerUri);
+    bool IsIpAddress(const char* host);
     int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
-    int32_t DeleteExtraJobsFromCups();
-    std::string getScheme(const std::string &printerUri);
-    bool IsIpAddress(const char* host);
     IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
     std::string GetCurCupsModelDir();
@@ -205,9 +200,6 @@ private:
     static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
@@ -232,6 +224,7 @@ private:
     bool HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleStoppedState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleCompletedState(std::shared_ptr<JobMonitorParam> monitorParams);
+    void HandleAbortedState(std::shared_ptr<JobMonitorParam> monitorParams);
 
     int32_t StartCupsdService();
     JobParameters *GetNextJob();
@@ -242,7 +235,6 @@ private:
     void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
     std::string GetColorString(uint32_t colorCode);
-    static std::string GetNumberUpLayoutString(uint32_t layoutCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);

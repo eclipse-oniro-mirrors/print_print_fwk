@@ -48,12 +48,12 @@
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
 #include "print_json_util.h"
-#ifdef WATERMARK_ENFORCING_ENABLE
-#include "watermark_manager.h"
-#endif // WATERMARK_ENFORCING_ENABLE
 #ifdef HAVE_SMB_PRINTER
 #include "smb_printer_state_monitor.h"
 #endif // HAVE_SMB_PRINTER
+#ifdef WATERMARK_ENFORCING_ENABLE
+#include "watermark_manager.h"
+#endif // WATERMARK_ENFORCING_ENABLE
 
 namespace OHOS::Print {
 using namespace std;
@@ -95,6 +95,7 @@ const std::string PPD_EXTENSION = ".ppd";
 const size_t MIN_QUOTED_LENGTH = 2;
 const size_t MAX_VERSION_PREFIX_DOT_POS = 3;
 const uint32_t SLOW_FILE_CONVERSION_THRESHOLD_TIME = 5000;
+static bool g_isFirstQueryState = false;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -188,7 +189,7 @@ static const std::string JOB_STATE_MESSAGE_UPLOADING_FILES = "uploading-files";
 static const std::string JOB_STATE_MESSAGE_CONVERTING_FILES = "converting-files";
 static const std::string JOB_STATE_MESSAGE_LARGE_FILE_ERROR = "large-file-error";
 static const std::string JOB_STATE_MESSAGE_FILE_PARSING_ERROR = "file-parsing-error";
-static const std::string JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION = "slow-file-convertion";
+static const std::string JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION = "slow-file-conversion";
 static const std::string JOB_STATE_MESSAGE_PORT_ERROR = "port-error";
 
 static const std::map<std::string, PrintJobSubState> JOB_PRINTER_STATE_MESSAGE_LIST{
@@ -196,7 +197,7 @@ static const std::map<std::string, PrintJobSubState> JOB_PRINTER_STATE_MESSAGE_L
     {JOB_STATE_MESSAGE_CONVERTING_FILES, PRINT_JOB_RUNNING_CONVERTING_FILES},
     {JOB_STATE_MESSAGE_LARGE_FILE_ERROR, PRINT_JOB_BLOCKED_LARGE_FILE_ERROR},
     {JOB_STATE_MESSAGE_FILE_PARSING_ERROR, PRINT_JOB_BLOCKED_FILE_PARSING_ERROR},
-    {JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION, PRINT_JOB_RUNNING_CONVERTING_FILES},
+    {JOB_STATE_MESSAGE_SLOW_FILE_CONVERSION, PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION},
     {JOB_STATE_MESSAGE_PORT_ERROR, PRINT_JOB_BLOCKED_PORT_ERROR},
 };
 
@@ -226,6 +227,8 @@ std::string GetUsbPrinterSerial(const std::string &deviceUri)
     }
     return serial;
 }
+
+static std::vector<PrinterInfo> usbPrinters;
 
 static std::mutex g_usbPrintersLock;
 static std::vector<PrinterInfo> g_usbPrinters;
@@ -398,7 +401,7 @@ int32_t PrintCupsClient::StartCupsdServiceNotAlive()
     std::string param = GetCurCupsdControlParam();
     int result = SetParameter(param.c_str(), "true");
     if (result) {
-        PRINT_HILOGD("SetParameter failed: %{public}d.", result);
+        PRINT_HILOGE("SetParameter failed: %{public}d.", result);
         return E_PRINT_SERVER_FAILURE;
     }
     char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
@@ -1115,9 +1118,7 @@ void PrintCupsClient::JobSentCallback()
 int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGD("not borderless job options");
-    if (jobParams->numberUp <= NUMBER_UP_MIN_VALUE) {
-        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
-    }
+    num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     if (!jobParams->mediaType.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {
@@ -1198,71 +1199,6 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
     return num_options;
 }
 
-int PrintCupsClient::FillNumberUpOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    if (jobParams == nullptr) {
-        PRINT_HILOGE("FillNumberUpOptions Params is nullptr");
-        return num_options;
-    }
-    if (jobParams->numberUp != NUMBER_UP_DEFAULT_VALUE) {
-        num_options = cupsAddIntegerOption("number-up", jobParams->numberUp, num_options, options);
-        PRINT_HILOGI("Added CUPS option: number-up=%{public}d", jobParams->numberUp);
-    } else {
-        PRINT_HILOGI("numberUp using default value, skip adding to CUPS options");
-    }
-    if (jobParams->numberUpLayout != NUMBER_UP_LAYOUT_DEFAULT_VALUE) {
-        std::string layoutStr = GetNumberUpLayoutString(jobParams->numberUpLayout);
-        num_options = cupsAddOption("number-up-layout", layoutStr.c_str(), num_options, options);
-        PRINT_HILOGI("Added CUPS option: number-up-layout=%{public}s", layoutStr.c_str());
-    } else {
-        PRINT_HILOGI("numberUpLayout using default value, skip adding to CUPS options");
-    }
-    return num_options;
-}
-
-int PrintCupsClient::FillMirrorOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    if (jobParams == nullptr) {
-        PRINT_HILOGE("FillMirrorOptions Params is nullptr");
-        return num_options;
-    }
-    // Mirror printing (CUPS mirror option)
-    // Only add option when mirror is enabled, avoid adding unsupported options for some printers
-    if (jobParams->mirror == PRINT_MIRROR_ENABLED) {
-        num_options = cupsAddOption("mirror", "true", num_options, options);
-        PRINT_HILOGI("Added CUPS option: mirror=true");
-    } else {
-        PRINT_HILOGI("mirror disabled (value=%{public}d)", jobParams->mirror);
-    }
-    return num_options;
-}
-
-int PrintCupsClient::FillPageBorderOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    if (jobParams == nullptr) {
-        PRINT_HILOGE("FillPageBorderOptions Params is nullptr");
-        return num_options;
-    }
-    // Page border (CUPS page-border option)
-    // Only add option when border is needed, avoid adding unsupported options for some printers
-    std::string borderStr;
-    switch (jobParams->pageBorder) {
-        case PRINT_PAGE_BORDER_SINGLE:
-            borderStr = "single";
-            break;
-        case PRINT_PAGE_BORDER_DOUBLE:
-            borderStr = "double";
-            break;
-        case PRINT_PAGE_BORDER_NONE:
-        default:
-            PRINT_HILOGI("pageBorder disabled (value=%{public}d)", jobParams->pageBorder);
-            return num_options;
-    }
-    num_options = cupsAddOption("page-border", borderStr.c_str(), num_options, options);
-    PRINT_HILOGI("Added CUPS option: page-border=%{public}s", borderStr.c_str());
-    return num_options;
-}
-
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGI("FillJobOptions start.");
@@ -1293,10 +1229,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     }
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
-    num_options = FillNumberUpOptions(jobParams, num_options, options);
-    num_options = FillMirrorOptions(jobParams, num_options, options);
-    num_options = FillPageBorderOptions(jobParams, num_options, options);
-
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
     } else {
@@ -1647,9 +1579,6 @@ bool PrintCupsClient::CheckPrinterDriverExist(const std::string &makeModel)
         PRINT_HILOGI("skip check printer driver exist");
         return true;
     }
-    if (makeModel == "Local Raw Printer") {
-        PRINT_HILOGI("raw printer, skip check printer driver exist.");
-    }
     std::string ppdName;
     QueryPPDInformation(makeModel, ppdName);
     return !ppdName.empty();
@@ -1980,17 +1909,17 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             return false;
         }
         if (monitorParams->printerId.find(IPPOVERUSB_PREFIX) != std::string::npos) {
-            PRINT_HILOGW("IPPOverUsb Printer Disconnect");
-            monitorParams->isIPPOverUsbOffline = true;
+            PRINT_HILOGW("IPPOverUsb Printer Disconnect, cancel PrintJob!");
+            if (!CancelPrinterJob(
+                monitorParams->cupsJobId, monitorParams->printerName, monitorParams->jobOriginatingUserName)) {
+                PRINT_HILOGE("cancel Job Error, jobId: %{public}s.", monitorParams->serviceJobId.c_str());
+            }
+            monitorParams->serviceAbility->UpdatePrintJobState(
+                monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_FAILED);
+            return false;
         }
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
-        return true;
-    }
-    if (monitorParams->isIPPOverUsbOffline) {
-        PRINT_HILOGW("IPPOverUsb Printer, Print Failed");
-        monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
         return true;
     }
     if (monitorParams->isFirstQueryState) {
@@ -2034,10 +1963,24 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
             return HandleStoppedState(monitorParams);
         case IPP_JOB_COMPLETED:
             return HandleCompletedState(monitorParams);
+        case IPP_JOB_ABORTED:
+            HandleAbortedState(monitorParams);
+            return false;
         default:
             SpecialJobStatusCallback(monitorParams);
             return false;
     }
+}
+
+void PrintCupsClient::HandleAbortedState(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (monitorParams->isCanceled) {
+        PRINT_HILOGI("Job canceled by user");
+        return;
+    }
+    PRINT_HILOGI("job is aborted");
+    monitorParams->serviceAbility->UpdatePrintJobState(
+        monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 bool PrintCupsClient::HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams)
@@ -2334,8 +2277,14 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
 
 uint32_t PrintCupsClient::GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate)
 {
+    // 使用 64 位运算检测是否溢出
+    uint64_t result = (uint64_t)substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
+    if (result > UINT32_MAX) {
+        PRINT_HILOGW("substate overflow detected, ignore new substate(%{public}d)", singleSubstate);
+        return substate;
+    }
     PRINT_HILOGD("add new substate(%{public}d) to substate(%{public}u)", singleSubstate, substate);
-    return substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
+    return (uint32_t)result;
 }
 
 bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorParam> monitorParams)
@@ -2477,6 +2426,7 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
     bool isRawPrinter = PrintUtil::startsWith(printerId, RAW_PPD_DRIVER);
+    bool isIPPOverUsbPrinter = printerId.find(IPPOVERUSB_PREFIX) != std::string::npos;
     if (isRawPrinter || printerId == VIRTUAL_PRINTER_ID) {
         PRINT_HILOGI("printer is raw or virtual printer.");
         return true;
@@ -2487,7 +2437,8 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
         return isOnline;
     }
 #endif // HAVE_SMB_PRINTER
-    if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
+    if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter || isIPPOverUsbPrinter)
+        && monitorParams->serviceAbility != nullptr) {
         if ((isUsbPrinter && CheckUsbPrinterOnline(printerUri)) ||
             monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
             PRINT_HILOGI("printer online");
@@ -2691,7 +2642,7 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value &optionJson, JobPar
         params->printerAttrsOptionCupsOption = optionJson["cupsOptions"].asString();
     }
 
-    if (optionJson.isMember("printQuality")) {
+    if (PrintJsonUtil::IsMember(optionJson, "printQuality")) {
         if (optionJson["printQuality"].isString()) {
             params->printQuality = optionJson["printQuality"].asString();
         } else if (optionJson["printQuality"].isInt()) {
@@ -2701,13 +2652,13 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value &optionJson, JobPar
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
     }
 
-    if (optionJson.isMember("jobName") && optionJson["jobName"].isString()) {
+    if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
         params->jobName = optionJson["jobName"].asString();
     } else {
         params->jobName = DEFAULT_JOB_NAME;
     }
 
-    if (optionJson.isMember("mediaType") && optionJson["mediaType"].isString()) {
+    if (PrintJsonUtil::IsMember(optionJson, "mediaType") && optionJson["mediaType"].isString()) {
         params->mediaType = optionJson["mediaType"].asString();
     } else {
         params->mediaType = CUPS_MEDIA_TYPE_PLAIN;
@@ -2729,7 +2680,8 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     }
     std::string option = jobInfo.GetOption();
     Json::Value optionJson;
-    if (!PrintJsonUtil::Parse(option, optionJson)) {
+    std::istringstream iss(option);
+    if (!PrintJsonUtil::ParseFromStream(iss, optionJson)) {
         PRINT_HILOGE("option can not parse to json object");
         return params;
     }
@@ -2757,11 +2709,6 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->printerUri = optionJson["printerUri"].asString();
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
-    NumberUpArgs numberUpArgs = jobInfo.GetNumberUpArgs();
-    params->numberUp = numberUpArgs.numberUp;
-    params->numberUpLayout = numberUpArgs.numberUpLayout;
-    params->mirror = numberUpArgs.mirror;
-    params->pageBorder = numberUpArgs.pageBorder;
     UpdateJobParameterByOption(optionJson, params);
     if (jobInfo.HasVendorOptions()) {
         params->vendorOptions = jobInfo.GetVendorOptions();
@@ -2791,10 +2738,6 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->mediaType: %{public}s", jobParams->mediaType.c_str());
     PRINT_HILOGI("jobParams->color: %{public}s", jobParams->color.c_str());
     PRINT_HILOGI("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
-    PRINT_HILOGI("jobParams->numberUp: %{public}d", jobParams->numberUp);
-    PRINT_HILOGI("jobParams->numberUpLayout: %{public}d", jobParams->numberUpLayout);
-    PRINT_HILOGI("jobParams->mirror: %{public}d", jobParams->mirror);
-    PRINT_HILOGI("jobParams->pageBorder: %{public}d", jobParams->pageBorder);
     PRINT_HILOGI("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
     PRINT_HILOGI("jobParams->isReverse: %{public}d", jobParams->isReverse);
     PRINT_HILOGI("jobParams->isCollate: %{public}d", jobParams->isCollate);
@@ -2835,31 +2778,6 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
             return CUPS_PRINT_COLOR_MODE_COLOR;
         default:
             return CUPS_PRINT_COLOR_MODE_AUTO;
-    }
-}
-
-std::string PrintCupsClient::GetNumberUpLayoutString(uint32_t layoutCode)
-{
-    PrintNumberUpLayout layout = static_cast<PrintNumberUpLayout>(layoutCode);
-    switch (layout) {
-        case NUMBER_UP_LAYOUT_LRTB:
-            return "lrtb";
-        case NUMBER_UP_LAYOUT_RLTB:
-            return "rltb";
-        case NUMBER_UP_LAYOUT_TBLR:
-            return "tblr";
-        case NUMBER_UP_LAYOUT_TBRL:
-            return "tbrl";
-        case NUMBER_UP_LAYOUT_LRBT:
-            return "lrbt";
-        case NUMBER_UP_LAYOUT_RLBT:
-            return "rlbt";
-        case NUMBER_UP_LAYOUT_BTLR:
-            return "btlr";
-        case NUMBER_UP_LAYOUT_BTRL:
-            return "btrl";
-        default:
-            return "lrtb";
     }
 }
 
@@ -3038,7 +2956,7 @@ int32_t PrintCupsClient::DiscoverBackendPrinters(std::vector<PrinterInfo> &print
 bool PrintCupsClient::ResumePrinter(const std::string &printerName)
 {
     if (printAbility_ == nullptr) {
-        PRINT_HILOGE("printAbility is null");
+        PRINT_HILOGE("printAbility_ is null");
         return false;
     }
     ipp_t *request = nullptr;
@@ -3435,6 +3353,62 @@ uint32_t PrintCupsClient::GetPrintCupsJobId(const std::string &jobId)
     }
     return 0;
 }
+int32_t PrintCupsClient::DeleteExtraJobsFromCups()
+{
+    http_t *http = nullptr;
+    ipp_t *request = nullptr;
+    ipp_t *response = nullptr;
+
+    http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL,
+                        HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+    if (http == nullptr) {
+        PRINT_HILOGE("cups server is not alive");
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGE("printAbility_ is nullptr");
+        httpClose(http);
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    request = ippNewRequest(IPP_CANCEL_JOBS);
+    if (request == nullptr) {
+        PRINT_HILOGE("Create IPP request failed");
+        httpClose(http);
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, "ipp://localhost/");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
+
+    response = printAbility_->DoRequest(http, request, "/");
+    httpClose(http);
+    http = nullptr;
+
+    if (response == nullptr) {
+        PRINT_HILOGE("Failed to get response from CUPS");
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    ippDelete(response);
+    return E_PRINT_NONE;
+}
+
+std::string PrintCupsClient::getScheme(const std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
+    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
+    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
+    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
+    int port = 0; /* Port portion of URI */
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    std::string infoScheme;
+    infoScheme.assign(scheme);
+    return infoScheme;
+}
 
 int32_t PrintCupsClient::CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
     const std::string &changedType, std::vector<std::string>& conflictTypes)
@@ -3602,63 +3576,6 @@ void PrintCupsClient::DumpCupsConflicts(const StdStringMap &mapParams,
     }
 
     PRINT_HILOGD("%{public}s", strLog.c_str());
-}
-
-int32_t PrintCupsClient::DeleteExtraJobsFromCups()
-{
-    http_t *http = nullptr;
-    ipp_t *request = nullptr;
-    ipp_t *response = nullptr;
-
-    http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL,
-                        HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
-    if (http == nullptr) {
-        PRINT_HILOGE("cups server is not alive");
-        return E_PRINT_SERVER_FAILURE;
-    }
-
-    if (printAbility_ == nullptr) {
-        PRINT_HILOGE("printAbility_ is nullptr");
-        httpClose(http);
-        return E_PRINT_SERVER_FAILURE;
-    }
-
-    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
-    request = ippNewRequest(IPP_CANCEL_JOBS);
-    if (request == nullptr) {
-        PRINT_HILOGE("Create IPP request failed");
-        httpClose(http);
-        return E_PRINT_SERVER_FAILURE;
-    }
-
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, "ipp://localhost/");
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
-
-    response = printAbility_->DoRequest(http, request, "/");
-    httpClose(http);
-    http = nullptr;
-
-    if (response == nullptr) {
-        PRINT_HILOGE("Failed to get response from CUPS");
-        return E_PRINT_SERVER_FAILURE;
-    }
-
-    ippDelete(response);
-    return E_PRINT_NONE;
-}
-
-std::string PrintCupsClient::getScheme(const std::string &printerUri)
-{
-    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
-    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
-    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
-    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
-    int port = 0; /* Port portion of URI */
-    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
-        host, sizeof(host), &port, resource, sizeof(resource));
-    std::string infoScheme;
-    infoScheme.assign(scheme);
-    return infoScheme;
 }
 
 }  // namespace OHOS::Print

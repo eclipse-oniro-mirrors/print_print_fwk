@@ -14,15 +14,9 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service/print_service"
-  _scan_service_path = "${print_path}/services/phone_service/scan_service"
-} else {
-  _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services/print_service"
-  _scan_service_path = "${print_path}/services/scan_service"
-}
+_test_path = "${print_path}/test"
+_service_path = "${print_path}/services/print_service"
+_scan_service_path = "${print_path}/services/scan_service"
 
 module_output_path = unit_test_output_path
 
@@ -106,11 +100,9 @@ ohos_unittest("print_service_test") {
     "hilog:libhilog",
     "huks:libhukssdk",
     "i18n:intl_util",
-    "image_framework:image_source",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
-    "openssl:libssl_shared",
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -118,6 +110,7 @@ ohos_unittest("print_service_test") {
     "udmf:utd_client",
     "udmf:libudmf",
     "usb_manager:usbsrv_client",
+    "netmanager_ext:mdns_manager_if",
   ]
 
   if (cups_enable) {
@@ -125,11 +118,12 @@ ohos_unittest("print_service_test") {
     external_deps += [
       "cups:cups",
       "cups-filters:cupsfilters",
+      "openssl:libcrypto_shared",
+      "openssl:libssl_shared",
     ]
   }
 
   if (print_fwk_feature_watermark_enforcing) {
-    sources += [ "${_test_path}/unittest/service_test/watermark_manager_test.cpp" ]
     cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
 
@@ -205,7 +199,7 @@ ohos_unittest("scan_service_test") {
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
     "usb_manager:usbsrv_client",
-    "netmanager_ext:mdns_manager_if",
+    "netmanager_ext:mdns_manager_if"
   ]
 }
 

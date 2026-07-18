@@ -568,6 +568,26 @@ HWTEST_F(PrinterUserPreferencesTest, ToString_EmptyBlob_ReturnsEmpty, TestSize.L
     EXPECT_EQ(blob.ToString(), "");
 }
 
+HWTEST_F(PrinterUserPreferencesTest, TwoArgConstructor_NullPtr_RemainsEmpty, TestSize.Level1)
+{
+    SecureBlob blob(5, nullptr);
+    EXPECT_TRUE(blob.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, TwoArgConstructor_ZeroSize_RemainsEmpty, TestSize.Level1)
+{
+    uint8_t data[] = {0x01, 0x02};
+    SecureBlob blob(0, data);
+    EXPECT_TRUE(blob.IsEmpty());
+}
+
+HWTEST_F(PrinterUserPreferencesTest, CopyFromEmpty_RemainsEmpty, TestSize.Level1)
+{
+    SecureBlob empty;
+    SecureBlob copy(empty);
+    EXPECT_TRUE(copy.IsEmpty());
+}
+
 HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_ValidSrc_DataCopied, TestSize.Level1)
 {
     SecureBlob blob;

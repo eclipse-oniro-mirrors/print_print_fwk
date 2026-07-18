@@ -74,12 +74,12 @@ static constexpr const char *FUNCTION_QUERY_ALL_PRINTER_PPDS = "queryAllPrinterP
 static constexpr const char *FUNCTION_QUERY_PRINTER_INFO_BY_IP = "queryPrinterInfoByIp";
 static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_IP_AND_PPD = "connectPrinterByIpAndPpd";
 static constexpr const char *FUNCTION_SAVE_PDF_FILE_JOB = "savePdfFileJob";
-static constexpr const char *FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID = "queryRecommendDriversById";
-static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD = "connectPrinterByIdAndPpd";
 static constexpr const char *FUNCTION_CHECK_PREFERENCES_CONFLICTS = "checkPreferencesConflicts";
 static constexpr const char *FUNCTION_CHECK_PRINTJOB_CONFLICTS = "checkPrintJobConflicts";
 static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrinterDefaultPreferences";
 static constexpr const char *FUNCTION_GET_PRINTER_PREFERENCE = "getPrinterPreferences";
+static constexpr const char *FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID = "queryRecommendDriversById";
+static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD = "connectPrinterByIdAndPpd";
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
 static constexpr const char *FUNCTION_START_SHARED_HOST_DISCOVERY = "startSharedHostDiscovery";
 static constexpr const char *AUTH_SMB_DEVICE_AS_GUEST = "authSmbDeviceAsGuest";
@@ -522,12 +522,12 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_PRINTER_INFO_BY_IP, NapiInnerPrint::QueryPrinterInfoByIp),
         DECLARE_NAPI_FUNCTION(FUNCTION_CONNECT_PRINTER_BY_IP_AND_PPD, NapiInnerPrint::ConnectPrinterByIpAndPpd),
         DECLARE_NAPI_FUNCTION(FUNCTION_SAVE_PDF_FILE_JOB, NapiInnerPrint::SavePdfFileJob),
-        DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID, NapiInnerPrint::QueryRecommendDriversById),
-        DECLARE_NAPI_FUNCTION(FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD, NapiInnerPrint::ConnectPrinterByIdAndPpd),
         DECLARE_NAPI_FUNCTION(FUNCTION_CHECK_PREFERENCES_CONFLICTS, NapiInnerPrint::CheckPreferencesConflicts),
         DECLARE_NAPI_FUNCTION(FUNCTION_CHECK_PRINTJOB_CONFLICTS, NapiInnerPrint::CheckPrintJobConflicts),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES, NapiInnerPrint::GetPrinterDefaultPreferences),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_PRINTER_PREFERENCE, NapiInnerPrint::GetPrinterPreference),
+        DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID, NapiInnerPrint::QueryRecommendDriversById),
+        DECLARE_NAPI_FUNCTION(FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD, NapiInnerPrint::ConnectPrinterByIdAndPpd),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
         DECLARE_NAPI_FUNCTION(FUNCTION_START_SHARED_HOST_DISCOVERY, NapiInnerPrint::StartSharedHostDiscovery),
         DECLARE_NAPI_FUNCTION(AUTH_SMB_DEVICE_AS_GUEST, NapiInnerPrint::AuthSmbDeviceAsGuest),

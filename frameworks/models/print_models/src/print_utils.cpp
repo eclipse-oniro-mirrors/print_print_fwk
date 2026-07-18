@@ -159,7 +159,7 @@ std::string PrintUtils::GetBundleName(const std::string &printerId)
         return "";
     }
     std::string bundleName = printerId.substr(0, userIdPos);
-    PRINT_HILOGD("bundleName: %{private}s", bundleName.c_str());
+    PRINT_HILOGD("bundleName: %{public}s", bundleName.c_str());
     return bundleName;
 }
 
@@ -488,7 +488,7 @@ void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &
     PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", (PrintJsonUtil::WriteString(attrJson)).c_str());
 }
 
-Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetPageRangeForJson(const PrintAttributes &attrParam)
 {
     Json::Value pageRangeJson;
     PrintRange printRangeAttr;
@@ -511,7 +511,7 @@ Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
     return pageRangeJson;
 }
 
-Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetPageSizeForJson(const PrintAttributes &attrParam)
 {
     Json::Value pageSizeJson;
     PrintPageSize pageSizeAttr;
@@ -523,7 +523,7 @@ Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
     return pageSizeJson;
 }
 
-Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetMarginForJson(const PrintAttributes &attrParam)
 {
     Json::Value marginJson;
     PrintMargin marginAttr;
@@ -546,13 +546,13 @@ Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
 void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson)
 {
     if (attrParam.HasPageRange()) {
-        attrJson["pageRange"] = CreatePageRangeJson(attrParam);
+        attrJson["pageRange"] = GetPageRangeForJson(attrParam);
     }
     if (attrParam.HasPageSize()) {
-        attrJson["pageSize"] = CreatePageSizeJson(attrParam);
+        attrJson["pageSize"] = GetPageSizeForJson(attrParam);
     }
     if (attrParam.HasMargin()) {
-        attrJson["margin"] = CreateMarginJson(attrParam);
+        attrJson["margin"] = GetMarginForJson(attrParam);
     }
 }
 
@@ -621,196 +621,4 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     return uri.substr(startPos, endPos - startPos);
 }
 
-bool PrintUtils::SetFdListToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
-{
-    if (params.docFlavor == PRINT_BYTES) {
-        if (params.binaryData == nullptr || params.dataLength == 0) {
-            PRINT_HILOGE("Invalid binary data: data is null or empty.");
-            return false;
-        }
-        std::string tmpPath;
-        int fd = CreateTempFileWithData(params.binaryData, params.dataLength, tmpPath);
-        if (fd == -1) {
-            return false;
-        }
-        std::vector<uint32_t> printFdList;
-        printFdList.emplace_back(fd);
-        nativeObj->SetFdList(printFdList);
-        unlink(tmpPath.c_str());
-    } else {
-        if (params.printFdList.empty()) {
-            PRINT_HILOGE("Invalid fdList data: fdList is empty.");
-            return false;
-        }
-        nativeObj->SetFdList(params.printFdList);
-    }
-    return true;
-}
-
-void PrintUtils::SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
-{
-    nativeObj->SetCopyNumber(params.copyNumber);
-    nativeObj->SetColorMode(params.colorMode);
-    nativeObj->SetDuplexMode(params.duplexMode);
-    nativeObj->SetPageSize(params.pageSize);
-    nativeObj->SetJobId(params.jobId);
-    nativeObj->SetPageRange(params.pageRange);
-    if (params.hasMargin) {
-        nativeObj->SetMargin(params.margin);
-    }
-    if (params.hasPreview) {
-        nativeObj->SetPreview(params.preview);
-    }
-    if (params.isSequential != PARAM_NOT_SET) {
-        nativeObj->SetIsSequential(static_cast<bool>(params.isSequential));
-    }
-    NumberUpArgs args;
-    args.numberUp = params.numberUp;
-    args.numberUpLayout = params.numberUpLayout;
-    args.mirror = params.mirror;
-    args.pageBorder = params.pageBorder;
-    nativeObj->SetNumberUpArgs(args);
-    if (!params.vendorOptions.empty()) {
-        nativeObj->SetVendorOptions(params.vendorOptions);
-    }
-}
-
-std::shared_ptr<PrintJob> PrintUtils::ConvertParamsToPrintJob(const PrintJobParams &params)
-{
-    if (params.printerId.empty()) {
-        PRINT_HILOGE("printerId is empty.");
-        return nullptr;
-    }
-    auto nativeObj = std::make_shared<PrintJob>();
-    nativeObj->SetPrinterId(params.printerId);
-    if (!SetFdListToPrintJob(params, nativeObj)) {
-        return nullptr;
-    }
-    SetAttributesToPrintJob(params, nativeObj);
-    SetOptionInPrintJob(params, nativeObj);
-    return nativeObj;
-}
-
-std::string PrintUtils::GetDocumentFormatToString(uint32_t format)
-{
-    switch (format) {
-        case PRINT_DOCUMENT_FORMAT_AUTO:
-            return "application/octet-stream";
-        case PRINT_DOCUMENT_FORMAT_JPEG:
-            return "image/jpeg";
-        case PRINT_DOCUMENT_FORMAT_PDF:
-            return "application/pdf";
-        case PRINT_DOCUMENT_FORMAT_POSTSCRIPT:
-            return "application/postscript";
-        case PRINT_DOCUMENT_FORMAT_TEXT:
-            return "text/plain";
-        case PRINT_DOCUMENT_FORMAT_RAW:
-            return "application/vnd.cups-raw";
-        default:
-            return "application/octet-stream";
-    }
-}
-
-int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &tmpPath)
-{
-    const auto appContext = AbilityRuntime::Context::GetApplicationContext();
-    if (appContext == nullptr) {
-        PRINT_HILOGE("appContext is null.");
-        return -1;
-    }
-    const std::string filesDir = appContext->GetFilesDir();
-    if (filesDir.empty()) {
-        PRINT_HILOGE("filesDir is empty.");
-        return -1;
-    }
-
-    tmpPath = GenerateTempFilePath(filesDir);
-    if (tmpPath.empty()) {
-        PRINT_HILOGE("Failed to generate valid temp file path.");
-        return -1;
-    }
-    std::ofstream tempFile(tmpPath, std::ios::binary);
-    if (!tempFile) {
-        PRINT_HILOGE("Failed to create temporary file.");
-        return -1;
-    }
-    if (!tempFile.write(static_cast<const char*>(data), length)) {
-        PRINT_HILOGE("Failed to write to temporary file: %{public}s", tmpPath.c_str());
-        tempFile.close();
-        std::remove(tmpPath.c_str());
-        return -1;
-    }
-    tempFile.close();
-
-    int fd = OpenFile(tmpPath);
-    if (fd == -1) {
-        PRINT_HILOGE("Failed to open temp file.");
-        std::remove(tmpPath.c_str());
-    }
-
-    return fd;
-}
-
-std::string PrintUtils::GenerateTempFilePath(const std::string &filesDir)
-{
-    auto now = std::chrono::system_clock::now();
-    auto now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm now_tm{};
-    localtime_r(&now_time_t, &now_tm);
-
-    std::ostringstream oss;
-    oss << "job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
-    std::string fileName = oss.str();
-    if (!IsPathValidForCreate(filesDir, fileName)) {
-        PRINT_HILOGE("Invalid temp file path!");
-        return "";
-    }
-
-    return filesDir + "/" + fileName;
-}
-
-void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
-{
-    PRINT_HILOGI("PrintUtils::SetOptionInPrintJob enter.");
-    Json::Value jsonOptions;
-    if (!params.jobName.empty()) {
-        jsonOptions["jobName"] = params.jobName;
-        Json::Value jobDesArr;
-        jobDesArr.append(params.jobName);
-        jobDesArr.append("0");
-        jobDesArr.append("1");
-        jsonOptions["jobDesArr"] = jobDesArr;
-    }
-    if (params.docFlavor == PRINT_FILE_DESCRIPTOR) {
-        jsonOptions["isDocument"] = true;
-    }
-    jsonOptions["documentFormat"] = GetDocumentFormatToString(params.documentFormat);
-    int printQuality = params.printQuality;
-    if (printQuality > static_cast<int32_t>(PRINT_QUALITY_HIGH) ||
-        printQuality < static_cast<int32_t>(PRINT_QUALITY_DRAFT)) {
-        printQuality = static_cast<int32_t>(PRINT_QUALITY_NORMAL);
-    }
-    jsonOptions["printQuality"] = printQuality;
-    if (!params.mediaType.empty()) {
-        jsonOptions["mediaType"] = params.mediaType;
-    }
-    if (params.isBorderless != PARAM_NOT_SET) {
-        jsonOptions["borderless"] = static_cast<bool>(params.isBorderless);
-    }
-    if (params.isAutoRotate != PARAM_NOT_SET) {
-        jsonOptions["isAutoRotate"] = static_cast<bool>(params.isAutoRotate);
-    }
-    if (params.isReverse != PARAM_NOT_SET) {
-        jsonOptions["isReverse"] = static_cast<bool>(params.isReverse);
-    }
-    if (params.isCollate != PARAM_NOT_SET) {
-        jsonOptions["isCollate"] = static_cast<bool>(params.isCollate);
-    }
-    if (!params.cupsOptions.empty()) {
-        jsonOptions["cupsOptions"] = params.cupsOptions;
-    }
-    std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", AnonymizeJobOption(option).c_str());
-    nativeObj->SetOption(option);
-}
 }  // namespace OHOS::Print

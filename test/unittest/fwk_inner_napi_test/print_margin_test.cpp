@@ -25,12 +25,20 @@ class PrintMarginTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintMarginTest::SetUpTestCase(void)
 {}
 
 void PrintMarginTest::TearDownTestCase(void)
+{}
+
+void PrintMarginTest::SetUp(void)
+{}
+
+void PrintMarginTest::TearDown(void)
 {}
 
 /**

@@ -60,6 +60,7 @@ void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
     if (devices == nullptr) {
         SCAN_HILOGE("devices is a nullptr");
         discoverCallback_(nullptr, 0);
+        return;
     }
     for (int i = 0; i < deviceCount; i++) {
         Scan_ScannerDevice* device = new (std::nothrow) Scan_ScannerDevice();
@@ -295,21 +296,21 @@ void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions *scannerOptions)
 
     if (scannerOptions->titles != nullptr) {
         for (int i = 0; i < scannerOptions->optionCount; i++) {
-            DELETE_AND_NULLIFY(scannerOptions->titles[i])
+            DELETE_ARRAY_AND_NULLIFY(scannerOptions->titles[i])
         }
         DELETE_ARRAY_AND_NULLIFY(scannerOptions->titles)
     }
 
     if (scannerOptions->descriptions != nullptr) {
         for (int i = 0; i < scannerOptions->optionCount; i++) {
-            DELETE_AND_NULLIFY(scannerOptions->descriptions[i])
+            DELETE_ARRAY_AND_NULLIFY(scannerOptions->descriptions[i])
         }
         DELETE_ARRAY_AND_NULLIFY(scannerOptions->descriptions)
     }
 
     if (scannerOptions->ranges != nullptr) {
         for (int i = 0; i < scannerOptions->optionCount; i++) {
-            DELETE_AND_NULLIFY(scannerOptions->ranges[i])
+            DELETE_ARRAY_AND_NULLIFY(scannerOptions->ranges[i])
         }
         DELETE_ARRAY_AND_NULLIFY(scannerOptions->ranges)
     }

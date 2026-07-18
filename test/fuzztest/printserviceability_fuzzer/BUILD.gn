@@ -16,13 +16,8 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service"
-} else {
-  _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services"
-}
+_test_path = "${print_path}/test"
+_service_path = "${print_path}/services"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintServiceAbilityFuzzTest") {
@@ -112,12 +107,12 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
     ]
   }
 
-  if (print_fwk_feature_edm_service) {
-    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
-  }
-
   if (print_fwk_feature_virtual_printer) {
     cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
+
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
   }
 }
 

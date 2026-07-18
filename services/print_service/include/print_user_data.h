@@ -105,8 +105,6 @@ private:
     PrintPreviewAttribute ParseJsonObjectToPrintPreviewAttribute(const Json::Value &jsonObject);
     void ParseOptionalJsonObjectToPrintJob(
         const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
-    void ParseNumberUpOptionsToPrintJob(
-        const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void ParseBasicOptionsToPrintJob(
         const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void ParsePrintModeOptionsToPrintJob(
@@ -115,7 +113,7 @@ private:
     void InitPrintHistoryJobList(const std::string &printerId);
     bool CheckOptionalParam(const Json::Value &jsonObject, const std::string &param);
     void DeleteOldestHistoryPrintJob();
-    
+
     std::string GetUserPreferencesFilePath(const std::string &standardizedPrinterName);
 
 public:

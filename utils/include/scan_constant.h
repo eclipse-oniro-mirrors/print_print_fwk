@@ -94,7 +94,7 @@ namespace OHOS::Scan {
         SCAN_HILOGE("%{public}s is nullptr.", (#ptr));  \
         return (retVal);                                \
     }
-
+    
 #define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
     if (!(parcelOpExp)) { \
         SCAN_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \

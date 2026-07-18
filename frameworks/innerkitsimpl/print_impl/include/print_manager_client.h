@@ -131,15 +131,15 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
-    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
-    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
-        const std::string &ppdName);
     int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions);
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences);
     int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference);
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName);
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts);
     int32_t StartSharedHostDiscovery();
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,

@@ -28,7 +28,6 @@
 
 #include "print_log.h"
 #include "print_constant.h"
-#include "print_utils.h"
 #include "print_json_util.h"
 #include "print_utils.h"
 
@@ -475,7 +474,8 @@ bool PrintUserData::SetUserDataToFile()
 
 bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject)
 {
-    if (!PrintJsonUtil::Parse(fileData, jsonObject)) {
+    std::istringstream iss(fileData);
+    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
         PRINT_HILOGW("json accept fail");
         return false;
     }
@@ -900,7 +900,6 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
     printHistoryJob->SetPrinterId(printJobInfoJson["printerId"].asString());
     ParseBasicOptionsToPrintJob(printJobInfoJson, printHistoryJob);
     ParsePrintModeOptionsToPrintJob(printJobInfoJson, printHistoryJob);
-    ParseNumberUpOptionsToPrintJob(printJobInfoJson, printHistoryJob);
     ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
     return true;
 }
@@ -934,25 +933,6 @@ void PrintUserData::ParsePrintModeOptionsToPrintJob(
     if (PrintJsonUtil::IsMember(printJobInfoJson, "duplexMode") && printJobInfoJson["duplexMode"].isInt()) {
         printHistoryJob->SetDuplexMode(printJobInfoJson["duplexMode"].asInt());
     }
-}
-
-void PrintUserData::ParseNumberUpOptionsToPrintJob(
-    const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
-{
-    NumberUpArgs args;
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUp") && printJobInfoJson["numberUp"].isInt()) {
-        args.numberUp = printJobInfoJson["numberUp"].asUInt();
-    }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "numberUpLayout") && printJobInfoJson["numberUpLayout"].isInt()) {
-        args.numberUpLayout = printJobInfoJson["numberUpLayout"].asUInt();
-    }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "mirror") && printJobInfoJson["mirror"].isInt()) {
-        args.mirror = printJobInfoJson["mirror"].asUInt();
-    }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "pageBorder") && printJobInfoJson["pageBorder"].isInt()) {
-        args.pageBorder = printJobInfoJson["pageBorder"].asUInt();
-    }
-    printHistoryJob->SetNumberUpArgs(args);
 }
 
 void PrintUserData::ParseOptionalJsonObjectToPrintJob(

@@ -18,7 +18,9 @@ cflags_cc = []
 config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
+}
 
+config("print_interfaces_kits_napi_config_private") {
   cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
@@ -29,6 +31,7 @@ config("print_interfaces_kits_napi_config") {
     "-Os",
   ]
 }
+
 ohos_shared_library("print_helper") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
@@ -36,6 +39,7 @@ ohos_shared_library("print_helper") {
     "${print_utils_path}/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
+  configs = [ ":print_interfaces_kits_napi_config_private" ]
 
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -70,6 +74,7 @@ ohos_shared_library("print_helper") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "access_token:libaccesstoken_sdk",
@@ -82,6 +87,7 @@ ohos_shared_library("print_helper") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
+    "jsoncpp:jsoncpp",
   ]
 
   if (build_variant == "user") {

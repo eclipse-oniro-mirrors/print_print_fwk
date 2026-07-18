@@ -136,9 +136,11 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     for (const auto &fileName : files_) {
         Json::Value fileObj;
         std::string name = PrintSecurityGuardUtil::ExtractFileName(fileName);
+        // print by ts interface, name start with file://, need decode
         if (fileName.find("file://") == 0) {
             name = PrintSecurityGuardUtil::UrlDecode(name);
         }
+        // print by capi interface, use jobName as fileName, don't need decode
         fileObj["fileName"] = name;
         filesArray.append(fileObj);
     }

@@ -145,7 +145,7 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
         fileList_.clear();
         return ret;
     }
-    ret = PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    ret = static_cast<uint32_t>(PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_));
     for (auto fd : fdList_) {
         fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
     }
@@ -210,6 +210,10 @@ uint32_t PrintTask::CallSpooler(
     }
 
     auto asyncContext = std::make_shared<BaseContext>();
+    if (asyncContext == nullptr) {
+        PRINT_HILOGE("create asyncContext failed.");
+        return E_PRINT_SERVER_FAILURE;
+    }
     asyncContext->env = env;
     asyncContext->requestType = PrintRequestType::REQUEST_TYPE_START;
     if (!ParseAbilityContextReq(env, argv[contextIndex], asyncContext->context, asyncContext->uiExtensionContext)) {

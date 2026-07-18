@@ -442,6 +442,7 @@ bool NapiPrintUtils::GetBooleanFromValue(napi_env env, napi_value value)
     return ret;
 }
 
+/* boolean */
 bool NapiPrintUtils::GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (object == nullptr) {
@@ -548,33 +549,33 @@ const std::string NapiPrintUtils::GetErrorMsgByErrorCode(int32_t code)
     PRINT_HILOGD("ErrorMessage: %{public}s", (iter->second).c_str());
     return iter->second;
 }
-
+ 
 napi_value NapiPrintUtils::CreateJsError(napi_env env, int32_t errCode)
 {
     std::string errMsg = GetErrorMsgByErrorCode(errCode);
     PRINT_HILOGD("CreateJsError errCode: %{public}d, errMsg: %{public}s", errCode, errMsg.c_str());
-
+ 
     napi_value code = nullptr;
     napi_status status = napi_create_int32(env, errCode, &code);
     if (status != napi_ok) {
         PRINT_HILOGE("napi create error code failed");
         return nullptr;
     }
-
+ 
     napi_value message = nullptr;
     status = napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
     if (status != napi_ok) {
         PRINT_HILOGE("napi create error message failed");
         return nullptr;
     }
-
+ 
     napi_value errorObj = nullptr;
     status = napi_create_error(env, code, message, &errorObj);
     if (status != napi_ok) {
         PRINT_HILOGE("napi create js error failed");
         return nullptr;
     }
-
+ 
     return errorObj;
 }
 }  // namespace OHOS::Print

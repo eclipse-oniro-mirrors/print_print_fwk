@@ -24,6 +24,8 @@ class PpdInfoTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PpdInfoTest::SetUpTestCase(void)
@@ -32,7 +34,13 @@ void PpdInfoTest::SetUpTestCase(void)
 void PpdInfoTest::TearDownTestCase(void)
 {}
 
-HWTEST_F(PpdInfoTest, SetAttributeTest, TestSize.Level1)
+void PpdInfoTest::SetUp(void)
+{}
+
+void PpdInfoTest::TearDown(void)
+{}
+
+HWTEST_F(PpdInfoTest, CreateAndSetAttributeTest, TestSize.Level1)
 {
     PpdInfo info;
     info.SetManufacturer("TestManu");
@@ -86,6 +94,8 @@ class PpdInfoCommon {
 public:
     static void SetUpTestCase(void){};
     static void TearDownTestCase(void){};
+    void SetUp(void){};
+    void TearDown(void){};
 };
  
 struct BuildPpdInfoParam {
@@ -97,7 +107,9 @@ struct BuildPpdInfoParam {
 class CheckPpdInfoTest : public PpdInfoCommon,
                         public testing::TestWithParam<BuildPpdInfoParam> {
 public:
+    using PpdInfoCommon::SetUp;
     using PpdInfoCommon::SetUpTestCase;
+    using PpdInfoCommon::TearDown;
     using PpdInfoCommon::TearDownTestCase;
 };
  

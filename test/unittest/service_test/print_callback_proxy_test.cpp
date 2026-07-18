@@ -35,6 +35,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 };
 
 void PrintCallbackProxyTest::SetUpTestCase(void)
@@ -48,6 +49,9 @@ void PrintCallbackProxyTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintCallbackProxyTest_%{public}d", ++testNo);
 }
+
+void PrintCallbackProxyTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintCallbackProxyTest_0001

@@ -27,12 +27,20 @@ class HisysEventUtilTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void HisysEventUtilTest::SetUpTestCase(void)
 {}
 
 void HisysEventUtilTest::TearDownTestCase(void)
+{}
+
+void HisysEventUtilTest::SetUp(void)
+{}
+
+void HisysEventUtilTest::TearDown(void)
 {}
 
 /**
@@ -45,7 +53,7 @@ HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001_NeedRename, TestSize.Level1
 {
     OHOS::Print::HisysEventUtil util;
     std::string param = "";
-    util->reportBehaviorEvent("test", HisysEventUtil::SEND_TASK, param);
+    util.reportBehaviorEvent("test", HisysEventUtil::SEND_TASK, param);
     EXPECT_CALL(util, reportBehaviorEvent(_, _, _)).Times(1);
 }
 

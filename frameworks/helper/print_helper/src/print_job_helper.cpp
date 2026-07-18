@@ -47,11 +47,6 @@ static constexpr const char *PARAM_JOB_DOCFLAVOR = "docFlavor";
 static constexpr const char *PARAM_JOB_ISAUTORATATE = "isAutoRotate";
 static constexpr const char *PARAM_JOB_ISREVERSE = "isReverse";
 static constexpr const char *PARAM_JOB_ISCOLLATE = "isCollate";
-static constexpr const char *PARAM_JOB_NUMBERUP = "numberUp";
-static constexpr const char *PARAM_JOB_NUMBERUPLAYOUT = "numberUpLayout";
-static constexpr const char *PARAM_JOB_MIRROR = "mirror";
-static constexpr const char *PARAM_JOB_PAGEBORDER = "pageBorder";
-static constexpr const char *PARAM_JOB_NUMBERUPARGS = "numberUpArgs";
 static constexpr const char *PARAM_JOB_VENDOR_OPTIONS = "vendorOptions";
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
@@ -124,16 +119,15 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
         return nullptr;
     }
 
-    if (!FillFdListFromJs(env, jsValue, nativeObj)) {
-        return nullptr;
-    }
-    FillBasicJobProperties(env, jsValue, nativeObj);
-    FillNumberUpProperties(env, jsValue, nativeObj);
-    BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
-        nativeObj->GetSubState(), nativeObj, cvtToPwgSize);
-    nativeObj->Dump();
-    return nativeObj;
-}
+      if (!FillFdListFromJs(env, jsValue, nativeObj)) {
+          return nullptr;
+      }
+      FillBasicJobProperties(env, jsValue, nativeObj);
+      BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
+          nativeObj->GetSubState(), nativeObj, cvtToPwgSize);
+      nativeObj->Dump();
+      return nativeObj;
+  }
 
 bool PrintJobHelper::FillFdListFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
 {
@@ -180,42 +174,6 @@ void PrintJobHelper::FillBasicJobProperties(napi_env env, napi_value jsValue, st
     nativeObj->SetDuplexMode(duplexMode);
 }
 
-void PrintJobHelper::FillNumberUpProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
-{
-    // Read numberUpArgs object from JS
-    napi_value jsNumberUpArgs = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPARGS);
-    if (jsNumberUpArgs == nullptr) {
-        PRINT_HILOGD("numberUpArgs is not provided");
-        return;
-    }
-    if (NapiPrintUtils::GetValueType(env, jsNumberUpArgs) != napi_object) {
-        PRINT_HILOGW("numberUpArgs is not an object, ignoring");
-        return;
-    }
-    NumberUpArgs args;
-    // Get numberUp from numberUpArgs object
-    napi_value jsNumberUp = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_NUMBERUP);
-    if (jsNumberUp != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUp) == napi_number) {
-        args.numberUp = NapiPrintUtils::GetUint32FromValue(env, jsNumberUp);
-    }
-    // Get numberUpLayout from numberUpArgs object
-    napi_value jsNumberUpLayout = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_NUMBERUPLAYOUT);
-    if (jsNumberUpLayout != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUpLayout) == napi_number) {
-        args.numberUpLayout = NapiPrintUtils::GetUint32FromValue(env, jsNumberUpLayout);
-    }
-    // Get mirror from numberUpArgs object
-    napi_value jsMirror = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_MIRROR);
-    if (jsMirror != nullptr && NapiPrintUtils::GetValueType(env, jsMirror) == napi_number) {
-        args.mirror = NapiPrintUtils::GetUint32FromValue(env, jsMirror);
-    }
-    // Get pageBorder from numberUpArgs object
-    napi_value jsPageBorder = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_PAGEBORDER);
-    if (jsPageBorder != nullptr && NapiPrintUtils::GetValueType(env, jsPageBorder) == napi_number) {
-        args.pageBorder = NapiPrintUtils::GetUint32FromValue(env, jsPageBorder);
-    }
-    nativeObj->SetNumberUpArgs(args);
-}
-
 std::shared_ptr<PrintJob> PrintJobHelper::BuildPrintJobFromJs(napi_env env, napi_value jsValue)
 {
     if (!ValidatePrintJobProperty(env, jsValue)) {
@@ -226,7 +184,7 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildPrintJobFromJs(napi_env env, napi
     if (!FillPrintJobParamsFromJs(env, jsValue, params)) {
         return nullptr;
     }
-    auto nativeObj = PrintUtils::ConvertParamsToPrintJob(params);
+    auto nativeObj = ConvertParamsToPrintJob(params);
     if (nativeObj == nullptr) {
         return nullptr;
     }
@@ -364,7 +322,6 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_MARGIN, PRINT_PARAM_OPT},
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
-        {PARAM_JOB_NUMBERUPARGS, PRINT_PARAM_OPT},
         {PARAM_JOB_VENDOR_OPTIONS, PRINT_PARAM_OPT},
     };
 
@@ -398,7 +355,6 @@ bool PrintJobHelper::ValidatePrintJobProperty(napi_env env, napi_value object)
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_ISSEQUENTIAL, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
-        {PARAM_JOB_NUMBERUPARGS, PRINT_PARAM_OPT},
         {PARAM_JOB_VENDOR_OPTIONS, PRINT_PARAM_OPT},
     };
 
@@ -446,7 +402,6 @@ bool PrintJobHelper::FillOptionalParamsFromJs(napi_env env, napi_value jsValue, 
         return false;
     }
     params.cupsOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION);
-    FillNumberUpParams(env, jsValue, params);
     napi_value jsVendorOptions = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_VENDOR_OPTIONS);
     if (jsVendorOptions != nullptr) {
         params.vendorOptions = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_VENDOR_OPTIONS);
@@ -479,39 +434,6 @@ void PrintJobHelper::FillBoolParamIfExists(napi_env env, napi_value jsValue,
     napi_value jsParam = NapiPrintUtils::GetNamedProperty(env, jsValue, paramName);
     if (jsParam != nullptr) {
         paramValue = static_cast<int32_t>(NapiPrintUtils::GetBooleanFromValue(env, jsParam));
-    }
-}
-
-void PrintJobHelper::FillNumberUpParams(napi_env env, napi_value jsValue, PrintJobParams &params)
-{
-    napi_value jsNumberUpArgs = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_NUMBERUPARGS);
-    if (jsNumberUpArgs == nullptr) {
-        PRINT_HILOGD("numberUpArgs is not provided, using default values");
-        return;
-    }
-    if (NapiPrintUtils::GetValueType(env, jsNumberUpArgs) != napi_object) {
-        PRINT_HILOGW("numberUpArgs is not an object, ignoring");
-        return;
-    }
-    // Get numberUp from numberUpArgs object
-    napi_value jsNumberUp = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_NUMBERUP);
-    if (jsNumberUp != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUp) == napi_number) {
-        params.numberUp = NapiPrintUtils::GetUint32FromValue(env, jsNumberUp);
-    }
-    // Get numberUpLayout from numberUpArgs object
-    napi_value jsNumberUpLayout = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_NUMBERUPLAYOUT);
-    if (jsNumberUpLayout != nullptr && NapiPrintUtils::GetValueType(env, jsNumberUpLayout) == napi_number) {
-        params.numberUpLayout = NapiPrintUtils::GetUint32FromValue(env, jsNumberUpLayout);
-    }
-    // Get mirror from numberUpArgs object
-    napi_value jsMirror = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_MIRROR);
-    if (jsMirror != nullptr && NapiPrintUtils::GetValueType(env, jsMirror) == napi_number) {
-        params.mirror = NapiPrintUtils::GetUint32FromValue(env, jsMirror);
-    }
-    // Get pageBorder from numberUpArgs object
-    napi_value jsPageBorder = NapiPrintUtils::GetNamedProperty(env, jsNumberUpArgs, PARAM_JOB_PAGEBORDER);
-    if (jsPageBorder != nullptr && NapiPrintUtils::GetValueType(env, jsPageBorder) == napi_number) {
-        params.pageBorder = NapiPrintUtils::GetUint32FromValue(env, jsPageBorder);
     }
 }
 
@@ -604,4 +526,185 @@ bool PrintJobHelper::GetPrintPreview(napi_env env, napi_value jsValue, PrintJobP
     }
     return true;
 }
+
+void PrintJobHelper::SetAttributesToPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
+{
+    nativeObj->SetCopyNumber(params.copyNumber);
+    nativeObj->SetColorMode(params.colorMode);
+    nativeObj->SetDuplexMode(params.duplexMode);
+    nativeObj->SetPageSize(params.pageSize);
+
+    nativeObj->SetJobId(params.jobId);
+    nativeObj->SetPageRange(params.pageRange);
+    if (params.hasMargin) {
+        nativeObj->SetMargin(params.margin);
+    }
+    if (params.hasPreview) {
+        nativeObj->SetPreview(params.preview);
+    }
+    if (params.isSequential != PARAM_NOT_SET) {
+        nativeObj->SetIsSequential(static_cast<bool>(params.isSequential));
+    }
+    if (!params.vendorOptions.empty()) {
+        nativeObj->SetVendorOptions(params.vendorOptions);
+    }
+}
+
+std::shared_ptr<PrintJob> PrintJobHelper::ConvertParamsToPrintJob(const PrintJobParams &params)
+{
+    auto nativeObj = std::make_shared<PrintJob>();
+    if (params.printerId.empty()) {
+        PRINT_HILOGE("printerId is empty.");
+        return nullptr;
+    }
+    nativeObj->SetPrinterId(params.printerId);
+    if (params.docFlavor == PRINT_BYTES) {
+        if (params.binaryData == nullptr || params.dataLength == 0) {
+            PRINT_HILOGE("Invalid binary data: data is null or empty.");
+            return nullptr;
+        }
+        std::string tmpPath;
+        int fd = CreateTempFileWithData(params.binaryData, params.dataLength, tmpPath);
+        if (fd == -1) {
+            return nullptr;
+        }
+        std::vector<uint32_t> printFdList;
+        printFdList.emplace_back(fd);
+        nativeObj->SetFdList(printFdList);
+        unlink(tmpPath.c_str());
+    } else {
+        if (params.printFdList.empty()) {
+            PRINT_HILOGE("Invalid fdList data: fdList is empty.");
+            return nullptr;
+        }
+        nativeObj->SetFdList(params.printFdList);
+    }
+    SetAttributesToPrintJob(params, nativeObj);
+    SetOptionInPrintJob(params, nativeObj);
+    return nativeObj;
+}
+
+std::string PrintJobHelper::GetDocumentFormatToString(uint32_t format)
+{
+    switch (format) {
+        case PRINT_DOCUMENT_FORMAT_AUTO:
+            return "application/octet-stream";
+        case PRINT_DOCUMENT_FORMAT_JPEG:
+            return "image/jpeg";
+        case PRINT_DOCUMENT_FORMAT_PDF:
+            return "application/pdf";
+        case PRINT_DOCUMENT_FORMAT_POSTSCRIPT:
+            return "application/postscript";
+        case PRINT_DOCUMENT_FORMAT_TEXT:
+            return "text/plain";
+        case PRINT_DOCUMENT_FORMAT_RAW:
+            return "application/vnd.cups-raw";
+        default:
+            return "application/octet-stream";
+    }
+}
+
+int PrintJobHelper::CreateTempFileWithData(void* data, size_t length, std::string &tmpPath)
+{
+    const auto appContext = AbilityRuntime::Context::GetApplicationContext();
+    if (appContext == nullptr) {
+        PRINT_HILOGE("appContext is null.");
+        return -1;
+    }
+    const std::string filesDir = appContext->GetFilesDir();
+    if (filesDir.empty()) {
+        PRINT_HILOGE("filesDir is empty.");
+        return -1;
+    }
+
+    tmpPath = GenerateTempFilePath(filesDir);
+    if (tmpPath.empty()) {
+        PRINT_HILOGE("Failed to generate valid temp file path.");
+        return -1;
+    }
+    std::ofstream tempFile(tmpPath, std::ios::binary);
+    if (!tempFile) {
+        PRINT_HILOGE("Failed to create temporary file.");
+        return -1;
+    }
+    if (!tempFile.write(static_cast<const char*>(data), length)) {
+        PRINT_HILOGE("Failed to write to temporary file: %{public}s", tmpPath.c_str());
+        tempFile.close();
+        std::remove(tmpPath.c_str());
+        return -1;
+    }
+    tempFile.close();
+
+    int fd = PrintUtils::OpenFile(tmpPath);
+    if (fd == -1) {
+        PRINT_HILOGE("Failed to open temp file.");
+        std::remove(tmpPath.c_str());
+    }
+
+    return fd;
+}
+
+std::string PrintJobHelper::GenerateTempFilePath(const std::string &filesDir)
+{
+    auto now = std::chrono::system_clock::now();
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm now_tm{};
+    localtime_r(&now_time_t, &now_tm);
+
+    std::ostringstream oss;
+    oss << "job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
+    std::string fileName = oss.str();
+    if (!PrintUtils::IsPathValidForCreate(filesDir, fileName)) {
+        PRINT_HILOGE("Invalid temp file path!");
+        return "";
+    }
+
+    return filesDir + "/" + fileName;
+}
+
+void PrintJobHelper::SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
+{
+    PRINT_HILOGI("PrintUtils::SetOptionInPrintJob enter.");
+    Json::Value jsonOptions;
+    if (!params.jobName.empty()) {
+        jsonOptions["jobName"] = params.jobName;
+        Json::Value jobDesArr;
+        jobDesArr.append(params.jobName);
+        jobDesArr.append("0");
+        jobDesArr.append("1");
+        jsonOptions["jobDesArr"] = jobDesArr;
+    }
+    if (params.docFlavor == PRINT_FILE_DESCRIPTOR) {
+        jsonOptions["isDocument"] = true;
+    }
+    jsonOptions["documentFormat"] = GetDocumentFormatToString(params.documentFormat);
+    int printQuality = params.printQuality;
+    if (printQuality > static_cast<int32_t>(PRINT_QUALITY_HIGH) ||
+        printQuality < static_cast<int32_t>(PRINT_QUALITY_DRAFT)) {
+        printQuality = static_cast<int32_t>(PRINT_QUALITY_NORMAL);
+    }
+    jsonOptions["printQuality"] = printQuality;
+    if (!params.mediaType.empty()) {
+        jsonOptions["mediaType"] = params.mediaType;
+    }
+    if (params.isBorderless != PARAM_NOT_SET) {
+        jsonOptions["borderless"] = static_cast<bool>(params.isBorderless);
+    }
+    if (params.isAutoRotate != PARAM_NOT_SET) {
+        jsonOptions["isAutoRotate"] = static_cast<bool>(params.isAutoRotate);
+    }
+    if (params.isReverse != PARAM_NOT_SET) {
+        jsonOptions["isReverse"] = static_cast<bool>(params.isReverse);
+    }
+    if (params.isCollate != PARAM_NOT_SET) {
+        jsonOptions["isCollate"] = static_cast<bool>(params.isCollate);
+    }
+    if (!params.cupsOptions.empty()) {
+        jsonOptions["cupsOptions"] = params.cupsOptions;
+    }
+    std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
+    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
+    nativeObj->SetOption(option);
+}
+
 }

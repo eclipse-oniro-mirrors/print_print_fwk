@@ -34,6 +34,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 };
 
 void PrintSystemDataTest::SetUpTestCase(void)
@@ -47,6 +48,9 @@ void PrintSystemDataTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintSystemDataTest_%{public}d", ++testNo);
 }
+
+void PrintSystemDataTest::TearDown(void)
+{}
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002_NeedRename, TestSize.Level1)
 {
@@ -141,11 +145,12 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0009_NeedRename, TestSize.Leve
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
+
     Json::Value printerMapJson;
     Json::Value printerJson;
     printerJson["id"] = "com.ohos.spooler:mdns://9e9561ad-0e30-1000-8000-9c9561ad0e30";
     printerJson["maker"] = "HUAWEI PixLab V1";
-    printerJson["name"] = "HUAWEI_PixLab_V1-0105";
+    printerJson["name"] = "PixLab_V1-0105";
     printerJson["uri"] = "ipp://192.168.186.1:631/ipp/print";
     printerMapJson.append(printerJson);
     Json::Value jsonObject;

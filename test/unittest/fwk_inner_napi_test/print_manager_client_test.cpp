@@ -44,6 +44,8 @@ class PrintManagerClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
     void CallRemoteObject(const std::shared_ptr<MockPrintService> service, const sptr<MockRemoteObject> &obj,
         sptr<IRemoteObject::DeathRecipient> &dr, int32_t sendRequestResult = E_PRINT_NONE);
     static void ResetRemoteObject(sptr<IRemoteObject::DeathRecipient> &dr, const sptr<MockRemoteObject> &obj);
@@ -53,6 +55,12 @@ void PrintManagerClientTest::SetUpTestCase(void)
 {}
 
 void PrintManagerClientTest::TearDownTestCase(void)
+{}
+
+void PrintManagerClientTest::SetUp(void)
+{}
+
+void PrintManagerClientTest::TearDown(void)
 {}
 
 void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintService> service,
@@ -2959,6 +2967,41 @@ HWTEST_F(PrintManagerClientTest, AnalyzePrintEvents_ShouldReturnNoPermission_Whe
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, CheckPreferencesConflictsTest, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, CheckPrintJobConflictsTest, TestSize.Level1)
+{
+    PrintJob printerJob;
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, printerJob, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences defaultPreferences;
+    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+ HWTEST_F(PrintManagerClientTest, GetPrinterPreference, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences printerPreference;
+    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_LoadServerFailed, TestSize.Level1)
 {
     std::string printerId = "testId";
@@ -3000,42 +3043,6 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_GetPrintServiceProxyFa
     int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
-
-HWTEST_F(PrintManagerClientTest, CheckPreferencesConflictsTest, TestSize.Level1)
-{
-    std::string printerId = "test";
-    PrinterPreferences printerPreference;
-    std::vector<std::string> conflictingOptions;
-    int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
-        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, CheckPrintJobConflictsTest, TestSize.Level1)
-{
-    PrintJob printerJob;
-    std::vector<std::string> conflictingOptions;
-    int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(
-        PRINT_PARAM_TYPE_PAGE_SIZE, printerJob, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
-{
-    std::string printerId = "test";
-    PrinterPreferences defaultPreferences;
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, GetPrinterPreference, TestSize.Level1)
-{
-    std::string printerId = "test";
-    PrinterPreferences printerPreference;
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printerPreference);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
 
 HWTEST_F(PrintManagerClientTest, GetSharedHosts_Test, TestSize.Level1)
 {
@@ -3291,5 +3298,6 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_Success, TestSize.Leve
 
     EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_NONE);
 }
+
 }  // namespace Print
 }  // namespace OHOS

@@ -51,25 +51,6 @@ void TestAddPrinterToCups(const uint8_t *data, size_t size, FuzzedDataProvider *
     PrintCupsClient::GetInstance()->JobSentCallback();
 }
 
-void TestQueryPrinterAttributesByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintCupsClient::GetInstance()->InitCupsResources();
-    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string nic = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int num = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    std::string pattrs = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    char **pattrsArray = new char *[1];
-    pattrsArray[0] = new char[pattrs.length() + 1];
-    if (strcpy_s(pattrsArray[0], MAX_SET_NUMBER, pattrs.c_str()) != EOK) {
-        delete[] pattrsArray[0];
-        delete[] pattrsArray;
-        return;
-    }
-    PrintCupsClient::GetInstance()->QueryPrinterAttributesByUri(printerUri, nic, num, pattrsArray);
-    delete[] pattrsArray[0];
-    delete[] pattrsArray;
-}
-
 void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
@@ -378,24 +359,6 @@ void TestGetNewSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintCupsClient::GetInstance()->GetNewSubstate(substate, singleSubstate);
 }
 
-void TestPrintJobNumberUpArgs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintJob printJob;
-    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-
-    // Set NumberUpArgs with fuzzed values
-    NumberUpArgs args;
-    args.numberUp = dataProvider->ConsumeIntegralInRange<uint32_t>(NUMBER_UP_MIN_VALUE, NUMBER_UP_MAX_VALUE);
-    args.numberUpLayout = dataProvider->ConsumeIntegralInRange<uint32_t>(0, NUMBER_UP_LAYOUT_BTRL);
-    args.mirror = dataProvider->ConsumeIntegralInRange<uint32_t>(PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED);
-    args.pageBorder = dataProvider->ConsumeIntegralInRange<uint32_t>(PRINT_PAGE_BORDER_NONE, PRINT_PAGE_BORDER_DOUBLE);
-    printJob.SetNumberUpArgs(args);
-
-    // Verify getter works without crash
-    (void)printJob.GetNumberUpArgs();
-}
-
 }  // namespace Print
 }  // namespace OHOS
 
@@ -411,12 +374,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider dataProvider(data, size);
-    PRINT_HILOGI("multithreading is running at function LLVMFuzzerTestOneInput.");
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
         &OHOS::Print::TestQueryPPDInformation,
         &OHOS::Print::TestAddPrinterToCups,
-        &OHOS::Print::TestQueryPrinterAttributesByUri,
         &OHOS::Print::TestQueryPrinterCapabilityByUri,
         &OHOS::Print::TestQueryPrinterStatusByUri,
         &OHOS::Print::TestDeleteCupsPrinter,
@@ -446,8 +408,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestParseStateReasons,
         &OHOS::Print::TestParseStateMessage,
         &OHOS::Print::TestGetBlockedAndUpdateSubstate,
-        &OHOS::Print::TestGetNewSubstate,
-        &OHOS::Print::TestPrintJobNumberUpArgs
+        &OHOS::Print::TestGetNewSubstate
     };
     TestHandler handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);

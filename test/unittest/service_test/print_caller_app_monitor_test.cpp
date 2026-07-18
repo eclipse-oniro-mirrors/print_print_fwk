@@ -37,6 +37,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 public:
     PrintCallerAppMonitor& printCallerAppMonitor = PrintCallerAppMonitor::GetInstance();
 };
@@ -52,6 +53,9 @@ void PrintCallerAppMonitorTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintCallerAppMonitorTest_%{public}d", ++testNo);
 }
+
+void PrintCallerAppMonitorTest::TearDown(void)
+{}
 
 HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_GetCallingPid_returnFalse, TestSize.Level1)
 {

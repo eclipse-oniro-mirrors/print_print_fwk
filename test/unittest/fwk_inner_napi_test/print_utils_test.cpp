@@ -14,14 +14,9 @@
  */
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "iservice_registry.h"
 #define private public
-#define protected public
 #include "print_utils.h"
-#undef protected
 #undef private
 #include "print_constant.h"
 #include "print_extension_callback_stub.h"
@@ -31,10 +26,8 @@
 #include "system_ability_definition.h"
 #include "print_json_util.h"
 #include "print_util.h"
-#include "mock_application_context.h"
 
 using namespace testing::ext;
-using namespace testing;
 
 namespace OHOS {
 namespace Print {
@@ -42,6 +35,8 @@ class PrintUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintUtilsTest::SetUpTestCase(void)
@@ -50,13 +45,19 @@ void PrintUtilsTest::SetUpTestCase(void)
 void PrintUtilsTest::TearDownTestCase(void)
 {}
 
+void PrintUtilsTest::SetUp(void)
+{}
+
+void PrintUtilsTest::TearDown(void)
+{}
+
 /**
  * @tc.name: PrintUtilsTest_0001
  * @tc.desc: Verify the toLower function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0001_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0001, TestSize.Level2)
 {
     std::string testResult = "test";
     std::string result = PrintUtils::ToLower("TEST");
@@ -69,7 +70,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0001_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0002_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0002, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     std::string testResult = "";
@@ -83,7 +84,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0002_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0003_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0003, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string testResult = "com.sample.ext";
@@ -112,7 +113,7 @@ HWTEST_F(PrintUtilsTest, GetGlobalId_NotIncludeExtensionId_ReturnWithExtensionId
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0005_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0005, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     std::string id = "com.sample.ext";
@@ -127,7 +128,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0005_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0006_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0006, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string id = "com.sample.extt";
@@ -142,7 +143,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0006_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0007_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0007, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string id = "com.sample.ext4";
@@ -157,7 +158,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0007_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0008_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0008, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     uint32_t cid = 1;
@@ -172,7 +173,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0008_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0009_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0009, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     std::string extensionId = "com.sample.ext";
@@ -186,7 +187,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0009_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0010_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0010, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1";
     std::string extensionId = "com.sample.ext";
@@ -202,7 +203,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0010_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0011_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0011, TestSize.Level2)
 {
     std::string taskId = "1234";
     std::string type = "block";
@@ -217,7 +218,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0011_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0012_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0012, TestSize.Level2)
 {
     int32_t result = PrintUtils::OpenFile("/error");
     EXPECT_EQ(PRINT_INVALID_ID, result);
@@ -229,7 +230,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0012_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0013_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0013, TestSize.Level2)
 {
     int32_t result = PrintUtils::OpenFile("/data/e11");
     EXPECT_EQ(PRINT_INVALID_ID, result);
@@ -241,7 +242,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0013_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0014_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0014, TestSize.Level2)
 {
     int32_t result = PrintUtils::IsPathValid("/data/service/e11/data/service/ \
     e11/data/service/e11/data/service/e11/data/service/e11/data/service/e11/data/service/ \
@@ -255,7 +256,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0014_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0015_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0015, TestSize.Level2)
 {
     int32_t result = PrintUtils::IsPathValid("/data/service/e11//data/service/e11");
     EXPECT_EQ(E_PRINT_NONE, result);
@@ -267,7 +268,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0015_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0016_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0016, TestSize.Level2)
 {
     int32_t result = PrintUtils::IsPathValid("/data/service/e11");
     EXPECT_NE(PRINT_INVALID_ID, result);
@@ -279,7 +280,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0016_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0017_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0017, TestSize.Level2)
 {
     int32_t result = PrintUtils::GetIdFromFdPath("/data/service");
     EXPECT_EQ(E_PRINT_NONE, result);
@@ -291,7 +292,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0017_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018, TestSize.Level2)
 {
     int32_t result = PrintUtils::GetIdFromFdPath("/data/service/e11");
     EXPECT_NE(PRINT_INVALID_ID, result);
@@ -303,7 +304,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019, TestSize.Level2)
 {
     std::string testResult = "PRINT_JOB_PREPARED";
     std::string result = PrintUtils::GetJobStateChar(PRINT_JOB_PREPARED);
@@ -316,14 +317,14 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0020_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0020, TestSize.Level2)
 {
     std::string testResult = "PRINT_JOB_UNKNOWN";
     std::string result = PrintUtils::GetJobStateChar(PRINT_JOB_PREPARED + 100);
     EXPECT_EQ(testResult, result);
 }
 
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021, TestSize.Level2)
 {
     PrintUtils printUtils;
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
@@ -365,7 +366,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021_NeedRename, TestSize.Level2)
     EXPECT_EQ(adapterParam->printAttributes.option_, "123");
 }
 
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level2)
 {
     PrintUtils printUtils;
     PrintAttributes attrParam;
@@ -404,7 +405,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022_NeedRename, TestSize.Level2)
         "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\",\"width\":400}}");
 }
 
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023, TestSize.Level2)
 {
     PrintUtils printUtils;
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
@@ -422,7 +423,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0024_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0024, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string id = "com.sample.ext";
@@ -437,7 +438,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0024_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0025_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0025, TestSize.Level2)
 {
     int32_t result = PrintUtils::OpenFile("content://test/test1");
     EXPECT_EQ(99, result);
@@ -449,7 +450,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0025_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0026_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0026, TestSize.Level2)
 {
     string testString(2048, '1');
     int32_t result = PrintUtils::IsPathValid("testString");
@@ -462,7 +463,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0026_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027, TestSize.Level2)
 {
     std::string result = PrintUtils::GetBundleNameForUid(123);
     EXPECT_EQ("", result);
@@ -474,7 +475,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028, TestSize.Level2)
 {
     std::string type = "test";
     int32_t callerUserId = 100;  // defaute test user id
@@ -526,470 +527,6 @@ HWTEST_F(PrintUtilsTest, IsUsbPrinter_IncludeUSBString_ReturnTrue, TestSize.Leve
     std::string printerId = "com.sample.ext:USB-printer-1234";
     bool result = PrintUtils::IsUsbPrinter(printerId);
     EXPECT_EQ(result, true);
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_Test
- * @tc.desc: Verify the ConvertParamsToPrintJob function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_Test, TestSize.Level2)
-{
-    PrintJobParams params;
-    auto result = PrintUtils::ConvertParamsToPrintJob(params);
-    params.printerId = "printerId";
-    EXPECT_EQ(result, nullptr);
-    params.docFlavor = 1;
-    params.binaryData = (uint8_t*)"text data";
-    params.dataLength = 0;
-    result = PrintUtils::ConvertParamsToPrintJob(params);
-    EXPECT_EQ(result, nullptr);
-
-    params.dataLength = 10;
-    result = PrintUtils::ConvertParamsToPrintJob(params);
-    EXPECT_EQ(result, nullptr);
-
-    params.docFlavor = 0;
-    params.printFdList = std::vector<uint32_t>();
-    result = PrintUtils::ConvertParamsToPrintJob(params);
-    EXPECT_EQ(result, nullptr);
-
-    params.printFdList.emplace_back(0);
-    result = PrintUtils::ConvertParamsToPrintJob(params);
-    EXPECT_NE(result, nullptr);
-
-    params.hasMargin = true;
-    params.hasPreview = true;
-    params.isSequential = 0;
-    result = PrintUtils::ConvertParamsToPrintJob(params);
-    EXPECT_NE(result, nullptr);
-}
-
-/**
- * @tc.name: GetDocumentFormatToString_Test
- * @tc.desc: Verify the GetDocumentFormatToString function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, GetDocumentFormatToString_Test, TestSize.Level2)
-{
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(0), "application/octet-stream");
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(1), "image/jpeg");
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(2), "application/pdf");
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(3), "application/postscript");
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(4), "text/plain");
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(5), "application/vnd.cups-raw");
-    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(6), "application/octet-stream");
-}
-
-/**
- * @tc.name: CreateTempFileWithData_Test
- * @tc.desc: Verify the CreateTempFileWithData function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, CreateTempFileWithData_Test, TestSize.Level2)
-{
-    void *data = (uint8_t*)"test data";
-    size_t length = 10;
-    std::string tmpPath;
-    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
-    EXPECT_EQ(fd, -1);
-}
-
-/**
- * @tc.name: CreateTempFileWithData_FilesDirEmpty
- * @tc.desc: Verify the CreateTempFileWithData function when appContext != nullptr but filesDir is empty.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, CreateTempFileWithData_FilesDirEmpty, TestSize.Level2)
-{
-    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
-    AbilityRuntime::Context::applicationContext_ = mockContext;
-    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return(""));
-    void *data = (uint8_t*)"test data";
-    size_t length = 10;
-    std::string tmpPath;
-    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
-    EXPECT_EQ(fd, -1);
-    EXPECT_TRUE(tmpPath.empty());
-    AbilityRuntime::Context::applicationContext_ = nullptr;
-}
-
-/**
- * @tc.name: CreateTempFileWithData_InvalidPath
- * @tc.desc: Verify the CreateTempFileWithData function when filesDir is a non-existent path.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, CreateTempFileWithData_InvalidPath, TestSize.Level2)
-{
-    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
-    AbilityRuntime::Context::applicationContext_ = mockContext;
-    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return("/nonexistent_dir_for_test"));
-    void *data = (uint8_t*)"test data";
-    size_t length = 10;
-    std::string tmpPath;
-    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
-    EXPECT_EQ(fd, -1);
-    AbilityRuntime::Context::applicationContext_ = nullptr;
-}
-
-/**
- * @tc.name: CreateTempFileWithData_Success
- * @tc.desc: Verify the CreateTempFileWithData function success path with valid writable filesDir.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, CreateTempFileWithData_Success, TestSize.Level2)
-{
-    std::string testDir = "/data/local/tmp/print_test";
-    mkdir(testDir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
-    AbilityRuntime::Context::applicationContext_ = mockContext;
-    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return(testDir));
-    void *data = (uint8_t*)"test data";
-    size_t length = 10;
-    std::string tmpPath;
-    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
-    EXPECT_GE(fd, 0);
-    EXPECT_FALSE(tmpPath.empty());
-    if (fd >= 0) {
-        close(fd);
-    }
-    if (!tmpPath.empty()) {
-        std::remove(tmpPath.c_str());
-    }
-    AbilityRuntime::Context::applicationContext_ = nullptr;
-}
-
-/**
- * @tc.name: GenerateTempFilePath_Test
- * @tc.desc: Verify the GenerateTempFilePath function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, GenerateTempFilePath_Test, TestSize.Level2)
-{
-    std::string result = PrintUtils::GenerateTempFilePath("/data");
-    EXPECT_TRUE(result.find("/data") == 0);
-    EXPECT_TRUE(result.find("/job_") != std::string::npos);
-
-    result = PrintUtils::GenerateTempFilePath("");
-    EXPECT_TRUE(result.empty());
-
-    result = PrintUtils::GenerateTempFilePath("/nonexistent_dir");
-    EXPECT_TRUE(result.empty());
-}
-
-/**
- * @tc.name: SetOptionInPrintJob_Test
- * @tc.desc: Verify the SetOptionInPrintJob function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, SetOptionInPrintJob_Test, TestSize.Level2)
-{
-    PrintJobParams params;
-    auto printJob = std::make_shared<PrintJob>();
-
-    params.jobName = "test_job";
-    params.docFlavor = 0;
-    params.documentFormat = 0;
-    params.printQuality = 0;
-    params.mediaType = "stationery";
-    params.isBorderless = 0;
-    params.isAutoRotate = 0;
-    params.isReverse = 0;
-    params.isCollate = 0;
-    params.cupsOptions = "test_cupsOptions";
-
-    PrintUtils::SetOptionInPrintJob(params, printJob);
-    std::string option = printJob->GetOption();
-    Json::Value json;
-    Json::Reader reader;
-    ASSERT_TRUE(reader.parse(option, json));
-    EXPECT_TRUE(json.isMember("jobName"));
-    EXPECT_TRUE(json.isMember("jobDesArr"));
-    EXPECT_TRUE(json.isMember("isDocument"));
-    EXPECT_TRUE(json.isMember("printQuality"));
-    EXPECT_TRUE(json.isMember("mediaType"));
-    EXPECT_TRUE(json.isMember("borderless"));
-    EXPECT_TRUE(json.isMember("isAutoRotate"));
-    EXPECT_TRUE(json.isMember("isReverse"));
-    EXPECT_TRUE(json.isMember("isCollate"));
-    EXPECT_TRUE(json.isMember("cupsOptions"));
-
-    EXPECT_EQ(json["jobName"].asString(), "test_job");
-    EXPECT_EQ(json["jobDesArr"].size(), 3);
-    EXPECT_EQ(json["isDocument"].asBool(), true);
-    EXPECT_EQ(json["printQuality"].asInt(), 4);
-    EXPECT_EQ(json["mediaType"].asString(), "stationery");
-    EXPECT_EQ(json["borderless"].asBool(), false);
-    EXPECT_EQ(json["isAutoRotate"].asBool(), false);
-    EXPECT_EQ(json["isReverse"].asBool(), false);
-    EXPECT_EQ(json["isCollate"].asBool(), false);
-    EXPECT_EQ(json["cupsOptions"].asString(), "test_cupsOptions");
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_001
- * @tc.desc: Verify the ConvertParamsToPrintJob function with NumberUpArgs.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_001, TestSize.Level2)
-{
-    PrintJobParams params;
-    params.printerId = "printer-001";
-    params.docFlavor = 0;
-    params.printFdList.emplace_back(1);
-
-    // Set NumberUpArgs
-    params.numberUp = 4;
-    params.numberUpLayout = NUMBER_UP_LAYOUT_TBLR;
-    params.mirror = 1;
-    params.pageBorder = 1;
-
-    auto result = PrintUtils::ConvertParamsToPrintJob(params);
-    ASSERT_NE(result, nullptr);
-    NumberUpArgs args = result->GetNumberUpArgs();
-    EXPECT_EQ(args.numberUp, 4);
-    EXPECT_EQ(args.numberUpLayout, NUMBER_UP_LAYOUT_TBLR);
-    EXPECT_EQ(args.mirror, 1);
-    EXPECT_EQ(args.pageBorder, 1);
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_002
- * @tc.desc: Verify the ConvertParamsToPrintJob function with all valid numberUp values.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_002, TestSize.Level2)
-{
-    PrintJobParams params;
-    params.printerId = "printer-001";
-    params.docFlavor = 0;
-    params.printFdList.emplace_back(1);
-
-    // Test all valid numberUp values
-    uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
-    for (auto numberUp : validNumberUps) {
-        params.numberUp = numberUp;
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr);
-        EXPECT_EQ(result->GetNumberUpArgs().numberUp, numberUp);
-    }
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_003
- * @tc.desc: Verify the ConvertParamsToPrintJob function with all numberUpLayout values.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_003, TestSize.Level2)
-{
-    PrintJobParams params;
-    params.printerId = "printer-001";
-    params.docFlavor = 0;
-    params.printFdList.emplace_back(1);
-    params.numberUp = 4;
-
-    // Test all layout values
-    uint32_t layouts[] = {
-        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_LRBT,
-        NUMBER_UP_LAYOUT_RLTB, NUMBER_UP_LAYOUT_RLBT,
-        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
-        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
-    };
-
-    for (auto layout : layouts) {
-        params.numberUpLayout = layout;
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr);
-        EXPECT_EQ(result->GetNumberUpArgs().numberUpLayout, layout);
-    }
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_004
- * @tc.desc: Verify the ConvertParamsToPrintJob function with mirror and pageBorder.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_004, TestSize.Level2)
-{
-    PrintJobParams params;
-    params.printerId = "printer-001";
-    params.docFlavor = 0;
-    params.printFdList.emplace_back(1);
-
-    // Test mirror values
-    params.mirror = 1;
-    params.pageBorder = 1;
-    auto result = PrintUtils::ConvertParamsToPrintJob(params);
-    ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->GetNumberUpArgs().mirror, 1);
-    EXPECT_EQ(result->GetNumberUpArgs().pageBorder, 1);
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_005
- * @tc.desc: Verify the ConvertParamsToPrintJob with all valid numberUp values (data table).
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_005, TestSize.Level2)
-{
-    // Data table: test all valid numberUp values
-    uint32_t validNumberUps[] = {1, 2, 4, 6, 9, 16};
-
-    for (auto numberUp : validNumberUps) {
-        PrintJobParams params;
-        params.printerId = "printer-001";
-        params.docFlavor = 0;
-        params.printFdList.emplace_back(1);
-        params.numberUp = numberUp;
-
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr) << "Failed for numberUp=" << numberUp;
-        EXPECT_EQ(result->GetNumberUpArgs().numberUp, numberUp);
-    }
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_006
- * @tc.desc: Verify the ConvertParamsToPrintJob with all numberUpLayout values (data table).
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_006, TestSize.Level2)
-{
-    // Data table: test all numberUpLayout values
-    uint32_t layouts[] = {
-        NUMBER_UP_LAYOUT_LRTB, NUMBER_UP_LAYOUT_RLTB,
-        NUMBER_UP_LAYOUT_TBLR, NUMBER_UP_LAYOUT_TBRL,
-        NUMBER_UP_LAYOUT_LRBT, NUMBER_UP_LAYOUT_RLBT,
-        NUMBER_UP_LAYOUT_BTLR, NUMBER_UP_LAYOUT_BTRL
-    };
-
-    for (auto layout : layouts) {
-        PrintJobParams params;
-        params.printerId = "printer-001";
-        params.docFlavor = 0;
-        params.printFdList.emplace_back(1);
-        params.numberUp = 4;
-        params.numberUpLayout = layout;
-
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr) << "Failed for layout=" << layout;
-        EXPECT_EQ(result->GetNumberUpArgs().numberUpLayout, layout);
-    }
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_007
- * @tc.desc: Verify the ConvertParamsToPrintJob with mirror values (data table).
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_007, TestSize.Level2)
-{
-    // Data table: test mirror values
-    uint32_t mirrorValues[] = {PRINT_MIRROR_DISABLED, PRINT_MIRROR_ENABLED};
-
-    for (auto mirror : mirrorValues) {
-        PrintJobParams params;
-        params.printerId = "printer-001";
-        params.docFlavor = 0;
-        params.printFdList.emplace_back(1);
-        params.numberUp = 4;
-        params.mirror = mirror;
-
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr) << "Failed for mirror=" << mirror;
-        EXPECT_EQ(result->GetNumberUpArgs().mirror, mirror);
-    }
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_008
- * @tc.desc: Verify the ConvertParamsToPrintJob with pageBorder values (data table).
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_008, TestSize.Level2)
-{
-    // Data table: test pageBorder values
-    uint32_t borderValues[] = {
-        PRINT_PAGE_BORDER_NONE,
-        PRINT_PAGE_BORDER_SINGLE,
-        PRINT_PAGE_BORDER_DOUBLE
-    };
-
-    for (auto border : borderValues) {
-        PrintJobParams params;
-        params.printerId = "printer-001";
-        params.docFlavor = 0;
-        params.printFdList.emplace_back(1);
-        params.numberUp = 4;
-        params.pageBorder = border;
-
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr) << "Failed for pageBorder=" << border;
-        EXPECT_EQ(result->GetNumberUpArgs().pageBorder, border);
-    }
-}
-
-/**
- * @tc.name: ConvertParamsToPrintJob_NumberUpArgs_009
- * @tc.desc: Verify the ConvertParamsToPrintJob with combined NumberUpArgs (data table).
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_NumberUpArgs_009, TestSize.Level2)
-{
-    // Data table: combined test cases
-    struct TestCase {
-        uint32_t numberUp;
-        uint32_t numberUpLayout;
-        uint32_t mirror;
-        uint32_t pageBorder;
-    };
-
-    std::vector<TestCase> testCases = {
-        {1, NUMBER_UP_LAYOUT_LRTB, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_NONE},
-        {2, NUMBER_UP_LAYOUT_RLTB, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_SINGLE},
-        {4, NUMBER_UP_LAYOUT_TBLR, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_DOUBLE},
-        {6, NUMBER_UP_LAYOUT_TBRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_NONE},
-        {9, NUMBER_UP_LAYOUT_LRBT, PRINT_MIRROR_DISABLED, PRINT_PAGE_BORDER_SINGLE},
-        {16, NUMBER_UP_LAYOUT_BTRL, PRINT_MIRROR_ENABLED, PRINT_PAGE_BORDER_DOUBLE}
-    };
-
-    int index = 0;
-    for (const auto& tc : testCases) {
-        PrintJobParams params;
-        params.printerId = "printer-001";
-        params.docFlavor = 0;
-        params.printFdList.emplace_back(1);
-        params.numberUp = tc.numberUp;
-        params.numberUpLayout = tc.numberUpLayout;
-        params.mirror = tc.mirror;
-        params.pageBorder = tc.pageBorder;
-
-        auto result = PrintUtils::ConvertParamsToPrintJob(params);
-        ASSERT_NE(result, nullptr) << "Failed at index " << index;
-        NumberUpArgs args = result->GetNumberUpArgs();
-        EXPECT_EQ(args.numberUp, tc.numberUp) << "Failed at index " << index;
-        EXPECT_EQ(args.numberUpLayout, tc.numberUpLayout) << "Failed at index " << index;
-        EXPECT_EQ(args.mirror, tc.mirror) << "Failed at index " << index;
-        EXPECT_EQ(args.pageBorder, tc.pageBorder) << "Failed at index " << index;
-        index++;
-    }
 }
 
 /**

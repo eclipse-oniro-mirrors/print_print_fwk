@@ -34,6 +34,7 @@ public:
     MOCK_METHOD1(HksFreeParamSet, void(HksParamSet**));
     MOCK_METHOD3(EVP_EncodeBlockWrapper, int(unsigned char*, const unsigned char*, int));
     MOCK_METHOD3(EVP_DecodeBlockWrapper, int(unsigned char*, const unsigned char*, int));
+    MOCK_METHOD2(Base64Decode, bool(const HksBlob&, HksBlob&));
 };
 
 } // namespace OHOS::Print

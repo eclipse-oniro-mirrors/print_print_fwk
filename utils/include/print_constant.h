@@ -88,12 +88,12 @@ namespace OHOS::Print {
         PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
         return;                                         \
     }
-
+    
 #define CHECK_PARCEL_OP_AND_RETURN_VAL(parcelOpExp, retVal) \
-    if (!(parcelOpExp)) { \
-        PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
-        return retVal; \
-    }
+        if (!(parcelOpExp)) { \
+            PRINT_HILOGE("%{public}s %{public}s failed", __func__, #parcelOpExp); \
+            return retVal; \
+        }
 
 #define PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(ptr, funcName)                       \
     if ((ptr) == nullptr) {                                                         \
@@ -200,7 +200,6 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_SMB_PRINTER = 38,  // SMB print job transmission failed.
     PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING = 39,  // Input tray is missing or not properly installed
     PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 40, // print job restricted by security policy.
-    PRINT_JOB_BLOCKED_INVALID_NUMBER_UP = 41, // n-in-1 print with invalid number-up parameter.
     PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION = 42, // slow file conversion
     PRINT_JOB_BLOCKED_PORT_ERROR = 43, // port error
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
@@ -258,42 +257,6 @@ enum PrintQualityCode {
     PRINT_QUALITY_DRAFT = 3,
     PRINT_QUALITY_NORMAL = 4,
     PRINT_QUALITY_HIGH = 5
-};
-
-enum PrintNumberUpLayout {
-    NUMBER_UP_LAYOUT_LRTB = 0,  // Left to Right, Top to Bottom
-    NUMBER_UP_LAYOUT_RLTB = 1,  // Right to Left, Top to Bottom
-    NUMBER_UP_LAYOUT_TBLR = 2,  // Top to Bottom, Left to Right
-    NUMBER_UP_LAYOUT_TBRL = 3,  // Top to Bottom, Right to Left
-    NUMBER_UP_LAYOUT_LRBT = 4,  // Left to Right, Bottom to Top
-    NUMBER_UP_LAYOUT_RLBT = 5,  // Right to Left, Bottom to Top
-    NUMBER_UP_LAYOUT_BTLR = 6,  // Bottom to Top, Left to Right
-    NUMBER_UP_LAYOUT_BTRL = 7,  // Bottom to Top, Right to Left
-};
-
-constexpr uint32_t NUMBER_UP_MIN_VALUE = 1;   // Minimum value for numberUp (single page per sheet)
-constexpr uint32_t NUMBER_UP_MAX_VALUE = 16;  // Maximum value for numberUp
-constexpr uint32_t NUMBER_UP_DEFAULT_VALUE = 1;  // Default value for numberUp (PRINT_NUMBER_UP_1_PAGE)
-constexpr uint32_t NUMBER_UP_2_PAGES = 2;
-constexpr uint32_t NUMBER_UP_4_PAGES = 4;
-constexpr uint32_t NUMBER_UP_6_PAGES = 6;
-constexpr uint32_t NUMBER_UP_9_PAGES = 9;
-constexpr uint32_t NUMBER_UP_16_PAGES = 16;
-constexpr uint32_t NUMBER_UP_LAYOUT_DEFAULT_VALUE = NUMBER_UP_LAYOUT_LRTB;  // Default layout for numberUp
-constexpr uint32_t MIRROR_DEFAULT_VALUE = 0;  // Default value for mirror (PRINT_MIRROR_DISABLED)
-constexpr uint32_t PAGE_BORDER_DEFAULT_VALUE = 0;  // Default value for pageBorder (PRINT_PAGE_BORDER_NONE)
-
-// Mirror printing mode (aligned with CUPS mirror-printing parameter)
-enum PrintMirrorMode {
-    PRINT_MIRROR_DISABLED = 0,  // Mirror printing disabled (normal mode)
-    PRINT_MIRROR_ENABLED = 1    // Mirror printing enabled (mirror mode)
-};
-
-// Page border style (supported by some printers)
-enum PrintPageBorderMode {
-    PRINT_PAGE_BORDER_NONE = 0,    // Page border none
-    PRINT_PAGE_BORDER_SINGLE = 1,  // Page border single
-    PRINT_PAGE_BORDER_DOUBLE = 2   // Page border double
 };
 
 enum PrintDocumentFormat {
@@ -421,6 +384,7 @@ const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
+constexpr uint32_t INVALID_FD = -1;
 const int32_t PRINT_API_COUNTED = 1;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";

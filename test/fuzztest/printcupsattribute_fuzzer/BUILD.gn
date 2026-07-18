@@ -16,13 +16,8 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-if (print_fwk_feature_device_isolation) {
-  _test_path = "${print_path}/test/phone_test"
-  _service_path = "${print_path}/services/phone_service"
-} else {
-  _test_path = "${print_path}/test"
-  _service_path = "${print_path}/services"
-}
+_test_path = "${print_path}/test"
+_service_path = "${print_path}/services"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintCupsAttributeFuzzTest") {
@@ -82,7 +77,6 @@ ohos_fuzztest("PrintCupsAttributeFuzzTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "openssl:libssl_shared",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -96,6 +90,8 @@ ohos_fuzztest("PrintCupsAttributeFuzzTest") {
       "cJSON:cjson",
       "cups:cups",
       "cups-filters:cupsfilters",
+      "openssl:libcrypto_shared",
+      "openssl:libssl_shared",
     ]
   }
 
