@@ -21,9 +21,7 @@
 namespace OHOS::Scan {
 constexpr int32_t SANE_SERVICE_ID = 3709;
 constexpr int32_t LOAD_SA_TIMEOUT_MS = 15000;
-std::mutex SaneManagerClient::instanceLock_;
 std::shared_mutex SaneManagerClient::serviceLock_;
-sptr<SaneManagerClient> SaneManagerClient::instance_;
 
 SaneManagerClient::SaneManagerClient() : proxy_(nullptr)
 {
@@ -35,14 +33,9 @@ SaneManagerClient::~SaneManagerClient()
     deathRecipient_ = nullptr;
 }
 
-sptr<SaneManagerClient> SaneManagerClient::GetInstance()
+SaneManagerClient &SaneManagerClient::GetInstance()
 {
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = new SaneManagerClient;
-        }
-    }
+    static SaneManagerClient instance_;
     return instance_;
 }
 

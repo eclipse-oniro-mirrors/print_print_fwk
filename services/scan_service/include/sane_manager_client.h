@@ -32,7 +32,7 @@ class SaneManagerClient : public RefBase {
 public:
     SaneManagerClient();
     ~SaneManagerClient();
-    static sptr<SaneManagerClient> GetInstance();
+    static SaneManagerClient &GetInstance();
     SaneStatus SaneInit();
     SaneStatus SaneExit();
     SaneStatus SaneOpen(const std::string& scannerId);
@@ -54,8 +54,6 @@ private:
     sptr<ISaneBackends> GetSaneServiceProxy();
     sptr<OHOS::Scan::ISaneBackends> proxy_;
     sptr<SaneSaDeathRecipient> deathRecipient_;
-    static sptr<SaneManagerClient> instance_;
-    static std::mutex instanceLock_;
     static std::shared_mutex serviceLock_;
     std::condition_variable_any syncCon_;
 };
