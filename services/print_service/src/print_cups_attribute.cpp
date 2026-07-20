@@ -128,7 +128,7 @@ void SetCapabilityGroupAttribute(ipp_t *response, PrinterCapability &printerCaps
         printerCaps.SetPrinterAttrNameAndValue(
             "printer-state", ippEnumString("printer-state", ippGetInteger(attrPtr, 0)));
     }
-    if ((attrPtr = ippFindAttribute(response, "printer-info", IPP_TAG_TEXTLANG)) != nullptr) {
+    if ((attrPtr = ippFindAttribute(response, "printer-info", IPP_TAG_TEXT)) != nullptr) {
         const char *printerInfo = ippGetString(attrPtr, 0, nullptr);
         printerCaps.SetPrinterAttrNameAndValue("printer-info", printerInfo ? printerInfo : "");
     }

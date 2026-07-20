@@ -524,6 +524,10 @@ static void StartGettingPrintFileNative(ani_env *env, ani_string jobId,
     }
     PRINT_HILOGD("Job ID: %{public}s, FD: %{public}d", id.c_str(), fd);
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     std::string typeStr = "getPrintFileCallback_adapter";
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
     PrintAttributes attrs = AniPrintAttributesHelper::ParsePrintAttributes(env, printAttributes);
@@ -685,6 +689,10 @@ static void OnPrinterStateChangeNative(ani_env *env, ani_object callback)
     PRINT_HILOGI("enter OnPrinterStateChangeNative");
     std::string typeStr = "printerStateChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -695,6 +703,10 @@ static void OnJobStateChangeNative(ani_env *env, ani_object callback)
     PRINT_HILOGI("enter OnJobStateChangeNative");
     std::string typeStr = "jobStateChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -705,6 +717,10 @@ static void OnExtInfoChangeNative(ani_env *env, ani_object callback)
     PRINT_HILOGI("enter OnExtInfoChangeNative");
     std::string typeStr = "extInfoChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -724,6 +740,10 @@ static void OnPrintTask(ani_env *env, ani_string type, ani_object callback, ani_
         return;
     }
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     printTask->On(typeStr, callbackWrapper);
 }
 
@@ -743,6 +763,10 @@ static void OffPrintTask(ani_env *env, ani_string type, ani_object callback, ani
         return;
     }
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     printTask->Off(typeStr, callbackWrapper);
 }
 
@@ -777,6 +801,10 @@ static void OnPrinterChangeNative(ani_env *env, ani_object callback)
     PRINT_HILOGI("enter OnPrinterChangeNative");
     std::string typeStr = "printerChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -840,6 +868,10 @@ static void OnPrinterInfoQueryNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OnPrinterInfoQueryNative");
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    if (callbackWrapper == nullptr) {
+        PRINT_HILOGE("callbackWrapper is nullptr");
+        return;
+    }
     PrintManagerClient::GetInstance()->On("", PRINTER_INFO_QUERY_EVENT_TYPE, callbackWrapper);
 }
 
