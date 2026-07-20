@@ -787,5 +787,19 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)
     EXPECT_FALSE(service->IsExtensionPrintJob(cid));
 }
 
+HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_NonStringItem_ShouldSkip, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string keyword = "testKeyword";
+    Json::Value singleOptArray;
+    singleOptArray.append("validString");
+    singleOptArray.append(123);
+    singleOptArray.append(true);
+    Json::Value singleAdvanceOptJson;
+    service->ParseSingleAdvanceOptJson(keyword, singleOptArray, singleAdvanceOptJson);
+    EXPECT_TRUE(singleAdvanceOptJson.isMember("choice"));
+    EXPECT_EQ(1, singleAdvanceOptJson["choice"]["default"].size());
+}
+
 }  // namespace Print
 }  // namespace OHOS

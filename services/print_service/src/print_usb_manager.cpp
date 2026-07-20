@@ -24,6 +24,34 @@ namespace OHOS::Print {
 using namespace OHOS;
 using namespace OHOS::USB;
 
+namespace {
+bool GetUsbInterfaceAndEndpoints(const UsbDevice& usbdevice, int32_t configIndex,
+    int32_t interfaceIndex, UsbInterface& useInterface, USBEndpoint& point1, USBEndpoint& point2)
+{
+    const auto& configs = usbdevice.GetConfigs();
+    if (configIndex < 0 || configIndex >= static_cast<int32_t>(configs.size())) {
+        PRINT_HILOGE("config index out of range, config: %{public}d, size: %{public}d",
+            configIndex, static_cast<int32_t>(configs.size()));
+        return false;
+    }
+    const auto& interfaces = configs[configIndex].GetInterfaces();
+    if (interfaceIndex < 0 || interfaceIndex >= static_cast<int32_t>(interfaces.size())) {
+        PRINT_HILOGE("interface index out of range, interface: %{public}d, size: %{public}d",
+            interfaceIndex, static_cast<int32_t>(interfaces.size()));
+        return false;
+    }
+    useInterface = interfaces[interfaceIndex];
+    const auto& endpoints = useInterface.GetEndpoints();
+    if (endpoints.size() < 2) {
+        PRINT_HILOGE("endpoints count < 2, size: %{public}d", static_cast<int32_t>(endpoints.size()));
+        return false;
+    }
+    point1 = endpoints[INDEX_0];
+    point2 = endpoints[INDEX_1];
+    return true;
+}
+}
+
 PrintUsbManager::PrintUsbManager()
 {}
 
@@ -277,9 +305,13 @@ int32_t PrintUsbManager::BulkTransferWrite(std::string printerName, const Operat
         currentConfigIndex = tranIndex.commonConfigIndex;
         currentInterfaceIndex = tranIndex.commonInterfaceIndex;
     }
-    UsbInterface useInterface = usbdevice.GetConfigs()[currentConfigIndex].GetInterfaces()[currentInterfaceIndex];
-    USBEndpoint point1 = useInterface.GetEndpoints().at(INDEX_0);
-    USBEndpoint point2 = useInterface.GetEndpoints().at(INDEX_1);
+    UsbInterface useInterface;
+    USBEndpoint point1;
+    USBEndpoint point2;
+    if (!GetUsbInterfaceAndEndpoints(usbdevice, currentConfigIndex, currentInterfaceIndex,
+        useInterface, point1, point2)) {
+        return INVAILD_VALUE;
+    }
     USBEndpoint pointWrite;
     if (point1.GetDirection() == 0) {
         pointWrite = point1;
@@ -317,9 +349,13 @@ int32_t PrintUsbManager::BulkTransferRead(std::string printerName, const Operati
         currentConfigIndex = tranIndex.commonConfigIndex;
         currentInterfaceIndex = tranIndex.commonInterfaceIndex;
     }
-    UsbInterface useInterface = usbdevice.GetConfigs()[currentConfigIndex].GetInterfaces()[currentInterfaceIndex];
-    USBEndpoint point1 = useInterface.GetEndpoints().at(INDEX_0);
-    USBEndpoint point2 = useInterface.GetEndpoints().at(INDEX_1);
+    UsbInterface useInterface;
+    USBEndpoint point1;
+    USBEndpoint point2;
+    if (!GetUsbInterfaceAndEndpoints(usbdevice, currentConfigIndex, currentInterfaceIndex,
+        useInterface, point1, point2)) {
+        return INVAILD_VALUE;
+    }
     USBEndpoint pointRead;
     if (point1.GetDirection() == 0) {
         pointRead = point2;

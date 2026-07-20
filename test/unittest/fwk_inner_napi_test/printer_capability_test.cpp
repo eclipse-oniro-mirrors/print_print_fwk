@@ -494,5 +494,21 @@ HWTEST_F(PrinterCapabilityTest, GetCustomOptionKeys_HasCustomOptions_ReturnKeys,
     EXPECT_EQ(true, keys.find("CustomPin") != keys.end());
     EXPECT_EQ(true, keys.find("CustomPassword") != keys.end());
 }
+
+HWTEST_F(PrinterCapabilityTest, GetCustomOptionKeys_HasCustomParamTypeNoKeyword_ReturnEmpty, TestSize.Level2)
+{
+    PrinterCapability capability;
+    Json::Value capJson;
+    Json::Value cupsOptions;
+    Json::Value advanceOptions;
+    Json::Value opt;
+    opt["customParamType"] = 1;
+    advanceOptions.append(opt);
+    cupsOptions["advanceOptions"] = PrintJsonUtil::WriteString(advanceOptions);
+    capJson["cupsOptions"] = cupsOptions;
+    capability.SetOption(PrintJsonUtil::WriteString(capJson));
+    std::set<std::string> keys = capability.GetCustomOptionKeys();
+    EXPECT_EQ(true, keys.empty());
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -682,7 +682,8 @@ std::set<std::string> PrinterCapability::GetCustomOptionKeys() const
 
     std::set<std::string> customOptionKeys;
     for (const auto &opt : advanceOptionsJson) {
-        if (opt.isObject() && opt["customParamType"].isInt()) {
+        if (opt.isObject() && opt["customParamType"].isInt() &&
+            opt.isMember("keyword") && opt["keyword"].isString()) {
             std::string keyword = opt["keyword"].asString();
             customOptionKeys.insert(keyword);
         }
