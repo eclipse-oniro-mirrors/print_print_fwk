@@ -78,6 +78,10 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     }
 
     PrinterCapability printerCapability;
+    if (!PrintJsonUtil::IsMember(object, "capability")) {
+        PRINT_HILOGW("json does not contain the key as capability");
+        return false;
+    }
     Json::Value capsJson = object["capability"];
     if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
         PRINT_HILOGW("convert json to printer capability failed");
@@ -1151,6 +1155,10 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(Json::Value &capsJson, P
 
 bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability)
 {
+    if (!PrintJsonUtil::IsMember(capsJson, "minMargin")) {
+        PRINT_HILOGE("can not find minMargin");
+        return false;
+    }
     Json::Value marginJson = capsJson["minMargin"];
     PrintMargin minMargin;
     if (!marginJson.isObject() ||
