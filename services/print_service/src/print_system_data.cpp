@@ -78,16 +78,7 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     }
 
     PrinterCapability printerCapability;
-    if (!PrintJsonUtil::IsMember(object, "capability")) {
-        PRINT_HILOGW("json does not contain the key as capability");
-        return false;
-    }
-    Json::Value capsJson = object["capability"];
-    if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
-        PRINT_HILOGW("convert json to printer capability failed");
-        return false;
-    }
-    printerCapability.Dump();
+    if (!ParseCapabilityFromJson(object, printerCapability)) { return false; }
 
     PrinterInfo info;
     info.SetPrinterId(id);
@@ -111,6 +102,21 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     }
     
     PRINT_HILOGI("ConvertJsonToPrinterInfo success, id: %{public}s", id.c_str());
+    return true;
+}
+
+bool PrintSystemData::ParseCapabilityFromJson(Json::Value &object, PrinterCapability &cap)
+{
+    if (!PrintJsonUtil::IsMember(object, "capability")) {
+        PRINT_HILOGW("json does not contain the key as capability");
+        return false;
+    }
+    Json::Value capsJson = object["capability"];
+    if (!ConvertJsonToPrinterCapability(capsJson, cap)) {
+        PRINT_HILOGW("convert json to printer capability failed");
+        return false;
+    }
+    cap.Dump();
     return true;
 }
 
