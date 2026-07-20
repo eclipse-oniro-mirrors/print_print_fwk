@@ -87,6 +87,12 @@ RemotePrinterManager::~RemotePrinterManager()
     Destroy();
 }
 
+RemotePrinterManager& RemotePrinterManager::GetInstance()
+{
+    static RemotePrinterManager instance;
+    return instance;
+}
+
 bool RemotePrinterManager::Destroy()
 {
     PRINT_HILOGI("RemotePrinterManager Destroy");
@@ -98,6 +104,15 @@ bool RemotePrinterManager::Destroy()
     
     std::lock_guard<std::mutex> lock(printerMapLock_);
     printerMap_.clear();
+    return true;
+}
+
+bool RemotePrinterManager::Disconnect()
+{
+    PRINT_HILOGI("RemotePrinterManager Disconnect");
+    StopPrinterDiscovery();
+    ClearAllPrinters();
+    serviceAdapter_.UnbindService();
     return true;
 }
 

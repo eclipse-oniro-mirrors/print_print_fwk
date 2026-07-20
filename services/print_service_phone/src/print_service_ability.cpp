@@ -769,7 +769,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     AppExecFwk::BundleInfo bundleInfo;
     if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
         PRINT_HILOGI("Remote bundle detected, start printer discovery");
-        DelayedSingleton<RemotePrinterManager>::GetInstance()->StartPrinterDiscovery();
+        RemotePrinterManager::GetInstance().StartPrinterDiscovery();
     }
 #endif
     return StartExtensionDiscovery(extensionIds);
@@ -1798,6 +1798,11 @@ void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
 void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
 {
     PRINT_HILOGD("NotifyAppCurrentUserChanged begin");
+#ifdef REMOTE_SERVICE_ENABLE
+    if (userId != INVALID_USER_ID) {
+        RemotePrinterManager::GetInstance().Disconnect();
+    }
+#endif
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (userId == INVALID_USER_ID) {
         currentUserId_ = GetCurrentUserId();
@@ -2512,7 +2517,7 @@ void PrintServiceAbility::StopDiscoveryInternal()
     AppExecFwk::BundleInfo bundleInfo;
     if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
         PRINT_HILOGI("Remote bundle detected, stop printer discovery");
-        DelayedSingleton<RemotePrinterManager>::GetInstance()->StopPrinterDiscovery();
+        RemotePrinterManager::GetInstance().StopPrinterDiscovery();
     }
 #endif
     printSystemData_.ClearDiscoveredPrinterList();

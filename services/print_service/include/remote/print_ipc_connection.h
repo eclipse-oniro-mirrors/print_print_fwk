@@ -44,6 +44,8 @@ public:
 
     sptr<IRemoteObject> GetRemoteObject();
 
+    void ClearConnection();
+
     bool WaitForConnection(int32_t timeoutMs = 5000);
 
     int32_t SendData(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);

@@ -37,7 +37,10 @@ public:
     RemotePrinterManager();
     ~RemotePrinterManager();
     
+    static RemotePrinterManager& GetInstance();
+    
     bool Destroy();
+    bool Disconnect();
     
     bool StartPrinterDiscovery();
     bool StopPrinterDiscovery();

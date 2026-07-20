@@ -373,4 +373,30 @@ HWTEST_F(RemotePrinterManagerTest, OnPrinterStatusReceived_004, TestSize.Level1)
     std::string response = "[{\"status\":\"online\"}]";
     EXPECT_TRUE(manager.OnPrinterStatusReceived(response));
 }
+
+/**
+ * @tc.name: Disconnect_001
+ * @tc.desc: Branch: stop discovery, clear printers, unbind service -> return true
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemotePrinterManagerTest, Disconnect_001, TestSize.Level1)
+{
+    RemotePrinterManager manager;
+    EXPECT_TRUE(manager.Disconnect());
+}
+
+/**
+ * @tc.name: Disconnect_002
+ * @tc.desc: Branch: disconnect while discovery running -> stop and return true
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemotePrinterManagerTest, Disconnect_002, TestSize.Level1)
+{
+    RemotePrinterManager manager;
+    EXPECT_TRUE(manager.StartPrinterDiscovery());
+    EXPECT_TRUE(manager.Disconnect());
+}
+
 } // namespace OHOS::Print
