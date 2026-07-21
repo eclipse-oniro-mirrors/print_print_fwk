@@ -5555,10 +5555,6 @@ void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, 
     Json::Value advanceChoiceJsonDefaultLanguage;
     Json::Value advanceOptionTextJson;
     for (const auto &item: singleOptArray) {
-        if (!item.isString()) {
-            PRINT_HILOGW("advance option item is not string, skip");
-            continue;
-        }
         advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
     }
     advanceChoiceJson["default"] = advanceChoiceJsonDefaultLanguage;
