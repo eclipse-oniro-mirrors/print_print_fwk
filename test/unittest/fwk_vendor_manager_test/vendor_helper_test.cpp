@@ -326,45 +326,45 @@ HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
 }
 
-HWTEST_F(VendorHelperTest, ReplaceIpInString_Ipv4_Anonymized, TestSize.Level1)
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_Ipv4_Anonymized, TestSize.Level1)
 {
     std::string input = "ipps://192.168.2.106:631/ipp/print, ipp://192.168.2.106:631/ipp/print";
     std::string expected = "ipps://*:631/ipp/print, ipp://*:631/ipp/print";
-    EXPECT_EQ(ReplaceIpInString(input), expected);
+    EXPECT_EQ(AnonymizeIpInString(input), expected);
 }
 
-HWTEST_F(VendorHelperTest, ReplaceIpInString_Ipv6Compressed_Anonymized, TestSize.Level1)
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_Ipv6Compressed_Anonymized, TestSize.Level1)
 {
     std::string input = "uri ipps://[fe80::1]:631 v6=2001:db8::8a2e:370:7334 loop=::1 tail=fe80::";
     std::string expected = "uri ipps://[*]:631 v6=* loop=* tail=*";
-    EXPECT_EQ(ReplaceIpInString(input), expected);
+    EXPECT_EQ(AnonymizeIpInString(input), expected);
 }
 
-HWTEST_F(VendorHelperTest, ReplaceIpInString_Ipv6Full_Anonymized, TestSize.Level1)
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_Ipv6Full_Anonymized, TestSize.Level1)
 {
     std::string input = "full=2001:0db8:85a3:08d3:1319:8a2e:0370:7334 mac=00:1a:2b:3c:4d:5e";
     std::string expected = "full=* mac=00:1a:2b:3c:4d:5e";
-    EXPECT_EQ(ReplaceIpInString(input), expected);
+    EXPECT_EQ(AnonymizeIpInString(input), expected);
 }
 
-HWTEST_F(VendorHelperTest, ReplaceIpInString_NoIp_Unchanged, TestSize.Level1)
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_NoIp_Unchanged, TestSize.Level1)
 {
     std::string input = "{\"printer-uuid\":\"urn:uuid:cfe92100-67c4-lld4-a45f-dccd2fbedl6e\","
         "\"uri-security-supported\":\"tls, node\",\"mac\":\"00:1a:2b:3c:4d:5e\"}";
-    EXPECT_EQ(ReplaceIpInString(input), input);
+    EXPECT_EQ(AnonymizeIpInString(input), input);
 }
 
-HWTEST_F(VendorHelperTest, ReplaceIpInString_EmptyString_Unchanged, TestSize.Level1)
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_EmptyString_Unchanged, TestSize.Level1)
 {
     std::string input = "";
-    EXPECT_TRUE(ReplaceIpInString(input).empty());
+    EXPECT_TRUE(AnonymizeIpInString(input).empty());
 }
 
-HWTEST_F(VendorHelperTest, ReplaceIpInString_MultipleIp_Anonymized, TestSize.Level1)
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_MultipleIp_Anonymized, TestSize.Level1)
 {
     std::string input = "ips: 192.168.1.1 and 10.20.30.40 and fe80::1";
     std::string expected = "ips: * and * and *";
-    EXPECT_EQ(ReplaceIpInString(input), expected);
+    EXPECT_EQ(AnonymizeIpInString(input), expected);
 }
 }  // namespace Print
 }  // namespace OHOS

@@ -46,7 +46,7 @@ char *CopyString(const std::string &source)
     return dest;
 }
 
-std::string ReplaceIpInString(const std::string &str)
+std::string AnonymizeIpInString(const std::string &str)
 {
     static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         R"(|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)"
