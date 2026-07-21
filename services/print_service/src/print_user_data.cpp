@@ -362,6 +362,10 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
 
 bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
 {
+    if (!PrintJsonUtil::IsMember(userData, "usedPrinterList")) {
+        PRINT_HILOGW("can not find usedPrinterList");
+        return false;
+    }
     Json::Value usedPrinterListJson = userData["usedPrinterList"];
     uint32_t jsonSize = usedPrinterListJson.size();
     if (jsonSize > MAX_PRINTER_SIZE) {

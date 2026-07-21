@@ -110,6 +110,7 @@ private:
     bool ParseUserListJsonV1(
         Json::Value &jsonObject, std::vector<int32_t> &allPrintUserList);
     bool ConvertJsonToPrinterInfo(Json::Value &object);
+    bool ParseCapabilityFromJson(Json::Value &object, PrinterCapability &cap);
     void ConvertInnerJsonToPrinterInfo(Json::Value &object, PrinterInfo &info);
 
     bool ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences);
