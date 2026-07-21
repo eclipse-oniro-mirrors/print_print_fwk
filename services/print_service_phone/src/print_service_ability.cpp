@@ -1800,11 +1800,6 @@ void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
 void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
 {
     PRINT_HILOGD("NotifyAppCurrentUserChanged begin");
-#ifdef REMOTE_SERVICE_ENABLE
-    if (userId != INVALID_USER_ID) {
-        RemotePrinterManager::GetInstance().Disconnect();
-    }
-#endif
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (userId == INVALID_USER_ID) {
         currentUserId_ = GetCurrentUserId();
