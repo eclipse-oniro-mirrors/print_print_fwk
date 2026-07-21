@@ -1979,7 +1979,7 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
         UserNameAndPasswd.data());
     response = cupsDoRequest(http, request, "/jobs/");
     if (response == nullptr) {
-        PRINT_HILOGE("The Printer authenticate fail, response is null.");
+        PRINT_HILOGE("The Printer authenticate fail.");
         httpClose(http);
         return false;
     }
