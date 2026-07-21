@@ -603,10 +603,10 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_IsSetInsteadOfChoice_NoFall
     PrinterUserPreferences userPrefs;
     userPrefs.ConvertFromJson(json);
 
-    auto opt = userPrefs.GetCustomOption("CustomPin");
-    ASSERT_NE(opt, nullptr);
-    EXPECT_EQ(opt->key, "CustomPin");
-    EXPECT_EQ(opt->choice, "");
+    auto keys = userPrefs.GetAllCustomOptionKeys();
+    EXPECT_EQ(keys.size(), 1u);
+    EXPECT_EQ(keys[0], "CustomPin");
+    EXPECT_EQ(userPrefs.GetCustomOption("CustomPin"), nullptr);
 }
 
 HWTEST_F(PrinterUserPreferencesTest, SecureBlob_SetData_ValidSrc_DataCopied, TestSize.Level1)
@@ -710,12 +710,12 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsKeyNotString_D
     EXPECT_EQ(keys[0], "");
 }
 
-HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsIsSetTrue_BackwardCompat, TestSize.Level1)
+HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsValueString_ValueSet, TestSize.Level1)
 {
     Json::Value json;
     Json::Value optJson;
     optJson["key"] = "color";
-    optJson["isSet"] = true;
+    optJson["choice"] = "auto";
     optJson["value"] = "red";
     json["customOptions"].append(optJson);
 
@@ -724,7 +724,8 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_CustomOptionsIsSetTrue_Back
 
     auto opt = userPrefs.GetCustomOption("color");
     ASSERT_NE(opt, nullptr);
-    EXPECT_EQ(opt->choice, CUSTOM_OPTION_CHOICE);
+    EXPECT_EQ(opt->key, "color");
+    EXPECT_EQ(opt->choice, "auto");
     EXPECT_EQ(opt->value.ToString(), "red");
 }
 

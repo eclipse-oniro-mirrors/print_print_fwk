@@ -19,7 +19,7 @@
 #include "scan_constant.h"
 #include "scan_log.h"
 #include "scanner_info.h"
-#include "mock_remote_object.h"
+#include "mock_scan_remote_object.h"
 #include "mock_scan_service.h"
 #include "mock_scan_callback_stub.h"
 
@@ -34,7 +34,7 @@ public:
 
     void SetupSuccessEnv()
     {
-        obj_ = new OHOS::Print::MockRemoteObject();
+        obj_ = new MockScanRemoteObject();
         proxy_ = std::make_shared<ScanServiceProxy>(obj_);
         service_ = std::make_shared<MockScanService>();
         EXPECT_NE(obj_, nullptr);
@@ -50,7 +50,7 @@ public:
 
     void SetupRpcErrorEnv()
     {
-        obj_ = new OHOS::Print::MockRemoteObject();
+        obj_ = new MockScanRemoteObject();
         proxy_ = std::make_shared<ScanServiceProxy>(obj_);
         EXPECT_NE(obj_, nullptr);
         EXPECT_NE(proxy_, nullptr);
@@ -65,13 +65,13 @@ public:
 
     void SetupProxyOnlyEnv()
     {
-        obj_ = new OHOS::Print::MockRemoteObject();
+        obj_ = new MockScanRemoteObject();
         proxy_ = std::make_shared<ScanServiceProxy>(obj_);
         EXPECT_NE(obj_, nullptr);
         EXPECT_NE(proxy_, nullptr);
     }
 
-    sptr<OHOS::Print::MockRemoteObject> obj_;
+    sptr<MockScanRemoteObject> obj_;
     std::shared_ptr<ScanServiceProxy> proxy_;
     std::shared_ptr<MockScanService> service_;
 };

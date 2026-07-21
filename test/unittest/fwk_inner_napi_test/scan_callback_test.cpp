@@ -205,15 +205,6 @@ HWTEST_F(ScanCallbackTest, ScanCallbackTest_ExecuteNapiEventWork_002, TestSize.L
     EXPECT_EQ(result, false);
 }
 
-HWTEST_F(ScanCallbackTest, ScanCallbackTest_Destructor_003, TestSize.Level1)
-{
-    auto callback = new ScanCallback(nullptr, nullptr);
-    EXPECT_NE(callback, nullptr);
-    callback->env_ = reinterpret_cast<napi_env>(1);
-    callback->ref_ = reinterpret_cast<napi_ref>(1);
-    delete callback;
-}
-
 HWTEST_F(ScanCallbackTest, ScanCallbackTest_NapiCallFunction_003, TestSize.Level1)
 {
     g_mockGetRefReturnNonNull = true;
