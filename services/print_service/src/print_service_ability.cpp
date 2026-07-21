@@ -773,14 +773,17 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
-    vendorManager.StartDiscovery();
 #ifdef REMOTE_SERVICE_ENABLE
     AppExecFwk::BundleInfo bundleInfo;
     if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
         PRINT_HILOGI("Remote bundle detected, start printer discovery");
-        RemotePrinterManager::GetInstance().StartPrinterDiscovery();
+        if (RemotePrinterManager::GetInstance().StartPrinterDiscovery()) {
+            PRINT_HILOGI("Remote discovery started, skip vendor and extension discovery");
+            return E_PRINT_NONE;
+        }
     }
 #endif
+    vendorManager.StartDiscovery();
     return StartExtensionDiscovery(extensionIds);
 }
 
