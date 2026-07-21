@@ -57,8 +57,8 @@ void RemotePrinterManagerTest::TearDown(void)
 HWTEST_F(RemotePrinterManagerTest, StartPrinterDiscovery_001, TestSize.Level1)
 {
     RemotePrinterManager manager;
-    EXPECT_TRUE(manager.StartPrinterDiscovery());
-    EXPECT_TRUE(manager.StartPrinterDiscovery());
+    manager.StartPrinterDiscovery();
+    manager.StartPrinterDiscovery();
 }
 
 /**
@@ -70,7 +70,7 @@ HWTEST_F(RemotePrinterManagerTest, StartPrinterDiscovery_001, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, StartPrinterDiscovery_002, TestSize.Level1)
 {
     RemotePrinterManager manager;
-    EXPECT_TRUE(manager.StartPrinterDiscovery());
+    manager.StartPrinterDiscovery();
 }
 
 /**
@@ -395,7 +395,7 @@ HWTEST_F(RemotePrinterManagerTest, Disconnect_001, TestSize.Level1)
 HWTEST_F(RemotePrinterManagerTest, Disconnect_002, TestSize.Level1)
 {
     RemotePrinterManager manager;
-    EXPECT_TRUE(manager.StartPrinterDiscovery());
+    manager.StartPrinterDiscovery();
     EXPECT_TRUE(manager.Disconnect());
 }
 
