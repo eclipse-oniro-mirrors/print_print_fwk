@@ -43,7 +43,7 @@ public:
     bool Destroy();
     bool Disconnect();
     
-    bool StartPrinterDiscovery();
+    void StartPrinterDiscovery();
     bool StopPrinterDiscovery();
     
     std::shared_ptr<PrinterInfo> GetPrinterInfo(const std::string &printerId);

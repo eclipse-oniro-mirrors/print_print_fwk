@@ -188,7 +188,7 @@ bool RemotePrinterManager::BuildPrinterInfo(const Json::Value &item, PrinterInfo
     return true;
 }
 
-bool RemotePrinterManager::StartPrinterDiscovery()
+void RemotePrinterManager::StartPrinterDiscovery()
 {
     PRINT_HILOGI("RemotePrinterManager StartPrinterDiscovery");
     std::lock_guard<std::mutex> lock(controlMutex_);
@@ -196,18 +196,17 @@ bool RemotePrinterManager::StartPrinterDiscovery()
         PRINT_HILOGW("Discovery already running, trigger immediate query");
         int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("Immediate RequestPrinterList result: %{public}d", result);
-        return true;
+        return;
     }
-    
+
     if (discoveryThread_.joinable()) {
         discoveryThread_.join();
     }
-    
+
     isDiscoveryRunning_ = true;
     discoveryThread_ = std::thread([this]() {
         DiscoveryLoop();
     });
-    return true;
 }
 
 bool RemotePrinterManager::StopPrinterDiscovery()
