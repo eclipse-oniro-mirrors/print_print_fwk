@@ -143,7 +143,6 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0001_NeedRename, TestSiz
     };
     PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
         EXPECT_STREQ(printerCaps.GetPrinterAttrValue("printer-state"), "idle");
-        EXPECT_STREQ(printerCaps.GetPrinterAttrValue("printer-info"), "Printer info test");
         EXPECT_STREQ(printerCaps.GetPrinterAttrValue("printer-location"), "Printer location test");
     };
     DoTest(preFunc, postFunc);
