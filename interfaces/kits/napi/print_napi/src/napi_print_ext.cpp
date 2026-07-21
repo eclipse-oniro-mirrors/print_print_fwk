@@ -36,7 +36,11 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
         napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            if (status != napi_ok) {
+                context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+                return napi_invalid_arg;
+            }
             auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, value);
             if (printerInfoPtr == nullptr) {
                 context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -92,7 +96,11 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            if (status != napi_ok) {
+                context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+                return napi_invalid_arg;
+            }
             std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
             if (printerId != "") {
                 context->printerIds.emplace_back(printerId);

@@ -26,6 +26,7 @@ const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
+const uint32_t MAX_COLOR_MODE_COUNT = 200;
 }  // namespace
 
 namespace OHOS::Print {
@@ -604,6 +605,10 @@ bool UpdateColorCapability(PrinterCapability &printerCap, const Print_PrinterCap
 {
     if (capability == nullptr || capability->supportedColorModes == nullptr) {
         PRINT_HILOGW("supportedColorModes is null");
+        return false;
+    }
+    if (capability->supportedColorModesCount > MAX_COLOR_MODE_COUNT) {
+        PRINT_HILOGW("supportedColorModesCount exceeds maximum");
         return false;
     }
     std::vector<uint32_t> supportedColorModes;

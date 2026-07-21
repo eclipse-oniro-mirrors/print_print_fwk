@@ -32,6 +32,19 @@ bool EsclScannerStatus::ValidateParameters(const std::string& ipAddress, int32_t
         SCAN_HILOGE("Invalid IP address format: %{private}s", ipAddress.c_str());
         return false;
     }
+    unsigned char* addrBytes = reinterpret_cast<unsigned char*>(&sa.sin_addr.s_addr);
+    if (addrBytes[0] == 127) {
+        SCAN_HILOGW("Reject loopback address: %{private}s", ipAddress.c_str());
+        return false;
+    }
+    if (sa.sin_addr.s_addr == 0) {
+        SCAN_HILOGW("Reject any-address 0.0.0.0: %{private}s", ipAddress.c_str());
+        return false;
+    }
+    if (addrBytes[0] == 169 && addrBytes[1] == 254) {
+        SCAN_HILOGW("Reject link-local/metadata address: %{private}s", ipAddress.c_str());
+        return false;
+    }
     return true;
 }
 

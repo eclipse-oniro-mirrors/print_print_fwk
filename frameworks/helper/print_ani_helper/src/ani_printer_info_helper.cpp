@@ -226,6 +226,8 @@ bool PrinterInfoAniHelper::GetPrinterInfoArray(ani_env *env, ani_object param, s
 
 bool PrinterInfoAniHelper::ValidateProperty(ani_env *env, ani_ref printerInfo)
 {
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(printerInfo, false);
     std::map<std::string, PrintParamStatus> propertyList = {
             {PARAM_INFO_PRINTERID, PRINT_PARAM_NOT_SET},
             {PARAM_INFO_PRINTERNAME, PRINT_PARAM_NOT_SET},
@@ -240,6 +242,17 @@ bool PrinterInfoAniHelper::ValidateProperty(ani_env *env, ani_ref printerInfo)
             {PARAM_INFO_PRINTER_PREFERENCES, PRINT_PARAM_OPT},
             {PARAM_INFO_ALIAS, PRINT_PARAM_OPT},
     };
+    for (const auto &item : propertyList) {
+        if (item.second != PRINT_PARAM_NOT_SET) {
+            continue;
+        }
+        std::string value;
+        if (!GetStringProperty(env, static_cast<ani_object>(printerInfo), item.first.c_str(), value) ||
+            value.empty()) {
+            PRINT_HILOGE("Invalid required property: %{public}s", item.first.c_str());
+            return false;
+        }
+    }
     return true;
 }
 }  // namespace OHOS::Print

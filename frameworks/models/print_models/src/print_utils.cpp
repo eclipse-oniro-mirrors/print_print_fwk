@@ -20,6 +20,7 @@
 #include <ctime>
 #include <filesystem>
 #include <fcntl.h>
+#include <arpa/inet.h>
 #include <random>
 #include <sstream>
 #include "ability.h"
@@ -377,11 +378,11 @@ std::string PrintUtils::AnonymizeIpv6(const std::string &ip)
     }
     size_t secondColon = ip.find(':', firstColon + 1);
     if (secondColon == std::string::npos) {
-        return ip;
+        return ip.substr(0, firstColon + 1) + "****";
     }
     size_t thirdColon = ip.find(':', secondColon + 1);
     if (thirdColon == std::string::npos) {
-        return ip;
+        return ip.substr(0, firstColon + 1) + "****" + ip.substr(secondColon);
     }
 
     std::string middlePart = ip.substr(secondColon + 1, thirdColon - secondColon - 1);
@@ -445,6 +446,20 @@ std::string PrintUtils::AnonymizeIp(const std::string &ip)
         return AnonymizeIpv6(ip);
     }
     return ip;
+}
+
+std::string PrintUtils::AnonymizePrinterName(const std::string &printerName)
+{
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET, printerName.c_str(), &addr4) == 1 ||
+        inet_pton(AF_INET6, printerName.c_str(), &addr6) == 1) {
+        return AnonymizeIp(printerName);
+    }
+    if (printerName.length() > ANONYMIZE_ALIAS_LEN) {
+        return printerName.substr(0, printerName.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
+    }
+    return "xxx";
 }
 
 std::string PrintUtils::AnonymizeJobOption(const std::string &option)

@@ -750,6 +750,11 @@ int32_t ScanServiceAbility::GetScanParametersInternal(const std::string &scanner
         SCAN_HILOGE("SaneGetParameters failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
+    int32_t frameValue = static_cast<int32_t>(saneParams.format_);
+    if (frameValue < SANE_FRAME_GRAY || frameValue > SANE_FRAME_BLUE) {
+        SCAN_HILOGE("Invalid scan format: [%{public}d]", frameValue);
+        return E_SCAN_INVALID_PARAMETER;
+    }
     para.SetFormat(static_cast<ScanFrame>(saneParams.format_));
     para.SetLastFrame(saneParams.lastFrame_);
     para.SetBytesPerLine(saneParams.bytesPerLine_);
@@ -1434,6 +1439,11 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
+    }
+    constexpr int32_t MAX_SCANNER_PARA_COUNT = 256;
+    if (outParam.valueNumber_ <= 0 || outParam.valueNumber_ > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("Invalid option count: [%{public}d]", outParam.valueNumber_);
+        return E_SCAN_INVALID_PARAMETER;
     }
     int32_t resolutionIndex = 0;
     for (int32_t optionIndex = 1; optionIndex < outParam.valueNumber_; optionIndex++) {

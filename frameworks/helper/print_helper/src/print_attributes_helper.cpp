@@ -89,17 +89,29 @@ std::shared_ptr<PrintAttributes> PrintAttributesHelper::BuildFromJs(napi_env env
     
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DIRECTIONMODE)) {
         uint32_t directionMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DIRECTIONMODE);
-        nativeObj->SetDirectionMode(directionMode);
+        if (directionMode > 2) {
+            PRINT_HILOGW("invalid directionMode value");
+        } else {
+            nativeObj->SetDirectionMode(directionMode);
+        }
     }
 
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_COLORMODE)) {
         uint32_t colorMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COLORMODE);
-        nativeObj->SetColorMode(colorMode);
+        if (colorMode > 2) {
+            PRINT_HILOGW("invalid colorMode value");
+        } else {
+            nativeObj->SetColorMode(colorMode);
+        }
     }
 
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DUPLEXMODE)) {
         uint32_t duplexMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DUPLEXMODE);
-        nativeObj->SetDuplexMode(duplexMode);
+        if (duplexMode > 2) {
+            PRINT_HILOGW("invalid duplexMode value");
+        } else {
+            nativeObj->SetDuplexMode(duplexMode);
+        }
     }
 
     BuildJsWorkerIsLegal(env, jsValue, nativeObj);

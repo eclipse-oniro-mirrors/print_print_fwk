@@ -17,6 +17,7 @@
 #include "ipc_skeleton.h"
 #include "print_log.h"
 #include "print_common_death_recipient.h"
+#include <cstdint>
 
 namespace OHOS {
 namespace Print {
@@ -50,7 +51,7 @@ ExecuteResult PrintJobEventCallback::Execute(const CallbackInfo &info)
             break;
         }
         case PRINT_JOB_CALLBACK_ADAPTER: {
-            if (info.fd == 0) {
+            if (info.fd == UINT32_MAX) {
                 ret = listener->OnCallbackAdapterJobStateChanged(info.jobId, info.jobState, info.adapterState);
             } else if (info.newAttrs && info.oldAttrs) {
                 ret = listener->OnCallbackAdapterLayout(info.jobId, *(info.oldAttrs), *(info.newAttrs), info.fd);

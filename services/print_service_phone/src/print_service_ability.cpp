@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cstdint>
 #include <ctime>
 #include <string>
 #include <sys/time.h>
@@ -88,7 +89,7 @@ constexpr uint32_t ENABLE_BANNER_BIT = 1 << 9;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
-const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
+const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 1;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
@@ -1582,6 +1583,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
         jobOrderList_.insert(std::make_pair(jobOrderId, jobId));
     } else {
         PRINT_HILOGE("UpdateQueuedJobList out of MAX_JOBQUEUE_NUM or jobId not found");
+        return;
     }
 
     int32_t userId = GetCurrentUserId();
@@ -2712,7 +2714,13 @@ int32_t PrintServiceAbility::RegisterExtCallback(
         return E_PRINT_INVALID_PARAMETER;
     }
     CallbackEventType eventType = static_cast<CallbackEventType>(CallbackEventType::EXTCB_START_DISCOVERY + callbackId);
-    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(eventType, extensionId, listener);
+    bool ret = DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(eventType,
+        extensionId, listener);
+    if (!ret) {
+        PRINT_HILOGE("RegisterExtensionListener failed, extensionId=%{public}s, callbackId=%{public}d",
+            extensionId.c_str(), callbackId);
+        return E_PRINT_GENERIC_FAILURE;
+    }
     PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback end.");
     return E_PRINT_NONE;
 }
@@ -3169,6 +3177,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(
     cbInfo.jobId = jobId;
     cbInfo.jobState = static_cast<PrintJobState>(state);
     cbInfo.adapterState = static_cast<PrintDocumentAdapterState>(printAdapterListeningState);
+    cbInfo.fd = UINT32_MAX;
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
@@ -5556,6 +5565,9 @@ void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, 
     Json::Value advanceChoiceJson;
     Json::Value advanceChoiceJsonDefaultLanguage;
     Json::Value advanceOptionTextJson;
+    if (!singleOptArray.isArray()) {
+        return;
+    }
     for (const auto &item: singleOptArray) {
         advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
     }

@@ -15,6 +15,7 @@
 
 #include "print_range_helper.h"
 #include "napi_print_utils.h"
+#include "printer_capability_helper.h"
 #include "print_constant.h"
 #include "print_log.h"
 
@@ -87,6 +88,10 @@ std::shared_ptr<PrintRange> PrintRangeHelper::BuildFromJs(napi_env env, napi_val
         }
         uint32_t arrayLength = 0;
         PRINT_CALL(env, napi_get_array_length(env, jsPages, &arrayLength));
+        if (arrayLength > MAX_ARRAY_LENGTH) {
+            PRINT_HILOGE("pages array length exceeds max %{public}d", MAX_ARRAY_LENGTH);
+            return nullptr;
+        }
         for (uint32_t index = 0; index < arrayLength; index++) {
             napi_value jsPage;
             uint32_t pageNo;

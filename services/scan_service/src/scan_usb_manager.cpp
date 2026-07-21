@@ -69,9 +69,8 @@ void ScanUsbManager::RefreshUsbDevice()
         SCAN_HILOGE("RefreshDeviceList GetDevices failed with ret = %{public}d.", ret);
         return;
     }
-    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
-    usbSnMap_.clear();
     SCAN_HILOGI("RefreshDeviceList DeviceList size = %{public}zu.", devlist.size());
+    std::vector<UsbDevice> resolvedDevices;
     for (auto &dev : devlist) {
         std::string serialNumber = GetSerialNumber(dev);
         if (serialNumber.empty()) {
@@ -79,9 +78,13 @@ void ScanUsbManager::RefreshUsbDevice()
             continue;
         }
         SCAN_HILOGD("RefreshDeviceList serialNumber = %{private}s.", serialNumber.c_str());
-        std::string devicePort = dev.GetName();
         dev.SetmSerial(serialNumber);
-        usbSnMap_[devicePort] = dev;
+        resolvedDevices.push_back(dev);
+    }
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    usbSnMap_.clear();
+    for (auto &dev : resolvedDevices) {
+        usbSnMap_[dev.GetName()] = dev;
     }
 }
 

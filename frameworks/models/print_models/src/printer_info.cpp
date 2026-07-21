@@ -723,7 +723,7 @@ void PrinterInfo::DumpInnerInfo() const
 void PrinterInfo::DumpInfo() const
 {
     PRINT_HILOGI("printerId: %{public}s", PrintUtils::AnonymizePrinterId(printerId_).c_str());
-    PRINT_HILOGI("printerName: %{public}s", printerName_.c_str());
+    PRINT_HILOGI("printerName: %{public}s", PrintUtils::AnonymizePrinterName(printerName_).c_str());
     PRINT_HILOGI("printerIcon: %{public}d", printerIcon_);
     PRINT_HILOGI("printerState: %{public}d", printerState_);
 

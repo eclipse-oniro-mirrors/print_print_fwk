@@ -170,7 +170,9 @@ private:
 
         decltype(argc) unwrapArgc = 0;
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
+        if (!OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want)) {
+            return GetUndefinedValue(engine);
+        }
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
@@ -185,7 +187,9 @@ private:
         AAFwk::StartOptions startOptions;
         if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO &&
             GetNapiValueType(engine, argv[NapiPrintUtils::INDEX_TWO]) == napi_object) {
-            AppExecFwk::UnwrapStartOptions(engine, argv[NapiPrintUtils::INDEX_TWO], startOptions);
+            if (!AppExecFwk::UnwrapStartOptions(engine, argv[NapiPrintUtils::INDEX_TWO], startOptions)) {
+                return GetUndefinedValue(engine);
+            }
             unwrapArgc++;
         }
 
