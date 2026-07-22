@@ -202,6 +202,7 @@ bool EventListenerMgr::UnRegisterPrinterListener(const CallbackEventType &eventT
             userId);
         return true;
     }
+    return false;
 }
 
 bool EventListenerMgr::TryDeletePrintJobListenerFromCallback(const std::shared_ptr<BaseEventCallback> &callback,
