@@ -471,6 +471,10 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
     if (!ScanUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
         return false;
     }
+    if (callbackIdTmp < 0) {
+        SCAN_HILOGE("invalid callbackId: %{public}d", callbackIdTmp);
+        return false;
+    }
     callbackId = static_cast<uint32_t>(callbackIdTmp);
     return true;
 }
