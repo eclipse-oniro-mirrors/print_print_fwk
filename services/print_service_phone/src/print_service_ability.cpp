@@ -1661,6 +1661,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         }
     } else {
         printJob = jobIt->second;
+        PRINT_CHECK_NULL_AND_RETURN(printJob, E_PRINT_INVALID_PRINTJOB);
     }
     if (printJob->GetJobState() >= PRINT_JOB_QUEUED) {
         std::string extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
@@ -3173,6 +3174,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(
         auto unregisterTask = [this, jobId]() {
             this->Off(jobId, PRINT_ADAPTER_EVENT_TYPE);
         };
+        PRINT_CHECK_NULL_RETURN_VOID(serviceHandler_);
         serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
     }
 }
@@ -4949,6 +4951,7 @@ int32_t PrintServiceAbility::SetPrinterCapabilityAndRegister(const std::string &
     const std::string &ppdName, const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo)
 {
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_GENERIC_FAILURE);
     PrinterCapability printerCaps;
     int32_t ret = QueryPrinterCapabilityFromPPD(printerName, printerCaps, ppdName);
     if (ret != E_PRINT_NONE) {

@@ -402,9 +402,13 @@ void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
     Json::Value jsonArrayOld;
 
     std::vector<std::string> supportedMediaTypeList;
+    if (ppdCache->types == nullptr) {
+        PRINT_HILOGE("ppdCache types is nullptr!");
+        return;
+    }
     for (int i = 0; i < ppdCache->num_types; i++) {
-        if (ppdCache->types + i == nullptr) {
-            PRINT_HILOGE("ppdCache types is nullptr!");
+        if (ppdCache->types[i].ppd == nullptr) {
+            PRINT_HILOGE("ppdCache types[%{public}d] ppd is nullptr!", i);
             return;
         }
         ppd_choice_t *typeChoice = ppdFindChoice(typeOption, ppdCache->types[i].ppd);

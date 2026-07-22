@@ -569,6 +569,10 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
 int32_t ScanServiceAbility::GetScanOptionDesc(
     const std::string scannerId, const int32_t optionIndex, ScanOptionDescriptor &desc)
 {
+    if (optionIndex < 0) {
+        SCAN_HILOGE("optionIndex is invalid: [%{public}d]", optionIndex);
+        return E_SCAN_INVALID_PARAMETER;
+    }
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;

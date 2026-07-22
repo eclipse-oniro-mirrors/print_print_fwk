@@ -188,6 +188,7 @@ bool PrintAttributesHelper::CreateMargin(napi_env env, napi_value &jsPrintAttrib
     PrintMargin margin;
     attributes.GetMargin(margin);
     napi_value jsMargin = PrintMarginHelper::MakeJsObject(env, margin);
+    PRINT_CHECK_NULL_AND_RETURN(jsMargin, false);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintAttributes, PARAM_JOB_MARGIN, jsMargin), false);
     return true;
 }

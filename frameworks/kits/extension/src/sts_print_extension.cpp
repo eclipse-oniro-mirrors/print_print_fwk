@@ -118,7 +118,12 @@ void StsPrintExtension::OnStart(const AAFwk::Want &want)
     }
     const char *signature =
         "C{@ohos.app.ability.Want.Want}:";
-    CallObjectMethod(false, "onCreate", signature, nullptr);
+    bool ret = CallObjectMethod(false, "onCreate", signature, nullptr);
+    if (!ret) {
+        PRINT_HILOGE("CallObjectMethod onCreate failed, stop extension");
+        OnStop();
+        return;
+    }
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
     RegisterCb();
     PRINT_HILOGD("%{public}s end.", __func__);
@@ -189,7 +194,7 @@ bool StsPrintExtension::CallObjectMethod(bool withResult, const char *name, cons
         return false;
     }
     va_end(args);
-    return false;
+    return true;
 }
 
 void StsPrintExtension::BindExtensionInfo(ani_env* aniEnv, ani_class contextClass, ani_object contextObj,

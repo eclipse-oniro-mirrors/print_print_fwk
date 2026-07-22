@@ -133,6 +133,11 @@ bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_obj
         PRINT_HILOGE("Class_FindMethod fail, status: %{public}d", status);
         return false;
     }
+    if (error == nullptr) {
+        ani_ref nullRef = nullptr;
+        env->GetNull(&nullRef);
+        error = reinterpret_cast<ani_object>(nullRef);
+    }
     if (result == nullptr) {
         ani_ref undefinedRef = nullptr;
         env->GetUndefined(&undefinedRef);

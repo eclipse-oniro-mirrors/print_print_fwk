@@ -317,6 +317,8 @@ private:
             static_cast<int32_t>(params.connectId));
         if (!context->ConnectAbilityWithAccount(params.want, params.accountId, params.connection)) {
             params.connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Connect Ability failed."));
+            return;
         }
         napi_value undefineResult = nullptr;
         napi_get_undefined(engine, &undefineResult);
@@ -436,7 +438,11 @@ napi_value CreateJsMetadata(napi_env &engine, const AppExecFwk::Metadata &Info)
 {
     PRINT_HILOGD("CreateJsMetadata");
     napi_value object = nullptr;
-    napi_create_object(engine, &object);
+    napi_status ret = napi_create_object(engine, &object);
+    if (ret != napi_ok || object == nullptr) {
+        PRINT_HILOGE("napi_create_object failed, status: %{public}d", ret);
+        return nullptr;
+    }
 
     napi_set_named_property(engine, object, "name", CreateJsValue(engine, Info.name));
     napi_set_named_property(engine, object, "value", CreateJsValue(engine, Info.value));
@@ -462,7 +468,11 @@ napi_value CreateJsExtensionAbilityInfoMessage(napi_env &engine, const AppExecFw
 {
     PRINT_HILOGD("CreateJsExtensionAbilityInfoMessage");
     napi_value object = nullptr;
-    napi_create_object(engine, &object);
+    napi_status ret = napi_create_object(engine, &object);
+    if (ret != napi_ok || object == nullptr) {
+        PRINT_HILOGE("napi_create_object failed, status: %{public}d", ret);
+        return nullptr;
+    }
     napi_set_named_property(engine, object, "bundleName", CreateJsValue(engine, info.bundleName));
     napi_set_named_property(engine, object, "moduleName", CreateJsValue(engine, info.moduleName));
     napi_set_named_property(engine, object, "name", CreateJsValue(engine, info.name));

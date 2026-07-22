@@ -40,8 +40,9 @@ char *CopyString(const std::string &source)
     }
     if (strcpy_s(dest, len + 1, source.c_str()) != 0) {
         PRINT_HILOGE("CopyString strcpy_s failed");
+        delete[] dest;
+        return nullptr;
     }
-    dest[len] = '\0';
     return dest;
 }
 
@@ -858,7 +859,13 @@ bool ConvertStringVectorToStringList(const std::vector<std::string> &stringVecto
         return false;
     }
     for (auto const &key : stringVector) {
-        stringList.list[stringList.count] = CopyString(key);
+        char *item = CopyString(key);
+        if (item == nullptr) {
+            PRINT_HILOGW("CopyString failed at index %{public}u, release stringList", stringList.count);
+            ReleaseStringList(stringList);
+            return false;
+        }
+        stringList.list[stringList.count] = item;
         stringList.count++;
     }
     return true;

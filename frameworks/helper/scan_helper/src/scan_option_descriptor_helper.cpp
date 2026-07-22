@@ -53,6 +53,10 @@ napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOpti
         uint32_t arrOptionConstraintStringLength = optionConstraintString.size();
         for (uint32_t i = 0; i < arrOptionConstraintStringLength; i++) {
             napi_value value = NapiScanUtils::CreateStringUtf8(env, optionConstraintString[i]);
+            if (value == nullptr) {
+                SCAN_HILOGE("CreateStringUtf8 fail at index %{public}u", i);
+                return nullptr;
+            }
             SCAN_CALL(env, napi_set_element(env, arrOptionConstraintString, i, value));
         }
         SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_STRING, arrOptionConstraintString));
@@ -71,8 +75,12 @@ napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOpti
     } else if (desc.GetOptionConstraintType() == SCAN_CONSTRAINT_RANGE) {
         ScanRange range;
         desc.GetOptionConstraintRange(range);
-        SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_RANGE,
-            ScanRangeHelper::MakeJsObject(env, range)));
+        napi_value rangeValue = ScanRangeHelper::MakeJsObject(env, range);
+        if (rangeValue == nullptr) {
+            SCAN_HILOGE("ScanRangeHelper::MakeJsObject fail");
+            return nullptr;
+        }
+        SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_RANGE, rangeValue));
     } else {
         SCAN_HILOGD("type (%{public}u) does not meet the format requirements", desc.GetOptionConstraintType());
     }

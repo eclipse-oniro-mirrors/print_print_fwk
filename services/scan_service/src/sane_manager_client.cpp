@@ -76,6 +76,7 @@ sptr<ISaneBackends> SaneManagerClient::GetSaneServiceProxy()
 bool SaneManagerClient::LoadSaneService()
 {
     std::unique_lock<std::shared_mutex> lock(serviceLock_);
+    isLoadFailed_ = false;
     sptr<SaneServiceLoadCallback> lockCallback = new SaneServiceLoadCallback();
     if (lockCallback == nullptr) {
         SCAN_HILOGE("lockCallback is a nullptr");
@@ -91,12 +92,9 @@ bool SaneManagerClient::LoadSaneService()
         SCAN_HILOGE("LoadSystemAbility failed");
         return false;
     }
-    auto waitStatus =
-        syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return proxy_ != nullptr; });
-    if (!waitStatus) {
-        return false;
-    }
-    return true;
+    syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+        [this]() { return proxy_ != nullptr || isLoadFailed_; });
+    return proxy_ != nullptr;
 }
 
 void SaneManagerClient::LoadSystemAbilitysuccess(const sptr<IRemoteObject> &remoteObject)
@@ -115,6 +113,8 @@ void SaneManagerClient::LoadSystemAbilityFail()
     std::unique_lock<std::shared_mutex> lock(serviceLock_);
     SCAN_HILOGI("sane_service LoadSystemAbilityFail");
     proxy_ = nullptr;
+    isLoadFailed_ = true;
+    syncCon_.notify_one();
 }
 
 void SaneManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &object)

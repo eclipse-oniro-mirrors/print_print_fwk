@@ -58,6 +58,7 @@ private:
     static std::mutex instanceLock_;
     static std::shared_mutex serviceLock_;
     std::condition_variable_any syncCon_;
+    bool isLoadFailed_ = false;
 };
 } // namespage OHOS::Scan
 #endif // BACKENDS_MANAGER_CLIENT_H

@@ -306,6 +306,7 @@ static void GetAddedScannersNative(ani_env *env, ani_object callback)
 
 static bool ParsePictureFdList(ani_env *env, ani_object pictureFdList, std::vector<int32_t>& fdList)
 {
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(pictureFdList, false, __func__);
     ani_int length;
     if (env->Object_GetPropertyByName_Int(pictureFdList, "length", &length) != ANI_OK) {
         SCAN_HILOGE("Get length fail");
@@ -313,9 +314,13 @@ static bool ParsePictureFdList(ani_env *env, ani_object pictureFdList, std::vect
     }
 
     for (ani_int i = 0; i < length; i++) {
-        ani_ref ref;
+        ani_ref ref = nullptr;
         if (env->Object_CallMethodByName_Ref(pictureFdList, "$_get", "i:Y", &ref, i) != ANI_OK) {
             SCAN_HILOGE("Get element fail at index %{public}d", i);
+            return false;
+        }
+        if (ref == nullptr) {
+            SCAN_HILOGE("null ref at index %{public}d", i);
             return false;
         }
         ani_int fd;

@@ -809,6 +809,16 @@ Print_ErrorCode ConvertStringVectorToPropertyList(
         }
         propertyList->list[count].key = CopyString(keyVal.substr(0, index));
         propertyList->list[count].value = CopyString(keyVal.substr(index + 1));
+        if (propertyList->list[count].key == nullptr || propertyList->list[count].value == nullptr) {
+            PRINT_HILOGW("CopyString failed at index %{public}zu", i);
+            for (uint32_t j = 0; j <= count; ++j) {
+                delete[] propertyList->list[j].key;
+                delete[] propertyList->list[j].value;
+            }
+            SAFE_DELETE_ARRAY(propertyList->list);
+            propertyList->count = 0;
+            return PRINT_ERROR_GENERIC_FAILURE;
+        }
         count++;
     }
     propertyList->count = count;

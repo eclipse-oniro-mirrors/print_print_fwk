@@ -171,10 +171,12 @@ bool ScanOptionDescriptor::ReadFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&optionConstraintNumber_), false);
 
     auto scanRange = ScanRange::Unmarshalling(parcel);
-    if (scanRange != nullptr) {
-        ScanRange optionConstraintRange = *scanRange;
-        SetOptionConstraintRange(optionConstraintRange);
+    if (scanRange == nullptr) {
+        SCAN_HILOGE("ScanRange unmarshalling failed");
+        return false;
     }
+    ScanRange optionConstraintRange = *scanRange;
+    SetOptionConstraintRange(optionConstraintRange);
     return true;
 }
 
