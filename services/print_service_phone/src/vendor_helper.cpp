@@ -526,6 +526,25 @@ bool UpdateDefaultPageSizeId(PrinterCapability &printerCap, const std::string &d
     return false;
 }
 
+bool TryAddCustomPageSize(std::vector<PrintPageSize> &pageSizeList, const Print_PageSize &page)
+{
+    if (page.name == nullptr || page.id == nullptr) {
+        return false;
+    }
+    if (strstr(page.id, "CUSTOM_MIN") || strstr(page.id, "CUSTOM_MAX")) {
+        PRINT_HILOGW("skip pageSize: %{public}s", page.name);
+        return true;
+    }
+    PrintPageSize printPageSize;
+    printPageSize.SetWidth(page.width);
+    printPageSize.SetHeight(page.height);
+    if (printPageSize.ConvertToPwgStyle()) {
+        AddUniquePageSize(pageSizeList, printPageSize);
+        PRINT_HILOGD("custom page size matched = %{public}s", printPageSize.GetId().c_str());
+    }
+    return true;
+}
+
 bool UpdatePageSizeCapability(
     PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
@@ -559,19 +578,8 @@ bool UpdatePageSizeCapability(
                 continue;
             }
         }
-        if (capability->supportedPageSizes[i].name != nullptr && capability->supportedPageSizes[i].id != nullptr) {
-            if (strstr(capability->supportedPageSizes[i].id, "CUSTOM_MIN") ||
-                strstr(capability->supportedPageSizes[i].id, "CUSTOM_MAX")) {
-                PRINT_HILOGW("skip pageSize: %{public}s", capability->supportedPageSizes[i].name);
-                continue;
-            }
-            printPageSize.SetWidth(capability->supportedPageSizes[i].width);
-            printPageSize.SetHeight(capability->supportedPageSizes[i].height);
-            if (printPageSize.ConvertToPwgStyle()) {
-                AddUniquePageSize(pageSizeList, printPageSize);
-                PRINT_HILOGD("custom page size matched = %{public}s", printPageSize.GetId().c_str());
-                continue;
-            }
+        if (TryAddCustomPageSize(pageSizeList, capability->supportedPageSizes[i])) {
+            continue;
         }
     }
     printerCap.SetSupportedPageSize(pageSizeList);
