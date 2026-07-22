@@ -694,6 +694,25 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0020, TestSize.Level1)
 }
 
 /**
+ * @tc.name: QueryPrintJobByIdRpcFailureTest
+ * @tc.desc: Verify QueryPrintJobById returns rpc failure when SendRequest fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, QueryPrintJobByIdRpcFailureTest, TestSize.Level1)
+{
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).WillOnce(Return(ERR_TRANSACTION_FAILED));
+    int32_t ret = proxy->QueryPrintJobById(testPrintJobId, testPrintJob);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
  * @tc.name: PrintServiceProxyTest_0021
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
