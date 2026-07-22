@@ -26,20 +26,15 @@ constexpr int MAX_USER_ID = 100;
 constexpr int MAX_REQUEST_CODE = 1000;
 }  // namespace
 
-MockRemoteObject::MockRemoteObject() : IRemoteObject(u"mock_remote_object")
+MockRemoteObject::MockRemoteObject() : IPCObjectStub(u"mock_remote_object")
 {}
 
 MockRemoteObject::~MockRemoteObject()
 {}
 
-int32_t MockRemoteObject::GetObjectRefCount()
-{
-    return refCount_;
-}
-
 bool MockRemoteObject::IsProxyObject() const
 {
-    return true;
+    return false;
 }
 
 bool MockRemoteObject::CheckObjectLegality() const
@@ -47,30 +42,9 @@ bool MockRemoteObject::CheckObjectLegality() const
     return true;
 }
 
-bool MockRemoteObject::AddDeathRecipient(const sptr<IRemoteObject::DeathRecipient> &recipient)
-{
-    return true;
-}
-
-bool MockRemoteObject::RemoveDeathRecipient(const sptr<IRemoteObject::DeathRecipient> &recipient)
-{
-    return true;
-}
-
-int MockRemoteObject::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
-{
-    reply.WriteInt32(0);
-    return 0;
-}
-
 sptr<IRemoteBroker> MockRemoteObject::AsInterface()
 {
     return nullptr;
-}
-
-int MockRemoteObject::Dump(int fd, const std::vector<std::u16string> &args)
-{
-    return 0;
 }
 
 void MockAbilityConnectCallback::OnAbilityConnectDone(
