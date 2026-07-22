@@ -65,11 +65,15 @@ HWTEST_F(PrintCloudConfigManagerTest, GetInstance_Singleton_ReturnSameInstance, 
     EXPECT_EQ(&instance1, &instance2);
 }
 
-HWTEST_F(PrintCloudConfigManagerTest, GetCloudConfigFilePath_ReturnResult, TestSize.Level1)
+HWTEST_F(PrintCloudConfigManagerTest, GetCloudConfigFilePath_ReturnValidResultOrEmpty, TestSize.Level1)
 {
     PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
     std::string result = instance.GetCloudConfigFilePath();
-    EXPECT_TRUE(!result.empty());
+    // 两目录均无 version.txt 时返回 ""；否则返回某目录下 bsuni_output_format.json 路径
+    if (result.empty()) {
+        return;
+    }
+    EXPECT_NE(result.find("bsuni_output_format.json"), std::string::npos);
 }
 
 HWTEST_F(PrintCloudConfigManagerTest, LoadCloudConfigFile_InvalidPath_ReturnFalse, TestSize.Level1)
@@ -271,6 +275,76 @@ HWTEST_F(PrintCloudConfigManagerTest,
             "{\"bsuniOutputFormat\":\"PDF\",\"printerMakes\":[\"HP\"]}]"), Return(true)));
     std::string result = mock_.MatchPrinterMakeInCloudConfig("HP");
     EXPECT_EQ(result, "PDF");
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, CompareVersion_Equal_ReturnZero, TestSize.Level1)
+{
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    EXPECT_EQ(instance.CompareVersion("1.0.0.0", "1.0.0.0"), 0);
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, CompareVersion_Higher_ReturnPositive, TestSize.Level1)
+{
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    EXPECT_GT(instance.CompareVersion("1.0.0.1", "1.0.0.0"), 0);
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, CompareVersion_Lower_ReturnNegative, TestSize.Level1)
+{
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    EXPECT_LT(instance.CompareVersion("1.0.0.0", "1.0.0.1"), 0);
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, CompareVersion_DifferentLength_PadsZero, TestSize.Level1)
+{
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    EXPECT_EQ(instance.CompareVersion("1.0.0", "1.0.0.0"), 0);
+    EXPECT_GT(instance.CompareVersion("1.0.1", "1.0.0.0"), 0);
+    EXPECT_GT(instance.CompareVersion("2.0", "1.0.0.0"), 0);
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, GetVersionFromDir_EmptyDir_ReturnEmpty, TestSize.Level1)
+{
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    std::string result = instance.GetVersionFromDir("");
+    EXPECT_EQ(result, "");
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, GetVersionFromDir_DirNotExist_ReturnEmpty, TestSize.Level1)
+{
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    std::string result = instance.GetVersionFromDir("/nonexistent/dir/abc/");
+    EXPECT_EQ(result, "");
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, GetVersionFromDir_ValidVersion_ReturnValue, TestSize.Level1)
+{
+    std::string tempDir = PRINTER_SERVICE_PRINTERS_PATH + "/";
+    std::string versionPath = tempDir + "version.txt";
+    std::ofstream file(versionPath);
+    file << "version=1.2.3.4\ntype=PRINTER\nsubtype=spooler\ncompatibleVersion=1\n";
+    file.close();
+
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    std::string result = instance.GetVersionFromDir(tempDir);
+    EXPECT_EQ(result, "1.2.3.4");
+
+    std::remove(versionPath.c_str());
+}
+
+HWTEST_F(PrintCloudConfigManagerTest, GetVersionFromDir_NoVersionKey_ReturnEmpty, TestSize.Level1)
+{
+    std::string tempDir = PRINTER_SERVICE_PRINTERS_PATH + "/";
+    std::string versionPath = tempDir + "version.txt";
+    std::ofstream file(versionPath);
+    file << "type=PRINTER\nsubtype=spooler\n";
+    file.close();
+
+    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
+    std::string result = instance.GetVersionFromDir(tempDir);
+    EXPECT_EQ(result, "");
+
+    std::remove(versionPath.c_str());
 }
 
 } // namespace Print
