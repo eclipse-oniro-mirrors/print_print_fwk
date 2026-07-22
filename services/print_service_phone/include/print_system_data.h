@@ -93,6 +93,7 @@ private:
     void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedOrientationToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     bool ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapability &printerCapability);
