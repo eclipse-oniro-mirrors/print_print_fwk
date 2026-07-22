@@ -2874,30 +2874,19 @@ bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
     return false;
 }
 
-bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &printerId)
+bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &uri)
 {
-    PRINT_HILOGI("[Printer: %{public}s] RemoveRemotePrinterInfo start",
-        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    PRINT_HILOGI("RemoveRemotePrinterInfo start, uri: %{private}s", uri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (RemoveSinglePrinterInfo(printerId)) {
-        return true;
-    }
-    std::string devId = PrintUtils::GetLocalId(printerId, REMOTE_EXT_BUNDLE_NAME);
-    if (devId.empty()) {
-        PRINT_HILOGE("invalid printer id, ignore it");
-        return false;
-    }
-    std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
-    for (const auto &id : addedPrinterIdList) {
-        PrinterInfo addedPrinter;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(id, addedPrinter)
-            && !addedPrinter.GetDeviceId().empty() && addedPrinter.GetDeviceId() == devId) {
-            PRINT_HILOGI("Device ID matched, remove printer: %{public}s",
-                PrintUtils::AnonymizePrinterId(id).c_str());
-            return RemoveSinglePrinterInfo(id);
+    auto discoveredPrinters = printSystemData_.GetDiscoveredPrinterInfo();
+    for (const auto &entry : discoveredPrinters) {
+        if (entry.second->HasUri() && entry.second->GetUri() == uri) {
+            PRINT_HILOGI("URI matched, remove printer: %{public}s",
+                PrintUtils::AnonymizePrinterId(entry.first).c_str());
+            return RemoveSinglePrinterInfo(entry.first);
         }
     }
-    PRINT_HILOGE("invalid printer id, ignore it");
+    PRINT_HILOGE("printer not found by uri, ignore it");
     return false;
 }
 

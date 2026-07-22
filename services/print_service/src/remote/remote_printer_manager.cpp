@@ -20,7 +20,6 @@
 #include "print_constant.h"
 #include "print_json_util.h"
 #include "print_page_size.h"
-#include "print_utils.h"
 #include "print_service_ability.h"
 #include <thread>
 #include <chrono>
@@ -289,8 +288,7 @@ void RemotePrinterManager::RemoveDeprecatedPrinters(const std::vector<std::strin
     for (auto it = printerMap_.begin(); it != printerMap_.end();) {
         if (std::find(currentDevIds.begin(), currentDevIds.end(), it->first) == currentDevIds.end()) {
             PRINT_HILOGI("[Printer: %{public}s] removed", it->first.c_str());
-            std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, it->first);
-            PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(globalId);
+            PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(it->second->GetUri());
             it = printerMap_.erase(it);
         } else {
             ++it;
@@ -332,11 +330,10 @@ bool RemotePrinterManager::OnPrinterStatusReceived(const Json::Value &jsonArray)
             continue;
         }
         
-        std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, devId);
         if (printerStatus == PRINTER_STATUS_IDLE) {
             serviceAbility->AddRemotePrinterInfo(*printerInfo, REMOTE_EXT_BUNDLE_NAME);
         } else if (printerStatus == PRINTER_STATUS_UNAVAILABLE) {
-            serviceAbility->RemoveRemotePrinterInfo(globalId);
+            serviceAbility->RemoveRemotePrinterInfo(printerInfo->GetUri());
         }
     }
     return true;
@@ -351,9 +348,8 @@ void RemotePrinterManager::ClearAllPrinters()
     
     std::lock_guard<std::mutex> lock(printerMapLock_);
     for (const auto &printer : printerMap_) {
-        std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, printer.first);
         PRINT_HILOGI("[Printer: %{public}s] removed", printer.first.c_str());
-        serviceAbility->RemoveRemotePrinterInfo(globalId);
+        serviceAbility->RemoveRemotePrinterInfo(printer.second->GetUri());
     }
     printerMap_.clear();
 }
