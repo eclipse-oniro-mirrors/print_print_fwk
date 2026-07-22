@@ -2879,7 +2879,26 @@ bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &printerId)
     PRINT_HILOGI("[Printer: %{public}s] RemoveRemotePrinterInfo start",
         PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    return RemoveSinglePrinterInfo(printerId);
+    if (RemoveSinglePrinterInfo(printerId)) {
+        return true;
+    }
+    std::string devId = PrintUtils::GetLocalId(printerId, REMOTE_EXT_BUNDLE_NAME);
+    if (devId.empty()) {
+        PRINT_HILOGE("invalid printer id, ignore it");
+        return false;
+    }
+    std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (const auto &id : addedPrinterIdList) {
+        PrinterInfo addedPrinter;
+        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(id, addedPrinter)
+            && !addedPrinter.GetDeviceId().empty() && addedPrinter.GetDeviceId() == devId) {
+            PRINT_HILOGI("Device ID matched, remove printer: %{public}s",
+                PrintUtils::AnonymizePrinterId(id).c_str());
+            return RemoveSinglePrinterInfo(id);
+        }
+    }
+    PRINT_HILOGE("invalid printer id, ignore it");
+    return false;
 }
 
 #endif
