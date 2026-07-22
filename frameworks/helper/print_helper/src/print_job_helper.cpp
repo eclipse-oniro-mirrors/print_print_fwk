@@ -119,17 +119,17 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
         return nullptr;
     }
 
-      if (!FillFdListFromJs(env, jsValue, nativeObj)) {
-          return nullptr;
-      }
-      FillBasicJobProperties(env, jsValue, nativeObj);
-      if (BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
-          nativeObj->GetSubState(), nativeObj, cvtToPwgSize) == nullptr) {
-          return nullptr;
-      }
-      nativeObj->Dump();
-      return nativeObj;
-  }
+    if (!FillFdListFromJs(env, jsValue, nativeObj)) {
+        return nullptr;
+    }
+    FillBasicJobProperties(env, jsValue, nativeObj);
+    if (BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
+        nativeObj->GetSubState(), nativeObj, cvtToPwgSize) == nullptr) {
+        return nullptr;
+    }
+    nativeObj->Dump();
+    return nativeObj;
+}
 
 bool PrintJobHelper::FillFdListFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj)
 {

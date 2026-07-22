@@ -41,6 +41,7 @@
 #include "pixel_map.h"
 #include "image_source.h"
 namespace OHOS::Scan {
+class SaneOptionDescriptor;
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class ScanServiceAbility : public SystemAbility, public ScanServiceStub {
     DECLARE_SYSTEM_ABILITY(ScanServiceAbility);
@@ -81,6 +82,7 @@ private:
     int32_t ActionGetValue(const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex);
     int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
                            const int32_t &optionIndex);
+    void FillOptionConstraint(SaneOptionDescriptor &saneDesc, ScanOptionDescriptor &desc);
     int32_t DoScanTask(ScanTask &scanTask);
     void StartScanTask(ScanTask &scanTask);
     void SendDeviceInfo(const ScanDeviceInfo &info, std::string event);

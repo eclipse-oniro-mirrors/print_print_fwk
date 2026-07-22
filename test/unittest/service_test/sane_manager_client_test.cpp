@@ -68,7 +68,7 @@ HWTEST_F(SaneManagerClientTest, SaneManagerClientTest_LoadSystemAbilityFail_0001
         client->proxy_ = nullptr;
     }
     std::atomic<bool> woke{false};
-    std::thread waiter([&]() {
+    std::thread waiter([&client, &woke]() {
         std::unique_lock<std::shared_mutex> lk(client->serviceLock_);
         client->syncCon_.wait_for(lk, std::chrono::seconds(5),
             [client]() { return client->proxy_ != nullptr || client->isLoadFailed_; });
