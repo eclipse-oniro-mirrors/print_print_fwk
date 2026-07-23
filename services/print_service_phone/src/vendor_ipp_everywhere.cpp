@@ -26,7 +26,11 @@ const std::string VENDOR_IPP_END = ":631/ipp/print";
 
 VendorIppEveryWhere::VendorIppEveryWhere() {}
 
-VendorIppEveryWhere::~VendorIppEveryWhere() {}
+VendorIppEveryWhere::~VendorIppEveryWhere()
+{
+    opQueue.Stop();
+    UnInit();
+}
 
 std::string VendorIppEveryWhere::GetVendorName()
 {
