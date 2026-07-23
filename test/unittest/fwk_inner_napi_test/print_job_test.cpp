@@ -527,6 +527,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_ReadLayoutFromParcel_PreviewUnmarshallingFai
     parcel.WriteBool(false);
     parcel.WriteBool(true);
     EXPECT_FALSE(job.ReadLayoutFromParcel(parcel));
+}
+
+/**
  * @tc.name: PrintJobTest_ConvertToJsonObject_001
  * @tc.desc: Verify ConvertToJsonObject with all flags false.
  * @tc.type: FUNC
