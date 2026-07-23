@@ -1568,7 +1568,7 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
             cupsFinishDocument(http, jobParams->printerName.c_str()) != IPP_STATUS_OK) {
             PRINT_HILOGE("[Job Id: %{public}s] Unable to queue, error is %{public}s, cancel the job and return...",
                 jobParams->serviceJobId.c_str(), cupsLastErrorString());
-            cupsCancelJob2(http, jobParams->printerUri.c_str(), jobId, 0);
+            cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
             UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
             return false;
         }
