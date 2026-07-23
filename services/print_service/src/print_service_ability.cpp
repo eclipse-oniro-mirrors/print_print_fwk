@@ -3704,10 +3704,18 @@ std::string PrintServiceAbility::GetCallerUserName()
     int32_t localId = -1;
     auto errCode = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, localId);
     PRINT_HILOGI("GetOsAccountLocalIdFromUid errCode = %{public}d", errCode);
+    if (errCode != 0) {
+        PRINT_HILOGE("GetOsAccountLocalIdFromUid failed, errCode = %{public}d", errCode);
+        return DEFAULT_USER_NAME;
+    }
     PRINT_HILOGD("uid: %{private}d, localId: %{private}d", uid, localId);
     AccountSA::OsAccountInfo osAccountInfo;
     errCode = AccountSA::OsAccountManager::QueryOsAccountById(localId, osAccountInfo);
     PRINT_HILOGI("QueryOsAccountById errCode = %{public}d", errCode);
+    if (errCode != 0) {
+        PRINT_HILOGE("QueryOsAccountById failed, errCode = %{public}d", errCode);
+        return DEFAULT_USER_NAME;
+    }
     PRINT_HILOGD("localName: %{private}s", osAccountInfo.GetLocalName().c_str());
     AccountSA::DomainAccountInfo domainInfo;
     osAccountInfo.GetDomainInfo(domainInfo);
