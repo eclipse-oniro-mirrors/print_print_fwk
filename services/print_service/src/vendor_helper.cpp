@@ -14,6 +14,7 @@
  */
 
 #include <securec.h>
+#include <regex>
 #include "vendor_helper.h"
 #include "print_service_converter.h"
 #include "print_log.h"
@@ -44,6 +45,14 @@ char *CopyString(const std::string &source)
         return nullptr;
     }
     return dest;
+}
+
+std::string AnonymizeIpInString(const std::string &str)
+{
+    static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+        R"(|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)"
+        R"(|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})");
+    return std::regex_replace(str, ipRegex, "*");
 }
 
 template <typename T1, typename T2>

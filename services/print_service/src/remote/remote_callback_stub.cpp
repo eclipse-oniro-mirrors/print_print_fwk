@@ -46,7 +46,7 @@ int32_t RemoteCallbackStub::OnRemoteRequest(
     if (errorCode == E_PRINT_NETWORK_ERROR || errorCode == E_PRINT_ACCOUNT_ERROR ||
         errorCode == E_PRINT_INVALID_PARAMETER) {
         PRINT_HILOGE("RemoteCallbackStub error: %{public}d, clear printers", errorCode);
-        DelayedSingleton<RemotePrinterManager>::GetInstance()->ClearAllPrinters();
+        RemotePrinterManager::GetInstance().ClearAllPrinters();
         return errorCode;
     }
     if (errorCode != E_PRINT_NONE) {
@@ -98,7 +98,7 @@ bool RemoteCallbackStub::HandleGetPrinterStatus(const std::string &msg)
         return false;
     }
     
-    return DelayedSingleton<RemotePrinterManager>::GetInstance()->OnPrinterStatusReceived(jsonObject);
+    return RemotePrinterManager::GetInstance().OnPrinterStatusReceived(jsonObject);
 }
 
 bool RemoteCallbackStub::HandleGetPrinterList(const std::string &msg)
@@ -116,7 +116,7 @@ bool RemoteCallbackStub::HandleGetPrinterList(const std::string &msg)
         return false;
     }
     
-    return DelayedSingleton<RemotePrinterManager>::GetInstance()->OnPrinterListReceived(jsonObject);
+    return RemotePrinterManager::GetInstance().OnPrinterListReceived(jsonObject);
 }
 
 } // namespace OHOS::Print

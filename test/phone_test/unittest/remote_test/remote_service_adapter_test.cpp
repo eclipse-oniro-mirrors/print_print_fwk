@@ -205,4 +205,45 @@ HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_002, TestSize.Level1)
     EXPECT_TRUE(callbackCalled);
 }
 
+/**
+ * @tc.name: UnbindService_001
+ * @tc.desc: Branch: not connected -> return true (skip unbind)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, UnbindService_001, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    EXPECT_FALSE(client.IsConnected());
+    EXPECT_TRUE(client.UnbindService());
+}
+
+/**
+ * @tc.name: UnbindService_002
+ * @tc.desc: Branch: connection_ == nullptr -> return false
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, UnbindService_002, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    client.connection_ = nullptr;
+    EXPECT_FALSE(client.UnbindService());
+}
+
+/**
+ * @tc.name: UnbindService_003
+ * @tc.desc: Branch: connected -> call DisconnectAbility and return result == ERR_OK
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteServiceAdapterTest, UnbindService_003, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
+    EXPECT_TRUE(client.IsConnected());
+    EXPECT_NO_FATAL_FAILURE(client.UnbindService());
+}
+
 } // namespace OHOS::Print

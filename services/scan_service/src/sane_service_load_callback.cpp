@@ -24,11 +24,11 @@ namespace OHOS::Scan {
 void SaneServiceLoadCallback::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
 {
-    SaneManagerClient::GetInstance()->LoadSystemAbilitysuccess(remoteObject);
+    SaneManagerClient::GetInstance().LoadSystemAbilitysuccess(remoteObject);
 }
 
 void SaneServiceLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
-    SaneManagerClient::GetInstance()->LoadSystemAbilityFail();
+    SaneManagerClient::GetInstance().LoadSystemAbilityFail();
 }
 }  // namespace OHOS::Scan

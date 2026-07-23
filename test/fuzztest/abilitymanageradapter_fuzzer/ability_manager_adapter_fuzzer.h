@@ -16,7 +16,7 @@
 #ifndef PRINT_FUZZTEST_ABILITY_MANAGER_ADAPTER_FUZZER_H
 #define PRINT_FUZZTEST_ABILITY_MANAGER_ADAPTER_FUZZER_H
 
-#include <iremote_object.h>
+#include <ipc_object_stub.h>
 #include <message_option.h>
 #include <message_parcel.h>
 #include <want.h>
@@ -37,22 +37,14 @@ public:
     sptr<IRemoteObject> AsObject() override;
 };
 
-class MockRemoteObject : public IRemoteObject {
+class MockRemoteObject : public IPCObjectStub {
 public:
     MockRemoteObject();
     ~MockRemoteObject() override;
 
-    int32_t GetObjectRefCount() override;
     bool IsProxyObject() const override;
     bool CheckObjectLegality() const override;
-    bool AddDeathRecipient(const sptr<IRemoteObject::DeathRecipient> &recipient) override;
-    bool RemoveDeathRecipient(const sptr<IRemoteObject::DeathRecipient> &recipient) override;
-    int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     sptr<IRemoteBroker> AsInterface() override;
-    int Dump(int fd, const std::vector<std::u16string> &args) override;
-
-private:
-    int32_t refCount_ = 1;
 };
 
 }  // namespace Print

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,16 +13,9 @@
  * limitations under the License.
  */
 
-#include "sane_manager_client.h"
-#include "scan_log.h"
-#include "sane_sa_death_recipient.h"
+#ifndef MOCK_NAPI_SCAN_UTILS_H
+#define MOCK_NAPI_SCAN_UTILS_H
 
-namespace OHOS::Scan {
-SaneSaDeathRecipient::SaneSaDeathRecipient() {}
+extern bool g_mockGetRefReturnNonNull;
 
-void SaneSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
-{
-    SCAN_HILOGE("SaneSaDeathRecipient on remote systemAbility died.");
-    SaneManagerClient::GetInstance().OnRemoteSaDied(object);
-}
-} // namespace OHOS::Scan
+#endif

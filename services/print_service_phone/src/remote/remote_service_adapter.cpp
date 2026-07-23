@@ -86,6 +86,28 @@ bool RemoteServiceAdapter::BindService()
     return true;
 }
 
+bool RemoteServiceAdapter::UnbindService()
+{
+    PRINT_HILOGI("RemoteServiceAdapter::UnbindService");
+    
+    PRINT_CHECK_NULL_AND_RETURN(connection_, false);
+    
+    std::lock_guard<std::mutex> lock(bindMutex_);
+    if (!IsConnected()) {
+        PRINT_HILOGI("RemoteServiceAdapter not connected, skip unbind");
+        return true;
+    }
+    
+    AAFwk::ExtensionManagerClient extensionManager;
+    int32_t result = extensionManager.DisconnectAbility(connection_->AsObject());
+    PRINT_HILOGI("DisconnectAbility result = %{public}d", result);
+    if (result != ERR_OK) {
+        PRINT_HILOGW("DisconnectAbility failed, manually clearing connection");
+        connection_->ClearConnection();
+    }
+    return result == ERR_OK;
+}
+
 bool RemoteServiceAdapter::IsConnected()
 {
     PRINT_CHECK_NULL_AND_RETURN(connection_, false);
