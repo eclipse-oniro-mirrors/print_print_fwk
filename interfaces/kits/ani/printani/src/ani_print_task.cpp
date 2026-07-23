@@ -171,8 +171,8 @@ uint32_t AniPrintTask::CallSpooler(const std::shared_ptr<AdapterParam>& adapterP
     if (!files.empty() && files.size() <= PRINT_MAX_FILE_LIST_SIZE) {
         want.SetParam(LAUNCH_PARAMETER_FILE_LIST, files);
         want.SetParam(ABILITY_PARAMS_STREAM, files);
-    } else if (files.size() > PRINT_MAX_FILE_LIST_SIZE) {
-        PRINT_HILOGW("fileList exceeds the maximum length.");
+    } else {
+        PRINT_HILOGW("fileList is empty or exceeds the maximum length.");
     }
     PrintUtils::BuildAdapterParam(adapterParam, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
