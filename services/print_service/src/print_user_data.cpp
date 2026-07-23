@@ -610,6 +610,29 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
     return true;
 }
 
+bool OpenCacheFdsForJob(const std::string &cacheDir, const std::vector<std::string> &fileNames,
+    std::vector<uint32_t> &fdList, int32_t openMode)
+{
+    char cachePath[PATH_MAX] = { 0 };
+    bool ret = true;
+    for (auto fileName : fileNames) {
+        std::string cacheFile = cacheDir + "/" + fileName;
+        if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
+            PRINT_HILOGE("The realFile is null, errno:%{public}s", std::to_string(errno).c_str());
+            ret = false;
+            break;
+        }
+        int32_t fd = open(cachePath, openMode);
+        if (fd < 0) {
+            PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
+            ret = false;
+            break;
+        }
+        fdList.push_back(fd);
+    }
+    return ret;
+}
+
 bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode)
 {
     PRINT_HILOGI("OpenCacheFileFd Start.");
@@ -641,25 +664,10 @@ bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32
         }
     }
 
-    std::string cacheFile;
-    bool ret = true;
-    for (auto fileName : fileNames) {
-        cacheFile = cacheDir + "/" + fileName;
-        if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
-            PRINT_HILOGE("The realFile is null, errno:%{public}s", std::to_string(errno).c_str());
-            ret = false;
-            break;
-        }
-        int32_t fd = open(cachePath, openMode);
-        if (fd < 0) {
-            PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
-            ret = false;
-            break;
-        }
-        fdList.push_back(fd);
-    }
+    bool ret = OpenCacheFdsForJob(cacheDir, fileNames, fdList, openMode);
     if (!ret) {
         for (auto fd : fdList) { close(fd); }
+        fdList.clear();
     }
     closedir(dir);
     return ret;

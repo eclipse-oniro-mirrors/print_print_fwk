@@ -1531,7 +1531,10 @@ bool PrintServiceAbility::createNewJobWhenRestart(std::shared_ptr<PrintJob> &pri
 {
     // reopen fd from cache
     std::vector<uint32_t> fdList;
-    OpenCacheFileFd(printJob->GetJobId(), fdList);
+    if (!OpenCacheFileFd(printJob->GetJobId(), fdList)) {
+        PRINT_HILOGE("OpenCacheFileFd failed");
+        return false;
+    }
     if (fdList.empty()) {
         PRINT_HILOGE("not find cache file");
         return false;
