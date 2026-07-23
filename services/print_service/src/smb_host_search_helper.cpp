@@ -120,6 +120,10 @@ std::vector<PrintSharedHost> SmbHostSearchHelper::GetSharedHosts()
         PRINT_HILOGE("sock_ is invalid");
         return scannedHosts_->GetPrintSharedHost();
     }
+    if (sock_ >= FD_SETSIZE) {
+        PRINT_HILOGE("sock_ fd exceeds FD_SETSIZE, sock_ = %{public}d", sock_);
+        return scannedHosts_->GetPrintSharedHost();
+    }
     fd_set readSet;
     fd_set writeSet;
     bool moreToSend = true;
@@ -452,6 +456,10 @@ bool SmbHostSearchHelper::TestSmbHostAlive(const std::string& ip, int32_t timeou
 {
     if (sock_ < 0) {
         PRINT_HILOGE("Socket is not initialized");
+        return false;
+    }
+    if (sock_ >= FD_SETSIZE) {
+        PRINT_HILOGE("sock_ fd exceeds FD_SETSIZE, sock_ = %{public}d", sock_);
         return false;
     }
     struct in_addr destAddr;
