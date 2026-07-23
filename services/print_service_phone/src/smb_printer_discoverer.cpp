@@ -101,6 +101,7 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
         PRINT_HILOGE("smb2_connect_share fail, ret = %{public}d, reason = %{public}s",
             ret, errorStr.c_str());
         smbLib_->DisconnectShare(smbCtx_);
+        smbLib_->SetPassword(smbCtx_, "");
         return ParseSmbErrorCode(errorStr);
     }
     if (smbLib_->ShareEnumAsync(smbCtx_, SHARE_INFO_1,
@@ -117,10 +118,12 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
         PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
             ret, errorReason ? errorReason : "null");
         smbLib_->DisconnectShare(smbCtx_);
+        smbLib_->SetPassword(smbCtx_, "");
         return ParseSmbErrorCode(errorStr);
     }
     ret = SmbEventLoop();
     smbLib_->DisconnectShare(smbCtx_);
+    smbLib_->SetPassword(smbCtx_, "");
     if (ret == E_PRINT_NONE) {
         GeneratePrinterInfos(sharedHost.GetIp(), infos);
     }
