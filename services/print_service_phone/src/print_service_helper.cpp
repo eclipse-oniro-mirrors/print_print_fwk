@@ -83,17 +83,25 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
     PRINT_HILOGD("enter PrintServiceHelper::StartExtensionAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
+    uint32_t retry = 0;
     sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection(deathCallback);
     PRINT_CHECK_NULL_AND_RETURN(printAbilityConnection, false);
     PRINT_HILOGD("PrintServiceHelper::StartExtensionAbility %{public}s %{public}s",
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
-    if (OHOS::Print::AbilityManagerAdapter::GetInstance().ConnectAbilityWithExtensionType(
-        want, printAbilityConnection, nullptr, -1, AppExecFwk::ExtensionAbilityType::PRINT) != 0) {
+    while (retry++ < MAX_RETRY_TIMES) {
+        if (OHOS::Print::AbilityManagerAdapter::GetInstance().ConnectAbilityWithExtensionType(
+            want, printAbilityConnection, nullptr, -1, AppExecFwk::ExtensionAbilityType::PRINT) == 0) {
+            PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
+        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility %{public}u", retry);
+    }
+    if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility --> failed ");
         return false;
     }
-    PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
     std::lock_guard<std::mutex> autoLock(connectionListLock_);
     extConnectionMap_[ExtensionAbilityType::PRINT_EXTENSION_ABILITY].push_back(printAbilityConnection);
     return true;
