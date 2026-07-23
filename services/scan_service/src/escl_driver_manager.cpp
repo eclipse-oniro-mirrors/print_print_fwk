@@ -171,11 +171,11 @@ bool EsclDriverManager::IsAdfMode(const std::string& scannerId)
     controlParam.action_ = SANE_ACTION_GET_VALUE;
     controlParam.valueType_ = SCAN_VALUE_NUM;
     SaneOutParam outParam;
-    SaneStatus status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
+    SaneStatus status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status == SANE_STATUS_GOOD) {
         for (int32_t optionIndex = 1; optionIndex < outParam.valueNumber_; optionIndex++) {
             SaneOptionDescriptor saneDesc;
-            status = SaneManagerClient::GetInstance()->SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
+            status = SaneManagerClient::GetInstance().SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
             if (status != SANE_STATUS_GOOD) {
                 continue;
             }
@@ -185,7 +185,7 @@ bool EsclDriverManager::IsAdfMode(const std::string& scannerId)
             controlParam.action_ = SANE_ACTION_GET_VALUE;
             controlParam.valueType_ = SCAN_VALUE_STR;
             controlParam.option_ = optionIndex;
-            status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
+            status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
             if (status == SANE_STATUS_GOOD) {
                 isAdfMode = (outParam.valueStr_ == "Automatic Document Feeder" ||
                     outParam.valueStr_ == "ADF" ||
