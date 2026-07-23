@@ -344,12 +344,7 @@ int32_t PrintServiceAbility::Init()
         return initCupsRet;
     }
 #endif
-    if (serviceHandler_ != nullptr) {
-        auto cupsTask = [this]() { CheckCupsServerAlive(); };
-        serviceHandler_->PostTask(cupsTask);
-    } else {
-        CheckCupsServerAlive();
-    }
+    CheckCupsServerAlive();
     auto tmpState = state_.load();
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("InitService: Pad/Phone");
