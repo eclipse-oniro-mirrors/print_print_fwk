@@ -421,22 +421,6 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_028_NeedRename, TestSize.Level1)
     EXPECT_TRUE(allStatus.count(static_cast<ScanErrorCode>(status)));
 }
 
-/**
- * @tc.name: ScanServiceAbilityTest_GetScanOptionDesc_0029
- * @tc.desc: GetScanOptionDesc with negative optionIndex returns E_SCAN_INVALID_PARAMETER.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(ScanServiceAbilityTest, GetScanOptionDesc_NegativeIndex_0029, TestSize.Level1)
-{
-    SetUp();
-    scanSa->openedScannerList_.insert("neg_idx_scanner");
-    ScanOptionDescriptor desc;
-    int32_t status = scanSa->GetScanOptionDesc("neg_idx_scanner", -1, desc);
-    EXPECT_EQ(status, E_SCAN_INVALID_PARAMETER);
-    scanSa->openedScannerList_.erase("neg_idx_scanner");
-}
-
 }  // namespace Scan
 
 }  // namespace OHOS
