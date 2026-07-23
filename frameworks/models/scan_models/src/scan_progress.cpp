@@ -135,7 +135,7 @@ bool ScanProgress::Marshalling(Parcel &parcel) const
 {
     auto mesgParcel = static_cast<MessageParcel*>(&parcel);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteInt32(progress_), false);
-    mesgParcel->WriteFileDescriptor(fd_);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(mesgParcel->WriteFileDescriptor(fd_), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(isFinal_), false);
     return true;
 }
