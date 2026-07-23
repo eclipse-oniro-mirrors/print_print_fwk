@@ -93,6 +93,7 @@ private:
     void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedOrientationToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     bool ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapability &printerCapability);
@@ -109,6 +110,7 @@ private:
     bool ParseUserListJsonV1(
         Json::Value &jsonObject, std::vector<int32_t> &allPrintUserList);
     bool ConvertJsonToPrinterInfo(Json::Value &object);
+    bool ParseCapabilityFromJson(Json::Value &object, PrinterCapability &cap);
     void ConvertInnerJsonToPrinterInfo(Json::Value &object, PrinterInfo &info);
 
     bool ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences);

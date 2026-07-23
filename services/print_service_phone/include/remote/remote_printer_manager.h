@@ -38,9 +38,12 @@ public:
     RemotePrinterManager();
     ~RemotePrinterManager();
     
-    bool Destroy();
+    static RemotePrinterManager& GetInstance();
     
-    bool StartPrinterDiscovery();
+    bool Destroy();
+    bool Disconnect();
+    
+    void StartPrinterDiscovery();
     bool StopPrinterDiscovery();
     
     std::shared_ptr<PrinterInfo> GetPrinterInfo(const std::string &printerId);

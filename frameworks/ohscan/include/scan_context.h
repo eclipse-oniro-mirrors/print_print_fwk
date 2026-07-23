@@ -54,6 +54,7 @@ public:
     std::shared_ptr<Scan_ScannerOptions> GetScannerOptions(const std::string& scannerId);
     std::shared_ptr<Scan_ScannerOptions> CreateScannerOptionsSharedPtr(Scan_ScannerOptions* options);
     void SetScanParaTable(const std::string& scannerId, std::unique_ptr<ScanParaTable> table);
+    void ClearScannerCache(const std::string& scannerId);
     const std::string& GetRegisterType();
     void Clear();
     bool ParaIndexConvert(const int32_t option, int32_t& innerOption, const std::string& deviceId);

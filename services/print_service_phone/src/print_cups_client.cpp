@@ -1978,6 +1978,11 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "auth-info", UserNameAndPasswd.size(), NULL,
         UserNameAndPasswd.data());
     response = cupsDoRequest(http, request, "/jobs/");
+    if (response == nullptr) {
+        PRINT_HILOGE("The Printer authenticate fail.");
+        httpClose(http);
+        return false;
+    }
     ipp_state_t state = ippGetState(response);
     if (state == IPP_ERROR) {
         PRINT_HILOGE("The Printer authenticate fail.");

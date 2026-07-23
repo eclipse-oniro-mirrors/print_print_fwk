@@ -78,12 +78,7 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     }
 
     PrinterCapability printerCapability;
-    Json::Value capsJson = object["capability"];
-    if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
-        PRINT_HILOGW("convert json to printer capability failed");
-        return false;
-    }
-    printerCapability.Dump();
+    if (!ParseCapabilityFromJson(object, printerCapability)) { return false; }
 
     PrinterInfo info;
     info.SetPrinterId(id);
@@ -107,6 +102,21 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     }
     
     PRINT_HILOGI("ConvertJsonToPrinterInfo success, id: %{public}s", id.c_str());
+    return true;
+}
+
+bool PrintSystemData::ParseCapabilityFromJson(Json::Value &object, PrinterCapability &cap)
+{
+    if (!PrintJsonUtil::IsMember(object, "capability")) {
+        PRINT_HILOGW("json does not contain the key as capability");
+        return false;
+    }
+    Json::Value capsJson = object["capability"];
+    if (!ConvertJsonToPrinterCapability(capsJson, cap)) {
+        PRINT_HILOGW("convert json to printer capability failed");
+        return false;
+    }
+    cap.Dump();
     return true;
 }
 
@@ -823,8 +833,6 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertPrintMarginToJson(printerCapability, capsJson);
     }
 
-    ConvertPageSizeToJson(printerCapability, capsJson);
-
     if (printerCapability.HasResolution()) {
         ConvertPrintResolutionToJson(printerCapability, capsJson);
     }
@@ -843,6 +851,10 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
 
     if (printerCapability.HasSupportedQuality()) {
         ConvertSupportedQualityToJson(printerCapability, capsJson);
+    }
+
+    if (printerCapability.HasSupportedOrientation()) {
+        ConvertSupportedOrientationToJson(printerCapability, capsJson);
     }
 
     ConvertVendorAbilityToJson(printerCapability, capsJson);
@@ -925,6 +937,17 @@ void PrintSystemData::ConvertSupportedQualityToJson(PrinterCapability &printerCa
         supportedQualityListJson.append(iter);
     }
     capsJson["supportedQuality"] = supportedQualityListJson;
+}
+
+void PrintSystemData::ConvertSupportedOrientationToJson(PrinterCapability &printerCapability, Json::Value &capsJson)
+{
+    Json::Value supportedOrientationListJson;
+    std::vector<uint32_t> supportedOrientationList;
+    printerCapability.GetSupportedOrientation(supportedOrientationList);
+    for (auto iter : supportedOrientationList) {
+        supportedOrientationListJson.append(iter);
+    }
+    capsJson["supportedOrientation"] = supportedOrientationListJson;
 }
 
 void PrintSystemData::ConvertPageSizeToJson(PrinterCapability &printerCapability, Json::Value &capsJson)
@@ -1151,6 +1174,10 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(Json::Value &capsJson, P
 
 bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability)
 {
+    if (!PrintJsonUtil::IsMember(capsJson, "minMargin")) {
+        PRINT_HILOGE("can not find minMargin");
+        return false;
+    }
     Json::Value marginJson = capsJson["minMargin"];
     PrintMargin minMargin;
     if (!marginJson.isObject() ||

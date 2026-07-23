@@ -112,13 +112,20 @@ private:
     int32_t RestartScan(const std::string &scannerId);
     void InitializeScanService();
     void CleanupScanService();
-    int32_t StartScanOnce(const std::string scannerId);
+    int32_t StartScanOnceInternal(const std::string &scannerId);
+    int32_t GetScanParametersInternal(const std::string &scannerId, ScanParameters &para);
     int32_t GetScannerImageDpi(const std::string& scannerId, int32_t& dpi);
+    int32_t CheckScannerOwner(const std::string& scannerId);
+    void CleanupDeadCaller(int32_t deadPid);
     void UnloadSystemAbility();
     int32_t InitializeEsclScannerDriver();
     void AddNetScanner(const std::string& uniqueId, const std::string &discoverMode);
     void AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode);
-    std::set<std::string> openedScannerList_;
+    struct ScannerOwner {
+        int32_t callerPid;
+        int32_t userId;
+    };
+    std::map<std::string, ScannerOwner> openedScannerMap_;
     std::atomic<ServiceRunningState> state_;
     std::mutex lock_;
     static std::mutex instanceLock_;
