@@ -1016,7 +1016,7 @@ PrintRange PrintUserData::ParseJsonObjectToPrintRange(const Json::Value &jsonObj
     }
     if (CheckOptionalParam(jsonObject, "hasEndPage_") &&
         PrintJsonUtil::IsMember(jsonObject, "endPage") && jsonObject["endPage"].isUInt()) {
-        printRange.SetStartPage(jsonObject["endPage"].asUInt());
+        printRange.SetEndPage(jsonObject["endPage"].asUInt());
     }
     if (PrintJsonUtil::IsMember(jsonObject, "pages") && jsonObject["pages"].isArray()) {
         std::vector<uint32_t> pages;
