@@ -1035,15 +1035,15 @@ PrintMargin PrintUserData::ParseJsonObjectToMargin(const Json::Value &jsonObject
     }
     if (CheckOptionalParam(jsonObject, "hasLeft_") &&
         PrintJsonUtil::IsMember(jsonObject, "left_") && jsonObject["left_"].isInt()) {
-        margin.SetTop(jsonObject["left_"].asInt());
+        margin.SetLeft(jsonObject["left_"].asInt());
     }
     if (CheckOptionalParam(jsonObject, "hasRight_") &&
         PrintJsonUtil::IsMember(jsonObject, "right_") && jsonObject["right_"].isInt()) {
-        margin.SetTop(jsonObject["right_"].asInt());
+        margin.SetRight(jsonObject["right_"].asInt());
     }
     if (CheckOptionalParam(jsonObject, "hasBottom_") &&
         PrintJsonUtil::IsMember(jsonObject, "bottom_") && jsonObject["bottom_"].isInt()) {
-        margin.SetTop(jsonObject["bottom_"].asInt());
+        margin.SetBottom(jsonObject["bottom_"].asInt());
     }
     return margin;
 }

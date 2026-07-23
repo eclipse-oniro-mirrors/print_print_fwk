@@ -1116,6 +1116,31 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_CorrectValue_HasTopReturnTru
 }
 
 /**
+ * @tc.name: ParseJsonObjectToMargin_SetEachSideCorrectly
+ * @tc.desc: Verify ParseJsonObjectToMargin sets left/right/bottom separately
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_SetEachSideCorrectly, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasTop_"] = true;
+    jsonObject["top_"] = 10;
+    jsonObject["hasLeft_"] = true;
+    jsonObject["left_"] = 20;
+    jsonObject["hasRight_"] = true;
+    jsonObject["right_"] = 30;
+    jsonObject["hasBottom_"] = true;
+    jsonObject["bottom_"] = 40;
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.GetTop(), 10u);
+    EXPECT_EQ(margin.GetLeft(), 20u);
+    EXPECT_EQ(margin.GetRight(), 30u);
+    EXPECT_EQ(margin.GetBottom(), 40u);
+}
+
+/**
  * @tc.name: OpenCacheFileFd_NoQueuedJob_ReturnsFalse
  * @tc.desc: Test OpenCacheFileFd returns false when job not in queued list
  * @tc.type: FUNC
