@@ -69,10 +69,6 @@ HWTEST_F(PrintCloudConfigManagerTest, GetCloudConfigFilePath_ReturnValidResultOr
 {
     PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
     std::string result = instance.GetCloudConfigFilePath();
-    // 两目录均无 version.txt 时返回 ""；否则返回某目录下 bsuni_output_format.json 路径
-    if (result.empty()) {
-        return;
-    }
     EXPECT_NE(result.find("bsuni_output_format.json"), std::string::npos);
 }
 
