@@ -86,6 +86,29 @@ public:
     }
 
 private:
+    static NapiAsyncTask::CompleteCallback CreateStartAbilityAccountCallback(
+        std::weak_ptr<PrintExtensionContext> context, AAFwk::Want want, int32_t accountId,
+        AAFwk::StartOptions startOptions, size_t unwrapArgc)
+    {
+        return [weak = context, want, accountId, startOptions, unwrapArgc](
+            napi_env engine, NapiAsyncTask &task, int32_t status) {
+            auto context = weak.lock();
+            if (!context) {
+                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
+                return;
+            }
+            ErrCode errcode = ERR_OK;
+            (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
+                : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
+            if (errcode == 0) {
+                napi_value undefineResult = nullptr;
+                napi_get_undefined(engine, &undefineResult);
+                task.Resolve(engine, undefineResult);
+            } else {
+                task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
+            }
+        };
+    }
     std::weak_ptr<PrintExtensionContext> context_;
     std::shared_mutex managersMutex_;
 
@@ -193,25 +216,8 @@ private:
             unwrapArgc++;
         }
 
-        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, accountId, startOptions, unwrapArgc](
-                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
-            auto context = weak.lock();
-            if (!context) {
-                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
-                return;
-            }
-
-            ErrCode errcode = ERR_OK;
-            (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
-                : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
-            if (errcode == 0) {
-                napi_value undefineResult = nullptr;
-                napi_get_undefined(engine, &undefineResult);
-                task.Resolve(engine, undefineResult);
-            } else {
-                task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
-            }
-        };
+        NapiAsyncTask::CompleteCallback complete =
+            CreateStartAbilityAccountCallback(context_, want, accountId, startOptions, unwrapArgc);
 
         napi_value lastParam = (argc == unwrapArgc) ? nullptr : argv[unwrapArgc];
         napi_value result = nullptr;

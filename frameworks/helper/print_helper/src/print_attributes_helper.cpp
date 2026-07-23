@@ -88,6 +88,16 @@ std::shared_ptr<PrintAttributes> PrintAttributesHelper::BuildFromJs(napi_env env
         nativeObj->SetIsLandscape(isLandscape);
     }
     
+    BuildFromJsMode(env, jsValue, nativeObj);
+
+    BuildJsWorkerIsLegal(env, jsValue, nativeObj);
+    nativeObj->Dump();
+    return nativeObj;
+}
+
+void PrintAttributesHelper::BuildFromJsMode(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrintAttributes> &nativeObj)
+{
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DIRECTIONMODE)) {
         uint32_t directionMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DIRECTIONMODE);
         if (directionMode > DIRECTION_MODE_LANDSCAPE) {
@@ -114,10 +124,6 @@ std::shared_ptr<PrintAttributes> PrintAttributesHelper::BuildFromJs(napi_env env
             nativeObj->SetDuplexMode(duplexMode);
         }
     }
-
-    BuildJsWorkerIsLegal(env, jsValue, nativeObj);
-    nativeObj->Dump();
-    return nativeObj;
 }
 
 void PrintAttributesHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue,

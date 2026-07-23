@@ -23,39 +23,45 @@
 #include "print_util.h"
 
 namespace OHOS::Print {
+napi_status ParsePrinterInfoInput(napi_env env, size_t argc, napi_value *argv,
+    const std::shared_ptr<NapiPrintExtContext> &context)
+{
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+    bool isArray = false;
+    napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+    PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
+    uint32_t len = 0;
+    napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+    for (uint32_t index = 0; index < len; index++) {
+        napi_value value;
+        napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+        if (status != napi_ok) {
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, value);
+        if (printerInfoPtr == nullptr) {
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            PRINT_HILOGE("PrinterInfo format error!");
+            return napi_invalid_arg;
+        }
+        printerInfoPtr->SetPrinterId(printerInfoPtr->GetPrinterId());
+        context->printerInfos.emplace_back(*printerInfoPtr);
+    }
+    if (context->printerInfos.empty()) {
+        context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+        PRINT_HILOGE("no valid printer info exists!");
+        return napi_invalid_arg;
+    }
+    return napi_ok;
+}
+
 napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input = [context](
-        napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
-        PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
-        uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
-        for (uint32_t index = 0; index < len; index++) {
-            napi_value value;
-            napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
-            if (status != napi_ok) {
-                context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-                return napi_invalid_arg;
-            }
-            auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, value);
-            if (printerInfoPtr == nullptr) {
-                context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-                PRINT_HILOGE("PrinterInfo format error!");
-                return napi_invalid_arg;
-            }
-            printerInfoPtr->SetPrinterId(printerInfoPtr->GetPrinterId());
-            context->printerInfos.emplace_back(*printerInfoPtr);
-        }
-        if (context->printerInfos.empty()) {
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            PRINT_HILOGE("no valid printer info exists!");
-            return napi_invalid_arg;
-        }
-        return napi_ok;
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self,
+        napi_callback_info info) -> napi_status {
+        return ParsePrinterInfoInput(env, argc, argv, context);
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);
@@ -79,39 +85,42 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_status ParsePrinterIdInput(napi_env env, size_t argc, napi_value *argv,
+    const std::shared_ptr<NapiPrintExtContext> &context)
+{
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+    bool isArray = false;
+    napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+    PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
+    uint32_t len = 0;
+    napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+    for (uint32_t index = 0; index < len; index++) {
+        napi_value value;
+        napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+        if (status != napi_ok) {
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
+        if (printerId != "") {
+            context->printerIds.emplace_back(printerId);
+        }
+    }
+    if (context->printerIds.empty()) {
+        context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+        PRINT_HILOGE("no valid printer info exists!");
+        return napi_invalid_arg;
+    }
+    return napi_ok;
+}
+
 napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
 {
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.removePrinters", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input = [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-
-        bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
-        PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
-
-        uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
-
-        for (uint32_t index = 0; index < len; index++) {
-            napi_value value;
-            napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
-            if (status != napi_ok) {
-                context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-                return napi_invalid_arg;
-            }
-            std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
-            if (printerId != "") {
-                context->printerIds.emplace_back(printerId);
-            }
-        }
-        if (context->printerIds.empty()) {
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            PRINT_HILOGE("no valid printer info exists!");
-            return napi_invalid_arg;
-        }
-        return napi_ok;
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self,
+        napi_callback_info info) -> napi_status {
+        return ParsePrinterIdInput(env, argc, argv, context);
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);

@@ -32,6 +32,7 @@ public:
     static napi_value MakeJsObject(napi_env env, const PrintAttributes &attributes);
     static std::shared_ptr<PrintAttributes> BuildFromJs(napi_env env, napi_value jsValue);
     static void BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::shared_ptr<PrintAttributes> &nativeObj);
+    static void BuildFromJsMode(napi_env env, napi_value jsValue, std::shared_ptr<PrintAttributes> &nativeObj);
 
 private:
     static bool CreatePageRange(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);

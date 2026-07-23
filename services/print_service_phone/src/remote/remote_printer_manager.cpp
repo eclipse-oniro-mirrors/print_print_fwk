@@ -281,7 +281,8 @@ bool RemotePrinterManager::OnPrinterListReceived(const Json::Value &jsonArray)
 
     for (const auto &devId : currentDevIds) {
         int32_t result = serviceAdapter_.RequestPrinterStatus(devId);
-        PRINT_HILOGI("RequestPrinterStatus for %{public}s result: %{public}d", PrintUtils::AnonymizePrinterId(devId).c_str(), result);
+        PRINT_HILOGI("RequestPrinterStatus for %{public}s result: %{public}d",
+            PrintUtils::AnonymizePrinterId(devId).c_str(), result);
     }
     
     RemoveDeprecatedPrinters(currentDevIds);
