@@ -33,6 +33,8 @@
 namespace OHOS {
 namespace Print {
 
+constexpr uint32_t MAX_CAPABILITY_ARRAY_SIZE = 128;
+
 class PrintSystemData {
 public:
     bool Init();
@@ -138,7 +140,6 @@ private:
             return true;
         }
         PRINT_HILOGD("find Capability %{public}s success", key.c_str());
-        const uint32_t MAX_CAPABILITY_ARRAY_SIZE = 128;
         if (capsJson[key].size() > MAX_CAPABILITY_ARRAY_SIZE) {
             PRINT_HILOGE("capability %{public}s array size is illegal", key.c_str());
             return false;

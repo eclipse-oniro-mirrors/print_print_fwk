@@ -24,7 +24,7 @@
 namespace OHOS::Scan {
 constexpr int32_t YES_VALUE = 1;
 constexpr int32_t NO_VALUE = 0;
-constexpr int32_t MAX_SCANNER_PARA_COUNT = 256;
+constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
 
 ScanContext::ScanContext()
 {}
@@ -330,8 +330,7 @@ void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions *scannerOptions)
 
 Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
 {
-    constexpr int32_t maxOptionCount = 1000;
-    if (optionCount > maxOptionCount) {
+    if (optionCount > MAX_SCANNER_PARA_COUNT) {
         SCAN_HILOGE("optionCount [%{public}d] exceeded the maximum value", optionCount);
         return nullptr;
     }

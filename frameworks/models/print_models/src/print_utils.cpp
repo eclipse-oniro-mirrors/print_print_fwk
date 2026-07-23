@@ -328,15 +328,18 @@ bool PrintUtils::IsPrivateIpv4(const std::string &ip)
     return false;
 }
 
+static std::string MaskStringTail(const std::string &value)
+{
+    if (value.length() > ANONYMIZE_ALIAS_LEN) {
+        return value.substr(0, value.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
+    }
+    return "xxx";
+}
+
 void PrintUtils::AnonymizeAlias(Json::Value &optionJson)
 {
     if (PrintJsonUtil::IsMember(optionJson, "alias") && optionJson["alias"].isString()) {
-        std::string alias = optionJson["alias"].asString();
-        if (alias.length() > ANONYMIZE_ALIAS_LEN) {
-            optionJson["alias"] = alias.substr(0, alias.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
-        } else {
-            optionJson["alias"] = "xxx";
-        }
+        optionJson["alias"] = MaskStringTail(optionJson["alias"].asString());
     }
 }
 
@@ -410,7 +413,7 @@ std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
     if (printerId.find_last_of('-') != std::string::npos) {
         return AnonymizeUUid(printerId);
     }
-    return printerId;
+    return MaskStringTail(printerId);
 }
 
 std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
@@ -456,10 +459,7 @@ std::string PrintUtils::AnonymizePrinterName(const std::string &printerName)
         inet_pton(AF_INET6, printerName.c_str(), &addr6) == 1) {
         return AnonymizeIp(printerName);
     }
-    if (printerName.length() > ANONYMIZE_ALIAS_LEN) {
-        return printerName.substr(0, printerName.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
-    }
-    return "xxx";
+    return MaskStringTail(printerName);
 }
 
 std::string PrintUtils::AnonymizeJobOption(const std::string &option)

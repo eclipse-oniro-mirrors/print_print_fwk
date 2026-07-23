@@ -15,7 +15,6 @@
 
 #include "print_range_helper.h"
 #include "napi_print_utils.h"
-#include "printer_capability_helper.h"
 #include "print_constant.h"
 #include "print_log.h"
 
@@ -23,6 +22,7 @@ namespace OHOS::Print {
 static constexpr const char *PARAM_RANGE_STARTPAGE = "startPage";
 static constexpr const char *PARAM_RANGE_ENDPAGE = "endPage";
 static constexpr const char *PARAM_RANGE_PAGES = "pages";
+static constexpr uint32_t MAX_PAGES_ARRAY_LENGTH = 128;
 
 napi_value PrintRangeHelper::MakeJsObject(napi_env env, const PrintRange &range)
 {
@@ -88,8 +88,8 @@ std::shared_ptr<PrintRange> PrintRangeHelper::BuildFromJs(napi_env env, napi_val
         }
         uint32_t arrayLength = 0;
         PRINT_CALL(env, napi_get_array_length(env, jsPages, &arrayLength));
-        if (arrayLength > MAX_ARRAY_LENGTH) {
-            PRINT_HILOGE("pages array length exceeds max %{public}d", MAX_ARRAY_LENGTH);
+        if (arrayLength > MAX_PAGES_ARRAY_LENGTH) {
+            PRINT_HILOGE("pages array length exceeds max %{public}d", MAX_PAGES_ARRAY_LENGTH);
             return nullptr;
         }
         for (uint32_t index = 0; index < arrayLength; index++) {

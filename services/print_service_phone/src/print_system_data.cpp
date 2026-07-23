@@ -568,7 +568,8 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
                 }
             }
         }
-        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s",
+            PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
         printerNameList.push_back(info->GetPrinterName());
     }
 }
@@ -592,7 +593,8 @@ void PrintSystemData::GetRawAddedPrinterListFromSystemData(std::vector<std::stri
             if (optionJson.isMember("driver") && optionJson["driver"].isString() &&
                 optionJson["driver"].asString() == "RAW") {
                 PRINT_HILOGD(
-                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s",
+                    PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
                 printerNameList.push_back(info->GetPrinterName());
             }
         }

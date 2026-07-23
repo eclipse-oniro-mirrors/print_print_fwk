@@ -35,7 +35,7 @@ SafeSANEAPI& SafeSANEAPI::GetInstance()
     return instance;
 }
 
-std::shared_ptr<std::recursive_mutex> SafeSANEAPI::GetHandleMutex(SANE_Handle handle)
+std::shared_ptr<std::mutex> SafeSANEAPI::GetHandleMutex(SANE_Handle handle)
 {
     if (handle == nullptr) {
         SCAN_HILOGE("GetHandleMutex: handle is nullptr");
@@ -57,11 +57,11 @@ void SafeSANEAPI::AddHandleMutex(SANE_Handle handle)
         return;
     }
     std::lock_guard<std::mutex> lock(handleMutexesLock_);
-    handleMutexes_[handle] = std::make_shared<std::recursive_mutex>();
+    handleMutexes_[handle] = std::make_shared<std::mutex>();
     SCAN_HILOGI("AddHandleMutex: handle added");
 }
 
-std::shared_ptr<std::recursive_mutex> SafeSANEAPI::RemoveHandleMutex(SANE_Handle handle)
+std::shared_ptr<std::mutex> SafeSANEAPI::RemoveHandleMutex(SANE_Handle handle)
 {
     if (handle == nullptr) {
         SCAN_HILOGE("RemoveHandleMutex: handle is nullptr");
@@ -109,80 +109,80 @@ SANE_Status SafeSANEAPI::SaneOpen(const char* device_name, SANE_Handle* handle)
 
 void SafeSANEAPI::SaneClose(SANE_Handle handle)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = RemoveHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = RemoveHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneClose: handle not registered or already closed");
         return;
     }
-    std::lock_guard<std::recursive_mutex> handleLock(*mutexPtr);
+    std::lock_guard<std::mutex> handleLock(*mutexPtr);
     sane_close(handle);
 }
 
 SANE_Status SafeSANEAPI::SaneStart(SANE_Handle handle)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = GetHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneStart: handle not registered or already closed");
         return SANE_STATUS_INVAL;
     }
-    std::lock_guard<std::recursive_mutex> lock(*mutexPtr);
+    std::lock_guard<std::mutex> lock(*mutexPtr);
     return sane_start(handle);
 }
 
 void SafeSANEAPI::SaneCancel(SANE_Handle handle)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = GetHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneCancel: handle not registered or already closed");
         return;
     }
-    std::lock_guard<std::recursive_mutex> lock(*mutexPtr);
+    std::lock_guard<std::mutex> lock(*mutexPtr);
     sane_cancel(handle);
 }
 
 const SANE_Option_Descriptor* SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle handle, SANE_Int option)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = GetHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneGetOptionDescriptor: handle not registered or already closed");
         return nullptr;
     }
-    std::lock_guard<std::recursive_mutex> lock(*mutexPtr);
+    std::lock_guard<std::mutex> lock(*mutexPtr);
     return sane_get_option_descriptor(handle, option);
 }
 
 SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* params)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = GetHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneGetParameters: handle not registered or already closed");
         return SANE_STATUS_INVAL;
     }
-    std::lock_guard<std::recursive_mutex> lock(*mutexPtr);
+    std::lock_guard<std::mutex> lock(*mutexPtr);
     return sane_get_parameters(handle, params);
 }
 
 SANE_Status SafeSANEAPI::SaneControlOption(SANE_Handle handle, SANE_Int option,
     SANE_Action action, void* value, SANE_Int* info)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = GetHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneControlOption: handle not registered or already closed");
         return SANE_STATUS_INVAL;
     }
-    std::lock_guard<std::recursive_mutex> lock(*mutexPtr);
+    std::lock_guard<std::mutex> lock(*mutexPtr);
     return sane_control_option(handle, option, action, value, info);
 }
 
 SANE_Status SafeSANEAPI::SaneRead(SANE_Handle handle, SANE_Byte* data,
     SANE_Int maxLength, SANE_Int* length)
 {
-    std::shared_ptr<std::recursive_mutex> mutexPtr = GetHandleMutex(handle);
+    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneRead: handle not registered or already closed");
         return SANE_STATUS_INVAL;
     }
-    std::lock_guard<std::recursive_mutex> lock(*mutexPtr);
+    std::lock_guard<std::mutex> lock(*mutexPtr);
     return sane_read(handle, data, maxLength, length);
 }
 

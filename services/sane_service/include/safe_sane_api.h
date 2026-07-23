@@ -61,12 +61,12 @@ private:
     SafeSANEAPI() = default;
     ~SafeSANEAPI() = default;
     
-    std::shared_ptr<std::recursive_mutex> GetHandleMutex(SANE_Handle handle);
+    std::shared_ptr<std::mutex> GetHandleMutex(SANE_Handle handle);
     void AddHandleMutex(SANE_Handle handle);
-    std::shared_ptr<std::recursive_mutex> RemoveHandleMutex(SANE_Handle handle);
+    std::shared_ptr<std::mutex> RemoveHandleMutex(SANE_Handle handle);
     
     std::mutex globalLock_;
-    std::unordered_map<SANE_Handle, std::shared_ptr<std::recursive_mutex>> handleMutexes_;
+    std::unordered_map<SANE_Handle, std::shared_ptr<std::mutex>> handleMutexes_;
     std::mutex handleMutexesLock_;
 };
 
