@@ -897,7 +897,7 @@ bool PrintSystemData::ConvertJsonToSupportedQuality(Json::Value &capsJson, Print
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedQuality", printerCapability,
         &PrinterCapability::SetSupportedQuality,
         [](const Json::Value &item, uint32_t &quality) -> bool {
-            quality = item.asInt();
+            quality = item.asUInt();
             return true;
         });
 }
@@ -907,7 +907,7 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(Json::Value &capsJson, P
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedOrientation", printerCapability,
         &PrinterCapability::SetSupportedOrientation,
         [](const Json::Value &item, uint32_t &orientation) -> bool {
-            orientation = item.asInt();
+            orientation = item.asUInt();
             return true;
         });
 }
