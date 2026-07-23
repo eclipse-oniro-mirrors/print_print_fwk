@@ -390,9 +390,9 @@ Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallba
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
         g_printerChangeCallback = callback;
     }
-    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(
+    auto ret = PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(
         PRINTER_CHANGE_EVENT_TYPE, NativePrinterInfoFunction);
-    return PRINT_ERROR_NONE;
+    return ConvertToNativeErrorCode(ret);
 }
 
 void OH_Print_UnregisterPrinterChangeListener()
