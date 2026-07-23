@@ -853,7 +853,7 @@ int32_t PrintServiceAbility::DestroyExtension()
     PRINT_HILOGI("DestroyExtension start.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    for (auto extension : extensionStateList_) {
+    for (auto& extension : extensionStateList_) {
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
         }
@@ -864,6 +864,7 @@ int32_t PrintServiceAbility::DestroyExtension()
         DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     }
 
+    PRINT_CHECK_NULL_AND_RETURN(helper_, E_PRINT_INVALID_PARAMETER);
     helper_->DisconnectAbility(ExtensionAbilityType::PRINT_EXTENSION_ABILITY);
 
     PRINT_HILOGI("DestroyExtension end.");
@@ -4345,7 +4346,9 @@ bool PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &uri, Pr
 bool PrintServiceAbility::QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status)
 {
 #ifdef CUPS_ENABLE
-    return DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterStatusByUri(uri, status) == E_PRINT_NONE;
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, false);
+    return printCupsClient->QueryPrinterStatusByUri(uri, status) == E_PRINT_NONE;
 #else
     return false;
 #endif

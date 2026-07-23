@@ -429,6 +429,7 @@ static void OnScanDeviceAddNative(ani_env *env, ani_object callback)
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceAdd";
     OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callbackWrapper, __func__);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 

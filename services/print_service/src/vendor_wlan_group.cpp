@@ -621,6 +621,10 @@ bool VendorWlanGroup::ConnectPrinterByIdAndPpd(const std::string &printerId, con
 
 bool VendorWlanGroup::ConnectByBsuni(const std::string &printerId)
 {
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
     SetGroupPrinterFromVendorGroupList(printerId, VENDOR_BSUNI_DRIVER);
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
     auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
