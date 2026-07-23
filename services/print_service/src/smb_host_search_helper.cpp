@@ -445,7 +445,9 @@ std::vector<PrintSharedHost> SmbHostSearchHelper::HostList::GetPrintSharedHost()
         PrintSharedHost host;
         struct in_addr addr;
         addr.s_addr = ip;
-        std::string ipStr = inet_ntoa(addr);
+        char ipBuf[INET_ADDRSTRLEN] = {0};
+        inet_ntop(AF_INET, &addr, ipBuf, INET_ADDRSTRLEN);
+        std::string ipStr = ipBuf;
         host.SetIp(ipStr);
         host.SetShareName(name);
         host.SetWorkgroupName("workgroup");
