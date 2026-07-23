@@ -189,7 +189,7 @@ bool StsPrintExtension::CallObjectMethod(bool withResult, const char *name, cons
         return false;
     }
     va_end(args);
-    return false;
+    return true;
 }
 
 void StsPrintExtension::BindExtensionInfo(ani_env* aniEnv, ani_class contextClass, ani_object contextObj,
