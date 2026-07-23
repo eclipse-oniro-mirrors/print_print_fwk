@@ -475,7 +475,7 @@ bool SmbHostSearchHelper::TestSmbHostAlive(const std::string& ip, int32_t timeou
     struct timeval selectTimeout;
     long tvUsec = static_cast<long>(timeoutMs) * KILO_FACTOR;
     long tvSec = tvUsec / (KILO_FACTOR * KILO_FACTOR);
-    SetTimeval(selectTimeout, tvSec, tvUsec);
+    SetTimeval(selectTimeout, tvSec, tvUsec % (KILO_FACTOR * KILO_FACTOR));
     int32_t result = select(sock_ + 1, &readSet, nullptr, nullptr, &selectTimeout);
     if (result < 0) {
         PRINT_HILOGW("select error, reason: %{private}s", strerror(errno));
