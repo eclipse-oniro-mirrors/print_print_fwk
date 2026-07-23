@@ -60,7 +60,7 @@ std::string ScanServiceUtils::ReplaceDeviceIdUsbPort(const std::string& deviceId
     oss << std::setw(portWidth) << std::setfill(zero) << end;
     std::string formattedEnd = oss.str();
     size_t pos1 = deviceId.rfind(':');
-    if (pos1 == std::string::npos) {
+    if (pos1 == std::string::npos || pos1 == 0) {
         SCAN_HILOGE("deviceId format is error");
         return "";
     }
