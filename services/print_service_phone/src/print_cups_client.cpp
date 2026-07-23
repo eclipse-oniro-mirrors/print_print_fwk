@@ -2407,7 +2407,7 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
             currentJob_->isCanceled = true;
         }
         jobLock.unlock(); // jobMutex
-        std::lock_guard<std::mutex> lock(jobMonitorMutex_);
+        std::unique_lock<std::mutex> monitorLock(jobMonitorMutex_);
         auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
             return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);
         };
@@ -2417,6 +2417,7 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
             return;
         }
         auto interruptMonitor = *monitorItem;
+        monitorLock.unlock();
         if (!CancelPrinterJob(
             interruptMonitor->cupsJobId, interruptMonitor->printerName, interruptMonitor->jobOriginatingUserName)) {
             PRINT_HILOGE("cancel Job Error");
