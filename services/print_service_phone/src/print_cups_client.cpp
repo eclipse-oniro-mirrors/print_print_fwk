@@ -398,6 +398,39 @@ int32_t PrintCupsClient::StartCupsdServiceNotAlive()
     return E_PRINT_NONE;
 }
 
+int32_t ReadCupsdPidFile(const std::string &realPidFile, char *buf, size_t bufSize)
+{
+    FILE *file = fopen(realPidFile.c_str(), "r");
+    if (file == nullptr) {
+        PRINT_HILOGE("Open pidFile error!");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        PRINT_HILOGE("Seek pidFile!");
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+        }
+        return E_PRINT_SERVER_FAILURE;
+    }
+    size_t bytesRead = fread(buf, 1, bufSize - 1, file);
+    if (ferror(file) != 0 || bytesRead == 0) {
+        PRINT_HILOGE("Read pidFile error!");
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+        }
+        return E_PRINT_SERVER_FAILURE;
+    }
+    buf[bytesRead] = '\0';
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    return E_PRINT_NONE;
+}
+
 int32_t PrintCupsClient::StartCupsdService()
 {
     PRINT_HILOGI("StartCupsdService enter");
@@ -419,32 +452,10 @@ int32_t PrintCupsClient::StartCupsdService()
         PRINT_HILOGE("realPidFile is not exist");
         return E_PRINT_SERVER_FAILURE;
     }
-    FILE *file = fopen(realPidFile, "r");
-    if (file == nullptr) {
-        PRINT_HILOGE("Open pidFile error!");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    if (fseek(file, 0, SEEK_SET) != 0) {
-        PRINT_HILOGE("Seek pidFile!");
-        int fcloseResult = fclose(file);
-        if (fcloseResult != 0) {
-            PRINT_HILOGE("Close File Failure.");
-        }
-        return E_PRINT_SERVER_FAILURE;
-    }
     char buf[BUFFER_LEN] = {0};
-    if ((fread(buf, 1, BUFFER_LEN, file)) < 0) {
-        PRINT_HILOGE("Read pidFile error!");
-        int fcloseResult = fclose(file);
-        if (fcloseResult != 0) {
-            PRINT_HILOGE("Close File Failure.");
-        }
-        return E_PRINT_SERVER_FAILURE;
-    }
-    int fcloseResult = fclose(file);
-    if (fcloseResult != 0) {
-        PRINT_HILOGE("Close File Failure.");
-        return E_PRINT_SERVER_FAILURE;
+    int32_t ret = ReadCupsdPidFile(realPidFile, buf, BUFFER_LEN);
+    if (ret != E_PRINT_NONE) {
+        return ret;
     }
     PRINT_HILOGI("The Process of CUPSD has existed, pid: %{public}s.", buf);
     return E_PRINT_NONE;
