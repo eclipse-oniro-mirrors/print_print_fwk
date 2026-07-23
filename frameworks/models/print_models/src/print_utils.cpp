@@ -413,7 +413,7 @@ std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
     if (printerId.find_last_of('-') != std::string::npos) {
         return AnonymizeUUid(printerId);
     }
-    return MaskStringTail(printerId);
+    return printerId;
 }
 
 std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)

@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cerrno>
-#include <cstdint>
 #include <ctime>
 #include <string>
 #include <sys/time.h>
@@ -3183,7 +3182,6 @@ void PrintServiceAbility::notifyAdapterJobChanged(
     cbInfo.jobId = jobId;
     cbInfo.jobState = static_cast<PrintJobState>(state);
     cbInfo.adapterState = static_cast<PrintDocumentAdapterState>(printAdapterListeningState);
-    cbInfo.fd = UINT32_MAX;
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
