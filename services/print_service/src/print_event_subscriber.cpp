@@ -19,6 +19,10 @@
 #include "print_log.h"
 #include "print_service_ability.h"
 
+#ifdef REMOTE_SERVICE_ENABLE
+#include "remote_printer_manager.h"
+#endif
+
 namespace OHOS {
 namespace Print {
 PrintEventSubscriber::PrintEventSubscriber(
@@ -36,6 +40,9 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
         PrintServiceAbility::GetInstance()->RefreshPrinterStatusOnSwitchUser();
 #endif // ENTERPRISE_ENABLE
 
+#ifdef REMOTE_SERVICE_ENABLE
+        RemotePrinterManager::GetInstance().Disconnect();
+#endif
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user switched, current userId: %{public}d", userId);
         PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(userId);

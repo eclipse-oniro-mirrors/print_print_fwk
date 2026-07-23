@@ -773,14 +773,16 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
-    vendorManager.StartDiscovery();
 #ifdef REMOTE_SERVICE_ENABLE
     AppExecFwk::BundleInfo bundleInfo;
     if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
         PRINT_HILOGI("Remote bundle detected, start printer discovery");
-        DelayedSingleton<RemotePrinterManager>::GetInstance()->StartPrinterDiscovery();
+        RemotePrinterManager::GetInstance().StartPrinterDiscovery();
+        PRINT_HILOGI("Remote discovery started, skip vendor and extension discovery");
+        return E_PRINT_NONE;
     }
 #endif
+    vendorManager.StartDiscovery();
     return StartExtensionDiscovery(extensionIds);
 }
 
@@ -2748,7 +2750,7 @@ void PrintServiceAbility::StopDiscoveryInternal()
     AppExecFwk::BundleInfo bundleInfo;
     if (GetBundleInfo(bundleInfo) && bundleInfo.signatureInfo.appIdentifier == REMOTE_EXT_BUNDLE_ID) {
         PRINT_HILOGI("Remote bundle detected, stop printer discovery");
-        DelayedSingleton<RemotePrinterManager>::GetInstance()->StopPrinterDiscovery();
+        RemotePrinterManager::GetInstance().StopPrinterDiscovery();
     }
 #endif
     printSystemData_.ClearDiscoveredPrinterList();
@@ -2872,12 +2874,20 @@ bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
     return false;
 }
 
-bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &printerId)
+bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &uri)
 {
-    PRINT_HILOGI("[Printer: %{public}s] RemoveRemotePrinterInfo start",
-        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    PRINT_HILOGI("RemoveRemotePrinterInfo start, uri: %{private}s", uri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    return RemoveSinglePrinterInfo(printerId);
+    auto discoveredPrinters = printSystemData_.GetDiscoveredPrinterInfo();
+    for (const auto &entry : discoveredPrinters) {
+        if (entry.second->HasUri() && entry.second->GetUri() == uri) {
+            PRINT_HILOGI("URI matched, remove printer: %{public}s",
+                PrintUtils::AnonymizePrinterId(entry.first).c_str());
+            return RemoveSinglePrinterInfo(entry.first);
+        }
+    }
+    PRINT_HILOGE("printer not found by uri, ignore it");
+    return false;
 }
 
 #endif

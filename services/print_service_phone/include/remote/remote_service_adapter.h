@@ -36,6 +36,7 @@ public:
     static RemoteServiceAdapter& GetInstance();
     
     bool BindService();
+    bool UnbindService();
     
     bool IsConnected();
     
