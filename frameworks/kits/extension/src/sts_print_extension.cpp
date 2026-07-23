@@ -121,7 +121,6 @@ void StsPrintExtension::OnStart(const AAFwk::Want &want)
     bool ret = CallObjectMethod(false, "onCreate", signature, nullptr);
     if (!ret) {
         PRINT_HILOGE("CallObjectMethod onCreate failed, stop extension");
-        OnStop();
         return;
     }
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);

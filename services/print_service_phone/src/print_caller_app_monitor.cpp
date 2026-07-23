@@ -80,9 +80,7 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
 void PrintCallerAppMonitor::RemoveCallerAppFromMap()
 {
     PRINT_HILOGI("RemoveCallerAppFromMap enter");
-    auto printBMSHelper = DelayedSingleton<PrintBMSHelper>::GetInstance();
-    PRINT_CHECK_NULL_RETURN_VOID(printBMSHelper);
-    std::string bundleName = printBMSHelper->QueryCallerBundleName();
+    std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::lock_guard<std::mutex> lock(callerMapMutex_);
     auto iter = callerMap_.find(callerPid);

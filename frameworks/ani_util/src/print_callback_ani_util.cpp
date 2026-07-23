@@ -134,9 +134,9 @@ bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_obj
         return false;
     }
     if (error == nullptr) {
-        ani_ref nullRef = nullptr;
-        env->GetNull(&nullRef);
-        error = reinterpret_cast<ani_object>(nullRef);
+        ani_ref undefinedRef = nullptr;
+        env->GetUndefined(&undefinedRef);
+        error = reinterpret_cast<ani_object>(undefinedRef);
     }
     if (result == nullptr) {
         ani_ref undefinedRef = nullptr;

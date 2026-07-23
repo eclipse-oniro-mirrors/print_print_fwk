@@ -317,8 +317,6 @@ private:
             static_cast<int32_t>(params.connectId));
         if (!context->ConnectAbilityWithAccount(params.want, params.accountId, params.connection)) {
             params.connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
-            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Connect Ability failed."));
-            return;
         }
         napi_value undefineResult = nullptr;
         napi_get_undefined(engine, &undefineResult);

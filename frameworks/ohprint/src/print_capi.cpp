@@ -264,17 +264,6 @@ Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList)
     }
     for (size_t i = 0; i < count; ++i) {
         printerIdList->list[i] = CopyString(printerNameList[i]);
-        if (printerIdList->list[i] == nullptr) {
-            PRINT_HILOGW("CopyString failed at index %{public}zu", i);
-            for (size_t j = 0; j < i; ++j) {
-                delete[] printerIdList->list[j];
-                printerIdList->list[j] = nullptr;
-            }
-            delete[] printerIdList->list;
-            printerIdList->list = nullptr;
-            printerIdList->count = 0;
-            return PRINT_ERROR_GENERIC_FAILURE;
-        }
     }
     printerIdList->count = count;
     return PRINT_ERROR_NONE;

@@ -570,39 +570,9 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
     return E_SCAN_NONE;
 }
 
-void ScanServiceAbility::FillOptionConstraint(SaneOptionDescriptor &saneDesc, ScanOptionDescriptor &desc)
-{
-    if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_RANGE) {
-        ScanRange scanRange;
-        scanRange.SetMinValue(saneDesc.minValue_);
-        scanRange.SetMaxValue(saneDesc.maxValue_);
-        scanRange.SetQuantValue(saneDesc.quantValue_);
-        desc.SetOptionConstraintRange(scanRange);
-    } else if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_WORD_LIST) {
-        std::vector<int32_t> optionConstraintNumber;
-        for (const auto &number : saneDesc.optionConstraintNumber_) {
-            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST : %{public}d", number);
-            optionConstraintNumber.push_back(number);
-        }
-        desc.SetOptionConstraintNumber(optionConstraintNumber);
-    } else if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_STRING_LIST) {
-        std::vector<std::string> optionConstraintString;
-        std::vector<std::string> &stringList = saneDesc.optionConstraintString_;
-        for (auto &str : stringList) {
-            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST %{public}s", str.c_str());
-            optionConstraintString.push_back(str);
-        }
-        desc.SetOptionConstraintString(optionConstraintString);
-    }
-}
-
 int32_t ScanServiceAbility::GetScanOptionDesc(
     const std::string scannerId, const int32_t optionIndex, ScanOptionDescriptor &desc)
 {
-    if (optionIndex < 0) {
-        SCAN_HILOGE("optionIndex is invalid: [%{public}d]", optionIndex);
-        return E_SCAN_INVALID_PARAMETER;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
@@ -625,7 +595,28 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
     desc.SetOptionType(saneDesc.optionType_);
     desc.SetOptionUnit(saneDesc.optionUnit_);
     desc.SetOptionConstraintType(saneDesc.optionConstraintType_);
-    FillOptionConstraint(saneDesc, desc);
+    if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_RANGE) {
+        ScanRange scanRange;
+        scanRange.SetMinValue(saneDesc.minValue_);
+        scanRange.SetMaxValue(saneDesc.maxValue_);
+        scanRange.SetQuantValue(saneDesc.quantValue_);
+        desc.SetOptionConstraintRange(scanRange);
+    } else if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_WORD_LIST) {
+        std::vector<int32_t> optionConstraintNumber;
+        for (const auto &number : saneDesc.optionConstraintNumber_) {
+            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST : %{public}d", number);
+            optionConstraintNumber.push_back(number);
+        }
+        desc.SetOptionConstraintNumber(optionConstraintNumber);
+    } else if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_STRING_LIST) {
+        std::vector<std::string> optionConstraintString;
+        std::vector<std::string> &stringList = saneDesc.optionConstraintString_;
+        for (auto &str : stringList) {
+            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST %{public}s", str.c_str());
+            optionConstraintString.push_back(str);
+        }
+        desc.SetOptionConstraintString(optionConstraintString);
+    }
     desc.Dump();
     SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc end");
     return E_SCAN_NONE;

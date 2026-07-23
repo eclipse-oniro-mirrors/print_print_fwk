@@ -864,7 +864,7 @@ int32_t PrintServiceAbility::DestroyExtension()
     PRINT_HILOGI("DestroyExtension start.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    for (auto& extension : extensionStateList_) {
+    for (auto extension : extensionStateList_) {
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
         }
@@ -5435,7 +5435,6 @@ int32_t PrintServiceAbility::SetPrinterCapabilityAndRegister(const std::string &
     const std::string &ppdName, const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo)
 {
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_GENERIC_FAILURE);
     PrinterCapability printerCaps;
     int32_t ret = QueryPrinterCapabilityFromPPD(printerName, printerCaps, ppdName);
     if (ret != E_PRINT_NONE) {

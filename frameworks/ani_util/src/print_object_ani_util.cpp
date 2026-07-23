@@ -148,7 +148,7 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
         ani_int enumValue;
         if (env->EnumItem_GetValue_Int(reinterpret_cast<ani_enum_item>(ref), &enumValue) != ANI_OK) {
             PRINT_HILOGE("EnumItem_GetValue_Int failed, index: %{public}zu", i);
-            continue;
+            return false;
         }
         res.push_back(enumValue);
     }
