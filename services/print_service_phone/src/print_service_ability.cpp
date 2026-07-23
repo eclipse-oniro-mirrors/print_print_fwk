@@ -1211,25 +1211,9 @@ int32_t PrintServiceAbility::AddPrinterToCups(
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
-    const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps)
+int32_t PrintServiceAbility::QueryPrinterCapabilityByUriInternal(
+    const std::string &printerUri, const std::string &standardizeId, PrinterCapability &printerCaps)
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        ManualStart();
-        if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
-            PRINT_HILOGE("no permission to access print service");
-            return E_PRINT_NO_PERMISSION;
-        }
-    }
-    PRINT_HILOGI("QueryPrinterCapabilityByUri start.");
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::string standardizeId = printerId;
-    if (standardizeId.find(extensionId) == std::string::npos && vendorManager.ExtractVendorName(printerId).empty()) {
-        standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
-    }
-    PRINT_HILOGI("[Printer: %{public}s] extensionId = %{public}s",
-        PrintUtils::AnonymizePrinterId(standardizeId).c_str(), extensionId.c_str());
 #ifdef CUPS_ENABLE
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(standardizeId);
@@ -1250,15 +1234,43 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
         }
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
-        DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(
+        int32_t capRet = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(
             printerInfo->GetPrinterName(), printerCaps, ppdName);
+        if (capRet != E_PRINT_NONE) {
+            PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", capRet);
+            return capRet;
+        }
     } else {
-        DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(
-            printerUri, printerId, printerCaps);
+        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(
+            printerUri, standardizeId, printerCaps);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("QueryPrinterCapabilityByUri error = %{public}d.", ret);
+            return ret;
+        }
     }
 #endif  // CUPS_ENABLE
-    PRINT_HILOGI("QueryPrinterCapabilityByUri end.");
     return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
+    const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGI("QueryPrinterCapabilityByUri start.");
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string standardizeId = printerId;
+    if (standardizeId.find(extensionId) == std::string::npos && vendorManager.ExtractVendorName(printerId).empty()) {
+        standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    }
+    PRINT_HILOGI("[Printer: %{public}s] extensionId = %{public}s",
+        PrintUtils::AnonymizePrinterId(standardizeId).c_str(), extensionId.c_str());
+    int32_t ret = QueryPrinterCapabilityByUriInternal(printerUri, standardizeId, printerCaps);
+    PRINT_HILOGI("QueryPrinterCapabilityByUri end.");
+    return ret;
 }
 
 int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences)

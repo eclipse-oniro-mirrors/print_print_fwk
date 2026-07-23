@@ -96,6 +96,8 @@ public:
         const std::string &printerUri, const std::string &printerName, const std::string &printerMake) override;
     int32_t QueryPrinterCapabilityByUri(
         const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps) override;
+    int32_t QueryPrinterCapabilityByUriInternal(const std::string &printerUri, const std::string &standardizeId,
+        PrinterCapability &printerCaps);
     void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
     int32_t PrintByAdapter(
         const std::string jobName, const PrintAttributes &printAttributes, std::string &taskId) override;
