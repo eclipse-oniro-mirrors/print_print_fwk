@@ -1114,7 +1114,7 @@ int32_t PrintServiceAbility::QueryPrinterProperties(
         PRINT_HILOGW("no printerInfo");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName().c_str());
+    PRINT_HILOGD("printerInfo %{public}s", PrintUtils::AnonymizePrinterName(printerInfo.GetPrinterName()).c_str());
     for (auto &key : keyList) {
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
         if (key == "printerPreference" && printerInfo.HasPreferences()) {
@@ -1800,6 +1800,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
         jobOrderList_.insert(std::make_pair(jobOrderId, jobId));
     } else {
         PRINT_HILOGE("UpdateQueuedJobList out of MAX_JOBQUEUE_NUM or jobId not found");
+        return;
     }
 
     int32_t userId = GetCurrentUserId();
@@ -2130,7 +2131,8 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     PRINT_HILOGD("CheckPrinterUriDifferent, old = %{private}s, new = %{private}s",
         oldUri.c_str(), newUri.c_str());
     if (oldUri != newUri) {
-        PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success", info->GetPrinterName().c_str());
+        PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success",
+            PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
         return true;
     }
 
@@ -3065,7 +3067,13 @@ int32_t PrintServiceAbility::RegisterExtCallback(
         return E_PRINT_INVALID_PARAMETER;
     }
     CallbackEventType eventType = static_cast<CallbackEventType>(CallbackEventType::EXTCB_START_DISCOVERY + callbackId);
-    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(eventType, extensionId, listener);
+    bool ret = DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterExtensionListener(eventType,
+        extensionId, listener);
+    if (!ret) {
+        PRINT_HILOGE("RegisterExtensionListener failed, extensionId=%{public}s, callbackId=%{public}d",
+            extensionId.c_str(), callbackId);
+        return E_PRINT_GENERIC_FAILURE;
+    }
     PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback end.");
     return E_PRINT_NONE;
 }
@@ -3921,7 +3929,8 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
         return E_PRINT_NO_PERMISSION;
     }
 
-    PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterInDiscovery start", printerInfo.GetPrinterName().c_str());
+    PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterInDiscovery start",
+        PrintUtils::AnonymizePrinterName(printerInfo.GetPrinterName()).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
@@ -3992,7 +4001,8 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     }
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterInSystem start", printerInfo.GetPrinterName().c_str());
+    PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterInSystem start",
+        PrintUtils::AnonymizePrinterName(printerInfo.GetPrinterName()).c_str());
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
     std::string printerId = printerInfo.GetPrinterId();
@@ -4247,7 +4257,8 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
 
 bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
-    PRINT_HILOGI("[Printer: %{public}s] UpdateSinglePrinterInfo start", info.GetPrinterName().c_str());
+    PRINT_HILOGI("[Printer: %{public}s] UpdateSinglePrinterInfo start",
+        PrintUtils::AnonymizePrinterName(info.GetPrinterName()).c_str());
     std::string printExtId = info.GetPrinterId();
     printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
 
@@ -4599,7 +4610,8 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
         PRINT_HILOGW("printerInfo is null");
         return;
     }
-    PRINT_HILOGI("[Printer: %{public}s] OnPrinterAddedToCups start", printerInfo->GetPrinterName().c_str());
+    PRINT_HILOGI("[Printer: %{public}s] OnPrinterAddedToCups start",
+        PrintUtils::AnonymizePrinterName(printerInfo->GetPrinterName()).c_str());
     auto globalPrinterId = printerInfo->GetPrinterId();
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
@@ -6069,7 +6081,13 @@ void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, 
     Json::Value advanceChoiceJson;
     Json::Value advanceChoiceJsonDefaultLanguage;
     Json::Value advanceOptionTextJson;
+    if (!singleOptArray.isArray()) {
+        return;
+    }
     for (const auto &item: singleOptArray) {
+        if (!item.isString()) {
+            continue;
+        }
         advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
     }
     advanceChoiceJson["default"] = advanceChoiceJsonDefaultLanguage;
