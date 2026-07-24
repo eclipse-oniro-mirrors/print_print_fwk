@@ -23,7 +23,7 @@
 #include "print_util.h"
 
 namespace OHOS::Print {
-napi_status ParsePrinterInfoInput(napi_env env, size_t argc, napi_value *argv,
+napi_status NapiPrintExt::ParsePrinterInfoInput(napi_env env, size_t argc, napi_value *argv,
     const std::shared_ptr<NapiPrintExtContext> &context)
 {
     PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
@@ -85,7 +85,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
-napi_status ParsePrinterIdInput(napi_env env, size_t argc, napi_value *argv,
+napi_status NapiPrintExt::ParsePrinterIdInput(napi_env env, size_t argc, napi_value *argv,
     const std::shared_ptr<NapiPrintExtContext> &context)
 {
     PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
