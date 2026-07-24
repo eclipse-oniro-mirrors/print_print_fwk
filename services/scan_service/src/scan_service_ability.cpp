@@ -752,7 +752,7 @@ int32_t ScanServiceAbility::GetScanParametersInternal(const std::string &scanner
         return ScanServiceUtils::ConvertErro(status);
     }
     int32_t frameValue = static_cast<int32_t>(saneParams.format_);
-    if (frameValue < SANE_FRAME_GRAY || frameValue > SANE_FRAME_BLUE) {
+    if (frameValue < SANE_FRAME_GRAY || frameValue >= SANE_FRAME_MAX) {
         SCAN_HILOGE("Invalid scan format: [%{public}d]", frameValue);
         return E_SCAN_INVALID_PARAMETER;
     }
