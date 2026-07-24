@@ -46,7 +46,7 @@ bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
-    if (length < 0 || length > MAX_ARRAY_LENGTH) {
+    if (length < 0 || length > MAX_ARRAY_LENGTH || static_cast<int32_t>(length) != length) {
         PRINT_HILOGE("invalid length: %{public}f, name : %{public}s", length, name);
         return false;
     }
