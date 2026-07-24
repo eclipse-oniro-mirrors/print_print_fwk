@@ -121,6 +121,7 @@ std::vector<PrintSharedHost> SmbHostSearchHelper::GetSharedHosts()
         return scannedHosts_->GetPrintSharedHost();
     }
     if (sock_ >= FD_SETSIZE) {
+        PRINT_HILOGE("sock_ fd exceeds FD_SETSIZE");
         return scannedHosts_->GetPrintSharedHost();
     }
     fd_set readSet;
@@ -458,6 +459,7 @@ bool SmbHostSearchHelper::TestSmbHostAlive(const std::string& ip, int32_t timeou
         return false;
     }
     if (sock_ >= FD_SETSIZE) {
+        PRINT_HILOGE("sock_ fd exceeds FD_SETSIZE");
         return false;
     }
     struct in_addr destAddr;
