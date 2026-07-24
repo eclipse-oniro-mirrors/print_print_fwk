@@ -248,6 +248,8 @@ enum PrintDirectionMode {
 enum PrintColorMode {
     PRINT_COLOR_MODE_MONOCHROME = 0,
     PRINT_COLOR_MODE_COLOR = 1,
+    PRINT_COLOR_MODE_AUTO = 2,
+    PRINT_COLOR_MODE_MAX,
 };
 
 enum PrintDuplexMode {

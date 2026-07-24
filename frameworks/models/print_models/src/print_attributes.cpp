@@ -14,7 +14,6 @@
  */
 
 #include "print_attributes.h"
-#include "ohprint.h"
 #include "print_constant.h"
 #include "print_log.h"
 
@@ -321,7 +320,7 @@ bool PrintAttributes::ReadModeAttrsFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasColorMode_), false);
     if (hasColorMode_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(colorMode_), false);
-        if (colorMode_ > COLOR_MODE_MAX) {
+        if (colorMode_ > PRINT_COLOR_MODE_MAX) {
             return false;
         }
     }
