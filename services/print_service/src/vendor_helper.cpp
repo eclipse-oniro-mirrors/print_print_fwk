@@ -46,14 +46,6 @@ char *CopyString(const std::string &source)
     return dest;
 }
 
-std::string AnonymizeIpInString(const std::string &str)
-{
-    static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-        R"(|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)"
-        R"(|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})");
-    return std::regex_replace(str, ipRegex, "*");
-}
-
 template <typename T1, typename T2>
 bool ConvertArrayToList(const T1 *array, uint32_t count, std::vector<T2> &list, bool (*convertType)(const T1 &, T2 &))
 {
