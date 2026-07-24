@@ -103,11 +103,12 @@ std::string PrintCloudConfigManager::GetVersionFromDir(const std::string &dir)
         return "";
     }
     std::string versionPath = dir + VERSION_FILE_NAME;
-    if (!PrintUtils::IsPathValid(versionPath)) {
+    std::string resolvedVersionPath;
+    if (!PrintUtils::ResolveAndValidatePath(versionPath, resolvedVersionPath)) {
         PRINT_HILOGW("version path is invalid: %{public}s", versionPath.c_str());
         return "";
     }
-    std::ifstream file(versionPath);
+    std::ifstream file(resolvedVersionPath);
     if (!file.is_open()) {
         PRINT_HILOGW("version file not found: %{public}s", versionPath.c_str());
         return "";
@@ -201,11 +202,12 @@ std::string PrintCloudConfigManager::MatchPrinterMakeInCloudConfig(const std::st
 
 bool PrintCloudConfigManager::LoadCloudConfigFile(const std::string &filePath, std::string &cloudConfigContent)
 {
-    if (!PrintUtils::IsPathValid(filePath)) {
+    std::string resolvedFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(filePath, resolvedFilePath)) {
         PRINT_HILOGE("Invalid cloud config file path!");
         return false;
     }
-    std::ifstream file(filePath);
+    std::ifstream file(resolvedFilePath);
     if (!file.is_open()) {
         PRINT_HILOGE("Failed to open file: %{public}s, error: %{public}s", filePath.c_str(), strerror(errno));
         return false;

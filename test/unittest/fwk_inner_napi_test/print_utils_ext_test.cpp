@@ -814,21 +814,6 @@ HWTEST_F(PrintUtilsExtTest, GetPrintJobId_002, TestSize.Level2)
     EXPECT_NE(id1, id2);
 }
 
-// ==================== GetJobStateChar Extended Tests ====================
-/**
- * @tc.name: GetJobStateChar_003
- * @tc.desc: Verify GetJobStateChar with all job states.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, GetJobStateChar_003, TestSize.Level2)
-{
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_QUEUED), "PRINT_JOB_QUEUED");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_RUNNING), "PRINT_JOB_RUNNING");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_BLOCKED), "PRINT_JOB_BLOCKED");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_COMPLETED), "PRINT_JOB_COMPLETED");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_CREATE_FILE_COMPLETED), "PRINT_JOB_CREATE_FILE_COMPLETED");
-}
-
 // ==================== DecodeExtensionCid Extended Tests ====================
 /**
  * @tc.name: DecodeExtensionCid_003

@@ -697,16 +697,17 @@ void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName)
 {
     std::string ppdFilePath = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir() + ppdName;
-    if (!PrintUtils::IsPathValid(ppdFilePath)) {
+    std::string resolvedPpdFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
         return E_PRINT_INVALID_PARAMETER;
     }
-    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", ppdFilePath.c_str());
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", resolvedPpdFilePath.c_str());
     char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
     if (locale == nullptr) {
         PRINT_HILOGE("setlocale fail");
         return E_PRINT_FILE_IO;
     }
-    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
+    ppd_file_t *ppd = ppdOpenFile(resolvedPpdFilePath.c_str());
     if (ppd == nullptr) {
         PRINT_HILOGE("Open PPD File fail");
         return E_PRINT_FILE_IO;

@@ -477,10 +477,12 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
 
 int32_t NapiScanUtils::OpenFile(const std::string &filePath)
 {
-    if (!IsPathValid(filePath)) {
+    char resolvedPath[PATH_MAX + 1] = { 0 };
+    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr) {
+        SCAN_HILOGE("invalid file path!");
         return SCAN_INVALID_ID;
     }
-    int32_t fd = open(filePath.c_str(), O_RDONLY);
+    int32_t fd = open(resolvedPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     SCAN_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -491,13 +493,19 @@ int32_t NapiScanUtils::OpenFile(const std::string &filePath)
 
 bool NapiScanUtils::IsPathValid(const std::string &filePath)
 {
-    auto path = filePath.substr(0, filePath.rfind('/'));
-    char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
-        strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+    std::string resolvedPath;
+    return ResolveAndValidatePath(filePath, resolvedPath);
+}
+
+bool NapiScanUtils::ResolveAndValidatePath(const std::string &filePath, std::string &resolvedPath)
+{
+    char buf[PATH_MAX + 1] = { 0 };
+    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), buf) == nullptr ||
+        strcmp(buf, filePath.c_str()) != 0) {
         SCAN_HILOGE("invalid file path!");
         return false;
     }
+    resolvedPath = buf;
     return true;
 }
 

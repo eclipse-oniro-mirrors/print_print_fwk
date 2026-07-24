@@ -256,8 +256,8 @@ private:
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
-    void CancelPrintJobHandleCallback(const std::shared_ptr<PrintUserData> userData,
-        const std::string& extensionId, const std::string &jobId);
+    void CancelPrintJobHandleCallback(const std::string& extensionId,
+        const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);

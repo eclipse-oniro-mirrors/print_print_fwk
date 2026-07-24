@@ -315,11 +315,12 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
     if (fileName.find("file://") == 0 || fileName.find("fd://") == 0 || fileName.find("content://") == 0) {
         return true;
     }
-    if (!PrintUtils::IsPathValid(fileName)) {
+    std::string resolvedFileName;
+    if (!PrintUtils::ResolveAndValidatePath(fileName, resolvedFileName)) {
         PRINT_HILOGE("invalid file path!");
         return false;
     }
-    auto file = fopen(fileName.c_str(), "rb");
+    auto file = fopen(resolvedFileName.c_str(), "rb");
     if (file != nullptr) {
         int fcloseResult = fclose(file);
         if (fcloseResult != 0) {
