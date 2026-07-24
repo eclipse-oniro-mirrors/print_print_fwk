@@ -4348,9 +4348,7 @@ bool PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &uri, Pr
 bool PrintServiceAbility::QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status)
 {
 #ifdef CUPS_ENABLE
-    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, false);
-    return printCupsClient->QueryPrinterStatusByUri(uri, status) == E_PRINT_NONE;
+    return DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterStatusByUri(uri, status) == E_PRINT_NONE;
 #else
     return false;
 #endif
