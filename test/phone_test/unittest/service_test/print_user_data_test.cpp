@@ -15,12 +15,13 @@
 
 #include <gtest/gtest.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <vector>
 #include <string>
 #include <map>
+#include <fstream>
 #include "printer_info.h"
-#include "iprint_callback.h"
-#define private public
+#include "iprint_callback.h"#define private public
 #include "print_user_data.h"
 #undef private
 #include "print_constant.h"
@@ -1188,5 +1189,59 @@ HWTEST_F(PrintUserDataTest, OpenCacheFileFd_WithDefaultOpenMode_ReturnsFalse, Te
     bool result = userData->OpenCacheFileFd(jobId, fdList, O_RDONLY);
     EXPECT_FALSE(result);
 }
+HWTEST_F(PrintUserDataTest, DeleteCacheFileFromUserData_EmptyJobId, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    EXPECT_FALSE(userData->DeleteCacheFileFromUserData(""));
+}
+
+HWTEST_F(PrintUserDataTest, DeleteCacheFileFromUserData_NoCacheDir, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(99999);
+    EXPECT_FALSE(userData->DeleteCacheFileFromUserData("testJob"));
+}
+
+HWTEST_F(PrintUserDataTest, DeleteCacheFileFromUserData_NoMatchingFiles, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+    std::string cacheDir = userData->ObtainUserCacheDirectory();
+    char canonicalPath[PATH_MAX] = {0};
+    if (realpath(cacheDir.c_str(), canonicalPath) == nullptr) {
+        return;
+    }
+    EXPECT_TRUE(userData->DeleteCacheFileFromUserData("nonexistent_prefix_job"));
+}
+
+HWTEST_F(PrintUserDataTest, DeleteCacheFileFromUserData_DeletesMatchingFiles, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(100);
+    std::string cacheDir = userData->ObtainUserCacheDirectory();
+    char canonicalPath[PATH_MAX] = {0};
+    if (realpath(cacheDir.c_str(), canonicalPath) == nullptr) {
+        return;
+    }
+    std::string testFile1 = std::string(canonicalPath) + "/testJob_cache1.pdf";
+    std::string testFile2 = std::string(canonicalPath) + "/testJob_cache2.pdf";
+    std::string testFile3 = std::string(canonicalPath) + "/otherJob_cache.pdf";
+    {
+        std::ofstream f1(testFile1);
+        std::ofstream f2(testFile2);
+        std::ofstream f3(testFile3);
+    }
+    EXPECT_EQ(access(testFile1.c_str(), F_OK), 0);
+    EXPECT_EQ(access(testFile2.c_str(), F_OK), 0);
+    EXPECT_EQ(access(testFile3.c_str(), F_OK), 0);
+
+    EXPECT_TRUE(userData->DeleteCacheFileFromUserData("testJob"));
+    EXPECT_NE(access(testFile1.c_str(), F_OK), 0);
+    EXPECT_NE(access(testFile2.c_str(), F_OK), 0);
+    EXPECT_EQ(access(testFile3.c_str(), F_OK), 0);
+
+    remove(testFile3.c_str());
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -124,8 +124,8 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
-    auto nativePrintTask = new AniPrintTask(env);
-    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, static_cast<ani_object>(printAdapter));
+    auto nativePrintTask = new (std::nothrow) AniPrintTask(env);
+    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, static_cast<ani_object>(printAdapter));
     if (nativePrintTask == nullptr) {
         PRINT_HILOGE("nativePrintTask is nullptr");
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
@@ -138,7 +138,12 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
         return;
     }
     int32_t ret = nativePrintTask->StartPrintWithAttributes(jobName, ctx, attributes, callbackWrapper);
-    AsyncCallback(env, callback, CreateStsError(env, ret), AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
+    ani_object taskObj = AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask);
+    if (taskObj == nullptr) {
+        PRINT_HILOGE("CreatePrintTask failed");
+        delete nativePrintTask;
+    }
+    AsyncCallback(env, callback, CreateStsError(env, ret), taskObj);
 }
 
 static void QueryAllPrinterExtensionInfosNative(ani_env *env, ani_object callback)

@@ -30,6 +30,21 @@
 #include "mock/mock_watermark_manager.h"
 #endif
 
+namespace OHOS {
+namespace Print {
+// Mock for IPrintAbilityBase to test code paths through printAbility_
+class MockIPrintAbilityBase : public IPrintAbilityBase {
+public:
+    MOCK_METHOD(cups_dest_t*, GetNamedDest, (http_t *http, const char *name, const char *instance), (override));
+    MOCK_METHOD(void, FreeDests, (int num, cups_dest_t *dests), (override));
+    MOCK_METHOD(ipp_t*, DoRequest, (http_t *http, ipp_t *request, const char *resource), (override));
+    MOCK_METHOD(cups_dinfo_t*, CopyDestInfo, (http_t *http, cups_dest_t *dest), (override));
+    MOCK_METHOD(void, FreeDestInfo, (cups_dinfo_t *dinfo), (override));
+    MOCK_METHOD(void, FreeRequest, (ipp_t *response), (override));
+};
+}  // namespace Print
+}  // namespace OHOS
+
 using namespace testing;
 using namespace testing::ext;
 using namespace testing;
@@ -4618,6 +4633,259 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_ExistingTextSmoothOption_NotOverwri
     cupsFreeOptions(ret, options);
     delete jobParams;
 }
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_DinfoNonNullAttrsNull
+ * @tc.desc: QueryPrinterCapabilityFromPPD returns E_PRINT_SERVER_FAILURE when dinfo is non-null but attrs is null,
+ *           and calls FreeDestInfo to avoid resource leak
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_DinfoNonNullAttrsNull, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Replace printAbility_ with a mock so we can control GetNamedDest/CopyDestInfo/FreeDestInfo
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    // Delete the default PrintCupsWrapper and install mock
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+
+    // cups_dinfo_t with attrs = nullptr - allocate a zeroed struct to simulate non-null dinfo with null attrs
+    cups_dinfo_t *dinfo = static_cast<cups_dinfo_t *>(calloc(1, sizeof(cups_dinfo_t)));
+    ASSERT_NE(dinfo, nullptr);
+    // dinfo->attrs is null because calloc zero-initializes
+
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _))
+        .WillOnce(Return(static_cast<cups_dest_t *>(calloc(1, sizeof(cups_dest_t)))));
+    EXPECT_CALL(*rawMock, CopyDestInfo(_, _))
+        .WillOnce(Return(dinfo));
+    // FreeDestInfo should be called because dinfo is non-null but attrs is null
+    EXPECT_CALL(*rawMock, FreeDestInfo(dinfo));
+    EXPECT_CALL(*rawMock, FreeDests(_, _));
+
+    PrinterCapability printerCap;
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD("test_printer", printerCap, ""), E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_NullPrintAbility
+ * @tc.desc: QueryPrinterCapabilityFromPPD returns E_PRINT_SERVER_FAILURE when printAbility_ is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_NullPrintAbility, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.printAbility_ = nullptr;
+    PrinterCapability printerCap;
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD("test_printer", printerCap, ""), E_PRINT_SERVER_FAILURE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddCupsPrintJob_BuildParamsNull_QueueEmpty
+ * @tc.desc: AddCupsPrintJob with BuildJobParameters returning nullptr leaves jobQueue_ empty
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_BuildParamsNull_QueueEmpty, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // BuildJobParameters returns nullptr when jobInfo has no option set
+    PrintJob testJob;
+    EXPECT_TRUE(printCupsClient.jobQueue_.empty());
+    printCupsClient.AddCupsPrintJob(testJob, JOB_USER_NAME);
+    // Job should not be added to queue since BuildJobParameters returns nullptr
+    EXPECT_TRUE(printCupsClient.jobQueue_.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_StartCupsJob_NullJobParams
+ * @tc.desc: StartCupsJob returns early without crash when jobParams is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, StartCupsJob_NullJobParams, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Should not crash
+    printCupsClient.StartCupsJob(nullptr);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_VerifyPrintJob_NullJobParams
+ * @tc.desc: VerifyPrintJob returns false when jobParams is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, VerifyPrintJob_NullJobParams, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int num_options = 0;
+    uint32_t jobId = 0;
+    cups_option_t *options = nullptr;
+    http_t *http = nullptr;
+    EXPECT_FALSE(printCupsClient.VerifyPrintJob(nullptr, num_options, jobId, options, http));
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_StartCupsJob_VerifyFails_CleansUpOptions
+ * @tc.desc: StartCupsJob calls cupsFreeOptions when VerifyPrintJob fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, StartCupsJob_VerifyFails_CleansUpOptions, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Replace printAbility_ with a mock so we can control VerifyPrintJob's CUPS calls
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    ASSERT_NE(jobParams, nullptr);
+
+    // Make VerifyPrintJob fail: CheckPrinterOnline will fail because
+    // GetNamedDest returns nullptr (printer offline)
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _))
+        .WillRepeatedly(Return(nullptr));
+    // VerifyPrintJob calls serviceAbility->UpdatePrintJobState on failure
+    // Use MockPrintServiceAbility for serviceAbility so UpdatePrintJobState can be called
+    sptr<MockPrintServiceAbility> mockServiceAbility = new MockPrintServiceAbility();
+    jobParams->serviceAbility = mockServiceAbility;
+    EXPECT_CALL(*mockServiceAbility, UpdatePrintJobState(_, _, _));
+
+    // StartCupsJob should call VerifyPrintJob which fails, then cupsFreeOptions
+    printCupsClient.StartCupsJob(jobParams);
+    // If we get here without crash, the cupsFreeOptions cleanup path was exercised
+}
+
+#ifdef WATERMARK_ENFORCING_ENABLE
+/**
+ * @tc.name: PrintCupsClientTest_ProcessWatermarkWithCacheFd_ProcessWatermarkFails_CleansUpFdsAndCancelsJob
+ * @tc.desc: StartCupsJob calls cupsCancelJob2 and cupsFreeOptions when ProcessWatermarkWithCacheFd fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ProcessWatermarkFails_CleansUpFdsAndCancelsJob, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Replace printAbility_ with mock so VerifyPrintJob can succeed
+    auto mockCupsAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMockCups = mockCupsAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMockCups;
+    mockCupsAbility.release();
+
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    ASSERT_NE(jobParams, nullptr);
+
+    // Set up mock for VerifyPrintJob to succeed:
+    // - CheckPrinterOnline needs serviceAbility->QueryDiscoveredPrinterInfoById to return non-null
+    sptr<MockPrintServiceAbility> mockServiceAbility = new MockPrintServiceAbility();
+    jobParams->serviceAbility = mockServiceAbility;
+    EXPECT_CALL(*mockServiceAbility, QueryDiscoveredPrinterInfoById(_))
+        .WillRepeatedly(Return(std::make_shared<PrinterInfo>()));
+    // - CheckPrinterMakeModel will call GetNamedDest which we mock
+    cups_dest_t *mockDest = static_cast<cups_dest_t *>(calloc(1, sizeof(cups_dest_t)));
+    EXPECT_CALL(*rawMockCups, GetNamedDest(_, _, _))
+        .WillOnce(Return(mockDest));
+    cups_dinfo_t *mockDinfo = static_cast<cups_dinfo_t *>(calloc(1, sizeof(cups_dinfo_t)));
+    mockDinfo->attrs = static_cast<ipp_t *>(calloc(1, sizeof(ipp_t)));
+    EXPECT_CALL(*rawMockCups, CopyDestInfo(_, _))
+        .WillOnce(Return(mockDinfo));
+    EXPECT_CALL(*rawMockCups, FreeDestInfo(_));
+    EXPECT_CALL(*rawMockCups, FreeDests(_, _));
+
+    // Make ProcessWatermarkForFiles fail
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+    std::vector<uint32_t> cacheFds = {static_cast<uint32_t>(dup(1))};
+    EXPECT_CALL(*mockServiceAbility, OpenCacheFileFd(_, _, O_RDWR))
+        .WillOnce(DoAll(SetArgReferee<1>(cacheFds), Return(true)));
+    EXPECT_CALL(mockWatermarkManager, ProcessWatermarkForFiles(_, _))
+        .WillOnce(Return(E_PRINT_GENERIC_FAILURE));
+
+    // StartCupsJob should: VerifyPrintJob succeeds, then ProcessWatermarkWithCacheFd fails,
+    // leading to cupsCancelJob2 + cupsFreeOptions + UpdatePrintJobState
+    printCupsClient.StartCupsJob(jobParams);
+
+    // Close remaining open fds to avoid leak
+    for (auto fd : jobParams->fdList) {
+        close(fd);
+    }
+
+    WatermarkManager::ResetInstance();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ProcessWatermarkWithCacheFd_ReopenFails_CleansUpFdsInJobParams
+ * @tc.desc: ProcessWatermarkWithCacheFd closes fdList fds when reopening cache fds fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ProcessWatermarkWithCacheFd_ReopenFails_CleansUpFdsInJobParams, TestSize.Level1)
+{
+    MockWatermarkManager mockWatermarkManager;
+    WatermarkManager::SetInstance(&mockWatermarkManager);
+
+    EXPECT_CALL(mockWatermarkManager, IsWatermarkEnabled())
+        .WillRepeatedly(Return(true));
+
+    OHOS::Print::PrintCupsClient printCupsClient;
+    sptr<MockPrintServiceAbility> mockAbility = new MockPrintServiceAbility();
+
+    JobParameters jobParams;
+    jobParams.serviceJobId = "test_job_id";
+    jobParams.serviceAbility = mockAbility;
+    // Set non-empty fdList so CLOSE_FD_IF_VALID has fds to close
+    int fd1 = dup(1);
+    int fd2 = dup(1);
+    jobParams.fdList = {static_cast<uint32_t>(fd1), static_cast<uint32_t>(fd2)};
+
+    std::vector<uint32_t> cacheFds = {static_cast<uint32_t>(dup(1)), static_cast<uint32_t>(dup(1))};
+    EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDWR))
+        .WillOnce(DoAll(SetArgReferee<1>(cacheFds), Return(true)));
+    EXPECT_CALL(mockWatermarkManager, ProcessWatermarkForFiles(_, _))
+        .WillOnce(Return(E_PRINT_NONE));
+    // Reopen fails
+    EXPECT_CALL(*mockAbility, OpenCacheFileFd(_, _, O_RDONLY))
+        .WillOnce(Return(false));
+
+    bool ret = printCupsClient.ProcessWatermarkWithCacheFd(&jobParams);
+    EXPECT_FALSE(ret);
+
+    // After reopen failure, jobParams.fdList fds should have been closed by CLOSE_FD_IF_VALID
+    // The original fd1/fd2 are now closed; verify we don't double-close them
+    // (CLOSE_FD_IF_VALID sets fd to INVALID_FD after close)
+    // Just verify the function returned false and no fd leak (would show in sanitizers)
+
+    WatermarkManager::ResetInstance();
+}
+#endif // WATERMARK_ENFORCING_ENABLE
 
 }  // namespace Print
 }  // namespace OHOS

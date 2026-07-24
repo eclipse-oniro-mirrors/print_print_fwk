@@ -3433,13 +3433,13 @@ void PrintServiceAbility::AddToPrintJobList(const std::string jobId, const std::
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("[Job Id: %{public}s] AddToPrintJobList start", jobId.c_str());
     UpdatePrintUserMap();
-    printJobList_.insert(std::make_pair(jobId, printjob));
     int32_t userId = GetCurrentUserId();
     auto userData = GetCurrentUserData();
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return;
     }
+    printJobList_.insert(std::make_pair(jobId, printjob));
     userJobMap_.insert(std::make_pair(jobId, userId));
     userData->AddToPrintJobList(jobId, printjob);
 }

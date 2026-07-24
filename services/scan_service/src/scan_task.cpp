@@ -159,6 +159,12 @@ int32_t ScanTask::WriteImageHeader(const ScanParameters &parm, uint16_t dpi)
         return E_SCAN_INVALID_PARAMETER;
     }
 
+    size_t totalBytes = static_cast<size_t>(pixMap->GetByteCount());
+    if (memset_s(picBuf_, totalBytes, 0, totalBytes) != 0) {
+        SCAN_HILOGE("Zero-initialize pixel buffer failed");
+        return E_SCAN_GENERIC_FAILURE;
+    }
+
     dpi_ = dpi;
     rowWriteIdx_ = 0;
     colWriteIdx_ = 0;

@@ -53,6 +53,9 @@ T *CopyArray(const std::vector<T> &list, uint32_t &count)
     if (len == 0) {
         return nullptr;
     }
+    if (len > UINT32_MAX) {
+        return nullptr;
+    }
     T *dest = new (std::nothrow) T[len];
     if (dest == nullptr) {
         return nullptr;
@@ -65,7 +68,7 @@ T *CopyArray(const std::vector<T> &list, uint32_t &count)
     for (size_t i = 0; i < len; i++) {
         *(dest + i) = list[i];
     }
-    count = len;
+    count = static_cast<uint32_t>(len);
     return dest;
 }
 

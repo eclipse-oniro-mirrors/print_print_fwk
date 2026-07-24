@@ -31,7 +31,7 @@ class SaneServerManager : public SystemAbility, public SaneBackendsStub {
 public:
     SaneServerManager(int32_t saId, bool runOnCreate);
     SaneServerManager();
-    ~SaneServerManager() override = default;
+    ~SaneServerManager() override;
 
     void OnStart() override;
 
@@ -51,6 +51,7 @@ public:
         SanePictureData& pictureData, int32_t& status) override;
     ErrCode UnloadSystemAbility() override;
 private:
+    void ReleaseResources();
     bool CheckPermission();
     SANE_Handle GetScanHandle(const std::string &scannerId);
     SaneStatus GetControlOption(SANE_Handle& handle, const SaneControlParam& controlParam, SaneOutParam& outParam);

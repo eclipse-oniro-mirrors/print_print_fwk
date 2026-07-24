@@ -79,6 +79,7 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
     ret = client->GetScannerList();
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("Failed to GetScannerList");
+        client->Off("", context.GetRegisterType());
         return ScanContext::StatusConvert(ret);
     }
     return SCAN_ERROR_NONE;

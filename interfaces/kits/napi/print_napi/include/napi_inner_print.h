@@ -123,7 +123,7 @@ private:
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
-        virtual ~InnerPrintContext() {};
+        virtual ~InnerPrintContext();
     };
     static napi_status BuildPrinterInfoArrayOutput(std::shared_ptr<InnerPrintContext> context,
         napi_env env, napi_value* result);

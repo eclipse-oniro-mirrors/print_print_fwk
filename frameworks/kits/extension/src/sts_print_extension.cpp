@@ -298,6 +298,7 @@ void StsPrintExtension::BindContext(ani_env*env, std::shared_ptr<AAFwk::Want> wa
 
     if ((status = env->Object_SetField_Ref(etsObj_->aniObj, contextField, contextRef)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
+        env->GlobalReference_Delete(contextRef);
         ResetEnv(env);
     }
 }

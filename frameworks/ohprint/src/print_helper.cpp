@@ -303,26 +303,31 @@ void ParseMediaOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinterI
     if (PrintJsonUtil::IsMember(cupsOpt, "defaultPageSizeId") && cupsOpt["defaultPageSizeId"].isString()) {
         std::string defaultPageSizeId = cupsOpt["defaultPageSizeId"].asString();
         PRINT_HILOGD("defaultPageSizeId %{public}s", defaultPageSizeId.c_str());
+        SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.defaultPageSizeId);
         nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(defaultPageSizeId);
     }
     if (PrintJsonUtil::IsMember(cupsOpt, "media-type-supported") && cupsOpt["media-type-supported"].isString()) {
         std::string mediaTypeSupported = cupsOpt["media-type-supported"].asString();
         PRINT_HILOGD("cupsOptionsStr media-type-supported %{public}s", mediaTypeSupported.c_str());
+        SAFE_DELETE_ARRAY(nativePrinterInfo.capability.supportedMediaTypes);
         nativePrinterInfo.capability.supportedMediaTypes = CopyString(mediaTypeSupported);
     }
     if (PrintJsonUtil::IsMember(cupsOpt, "media-type-default") && cupsOpt["media-type-default"].isString()) {
         std::string mediaTypeDefault = cupsOpt["media-type-default"].asString();
         PRINT_HILOGD("cupsOptionsStr media-type-default %{public}s", mediaTypeDefault.c_str());
+        SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.defaultMediaType);
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(mediaTypeDefault);
     }
     if (PrintJsonUtil::IsMember(cupsOpt, "media-source-default") && cupsOpt["media-source-default"].isString()) {
         std::string mediaSourceDefault = cupsOpt["media-source-default"].asString();
         PRINT_HILOGD("cupsOptionsStr media-source-default %{public}s", mediaSourceDefault.c_str());
+        SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.defaultPaperSource);
         nativePrinterInfo.defaultValue.defaultPaperSource = CopyString(mediaSourceDefault);
     }
     if (PrintJsonUtil::IsMember(cupsOpt, "media-source-supported") && cupsOpt["media-source-supported"].isString()) {
         std::string mediaSourceSupported = cupsOpt["media-source-supported"].asString();
         PRINT_HILOGD("cupsOptionsStr media-source-supported %{public}s", mediaSourceSupported.c_str());
+        SAFE_DELETE_ARRAY(nativePrinterInfo.capability.supportedPaperSources);
         nativePrinterInfo.capability.supportedPaperSources = CopyString(mediaSourceSupported);
     }
 }
@@ -432,6 +437,7 @@ void ParseCupsOptions(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrint
     Json::Value advancedCapJson;
     std::string keyword = "multiple-document-handling-supported";
     AddJsonFieldStringToJsonObject(cupsOpt, keyword, advancedCapJson);
+    SAFE_DELETE_ARRAY(nativePrinterInfo.capability.advancedCapability);
     nativePrinterInfo.capability.advancedCapability = CopyString((PrintJsonUtil::WriteString(advancedCapJson)).c_str());
 }
 
@@ -474,7 +480,7 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
     }
     nativePrinterInfo.makeAndModel = CopyString(infoJson["make"].asString());
     nativePrinterInfo.printerUri = CopyString(infoJson["printerUri"].asString());
-    if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions")) {
+    if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions") || !infoJson["cupsOptions"].isObject()) {
         PRINT_HILOGW("The infoJson does not have a cupsOptions attribute.");
         return E_PRINT_NONE;
     }
@@ -499,12 +505,14 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
         ConvertOrientationMode(preferences.GetDefaultOrientation(), nativePrinterInfo.defaultValue.defaultOrientation);
     }
     if (!preferences.GetDefaultPageSizeId().empty()) {
+        SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.defaultPageSizeId);
         nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(preferences.GetDefaultPageSizeId());
     }
     if (preferences.HasDefaultPrintQuality()) {
         ConvertQuality(preferences.GetDefaultPrintQuality(), nativePrinterInfo.defaultValue.defaultPrintQuality);
     }
     if (!preferences.GetDefaultMediaType().empty()) {
+        SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.defaultMediaType);
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(preferences.GetDefaultMediaType());
     }
     if (preferences.HasDefaultColorMode()) {

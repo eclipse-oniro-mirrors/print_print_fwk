@@ -38,6 +38,11 @@ const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
 const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 const uint32_t ARRAY_LENGTH_ONE_THOUSAND = 1000;
 
+NapiInnerPrint::InnerPrintContext::~InnerPrintContext()
+{
+    PrintUtil::SafeDeleteAuthInfo(userPasswd);
+}
+
 napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
@@ -963,6 +968,9 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
 
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
+        napi_valuetype callbackType = napi_undefined;
+        napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &callbackType);
+        PRINT_ASSERT(env, callbackType == napi_function, "callback is not a function");
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
         PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
@@ -982,6 +990,9 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[1]);
     if (printAttributes == nullptr) {
         PRINT_HILOGE("printAttributes is nullptr");
+        if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
+            PrintManagerClient::GetInstance()->Off(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER);
+        }
         return nullptr;
     }
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
@@ -989,6 +1000,9 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to StartGetPrintFile");
+            if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
+                PrintManagerClient::GetInstance()->Off(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER);
+            }
             NapiThrowError(env, ret);
             return nullptr;
         }
@@ -1344,12 +1358,15 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
+            context->userPasswd = nullptr;
             context->result = false;
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
         int32_t ret =
             PrintManagerClient::GetInstance()->AuthPrintJob(context->jobId, context->userName, context->userPasswd);
+        PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
+        context->userPasswd = nullptr;
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to set default printer");
@@ -1837,6 +1854,8 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
         }
         int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,
             context->userName, context->userPasswd, context->printerInfos);
+        PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
+        context->userPasswd = nullptr;
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to get sharedHosts");

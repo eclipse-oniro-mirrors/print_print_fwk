@@ -203,6 +203,12 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     napi_open_handle_scope(context->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("open handle scope failed");
+        context->callback = nullptr;
+        delete context;
+        context = nullptr;
+        delete work;
+        work = nullptr;
+        return;
     }
 
     napi_value result[2] = {nullptr};

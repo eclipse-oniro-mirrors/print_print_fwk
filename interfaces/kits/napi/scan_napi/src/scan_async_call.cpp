@@ -62,8 +62,14 @@ napi_value ScanAsyncCall::Call(napi_env env, Context::ExecAction exec)
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "ScanAsyncCall", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, ScanAsyncCall::OnExecute,
+    napi_status status = napi_create_async_work(env, nullptr, resource, ScanAsyncCall::OnExecute,
         ScanAsyncCall::OnComplete, context_, &work);
+    if (status != napi_ok) {
+        SCAN_HILOGE("napi_create_async_work failed, status: %{public}d", status);
+        DeleteContext(env, context_);
+        context_ = nullptr;
+        return nullptr;
+    }
     context_->work = work;
     context_ = nullptr;
     napi_queue_async_work(env, work);

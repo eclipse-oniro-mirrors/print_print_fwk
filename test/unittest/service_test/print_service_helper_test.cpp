@@ -246,5 +246,49 @@ INSTANTIATE_TEST_SUITE_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest,
         BuildSubscribeInfoParam{"unknown.event", 0},
         BuildSubscribeInfoParam{"", 0}
     ));
+
+/**
+ * @tc.name: DisconnectAbility_TypeNotFound
+ * @tc.desc: Verify DisconnectAbility returns false when extension type is not in the map
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceHelperTest, DisconnectAbility_TypeNotFound, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    // extConnectionMap_ is empty by default, so any extension type won't be found
+    EXPECT_FALSE(helper.DisconnectAbility(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY));
+}
+
+/**
+ * @tc.name: DisconnectAbility_EmptyConnectionList
+ * @tc.desc: Verify DisconnectAbility returns false when the connection list for the type is empty
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceHelperTest, DisconnectAbility_EmptyConnectionList, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    // Insert an empty list for the extension type
+    helper.extConnectionMap_[ExtensionAbilityType::SERVICE_EXTENSION_ABILITY] = {};
+    EXPECT_FALSE(helper.DisconnectAbility(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY));
+}
+
+/**
+ * @tc.name: DisconnectAbility_MaxRetryExceeded
+ * @tc.desc: Verify DisconnectAbility returns false when retry exceeds MAX_RETRY_TIMES
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceHelperTest, DisconnectAbility_MaxRetryExceeded, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    // Add a null connection to the list - the adapter will fail to disconnect it,
+    // exercising the retry loop and the `return false` on MAX_RETRY_TIMES
+    std::list<sptr<PrintServiceHelper::PrintAbilityConnection>> connList;
+    connList.push_back(nullptr);
+    helper.extConnectionMap_[ExtensionAbilityType::SERVICE_EXTENSION_ABILITY] = connList;
+    EXPECT_FALSE(helper.DisconnectAbility(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY));
+}
 }  // namespace Print
 }  // namespace OHOS

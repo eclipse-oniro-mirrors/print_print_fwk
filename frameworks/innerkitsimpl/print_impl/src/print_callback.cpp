@@ -22,6 +22,7 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
+
 PrintCallback::PrintCallback(napi_env env, napi_ref ref)
     : env_(env), ref_(ref), mutex_(std::make_shared<std::mutex>()), adapter_(nullptr)
 {
@@ -59,6 +60,7 @@ PrintCallback::~PrintCallback()
             napi_open_handle_scope(param->env, &scope);
             if (scope == nullptr) {
                 PRINT_HILOGE("scope is a nullptr");
+                NapiPrintUtils::DeleteReference(param->env, param->callbackRef);
                 delete param;
                 return;
             }
@@ -119,10 +121,7 @@ static napi_value WriteResultCallback(napi_env env, napi_callback_info info)
 
     PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
         jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
-    if (cbParam->fd != INVALID_FD) {
-        close(cbParam->fd);
-        cbParam->fd = INVALID_FD;
-    }
+    CLOSE_FD_IF_VALID(cbParam->fd);
     PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
     return nullptr;
 }
@@ -138,10 +137,7 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
-        if (cbParam->fd != INVALID_FD) {
-            close(cbParam->fd);
-            cbParam->fd = INVALID_FD;
-        }
+        CLOSE_FD_IF_VALID(cbParam->fd);
         return;
     }
     napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
@@ -158,15 +154,19 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
             NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
             NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", WriteResultCallback, cbParam);
-        napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
+        napi_status callStatus = napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
             callbackValues, &callbackResult);
-        PRINT_HILOGI("OnCallback end run PrintAdapterWorkCb success");
+        if (callStatus != napi_ok) {
+            PRINT_HILOGE("napi_call_function failed");
+            CLOSE_FD_IF_VALID(cbParam->fd);
+        } else {
+            PRINT_HILOGI("OnCallback end run PrintAdapterWorkCb success");
+        }
+    } else {
+        CLOSE_FD_IF_VALID(cbParam->fd);
     }
     if (napi_close_handle_scope(cbParam->env, scope) != napi_ok) {
-        if (cbParam->fd != INVALID_FD) {
-            close(cbParam->fd);
-            cbParam->fd = INVALID_FD;
-        }
+       PRINT_HILOGE("napi_close_handle_scope failed");
     }
 }
 
@@ -181,10 +181,7 @@ static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
-        if (cbParam->fd != INVALID_FD) {
-            close(cbParam->fd);
-            cbParam->fd = INVALID_FD;
-        }
+        CLOSE_FD_IF_VALID(cbParam->fd);
         return;
     }
     napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);

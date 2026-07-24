@@ -1270,7 +1270,6 @@ int32_t PrintServiceProxy::AuthPrintJob(const std::string &jobId, const std::str
     CHECK_PARCEL_OP_AND_RETURN_VAL(
         data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE), E_PRINT_RPC_FAILURE);
 
-    PrintUtil::SafeDeleteAuthInfo(userPasswd);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("PrintServiceProxy AuthPrintJob remote is null");

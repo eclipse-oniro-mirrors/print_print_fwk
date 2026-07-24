@@ -27,6 +27,7 @@ const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
+constexpr uint32_t MAX_RESOLUTION_COUNT = 64;
 }  // namespace
 
 namespace OHOS::Print {
@@ -651,6 +652,10 @@ bool UpdateResolutionCapability(PrinterCapability &printerCap, const Print_Print
 {
     if (capability == nullptr || capability->supportedResolutions == nullptr) {
         PRINT_HILOGW("supportedResolutions is null");
+        return false;
+    }
+    if (capability->supportedResolutionsCount > MAX_RESOLUTION_COUNT) {
+        PRINT_HILOGE("supportedResolutionsCount %{public}u exceeds max limit", capability->supportedResolutionsCount);
         return false;
     }
     std::vector<PrintResolution> resolutionList;

@@ -48,6 +48,7 @@ WatermarkCallback::~WatermarkCallback()
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
+            NapiPrintUtils::DeleteReference(param->env, param->callbackRef);
             delete param;
             return;
         }
@@ -77,7 +78,7 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
     napi_open_handle_scope(param->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
-        close(param->fd);
+        CLOSE_FD_IF_VALID(param->fd);
         delete param;
         return;
     }
@@ -85,7 +86,7 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
     napi_value callbackFunc = NapiPrintUtils::GetReference(param->env, param->ref);
     if (callbackFunc == nullptr) {
         PRINT_HILOGE("WatermarkCallback get reference failed");
-        close(param->fd);
+        CLOSE_FD_IF_VALID(param->fd);
         napi_close_handle_scope(param->env, scope);
         delete param;
         return;
@@ -102,7 +103,7 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
         PRINT_HILOGI("WatermarkCallback call JS function success");
     } else {
         PRINT_HILOGE("WatermarkCallback call JS function failed, status:%{public}d", status);
-        close(param->fd);
+        CLOSE_FD_IF_VALID(param->fd);
     }
 
     napi_close_handle_scope(param->env, scope);
@@ -117,7 +118,7 @@ void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
     WatermarkCallbackParam *param = new (std::nothrow) WatermarkCallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create watermark callback parameter");
-        close(fd);
+        CLOSE_FD_IF_VALID(fd);
         return;
     }
 
@@ -135,7 +136,7 @@ void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
     napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_ok) {
         PRINT_HILOGE("napi_send_event fail");
-        close(fd);
+        CLOSE_FD_IF_VALID(fd);
         delete param;
     }
 }

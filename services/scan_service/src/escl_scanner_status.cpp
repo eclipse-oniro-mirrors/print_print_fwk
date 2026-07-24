@@ -17,6 +17,15 @@
 #include "scan_log.h"
 #include "escl_scanner_status.h"
 
+namespace {
+struct xmlXPathContextDeleter {
+    void operator()(xmlXPathContextPtr ctx) const
+    {
+        xmlXPathFreeContext(ctx);
+    }
+};
+}  // namespace
+
 namespace OHOS::Scan {
 static const int32_t MAX_PORT_NUMBER = 65535;
 
@@ -95,11 +104,11 @@ bool EsclScannerStatus::ExtractStatusInfo(xmlDoc* xmlDoc, std::map<std::string, 
         return false;
     }
 
+    std::unique_ptr<xmlXPathContext, xmlXPathContextDeleter> xpathCtxGuard(xpathCtx);
     AddStatusEntry(xpathCtx, "/*[local-name()='ScannerStatus']/*[local-name()='State']", "pwg:State", statusMap);
     AddStatusEntry(xpathCtx, "/*[local-name()='ScannerStatus']/*[local-name()='AdfState']", "scan:AdfState",
         statusMap);
 
-    xmlXPathFreeContext(xpathCtx);
     return true;
 }
 

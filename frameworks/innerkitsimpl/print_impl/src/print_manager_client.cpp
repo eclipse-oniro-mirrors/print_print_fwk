@@ -1177,7 +1177,6 @@ int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::st
     auto proxy = GetPrintServiceProxy();
     if (proxy == nullptr) {
         PRINT_HILOGE("GetPrintServiceProxy failed.");
-        PrintUtil::SafeDeleteAuthInfo(userPasswd);
         return E_PRINT_RPC_FAILURE;
     }
     int32_t ret = proxy->AuthPrintJob(jobId, userName, userPasswd);
@@ -1275,9 +1274,6 @@ int32_t PrintManagerClient::AuthSmbDevice(const PrintSharedHost &sharedHost, con
     if (proxy != nullptr) {
         ret = proxy->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
         PRINT_HILOGD("PrintManagerClient AuthSmbDevice out ret = [%{public}d].", ret);
-    }
-    if (userPasswd) {
-        PrintUtil::SafeDeleteAuthInfo(userPasswd);
     }
     return ret;
 }

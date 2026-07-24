@@ -42,6 +42,28 @@ SaneServerManager::SaneServerManager(int32_t saId, bool runOnCreate) : SystemAbi
     SCAN_HILOGI("SaneServerManager init");
 }
 
+SaneServerManager::~SaneServerManager()
+{
+    SCAN_HILOGI("SaneServerManager destructor start");
+    ReleaseResources();
+}
+
+void SaneServerManager::ReleaseResources()
+{
+    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
+    scannerHandleList_.clear();
+    SafeSANEAPI::GetInstance().SaneCloseAllHandles();
+    SafeSANEAPI::GetInstance().SaneExit();
+    const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;
+    std::vector<std::string> files;
+    GetDirFiles(dataTmpDir, files);
+    for (const auto &file : files) {
+        if (!RemoveFile(file)) {
+            SCAN_HILOGW("RemoveFile failed");
+        }
+    }
+}
+
 void SaneServerManager::OnStart()
 {
     SCAN_HILOGI("SaneServerManager::OnStart()");
@@ -509,18 +531,7 @@ ErrCode SaneServerManager::UnloadSystemAbility()
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    scannerHandleList_.clear();
-    SafeSANEAPI::GetInstance().SaneCloseAllHandles();
-    SafeSANEAPI::GetInstance().SaneExit();
-    const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;
-    std::vector<std::string> files;
-    GetDirFiles(dataTmpDir, files);
-    for (const auto &file : files) {
-        if (!RemoveFile(file)) {
-            SCAN_HILOGW("RemoveFile failed");
-        }
-    }
+    ReleaseResources();
     auto task = [this]() {
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {

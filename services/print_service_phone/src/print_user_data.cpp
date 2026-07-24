@@ -589,22 +589,21 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
         PRINT_HILOGE("Failed to open Dir: %{private}s", cachePath);
         return false;
     }
+    struct DirGuard {
+        DIR *d;
+        ~DirGuard() { if (d) closedir(d); }
+    } dirGuard{dir};
     struct dirent *file;
     std::vector<std::string> fileNames;
     std::string cacheFile;
     while ((file = readdir(dir)) != nullptr) {
         if (strncmp(file->d_name, jobId.c_str(), jobId.length()) == 0) {
             cacheFile = cacheDir + '/' + std::string(file->d_name);
-            if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
-                PRINT_HILOGE("The realFile is null, errno:%{public}s", strerror(errno));
-                continue;
-            }
-            if (std::remove(cachePath) != 0) {
-                PRINT_HILOGW("error deleting file %{private}s err: %{public}s", cachePath, strerror(errno));
+            if (std::remove(cacheFile.c_str()) != 0) {
+                PRINT_HILOGW("error deleting file %{private}s err: %{public}s", cacheFile.c_str(), strerror(errno));
             }
         }
     }
-    closedir(dir);
     return true;
 }
 
