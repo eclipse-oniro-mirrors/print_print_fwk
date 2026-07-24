@@ -149,7 +149,7 @@ void SafeSANEAPI::SaneCancel(SANE_Handle handle)
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
     if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneStart: handle was closed concurrently");
+        SCAN_HILOGE("SaneCancel: handle was closed concurrently");
         return;
     }
     sane_cancel(handle);
@@ -164,7 +164,7 @@ const SANE_Option_Descriptor* SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle h
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
     if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneStart: handle was closed concurrently");
+        SCAN_HILOGE("SaneGetOptionDescriptor: handle was closed concurrently");
         return nullptr;
     }
     return sane_get_option_descriptor(handle, option);
@@ -179,7 +179,7 @@ SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* 
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
     if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneStart: handle was closed concurrently");
+        SCAN_HILOGE("SaneGetParameters: handle was closed concurrently");
         return SANE_STATUS_INVAL;
     }
     return sane_get_parameters(handle, params);
@@ -195,7 +195,7 @@ SANE_Status SafeSANEAPI::SaneControlOption(SANE_Handle handle, SANE_Int option,
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
     if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneStart: handle was closed concurrently");
+        SCAN_HILOGE("SaneControlOption: handle was closed concurrently");
         return SANE_STATUS_INVAL;
     }
     return sane_control_option(handle, option, action, value, info);
@@ -211,7 +211,7 @@ SANE_Status SafeSANEAPI::SaneRead(SANE_Handle handle, SANE_Byte* data,
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
     if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneStart: handle was closed concurrently");
+        SCAN_HILOGE("SaneRead: handle was closed concurrently");
         return SANE_STATUS_INVAL;
     }
     return sane_read(handle, data, maxLength, length);
