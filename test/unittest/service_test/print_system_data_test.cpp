@@ -2032,9 +2032,11 @@ HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_EmptyRawData_ShouldNotSave, Tes
 HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_DirNotExist_ShouldNotSave, TestSize.Level1)
 {
     auto systemData = std::make_shared<PrintSystemData>();
-    CleanupIppRawDataDir();
+    std::error_code ec;
+    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
     systemData->SaveIppRawDataFile("printer1", "raw_data");
     EXPECT_FALSE(systemData->HasIppRawDataFile("printer1"));
+    CreateIppRawDataDir();
 }
 
 HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_NormalSave_ShouldCreateFile, TestSize.Level1)
@@ -2060,8 +2062,11 @@ HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_ReplaceOldFile_ShouldHaveOnlyOn
 HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_DirNotExist_ShouldReturnFalse, TestSize.Level1)
 {
     auto systemData = std::make_shared<PrintSystemData>();
+    std::error_code ec;
+    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
     CleanupIppRawDataDir();
     EXPECT_FALSE(systemData->HasIppRawDataFile("any_printer"));
+    CreateIppRawDataDir();
 }
 
 HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_FileNotExist_ShouldReturnFalse, TestSize.Level1)
