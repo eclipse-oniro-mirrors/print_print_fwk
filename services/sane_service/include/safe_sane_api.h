@@ -60,11 +60,17 @@ public:
 private:
     SafeSANEAPI() = default;
     ~SafeSANEAPI() = default;
-    
+
     std::shared_ptr<std::mutex> GetHandleMutex(SANE_Handle handle);
     void AddHandleMutex(SANE_Handle handle);
     std::shared_ptr<std::mutex> RemoveHandleMutex(SANE_Handle handle);
-    
+    // Must be called AFTER acquiring the per-handle mutex. Returns true only if
+    // the handle is still registered in the map AND the mutex associated with it
+    // is exactly the one the caller holds. This closes the TOCTOU window between
+    // GetHandleMutex() and lock(): a concurrent SaneClose() may have erased the
+    // handle (and even called sane_close()) before the caller managed to lock.
+    bool IsHandleRegistered(SANE_Handle handle, const std::shared_ptr<std::mutex> &mutexPtr);
+
     std::mutex globalLock_;
     std::unordered_map<SANE_Handle, std::shared_ptr<std::mutex>> handleMutexes_;
     std::mutex handleMutexesLock_;

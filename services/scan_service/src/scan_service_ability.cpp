@@ -533,6 +533,12 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("scannerId %{private}s is already opened by another caller", scannerId.c_str());
         return E_SCAN_DEVICE_BUSY;
     }
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    if (!scannerDiscoverData_.IsDeviceIdDiscovered(scannerId)
+        && !scanData.IsDeviceIdAdded(scannerId)) {
+        SCAN_HILOGE("OpenScanner scannerId is not found in discovered or added devices");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SaneStatus status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
@@ -908,6 +914,7 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
         return;
     }
     SCAN_HILOGD("DisConnectUsbScanner start deviceId:%{private}s", deviceId.c_str());
+    scannerDiscoverData_.RemoveUsbDevice(serialNumber);
     ScanDeviceInfoSync scanDeviceInfoSync;
     scanDeviceInfoSync.uniqueId = serialNumber;
     scanDeviceInfoSync.deviceId = deviceId;
