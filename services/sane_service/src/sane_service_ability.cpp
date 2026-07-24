@@ -32,7 +32,6 @@ namespace {
 const int32_t VALUE_BUFFER_LEN = 1024;
 constexpr int32_t SANE_SERVICE_ID = 3709;
 constexpr int32_t MAX_WORD_LIST_SIZE = 1000;
-constexpr int32_t MAX_READ_BUFFER_LEN = 4 * 1024 * 1024;
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 } //namespace
 
@@ -470,7 +469,7 @@ ErrCode SaneServerManager::SaneRead(
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    if (buflen <= 0 || buflen > MAX_READ_BUFFER_LEN) {
+    if (buflen <= 0 || buflen > MAX_BUFLEN) {
         SCAN_HILOGE("invalid buflen, buflen = %{public}d", buflen);
         status = SANE_STATUS_INVAL;
         return ERR_OK;

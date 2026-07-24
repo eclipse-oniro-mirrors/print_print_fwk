@@ -100,7 +100,7 @@ void PrintAttributesHelper::BuildFromJsMode(napi_env env, napi_value jsValue,
 {
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DIRECTIONMODE)) {
         uint32_t directionMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DIRECTIONMODE);
-        if (directionMode > DIRECTION_MODE_LANDSCAPE) {
+        if (directionMode > DIRECTION_MODE_MAX) {
             PRINT_HILOGW("invalid directionMode value");
         } else {
             nativeObj->SetDirectionMode(directionMode);
@@ -109,7 +109,7 @@ void PrintAttributesHelper::BuildFromJsMode(napi_env env, napi_value jsValue,
 
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_COLORMODE)) {
         uint32_t colorMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COLORMODE);
-        if (colorMode > COLOR_MODE_AUTO) {
+        if (colorMode > COLOR_MODE_MAX) {
             PRINT_HILOGW("invalid colorMode value");
         } else {
             nativeObj->SetColorMode(colorMode);
@@ -118,7 +118,7 @@ void PrintAttributesHelper::BuildFromJsMode(napi_env env, napi_value jsValue,
 
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DUPLEXMODE)) {
         uint32_t duplexMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DUPLEXMODE);
-        if (duplexMode > DUPLEX_MODE_SHORT_EDGE) {
+        if (duplexMode > DUPLEX_MODE_MAX) {
             PRINT_HILOGW("invalid duplexMode value");
         } else {
             nativeObj->SetDuplexMode(duplexMode);

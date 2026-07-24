@@ -55,22 +55,7 @@ int32_t EsclDriverManager::InitializeEsclScannerDriver()
 bool EsclDriverManager::CreateSoftLink()
 {
     struct stat st;
-    if (lstat(AIRSCAN_LINKPATH, &st) == 0) {
-        if (!S_ISLNK(st.st_mode)) {
-            SCAN_HILOGE("AIRSCAN_LINKPATH exists but is not a symbolic link");
-            return false;
-        }
-        constexpr size_t LINK_TARGET_MAX_LEN = 4096;
-        char linkTarget[LINK_TARGET_MAX_LEN] = {0};
-        ssize_t linkLen = readlink(AIRSCAN_LINKPATH, linkTarget, LINK_TARGET_MAX_LEN - 1);
-        if (linkLen <= 0) {
-            SCAN_HILOGE("Failed to read symbolic link, errno = %{public}d", errno);
-            return false;
-        }
-        if (std::string(linkTarget) != AIRSCAN_TARGET) {
-            SCAN_HILOGE("Symbolic link target mismatch, refuse to proceed");
-            return false;
-        }
+    if (stat(AIRSCAN_LINKPATH, &st) == 0) {
         SCAN_HILOGD("Symbolic link already exists");
         return true;
     }

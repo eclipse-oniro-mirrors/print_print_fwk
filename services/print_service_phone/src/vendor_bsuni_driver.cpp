@@ -15,7 +15,6 @@
 
 #include "vendor_bsuni_driver.h"
 #include <dlfcn.h>
-#include <filesystem>
 #include "parameter.h"
 #include "print_log.h"
 #include "vendor_helper.h"
@@ -29,28 +28,6 @@ static const char* CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups"
 #ifdef ENTERPRISE_ENABLE
 static const char* CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
 #endif  // ENTERPRISE_ENABLE
-
-bool IsValidSoPath(const char *path)
-{
-    if (path == nullptr || path[0] != '/') {
-        PRINT_HILOGW("so path is null or not absolute");
-        return false;
-    }
-    std::error_code ec;
-    std::filesystem::path resolved = std::filesystem::canonical(path, ec);
-    if (ec) {
-        PRINT_HILOGW("canonical so path failed");
-        return false;
-    }
-    const std::string lib64Prefix = "/system/lib64/";
-    const std::string libPrefix = "/system/lib/";
-    std::string resolvedStr = resolved.string();
-    if (resolvedStr.rfind(lib64Prefix, 0) != 0 && resolvedStr.rfind(libPrefix, 0) != 0) {
-        PRINT_HILOGW("so path not in trusted directory");
-        return false;
-    }
-    return true;
-}
 }  // namespace
 
 void VendorBsuniDriver::SetDriverWrapper(VendorBsuniDriver *driver)
@@ -85,10 +62,6 @@ bool VendorBsuniDriver::LoadDriverExtension()
     constexpr int BUFFER_SIZE = 96;
     char value[BUFFER_SIZE] = {0};
     GetParameter(DRIVER_SO_PATH.c_str(), "", value, BUFFER_SIZE - 1);
-    if (!IsValidSoPath(value)) {
-        PRINT_HILOGW("invalid so path");
-        return false;
-    }
     bsUniDriverHandler = dlopen(value, RTLD_LAZY | RTLD_NODELETE);
     if (bsUniDriverHandler == nullptr) {
         PRINT_HILOGW("dlopen failed");

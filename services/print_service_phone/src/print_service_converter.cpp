@@ -19,6 +19,7 @@
 #include <cstdlib>  // for std::strtod
 #include <cerrno>   // for errno
 #include <cmath>   // for std::isfinite
+#include <cstdint> // for UINT32_MAX
 
 namespace OHOS {
 namespace Print {
@@ -103,12 +104,24 @@ bool ConvertCustomPageSizeFromWidthAndLength(const double& widthValue, const dou
 
     std::stringstream postfixName;
     if (unit == "mm") {
-        width = static_cast<uint32_t>(round(widthValue * HUNDRED_OF_MILLIMETRE_TO_INCH));
-        length = static_cast<uint32_t>(round(lengthValue * HUNDRED_OF_MILLIMETRE_TO_INCH));
+        double widthRounded = round(widthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        double lengthRounded = round(lengthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        if (widthRounded > UINT32_MAX || lengthRounded > UINT32_MAX) {
+            PRINT_HILOGE("width or length value overflow");
+            return false;
+        }
+        width = static_cast<uint32_t>(widthRounded);
+        length = static_cast<uint32_t>(lengthRounded);
         postfixName << round(widthValue) << "x" << round(lengthValue) << "mm";
     } else if (unit == "in") {
-        width = static_cast<uint32_t>(round(widthValue * ONE_THOUSAND_INCH));
-        length = static_cast<uint32_t>(round(lengthValue * ONE_THOUSAND_INCH));
+        double widthRounded = round(widthValue * ONE_THOUSAND_INCH);
+        double lengthRounded = round(lengthValue * ONE_THOUSAND_INCH);
+        if (widthRounded > UINT32_MAX || lengthRounded > UINT32_MAX) {
+            PRINT_HILOGE("width or length value overflow");
+            return false;
+        }
+        width = static_cast<uint32_t>(widthRounded);
+        length = static_cast<uint32_t>(lengthRounded);
         postfixName << round(widthValue * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
             round(lengthValue * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
     } else {

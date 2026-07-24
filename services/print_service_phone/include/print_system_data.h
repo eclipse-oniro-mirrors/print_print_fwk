@@ -33,7 +33,7 @@
 namespace OHOS {
 namespace Print {
 
-constexpr uint32_t MAX_CAPABILITY_ARRAY_SIZE = 128;
+constexpr uint32_t MAX_CAPABILITY_ARRAY_SIZE = 1000;
 
 class PrintSystemData {
 public:

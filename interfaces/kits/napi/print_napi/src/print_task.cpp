@@ -290,7 +290,6 @@ uint32_t PrintTask::StartUIExtensionAbility(
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, adapterParam->jobId);
     if (fileList_.size() <= PRINT_MAX_FILE_LIST_SIZE) {
         want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList_);
-        want.SetParam(ABILITY_PARAMS_STREAM, fileList_);
     } else {
         PRINT_HILOGW("fileList exceeds the maximum length.");
     }
@@ -305,6 +304,7 @@ uint32_t PrintTask::StartUIExtensionAbility(
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
     want.SetParam(UI_EXTENSION_TYPE_NAME, PRINT_UI_EXTENSION_TYPE);
+    want.SetParam(ABILITY_PARAMS_STREAM, fileList_);
     want.SetFlags(AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION);
 
     uint32_t ret = StartUIExtensionAbility(want, asyncContext);

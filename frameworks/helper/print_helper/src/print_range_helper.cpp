@@ -22,7 +22,7 @@ namespace OHOS::Print {
 static constexpr const char *PARAM_RANGE_STARTPAGE = "startPage";
 static constexpr const char *PARAM_RANGE_ENDPAGE = "endPage";
 static constexpr const char *PARAM_RANGE_PAGES = "pages";
-static constexpr uint32_t MAX_PAGES_ARRAY_LENGTH = 128;
+static constexpr uint32_t MAX_PAGES_ARRAY_LENGTH = 1000;
 
 napi_value PrintRangeHelper::MakeJsObject(napi_env env, const PrintRange &range)
 {

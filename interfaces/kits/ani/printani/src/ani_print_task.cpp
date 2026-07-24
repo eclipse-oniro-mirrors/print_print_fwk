@@ -168,11 +168,10 @@ uint32_t AniPrintTask::CallSpooler(const std::shared_ptr<AdapterParam>& adapterP
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, adapterParam->jobId);
+    want.SetParam(LAUNCH_PARAMETER_FILE_LIST, files);
     if (!files.empty() && files.size() <= PRINT_MAX_FILE_LIST_SIZE) {
         want.SetParam(LAUNCH_PARAMETER_FILE_LIST, files);
         want.SetParam(ABILITY_PARAMS_STREAM, files);
-    } else {
-        PRINT_HILOGW("fileList is empty or exceeds the maximum length.");
     }
     PrintUtils::BuildAdapterParam(adapterParam, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
