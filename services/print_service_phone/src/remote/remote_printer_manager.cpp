@@ -40,8 +40,6 @@ const std::vector<uint32_t> DEFAULT_DUPLEX_MODE_LIST = {
     DUPLEX_MODE_NONE, DUPLEX_MODE_LONG_EDGE, DUPLEX_MODE_SHORT_EDGE
 };
 
-const uint32_t MAX_PRINTER_SIZE = 1000;
-
 std::vector<PrintPageSize> BuildDefaultPageSizeList()
 {
     std::vector<PrintPageSize> pageSizeList;
@@ -258,10 +256,6 @@ bool RemotePrinterManager::UpdatePrinterStatus(const std::string &printerId, Pri
 bool RemotePrinterManager::OnPrinterListReceived(const Json::Value &jsonArray)
 {
     PRINT_HILOGI("RemotePrinterManager OnPrinterListReceived");
-    if (jsonArray.size() > MAX_PRINTER_SIZE) {
-        PRINT_HILOGE("printer list size is illegal");
-        return false;
-    }
 
     std::vector<std::string> currentDevIds;
     
