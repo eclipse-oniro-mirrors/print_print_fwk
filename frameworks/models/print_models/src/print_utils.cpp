@@ -22,7 +22,6 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <random>
-#include <regex>
 #include <sstream>
 #include "ability.h"
 #include "print_util.h"
@@ -450,14 +449,6 @@ std::string PrintUtils::AnonymizeIp(const std::string &ip)
         return AnonymizeIpv6(ip);
     }
     return ip;
-}
-
-std::string PrintUtils::AnonymizeIpInString(const std::string &str)
-{
-    static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-        R"(|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)"
-        R"(|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})");
-    return std::regex_replace(str, ipRegex, "*");
 }
 
 std::string PrintUtils::AnonymizePrinterName(const std::string &printerName)
