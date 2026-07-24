@@ -16,7 +16,6 @@
 #include "napi/native_api.h"
 #include "print_log.h"
 #include "print_attributes_helper.h"
-#include "ohprint.h"
 
 namespace OHOS::Print {
 static constexpr const char *PARAM_JOB_COPYNUMBER = "copyNumber";
@@ -109,7 +108,7 @@ void PrintAttributesHelper::BuildFromJsMode(napi_env env, napi_value jsValue,
 
     if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_COLORMODE)) {
         uint32_t colorMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COLORMODE);
-        if (colorMode > COLOR_MODE_MAX) {
+        if (colorMode > PRINT_COLOR_MODE_MAX) {
             PRINT_HILOGW("invalid colorMode value");
         } else {
             nativeObj->SetColorMode(colorMode);
