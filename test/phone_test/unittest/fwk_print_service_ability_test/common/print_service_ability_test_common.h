@@ -25,6 +25,7 @@
 #define protected public
 #include "print_service_ability.h"
 #include "print_bms_helper.h"
+#include "print_caller_app_monitor.h"
 #include "event_listener_mgr.h"
 #undef protected
 #undef private

@@ -51,7 +51,8 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/print_system_data_test.cpp",
     "${_test_path}/unittest/service_test/print_user_data_test.cpp",
     "${_test_path}/unittest/service_test/watermark_callback_proxy_test.cpp",
-    "${_test_path}/unittest/service_test/print_callback_proxy_test.cpp"
+    "${_test_path}/unittest/service_test/print_callback_proxy_test.cpp",
+    "${_test_path}/unittest/service_test/print_service_stub_test.cpp",
   ]
 
   deps = [
