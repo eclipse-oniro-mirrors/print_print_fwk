@@ -512,13 +512,7 @@ napi_value CreateJsPrintExtensionContext(napi_env engine,
     napi_value object = objValue;
 
     std::unique_ptr<JsPrintExtensionContext> jsContext = std::make_unique<JsPrintExtensionContext>(context);
-    napi_status wrapStatus = napi_wrap(engine, object, jsContext.get(), JsPrintExtensionContext::Finalizer,
-        nullptr, nullptr);
-    if (wrapStatus != napi_ok) {
-        PRINT_HILOGE("CreateJsPrintExtensionContext napi_wrap failed");
-        return nullptr;
-    }
-    jsContext.release();
+    napi_wrap(engine, object, jsContext.release(), JsPrintExtensionContext::Finalizer, nullptr, nullptr);
 
     // make handler
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());

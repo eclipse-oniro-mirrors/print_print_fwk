@@ -1353,16 +1353,12 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
-            PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
-            context->userPasswd = nullptr;
             context->result = false;
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
         int32_t ret =
             PrintManagerClient::GetInstance()->AuthPrintJob(context->jobId, context->userName, context->userPasswd);
-        PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
-        context->userPasswd = nullptr;
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to set default printer");
@@ -1842,16 +1838,12 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!CheckCallerIsSystemApp(context)) {
-            PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
-            context->userPasswd = nullptr;
             context->result = false;
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
         int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,
             context->userName, context->userPasswd, context->printerInfos);
-        PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
-        context->userPasswd = nullptr;
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to get sharedHosts");

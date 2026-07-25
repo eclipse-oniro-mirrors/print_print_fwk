@@ -148,16 +148,11 @@ bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDri
         PRINT_HILOGW("vendorDriver init fail");
         return false;
     }
-    vendorDriver->OnCreate();
     {
         std::lock_guard<std::mutex> lock(vendorMapMutex);
-        auto [iter, inserted] = vendorMap.insert(std::make_pair(vendorDriver->GetVendorName(), vendorDriver));
-        if (!inserted) {
-            PRINT_HILOGW("vendorDriver %{public}s already exists in vendorMap", vendorDriver->GetVendorName().c_str());
-            vendorDriver->OnDestroy();
-            return false;
-        }
+        vendorMap.insert(std::make_pair(vendorDriver->GetVendorName(), vendorDriver));
     }
+    vendorDriver->OnCreate();
     return true;
 }
 bool VendorManager::UnloadVendorDriver(const std::string &vendorName)

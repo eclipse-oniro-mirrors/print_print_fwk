@@ -1663,10 +1663,8 @@ bool PrintCupsClient::VerifyPrintJob(
             jobParams->serviceJobId.c_str(), cupsLastErrorString());
         jobParams->serviceAbility->UpdatePrintJobState(
             jobParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
-        cupsFreeOptions(num_options, options);
         return false;
     }
-    cupsFreeOptions(num_options, options);
     return true;
 }
 

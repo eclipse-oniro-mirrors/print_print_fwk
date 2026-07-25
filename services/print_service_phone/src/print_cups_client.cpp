@@ -1475,7 +1475,7 @@ bool PrintCupsClient::CheckPrinterDriverExist(const std::string &makeModel)
 }
 
 bool PrintCupsClient::VerifyPrintJob(
-    JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *&options, http_t *http)
+    JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *options, http_t *http)
 {
     if (jobParams == nullptr) {
         PRINT_HILOGE("The jobParams is null");
@@ -1521,10 +1521,8 @@ bool PrintCupsClient::VerifyPrintJob(
             jobParams->serviceJobId.c_str(), cupsLastErrorString());
         jobParams->serviceAbility->UpdatePrintJobState(
             jobParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
-        cupsFreeOptions(num_options, options);
         return false;
     }
-    cupsFreeOptions(num_options, options);
     return true;
 }
 
@@ -1601,7 +1599,7 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
     /* Pass writable cache fds to MDM callback for watermark embedding, then close them */
     int32_t ret = WatermarkManager::GetInstance().ProcessWatermarkForFiles(
         jobParams->serviceJobId, cacheFdList);
-    for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }
+    for (auto fd : cacheFdList) { CLOSE_FD_IF_VALID(fd); }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("ProcessWatermarkForFiles failed, ret: %{public}d, jobId: %{public}s.",
             ret, jobParams->serviceJobId.c_str());
@@ -1614,7 +1612,6 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
         freshFdList.empty()) {
         PRINT_HILOGE("Failed to reopen cache fds after watermark processing, jobId: %{public}s",
             jobParams->serviceJobId.c_str());
-        for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }
         return false;
     }
     for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }

@@ -400,7 +400,6 @@ const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
 constexpr uint32_t INVALID_FD = -1;
-
 const int32_t PRINT_API_COUNTED = 1;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";

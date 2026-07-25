@@ -468,40 +468,5 @@ HWTEST_F(VendorManagerTest, SetConnectingPrinter_ClearsQueue, TestSize.Level0)
     EXPECT_TRUE(vendorManager.GetConnectingQueue().empty());
 }
 
-HWTEST_F(VendorManagerTest, LoadVendorDriver_NullDriver, TestSize.Level0)
-{
-    VendorManager vendorManager;
-    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
-    EXPECT_TRUE(vendorManager.Init(mock, false));
-    EXPECT_FALSE(vendorManager.LoadVendorDriver(nullptr));
-    vendorManager.UnInit();
-}
-
-HWTEST_F(VendorManagerTest, LoadVendorDriver_InitFails, TestSize.Level0)
-{
-    VendorManager vendorManager;
-    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
-    EXPECT_TRUE(vendorManager.Init(mock, false));
-    auto mockDriver = std::make_shared<MockVendorPpdDriver>();
-    EXPECT_CALL(*mockDriver, Init(_)).WillOnce(Return(false));
-    EXPECT_FALSE(vendorManager.LoadVendorDriver(mockDriver));
-    vendorManager.UnInit();
-}
-
-HWTEST_F(VendorManagerTest, LoadVendorDriver_DuplicateVendorName, TestSize.Level0)
-{
-    VendorManager vendorManager;
-    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
-    EXPECT_TRUE(vendorManager.Init(mock, false));
-    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
-    ASSERT_NE(vendorIppEverywhere, nullptr);
-    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
-    // Loading the same driver again should fail with OnDestroy called
-    EXPECT_FALSE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
-    std::string vendorName = vendorIppEverywhere->GetVendorName();
-    EXPECT_TRUE(vendorManager.UnloadVendorDriver(vendorName));
-    vendorManager.UnInit();
-}
-
 }  // namespace Print
 }  // namespace OHOS

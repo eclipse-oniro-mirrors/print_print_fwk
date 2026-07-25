@@ -22,7 +22,6 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-
 PrintCallback::PrintCallback(napi_env env, napi_ref ref)
     : env_(env), ref_(ref), mutex_(std::make_shared<std::mutex>()), adapter_(nullptr)
 {

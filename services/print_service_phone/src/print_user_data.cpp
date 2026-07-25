@@ -595,8 +595,12 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
     while ((file = readdir(dir)) != nullptr) {
         if (strncmp(file->d_name, jobId.c_str(), jobId.length()) == 0) {
             cacheFile = cacheDir + '/' + std::string(file->d_name);
-            if (std::remove(cacheFile.c_str()) != 0) {
-                PRINT_HILOGW("error deleting file %{private}s err: %{public}s", cacheFile.c_str(), strerror(errno));
+            if (realpath(cacheFile.c_str(), cachePath) == nullptr) {	 
+                PRINT_HILOGE("The realFile is null, errno:%{public}s", strerror(errno));	 
+                continue; 
+            } 
+            if (std::remove(cachePath) != 0) { 
+                PRINT_HILOGW("error deleting file %{private}s err: %{public}s", cachePath, strerror(errno));
             }
         }
     }
