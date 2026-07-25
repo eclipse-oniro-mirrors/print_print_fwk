@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 #include <cstdio>
-#define private public
 #include "scan_task.h"
 
 constexpr int32_t DEFAULT_USER_ID = 100;

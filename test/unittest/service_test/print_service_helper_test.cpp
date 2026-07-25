@@ -245,6 +245,6 @@ INSTANTIATE_TEST_SUITE_P(CheckSubscribeInfoTest, CheckSubscribeInfoTest,
         BuildSubscribeInfoParam{EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED, 0},
         BuildSubscribeInfoParam{"unknown.event", 0},
         BuildSubscribeInfoParam{"", 0}
-    )); 
+    ));
 }  // namespace Print
 }  // namespace OHOS
