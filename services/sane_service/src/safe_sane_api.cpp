@@ -141,10 +141,6 @@ void SafeSANEAPI::SaneCancel(SANE_Handle handle)
         return;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (GetHandleMutex(handle) == nullptr) {
-        SCAN_HILOGE("SaneCancel: handle closed after lock acquired");
-        return;
-    }
     sane_cancel(handle);
 }
 
@@ -156,10 +152,6 @@ const SANE_Option_Descriptor* SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle h
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (GetHandleMutex(handle) == nullptr) {
-        SCAN_HILOGE("SaneGetOptionDescriptor: handle closed after lock acquired");
-        return nullptr;
-    }
     return sane_get_option_descriptor(handle, option);
 }
 
@@ -171,10 +163,6 @@ SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* 
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (GetHandleMutex(handle) == nullptr) {
-        SCAN_HILOGE("SaneGetParameters: handle closed after lock acquired");
-        return SANE_STATUS_INVAL;
-    }
     return sane_get_parameters(handle, params);
 }
 
@@ -187,10 +175,6 @@ SANE_Status SafeSANEAPI::SaneControlOption(SANE_Handle handle, SANE_Int option,
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (GetHandleMutex(handle) == nullptr) {
-        SCAN_HILOGE("SaneControlOption: handle closed after lock acquired");
-        return SANE_STATUS_INVAL;
-    }
     return sane_control_option(handle, option, action, value, info);
 }
 
@@ -203,10 +187,6 @@ SANE_Status SafeSANEAPI::SaneRead(SANE_Handle handle, SANE_Byte* data,
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (GetHandleMutex(handle) == nullptr) {
-        SCAN_HILOGE("SaneRead: handle closed after lock acquired");
-        return SANE_STATUS_INVAL;
-    }
     return sane_read(handle, data, maxLength, length);
 }
 
