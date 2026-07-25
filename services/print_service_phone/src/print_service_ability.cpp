@@ -1854,10 +1854,7 @@ bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     }
 
     auto userData = GetCurrentUserData();
-    if (userData == nullptr) {
-        PRINT_HILOGE("Get user data failed.");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(userData, false);
     auto jobId = printerJobMap_[printerId].begin()->first;
     auto jobIt = userData->queuedJobList_.find(jobId);
     if (jobIt == userData->queuedJobList_.end()) {

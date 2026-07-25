@@ -104,65 +104,83 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
     std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
     PRINT_HILOGI("start monitor caller apps");
     do {
-        // Collect snapshot under lock (fast)
-        std::vector<std::shared_ptr<PrintCallerAppInfo>> appsToCheck;
-        {
-            std::lock_guard<std::mutex> lock(callerMapMutex_);
-            for (const auto &pair : callerMap_) {
-                if (pair.second != nullptr) {
-                    appsToCheck.push_back(pair.second);
-                }
-            }
-        }
-
-        // Check liveness outside lock (slow IPC calls)
-        std::vector<int32_t> deadPids;
-        for (const auto &appInfo : appsToCheck) {
-            PRINT_HILOGI("check caller process, pid: %{public}d, bundleName: %{public}s",
-                appInfo->pid_, appInfo->bundleName_.c_str());
-            if (!IsAppAlive(appInfo)) {
-                PRINT_HILOGI("app not alive, erase it");
-                deadPids.push_back(appInfo->pid_);
-            } else {
-                PRINT_HILOGI("app still alive");
-            }
-        }
-
-        // Remove dead apps under lock (fast)
-        {
-            std::lock_guard<std::mutex> lock(callerMapMutex_);
-            for (auto pid : deadPids) {
-                if (auto iter = callerMap_.find(pid); iter != callerMap_.end()) {
-                    int value = iter->second->counter_.Value();
-                    if (value) {
-                        counter_.Decrement(value);
-                    }
-                    callerMap_.erase(iter);
-                }
-            }
-            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
-        }
-
+        auto appsToCheck = CollectAppsSnapshot();
+        auto deadPids = CheckAppsLiveness(appsToCheck);
+        RemoveDeadApps(deadPids);
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-
-        if (delayUnload_.load()) {
-            PRINT_HILOGW("delay unload print SA");
-            delayUnload_.store(false);
+        if (ShouldDelayUnload()) {
             continue;
         }
-
-        // Check unload condition under lock, call unloadTask outside lock
-        bool shouldUnload = false;
-        {
-            std::lock_guard<std::mutex> lock(callerMapMutex_);
-            if (callerMap_.empty() || counter_.Value() == 0) {
-                shouldUnload = true;
-            }
-        }
-        if (shouldUnload && unloadTask()) {
-            isMonitoring_.store(false);
-        }
+        TryUnload(unloadTask);
     } while (isMonitoring_.load());
+}
+
+std::vector<std::shared_ptr<PrintCallerAppInfo>> PrintCallerAppMonitor::CollectAppsSnapshot()
+{
+    std::vector<std::shared_ptr<PrintCallerAppInfo>> appsToCheck;
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
+    for (const auto &pair : callerMap_) {
+        if (pair.second != nullptr) {
+            appsToCheck.push_back(pair.second);
+        }
+    }
+    return appsToCheck;
+}
+
+std::vector<int32_t> PrintCallerAppMonitor::CheckAppsLiveness(
+    const std::vector<std::shared_ptr<PrintCallerAppInfo>> &appsToCheck)
+{
+    std::vector<int32_t> deadPids;
+    for (const auto &appInfo : appsToCheck) {
+        PRINT_HILOGI("check caller process, pid: %{public}d, bundleName: %{public}s",
+            appInfo->pid_, appInfo->bundleName_.c_str());
+        if (!IsAppAlive(appInfo)) {
+            PRINT_HILOGI("app not alive, erase it");
+            deadPids.push_back(appInfo->pid_);
+        } else {
+            PRINT_HILOGI("app still alive");
+        }
+    }
+    return deadPids;
+}
+
+void PrintCallerAppMonitor::RemoveDeadApps(const std::vector<int32_t> &deadPids)
+{
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
+    for (auto pid : deadPids) {
+        if (auto iter = callerMap_.find(pid); iter != callerMap_.end()) {
+            int value = iter->second->counter_.Value();
+            if (value) {
+                counter_.Decrement(value);
+            }
+            callerMap_.erase(iter);
+        }
+    }
+    PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+}
+
+bool PrintCallerAppMonitor::ShouldDelayUnload()
+{
+    if (delayUnload_.load()) {
+        PRINT_HILOGW("delay unload print SA");
+        delayUnload_.store(false);
+        return true;
+    }
+    return false;
+}
+
+void PrintCallerAppMonitor::TryUnload(std::function<bool()> &unloadTask)
+{
+    bool shouldUnload = false;
+    {
+        std::lock_guard<std::mutex> lock(callerMapMutex_);
+        if (callerMap_.empty() || counter_.Value() == 0) {
+            shouldUnload = true;
+        }
+    }
+    if (shouldUnload && unloadTask()) {
+        isMonitoring_.store(false);
+    }
 }
 
 sptr<AppExecFwk::IAppMgr> PrintCallerAppMonitor::GetAppManager()

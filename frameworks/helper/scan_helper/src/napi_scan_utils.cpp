@@ -477,8 +477,8 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
 
 int32_t NapiScanUtils::OpenFile(const std::string &filePath)
 {
-    char resolvedPath[PATH_MAX + 1] = { 0 };
-    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr) {
+    char resolvedPath[PATH_MAX] = {0};
+    if (filePath.length() >= PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr) {
         SCAN_HILOGE("invalid file path!");
         return SCAN_INVALID_ID;
     }
@@ -499,8 +499,8 @@ bool NapiScanUtils::IsPathValid(const std::string &filePath)
 
 bool NapiScanUtils::ResolveAndValidatePath(const std::string &filePath, std::string &resolvedPath)
 {
-    char buf[PATH_MAX + 1] = { 0 };
-    if (filePath.length() > PATH_MAX || realpath(filePath.c_str(), buf) == nullptr ||
+    char buf[PATH_MAX] = {0};
+    if (filePath.length() >= PATH_MAX || realpath(filePath.c_str(), buf) == nullptr ||
         strcmp(buf, filePath.c_str()) != 0) {
         SCAN_HILOGE("invalid file path!");
         return false;
