@@ -541,10 +541,6 @@ bool SmbHostSearchHelper::EncodingConverter::GbkToUtf8Iconv(const std::string& g
         PRINT_HILOGE("iconv_open fail, errno = %d", errno);
         return false;
     }
-    struct IconvGuard {
-        iconv_t cd;
-        ~IconvGuard() { if (cd != (iconv_t)-1) iconv_close(cd); }
-    } IconvGuard{cd};
 
     bool success = false;
     size_t inBytesLeft = gbkInput.size();
@@ -567,6 +563,7 @@ bool SmbHostSearchHelper::EncodingConverter::GbkToUtf8Iconv(const std::string& g
         utf8Output.assign(buffer.data(), bytesConverted);
         success = true;
     }
+    iconv_close(cd);
     return success;
 }
 }

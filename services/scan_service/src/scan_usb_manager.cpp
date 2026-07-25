@@ -196,10 +196,7 @@ bool ScanUsbManager::IsDeviceAvailable(const std::string &firstId, const std::st
         return false;
     }
     bool closeDeviceRet = UsbSrvClient.Close(usbDevicePipe);
-    if (!closeDeviceRet) {
-        SCAN_HILOGE("closeDevice fail, usb pipe handle may leak, busNum=%{public}d, devAddr=%{public}d", busNum, devAddr);
-        return false;
-    }
+    SCAN_HILOGD("closeDevice ret = %{public}d", closeDeviceRet);
     return true;
 }
 

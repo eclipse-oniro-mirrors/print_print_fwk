@@ -1034,11 +1034,14 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
         return E_PRINT_SERVER_FAILURE;
     }
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
-    if (dinfo == nullptr || dinfo->attrs == nullptr) {
-        PRINT_HILOGE("cupsCopyDestInfo failed");
-        if (dinfo != nullptr) {
-            printAbility_->FreeDestInfo(dinfo);
-        }
+    if (dinfo == nullptr) {
+        PRINT_HILOGE("cupsCopyDestInfo failed, dinfo is nullptr");
+        printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (dinfo->attrs == nullptr) {
+        PRINT_HILOGE("cupsCopyDestInfo failed, dinfo->attrs is nullptr");
+        printAbility_->FreeDestInfo(dinfo);
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
         return E_PRINT_SERVER_FAILURE;
     }
@@ -1055,16 +1058,15 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
 void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName)
 {
     PRINT_HILOGI("[Job Id: %{public}s] AddCupsPrintJob start", jobInfo.GetJobId().c_str());
-    std::unique_ptr<JobParameters> jobParams(BuildJobParameters(jobInfo, userName));
+    JobParameters *jobParams = BuildJobParameters(jobInfo, userName);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
         return;
     }
-    DumpJobParameters(jobParams.get());
+    DumpJobParameters(jobParams);
     {
         std::lock_guard<std::mutex> lock(jobMutex);
-        jobQueue_.push_back(jobParams.get());
-        jobParams.release();
+        jobQueue_.push_back(jobParams);
     }
     StartNextJob();
     PRINT_HILOGI("AddCupsPrintJob end.");
@@ -1615,7 +1617,7 @@ bool PrintCupsClient::CheckPrinterDriverExist(const std::string &makeModel)
 }
 
 bool PrintCupsClient::VerifyPrintJob(
-    JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *&options, http_t *http)
+    JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *options, http_t *http)
 {
     if (jobParams == nullptr) {
         PRINT_HILOGE("The jobParams is null");
@@ -1661,8 +1663,10 @@ bool PrintCupsClient::VerifyPrintJob(
             jobParams->serviceJobId.c_str(), cupsLastErrorString());
         jobParams->serviceAbility->UpdatePrintJobState(
             jobParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
+        cupsFreeOptions(num_options, options);
         return false;
     }
+    cupsFreeOptions(num_options, options);
     return true;
 }
 
@@ -1739,7 +1743,7 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
     /* Pass writable cache fds to MDM callback for watermark embedding, then close them */
     int32_t ret = WatermarkManager::GetInstance().ProcessWatermarkForFiles(
         jobParams->serviceJobId, cacheFdList);
-    for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }
+    for (auto fd : cacheFdList) { CLOSE_FD_IF_VALID(fd); }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("ProcessWatermarkForFiles failed, ret: %{public}d, jobId: %{public}s.",
             ret, jobParams->serviceJobId.c_str());
@@ -1752,7 +1756,6 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
         freshFdList.empty()) {
         PRINT_HILOGE("Failed to reopen cache fds after watermark processing, jobId: %{public}s",
             jobParams->serviceJobId.c_str());
-        for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }
         return false;
     }
     for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }
@@ -1775,7 +1778,6 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
 
     if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
         PRINT_HILOGE("[Job Id: %{public}s] verify print job failed", jobParams->serviceJobId.c_str());
-        cupsFreeOptions(num_options, options);
         return;
     }
     if (!ResumePrinter(jobParams->printerName)) {
@@ -1785,15 +1787,12 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     // Process watermark before sending files to printer
 #ifdef WATERMARK_ENFORCING_ENABLE
     if (!ProcessWatermarkWithCacheFd(jobParams)) {
-        cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
-        cupsFreeOptions(num_options, options);
         UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
         return;
     }
 #endif // WATERMARK_ENFORCING_ENABLE
 
     HandleFilesAndStartMonitoring(jobParams, http, jobId);
-    cupsFreeOptions(num_options, options);
     PRINT_HILOGI("StartCupsJob end.");
 }
 

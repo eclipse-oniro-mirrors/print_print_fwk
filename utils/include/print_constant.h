@@ -18,7 +18,6 @@
 
 #include <string>
 #include <map>
-// #include <unistd.h>
 
 namespace OHOS::Print {
 #define PRINT_RET_NONE
@@ -101,6 +100,14 @@ namespace OHOS::Print {
         PRINT_HILOGE("%{public}s is nullptr in %{public}s.", (#ptr), __func__);   \
         return;                                                                     \
     }
+
+#define CLOSE_FD_IF_VALID(fd) \
+    do { \
+        if ((fd) != INVALID_FD) { \
+            close(fd); \
+            (fd) = INVALID_FD; \
+        } \
+    } while (0) \
 
 enum PrintErrorCode {
     E_PRINT_ACCOUNT_ERROR = -5,
@@ -393,7 +400,7 @@ const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
 constexpr uint32_t INVALID_FD = -1;
-#define CLOSE_FD_IF_VALID(fd) { if ((fd) != INVALID_FD) { close(fd); (fd) = INVALID_FD; } }
+
 const int32_t PRINT_API_COUNTED = 1;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";

@@ -152,7 +152,7 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
     while (!connectionListIt->second.empty()) {
         if (retry++ >= MAX_RETRY_TIMES) {
             PRINT_HILOGW("PrintServiceHelper::DisconnectAbility --> failed ");
-            return false;
+            break;
         }
         for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
             if (OHOS::Print::AbilityManagerAdapter::GetInstance().DisconnectAbility(*connIt) == 0) {

@@ -591,10 +591,6 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
         PRINT_HILOGE("Failed to open Dir: %{private}s", cachePath);
         return false;
     }
-    struct DirGuard {
-        DIR *d;
-        ~DirGuard() { if (d) closedir(d); }
-    } dirGuard{dir};
     struct dirent *file;
     std::vector<std::string> fileNames;
     std::string cacheFile;
@@ -606,6 +602,7 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
             }
         }
     }
+    closedir(dir);
     return true;
 }
 

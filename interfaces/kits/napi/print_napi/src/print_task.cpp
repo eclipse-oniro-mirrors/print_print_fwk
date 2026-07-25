@@ -209,7 +209,7 @@ uint32_t PrintTask::CallSpooler(
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    auto asyncContext = std::make_shared<BaseContext>();  //auto asyncContext = std::make_shared<PrintContext>();
+    auto asyncContext = std::make_shared<BaseContext>();
     if (asyncContext == nullptr) {
         PRINT_HILOGE("create asyncContext failed.");
         return E_PRINT_SERVER_FAILURE;

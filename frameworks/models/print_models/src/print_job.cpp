@@ -29,8 +29,7 @@ PrintJob::PrintJob()
 
 PrintJob::PrintJob(const PrintJob &right)
 {
-    fdList_.clear();
-    fdList_.assign(right.fdList_.begin(), right.fdList_.end());
+    right.DupFdList(fdList_);
 
     printerId_ = right.printerId_;
     jobId_ = right.jobId_;
@@ -56,8 +55,7 @@ PrintJob::PrintJob(const PrintJob &right)
 PrintJob &PrintJob::operator=(const PrintJob &right)
 {
     if (this != &right) {
-        fdList_.clear();
-        fdList_.assign(right.fdList_.begin(), right.fdList_.end());
+        right.DupFdList(fdList_);
 
         printerId_ = right.printerId_;
         jobId_ = right.jobId_;
