@@ -5901,9 +5901,6 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
     printerInfo->SetSelectedProtocol("auto");
     BuildPrinterPreference(*printerInfo);
 
-    std::string printerName = RenamePrinterWhenAdded(*printerInfo);
-    printerInfo->SetPrinterName(printerName);
-
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printSystemData_.IsPrinterAdded(printerId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
