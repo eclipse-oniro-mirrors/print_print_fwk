@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "print_cups_attribute.h"
+#include "print_service_converter.h"
 #include "print_json_util.h"
 
 using namespace testing;
@@ -71,6 +72,7 @@ void TestAttrCount(const std::string &jsonString, int count)
 }  // namespace
 
 namespace OHOS::Print {
+bool ConvertDuplexModeCode(const char *src, DuplexModeCode &dst);
 using PreAttrTestFunc = std::function<void(ipp_t *)>;
 using PostResponseTestFunc = std::function<void(ipp_t *)>;
 using PostAttrTestFunc = std::function<void(PrinterCapability &)>;
@@ -684,6 +686,94 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0025_NeedRename, TestSiz
         EXPECT_STREQ(printerCaps.GetPrinterAttrValue("sides-default"), "");
     };
     DoTest(preFunc, postFunc);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0026
+ * @tc.desc: ConvertDuplexModeCode matches one-sided (lowercase)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0026_ConvertDuplexModeCode_OneSidedLower_ReturnsTrue, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("one-sided", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_ONE_SIDED);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0027
+ * @tc.desc: ConvertDuplexModeCode matches ONE-SIDED case-insensitively (strcasecmp)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0027_ConvertDuplexModeCode_OneSidedUpper_ReturnsTrue, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("ONE-SIDED", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_ONE_SIDED);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0028
+ * @tc.desc: ConvertDuplexModeCode matches two-sided-long-edge (mixed case)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0028_ConvertDuplexModeCode_LongEdgeMixed_ReturnsTrue, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("Two-Sided-Long-Edge", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_TWO_SIDED_LONG_EDGE);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0029
+ * @tc.desc: ConvertDuplexModeCode matches TWO-SIDED-SHORT-EDGE case-insensitively (strcasecmp)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0029_ConvertDuplexModeCode_ShortEdgeUpper_ReturnsTrue, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("TWO-SIDED-SHORT-EDGE", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_TWO_SIDED_SHORT_EDGE);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0030
+ * @tc.desc: ConvertDuplexModeCode returns false for unmatched value (else branch)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0030_ConvertDuplexModeCode_NoMatch_ReturnsFalse, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("invalid-sides-value", dst), false);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0031
+ * @tc.desc: ConvertDuplexModeCode requires exact match, substring no longer matches
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0031_ConvertDuplexModeCode_SubstringNoMatch_ReturnsFalse, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("xone-sidedx", dst), false);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0032
+ * @tc.desc: ConvertDuplexModeCode with null source
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0032_ConvertDuplexModeCode_NullSrc_ReturnsFalse, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode(nullptr, dst), false);
 }
 
 }  // namespace OHOS::Print

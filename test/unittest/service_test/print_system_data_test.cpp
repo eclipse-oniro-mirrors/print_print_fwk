@@ -2330,5 +2330,121 @@ HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_VendorAndOptions, 
     EXPECT_EQ(restored.GetVendorJobAttrAbility(), "job");
     EXPECT_TRUE(restored.HasOption());
 }
+
+HWTEST_F(PrintSystemDataTest, ProcessJsonToCapabilityList_ArrayExceedMax_ReturnFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value colorModeList;
+    for (uint32_t i = 0; i <= MAX_CAPABILITY_ARRAY_SIZE; i++) {
+        colorModeList.append(i);
+    }
+    capsJson["supportedColorMode"] = colorModeList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability), false);
+}
+
+HWTEST_F(PrintSystemDataTest, ProcessJsonToCapabilityList_NormalSize_ReturnTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value colorModeList;
+    colorModeList.append(0);
+    colorModeList.append(1);
+    colorModeList.append(2);
+    capsJson["supportedColorMode"] = colorModeList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability), true);
+    std::vector<uint32_t> colorModes;
+    printerCapability.GetSupportedColorMode(colorModes);
+    EXPECT_EQ(colorModes.size(), 3);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToSupportedDuplexMode_ValidAsUInt_ReturnsTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value duplexList;
+    duplexList.append(0);
+    duplexList.append(1);
+    duplexList.append(2);
+    capsJson["supportedDuplexMode"] = duplexList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedDuplexMode(capsJson, printerCapability), true);
+    std::vector<uint32_t> duplexModes;
+    printerCapability.GetSupportedDuplexMode(duplexModes);
+    EXPECT_EQ(duplexModes.size(), 3);
+    EXPECT_EQ(duplexModes[0], 0);
+    EXPECT_EQ(duplexModes[1], 1);
+    EXPECT_EQ(duplexModes[2], 2);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToSupportedOrientation_ValidAsUInt_ReturnsTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value orientationList;
+    orientationList.append(0);
+    orientationList.append(1);
+    orientationList.append(2);
+    orientationList.append(3);
+    capsJson["supportedOrientation"] = orientationList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedOrientation(capsJson, printerCapability), true);
+    std::vector<uint32_t> orientations;
+    printerCapability.GetSupportedOrientation(orientations);
+    EXPECT_EQ(orientations.size(), 4);
+    EXPECT_EQ(orientations[0], 0);
+    EXPECT_EQ(orientations[1], 1);
+    EXPECT_EQ(orientations[2], 2);
+    EXPECT_EQ(orientations[3], 3);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrintResolution_ValidAsUInt_ReturnsResolution, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value resolutionList;
+    Json::Value item;
+    item["id"] = "300dpi";
+    item["horizontalDpi"] = 300;
+    item["verticalDpi"] = 600;
+    resolutionList.append(item);
+    capsJson["resolution"] = resolutionList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToPrintResolution(capsJson, printerCapability), true);
+    std::vector<PrintResolution> resolution;
+    printerCapability.GetResolution(resolution);
+    ASSERT_EQ(resolution.size(), 1);
+    EXPECT_EQ(resolution[0].GetHorizontalDpi(), 300);
+    EXPECT_EQ(resolution[0].GetVerticalDpi(), 600);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrintMargin_ValidAsUInt_ReturnsMargin, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value marginJson;
+    marginJson["top"] = 100;
+    marginJson["bottom"] = 200;
+    marginJson["left"] = 300;
+    marginJson["right"] = 400;
+    capsJson["minMargin"] = marginJson;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToPrintMargin(capsJson, printerCapability), true);
+    PrintMargin margin;
+    printerCapability.GetMinMargin(margin);
+    EXPECT_EQ(margin.GetTop(), 100);
+    EXPECT_EQ(margin.GetBottom(), 200);
+    EXPECT_EQ(margin.GetLeft(), 300);
+    EXPECT_EQ(margin.GetRight(), 400);
+}
+
 }  // namespace Print
 }  // namespace OHOS
