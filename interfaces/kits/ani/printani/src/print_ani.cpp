@@ -125,7 +125,8 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
         return;
     }
     auto nativePrintTask = new (std::nothrow) AniPrintTask(env);
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, static_cast<ani_object>(printAdapter));
+    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env,
+        static_cast<ani_object>(printAdapter));
     if (nativePrintTask == nullptr) {
         PRINT_HILOGE("nativePrintTask is nullptr");
         AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);

@@ -990,7 +990,6 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[1]);
     if (printAttributes == nullptr) {
         PRINT_HILOGE("printAttributes is nullptr");
-        PrintManagerClient::GetInstance()->Off(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER);
         return nullptr;
     }
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
@@ -998,7 +997,6 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to StartGetPrintFile");
-            PrintManagerClient::GetInstance()->Off(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER);
             NapiThrowError(env, ret);
             return nullptr;
         }

@@ -153,8 +153,8 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
             NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
             NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", WriteResultCallback, cbParam);
-        napi_status callStatus = napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
-            callbackValues, &callbackResult);
+        napi_status callStatus = napi_call_function(cbParam->env, adapterObj, layoutWriteFunc,
+            NapiPrintUtils::ARGC_FIVE, callbackValues, &callbackResult);
         if (callStatus != napi_ok) {
             PRINT_HILOGE("napi_call_function failed");
             CLOSE_FD_IF_VALID(cbParam->fd);
@@ -165,7 +165,7 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
         CLOSE_FD_IF_VALID(cbParam->fd);
     }
     if (napi_close_handle_scope(cbParam->env, scope) != napi_ok) {
-       PRINT_HILOGE("napi_close_handle_scope failed");
+        PRINT_HILOGE("napi_close_handle_scope failed");
     }
 }
 
