@@ -217,6 +217,7 @@ napi_value NapiPrintTask::GetAbilityContext(
         abilityContext = OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(context);
         if (abilityContext == nullptr) {
             PRINT_HILOGE("GetAbilityContext get Stage model ability context failed.");
+            return nullptr;
         }
         return WrapVoidToJS(env);
     }

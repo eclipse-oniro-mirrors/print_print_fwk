@@ -547,5 +547,22 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterExtensionCb_Lambda_V
     TearDownProxy();
 }
 
+/**
+ * @tc.name: JsPrintExtensionTest_GetSrcPath_NullAbilityInfo_0001
+ * @tc.desc: GetSrcPath does not crash and leaves srcPath untouched when abilityInfo_ is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_GetSrcPath_NullAbilityInfo_0001, TestSize.Level0)
+{
+    std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
+    auto *ext = JsPrintExtension::Create(runtime);
+    ASSERT_NE(ext, nullptr);
+    std::string srcPath = "sentinel";
+    ext->GetSrcPath(srcPath);
+    EXPECT_EQ(srcPath, "sentinel");
+    delete ext;
+}
+
 }  // namespace AbilityRuntime
 }  // namespace OHOS

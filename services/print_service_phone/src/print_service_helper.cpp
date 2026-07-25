@@ -248,7 +248,6 @@ void PrintServiceHelper::PrintSubscribeCommonEvent()
     if (isSubscribeCommonEvent) {
         return;
     }
-    isSubscribeCommonEvent = true;
     PRINT_HILOGI("listen common event.");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
@@ -272,6 +271,8 @@ void PrintServiceHelper::PrintSubscribeCommonEvent()
     }
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(userStatusListener)) {
         PRINT_HILOGE("subscribe common event failed");
+        return;
     }
+    isSubscribeCommonEvent = true;
 }
 }  // namespace OHOS

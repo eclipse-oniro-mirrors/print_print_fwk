@@ -866,6 +866,7 @@ int32_t PrintServiceAbility::DestroyExtension()
         DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     }
 
+    PRINT_CHECK_NULL_AND_RETURN(helper_, E_PRINT_INVALID_PARAMETER);
     helper_->DisconnectAbility(ExtensionAbilityType::PRINT_EXTENSION_ABILITY);
 
     PRINT_HILOGI("DestroyExtension end.");
@@ -1663,6 +1664,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         }
     } else {
         printJob = jobIt->second;
+        PRINT_CHECK_NULL_AND_RETURN(printJob, E_PRINT_INVALID_PRINTJOB);
     }
     if (printJob->GetJobState() >= PRINT_JOB_QUEUED) {
         std::string extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
@@ -3175,6 +3177,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(
         auto unregisterTask = [this, jobId]() {
             this->Off(jobId, PRINT_ADAPTER_EVENT_TYPE);
         };
+        PRINT_CHECK_NULL_RETURN_VOID(serviceHandler_);
         serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
     }
 }

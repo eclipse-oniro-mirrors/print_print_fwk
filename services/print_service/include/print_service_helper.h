@@ -80,11 +80,11 @@ private:
         {
             if (resultCode == ERR_OK) {
                 PRINT_HILOGI("connect done");
-                isConnected_ = true;
                 if (remoteObject == nullptr || deathRecipient_ == nullptr) {
                     PRINT_HILOGE("fail to create DeathRecipient");
                     return;
                 }
+                isConnected_ = true;
                 remoteObject->AddDeathRecipient(deathRecipient_);
             } else {
                 PRINT_HILOGI("connect failed, ret = %{public}d", resultCode);
