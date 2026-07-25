@@ -17,6 +17,7 @@
 #include "safe_sane_api.h"
 #include "sane/sane.h"
 #include "sane/saneopts.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS {
@@ -79,13 +80,6 @@ std::shared_ptr<std::mutex> SafeSANEAPI::RemoveHandleMutex(SANE_Handle handle)
     return mutexPtr;
 }
 
-bool SafeSANEAPI::IsHandleRegistered(SANE_Handle handle, const std::shared_ptr<std::mutex>& mutexPtr)
-{
-    std::lock_guard<std::mutex> lock(handleMutexesLock_);
-    auto it = handleMutexes_.find(handle);
-    return it != handleMutexes_.end() && it->second && it->second.get() == mutexPtr.get();
-}
-
 SANE_Status SafeSANEAPI::SaneInit(SANE_Int* version, SANE_Auth_Callback authorize)
 {
     std::lock_guard<std::mutex> lock(globalLock_);
@@ -133,10 +127,7 @@ SANE_Status SafeSANEAPI::SaneStart(SANE_Handle handle)
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneStart: handle was closed concurrently");
-        return SANE_STATUS_INVAL;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_start(handle);
 }
 
@@ -148,10 +139,7 @@ void SafeSANEAPI::SaneCancel(SANE_Handle handle)
         return;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneCancel: handle was closed concurrently");
-        return;
-    }
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(GetHandleMutex(handle), __func__);
     sane_cancel(handle);
 }
 
@@ -163,10 +151,7 @@ const SANE_Option_Descriptor* SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle h
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneGetOptionDescriptor: handle was closed concurrently");
-        return nullptr;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), nullptr, __func__);
     return sane_get_option_descriptor(handle, option);
 }
 
@@ -178,10 +163,7 @@ SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* 
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneGetParameters: handle was closed concurrently");
-        return SANE_STATUS_INVAL;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_get_parameters(handle, params);
 }
 
@@ -194,10 +176,7 @@ SANE_Status SafeSANEAPI::SaneControlOption(SANE_Handle handle, SANE_Int option,
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneControlOption: handle was closed concurrently");
-        return SANE_STATUS_INVAL;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_control_option(handle, option, action, value, info);
 }
 
@@ -210,10 +189,7 @@ SANE_Status SafeSANEAPI::SaneRead(SANE_Handle handle, SANE_Byte* data,
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (!IsHandleRegistered(handle, mutexPtr)) {
-        SCAN_HILOGE("SaneRead: handle was closed concurrently");
-        return SANE_STATUS_INVAL;
-    }
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_read(handle, data, maxLength, length);
 }
 
