@@ -5572,9 +5572,6 @@ void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, 
         return;
     }
     for (const auto &item: singleOptArray) {
-        if (!item.isString()) {
-            continue;
-        }
         advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
     }
     advanceChoiceJson["default"] = advanceChoiceJsonDefaultLanguage;

@@ -313,21 +313,21 @@ bool PrintAttributes::ReadModeAttrsFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasDirectionMode_), false);
     if (hasDirectionMode_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(directionMode_), false);
-        if (directionMode_ > DIRECTION_MODE_MAX) {
+        if (directionMode_ >= DIRECTION_MODE_MAX) {
             return false;
         }
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasColorMode_), false);
     if (hasColorMode_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(colorMode_), false);
-        if (colorMode_ > PRINT_COLOR_MODE_MAX) {
+        if (colorMode_ >= PRINT_COLOR_MODE_MAX) {
             return false;
         }
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasDuplexMode_), false);
     if (hasDuplexMode_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(duplexMode_), false);
-        if (duplexMode_ > DUPLEX_MODE_MAX) {
+        if (duplexMode_ >= DUPLEX_MODE_MAX) {
             return false;
         }
     }
