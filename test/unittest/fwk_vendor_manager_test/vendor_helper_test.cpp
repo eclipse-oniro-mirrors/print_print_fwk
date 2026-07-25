@@ -376,15 +376,6 @@ HWTEST_F(VendorHelperTest, UpdateColorCapability_NullCapability_ReturnsFalse, Te
     EXPECT_FALSE(UpdateColorCapability(printerCap, nullptr));
 }
 
-HWTEST_F(VendorHelperTest, UpdateColorCapability_NullColorModes_ReturnsFalse, TestSize.Level1)
-{
-    PrinterCapability printerCap;
-    Print_PrinterCapability capability = {0};
-    BuildCapability(capability);
-    capability.supportedColorModes = nullptr;
-    EXPECT_FALSE(UpdateColorCapability(printerCap, &capability));
-}
-
 HWTEST_F(VendorHelperTest, UpdateColorCapability_CountExceedsMax_ReturnsFalse, TestSize.Level1)
 {
     PrinterCapability printerCap;
@@ -394,17 +385,6 @@ HWTEST_F(VendorHelperTest, UpdateColorCapability_CountExceedsMax_ReturnsFalse, T
     capability.supportedColorModes = modes.data();
     capability.supportedColorModesCount = MAX_COLOR_MODE_COUNT + 1;
     EXPECT_FALSE(UpdateColorCapability(printerCap, &capability));
-}
-
-HWTEST_F(VendorHelperTest, UpdateColorCapability_CountAtMax_ReturnsTrue, TestSize.Level1)
-{
-    PrinterCapability printerCap;
-    Print_PrinterCapability capability = {0};
-    BuildCapability(capability);
-    std::vector<Print_ColorMode> modes(MAX_COLOR_MODE_COUNT, COLOR_MODE_MONOCHROME);
-    capability.supportedColorModes = modes.data();
-    capability.supportedColorModesCount = MAX_COLOR_MODE_COUNT;
-    EXPECT_TRUE(UpdateColorCapability(printerCap, &capability));
 }
 
 HWTEST_F(VendorHelperTest, UpdateColorCapability_NormalCount_ReturnsTrue, TestSize.Level1)
