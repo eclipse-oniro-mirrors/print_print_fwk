@@ -51,7 +51,7 @@ HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_Constructor_Test, Test
 {
     std::string id = "12345";
     PrintEventContainer container(id);
-    EXPECT_EQ(container.printerId, id);
+    EXPECT_EQ(container.printerId_, id);
 }
 HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_ShouldAddNewEvent_WhenTypeNotExists, TestSize.Level0)
 {
@@ -59,8 +59,8 @@ HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_ShouldAddNewEvent_When
     std::string type = "new_type";
     int32_t code = 123;
     container.AddEventCode(type, code);
-    auto iter = container.eventTypeMap.find(type);
-    EXPECT_NE(iter, container.eventTypeMap.end());
+    auto iter = container.eventTypeMap_.find(type);
+    EXPECT_NE(iter, container.eventTypeMap_.end());
     EXPECT_NE(iter->second, nullptr);
     EXPECT_EQ(iter->second->size(), 1);
     EXPECT_EQ(iter->second->at(0), code);
@@ -74,8 +74,8 @@ HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_ShouldAddToExistingEve
     int32_t code2 = 456;
     container.AddEventCode(type, code1);
     container.AddEventCode(type, code2);
-    auto iter = container.eventTypeMap.find(type);
-    EXPECT_NE(iter, container.eventTypeMap.end());
+    auto iter = container.eventTypeMap_.find(type);
+    EXPECT_NE(iter, container.eventTypeMap_.end());
     EXPECT_NE(iter->second, nullptr);
     EXPECT_EQ(iter->second->size(), 2);
     EXPECT_EQ(iter->second->at(1), code2);
@@ -87,10 +87,10 @@ HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_ShouldHandleNullVector
     PrintEventContainer container("test_id");
     std::string type = "null_type";
     int32_t code = 123;
-    container.eventTypeMap[type] = nullptr;
+    container.eventTypeMap_[type] = nullptr;
     container.AddEventCode(type, code);
-    auto iter = container.eventTypeMap.find(type);
-    EXPECT_NE(iter, container.eventTypeMap.end());
+    auto iter = container.eventTypeMap_.find(type);
+    EXPECT_NE(iter, container.eventTypeMap_.end());
     EXPECT_NE(iter->second, nullptr);
     EXPECT_EQ(iter->second->size(), 1);
     EXPECT_EQ(iter->second->at(0), code);
@@ -104,8 +104,8 @@ HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_ShouldClearEvents_When
     int32_t code = 123;
     container.AddEventCode(type, code);
     container.ClearEventType(type);
-    auto iter = container.eventTypeMap.find(type);
-    EXPECT_NE(iter, container.eventTypeMap.end());
+    auto iter = container.eventTypeMap_.find(type);
+    EXPECT_NE(iter, container.eventTypeMap_.end());
     EXPECT_NE(iter->second, nullptr);
     EXPECT_EQ(iter->second->size(), 0);
 }
@@ -115,11 +115,11 @@ HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_ShouldDoNothing_WhenTy
 {
     PrintEventContainer container("test_id");
     std::string type = "null_type";
-    container.eventTypeMap[type] = nullptr;
+    container.eventTypeMap_[type] = nullptr;
     container.ClearEventType(type);
     container.ClearEventType("not_exist_type");
-    auto iter = container.eventTypeMap.find(type);
-    EXPECT_NE(iter, container.eventTypeMap.end());
+    auto iter = container.eventTypeMap_.find(type);
+    EXPECT_NE(iter, container.eventTypeMap_.end());
     EXPECT_EQ(iter->second, nullptr);
 }
 

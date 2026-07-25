@@ -26,6 +26,7 @@
 #define protected public
 #include "print_service_ability.h"
 #include "print_bms_helper.h"
+#include "print_caller_app_monitor.h"
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
 #include "print_failure_ai_notifier.h"
 #endif
