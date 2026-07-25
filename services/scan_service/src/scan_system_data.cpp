@@ -233,7 +233,7 @@ bool ScanSystemData::UpdateScannerInfoByUniqueId(const std::string &uniqueId, co
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
-    if (iter != addedScannerMap_.end()) {
+    if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         *iter->second = scannerInfo;
         return true;
     }

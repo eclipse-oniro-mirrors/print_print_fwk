@@ -360,16 +360,20 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasMargin_), false);
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
-        if (marginPtr != nullptr) {
-            margin_ = *marginPtr;
+        if (marginPtr == nullptr) {
+            PRINT_HILOGE("PrintMargin unmarshalling failed");
+            return false;
         }
+        margin_ = *marginPtr;
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPreview_), false);
     if (hasPreview_) {
         auto previewPtr = PrintPreviewAttribute::Unmarshalling(parcel);
-        if (previewPtr != nullptr) {
-            preview_ = *previewPtr;
+        if (previewPtr == nullptr) {
+            PRINT_HILOGE("PrintPreviewAttribute unmarshalling failed");
+            return false;
         }
+        preview_ = *previewPtr;
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasOption_), false);
     if (hasOption_) {

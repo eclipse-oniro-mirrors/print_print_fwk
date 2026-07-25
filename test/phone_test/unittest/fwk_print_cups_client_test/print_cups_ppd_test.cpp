@@ -37,7 +37,7 @@ class PrintCupsPpdTest : public testing::Test {
 protected:
     std::string CreateTempPpdFile(const std::string &content)
     {
-        std::string tempPath = "/data/local/tmp/test_ppd_" + std::to_string(getpid()) + ".ppd";
+        std::string tempPath = "/data/local/tmp/test_vendor_" + std::to_string(getpid()) + ".ppd";
         std::ofstream file(tempPath);
         file << content;
         file.close();
@@ -100,6 +100,8 @@ protected:
         return CreateTempPpdFile(content);
     }
 };
+
+void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
 /**
  * @tc.name: QueryPrinterCapabilityFromPPDFile_001
@@ -435,6 +437,38 @@ HWTEST_F(PrintCupsPpdTest, CheckPpdConflicts_002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash
+ * @tc.desc: ParseMediaTypeAttributeFromPPD returns without crash when ppdCache->types is nullptr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsPpdTest, ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    auto *origTypes = ppd->cache->types;
+    int origNumTypes = ppd->cache->num_types;
+    ppd->cache->types = nullptr;
+    ppd->cache->num_types = origNumTypes > 0 ? origNumTypes : 1;
+
+    PrinterCapability printerCaps;
+    ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
+    std::vector<std::string> mediaTypes;
+    printerCaps.GetSupportedMediaType(mediaTypes);
+    EXPECT_TRUE(mediaTypes.empty());
+
+    ppd->cache->types = origTypes;
+    ppd->cache->num_types = origNumTypes;
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+/**
  * @tc.name: ConvertOptionAndChoiceNameToPpd_001
  * @tc.desc: ConvertOptionAndChoiceNameToPpd with unknown type returns false
  * @tc.type: FUNC
@@ -604,8 +638,8 @@ HWTEST_F(PrintCupsPpdTest, ConvertOptionAndChoiceNameToPpd_008, TestSize.Level1)
 {
     ppd_file_t *ppd = nullptr;
     std::string optName, choiceName;
-    bool ret = ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_QUALITY,
-        CUPS_PRINT_QUALITY_DRAFT, optName, choiceName);
+    bool ret = ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_DRAFT,
+        optName, choiceName);
     EXPECT_FALSE(ret);
     EXPECT_EQ(optName, PRINT_PARAM_TYPE_QUALITY);
     EXPECT_EQ(choiceName, CUPS_PRINT_QUALITY_DRAFT);

@@ -177,6 +177,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 
     static const char *className = "@ohos.print.print.PrinterInformationImp";
     ani_object obj = CreateObject(env, nullptr, className);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(obj, nullptr);
 
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
 
