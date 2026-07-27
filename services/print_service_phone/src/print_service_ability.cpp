@@ -1229,16 +1229,18 @@ int32_t PrintServiceAbility::ValidatePrinterForUpdateDiscovery(
         PRINT_HILOGE("printer not in discovery list, globalId: %{public}s", globalId.c_str());
         return E_PRINT_INVALID_PARAMETER;
     }
+    std::string newName = printerInfo.GetPrinterName();
     PrinterInfo addedInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalId, addedInfo)) {
-        std::vector<std::string> addedPrinterNames;
-        printSystemData_.GetAddedPrinterListFromSystemData(addedPrinterNames);
-        std::string newName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
-        for (const auto &name : addedPrinterNames) {
-            if (PrintUtil::StandardizePrinterName(name) == newName) {
-                PRINT_HILOGE("printerName conflict with added printer");
-                return E_PRINT_INVALID_PARAMETER;
-            }
+    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalId, addedInfo) &&
+        addedInfo.GetPrinterName() == newName) {
+        return E_PRINT_NONE;
+    }
+    std::vector<std::string> addedPrinterNames;
+    printSystemData_.GetAddedPrinterListFromSystemData(addedPrinterNames);
+    for (const auto &name : addedPrinterNames) {
+        if (name == newName) {
+            PRINT_HILOGE("printerName conflict with added printer");
+            return E_PRINT_INVALID_PARAMETER;
         }
     }
     return E_PRINT_NONE;
