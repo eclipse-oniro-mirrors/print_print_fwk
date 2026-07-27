@@ -1197,11 +1197,17 @@ int32_t PrintServiceAbility::AddPrinterToCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGI("[Printer: %{public}s] AddPrinterToCups start, printerUri: %{public}s, printerMake: %{public}s.",
+    return AddPrinterToCupsInner(printerUri, printerName, printerMake);
+}
+
+int32_t PrintServiceAbility::AddPrinterToCupsInner(
+    const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
+{
+    PRINT_HILOGI("[Printer: %{public}s] AddPrinterToCupsInner start, printerUri: %{public}s, printerMake: %{public}s.",
         printerName.c_str(), PrintUtils::AnonymizePrinterUri(printerUri).c_str(), printerMake.c_str());
 #ifdef CUPS_ENABLE
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
@@ -1210,7 +1216,31 @@ int32_t PrintServiceAbility::AddPrinterToCups(
         return ret;
     }
 #endif  // CUPS_ENABLE
-    PRINT_HILOGI("AddPrinterToCups end.");
+    PRINT_HILOGI("AddPrinterToCupsInner end.");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ValidatePrinterForUpdateDiscovery(
+    const std::string &extensionId, const PrinterInfo &printerInfo)
+{
+    std::string globalId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
+    auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    if (discoveredInfo == nullptr) {
+        PRINT_HILOGE("printer not in discovery list, globalId: %{public}s", globalId.c_str());
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    PrinterInfo addedInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalId, addedInfo)) {
+        std::vector<std::string> addedPrinterNames;
+        printSystemData_.GetAddedPrinterListFromSystemData(addedPrinterNames);
+        std::string newName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+        for (const auto &name : addedPrinterNames) {
+            if (PrintUtil::StandardizePrinterName(name) == newName) {
+                PRINT_HILOGE("printerName conflict with added printer");
+                return E_PRINT_INVALID_PARAMETER;
+            }
+        }
+    }
     return E_PRINT_NONE;
 }
 
@@ -2691,6 +2721,11 @@ int32_t PrintServiceAbility::RegisterExtCallback(
 
     PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
 
+    int32_t verifyRet = ValidateExtensionId(extensionId);
+    if (verifyRet != E_PRINT_NONE) {
+        return verifyRet;
+    }
+
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
@@ -2734,6 +2769,10 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
+    int32_t verifyRet = ValidateExtensionId(extensionId);
+    if (verifyRet != E_PRINT_NONE) {
+        return verifyRet;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
@@ -3585,7 +3624,11 @@ int32_t PrintServiceAbility::UpdatePrinterInDiscovery(const PrinterInfo &printer
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
     int32_t ret = E_PRINT_NONE;
     if (!PrintUtil::startsWith(extensionId, PRINT_EXTENSION_BUNDLE_NAME)) {
-        ret = AddPrinterToCups(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerInfo.GetPrinterMake());
+        int32_t verifyRet = ValidatePrinterForUpdateDiscovery(extensionId, printerInfo);
+        if (verifyRet != E_PRINT_NONE) {
+            return verifyRet;
+        }
+        ret = AddPrinterToCupsInner(printerInfo.GetUri(), printerInfo.GetPrinterName(), printerInfo.GetPrinterMake());
     }
     if (ret == E_PRINT_NONE) {
         UpdateSinglePrinterInfo(printerInfo, extensionId);
@@ -4916,6 +4959,16 @@ int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
 std::string PrintServiceAbility::GetCallerBundleName()
 {
     return DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+}
+
+int32_t PrintServiceAbility::ValidateExtensionId(const std::string &extensionId)
+{
+    std::string callerBundleName = GetCallerBundleName();
+    if (callerBundleName.empty() || callerBundleName != extensionId) {
+        PRINT_HILOGE("extensionId mismatch, caller: %{public}s", callerBundleName.c_str());
+        return E_PRINT_NO_PERMISSION;
+    }
+    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
