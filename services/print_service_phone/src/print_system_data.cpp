@@ -154,8 +154,11 @@ bool PrintSystemData::Init()
         return false;
     }
     for (const auto &entry : iter) {
-        if (!entry.is_directory(ec) || ec) {
-            ec.clear();
+        if (entry.is_directory(ec)) {
+            if (ec) {
+                PRINT_HILOGW("is_directory ec error: %{public}s.", ec.message().c_str());
+                ec.clear();
+            }
             continue;
         }
         ReadJsonFile(entry.path());

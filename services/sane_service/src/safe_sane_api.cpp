@@ -126,10 +126,6 @@ SANE_Status SafeSANEAPI::SaneStart(SANE_Handle handle)
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    if (GetHandleMutex(handle) == nullptr) {
-        SCAN_HILOGE("SaneStart: handle closed after lock acquired");
-        return SANE_STATUS_INVAL;
-    }
     return sane_start(handle);
 }
 

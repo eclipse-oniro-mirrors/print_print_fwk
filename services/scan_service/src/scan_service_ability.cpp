@@ -161,7 +161,7 @@ void ScanServiceAbility::OnStart()
         auto callback = [=]() { ServiceInit(); };
         std::shared_ptr<AppExecFwk::EventHandler> handler;
         {
-            std::lock_guard<std::mutex> lock(lock_);
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
             handler = serviceHandler_;
         }
         if (handler != nullptr) {
@@ -202,7 +202,7 @@ void ScanServiceAbility::OnStop()
         return;
     }
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         serviceHandler_ = nullptr;
     }
     state_ = ServiceRunningState::STATE_NOT_START;
@@ -519,7 +519,7 @@ int32_t ScanServiceAbility::GetScannerList()
     {
         std::shared_ptr<AppExecFwk::EventHandler> handler;
         {
-            std::lock_guard<std::mutex> lock(lock_);
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
             handler = serviceHandler_;
         }
         SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(handler, E_SCAN_SERVER_FAILURE, __func__);
@@ -1201,7 +1201,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     {
         std::shared_ptr<AppExecFwk::EventHandler> handler;
         {
-            std::lock_guard<std::mutex> lock(lock_);
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
             handler = serviceHandler_;
         }
         SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(handler, E_SCAN_SERVER_FAILURE, __func__);
