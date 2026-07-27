@@ -2809,7 +2809,6 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
         std::string printerName = RenamePrinterWhenAdded(*printerInfo);
-        PRINT_HILOGI("[Printer: %{public}s] rename printer when connect", printerName.c_str());
         printerInfo->SetPrinterName(printerName);
         printSystemData_.InsertAddedPrinter(printerId, *printerInfo);
         printSystemData_.SavePrinterFile(printerId);
