@@ -597,5 +597,28 @@ HWTEST_F(PrintServiceAbilityTest, StartPrintJobInternal, TestSize.Level1)
 
 #endif  // REMOTE_SERVICE_ENABLE
 
+// covers #50: queuedJobList_ entry is null, CancelPrintJob must not deref null
+HWTEST_F(PrintServiceAbilityTest, CancelPrintJob_WhenQueuedJobEntryNull_ShouldReturnInvalid, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string jobId = "123";
+    int32_t userId = 100;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    userData->queuedJobList_[jobId] = nullptr;
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
+}
+
+// covers #49: serviceHandler_ null, notifyAdapterJobChanged must not crash.
+// PostTask path needs a registered print job listener (heavy mock, skipped).
+HWTEST_F(PrintServiceAbilityTest, notifyAdapterJobChanged_WhenServiceHandlerNull_ShouldNotCrash, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    service->serviceHandler_ = nullptr;
+    std::string jobId = "job_005";
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, 0);
+    EXPECT_EQ(service->serviceHandler_, nullptr);
+}
+
 }  // namespace Print
 }  // namespace OHOS

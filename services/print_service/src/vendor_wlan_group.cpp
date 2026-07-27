@@ -14,6 +14,7 @@
  */
 
 #include "vendor_wlan_group.h"
+#include "print_constant.h"
 #include "print_log.h"
 #include "print_utils.h"
 #include "file_ex.h"
@@ -629,6 +630,7 @@ bool VendorWlanGroup::ConnectPrinterByIdAndPpd(const std::string &printerId, con
 
 bool VendorWlanGroup::ConnectByBsuni(const std::string &printerId)
 {
+    PRINT_CHECK_NULL_AND_RETURN(parentVendorManager, false);
     SetGroupPrinterFromVendorGroupList(printerId, VENDOR_BSUNI_DRIVER);
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
     auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);

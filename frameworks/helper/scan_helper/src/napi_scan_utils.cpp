@@ -501,7 +501,7 @@ bool NapiScanUtils::ResolveAndValidatePath(const std::string &filePath, std::str
 {
     char buf[PATH_MAX] = {0};
     if (filePath.length() >= PATH_MAX || realpath(filePath.c_str(), buf) == nullptr ||
-        strcmp(buf, filePath.c_str()) != 0) {
+        std::string(buf) != filePath) {
         SCAN_HILOGE("invalid file path!");
         return false;
     }

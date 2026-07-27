@@ -787,7 +787,8 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
                 }
             }
         }
-        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s",
+            PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
         printerNameList.push_back(info->GetPrinterName());
     }
 }
@@ -811,7 +812,8 @@ void PrintSystemData::GetRawAddedPrinterListFromSystemData(std::vector<std::stri
             if (optionJson.isMember("driver") && optionJson["driver"].isString() &&
                 optionJson["driver"].asString() == "RAW") {
                 PRINT_HILOGD(
-                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s",
+                    PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
                 printerNameList.push_back(info->GetPrinterName());
             }
         }
@@ -1119,8 +1121,8 @@ bool PrintSystemData::ConvertJsonToPrintResolution(Json::Value &capsJson, Printe
                 return false;
             }
             resolution.SetId(item["id"].asString());
-            resolution.SetHorizontalDpi(item["horizontalDpi"].asInt());
-            resolution.SetVerticalDpi(item["verticalDpi"].asInt());
+            resolution.SetHorizontalDpi(item["horizontalDpi"].asUInt());
+            resolution.SetVerticalDpi(item["verticalDpi"].asUInt());
             return true;
         }
     );
@@ -1141,7 +1143,7 @@ bool PrintSystemData::ConvertJsonToSupportedDuplexMode(Json::Value &capsJson, Pr
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedDuplexMode", printerCapability,
         &PrinterCapability::SetSupportedDuplexMode,
         [](const Json::Value &item, uint32_t &duplexMode) -> bool {
-            duplexMode = item.asInt();
+            duplexMode = item.asUInt();
             return true;
         });
 }
@@ -1171,7 +1173,7 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(Json::Value &capsJson, P
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedOrientation", printerCapability,
         &PrinterCapability::SetSupportedOrientation,
         [](const Json::Value &item, uint32_t &orientation) -> bool {
-            orientation = item.asInt();
+            orientation = item.asUInt();
             return true;
         });
 }
@@ -1192,10 +1194,10 @@ bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCap
         PRINT_HILOGE("Invalid format,key is minMargin");
         return false;
     }
-    minMargin.SetTop(marginJson["top"].asInt());
-    minMargin.SetBottom(marginJson["bottom"].asInt());
-    minMargin.SetLeft(marginJson["left"].asInt());
-    minMargin.SetRight(marginJson["right"].asInt());
+    minMargin.SetTop(marginJson["top"].asUInt());
+    minMargin.SetBottom(marginJson["bottom"].asUInt());
+    minMargin.SetLeft(marginJson["left"].asUInt());
+    minMargin.SetRight(marginJson["right"].asUInt());
     printerCapability.SetMinMargin(minMargin);
     PRINT_HILOGD("ProcessJsonToCapabilityList success, key is minMargin");
     return true;

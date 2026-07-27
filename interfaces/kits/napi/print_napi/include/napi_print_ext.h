@@ -75,6 +75,11 @@ private:
         NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~NapiPrintExtContext() {};
     };
+
+    static napi_status ParsePrinterInfoInput(napi_env env, size_t argc, napi_value *argv,
+        const std::shared_ptr<NapiPrintExtContext> &context);
+    static napi_status ParsePrinterIdInput(napi_env env, size_t argc, napi_value *argv,
+        const std::shared_ptr<NapiPrintExtContext> &context);
 };
 }  // namespace OHOS::Print
 #endif  // NAPI_PRINT_EXT_H

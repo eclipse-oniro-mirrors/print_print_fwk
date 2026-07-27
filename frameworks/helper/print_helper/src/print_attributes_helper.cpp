@@ -87,24 +87,42 @@ std::shared_ptr<PrintAttributes> PrintAttributesHelper::BuildFromJs(napi_env env
         nativeObj->SetIsLandscape(isLandscape);
     }
     
-    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DIRECTIONMODE)) {
-        uint32_t directionMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DIRECTIONMODE);
-        nativeObj->SetDirectionMode(directionMode);
-    }
-
-    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_COLORMODE)) {
-        uint32_t colorMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COLORMODE);
-        nativeObj->SetColorMode(colorMode);
-    }
-
-    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DUPLEXMODE)) {
-        uint32_t duplexMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DUPLEXMODE);
-        nativeObj->SetDuplexMode(duplexMode);
-    }
+    BuildFromJsMode(env, jsValue, nativeObj);
 
     BuildJsWorkerIsLegal(env, jsValue, nativeObj);
     nativeObj->Dump();
     return nativeObj;
+}
+
+void PrintAttributesHelper::BuildFromJsMode(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrintAttributes> &nativeObj)
+{
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DIRECTIONMODE)) {
+        uint32_t directionMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DIRECTIONMODE);
+        if (directionMode >= DIRECTION_MODE_MAX) {
+            PRINT_HILOGW("invalid directionMode value");
+        } else {
+            nativeObj->SetDirectionMode(directionMode);
+        }
+    }
+
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_COLORMODE)) {
+        uint32_t colorMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COLORMODE);
+        if (colorMode >= PRINT_COLOR_MODE_MAX) {
+            PRINT_HILOGW("invalid colorMode value");
+        } else {
+            nativeObj->SetColorMode(colorMode);
+        }
+    }
+
+    if (NapiPrintUtils::HasNamedProperty(env, jsValue, PARAM_JOB_DUPLEXMODE)) {
+        uint32_t duplexMode = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DUPLEXMODE);
+        if (duplexMode >= DUPLEX_MODE_MAX) {
+            PRINT_HILOGW("invalid duplexMode value");
+        } else {
+            nativeObj->SetDuplexMode(duplexMode);
+        }
+    }
 }
 
 void PrintAttributesHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue,
@@ -188,6 +206,7 @@ bool PrintAttributesHelper::CreateMargin(napi_env env, napi_value &jsPrintAttrib
     PrintMargin margin;
     attributes.GetMargin(margin);
     napi_value jsMargin = PrintMarginHelper::MakeJsObject(env, margin);
+    PRINT_CHECK_NULL_AND_RETURN(jsMargin, false);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintAttributes, PARAM_JOB_MARGIN, jsMargin), false);
     return true;
 }

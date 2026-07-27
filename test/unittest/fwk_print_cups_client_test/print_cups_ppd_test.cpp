@@ -131,6 +131,7 @@ bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType, 
 bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val, std::string &choiceName);
 bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::string &optName, std::string &choiceName);
+void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_InvalidPath_ReturnsFileIOError, TestSize.Level1)
 {
@@ -728,6 +729,38 @@ HWTEST_F(PrintCupsPpdTest, FindDuplexChoiceByPwg_UnrecognizedId_ReturnsFalse, Te
         EXPECT_FALSE(FindDuplexChoiceByPwg(ppd, "custom-duplex", optName, choiceName));
     }
 
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+/**
+ * @tc.name: ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash
+ * @tc.desc: ParseMediaTypeAttributeFromPPD returns without crash when ppdCache->types is nullptr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsPpdTest, ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppdMarkDefaults(ppd);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    auto *origTypes = ppd->cache->types;
+    int origNumTypes = ppd->cache->num_types;
+    ppd->cache->types = nullptr;
+    ppd->cache->num_types = origNumTypes > 0 ? origNumTypes : 1;
+
+    PrinterCapability printerCaps;
+    ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
+    std::vector<std::string> mediaTypes;
+    printerCaps.GetSupportedMediaType(mediaTypes);
+    EXPECT_TRUE(mediaTypes.empty());
+
+    ppd->cache->types = origTypes;
+    ppd->cache->num_types = origNumTypes;
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
 }

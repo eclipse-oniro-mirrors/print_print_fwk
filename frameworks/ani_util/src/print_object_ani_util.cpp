@@ -18,6 +18,7 @@
 #include "print_constant.h"
 
 namespace OHOS::Print {
+constexpr int32_t MAX_ARRAY_LENGTH = 1000;
 bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &res)
 {
     PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
@@ -43,6 +44,10 @@ bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::
     status = env->Object_GetPropertyByName_Double(reinterpret_cast<ani_object>(arrayObj), "length", &length);
     if (status != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    if (length < 0 || length > MAX_ARRAY_LENGTH || static_cast<int32_t>(length) != length) {
+        PRINT_HILOGE("invalid length: %{public}f, name : %{public}s", length, name);
         return false;
     }
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
@@ -113,6 +118,7 @@ bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, st
 bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res)
 {
     PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false);
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
@@ -145,7 +151,10 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
             return false;
         }
         ani_int enumValue;
-        env->EnumItem_GetValue_Int(reinterpret_cast<ani_enum_item>(ref), &enumValue);
+        if (env->EnumItem_GetValue_Int(reinterpret_cast<ani_enum_item>(ref), &enumValue) != ANI_OK) {
+            PRINT_HILOGE("EnumItem_GetValue_Int failed, index: %{public}zu", i);
+            return false;
+        }
         res.push_back(enumValue);
     }
     return true;
@@ -187,6 +196,7 @@ bool GetStringProperty(ani_env *env, ani_object param, const char *name, std::st
         PRINT_HILOGE("null env");
         return false;
     }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false);
 
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
@@ -217,6 +227,7 @@ bool GetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref &v
         PRINT_HILOGE("null env");
         return false;
     }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false);
 
     ani_status status;
     ani_boolean isUndefined = true;
@@ -241,6 +252,7 @@ bool GetIntProperty(ani_env *env, ani_object param, const char *name, int32_t &v
         PRINT_HILOGE("null env");
         return false;
     }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false);
 
     ani_status status = ANI_ERROR;
     if ((status = env->Object_GetPropertyByName_Int(param, name, &value)) != ANI_OK) {
