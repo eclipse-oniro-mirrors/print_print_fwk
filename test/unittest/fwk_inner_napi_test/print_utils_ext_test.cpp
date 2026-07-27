@@ -220,7 +220,7 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIpv6_003, TestSize.Level2)
 {
     std::string ip = "2001:0db8";
     std::string result = PrintUtils::AnonymizeIpv6(ip);
-    EXPECT_EQ(result, ip);
+    EXPECT_EQ(result, "2001:****");
 }
 
 /**
@@ -232,7 +232,7 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIpv6_004, TestSize.Level2)
 {
     std::string ip = "2001:0db8:85a3";
     std::string result = PrintUtils::AnonymizeIpv6(ip);
-    EXPECT_EQ(result, ip);
+    EXPECT_EQ(result, "2001:****:85a3");
 }
 
 /**

@@ -72,6 +72,7 @@ using SteadyTimePoint = std::chrono::steady_clock::time_point;
 
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
+constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
 
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
@@ -755,6 +756,11 @@ int32_t ScanServiceAbility::GetScanParametersInternal(const std::string &scanner
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetParameters failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
+    }
+    int32_t frameValue = static_cast<int32_t>(saneParams.format_);
+    if (frameValue < SANE_FRAME_GRAY || frameValue >= SANE_FRAME_MAX) {
+        SCAN_HILOGE("Invalid scan format: [%{public}d]", frameValue);
+        return E_SCAN_INVALID_PARAMETER;
     }
     para.SetFormat(static_cast<ScanFrame>(saneParams.format_));
     para.SetLastFrame(saneParams.lastFrame_);
@@ -1441,6 +1447,10 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
+    }
+    if (outParam.valueNumber_ <= 0 || outParam.valueNumber_ > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("Invalid option count: [%{public}d]", outParam.valueNumber_);
+        return E_SCAN_INVALID_PARAMETER;
     }
     int32_t resolutionIndex = 0;
     for (int32_t optionIndex = 1; optionIndex < outParam.valueNumber_; optionIndex++) {

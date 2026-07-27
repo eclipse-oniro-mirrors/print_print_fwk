@@ -787,7 +787,7 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)
     EXPECT_FALSE(service->IsExtensionPrintJob(cid));
 }
 
-HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_NonStringItem_ConvertedToString, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_MixedTypes_Processed, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
     std::string keyword = "testKeyword";

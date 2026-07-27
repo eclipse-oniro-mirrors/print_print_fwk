@@ -1360,7 +1360,8 @@ int32_t PrintCupsClient::QueryPrinterAttrList(
 
 int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
-    PRINT_HILOGD("the printerInfo printerName %{public}s", info.GetPrinterName().c_str());
+    PRINT_HILOGD("the printerInfo printerName %{public}s",
+        PrintUtils::AnonymizePrinterName(info.GetPrinterName()).c_str());
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
