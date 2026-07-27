@@ -235,5 +235,65 @@ HWTEST_F(PrintServiceAbilityTest, IsModeChangeEnd_WhenValueNotDefault_ShouldRetu
     EXPECT_EQ(result, false);
 }
 
+HWTEST_F(PrintServiceAbilityTest, RegisterExtCallback_CallerMismatch_ShouldReject, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<MockPrintServiceHelper> helper = std::make_shared<MockPrintServiceHelper>();
+    service->helper_ = helper;
+    EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*service, GetCallerBundleName()).WillRepeatedly(Return("com.malicious.app"));
+    std::string extensionId = "com.valid.ext";
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
+    std::string extensionCid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_DISCOVERY);
+    sptr<IPrintExtensionCallback> listener = new MockPrintExtensionCallbackProxy();
+    EXPECT_EQ(service->RegisterExtCallback(extensionCid, listener), E_PRINT_INVALID_EXTENSION);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RegisterExtCallback_CallerMatch_ShouldSucceed, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<MockPrintServiceHelper> helper = std::make_shared<MockPrintServiceHelper>();
+    service->helper_ = helper;
+    EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
+    std::string extensionId = "com.valid.ext";
+    EXPECT_CALL(*service, GetCallerBundleName()).WillRepeatedly(Return(extensionId));
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
+    std::string extensionCid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_DISCOVERY);
+    sptr<IPrintExtensionCallback> listener = new MockPrintExtensionCallbackProxy();
+    EXPECT_EQ(service->RegisterExtCallback(extensionCid, listener), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, LoadExtSuccess_CallerMismatch_ShouldReject, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<MockPrintServiceHelper> helper = std::make_shared<MockPrintServiceHelper>();
+    service->helper_ = helper;
+    EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*service, GetCallerBundleName()).WillRepeatedly(Return("com.malicious.app"));
+    std::string extensionId = "com.valid.ext";
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
+    EXPECT_EQ(service->LoadExtSuccess(extensionId), E_PRINT_INVALID_EXTENSION);
+}
+
+HWTEST_F(PrintServiceAbilityTest, LoadExtSuccess_CallerMatch_ShouldSucceed, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<MockPrintServiceHelper> helper = std::make_shared<MockPrintServiceHelper>();
+    service->helper_ = helper;
+    EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
+    std::string extensionId = "com.valid.ext";
+    EXPECT_CALL(*service, GetCallerBundleName()).WillRepeatedly(Return(extensionId));
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
+    EXPECT_EQ(service->LoadExtSuccess(extensionId), E_PRINT_NONE);
+}
+
 }  // namespace Print
 }  // namespace OHOS
