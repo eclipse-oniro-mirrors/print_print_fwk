@@ -423,30 +423,25 @@ int32_t ReadCupsdPidFile(const std::string &realPidFile, char *buf, size_t bufSi
         PRINT_HILOGE("Open pidFile error!");
         return E_PRINT_SERVER_FAILURE;
     }
+    int32_t ret = E_PRINT_NONE;
     if (fseek(file, 0, SEEK_SET) != 0) {
         PRINT_HILOGE("Seek pidFile!");
-        int fcloseResult = fclose(file);
-        if (fcloseResult != 0) {
-            PRINT_HILOGE("Close File Failure.");
+        ret = E_PRINT_SERVER_FAILURE;
+    } else {
+        size_t bytesRead = fread(buf, 1, bufSize - 1, file);
+        if (ferror(file) != 0) {
+            PRINT_HILOGE("Read pidFile error!");
+            ret = E_PRINT_SERVER_FAILURE;
+        } else {
+            buf[bytesRead] = '\0';
         }
-        return E_PRINT_SERVER_FAILURE;
     }
-    size_t bytesRead = fread(buf, 1, bufSize - 1, file);
-    if (ferror(file) != 0 || bytesRead == 0) {
-        PRINT_HILOGE("Read pidFile error!");
-        int fcloseResult = fclose(file);
-        if (fcloseResult != 0) {
-            PRINT_HILOGE("Close File Failure.");
-        }
-        return E_PRINT_SERVER_FAILURE;
-    }
-    buf[bytesRead] = '\0';
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close File Failure.");
         return E_PRINT_SERVER_FAILURE;
     }
-    return E_PRINT_NONE;
+    return ret;
 }
 
 int32_t PrintCupsClient::StartCupsdService()

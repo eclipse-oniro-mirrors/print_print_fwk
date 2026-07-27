@@ -188,7 +188,7 @@ bool SmbHostSearchHelper::SendQuery(const struct in_addr& destAddr)
     if (status < 0) {
         char destAddrBuf[INET_ADDRSTRLEN] = {0};
         inet_ntop(AF_INET, &destAddr, destAddrBuf, INET_ADDRSTRLEN);
-        PRINT_HILOGE("Sendto failed to %s: %s", destAddrBuf, strerror(errno));
+        PRINT_HILOGE("Sendto failed to %{private}s: %{public}s", destAddrBuf, strerror(errno));
         return false;
     }
     

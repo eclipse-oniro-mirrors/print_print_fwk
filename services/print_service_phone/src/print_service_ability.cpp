@@ -1263,7 +1263,10 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
     PRINT_HILOGI("QueryPrinterCapabilityByUri start.");
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     std::string standardizeId = printerId;
-    if (standardizeId.find(extensionId) == std::string::npos && vendorManager.ExtractVendorName(printerId).empty()) {
+    if (extensionId.empty()) {
+        PRINT_HILOGW("extensionId is empty, skip standardize");
+    } else if (standardizeId.find(extensionId) == std::string::npos &&
+        vendorManager.ExtractVendorName(printerId).empty()) {
         standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
     }
     PRINT_HILOGI("[Printer: %{public}s] extensionId = %{public}s",
