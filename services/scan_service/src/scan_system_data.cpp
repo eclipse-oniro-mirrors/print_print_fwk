@@ -336,6 +336,18 @@ bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
     }
 }
 
+bool ScanSystemData::IsDeviceIdAdded(const std::string &deviceId)
+{
+    std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
+    for (const auto& [_, deviceInfo] : addedScannerMap_) {
+        if (deviceInfo != nullptr && deviceInfo->GetDeviceId() == deviceId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 std::optional<std::pair<std::string, std::string>> ScanSystemData::UpdateNetScannerByUuid(const std::string &uuid,
     const std::string &ip)
 {

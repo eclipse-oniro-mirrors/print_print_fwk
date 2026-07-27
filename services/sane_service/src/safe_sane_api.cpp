@@ -17,6 +17,7 @@
 #include "safe_sane_api.h"
 #include "sane/sane.h"
 #include "sane/saneopts.h"
+#include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS {
@@ -126,6 +127,7 @@ SANE_Status SafeSANEAPI::SaneStart(SANE_Handle handle)
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_start(handle);
 }
 
@@ -137,6 +139,7 @@ void SafeSANEAPI::SaneCancel(SANE_Handle handle)
         return;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
+    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(GetHandleMutex(handle), __func__);
     sane_cancel(handle);
 }
 
@@ -148,6 +151,7 @@ const SANE_Option_Descriptor* SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle h
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), nullptr, __func__);
     return sane_get_option_descriptor(handle, option);
 }
 
@@ -159,6 +163,7 @@ SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* 
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_get_parameters(handle, params);
 }
 
@@ -171,6 +176,7 @@ SANE_Status SafeSANEAPI::SaneControlOption(SANE_Handle handle, SANE_Int option,
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_control_option(handle, option, action, value, info);
 }
 
@@ -183,6 +189,7 @@ SANE_Status SafeSANEAPI::SaneRead(SANE_Handle handle, SANE_Byte* data,
         return SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
     return sane_read(handle, data, maxLength, length);
 }
 
