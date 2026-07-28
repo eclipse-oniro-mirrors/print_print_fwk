@@ -477,12 +477,11 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
 
 int32_t NapiScanUtils::OpenFile(const std::string &filePath)
 {
-    char resolvedPath[PATH_MAX] = {0};
-    if (filePath.length() >= PATH_MAX || realpath(filePath.c_str(), resolvedPath) == nullptr) {
-        SCAN_HILOGE("invalid file path!");
+    std::string resolvedPath;
+    if (!ResolveAndValidatePath(filePath, resolvedPath)) {
         return SCAN_INVALID_ID;
     }
-    int32_t fd = open(resolvedPath, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    int32_t fd = open(resolvedPath.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     SCAN_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
