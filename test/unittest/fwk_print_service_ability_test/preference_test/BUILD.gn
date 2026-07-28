@@ -41,6 +41,7 @@ ohos_unittest("fwk_print_service_ability_preference_test") {
     "../common/print_service_ability_test_common.cpp",
     "../common/print_service_mock_permission.cpp",
     "fwk_print_service_ability_preference_test.cpp",
+    "fwk_print_service_ability_vendor_options_test.cpp",
   ]
 
   deps = [
