@@ -2033,7 +2033,7 @@ HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_DirNotExist_ShouldNotSave, Test
 {
     auto systemData = std::make_shared<PrintSystemData>();
     std::error_code ec;
- 	std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
+    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
     systemData->SaveIppRawDataFile("printer1", "raw_data");
     EXPECT_FALSE(systemData->HasIppRawDataFile("printer1"));
     CreateIppRawDataDir();

@@ -604,9 +604,9 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_IsSetInsteadOfChoice_NoFall
     userPrefs.ConvertFromJson(json);
 
     auto keys = userPrefs.GetAllCustomOptionKeys();
- 	EXPECT_EQ(keys.size(), 1u);
- 	EXPECT_EQ(keys[0], "CustomPin");
- 	EXPECT_EQ(userPrefs.GetCustomOption("CustomPin"), nullptr);
+    EXPECT_EQ(keys.size(), 1u);
+    EXPECT_EQ(keys[0], "CustomPin");
+    EXPECT_EQ(userPrefs.GetCustomOption("CustomPin"), nullptr);
 }
 
 } // namespace Print
