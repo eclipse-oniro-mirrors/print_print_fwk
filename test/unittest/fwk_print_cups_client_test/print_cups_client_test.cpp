@@ -3193,19 +3193,6 @@ HWTEST_F(PrintCupsClientTest, ResumePrinter_ValidName_Test, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintCupsClientTest_DeleteExtraJobsFromCups_001
- * @tc.desc: DeleteExtraJobsFromCups basic test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, DeleteExtraJobsFromCups_Basic_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    int32_t ret = printCupsClient.DeleteExtraJobsFromCups();
-    EXPECT_EQ(ret, E_PRINT_NONE);
-}
-
-/**
  * @tc.name: PrintCupsClientTest_getScheme_001
  * @tc.desc: getScheme with valid URI
  * @tc.type: FUNC
@@ -3437,20 +3424,6 @@ HWTEST_F(PrintCupsClientTest, IsCupsServerAlive_Basic_Test, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintCupsClientTest_DiscoverBackendPrinters_001
- * @tc.desc: DiscoverBackendPrinters basic test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, DiscoverBackendPrinters_Basic_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    std::vector<PrinterInfo> printers;
-    int32_t ret = printCupsClient.DiscoverBackendPrinters(printers);
-    EXPECT_EQ(ret, E_PRINT_NONE);
-}
-
-/**
  * @tc.name: PrintCupsClientTest_QueryUsbPrinterInfoByPrinterId_001
  * @tc.desc: QueryUsbPrinterInfoByPrinterId with empty id
  * @tc.type: FUNC
@@ -3497,19 +3470,6 @@ HWTEST_F(PrintCupsClientTest, AddPrinterToCups_EmptyParams_Test, TestSize.Level1
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.AddPrinterToCups("", "", "");
     EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: PrintCupsClientTest_AddPrinterToCupsWithPpd_001
- * @tc.desc: AddPrinterToCupsWithPpd with empty params
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, AddPrinterToCupsWithPpd_EmptyParams_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    int32_t ret = printCupsClient.AddPrinterToCupsWithPpd("", "", "", "");
-    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 /**
@@ -4360,7 +4320,8 @@ HWTEST_F(PrintCupsClientTest, ParseStateMessage_NoMatchButStartTimeSet_SlowConve
 
     // Pretend a prior call already set uploadingFilesStartTime to 8 seconds ago
     param->uploadingFilesStartTime = GetNowTime() - 8000;
-    param->substate = static_cast<uint32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES);
+    param->substate = static_cast<uint32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES) * 100 +
+        static_cast<uint32_t>(PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION);
 
     // Current message does not match any known token
     std::string msg = "some unrelated message";

@@ -44,6 +44,10 @@ void PrintHksAdapterTest::TearDownTestCase(void)
 void PrintHksAdapterTest::SetUp(void)
 {
     mockAdapter_ = std::make_shared<MockHksAdapter>();
+    ON_CALL(*mockAdapter_, Base64Decode(_, _))
+ 	    .WillByDefault(Invoke([this](const HksBlob &base64Blob, HksBlob &cipherBlob) -> bool {
+ 	        return mockAdapter_->HksAdapter::Base64Decode(base64Blob, cipherBlob);
+ 	    }));
 }
 
 void PrintHksAdapterTest::TearDown(void)
