@@ -23,6 +23,7 @@
 #include "print_log.h"
 #include "print_utils.h"
 #include "print_service_ability.h"
+#include "hisys_event_util.h"
 
 using namespace OHOS::Print;
 namespace {
@@ -290,6 +291,7 @@ int32_t VendorManager::AddPrinterToCupsWithPpd(
     PRINT_HILOGI("AddPrinterToCupsWithPpd enter");
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("printServiceAbility is null");
+        HisysEventUtil::ReportConnectFailure(HisysEventUtil::ADD_CUPS_SERVICE_NULL, vendorName);
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
     auto targetVendorName = IsWlanGroupDriver(ExtractPrinterId(printerId)) ? VENDOR_WLAN_GROUP : vendorName;
@@ -302,6 +304,7 @@ int32_t VendorManager::AddPrinterToCupsWithPpd(
     }
     if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
+        HisysEventUtil::ReportConnectFailure(HisysEventUtil::ADD_CUPS_FAIL, vendorName);
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
     PRINT_HILOGI("AddPrinterToCupsWithPpd quit");
@@ -350,6 +353,7 @@ bool VendorManager::OnPrinterPpdQueried(
     PRINT_HILOGI("[Printer: %{public}s]", PrintUtils::AnonymizePrinterId(globalPrinterId).c_str());
     if (!IsConnectingPrinter(globalPrinterId, "")) {
         PRINT_HILOGW("not connecting");
+        HisysEventUtil::ReportConnectFailure(HisysEventUtil::PPD_CALLBACK_NOT_CONNECTING, vendorName);
         return false;
     }
     if (AddPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData) != EXTENSION_ERROR_NONE) {
