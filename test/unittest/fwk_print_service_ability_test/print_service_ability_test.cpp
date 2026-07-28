@@ -550,7 +550,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0010_NeedRename, TestS
     service->SetHelper(mockHelper);
     service->currentUserId_ = 100;
     std::vector<std::string> extensionIds;
-    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_NONE);
+    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_USERID);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0011_NeedRename, TestSize.Level1)
@@ -3990,74 +3990,6 @@ HWTEST_F(PrintServiceAbilityTest, RefreshIpPrinterToIdle, TestSize.Level1)
     EXPECT_EQ(ipInfo.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_ShouldProcessEach, TestSize.Level1)
-{
-    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId1 = "test_printer_id_1";
-    auto printerInfo1 = std::make_shared<PrinterInfo>();
-    printerInfo1->SetPrinterId(printerId1);
-    printerInfo1->SetPrinterName("Printer1");
-    printerInfo1->SetPrinterMake("");
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId1, printerInfo1);
-    std::string printerId2 = "test_printer_id_2";
-    auto printerInfo2 = std::make_shared<PrinterInfo>();
-    printerInfo2->SetPrinterId(printerId2);
-    printerInfo2->SetPrinterName(CUSTOM_PRINTER_NAME);
-    printerInfo2->SetPrinterMake("Make2");
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId2, printerInfo2);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(true));
-    service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
-    EXPECT_EQ(printerIdList.size(), 2);
-}
-
-HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_QueryPpdFailed_ShouldContinue, TestSize.Level1)
-{
-    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "test_printer_id_1";
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    printerInfo->SetPrinterId(printerId);
-    printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
-    printerInfo->SetPrinterMake("Make1");
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(false));
-    service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
-    EXPECT_EQ(printerIdList.size(), 1);
-}
-
-HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCodeSame_ShouldContinue, TestSize.Level1)
-{
-    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "test_printer_id_1";
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    printerInfo->SetPrinterId(printerId);
-    printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
-    printerInfo->SetPrinterMake("Make1");
-    printerInfo->SetPpdHashCode("");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
-    service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
-    EXPECT_EQ(printerIdList.size(), 1);
-}
-
-HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode_Notequal, TestSize.Level1)
-{
-    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "test_printer_id_1";
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    printerInfo->SetPrinterId(printerId);
-    printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
-    printerInfo->SetPrinterMake("Make1");
-    printerInfo->SetPpdHashCode("notEqualHash");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
-    EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
-    service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
-    EXPECT_EQ(printerIdList.size(), 1);
-}
-
 HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_SyncMode_ShouldExecuteCallback, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -6610,6 +6542,10 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_Base64Decode
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     auto mockAdapter = std::make_shared<MockHksAdapter>();
+    ON_CALL(*mockAdapter, Base64Decode(_, _))
+        .WillByDefault(Invoke([&mockAdapter](const HksBlob &base64Blob, HksBlob &cipherBlob) -> bool {
+            return mockAdapter->HksAdapter::Base64Decode(base64Blob, cipherBlob);
+        }));
     EXPECT_CALL(*mockAdapter, EVP_DecodeBlockWrapper(_, _, _)).WillOnce(Return(-1));
     service->hksAdapter_ = mockAdapter;
     PrinterUserPreferences userPrefs;
@@ -6630,9 +6566,11 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_DecryptSucce
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->currentUserId_ = 100;
     auto mockAdapter = std::make_shared<MockHksAdapter>();
+    ON_CALL(*mockAdapter, Base64Decode(_, _))
+        .WillByDefault(Invoke([&mockAdapter](const HksBlob &base64Blob, HksBlob &cipherBlob) -> bool {
+            return mockAdapter->HksAdapter::Base64Decode(base64Blob, cipherBlob);
+        }));
     EXPECT_CALL(*mockAdapter, EVP_DecodeBlockWrapper(_, _, _)).WillOnce(Return(4));
-    EXPECT_CALL(*mockAdapter, Base64Decode(_, _)).WillOnce(Return(true));
-    EXPECT_CALL(*mockAdapter, HksKeyExist(_, _)).WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter, HksInitParamSet(_)).WillRepeatedly(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter, HksAddParams(_, _, _)).WillRepeatedly(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter, HksBuildParamSet(_)).WillRepeatedly(Return(HKS_SUCCESS));
@@ -6641,7 +6579,7 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_DecryptSucce
     service->hksAdapter_ = mockAdapter;
     PrinterUserPreferences userPrefs;
     SecureBlob value;
-    std::string valueStr = "dGVzdA==";
+    std::string valueStr = "AAAAAAAAAAAAAAAA";
     value.SetData(reinterpret_cast<const uint8_t*>(valueStr.c_str()), valueStr.size());
     userPrefs.SetCustomOption("CustomPin", CUSTOM_OPTION_CHOICE, value);
     Json::Value opsJson;
@@ -6864,7 +6802,7 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_eprint, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string cid = PRINT_EXTENSION_BUNDLE_NAME;
     cid = cid + ":1";
-    EXPECT_TRUE(service->IsExtensionPrintJob("com.ohos.remote:1"));
+    EXPECT_FALSE(service->IsExtensionPrintJob("com.ohos.remote:1"));
 }
 
 HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)

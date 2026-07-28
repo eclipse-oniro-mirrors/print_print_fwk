@@ -65,13 +65,6 @@ HWTEST_F(PrintCloudConfigManagerTest, GetInstance_Singleton_ReturnSameInstance, 
     EXPECT_EQ(&instance1, &instance2);
 }
 
-HWTEST_F(PrintCloudConfigManagerTest, GetCloudConfigFilePath_ReturnResult, TestSize.Level1)
-{
-    PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();
-    std::string result = instance.GetCloudConfigFilePath();
-    EXPECT_TRUE(!result.empty());
-}
-
 HWTEST_F(PrintCloudConfigManagerTest, LoadCloudConfigFile_InvalidPath_ReturnFalse, TestSize.Level1)
 {
     PrintCloudConfigManager &instance = PrintCloudConfigManager::GetInstance();

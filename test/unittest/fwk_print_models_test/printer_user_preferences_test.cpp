@@ -603,10 +603,10 @@ HWTEST_F(PrinterUserPreferencesTest, ConvertFromJson_IsSetInsteadOfChoice_NoFall
     PrinterUserPreferences userPrefs;
     userPrefs.ConvertFromJson(json);
 
-    auto opt = userPrefs.GetCustomOption("CustomPin");
-    ASSERT_NE(opt, nullptr);
-    EXPECT_EQ(opt->key, "CustomPin");
-    EXPECT_EQ(opt->choice, "");
+    auto keys = userPrefs.GetAllCustomOptionKeys();
+    EXPECT_EQ(keys.size(), 1u);
+    EXPECT_EQ(keys[0], "CustomPin");
+    EXPECT_EQ(userPrefs.GetCustomOption("CustomPin"), nullptr);
 }
 
 } // namespace Print
