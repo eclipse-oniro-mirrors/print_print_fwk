@@ -123,7 +123,7 @@ void StsPrintExtension::OnStart(const AAFwk::Want &want)
         PRINT_HILOGE("CallObjectMethod onCreate failed, stop extension");
         return;
     }
-    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
+    PrintManagerClient::GetInstance().LoadExtSuccess(extensionId_);
     RegisterCb();
     PRINT_HILOGD("%{public}s end.", __func__);
 }
@@ -366,7 +366,7 @@ void StsPrintExtension::RegisterCb()
 void StsPrintExtension::RegisterDiscoveryCb()
 {
     PRINT_HILOGD("Register Print Extension Callback");
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -374,7 +374,7 @@ void StsPrintExtension::RegisterDiscoveryCb()
             }
             return StsPrintExtension::stsExtension_->Callback("onStartDiscoverPrinter");
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -386,7 +386,7 @@ void StsPrintExtension::RegisterDiscoveryCb()
 
 void StsPrintExtension::RegisterConnectionCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -395,7 +395,7 @@ void StsPrintExtension::RegisterConnectionCb()
             std::string realPrinterId = PrintUtils::GetLocalId(printId, stsExtension_->extensionId_);
             return StsPrintExtension::stsExtension_->Callback("onConnectPrinter", realPrinterId);
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -408,7 +408,7 @@ void StsPrintExtension::RegisterConnectionCb()
 
 void StsPrintExtension::RegisterPrintJobCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -416,7 +416,7 @@ void StsPrintExtension::RegisterPrintJobCb()
             }
             return StsPrintExtension::stsExtension_->Callback("onStartPrintJob", job);
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -428,7 +428,7 @@ void StsPrintExtension::RegisterPrintJobCb()
 
 void StsPrintExtension::RegisterPreviewCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -440,7 +440,7 @@ void StsPrintExtension::RegisterPreviewCb()
 
 void StsPrintExtension::RegisterQueryCapCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");
@@ -453,7 +453,7 @@ void StsPrintExtension::RegisterQueryCapCb()
 
 void StsPrintExtension::RegisterExtensionCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
+    PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
             if (StsPrintExtension::stsExtension_ == nullptr) {
                 PRINT_HILOGE("stsExtension_ is null");

@@ -73,7 +73,7 @@ void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintSer
         dr = recipient;
         return true;
     });
-    PrintManagerClient::GetInstance()->SetProxy(obj);
+    PrintManagerClient::GetInstance().SetProxy(obj);
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service, sendRequestResult](uint32_t code, MessageParcel &data,
@@ -99,8 +99,8 @@ void PrintManagerClientTest::ResetRemoteObject(sptr<IRemoteObject::DeathRecipien
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001_NeedRename, TestSize.Level0)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    EXPECT_EQ(PrintManagerClient::GetInstance().ready_, false);
 }
 
 /**
@@ -121,7 +121,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002_NeedRename, TestSiz
         "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> testFdList = {1, 2};
     std::string testTaskId = "2";
-    EXPECT_EQ(PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId), E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(PrintManagerClient::GetInstance().StartPrint(testFileList, testFdList, testTaskId), E_PRINT_RPC_FAILURE);
 
     ResetRemoteObject(dr, obj);
 }
@@ -156,8 +156,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartPrint(testFileList, testFdList, testTaskId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -172,8 +172,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0009_NeedRename, TestSize.Level0)
 {
     std::vector<PrintExtensionInfo> extensionInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(extensionInfos);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -186,9 +186,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0009_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_00010_NeedRename, TestSize.Level0)
 {
     std::vector<PrintExtensionInfo> extensionInfos;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(extensionInfos);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -201,9 +201,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_00010_NeedRename, TestSi
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0011_NeedRename, TestSize.Level0)
 {
     std::vector<PrintExtensionInfo> extensionInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(extensionInfos);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -231,9 +231,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0012_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::vector<PrintExtensionInfo> result;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(result);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(result);
     EXPECT_EQ(testExtensionInfos.size(), result.size());
     for (size_t index = 0; index < testExtensionInfos.size(); index++) {
         EXPECT_EQ(testExtensionInfos[index].GetExtensionId(), result[index].GetExtensionId());
@@ -253,8 +253,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0013_NeedRename, TestSiz
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(testExtensionList);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(testExtensionList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -268,9 +268,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0014_NeedRename, TestSiz
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(testExtensionList);
+    int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(testExtensionList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -284,9 +284,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0015_NeedRename, TestSiz
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
     std::vector<PrintExtensionInfo> extensionInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(testExtensionList);
+    int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(testExtensionList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -308,8 +308,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(testExtensionList);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(testExtensionList);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -323,8 +323,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016_NeedRename, TestSiz
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017_NeedRename, TestSize.Level0)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().StopDiscoverPrinter();
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -336,9 +336,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017_NeedRename, TestSiz
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0018_NeedRename, TestSize.Level0)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
+    int32_t ret = PrintManagerClient::GetInstance().StopDiscoverPrinter();
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -352,9 +352,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0019_NeedRename, TestSiz
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
     std::vector<PrintExtensionInfo> extensionInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(testExtensionList);
+    int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(testExtensionList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -373,8 +373,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StopDiscoverPrinter();
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -389,8 +389,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0021_NeedRename, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinters(printerInfos);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinters(printerInfos);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
@@ -409,7 +409,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0022_NeedRename, TestSiz
     CallRemoteObject(service, obj, dr, E_PRINT_RPC_FAILURE);
 
     std::vector<PrinterInfo> printerInfos;
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinters(printerInfos);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinters(printerInfos);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 
     ResetRemoteObject(dr, obj);
@@ -430,7 +430,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0023_NeedRename, TestSiz
     CallRemoteObject(service, obj, dr, E_PRINT_RPC_FAILURE);
 
     std::vector<PrinterInfo> printerInfos;
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinters(printerInfos);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinters(printerInfos);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 
     ResetRemoteObject(dr, obj);
@@ -471,8 +471,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinters(testPrinterInfos);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinters(testPrinterInfos);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -488,8 +488,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025_NeedRename, TestSiz
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinters(testPrinterIds);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinters(testPrinterIds);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -502,9 +502,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026_NeedRename, TestSize.Level0)
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinters(testPrinterIds);
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinters(testPrinterIds);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -518,9 +518,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027_NeedRename, TestSiz
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
     std::vector<PrinterInfo> printerInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinters(testPrinterIds);
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinters(testPrinterIds);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -546,8 +546,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinters(testPrinterIds);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinters(testPrinterIds);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -562,8 +562,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029_NeedRename, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(printerInfos);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinters(printerInfos);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
@@ -582,7 +582,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0030_NeedRename, TestSiz
     CallRemoteObject(service, obj, dr, E_PRINT_RPC_FAILURE);
 
     std::vector<PrinterInfo> printerInfos;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(printerInfos);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinters(printerInfos);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 
     ResetRemoteObject(dr, obj);
@@ -603,7 +603,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0031_NeedRename, TestSiz
     CallRemoteObject(service, obj, dr, E_PRINT_RPC_FAILURE);
 
     std::vector<PrinterInfo> printerInfos;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(printerInfos);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinters(printerInfos);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 
     ResetRemoteObject(dr, obj);
@@ -644,8 +644,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(testPrinterInfos);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinters(testPrinterInfos);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -660,8 +660,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033_NeedRename, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(printerId);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -674,9 +674,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034_NeedRename, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(printerId);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -689,9 +689,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0035_NeedRename, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(printerId);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -715,8 +715,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(testPrinterId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(testPrinterId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -732,8 +732,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037_NeedRename, TestSiz
 {
     std::string printerId = "printerId-1";
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(printerId);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().DisconnectPrinter(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -747,9 +747,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038_NeedRename, TestSiz
 {
     std::string printerId = "printerId-1";
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(printerId);
+    int32_t ret = PrintManagerClient::GetInstance().DisconnectPrinter(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -762,9 +762,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039_NeedRename, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(printerId);
+    int32_t ret = PrintManagerClient::GetInstance().DisconnectPrinter(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -788,8 +788,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(testPrinterId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().DisconnectPrinter(testPrinterId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -804,8 +804,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041_NeedRename, TestSize.Level0)
 {
     PrintJob jobinfo;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(jobinfo);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().StartPrintJob(jobinfo);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -819,9 +819,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042_NeedRename, TestSiz
 {
     PrintJob jobinfo;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(jobinfo);
+    int32_t ret = PrintManagerClient::GetInstance().StartPrintJob(jobinfo);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -834,9 +834,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043_NeedRename, TestSize.Level0)
 {
     PrintJob jobinfo;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(jobinfo);
+    int32_t ret = PrintManagerClient::GetInstance().StartPrintJob(jobinfo);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -860,8 +860,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(testJob);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartPrintJob(testJob);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -877,8 +877,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045_NeedRename, TestSiz
 {
     std::string jobId = "jobId-1";
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->CancelPrintJob(jobId);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().CancelPrintJob(jobId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -892,9 +892,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046_NeedRename, TestSiz
 {
     std::string jobId = "jobId-1";
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->CancelPrintJob(jobId);
+    int32_t ret = PrintManagerClient::GetInstance().CancelPrintJob(jobId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -907,9 +907,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047_NeedRename, TestSize.Level0)
 {
     std::string jobId = "jobId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->CancelPrintJob(jobId);
+    int32_t ret = PrintManagerClient::GetInstance().CancelPrintJob(jobId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -933,8 +933,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->CancelPrintJob(testJobId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().CancelPrintJob(testJobId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -950,8 +950,8 @@ HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSAFail_ShouldNopermissi
 {
     std::string jobId = "jobId-1";
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(jobId);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().RestartPrintJob(jobId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -965,9 +965,9 @@ HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenResetProxy_ShouldNopermissi
 {
     std::string jobId = "jobId-1";
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(jobId);
+    int32_t ret = PrintManagerClient::GetInstance().RestartPrintJob(jobId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -980,9 +980,9 @@ HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenResetProxy_ShouldNopermissi
 HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSAFailAndResetProxy_ShouldNopermission, TestSize.Level2)
 {
     std::string jobId = "jobId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(jobId);
+    int32_t ret = PrintManagerClient::GetInstance().RestartPrintJob(jobId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1006,8 +1006,8 @@ HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSASucc_ShouldSucc, Test
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(testJobId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().RestartPrintJob(testJobId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1024,8 +1024,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0049_NeedRename, TestSiz
     std::string printerId = "printerId-1";
     uint32_t state = 6;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(printerId, state);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterState(printerId, state);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1040,9 +1040,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0050_NeedRename, TestSiz
     std::string printerId = "printerId-1";
     uint32_t state = 6;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(printerId, state);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterState(printerId, state);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1056,9 +1056,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0051_NeedRename, TestSiz
 {
     std::string printerId = "printerId-1";
     uint32_t state = 6;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(printerId, state);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterState(printerId, state);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1084,8 +1084,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0052_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(testPrinterId, testState);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterState(testPrinterId, testState);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1102,8 +1102,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0053_NeedRename, TestSiz
     std::string printerId = "printerId-1";
     uint32_t state = 6;
     uint32_t subState = 6;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1118,9 +1118,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0054_NeedRename, TestSiz
     std::string printerId = "printerId-1";
     uint32_t state = 6;
     uint32_t subState = 6;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1135,9 +1135,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0055_NeedRename, TestSiz
     std::string printerId = "printerId-1";
     uint32_t state = 6;
     uint32_t subState = 6;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1166,9 +1166,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     int32_t ret =
-        PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(testPrinterId, testState, testSubState);
+        PrintManagerClient::GetInstance().UpdatePrintJobStateOnlyForSystemApp(testPrinterId, testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1183,8 +1183,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0057_NeedRename, TestSize.Level1)
 {
     std::string extensionId = "extensionId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(extensionId);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().UpdateExtensionInfo(extensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1197,9 +1197,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0057_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0058_NeedRename, TestSize.Level1)
 {
     std::string extensionId = "extensionId-1";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(extensionId);
+    int32_t ret = PrintManagerClient::GetInstance().UpdateExtensionInfo(extensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1212,9 +1212,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0058_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0059_NeedRename, TestSize.Level1)
 {
     std::string extensionId = "extensionId-1";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(extensionId);
+    int32_t ret = PrintManagerClient::GetInstance().UpdateExtensionInfo(extensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1238,8 +1238,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0060_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(testExtensionId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().UpdateExtensionInfo(testExtensionId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1255,8 +1255,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0061_NeedRename, TestSiz
 {
     PrintJob jobinfo;
     std::string previewFilePath = "/data/temp/preview.png";
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(jobinfo, previewFilePath);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().RequestPreview(jobinfo, previewFilePath);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1270,9 +1270,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0062_NeedRename, TestSiz
 {
     PrintJob jobinfo;
     std::string previewFilePath = "/data/temp/preview.png";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(jobinfo, previewFilePath);
+    int32_t ret = PrintManagerClient::GetInstance().RequestPreview(jobinfo, previewFilePath);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1286,9 +1286,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0063_NeedRename, TestSiz
 {
     PrintJob jobinfo;
     std::string previewFilePath = "/data/temp/preview.png";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(jobinfo, previewFilePath);
+    int32_t ret = PrintManagerClient::GetInstance().RequestPreview(jobinfo, previewFilePath);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1315,9 +1315,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0064_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string result;
-    int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(testJobinfo, result);
+    int32_t ret = PrintManagerClient::GetInstance().RequestPreview(testJobinfo, result);
     EXPECT_EQ(testPreviewFilePath, result);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
@@ -1334,8 +1334,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0065_NeedRename, TestSiz
 {
     std::string testPrintId = "printId-123";
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(testPrintId);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapability(testPrintId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1349,9 +1349,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0066_NeedRename, TestSiz
 {
     std::string testPrintId = "printId-123";
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(testPrintId);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapability(testPrintId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1364,9 +1364,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0066_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0067_NeedRename, TestSize.Level1)
 {
     std::string testPrintId = "printId-123";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(testPrintId);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapability(testPrintId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1390,8 +1390,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0068_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(testPrintId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapability(testPrintId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1407,8 +1407,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0069_NeedRename, TestSiz
 {
     std::vector<PrintJob> testPrintJobs;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(testPrintJobs);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllActivePrintJob(testPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1422,9 +1422,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0070_NeedRename, TestSiz
 {
     std::vector<PrintJob> testPrintJobs;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(testPrintJobs);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllActivePrintJob(testPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1437,9 +1437,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0070_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0071_NeedRename, TestSize.Level1)
 {
     std::vector<PrintJob> testPrintJobs;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(testPrintJobs);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllActivePrintJob(testPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1466,9 +1466,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0072_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::vector<PrintJob> result;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(result);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllActivePrintJob(result);
     EXPECT_EQ(testPrintJobs.size(), result.size());
     for (size_t index = 0; index < testPrintJobs.size(); index++) {
         EXPECT_EQ(testPrintJobs[index].GetJobId(), result[index].GetJobId());
@@ -1488,8 +1488,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0073_NeedRename, TestSiz
 {
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrintJobById(testPrintJobId, testPrintJob);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrintJobById(testPrintJobId, testPrintJob);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1503,9 +1503,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0074_NeedRename, TestSiz
 {
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrintJobById(testPrintJobId, testPrintJob);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrintJobById(testPrintJobId, testPrintJob);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1519,9 +1519,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0075_NeedRename, TestSiz
 {
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrintJobById(testPrintJobId, testPrintJob);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrintJobById(testPrintJobId, testPrintJob);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1549,9 +1549,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0076_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     PrintJob result;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrintJobById(testPrintJobId, result);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrintJobById(testPrintJobId, result);
     EXPECT_EQ(testPrintJob.GetJobId(), result.GetJobId());
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
@@ -1570,8 +1570,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0077_NeedRename, TestSiz
     std::string testType = "type";
     sptr<IPrintCallback> testListener;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->On(testTaskId, testType, testListener);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().On(testTaskId, testType, testListener);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1587,9 +1587,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0078_NeedRename, TestSiz
     std::string testType = "type";
     sptr<IPrintCallback> testListener;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->On(testTaskId, testType, testListener);
+    int32_t ret = PrintManagerClient::GetInstance().On(testTaskId, testType, testListener);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1604,9 +1604,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0079_NeedRename, TestSiz
     std::string testTaskId = "taskId-123";
     std::string testType = "type";
     sptr<IPrintCallback> testListener;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->On(testTaskId, testType, testListener);
+    int32_t ret = PrintManagerClient::GetInstance().On(testTaskId, testType, testListener);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1636,8 +1636,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0080_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->On(testTaskId, testType, testListener);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().On(testTaskId, testType, testListener);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1654,8 +1654,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0081_NeedRename, TestSiz
     std::string testTaskId = "taskId-123";
     std::string testType = "type";
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->Off(testTaskId, testType);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().Off(testTaskId, testType);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1670,9 +1670,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0082_NeedRename, TestSiz
     std::string testTaskId = "taskId-123";
     std::string testType = "type";
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->Off(testTaskId, testType);
+    int32_t ret = PrintManagerClient::GetInstance().Off(testTaskId, testType);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1687,9 +1687,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0083_NeedRename, TestSiz
     std::string testTaskId = "taskId-123";
     std::string testType = "type";
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->Off(testTaskId, testType);
+    int32_t ret = PrintManagerClient::GetInstance().Off(testTaskId, testType);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1715,8 +1715,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0084_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->Off(testTaskId, testType);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().Off(testTaskId, testType);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1734,7 +1734,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0085_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_MAX + 100;
     PrintExtCallback testCb = nullptr;
 
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1750,7 +1750,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0086_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_MAX + 100;
     PrintJobCallback testCb = nullptr;
 
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1766,7 +1766,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0087_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_MAX + 100;
     PrinterCapabilityCallback testCb = nullptr;
 
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1782,7 +1782,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0088_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_MAX + 100;
     PrinterCallback testCb = nullptr;
 
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -1798,9 +1798,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0089_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrintExtCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1816,9 +1816,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0090_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrintJobCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1834,9 +1834,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0091_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrinterCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1852,9 +1852,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0092_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrinterCapabilityCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1870,9 +1870,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0093_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrintExtCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1888,9 +1888,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0094_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrintJobCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1906,9 +1906,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0095_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrinterCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1924,9 +1924,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0096_NeedRename, TestSiz
     uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
     PrinterCapabilityCallback testCb = nullptr;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1948,8 +1948,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0097_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1973,8 +1973,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0098_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -1998,8 +1998,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0099_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -2023,8 +2023,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0100_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(testExtensionId, testCallbackId, testCb);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -2039,9 +2039,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0100_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0105_NeedRename, TestSize.Level1)
 {
     std::string testExtensionId = "com.example.ext";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->LoadExtSuccess(testExtensionId);
+    int32_t ret = PrintManagerClient::GetInstance().LoadExtSuccess(testExtensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2054,9 +2054,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0105_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0106_NeedRename, TestSize.Level1)
 {
     std::string testExtensionId = "com.example.ext";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->LoadExtSuccess(testExtensionId);
+    int32_t ret = PrintManagerClient::GetInstance().LoadExtSuccess(testExtensionId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2069,14 +2069,14 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0106_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0107_NeedRename, TestSize.Level1)
 {
     std::string testExtensionId = "com.example.ext";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, LoadExtSuccess(_)).Times(1).WillOnce(Return(E_PRINT_NONE));
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    int32_t ret = PrintManagerClient::GetInstance()->LoadExtSuccess(testExtensionId);
+    int32_t ret = PrintManagerClient::GetInstance().LoadExtSuccess(testExtensionId);
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
@@ -2095,8 +2095,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0108_NeedRename, TestSiz
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->LoadExtSuccess(testExtensionId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().LoadExtSuccess(testExtensionId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -2107,8 +2107,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0112_NeedRename, TestSiz
     std::string printerUri;
     std::string printerName;
     std::string printerMake;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinterToCups(printerUri, printerName, printerMake);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2117,9 +2117,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0113_NeedRename, TestSiz
     std::string printerUri;
     std::string printerName;
     std::string printerMake;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinterToCups(printerUri, printerName, printerMake);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2128,9 +2128,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0114_NeedRename, TestSiz
     std::string printerUri;
     std::string printerName;
     std::string printerMake;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinterToCups(printerUri, printerName, printerMake);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2139,8 +2139,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0115_NeedRename, TestSiz
     std::string printerUri;
     std::string printerName;
     std::string printerMake;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinterToCups(printerUri, printerName, printerMake);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2149,8 +2149,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0116_NeedRename, TestSiz
     std::string printerUri;
     std::string printerId;
     PrinterCapability printerCaps;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2159,9 +2159,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0117_NeedRename, TestSiz
     std::string printerUri;
     std::string printerId;
     PrinterCapability printerCaps;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2170,9 +2170,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0118_NeedRename, TestSiz
     std::string printerUri;
     std::string printerId;
     PrinterCapability printerCaps;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2181,8 +2181,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0119_NeedRename, TestSiz
     std::string printerUri;
     std::string printerId;
     PrinterCapability printerCaps;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2200,8 +2200,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0121_NeedRename, TestSiz
     const std::string option = "1";
     printerInfo.SetOption(option);
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterInfoByPrinterId(printerId, printerInfo);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2209,8 +2209,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0122_NeedRename, TestSiz
 {
     std::vector<std::string> printerNameList;
     printerNameList.push_back("1");
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(printerNameList);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().QueryAddedPrinter(printerNameList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2221,8 +2221,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0123_NeedRename, TestSiz
     std::vector<std::string> valueList;
     keyList.push_back("1");
     valueList.push_back("1");
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterProperties(printerId, keyList, valueList);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterProperties(printerId, keyList, valueList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2231,8 +2231,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0124_NeedRename, TestSiz
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
     testPrintJob.SetJobId("jobId-123");
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(testPrintJob);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2242,8 +2242,8 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerFail, TestSize.Le
     PrintJob testPrintJob;
     testPrintJob.SetJobId(testPrintJobId);
     sptr<IPrintCallback> testListener;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -2253,8 +2253,8 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerSuccess, TestSize
     PrintJob testPrintJob;
     testPrintJob.SetJobId(testPrintJobId);
     sptr<IPrintCallback> testListener;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -2264,8 +2264,8 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_NO_PERMISSION, TestSize.Lev
     PrintJob testPrintJob;
     testPrintJob.SetJobId(testPrintJobId);
     sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2276,7 +2276,7 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
     testPrintJob.SetJobId(testPrintJobId);
     sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, On(_, _, _)).WillOnce(Return(E_PRINT_NONE));
@@ -2289,14 +2289,14 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
         dr = recipient;
         return true;
     });
-    PrintManagerClient::GetInstance()->SetProxy(obj);
+    PrintManagerClient::GetInstance().SetProxy(obj);
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(2);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -2307,8 +2307,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0125_NeedRename, TestSiz
     std::string printJobName = "jobName-123";
     sptr<IPrintCallback> testListener;
     PrintAttributes testPrintAttributes;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().Print(printJobName, testListener, testPrintAttributes);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -2318,9 +2318,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0126_NeedRename, TestSiz
     sptr<IPrintCallback> testListener;
     PrintAttributes testPrintAttributes;
     void *contextToken = nullptr;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     int32_t ret =
-        PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, contextToken);
+        PrintManagerClient::GetInstance().Print(printJobName, testListener, testPrintAttributes, contextToken);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -2330,8 +2330,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0127_NeedRename, TestSiz
     sptr<IPrintCallback> testListener;
     PrintAttributes testPrintAttributes;
     std::string taskId = "1";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, taskId);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().Print(printJobName, testListener, testPrintAttributes, taskId);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -2342,9 +2342,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0128_NeedRename, TestSiz
     PrintAttributes testPrintAttributes;
     std::string taskId = "1";
     void *contextToken = nullptr;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     int32_t ret =
-        PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
+        PrintManagerClient::GetInstance().Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
@@ -2362,9 +2362,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_Print_with_contextToken,
     std::string taskId = "";
     OHOS::Ace::UIContent* contextToken = new OHOS::Ace::MockUIContent();
     ASSERT_NE(contextToken, nullptr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     int32_t ret =
-        PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
+        PrintManagerClient::GetInstance().Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     delete contextToken;
 }
@@ -2374,8 +2374,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSiz
     std::string jobId = "1";
     PrintAttributes testPrintAttributes;
     uint32_t fd = static_cast<uint32_t>(dup(1));
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().StartGetPrintFile(jobId, testPrintAttributes, fd);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     close(fd);
 }
@@ -2384,8 +2384,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0130_NeedRename, TestSiz
 {
     std::string jobId = "1";
     std::string type = "";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintService(jobId, type);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().NotifyPrintService(jobId, type);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2394,8 +2394,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0131_NeedRename, TestSiz
     char callerFunN[] = "testName";
     char *callerFunName = callerFunN;
     std::function<int32_t(sptr<IPrintService>)> func = [](sptr<IPrintService>) -> int32_t { return 0; };
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->runBase(callerFunName, func);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().runBase(callerFunName, func);
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
@@ -2403,17 +2403,17 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0132_NeedRename, TestSiz
 {
     std::string type = "test";
     NativePrinterChangeCallback cb = nullptr;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(type, cb);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().SetNativePrinterChangeCallback(type, cb);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0133_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->Init();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().Init();
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-    ret = PrintManagerClient::GetInstance()->Release();
+    ret = PrintManagerClient::GetInstance().Release();
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2568,123 +2568,123 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0144_NeedRename, TestSiz
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0145_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     uint32_t event = 0;
     std::string jobId = "jobId";
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyPrintServiceEvent(jobId, event);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     uint32_t event = 0;
     std::string jobId = "jobId";
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyPrintServiceEvent(jobId, event);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0147_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string printerId = "printId-123";
     uint32_t type = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->SetDefaultPrinter(printerId, type);
+    int32_t ret = PrintManagerClient::GetInstance().SetDefaultPrinter(printerId, type);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0148_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::string printerId = "printId-123";
     uint32_t type = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->SetDefaultPrinter(printerId, type);
+    int32_t ret = PrintManagerClient::GetInstance().SetDefaultPrinter(printerId, type);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0149_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string printerName;
-    int32_t ret = PrintManagerClient::GetInstance()->DeletePrinterFromCups(printerName);
+    int32_t ret = PrintManagerClient::GetInstance().DeletePrinterFromCups(printerName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, QueryAllPrinterPpds_pass, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::vector<PpdInfo> infos;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrinterPpds(infos);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllPrinterPpds(infos);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, QueryPrinterInfoByIp_pass, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string testIp = "192.168.1.1";
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(testIp);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterInfoByIp(testIp);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_pass, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string testIp = "192.168.1.1";
     std::string protocol = "ipp";
     std::string ppdName = DEFAULT_PPD_NAME;
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, QueryAllPrinterPpds_reload, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::vector<PpdInfo> infos;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrinterPpds(infos);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllPrinterPpds(infos);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, QueryPrinterInfoByIp_reload, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::string testIp = "192.168.1.1";
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(testIp);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterInfoByIp(testIp);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_reload, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::string testIp = "192.168.1.1";
     std::string protocol = "ipp";
     std::string ppdName = DEFAULT_PPD_NAME;
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0150_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::string printerName;
-    int32_t ret = PrintManagerClient::GetInstance()->DeletePrinterFromCups(printerName);
+    int32_t ret = PrintManagerClient::GetInstance().DeletePrinterFromCups(printerName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0153_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string printerId = "printId-123";
     PrinterPreferences printPreference;
-    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, printPreference);
+    int32_t ret = PrintManagerClient::GetInstance().SetPrinterPreference(printerId, printPreference);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0154_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::string printerId = "printId-123";
     PrinterPreferences printPreference;
-    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, printPreference);
+    int32_t ret = PrintManagerClient::GetInstance().SetPrinterPreference(printerId, printPreference);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2692,8 +2692,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0155_NeedRename, TestSiz
 {
     std::vector<PrinterInfo> testPrinters;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(testPrinters);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().DiscoverUsbPrinters(testPrinters);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2701,9 +2701,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0156_NeedRename, TestSiz
 {
     std::vector<PrinterInfo> testPrinters;
 
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(testPrinters);
+    int32_t ret = PrintManagerClient::GetInstance().DiscoverUsbPrinters(testPrinters);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2711,9 +2711,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0157_NeedRename, TestSiz
 {
     std::vector<PrinterInfo> testPrinters;
 
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(testPrinters);
+    int32_t ret = PrintManagerClient::GetInstance().DiscoverUsbPrinters(testPrinters);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2726,9 +2726,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0157_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0158_NeedRename, TestSize.Level1)
 {
     PrinterInfo info;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToDiscovery(info);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinterToDiscovery(info);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2741,9 +2741,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0158_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0159_NeedRename, TestSize.Level1)
 {
     PrinterInfo info;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInDiscovery(info);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterInDiscovery(info);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2756,9 +2756,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0159_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0160_NeedRename, TestSize.Level1)
 {
     std::string printerId = "test";
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinterFromDiscovery(printerId);
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinterFromDiscovery(printerId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2771,9 +2771,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0160_NeedRename, TestSiz
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0161_NeedRename, TestSize.Level1)
 {
     PrinterInfo info;
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(info);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterInSystem(info);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2785,9 +2785,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0161_NeedRename, TestSiz
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_LoadServerFailed, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     PrinterInfo info;
-    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    int32_t ret = PrintManagerClient::GetInstance().AddRawPrinter(info);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2799,10 +2799,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_LoadServer
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_GetPrintServiceProxyFailed, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
     PrinterInfo info;
-    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    int32_t ret = PrintManagerClient::GetInstance().AddRawPrinter(info);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2821,9 +2821,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_RpcCallSuc
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     PrinterInfo info;
-    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    int32_t ret = PrintManagerClient::GetInstance().AddRawPrinter(info);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -2838,8 +2838,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_RpcCallSuc
 HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_LoadServerFailed, TestSize.Level1)
 {
     std::vector<PrintJob> historyPrintJobs;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(historyPrintJobs);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllPrintJob(historyPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2852,9 +2852,9 @@ HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_LoadServerFailed, TestSize.Lev
 HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_GetPrintServiceProxyFail, TestSize.Level1)
 {
     std::vector<PrintJob> historyPrintJobs;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(historyPrintJobs);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllPrintJob(historyPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2866,11 +2866,11 @@ HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_GetPrintServiceProxyFail, Test
  */
 HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_LoadServerFailed, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance().AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -2883,12 +2883,12 @@ HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_LoadServerFailed, TestSi
  */
 HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_GetPrintServiceProxyFail, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance().AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -2902,8 +2902,8 @@ HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_GetPrintServiceProxyFail
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_LoadServerFailed, TestSize.Level1)
 {
     std::vector<std::string> printerNameList;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryRawAddedPrinter(printerNameList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(printerNameList.empty());
 }
@@ -2917,9 +2917,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_Loa
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_GetPrintServiceProxyFail, TestSize.Level1)
 {
     std::vector<std::string> printerNameList;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    int32_t ret = PrintManagerClient::GetInstance().QueryRawAddedPrinter(printerNameList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(printerNameList.empty());
 }
@@ -2942,9 +2942,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_Rpc
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::vector<std::string> printerNameList;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    int32_t ret = PrintManagerClient::GetInstance().QueryRawAddedPrinter(printerNameList);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(printerNameList, expectedPrinters);
     EXPECT_NE(dr, nullptr);
@@ -2959,11 +2959,11 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_Rpc
  */
 HWTEST_F(PrintManagerClientTest, AnalyzePrintEvents_ShouldReturnNoPermission_WhenNoPermission, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
     
     std::string printerId = "test";
     std::string detail;
-    int32_t ret = PrintManagerClient::GetInstance()->AnalyzePrintEvents(printerId, "type", detail);
+    int32_t ret = PrintManagerClient::GetInstance().AnalyzePrintEvents(printerId, "type", detail);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2972,7 +2972,7 @@ HWTEST_F(PrintManagerClientTest, CheckPreferencesConflictsTest, TestSize.Level1)
     std::string printerId = "test";
     PrinterPreferences printerPreference;
     std::vector<std::string> conflictingOptions;
-    int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
+    int32_t ret = PrintManagerClient::GetInstance().CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -2981,7 +2981,7 @@ HWTEST_F(PrintManagerClientTest, CheckPrintJobConflictsTest, TestSize.Level1)
 {
     PrintJob printerJob;
     std::vector<std::string> conflictingOptions;
-    int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(
+    int32_t ret = PrintManagerClient::GetInstance().CheckPrintJobConflicts(
         PRINT_PARAM_TYPE_PAGE_SIZE, printerJob, conflictingOptions);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -2990,7 +2990,7 @@ HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
 {
     std::string printerId = "test";
     PrinterPreferences defaultPreferences;
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+    int32_t ret = PrintManagerClient::GetInstance().GetPrinterDefaultPreferences(printerId, defaultPreferences);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2998,7 +2998,7 @@ HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
 {
     std::string printerId = "test";
     PrinterPreferences printerPreference;
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printerPreference);
+    int32_t ret = PrintManagerClient::GetInstance().GetPrinterPreference(printerId, printerPreference);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -3006,8 +3006,8 @@ HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_LoadServerFailed, Tes
 {
     std::string printerId = "testId";
     std::vector<PpdInfo> ppdList;
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryRecommendDriversById(printerId, ppdList);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().QueryRecommendDriversById(printerId, ppdList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(ppdList.empty());
 }
@@ -3016,9 +3016,9 @@ HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_GetPrintServiceProxyF
 {
     std::string printerId = "testId";
     std::vector<PpdInfo> ppdList;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->QueryRecommendDriversById(printerId, ppdList);
+    int32_t ret = PrintManagerClient::GetInstance().QueryRecommendDriversById(printerId, ppdList);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(ppdList.empty());
 }
@@ -3028,8 +3028,8 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_LoadServerFailed, Test
     std::string printerId = "testId";
     std::string protocol = "testprot";
     std::string ppdName = "test.ppd";
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -3038,16 +3038,16 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_GetPrintServiceProxyFa
     std::string printerId = "testId";
     std::string protocol = "testprot";
     std::string ppdName = "test.ppd";
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, GetSharedHosts_Test, TestSize.Level1)
 {
     std::vector<PrintSharedHost> sharedHosts;
-    PrintManagerClient::GetInstance()->GetSharedHosts(sharedHosts);
+    PrintManagerClient::GetInstance().GetSharedHosts(sharedHosts);
     EXPECT_TRUE(sharedHosts.empty());
 }
 
@@ -3057,7 +3057,7 @@ HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
     std::string userName;
     char *userPasswd = nullptr;
     std::vector<PrinterInfo> printerInfos;
-    PrintManagerClient::GetInstance()->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+    PrintManagerClient::GetInstance().AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
     EXPECT_TRUE(printerInfos.empty());
 }
 
@@ -3067,7 +3067,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_StartPrint_noPermission,
         "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> testFdList = {1, 2};
     std::string testTaskId = "2";
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
+    int32_t ret = PrintManagerClient::GetInstance().StartPrint(testFileList, testFdList, testTaskId);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -3089,10 +3089,10 @@ HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_Success, TestSize.Lev
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
 
     sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterWatermarkCallback(callback);
     EXPECT_EQ(ret, E_PRINT_NONE);
 
     dr->OnRemoteDied(obj);
@@ -3116,9 +3116,9 @@ HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_Success, TestSize.L
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
 
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    int32_t ret = PrintManagerClient::GetInstance().UnregisterWatermarkCallback();
     EXPECT_EQ(ret, E_PRINT_NONE);
 
     dr->OnRemoteDied(obj);
@@ -3145,9 +3145,9 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_Success, TestSize.Level
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
 
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyWatermarkComplete(testJobId, testResult);
     EXPECT_EQ(ret, E_PRINT_NONE);
 
     dr->OnRemoteDied(obj);
@@ -3174,9 +3174,9 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_WithFailureResult, Test
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
 
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(testJobId, testResult);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyWatermarkComplete(testJobId, testResult);
     EXPECT_EQ(ret, E_PRINT_NONE);
 
     dr->OnRemoteDied(obj);
@@ -3184,12 +3184,12 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_WithFailureResult, Test
 
 HWTEST_F(PrintManagerClientTest, AddPrinter_pass, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
     std::string testPrinterName = "test-printer";
     std::string testUri = "ipp://192.168.1.1:631/ipp/print";
     std::string testPpdName = DEFAULT_PPD_NAME;
     std::string testOptions = "";
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -3216,8 +3216,8 @@ HWTEST_F(PrintManagerClientTest, AddPrinter_reload, TestSize.Level1)
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -3236,10 +3236,10 @@ HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Le
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance().LoadServerSuccess();
 
     sptr<MockKiaInterceptorCallbackStub> callback = new MockKiaInterceptorCallbackStub();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterKiaInterceptorCallback(callback);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterKiaInterceptorCallback(callback);
     EXPECT_EQ(ret, E_PRINT_NONE);
 
     dr->OnRemoteDied(obj);
@@ -3266,7 +3266,7 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_RpcFailure, TestSize.L
         dr = recipient;
         return true;
     });
-    PrintManagerClient::GetInstance()->SetProxy(obj);
+    PrintManagerClient::GetInstance().SetProxy(obj);
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -3274,7 +3274,7 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_RpcFailure, TestSize.L
             return E_PRINT_RPC_FAILURE;
         });
 
-    EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(PrintManagerClient::GetInstance().StartSharedHostDiscovery(), E_PRINT_RPC_FAILURE);
 }
 
 /**
@@ -3296,7 +3296,7 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_Success, TestSize.Leve
         .Times(Exactly(1))
         .WillOnce(Return(E_PRINT_NONE));
 
-    EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_NONE);
+    EXPECT_EQ(PrintManagerClient::GetInstance().StartSharedHostDiscovery(), E_PRINT_NONE);
 }
 
 }  // namespace Print

@@ -145,7 +145,7 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
         fileList_.clear();
         return ret;
     }
-    ret = static_cast<uint32_t>(PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_));
+    ret = static_cast<uint32_t>(PrintManagerClient::GetInstance().StartPrint(fileList_, fdList_, taskId_));
     for (auto fd : fdList_) {
         fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
     }
@@ -178,7 +178,7 @@ uint32_t PrintTask::StartPrintAdapter(napi_env env, napi_callback_info info)
             PRINT_HILOGE("CallSpooler failed.");
             return ret;
         }
-        return PrintManagerClient::GetInstance()->Print(
+        return PrintManagerClient::GetInstance().Print(
             printJobName_, printAdapterCallback_, *printAttributes_, taskId_, callerToken_);
     }
     return E_PRINT_INVALID_PARAMETER;
@@ -441,7 +441,7 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
         NapiPrintUtils::DeleteReference(env, callbackRef);
         return nullptr;
     }
-    int32_t ret = PrintManagerClient::GetInstance()->On(task->taskId_, type, callback);
+    int32_t ret = PrintManagerClient::GetInstance().On(task->taskId_, type, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");
         return nullptr;
@@ -481,7 +481,7 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->Off(context->taskId, context->type);
+        int32_t ret = PrintManagerClient::GetInstance().Off(context->taskId, context->type);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to unregistered event");

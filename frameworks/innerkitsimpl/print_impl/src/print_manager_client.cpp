@@ -46,10 +46,10 @@ PrintManagerClient::PrintManagerClient() : printServiceProxy_(nullptr), deathRec
 
 PrintManagerClient::~PrintManagerClient() {}
 
-PrintManagerClient* PrintManagerClient::GetInstance()
+PrintManagerClient& PrintManagerClient::GetInstance()
 {
     static PrintManagerClient instance;
-    return &instance;
+    return instance;
 }
 
 sptr<IPrintService> PrintManagerClient::GetPrintServiceProxy()

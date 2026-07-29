@@ -83,7 +83,7 @@ int32_t AniPrintTask::StartPrint(const std::vector<std::string>& files)
     adapterParam->jobId = jobId_;
     adapterParam->documentName = "";
     adapterParam->isCheckFdList = true;
-    return PrintManagerClient::GetInstance()->StartPrint(files, fdList.Get(), jobId_);
+    return PrintManagerClient::GetInstance().StartPrint(files, fdList.Get(), jobId_);
 }
 
 int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& files,
@@ -126,7 +126,7 @@ int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& file
         PRINT_HILOGE("CallSpooler fail");
         return ret;
     }
-    return PrintManagerClient::GetInstance()->StartPrint(files, fdList.Get(), jobId_);
+    return PrintManagerClient::GetInstance().StartPrint(files, fdList.Get(), jobId_);
 }
 
 int32_t AniPrintTask::StartPrintWithAttributes(const std::string& jobName, std::shared_ptr<AbilityRuntime::Context> ctx,
@@ -149,7 +149,7 @@ int32_t AniPrintTask::StartPrintWithAttributes(const std::string& jobName, std::
         return E_PRINT_INVALID_PARAMETER;
     }
     sptr<IRemoteObject> callerToken = abilityContext->GetToken();
-    return PrintManagerClient::GetInstance()->Print(
+    return PrintManagerClient::GetInstance().Print(
         jobName, listener, attributes, jobId_, callerToken);
 }
 
@@ -221,13 +221,13 @@ OHOS::Ace::UIContent* AniPrintTask::GetUIContent(std::shared_ptr<OHOS::AbilityRu
 
 int32_t AniPrintTask::On(std::string type, sptr<IPrintCallback> callback)
 {
-    int32_t ret = PrintManagerClient::GetInstance()->On(jobId_, type, callback);
+    int32_t ret = PrintManagerClient::GetInstance().On(jobId_, type, callback);
     return ret;
 }
 
 int32_t AniPrintTask::Off(std::string type, sptr<IPrintCallback> callback)
 {
-    int32_t ret = PrintManagerClient::GetInstance()->Off(jobId_, type);
+    int32_t ret = PrintManagerClient::GetInstance().Off(jobId_, type);
     return ret;
 }
 

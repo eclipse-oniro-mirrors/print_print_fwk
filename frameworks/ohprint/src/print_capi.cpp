@@ -205,7 +205,7 @@ static void GetPrintJobState(const PrintJob &jobInfo,  uint32_t &state)
 Print_ErrorCode OH_Print_Init()
 {
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_Init", PRINT_API_COUNTED);
-    int32_t ret = PrintManagerClient::GetInstance()->Init();
+    int32_t ret = PrintManagerClient::GetInstance().Init();
     PRINT_HILOGI("OH_Print_Init ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
 }
@@ -214,7 +214,7 @@ Print_ErrorCode OH_Print_Init()
 Print_ErrorCode OH_Print_Release()
 {
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_Release", PRINT_API_COUNTED);
-    int32_t ret = PrintManagerClient::GetInstance()->Release();
+    int32_t ret = PrintManagerClient::GetInstance().Release();
     PRINT_HILOGI("OH_Print_Release ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
 }
@@ -229,7 +229,7 @@ Print_ErrorCode OH_Print_AddRawPrinter(const char *printerId, const char *printe
 
     PrinterInfo info;
     SetInitRawPrinterInfo(printerId, printerName, printerUri, info);
-    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    int32_t ret = PrintManagerClient::GetInstance().AddRawPrinter(info);
     if (ret != PRINT_ERROR_NONE) {
         PRINT_HILOGI("AddRawPrinter failed, ret = [%{public}d], printerId = [%{private}s].", ret, printerId);
         return ConvertToNativeErrorCode(ret);
@@ -245,7 +245,7 @@ Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList)
         return PRINT_ERROR_INVALID_PARAMETER;
     }
     std::vector<std::string> printerNameList;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    int32_t ret = PrintManagerClient::GetInstance().QueryRawAddedPrinter(printerNameList);
     size_t count = printerNameList.size();
     PRINT_HILOGI("OH_Print_GetRawPrinterList ret = %{public}d, count = %{public}zu.", ret, count);
     if (ret != 0 || count == 0) {
@@ -277,10 +277,10 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         g_printerDiscoverCallback = callback;
     }
-    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(
+    PrintManagerClient::GetInstance().SetNativePrinterChangeCallback(
         PRINTER_DISCOVER_EVENT_TYPE, NativePrinterDiscoverFunction);
     std::vector<PrintExtensionInfo> extensionInfos;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(extensionInfos);
     PRINT_HILOGI("QueryAllExtension ret = [%{public}d]", ret);
     if (ret == PRINT_ERROR_NONE) {
         std::vector<std::string> extensionIds;
@@ -288,7 +288,7 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
             extensionIds.emplace_back(extensionInfo.GetExtensionId());
         }
         PRINT_HILOGI("extensionIds size = [%{public}zu]", extensionIds.size());
-        ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(extensionIds);
+        ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(extensionIds);
         PRINT_HILOGI("StartDiscoverPrinter ret = [%{public}d]", ret);
     }
     return ConvertToNativeErrorCode(ret);
@@ -298,7 +298,7 @@ Print_ErrorCode OH_Print_StopPrinterDiscovery()
 {
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StopPrinterDiscovery", PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_StopPrinterDiscovery");
-    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
+    PrintManagerClient::GetInstance().SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         g_printerDiscoverCallback = nullptr;
@@ -314,7 +314,7 @@ Print_ErrorCode OH_Print_ConnectPrinter(const char *printerId)
         return PRINT_ERROR_INVALID_PRINTER;
     }
     std::string nativePrinterId = printerId;
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(nativePrinterId);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(nativePrinterId);
     PRINT_HILOGI("ConnectPrinter ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
 }
@@ -332,7 +332,7 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
         PRINT_HILOGW("ConvertNativeJobToPrintJob fail.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
     }
-    ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob);
+    ret = PrintManagerClient::GetInstance().StartNativePrintJob(curPrintJob);
     PRINT_HILOGI("StartNativePrintJob ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
 }
@@ -376,7 +376,7 @@ Print_ErrorCode OH_Print_StartPrintWithJobStateCallback(const Print_PrintJob *pr
         return PRINT_ERROR_GENERIC_FAILURE;
     }
     callback->SetNativePrintJobChangeCallback(nativePrintJobChangedFunc);
-    ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob, callback);
+    ret = PrintManagerClient::GetInstance().StartNativePrintJob(curPrintJob, callback);
     PRINT_HILOGI("StartNativePrintJob with callback ,ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
 }
@@ -390,7 +390,7 @@ Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallba
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
         g_printerChangeCallback = callback;
     }
-    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(
+    PrintManagerClient::GetInstance().SetNativePrinterChangeCallback(
         PRINTER_CHANGE_EVENT_TYPE, NativePrinterInfoFunction);
     return PRINT_ERROR_NONE;
 }
@@ -400,7 +400,7 @@ void OH_Print_UnregisterPrinterChangeListener()
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_UnregisterPrinterChangeListener",
         PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_UnregisterPrinterChangeListener");
-    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
+    PrintManagerClient::GetInstance().SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
         g_printerChangeCallback = nullptr;
@@ -415,7 +415,7 @@ Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
         return PRINT_ERROR_INVALID_PARAMETER;
     }
     std::vector<std::string> printerNameList;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(printerNameList);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAddedPrinter(printerNameList);
     size_t count = printerNameList.size();
     PRINT_HILOGI("OH_Print_QueryPrinterList ret = %{public}d, count = %{public}zu.", ret, count);
     if (ret != 0 || count == 0) {
@@ -464,7 +464,7 @@ Print_ErrorCode OH_Print_QueryPrinterInfo(const char *printerId, Print_PrinterIn
     }
     std::string id(printerId);
     PrinterInfo info;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(id, info);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterInfoByPrinterId(id, info);
     PRINT_HILOGI("QueryPrinterInfoByPrinterId ret = %{public}d", ret);
     if (info.GetPrinterId() != id || info.GetPrinterName().empty()) {
         PRINT_HILOGI("QueryPrinterInfoByPrinterId invalid printer");
@@ -524,7 +524,7 @@ Print_ErrorCode OH_Print_QueryPrinterProperties(
         return PRINT_ERROR_INVALID_PARAMETER;
     }
     std::vector<std::string> valueList;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterProperties(printerId, keyList, valueList);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterProperties(printerId, keyList, valueList);
     PRINT_HILOGI("QueryPrinterProperties ret = %{public}d", ret);
     if (ret != 0) {
         PRINT_HILOGW("QueryPrinterProperties fail");
@@ -565,7 +565,7 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
         "OH_Print_UpdatePrinterProperties setting : %{public}s.", (PrintJsonUtil::WriteString(settingJson)).c_str());
     PrinterPreferences preferences;
     preferences.ConvertJsonToPrinterPreferences(settingJson);
-    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, preferences);
+    int32_t ret = PrintManagerClient::GetInstance().SetPrinterPreference(printerId, preferences);
     if (ret != 0) {
         PRINT_HILOGW("SetPrinterPreference fail");
         return PRINT_ERROR_INVALID_PRINTER;
@@ -749,7 +749,7 @@ Print_ErrorCode OH_Print_StartPrintByNative(
     }
     auto attributes = std::make_shared<PrintAttributes>();
     std::string printJobNameStr = printJobName;
-    int32_t ret = PrintManagerClient::GetInstance()->Print(printJobNameStr, printCb, attributes, uiContent);
+    int32_t ret = PrintManagerClient::GetInstance().Print(printJobNameStr, printCb, attributes, uiContent);
     if (ret != PRINT_ERROR_NONE) {
         PRINT_HILOGE("OH_Print start print start failed, error code : %{public}d.", ret);
         return ConvertToNativeErrorCode(ret);
