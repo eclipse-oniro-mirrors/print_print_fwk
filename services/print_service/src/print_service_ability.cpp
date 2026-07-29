@@ -1234,10 +1234,7 @@ int32_t PrintServiceAbility::ValidatePrinterForUpdateDiscovery(
 {
     std::string globalId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
     auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
-    if (discoveredInfo == nullptr) {
-        PRINT_HILOGE("printer not in discovery list, globalId: %{public}s", globalId.c_str());
-        return E_PRINT_INVALID_PARAMETER;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(discoveredInfo, E_PRINT_INVALID_PARAMETER);
     std::string newName = printerInfo.GetPrinterName();
     PrinterInfo addedInfo;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalId, addedInfo) &&
