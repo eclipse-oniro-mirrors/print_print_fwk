@@ -1360,7 +1360,8 @@ int32_t PrintCupsClient::QueryPrinterAttrList(
 
 int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
-    PRINT_HILOGD("the printerInfo printerName %{public}s", info.GetPrinterName().c_str());
+    PRINT_HILOGD("the printerInfo printerName %{public}s",
+        PrintUtils::AnonymizePrinterName(info.GetPrinterName()).c_str());
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
@@ -1978,6 +1979,11 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "auth-info", UserNameAndPasswd.size(), NULL,
         UserNameAndPasswd.data());
     response = cupsDoRequest(http, request, "/jobs/");
+    if (response == nullptr) {
+        PRINT_HILOGE("The Printer authenticate fail.");
+        httpClose(http);
+        return false;
+    }
     ipp_state_t state = ippGetState(response);
     if (state == IPP_ERROR) {
         PRINT_HILOGE("The Printer authenticate fail.");

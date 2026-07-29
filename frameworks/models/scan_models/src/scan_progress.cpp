@@ -126,7 +126,12 @@ bool ScanProgress::ReadFromParcel(Parcel &parcel)
 {
     auto mesgParcel = static_cast<MessageParcel*>(&parcel);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(progress_), false);
-    SetScanPictureFd(mesgParcel->ReadFileDescriptor());
+    int32_t fd = mesgParcel->ReadFileDescriptor();
+    if (fd < 0) {
+        SCAN_HILOGE("ReadFileDescriptor failed");
+        return false;
+    }
+    SetScanPictureFd(fd);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isFinal_), false);
     return true;
 }

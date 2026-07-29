@@ -24,6 +24,7 @@
 namespace OHOS::Scan {
 constexpr int32_t YES_VALUE = 1;
 constexpr int32_t NO_VALUE = 0;
+constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
 
 ScanContext::ScanContext()
 {}
@@ -105,6 +106,11 @@ int32_t ScanContext::GetScannerParaCount(const std::string &deviceId, int32_t &s
         return StatusConvert(ret);
     }
     scannerParaCount = value.GetNumValue();
+    if (scannerParaCount < 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("scannerParaCount [%{public}d] out of valid range [0, %{public}d]",
+            scannerParaCount, MAX_SCANNER_PARA_COUNT);
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     return SCAN_ERROR_NONE;
 }
 
@@ -134,6 +140,10 @@ bool ScanContext::ParaIndexConvert(const int32_t option, int32_t &innerOption, c
 int32_t ScanContext::GetScannerParameter(
     const std::string &deviceId, int32_t scannerParaCount, ScanParaTable &paraTable)
 {
+    if (scannerParaCount <= 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("scannerParaCount [%{public}d] out of range", scannerParaCount);
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     int32_t buffLength = 0;
     for (int i = 1; i < scannerParaCount; i++) {
         ScanOptionDescriptor desc;
@@ -320,8 +330,7 @@ void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions *scannerOptions)
 
 Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
 {
-    constexpr int32_t maxOptionCount = 1000;
-    if (optionCount > maxOptionCount) {
+    if (optionCount > MAX_SCANNER_PARA_COUNT) {
         SCAN_HILOGE("optionCount [%{public}d] exceeded the maximum value", optionCount);
         return nullptr;
     }
@@ -431,9 +440,8 @@ int32_t ScanContext::StatusConvert(int32_t status)
         {E_SCAN_COVER_OPEN, SCAN_ERROR_COVER_OPEN},
         {E_SCAN_IO_ERROR, SCAN_ERROR_IO_ERROR},
         {E_SCAN_NO_MEM, SCAN_ERROR_NO_MEMORY},
-        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID},
-        {E_SCAN_NO_PERMISSION, SCAN_ERROR_NO_PERMISSION},
-        {E_SCAN_INVALID_PARAMETER, SCAN_ERROR_INVALID_PARAMETER}};
+        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_NO_PERMISSION},
+        {E_SCAN_NO_PERMISSION, SCAN_ERROR_NO_PERMISSION}};
     auto it = errorCodeMap.find(status);
     if (it != errorCodeMap.end()) {
         return it->second;
@@ -455,6 +463,13 @@ void ScanContext::SetScanParaTable(const std::string &scannerId, std::unique_ptr
 {
     std::lock_guard<std::mutex> lock(mutex_);
     innerScanParaTables_[scannerId] = std::move(table);
+}
+
+void ScanContext::ClearScannerCache(const std::string &scannerId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    exScanParaTables_.erase(scannerId);
+    innerScanParaTables_.erase(scannerId);
 }
 
 std::shared_ptr<Scan_ScannerOptions> ScanContext::GetScannerOptions(const std::string &scannerId)

@@ -438,7 +438,7 @@ public:
 #ifdef REMOTE_SERVICE_ENABLE
 public:
     int32_t AddRemotePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
-    bool RemoveRemotePrinterInfo(const std::string &printerId);
+    bool RemoveRemotePrinterInfo(const std::string &uri);
 private:
     bool MatchPrinterByUri(const std::string &uri, std::string &matchedPrinterId, PrinterInfo &matchedPrinter);
     bool IsRemotePrinter(const std::string &printerId);

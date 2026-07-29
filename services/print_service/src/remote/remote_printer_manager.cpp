@@ -18,9 +18,9 @@
 #include "remote_constants.h"
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_json_util.h"
 #include "print_page_size.h"
-#include "print_utils.h"
 #include "print_service_ability.h"
 #include <thread>
 #include <chrono>
@@ -87,6 +87,12 @@ RemotePrinterManager::~RemotePrinterManager()
     Destroy();
 }
 
+RemotePrinterManager& RemotePrinterManager::GetInstance()
+{
+    static RemotePrinterManager instance;
+    return instance;
+}
+
 bool RemotePrinterManager::Destroy()
 {
     PRINT_HILOGI("RemotePrinterManager Destroy");
@@ -98,6 +104,15 @@ bool RemotePrinterManager::Destroy()
     
     std::lock_guard<std::mutex> lock(printerMapLock_);
     printerMap_.clear();
+    return true;
+}
+
+bool RemotePrinterManager::Disconnect()
+{
+    PRINT_HILOGI("RemotePrinterManager Disconnect");
+    StopPrinterDiscovery();
+    ClearAllPrinters();
+    serviceAdapter_.UnbindService();
     return true;
 }
 
@@ -173,7 +188,7 @@ bool RemotePrinterManager::BuildPrinterInfo(const Json::Value &item, PrinterInfo
     return true;
 }
 
-bool RemotePrinterManager::StartPrinterDiscovery()
+void RemotePrinterManager::StartPrinterDiscovery()
 {
     PRINT_HILOGI("RemotePrinterManager StartPrinterDiscovery");
     std::lock_guard<std::mutex> lock(controlMutex_);
@@ -181,18 +196,17 @@ bool RemotePrinterManager::StartPrinterDiscovery()
         PRINT_HILOGW("Discovery already running, trigger immediate query");
         int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("Immediate RequestPrinterList result: %{public}d", result);
-        return true;
+        return;
     }
-    
+
     if (discoveryThread_.joinable()) {
         discoveryThread_.join();
     }
-    
+
     isDiscoveryRunning_ = true;
     discoveryThread_ = std::thread([this]() {
         DiscoveryLoop();
     });
-    return true;
 }
 
 bool RemotePrinterManager::StopPrinterDiscovery()
@@ -227,12 +241,12 @@ std::shared_ptr<PrinterInfo> RemotePrinterManager::GetPrinterInfo(const std::str
 bool RemotePrinterManager::UpdatePrinterStatus(const std::string &printerId, PrinterStatus status)
 {
     PRINT_HILOGI("RemotePrinterManager UpdatePrinterStatus: %{public}s, status=%{public}d",
-                 printerId.c_str(), status);
+                 PrintUtils::AnonymizePrinterId(printerId).c_str(), status);
     
     std::lock_guard<std::mutex> lock(printerMapLock_);
     auto it = printerMap_.find(printerId);
     if (it == printerMap_.end()) {
-        PRINT_HILOGW("Printer not found: %{public}s", printerId.c_str());
+        PRINT_HILOGW("Printer not found: %{public}s", PrintUtils::AnonymizePrinterId(printerId).c_str());
         return false;
     }
     
@@ -253,7 +267,7 @@ bool RemotePrinterManager::OnPrinterListReceived(const Json::Value &jsonArray)
         }
         
         std::string devId = printerInfo.GetPrinterId();
-        PRINT_HILOGI("[Printer: %{public}s] discovered", devId.c_str());
+        PRINT_HILOGI("[Printer: %{public}s] discovered", PrintUtils::AnonymizePrinterId(devId).c_str());
         currentDevIds.push_back(devId);
         
         std::lock_guard<std::mutex> lock(printerMapLock_);
@@ -262,7 +276,8 @@ bool RemotePrinterManager::OnPrinterListReceived(const Json::Value &jsonArray)
 
     for (const auto &devId : currentDevIds) {
         int32_t result = serviceAdapter_.RequestPrinterStatus(devId);
-        PRINT_HILOGI("RequestPrinterStatus for %{public}s result: %{public}d", devId.c_str(), result);
+        PRINT_HILOGI("RequestPrinterStatus for %{public}s result: %{public}d",
+            PrintUtils::AnonymizePrinterId(devId).c_str(), result);
     }
     
     RemoveDeprecatedPrinters(currentDevIds);
@@ -274,9 +289,8 @@ void RemotePrinterManager::RemoveDeprecatedPrinters(const std::vector<std::strin
     std::lock_guard<std::mutex> lock(printerMapLock_);
     for (auto it = printerMap_.begin(); it != printerMap_.end();) {
         if (std::find(currentDevIds.begin(), currentDevIds.end(), it->first) == currentDevIds.end()) {
-            PRINT_HILOGI("[Printer: %{public}s] removed", it->first.c_str());
-            std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, it->first);
-            PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(globalId);
+            PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(it->first).c_str());
+            PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(it->second->GetUri());
             it = printerMap_.erase(it);
         } else {
             ++it;
@@ -303,7 +317,7 @@ bool RemotePrinterManager::OnPrinterStatusReceived(const Json::Value &jsonArray)
             continue;
         }
         
-        PRINT_HILOGI("Printer devId: %{public}s", devId.c_str());
+        PRINT_HILOGI("Printer devId: %{public}s", PrintUtils::AnonymizePrinterId(devId).c_str());
         
         if (!PrintJsonUtil::FindJsonStringMember(item, "status", statusStr)) {
             continue;
@@ -314,15 +328,14 @@ bool RemotePrinterManager::OnPrinterStatusReceived(const Json::Value &jsonArray)
         
         auto printerInfo = GetPrinterInfo(devId);
         if (printerInfo == nullptr) {
-            PRINT_HILOGW("Printer not found in cache: %{public}s", devId.c_str());
+            PRINT_HILOGW("Printer not found in cache: %{public}s", PrintUtils::AnonymizePrinterId(devId).c_str());
             continue;
         }
         
-        std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, devId);
         if (printerStatus == PRINTER_STATUS_IDLE) {
             serviceAbility->AddRemotePrinterInfo(*printerInfo, REMOTE_EXT_BUNDLE_NAME);
         } else if (printerStatus == PRINTER_STATUS_UNAVAILABLE) {
-            serviceAbility->RemoveRemotePrinterInfo(globalId);
+            serviceAbility->RemoveRemotePrinterInfo(printerInfo->GetUri());
         }
     }
     return true;
@@ -337,9 +350,8 @@ void RemotePrinterManager::ClearAllPrinters()
     
     std::lock_guard<std::mutex> lock(printerMapLock_);
     for (const auto &printer : printerMap_) {
-        std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, printer.first);
         PRINT_HILOGI("[Printer: %{public}s] removed", printer.first.c_str());
-        serviceAbility->RemoveRemotePrinterInfo(globalId);
+        serviceAbility->RemoveRemotePrinterInfo(printer.second->GetUri());
     }
     printerMap_.clear();
 }

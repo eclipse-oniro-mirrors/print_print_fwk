@@ -230,6 +230,7 @@ typedef enum {
     COLOR_MODE_COLOR = 1,
     /** Auto mode. */
     COLOR_MODE_AUTO = 2,
+    COLOR_MODE_MAX,
 } Print_ColorMode;
 
 /**

@@ -496,5 +496,111 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028_NeedRename, TestSize.Level1)
     EXPECT_EQ(getJob.GetIsSequential(), true);
 }
 
+/**
+ * @tc.name: PrintJobTest_ReadLayoutFromParcel_MarginUnmarshallingFails
+ * @tc.desc: Verify ReadLayoutFromParcel returns false when PrintMargin::Unmarshalling fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_ReadLayoutFromParcel_MarginUnmarshallingFails, TestSize.Level1)
+{
+    PrintJob job;
+    Parcel parcel;
+    parcel.WriteUint32(0u);
+    parcel.WriteUint32(0u);
+    parcel.WriteBool(true);
+    EXPECT_FALSE(job.ReadLayoutFromParcel(parcel));
+}
+
+/**
+ * @tc.name: PrintJobTest_ReadLayoutFromParcel_PreviewUnmarshallingFails
+ * @tc.desc: Verify ReadLayoutFromParcel returns false when PrintPreviewAttribute::Unmarshalling fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_ReadLayoutFromParcel_PreviewUnmarshallingFails, TestSize.Level1)
+{
+    PrintJob job;
+    Parcel parcel;
+    parcel.WriteUint32(0u);
+    parcel.WriteUint32(0u);
+    parcel.WriteBool(false);
+    parcel.WriteBool(true);
+    EXPECT_FALSE(job.ReadLayoutFromParcel(parcel));
+}
+
+/**
+ * @tc.name: PrintJobTest_ConvertToJsonObject_001
+ * @tc.desc: Verify ConvertToJsonObject with all flags false.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_ConvertToJsonObject_001, TestSize.Level1)
+{
+    PrintJob job;
+    job.SetJobId("job-001");
+    job.SetPrinterId("printer-001");
+    job.SetJobState(PRINT_JOB_PREPARED);
+    job.SetCopyNumber(1);
+    job.SetIsSequential(false);
+    job.SetIsLandscape(false);
+    job.SetColorMode(0);
+    job.SetDuplexMode(0);
+
+    Json::Value result = job.ConvertToJsonObject();
+    EXPECT_EQ(result["jobId"].asString(), "job-001");
+    EXPECT_EQ(result["printerId"].asString(), "printer-001");
+    EXPECT_EQ(result["jobState"].asInt(), PRINT_JOB_PREPARED);
+    EXPECT_EQ(result["hasMargin"].asBool(), false);
+    EXPECT_EQ(result["hasPreview"].asBool(), false);
+    EXPECT_EQ(result["hasOption"].asBool(), false);
+    EXPECT_EQ(result["hasVendorOptions"].asBool(), false);
+    EXPECT_EQ(result.isMember("margin"), false);
+    EXPECT_EQ(result.isMember("preview"), false);
+    EXPECT_EQ(result.isMember("option"), false);
+    EXPECT_EQ(result.isMember("vendorOptions"), false);
+}
+
+/**
+ * @tc.name: PrintJobTest_ConvertToJsonObject_002
+ * @tc.desc: Verify ConvertToJsonObject with all flags true.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_ConvertToJsonObject_002, TestSize.Level1)
+{
+    PrintJob job;
+    job.SetJobId("job-002");
+    job.SetPrinterId("printer-002");
+    job.SetJobState(PRINT_JOB_RUNNING);
+    job.SetCopyNumber(2);
+    job.SetIsSequential(true);
+    job.SetIsLandscape(true);
+    job.SetColorMode(1);
+    job.SetDuplexMode(1);
+
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(10);
+    job.SetMargin(margin);
+
+    OHOS::Print::PrintPreviewAttribute preview;
+    preview.SetResult(1);
+    job.SetPreview(preview);
+
+    job.SetOption("test-option");
+    job.SetVendorOptions("test-vendor-options");
+
+    Json::Value result = job.ConvertToJsonObject();
+    EXPECT_EQ(result["jobId"].asString(), "job-002");
+    EXPECT_EQ(result["hasMargin"].asBool(), true);
+    EXPECT_EQ(result.isMember("margin"), true);
+    EXPECT_EQ(result["hasPreview"].asBool(), true);
+    EXPECT_EQ(result.isMember("preview"), true);
+    EXPECT_EQ(result["hasOption"].asBool(), true);
+    EXPECT_EQ(result["option"].asString(), "test-option");
+    EXPECT_EQ(result["hasVendorOptions"].asBool(), true);
+    EXPECT_EQ(result["vendorOptions"].asString(), "test-vendor-options");
+}
+
 }  // namespace Print
 }  // namespace OHOS

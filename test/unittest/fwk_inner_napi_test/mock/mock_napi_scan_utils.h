@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_HISYS_EVENT_UTIL_H
-#define MOCK_HISYS_EVENT_UTIL_H
+#ifndef MOCK_NAPI_SCAN_UTILS_H
+#define MOCK_NAPI_SCAN_UTILS_H
 
-#include <gmock/gmock.h>
-#include "hisys_event_util.h"
+extern bool g_mockGetRefReturnNonNull;
 
-namespace OHOS {
-namespace Print {
-class MockHisysEventUtil {
-public:
-    MOCK_METHOD3(reportBehaviorEvent, void(std::string name, int behaviorCode, const std::string &msg));
-    MOCK_METHOD1(ReportFailureEvent, void(const HisysEventParams &params));
-};
-}  // namespace Print
-}  // namespace OHOS
-#endif  // MOCK_HISYS_EVENT_UTIL_H
+#endif

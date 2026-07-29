@@ -14,9 +14,15 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #define private public
+#define protected public
 #include "print_job_helper.h"
+#undef protected
 #undef private
+#include "mock_application_context.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -111,6 +117,73 @@ HWTEST_F(PrintJobHelperTest, CreateTempFileWithData_Test, TestSize.Level2)
     std::string tmpPath;
     int fd = PrintJobHelper::CreateTempFileWithData(data, length, tmpPath);
     EXPECT_EQ(fd, -1);
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_FilesDirEmpty
+ * @tc.desc: Verify the CreateTempFileWithData function when appContext != nullptr but filesDir is empty.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, CreateTempFileWithData_FilesDirEmpty, TestSize.Level2)
+{
+    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
+    AbilityRuntime::Context::applicationContext_ = mockContext;
+    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return(""));
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintJobHelper::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_EQ(fd, -1);
+    EXPECT_TRUE(tmpPath.empty());
+    AbilityRuntime::Context::applicationContext_ = nullptr;
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_InvalidPath
+ * @tc.desc: Verify the CreateTempFileWithData function when filesDir is a non-existent path.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, CreateTempFileWithData_InvalidPath, TestSize.Level2)
+{
+    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
+    AbilityRuntime::Context::applicationContext_ = mockContext;
+    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return("/nonexistent_dir_for_test"));
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintJobHelper::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_EQ(fd, -1);
+    AbilityRuntime::Context::applicationContext_ = nullptr;
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_Success
+ * @tc.desc: Verify the CreateTempFileWithData function success path with valid writable filesDir.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, CreateTempFileWithData_Success, TestSize.Level2)
+{
+    std::string testDir = "/data/local/tmp/print_test";
+    mkdir(testDir.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
+    auto mockContext = std::make_shared<AbilityRuntime::MockApplicationContext>();
+    AbilityRuntime::Context::applicationContext_ = mockContext;
+    EXPECT_CALL(*mockContext, GetFilesDir()).WillOnce(Return(testDir));
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintJobHelper::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_GE(fd, 0);
+    EXPECT_FALSE(tmpPath.empty());
+    if (fd >= 0) {
+        close(fd);
+    }
+    if (!tmpPath.empty()) {
+        std::remove(tmpPath.c_str());
+    }
+    AbilityRuntime::Context::applicationContext_ = nullptr;
 }
 
 /**
@@ -239,6 +312,31 @@ HWTEST_F(PrintJobHelperTest, SetOptionInPrintJob_004, TestSize.Level2)
     EXPECT_TRUE(json.isMember("isDocument"));
     EXPECT_EQ(json["isDocument"].asBool(), true);
 }
+
+/**
+ * @tc.name: BuildFromJs_InvalidJobState_Test
+ * @tc.desc: Verify BuildFromJs returns nullptr when jobState is invalid (covers #12).
+ * @tc.type: FUNC
+ * @tc.require:
+ * DT SKIPPED: BuildFromJs requires napi_env/napi_value constructed via napi mock;
+ *   no napi mock framework in fwk_print_helper_test. Add when napi mock is introduced.
+ */
+
+/**
+ * @tc.name: CreateMargin_MakeJsObjectFail_Test
+ * @tc.desc: Verify CreateMargin returns false when PrintMarginHelper::MakeJsObject fails (covers #13).
+ * @tc.type: FUNC
+ * @tc.require:
+ * DT SKIPPED: CreateMargin requires napi_env to trigger MakeJsObject nullptr path; no napi mock.
+ */
+
+/**
+ * @tc.name: CreatePreview_MakeJsObjectFail_Test
+ * @tc.desc: Verify CreatePreview returns false when PrintPreviewAttributeHelper::MakeJsObject fails (covers #14).
+ * @tc.type: FUNC
+ * @tc.require:
+ * DT SKIPPED: CreatePreview requires napi_env to trigger MakeJsObject nullptr path; no napi mock.
+ */
 
 }  // namespace Print
 }  // namespace OHOS

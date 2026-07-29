@@ -33,6 +33,8 @@
 namespace OHOS {
 namespace Print {
 
+constexpr uint32_t MAX_CAPABILITY_ARRAY_SIZE = 1000;
+
 class PrintSystemData {
 public:
     bool Init();
@@ -99,6 +101,7 @@ private:
     void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedOrientationToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     void ConvertVendorAbilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
     bool ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability);
@@ -118,6 +121,7 @@ private:
     bool ParseUserListJsonV1(
         Json::Value &jsonObject, std::vector<int32_t> &allPrintUserList);
     bool ConvertJsonToPrinterInfo(Json::Value &object);
+    bool ParseCapabilityFromJson(Json::Value &object, PrinterCapability &cap);
     void ConvertInnerJsonToPrinterInfo(Json::Value &object, PrinterInfo &info);
 
     bool ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences);
@@ -148,6 +152,10 @@ private:
             return true;
         }
         PRINT_HILOGD("find Capability %{public}s success", key.c_str());
+        if (capsJson[key].size() > MAX_CAPABILITY_ARRAY_SIZE) {
+            PRINT_HILOGE("capability %{public}s array size is illegal", key.c_str());
+            return false;
+        }
         std::vector<T> resultList;
         for (const auto &item: capsJson[key]) {
             if (!PrintUtils::CheckJsonType<T>(item)) {

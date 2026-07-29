@@ -45,6 +45,7 @@
 #include "print_constant.h"
 #include "print_utils.h"
 #include "print_service_converter.h"
+#include "hisys_event_util.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
 #include "print_json_util.h"
@@ -1055,6 +1056,8 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
     JobParameters *jobParams = BuildJobParameters(jobInfo, userName);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::BUILD_JOB_PARAMS_FAILED, PRINT_JOB_BLOCKED_UNKNOWN);
         return;
     }
     DumpJobParameters(jobParams);
@@ -1502,7 +1505,8 @@ int32_t PrintCupsClient::QueryPrinterAttrList(
 
 int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
-    PRINT_HILOGD("the printerInfo printerName %{public}s", info.GetPrinterName().c_str());
+    PRINT_HILOGD("the printerInfo printerName %{public}s",
+        PrintUtils::AnonymizePrinterName(info.GetPrinterName()).c_str());
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
@@ -1804,6 +1808,8 @@ void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, ht
         LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
         PRINT_HILOGW("monitorHttp is null");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::MONITOR_HTTP_CREATE_FAILED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
         return;
     }
     jobParams->cupsJobId = jobId;
@@ -1942,6 +1948,8 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             }
             monitorParams->serviceAbility->UpdatePrintJobState(
                 monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_FAILED);
+            HisysEventUtil::ReportPrintProcessFault(
+                HisysEventUtil::USB_PRINTER_DISCONNECTED, PRINT_JOB_COMPLETED_FAILED);
             return false;
         }
         monitorParams->serviceAbility->UpdatePrintJobState(
@@ -2136,6 +2144,11 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "auth-info", UserNameAndPasswd.size(), NULL,
         UserNameAndPasswd.data());
     response = cupsDoRequest(http, request, "/jobs/");
+    if (response == nullptr) {
+        PRINT_HILOGE("The Printer authenticate fail.");
+        httpClose(http);
+        return false;
+    }
     ipp_state_t state = ippGetState(response);
     if (state == IPP_ERROR) {
         PRINT_HILOGE("The Printer authenticate fail.");

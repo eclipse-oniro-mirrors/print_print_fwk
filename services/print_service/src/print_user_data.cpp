@@ -102,9 +102,11 @@ int32_t PrintUserData::QueryPrintJobById(const std::string &printJobId, PrintJob
         PRINT_HILOGW("no print job exists");
         return E_PRINT_INVALID_PRINTJOB;
     } else {
-        if (jobIt->second != nullptr) {
-            printJob = *jobIt->second;
+        if (jobIt->second == nullptr) {
+            PRINT_HILOGE("printJob object is null.");
+            return E_PRINT_INVALID_PRINTJOB;
         }
+        printJob = *jobIt->second;
     }
     PRINT_HILOGI("QueryPrintJobById End.");
     return E_PRINT_NONE;
@@ -362,6 +364,10 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
 
 bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
 {
+    if (!PrintJsonUtil::IsMember(userData, "usedPrinterList")) {
+        PRINT_HILOGW("can not find usedPrinterList");
+        return false;
+    }
     Json::Value usedPrinterListJson = userData["usedPrinterList"];
     uint32_t jsonSize = usedPrinterListJson.size();
     if (jsonSize > MAX_PRINTER_SIZE) {
@@ -727,6 +733,9 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
     if ((printerHistroyJobList->insert(std::make_pair(jobId, printJob))).second) {
         int32_t historyPrintJobNum = 0;
         for (const auto& pair: printHistoryJobList_) {
+            if (!pair.second) {
+                continue;
+            }
             historyPrintJobNum += static_cast<int>(pair.second->size());
         }
         // erase the history print jobs more than 100
