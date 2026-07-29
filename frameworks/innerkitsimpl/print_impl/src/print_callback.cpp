@@ -44,18 +44,11 @@ PrintCallback::~PrintCallback()
     } else {
         auto mutexPtr = mutex_;
         std::lock_guard<std::mutex> autoLock(*mutexPtr);
-        Param *param = new (std::nothrow) Param;
-        if (param == nullptr) {
-            return;
-        }
-        param->env = env_;
+    Param *param = new Param;
+    param->env = env_;
         param->callbackRef = ref_;
-        auto task = [param]() {
-            if (param == nullptr) {
-                PRINT_HILOGE("param is a nullptr");
-                return;
-            }
-            napi_handle_scope scope = nullptr;
+    auto task = [param]() {
+        napi_handle_scope scope = nullptr;
             napi_open_handle_scope(param->env, &scope);
             if (scope == nullptr) {
                 PRINT_HILOGE("scope is a nullptr");
@@ -209,12 +202,8 @@ static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
 bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     std::function<void(CallbackParam*)> workCb)
 {
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        PRINT_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-    
+    CallbackParam *param = new CallbackParam;
+
     {
         std::lock_guard<std::mutex> lock(*mutex_);
         param->env = env_;
@@ -224,10 +213,6 @@ bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     }
 
     auto task = [param, workCb]() {
-        if (param == nullptr) {
-            PRINT_HILOGE("param is a nullptr");
-            return;
-        }
         std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
         workCb(param);
         delete param;

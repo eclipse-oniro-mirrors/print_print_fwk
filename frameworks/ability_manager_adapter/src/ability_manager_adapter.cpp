@@ -50,8 +50,7 @@ ErrCode AbilityManagerAdapter::Connect()
     PRINT_CHECK_NULL_AND_RETURN(systemManager, E_PRINT_GENERIC_FAILURE);
     sptr<IRemoteObject> remoteObj = systemManager->CheckSystemAbility(ABILITY_MGR_SERVICE_ID);
     PRINT_CHECK_NULL_AND_RETURN(remoteObj, E_PRINT_GENERIC_FAILURE);
-    deathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new (std::nothrow) AbilityMgrDeathRecipient());
-    PRINT_CHECK_NULL_AND_RETURN(deathRecipient_, E_PRINT_GENERIC_FAILURE);
+    deathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new AbilityMgrDeathRecipient());
     if ((remoteObj->IsProxyObject()) && (!remoteObj->AddDeathRecipient(deathRecipient_))) {
         PRINT_HILOGE("[AbilityManagerAdapter] Add death recipient to AbilityManagerService failed");
         return E_PRINT_GENERIC_FAILURE;

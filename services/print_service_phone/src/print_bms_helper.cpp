@@ -91,11 +91,7 @@ bool PrintBMSHelper::GetProxy()
             return false;
         }
 
-        printBMSDeath_ = new (std::nothrow) PrintBMSDeathRecipient();
-        if (printBMSDeath_ == nullptr) {
-            PRINT_HILOGE("Failed to create death Recipient ptr BMSDeathRecipient");
-            return false;
-        }
+        printBMSDeath_ = new PrintBMSDeathRecipient();
         remoteObject->AddDeathRecipient(printBMSDeath_);
     }
     return true;

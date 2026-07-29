@@ -75,14 +75,12 @@ void SecureBlob::SetData(const uint8_t *src, uint32_t srcSize)
 {
     Clear();
     if (src != nullptr && srcSize > 0) {
-        data = new (std::nothrow) uint8_t[srcSize];
-        if (data != nullptr) {
-            if (memcpy_s(data, srcSize, src, srcSize) == EOK) {
-                size = srcSize;
-            } else {
-                delete[] data;
-                data = nullptr;
-            }
+        data = new uint8_t[srcSize];
+        if (memcpy_s(data, srcSize, src, srcSize) == EOK) {
+            size = srcSize;
+        } else {
+            delete[] data;
+            data = nullptr;
         }
     }
 }
@@ -91,10 +89,8 @@ void SecureBlob::Allocate(uint32_t allocSize)
 {
     Clear();
     if (allocSize > 0) {
-        data = new (std::nothrow) uint8_t[allocSize];
-        if (data != nullptr) {
-            size = allocSize;
-        }
+        data = new uint8_t[allocSize];
+        size = allocSize;
     }
 }
 

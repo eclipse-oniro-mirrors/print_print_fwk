@@ -34,11 +34,7 @@ namespace OHOS::Print {
 char *CopyString(const std::string &source)
 {
     auto len = source.length();
-    char *dest = new (std::nothrow) char[len + 1];
-    if (dest == nullptr) {
-        PRINT_HILOGE("allocate failed");
-        return nullptr;
-    }
+    char *dest = new char[len + 1];
     if (strcpy_s(dest, len + 1, source.c_str()) != 0) {
         PRINT_HILOGE("CopyString strcpy_s failed");
     }
@@ -865,11 +861,7 @@ bool ConvertStringVectorToStringList(const std::vector<std::string> &stringVecto
         return false;
     }
     stringList.count = 0;
-    stringList.list = new (std::nothrow) char *[count];
-    if (stringList.list == nullptr) {
-        PRINT_HILOGW("stringList list allocate fail");
-        return false;
-    }
+    stringList.list = new char *[count];
     if (memset_s(stringList.list, count * sizeof(char *), 0, count * sizeof(char *)) != 0) {
         PRINT_HILOGW("memset_s fail");
         delete[] stringList.list;
