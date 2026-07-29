@@ -26,6 +26,7 @@
 #include "napi_common_want.h"
 #include "napi_print_utils.h"
 #include "napi_remote_object.h"
+#include "print_constant.h"
 #include "print_log.h"
 #include "start_options.h"
 #include <shared_mutex>
@@ -142,7 +143,7 @@ private:
             ErrCode errcode = ERR_OK;
             (unwrapArgc == 1) ? errcode = context->StartAbility(want)
                               : errcode = context->StartAbility(want, startOptions);
-            if (errcode == 0) {
+            if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
                 napi_get_undefined(engine, &undefineResult);
                 task.Resolve(engine, undefineResult);
@@ -200,7 +201,7 @@ private:
             ErrCode errcode = ERR_OK;
             (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
                 : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
-            if (errcode == 0) {
+            if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
                 napi_get_undefined(engine, &undefineResult);
                 task.Resolve(engine, undefineResult);
@@ -237,7 +238,7 @@ private:
             }
 
             auto errcode = context->TerminateAbility();
-            if (errcode == 0) {
+            if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
                 napi_get_undefined(engine, &undefineResult);
                 task.Resolve(engine, undefineResult);
@@ -387,7 +388,7 @@ private:
         auto errcode = context->DisconnectAbility(want, connection);
         napi_value undefineResult = nullptr;
         napi_get_undefined(engine, &undefineResult);
-        errcode == 0 ? task.Resolve(engine, undefineResult)
+        errcode == E_PRINT_NONE ? task.Resolve(engine, undefineResult)
                      : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
     }
 

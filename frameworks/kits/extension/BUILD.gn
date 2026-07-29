@@ -80,6 +80,7 @@ ohos_shared_library("print_extension_framework") {
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_page_size_helper.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_preview_attribute_helper.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_range_helper.cpp",
+    "${print_path}/utils/src/print_error_converter.cpp",
     "src/js_print_callback.cpp",
     "src/js_print_extension.cpp",
     "src/js_print_extension_connection.cpp",
