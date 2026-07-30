@@ -93,7 +93,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130_NeedRename, TestS
     EXPECT_EQ(service->AddPrinterToDiscovery(info), E_PRINT_NONE);
     EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
     info.SetPrinterId("1234");
-    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
+    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_INVALID_PARAMETER);
 
     std::shared_ptr<PrinterInfo> info1 = std::make_shared<PrinterInfo>();
     info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);

@@ -18,6 +18,7 @@
 #include "print_constant.h"
 
 namespace OHOS::Print {
+constexpr int32_t MAX_ARRAY_LENGTH = 1000;
 bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &res)
 {
     PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(env, false);
@@ -43,6 +44,10 @@ bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::
     status = env->Object_GetPropertyByName_Double(reinterpret_cast<ani_object>(arrayObj), "length", &length);
     if (status != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    if (length < 0 || length > MAX_ARRAY_LENGTH || static_cast<int32_t>(length) != length) {
+        PRINT_HILOGE("invalid length: %{public}f, name : %{public}s", length, name);
         return false;
     }
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {

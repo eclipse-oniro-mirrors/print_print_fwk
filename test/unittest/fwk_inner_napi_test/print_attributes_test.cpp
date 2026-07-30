@@ -20,6 +20,7 @@
 #include "print_margin.h"
 #include "print_page_size.h"
 #include "print_range.h"
+#include "print_constant.h"
 
 using namespace testing::ext;
 
@@ -312,6 +313,75 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_0015, TestSize.Level1)
     printAttributes.Dump();
     Parcel parcel;
     EXPECT_FALSE(printAttributes.ReadFromParcel(parcel));
+}
+
+/**
+ * @tc.name: PrintAttributesTest_0016
+ * @tc.desc: Verify ReadModeAttrsFromParcel returns false when directionMode exceeds DIRECTION_MODE_MAX.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0016, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    printAttributes.SetDirectionMode(DIRECTION_MODE_MAX + 1);
+    Parcel parcel;
+    EXPECT_TRUE(printAttributes.Marshalling(parcel));
+    auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
+    EXPECT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.name: PrintAttributesTest_0017
+ * @tc.desc: Verify ReadModeAttrsFromParcel returns false when colorMode exceeds PRINT_COLOR_MODE_MAX.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0017, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    printAttributes.SetColorMode(PRINT_COLOR_MODE_MAX + 1);
+    Parcel parcel;
+    EXPECT_TRUE(printAttributes.Marshalling(parcel));
+    auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
+    EXPECT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.name: PrintAttributesTest_0018
+ * @tc.desc: Verify ReadModeAttrsFromParcel returns false when duplexMode exceeds DUPLEX_MODE_MAX.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0018, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    printAttributes.SetDuplexMode(DUPLEX_MODE_MAX + 1);
+    Parcel parcel;
+    EXPECT_TRUE(printAttributes.Marshalling(parcel));
+    auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
+    EXPECT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.name: PrintAttributesTest_0019
+ * @tc.desc: Verify ReadModeAttrsFromParcel returns true when all modes are at valid upper bound.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0019, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    printAttributes.SetDirectionMode(DIRECTION_MODE_LANDSCAPE);
+    printAttributes.SetColorMode(PRINT_COLOR_MODE_AUTO);
+    printAttributes.SetDuplexMode(DUPLEX_MODE_SHORT_EDGE);
+    Parcel parcel;
+    EXPECT_TRUE(printAttributes.Marshalling(parcel));
+    auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result->GetDirectionMode(), DIRECTION_MODE_LANDSCAPE);
+    EXPECT_EQ(result->GetColorMode(), PRINT_COLOR_MODE_AUTO);
+    EXPECT_EQ(result->GetDuplexMode(), DUPLEX_MODE_SHORT_EDGE);
 }
 
 }  // namespace Print

@@ -53,6 +53,8 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/watermark_callback_proxy_test.cpp",
     "${_test_path}/unittest/service_test/print_callback_proxy_test.cpp",
     "${_test_path}/unittest/service_test/print_service_stub_test.cpp",
+    "${_test_path}/unittest/service_test/hisys_event_util_test.cpp",
+    "${_test_path}/unittest/service_test/print_event_container_test.cpp",
   ]
 
   deps = [
@@ -197,6 +199,7 @@ ohos_unittest("scan_task_test") {
 
   sources = [
     "${_test_path}/unittest/service_test/scan_task_test.cpp",
+    "${_test_path}/unittest/service_test/image_exporter_test.cpp",
   ]
 
   deps = [

@@ -42,10 +42,13 @@ namespace OHOS::Print {
     {
         switch (params.eventType) {
             case HisysEventType::PRINT_FAILURE:
-                ReportPrintFailure(params.subState, params.resourceKey);
+                ReportPrintFailure(params.resourceKey, params.subState);
                 break;
             case HisysEventType::CONNECT_FAILURE:
                 ReportConnectFailure(params.resourceKey, params.printerModel);
+                break;
+            case HisysEventType::PRINT_PROCESS_FAULT:
+                ReportPrintProcessFault(params.resourceKey, params.subState);
                 break;
             default:
                 break;
@@ -65,7 +68,7 @@ namespace OHOS::Print {
         }
     }
 
-    void HisysEventUtil::ReportPrintFailure(uint32_t subState, const std::string &resourceKey)
+    void HisysEventUtil::ReportPrintFailure(const std::string &resourceKey, uint32_t subState)
     {
         if (!resourceKey.empty()) {
             HiSysEventWrite(
@@ -84,7 +87,29 @@ namespace OHOS::Print {
             PRINT_DOMAIN,
             FAULT_CONNECT_PRINT_EVENT,
             HiSysEvent::EventType::FAULT,
+            SCENE, SCENE_IPP_RAW_DATA,
             MSG, msg);
+    }
+
+    void HisysEventUtil::ReportConnectFault(const std::string &scene, const std::string &msg)
+    {
+        HiSysEventWrite(
+            PRINT_DOMAIN,
+            FAULT_CONNECT_PRINT_EVENT,
+            HiSysEvent::EventType::FAULT,
+            SCENE, scene,
+            MSG, msg);
+    }
+
+    void HisysEventUtil::ReportPrintProcessFault(const std::string &resourceKey, uint32_t subState)
+    {
+        HiSysEventWrite(
+            PRINT_DOMAIN,
+            PRINT_EXCEPTION_FAULT_EVENT,
+            HiSysEvent::EventType::FAULT,
+            MSG, resourceKey,
+            FAULT_CODE, static_cast<int32_t>(subState)
+        );
     }
 
 }

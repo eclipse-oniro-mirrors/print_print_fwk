@@ -242,17 +242,21 @@ enum PrintDirectionMode {
     DIRECTION_MODE_AUTO = 0,
     DIRECTION_MODE_PORTRAIT = 1,
     DIRECTION_MODE_LANDSCAPE = 2,
+    DIRECTION_MODE_MAX,
 };
 
 enum PrintColorMode {
     PRINT_COLOR_MODE_MONOCHROME = 0,
     PRINT_COLOR_MODE_COLOR = 1,
+    PRINT_COLOR_MODE_AUTO = 2,
+    PRINT_COLOR_MODE_MAX,
 };
 
 enum PrintDuplexMode {
     DUPLEX_MODE_NONE = 0,
     DUPLEX_MODE_LONG_EDGE = 1,
     DUPLEX_MODE_SHORT_EDGE = 2,
+    DUPLEX_MODE_MAX,
 };
 
 enum PrintQualityCode {

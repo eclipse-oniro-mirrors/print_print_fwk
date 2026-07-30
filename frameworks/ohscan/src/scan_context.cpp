@@ -24,6 +24,7 @@
 namespace OHOS::Scan {
 constexpr int32_t YES_VALUE = 1;
 constexpr int32_t NO_VALUE = 0;
+constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
 
 ScanContext::ScanContext()
 {}
@@ -105,6 +106,11 @@ int32_t ScanContext::GetScannerParaCount(const std::string &deviceId, int32_t &s
         return StatusConvert(ret);
     }
     scannerParaCount = value.GetNumValue();
+    if (scannerParaCount < 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("scannerParaCount [%{public}d] out of valid range [0, %{public}d]",
+            scannerParaCount, MAX_SCANNER_PARA_COUNT);
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     return SCAN_ERROR_NONE;
 }
 
@@ -134,6 +140,10 @@ bool ScanContext::ParaIndexConvert(const int32_t option, int32_t &innerOption, c
 int32_t ScanContext::GetScannerParameter(
     const std::string &deviceId, int32_t scannerParaCount, ScanParaTable &paraTable)
 {
+    if (scannerParaCount <= 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("scannerParaCount [%{public}d] out of range", scannerParaCount);
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     int32_t buffLength = 0;
     for (int i = 1; i < scannerParaCount; i++) {
         ScanOptionDescriptor desc;
@@ -320,8 +330,7 @@ void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions *scannerOptions)
 
 Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
 {
-    constexpr int32_t maxOptionCount = 1000;
-    if (optionCount > maxOptionCount) {
+    if (optionCount > MAX_SCANNER_PARA_COUNT) {
         SCAN_HILOGE("optionCount [%{public}d] exceeded the maximum value", optionCount);
         return nullptr;
     }
