@@ -23,11 +23,11 @@
 #include "print_cups_client.h"
 
 namespace {
+constexpr uint32_t MAX_RESOLUTION_COUNT = 64;
 const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
-constexpr uint32_t MAX_RESOLUTION_COUNT = 64;
 }  // namespace
 
 namespace OHOS::Print {
