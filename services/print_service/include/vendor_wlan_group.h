@@ -76,10 +76,6 @@ private:
     bool TryConnectWithBsuni(const std::string &printerId, const std::string &printerModel);
 
 private:
-    static constexpr char BSUNI_DRIVER_SUPPORT_CONNECT_FAIL[] = "bsuni_driver_support_connect_fail";
-    static constexpr char NO_VENDOR_SUPPORT[] = "no_vendor_support";
-
-private:
     VendorManager* parentVendorManager = nullptr;
     std::map<std::string, std::string> printerVendorGroupList_;
     std::mutex printerVendorGroupListMutex_;

@@ -61,6 +61,7 @@ private:
     void OnStateQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> stateData);
     void OnIppRawDataQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> rawData);
     void OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> printerInfo);
+    bool TryBuildPrinterUri(PrinterInfo &printerInfo);
 private:
     void *bsUniDriverHandler = nullptr;
     Print_VendorExtension *vendorExtension = nullptr;
