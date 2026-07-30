@@ -3027,12 +3027,12 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     cbInfo.printJobInfo = std::make_shared<PrintJob>(jobInfo);
     cbInfo.jobId = jobId;
     cbInfo.ownerPid = jobInfo.GetOwnerPid();
+    cbInfo.userId = GetCurrentUserId();
+    cbInfo.printJobInfo->SetFdList(std::vector<uint32_t>());
     if (state != PRINT_PRINT_JOB_DEFAULT) {
         HandleJobStateChanged(jobId, cbInfo);
     }
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINTJOB_EVENT_TYPE);
-    cbInfo.userId = GetCurrentUserId();
-    cbInfo.printJobInfo->SetFdList(std::vector<uint32_t>());
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     // notify securityGuard
