@@ -1205,11 +1205,11 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
 int32_t PrintServiceAbility::AddPrinterToCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    ManualStart();
     return AddPrinterToCupsInner(printerUri, printerName, printerMake);
 }
 
