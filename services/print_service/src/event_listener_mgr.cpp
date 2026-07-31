@@ -16,14 +16,17 @@
 #include <unistd.h>
 #include "event_listener_mgr.h"
 #include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
 #include "print_log.h"
 #include "print_common_death_recipient.h"
+#include "print_constant.h"
 
 namespace OHOS {
 namespace Print {
 namespace {
 const int32_t MAX_LISTENERS_COUNT = 1000;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
+using namespace Security::AccessToken;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
@@ -166,7 +169,8 @@ bool EventListenerMgr::RegisterPrintJobListener(
         PRINT_HILOGE("Exceeded the maximum number of registration.");
         return false;
     }
-    auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType, eventListenerDeathRecipient_);
+    auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType,
+        eventListenerDeathRecipient_, CheckJobManagePermission());
     callback->SetListener(listener, jobId);
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
@@ -404,6 +408,13 @@ std::string EventListenerMgr::FormatPids(const std::vector<pid_t> &pids)
     }
     result += "]";
     return result;
+}
+
+bool EventListenerMgr::CheckJobManagePermission() const
+{
+    AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    int result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT_JOB);
+    return result == PERMISSION_GRANTED;
 }
 }  // namespace Print
 }  // namespace OHOS

@@ -57,11 +57,7 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
         return true;
     }
 
-    HisysEventUtil::ReportFailureEvent(HisysEventParams{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = NO_VENDOR_SUPPORT,
-        .printerModel = printerModel
-    });
+    HisysEventUtil::ReportConnectFailure(HisysEventUtil::NO_VENDOR_SUPPORT, printerModel);
     PRINT_HILOGE("no vendor can query capability.");
     return false;
 }
@@ -87,11 +83,7 @@ bool VendorWlanGroup::TryConnectWithBsuni(const std::string &printerId, const st
     if (ConnectByBsuni(printerId)) {
         return true;
     }
-    HisysEventUtil::ReportFailureEvent(HisysEventParams{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = BSUNI_DRIVER_SUPPORT_CONNECT_FAIL,
-        .printerModel = printerModel
-    });
+    HisysEventUtil::ReportConnectFailure(HisysEventUtil::BSUNI_DRIVER_SUPPORT_CONNECT_FAIL, printerModel);
     return false;
 }
 
@@ -108,10 +100,7 @@ bool VendorWlanGroup::OnQueryCapabilityByIp(const std::string &printerIp, const 
     } else if (ConnectByIppEverywhere(printerIp, protocol, printQueue)) {
         return true;
     }
-    HisysEventUtil::ReportFailureEvent(HisysEventParams{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = NO_VENDOR_SUPPORT
-    });
+    HisysEventUtil::ReportConnectFailure(HisysEventUtil::NO_VENDOR_SUPPORT);
     PRINT_HILOGE("no vendor can query capability by ip.");
     return false;
 }
