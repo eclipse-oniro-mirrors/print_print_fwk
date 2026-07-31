@@ -241,6 +241,7 @@ static void StartPrintJobNative(ani_env *env, ani_object jobInfo, ani_object cal
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(jobInfo);
     PRINT_HILOGI("enter StartPrintJobNative");
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(job);
@@ -286,6 +287,7 @@ static void RequestPrintPreviewAsyncCallbackNative(ani_env *env, ani_object jobI
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(jobInfo);
     PRINT_HILOGI("enter RequestPrintPreviewNative");
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     std::string previewResult;
@@ -617,6 +619,7 @@ static void AddPrinterToDiscoveryNative(ani_env *env, ani_object printerInfo, an
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(printerInfo);
     PRINT_HILOGI("enter AddPrinterToDiscoveryNative");
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
     info.Dump();

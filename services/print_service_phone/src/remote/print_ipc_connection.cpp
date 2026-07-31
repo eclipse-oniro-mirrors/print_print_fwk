@@ -85,6 +85,19 @@ void PrintIpcConnection::OnAbilityDisconnectDone(
     }
 }
 
+void PrintIpcConnection::ClearConnection()
+{
+    PRINT_HILOGI("PrintIpcConnection::ClearConnection");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (remoteObject_ != nullptr && deathRecipient_ != nullptr) {
+        if (!remoteObject_->RemoveDeathRecipient(deathRecipient_)) {
+            PRINT_HILOGW("RemoveDeathRecipient failed during clear");
+        }
+    }
+    remoteObject_ = nullptr;
+    deathRecipient_ = nullptr;
+}
+
 bool PrintIpcConnection::IsConnected()
 {
     std::lock_guard<std::mutex> lock(mutex_);

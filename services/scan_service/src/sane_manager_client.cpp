@@ -21,9 +21,7 @@
 namespace OHOS::Scan {
 constexpr int32_t SANE_SERVICE_ID = 3709;
 constexpr int32_t LOAD_SA_TIMEOUT_MS = 15000;
-std::mutex SaneManagerClient::instanceLock_;
 std::shared_mutex SaneManagerClient::serviceLock_;
-sptr<SaneManagerClient> SaneManagerClient::instance_;
 
 SaneManagerClient::SaneManagerClient() : proxy_(nullptr)
 {
@@ -35,14 +33,9 @@ SaneManagerClient::~SaneManagerClient()
     deathRecipient_ = nullptr;
 }
 
-sptr<SaneManagerClient> SaneManagerClient::GetInstance()
+SaneManagerClient &SaneManagerClient::GetInstance()
 {
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = new SaneManagerClient;
-        }
-    }
+    static SaneManagerClient instance_;
     return instance_;
 }
 
@@ -91,12 +84,8 @@ bool SaneManagerClient::LoadSaneService()
         SCAN_HILOGE("LoadSystemAbility failed");
         return false;
     }
-    auto waitStatus =
-        syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return proxy_ != nullptr; });
-    if (!waitStatus) {
-        return false;
-    }
-    return true;
+    syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS));
+    return proxy_ != nullptr;
 }
 
 void SaneManagerClient::LoadSystemAbilitysuccess(const sptr<IRemoteObject> &remoteObject)
@@ -115,6 +104,7 @@ void SaneManagerClient::LoadSystemAbilityFail()
     std::unique_lock<std::shared_mutex> lock(serviceLock_);
     SCAN_HILOGI("sane_service LoadSystemAbilityFail");
     proxy_ = nullptr;
+    syncCon_.notify_one();
 }
 
 void SaneManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &object)

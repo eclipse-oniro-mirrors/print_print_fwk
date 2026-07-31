@@ -23,6 +23,6 @@ SaneSaDeathRecipient::SaneSaDeathRecipient() {}
 void SaneSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     SCAN_HILOGE("SaneSaDeathRecipient on remote systemAbility died.");
-    SaneManagerClient::GetInstance()->OnRemoteSaDied(object);
+    SaneManagerClient::GetInstance().OnRemoteSaDied(object);
 }
 } // namespace OHOS::Scan

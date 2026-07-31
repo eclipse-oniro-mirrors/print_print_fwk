@@ -51,6 +51,10 @@ std::shared_ptr<ScanOptionValue> ScanOptionValueHelper::BuildFromJs(napi_env env
     }
     ScanOptionValueType valueType = (ScanOptionValueType
         ) NapiScanUtils::GetUint32Property(env, jsValue, PARAM_SCAN_OPTION_VALUE_TYPE);
+    if (valueType < SCAN_VALUE_BOOL || valueType > SCAN_VALUE_GROUP) {
+        SCAN_HILOGE("Invalid valueType %{public}d", valueType);
+        return nullptr;
+    }
     nativeObj->SetScanOptionValueType(valueType);
     if (valueType == SCAN_VALUE_NUM) {
         int32_t numValue = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_SCAN_OPTION_NUM_VALUE);

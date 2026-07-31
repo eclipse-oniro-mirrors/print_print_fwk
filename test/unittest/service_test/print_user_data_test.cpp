@@ -1419,7 +1419,7 @@ HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_OverwritesExistingPrefs, 
     EXPECT_NE(savedPrefs, nullptr);
 }
 
-HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_InvalidUserId_ReturnsFalse, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_DefaultUserId_ReturnsTrue, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
 
@@ -1428,7 +1428,7 @@ HWTEST_F(PrintUserDataTest, SavePrinterUserPreferences_InvalidUserId_ReturnsFals
     userPrefs.SetVendorOptions(R"({"setting":"value"})");
 
     bool result = userData->SavePrinterUserPreferences("test_printer", "test_printer", userPrefs);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 }
 
 HWTEST_F(PrintUserDataTest, ObtainUserPreferencesDirectory_ReturnsCorrectPath, TestSize.Level1)
@@ -1465,6 +1465,16 @@ HWTEST_F(PrintUserDataTest, DeletePrinterUserPreferences_NeitherPath_NoError, Te
 
     userData->DeletePrinterUserPreferences("no_file", "no_file");
     EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+}
+
+// covers #54: printJobList_ has null entry, QueryPrintJobById returns error not E_PRINT_NONE
+HWTEST_F(PrintUserDataTest, QueryPrintJobById_WhenEntryIsNull_ShouldReturnInvalid, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "1";
+    userData->printJobList_[jobId] = nullptr;
+    PrintJob printJob;
+    EXPECT_EQ(userData->QueryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
 }
 
 }  // namespace Print

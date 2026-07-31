@@ -294,6 +294,7 @@ napi_value JsPrintExtension::CallObjectMethod(const char *name, napi_value const
 void JsPrintExtension::GetSrcPath(std::string &srcPath)
 {
     PRINT_HILOGI("JsPrintExtension GetSrcPath begin.");
+    PRINT_CHECK_NULL_RETURN_VOID(Extension::abilityInfo_);
     if (!Extension::abilityInfo_->isModuleJson) {
         /* temporary compatibility api8 + config.json */
         srcPath.append(Extension::abilityInfo_->package);

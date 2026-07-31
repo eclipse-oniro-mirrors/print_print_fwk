@@ -73,7 +73,7 @@ bool SmbLibrary::InitializeLibrary()
     smb2_service_ = reinterpret_cast<smb2_service_t>(dlsym(smbLibHandle_, "smb2_service"));
     if (!smb2_init_context_ || !smb2_close_context_ || !smb2_destroy_context_ ||
         !smb2_connect_share_ || !smb2_disconnect_share_ || !smb2_set_user_ ||
-        !smb2_set_password_ || !smb2_get_error_ || !smb2_set_security_mode_ ||
+        !smb2_set_password_ || !smb2_set_domain_ || !smb2_get_error_ || !smb2_set_security_mode_ ||
         !smb2_set_timeout_ || !smb2_share_enum_async_ || !smb2_free_data_ ||
         !smb2_get_fd_ || !smb2_which_events_ || !smb2_service_) {
         PRINT_HILOGE("Failed to load required SMB functions");

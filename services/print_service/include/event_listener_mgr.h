@@ -60,6 +60,8 @@ private:
     void ClearListenersForUser(
         std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap);
 
+    bool CheckJobManagePermission() const;
+
     std::mutex mutex_;
     std::unordered_map<int32_t, std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>>>
         registeredListeners_;

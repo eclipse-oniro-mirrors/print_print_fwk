@@ -185,6 +185,10 @@ int32_t ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &inf
 int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGD("MDnsInfo name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
+    if (retCode != NETMANAGER_EXT_SUCCESS) {
+        SCAN_HILOGW("mDNS resolve failed, retCode = [%{public}d]", retCode);
+        return retCode;
+    }
     ScanDeviceInfoTCP tcpInfo;
     tcpInfo.addr = info.addr;
     tcpInfo.deviceName = info.name;

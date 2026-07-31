@@ -51,6 +51,7 @@ PrintJob::PrintJob(const PrintJob &right)
     option_ = right.option_;
     hasVendorOptions_ = right.hasVendorOptions_;
     vendorOptions_ = right.vendorOptions_;
+    ownerPid_ = right.ownerPid_;
 }
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
@@ -78,6 +79,7 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         option_ = right.option_;
         hasVendorOptions_ = right.hasVendorOptions_;
         vendorOptions_ = right.vendorOptions_;
+        ownerPid_ = right.ownerPid_;
     }
     return *this;
 }
@@ -188,6 +190,7 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     option_ = jobInfo.option_;
     hasVendorOptions_ = jobInfo.hasVendorOptions_;
     vendorOptions_ = jobInfo.vendorOptions_;
+    ownerPid_ = jobInfo.ownerPid_;
 }
 
 void PrintJob::GetFdList(std::vector<uint32_t> &fdList) const
@@ -360,16 +363,20 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasMargin_), false);
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
-        if (marginPtr != nullptr) {
-            margin_ = *marginPtr;
+        if (marginPtr == nullptr) {
+            PRINT_HILOGE("PrintMargin unmarshalling failed");
+            return false;
         }
+        margin_ = *marginPtr;
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPreview_), false);
     if (hasPreview_) {
         auto previewPtr = PrintPreviewAttribute::Unmarshalling(parcel);
-        if (previewPtr != nullptr) {
-            preview_ = *previewPtr;
+        if (previewPtr == nullptr) {
+            PRINT_HILOGE("PrintPreviewAttribute unmarshalling failed");
+            return false;
         }
+        preview_ = *previewPtr;
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasOption_), false);
     if (hasOption_) {

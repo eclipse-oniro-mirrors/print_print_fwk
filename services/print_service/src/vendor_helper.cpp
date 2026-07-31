@@ -14,6 +14,7 @@
  */
 
 #include <securec.h>
+#include <regex>
 #include "vendor_helper.h"
 #include "print_service_converter.h"
 #include "print_log.h"
@@ -26,6 +27,7 @@ const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
+const uint32_t MAX_COLOR_MODE_COUNT = 200;
 }  // namespace
 
 namespace OHOS::Print {
@@ -43,6 +45,14 @@ char *CopyString(const std::string &source)
     }
     dest[len] = '\0';
     return dest;
+}
+
+std::string AnonymizeIpInString(const std::string &str)
+{
+    static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+        R"(|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?)"
+        R"(|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})");
+    return std::regex_replace(str, ipRegex, "*");
 }
 
 template <typename T1, typename T2>
@@ -590,6 +600,10 @@ bool UpdateColorCapability(PrinterCapability &printerCap, const Print_PrinterCap
 {
     if (capability == nullptr || capability->supportedColorModes == nullptr) {
         PRINT_HILOGW("supportedColorModes is null");
+        return false;
+    }
+    if (capability->supportedColorModesCount > MAX_COLOR_MODE_COUNT) {
+        PRINT_HILOGW("supportedColorModesCount exceeds maximum");
         return false;
     }
     std::vector<uint32_t> supportedColorModes;

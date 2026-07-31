@@ -35,6 +35,7 @@ if (!print_fwk_feature_device_isolation) {
       "printserviceppdqueryfunction_fuzzer:fuzztest",
       "printservicenotpublicfunction_fuzzer:fuzztest",
       "printserviceprintdiscoverfunction_fuzzer:fuzztest",
+      "printserviceprintjobfunction_fuzzer:fuzztest",
       "printserviceprintjobstatefunction_fuzzer:fuzztest",
       "printservicequeryprinter_fuzzer:fuzztest",
       "printserviceupdateprinterfunction_fuzzer:fuzztest",
@@ -52,6 +53,7 @@ if (!print_fwk_feature_device_isolation) {
       "scanpicturedata_fuzzer:fuzztest",
       "scantask_fuzzer:fuzztest",
       "scanusbmanager_fuzzer:fuzztest",
+      "vendormanager_fuzzer:fuzztest",
       "printsecurityguardmanager_fuzzer:fuzztest",
       "printsecurityguardutil_fuzzer:fuzztest",
     ]

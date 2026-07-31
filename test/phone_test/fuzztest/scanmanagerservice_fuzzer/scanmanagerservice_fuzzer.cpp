@@ -62,7 +62,9 @@ void TestOnRemoteSaDied(const uint8_t* data, size_t size, FuzzedDataProvider* da
     if (scanManagerPtr == nullptr) {
         return;
     }
-    scanManagerPtr->OnRemoteSaDied(nullptr);
+    if (dataProvider->ConsumeBool()) {
+        scanManagerPtr->OnRemoteSaDied(nullptr);
+    }
     sptr<IPCObjectStub> stub = new IPCObjectStub(u"test_scan_remote");
     wptr<IRemoteObject> weakObj = stub;
     scanManagerPtr->OnRemoteSaDied(weakObj);

@@ -1213,5 +1213,15 @@ HWTEST_F(PrintUserDataTest, OpenCacheFileFd_WithDefaultOpenMode_ReturnsFalse, Te
     bool result = userData->OpenCacheFileFd(jobId, fdList, O_RDONLY);
     EXPECT_FALSE(result);
 }
+// covers #54: printJobList_ has null entry, QueryPrintJobById returns error not E_PRINT_NONE
+HWTEST_F(PrintUserDataTest, QueryPrintJobById_WhenEntryIsNull_ShouldReturnInvalid, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "1";
+    userData->printJobList_[jobId] = nullptr;
+    PrintJob printJob;
+    EXPECT_EQ(userData->QueryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
+}
+
 }  // namespace Print
 }  // namespace OHOS

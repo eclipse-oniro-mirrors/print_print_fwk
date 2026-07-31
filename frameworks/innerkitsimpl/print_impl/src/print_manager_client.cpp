@@ -1111,12 +1111,14 @@ void PrintManagerClient::LoadServerSuccess(const sptr<IRemoteObject> &remoteObje
             printServiceProxy_ = iface_cast<IPrintService>(remoteObject);
         }
     }
-    {
+    if (printServiceProxy_ != nullptr) {
         std::unique_lock<std::mutex> lock(conditionMutex_);
         ready_ = true;
         syncCon_.notify_one();
+        PRINT_HILOGD("load print server success");
+    } else {
+        LoadServerFail();
     }
-    PRINT_HILOGD("load print server success");
 }
 
 void PrintManagerClient::LoadServerFail()
