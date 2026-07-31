@@ -801,6 +801,16 @@ HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_MixedTypes_Processed
     EXPECT_EQ(3, singleAdvanceOptJson["choice"]["default"].size());
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckUserIdInEventType_InvalidUserId_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockHelper, QueryAccounts(_)).WillRepeatedly(Return(false));
+    service->SetHelper(mockHelper);
+    EXPECT_EQ(service->CheckUserIdInEventType(PRINTER_CHANGE_EVENT_TYPE), false);
+}
+
 HWTEST_F(PrintServiceAbilityTest, ValidateExtId_Mismatch_ReturnsNoPermission, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();

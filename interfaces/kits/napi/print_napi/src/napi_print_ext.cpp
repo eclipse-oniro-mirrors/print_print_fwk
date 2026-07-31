@@ -345,36 +345,37 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
     return asyncCall.Call(env, exec);
 }
 
+napi_status NapiPrintExt::ParseAddPrinterToCupsInput(napi_env env, size_t argc, napi_value *argv,
+    std::shared_ptr<NapiPrintExt::NapiPrintExtContext> context)
+{
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
+    napi_valuetype valuetype;
+    PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
+    PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerName is not a string", napi_string_expected);
+    std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
+    context->printerUri = printerUri;
+    std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+    PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
+    context->printerName = printerName;
+    PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
+    std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+    PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
+    context->printerMake = printerMake;
+    return napi_ok;
+}
+
 napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter AddPrinterToCups---->");
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.addPrinterToCups", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input =
-        [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
-        napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
-
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerName is not a string", napi_string_expected);
-
-        std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
-        context->printerUri = printerUri;
-
-        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
-        PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
-        context->printerName = printerName;
-
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
-        std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-        PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
-        context->printerMake = printerMake;
-        return napi_ok;
+    auto input = [context](
+        napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        return ParseAddPrinterToCupsInput(env, argc, argv, context);
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);
@@ -382,6 +383,12 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
         int32_t ret = PrintManagerClient::GetInstance().AddPrinterToCups(
             context->printerUri, context->printerName, context->printerMake);
         PRINT_HILOGD("ret: %{public}d", ret);
