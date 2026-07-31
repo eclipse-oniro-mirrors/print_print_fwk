@@ -23,12 +23,10 @@ namespace Print {
 
 ExecuteResult PrintJobEventCallback::Execute(const CallbackInfo &info)
 {
-    if (info.cbEventType == PRINT_JOB_STATE_CALLBACK || info.cbEventType == PRINT_JOB_CALLBACK_ADAPTER) {
-        if (!HasJobManagePermission() && pid_ != info.ownerPid) {
-            PRINT_HILOGE("Identity verify failed: listener pid %{public}d != owner pid %{public}d for job %{public}s",
-                pid_, info.ownerPid, info.jobId.c_str());
-            return ExecuteResult::SKIP;
-        }
+    if (!HasJobManagePermission() && pid_ != info.ownerPid) {
+        PRINT_HILOGE("Identity verify failed: listener pid %{public}d != owner pid %{public}d for job %{public}s",
+            pid_, info.ownerPid, info.jobId.c_str());
+        return ExecuteResult::SKIP;
     }
     auto it = listeners_.find(info.jobId);
     if (it == listeners_.end()) {
