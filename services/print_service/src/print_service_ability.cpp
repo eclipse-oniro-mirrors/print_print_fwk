@@ -1441,15 +1441,13 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
     size_t valueSize = optionJson["value"].asString().size();
     struct HksBlob plainBlob = { 0, nullptr };
     if (valueSize > 0) {
-        plainBlob.data = new (std::nothrow) uint8_t[valueSize + 1];
-        if (plainBlob.data != nullptr) {
-            if (memcpy_s(plainBlob.data, valueSize + 1, optionJson["value"].asString().c_str(), valueSize) == EOK) {
-                plainBlob.data[valueSize] = '\0';
-                plainBlob.size = valueSize;
-            } else {
-                delete[] plainBlob.data;
-                plainBlob.data = nullptr;
-            }
+        plainBlob.data = new uint8_t[valueSize + 1];
+        if (memcpy_s(plainBlob.data, valueSize + 1, optionJson["value"].asString().c_str(), valueSize) == EOK) {
+            plainBlob.data[valueSize] = '\0';
+            plainBlob.size = valueSize;
+        } else {
+            delete[] plainBlob.data;
+            plainBlob.data = nullptr;
         }
     }
 

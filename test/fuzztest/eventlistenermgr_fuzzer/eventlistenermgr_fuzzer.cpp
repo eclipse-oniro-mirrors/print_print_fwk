@@ -34,13 +34,8 @@ void TestRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataPro
     sptr<IPrintCallback> listener = nullptr;
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, listener);
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
-    sptr<IPrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-    if (callback != nullptr) {
-        DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, callback);
-    } else {
-        delete printerAdapterPtr;
-        printerAdapterPtr = nullptr;
-    }
+    sptr<IPrintCallback> callback = new PrintCallback(printerAdapterPtr);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(eventType, callback);
 }
 
 void TestRegisterExtensionListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -60,13 +55,8 @@ void TestRegisterPrintJobListener(const uint8_t *data, size_t size, FuzzedDataPr
     sptr<IPrintCallback> listener = nullptr;
     DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(eventType, jobId, listener);
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
-    sptr<IPrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
-    if (callback != nullptr) {
-        DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(eventType, jobId, callback);
-    } else {
-        delete printerAdapterPtr;
-        printerAdapterPtr = nullptr;
-    }
+    sptr<IPrintCallback> callback = new PrintCallback(printerAdapterPtr);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(eventType, jobId, callback);
 }
 
 void TestUnRegisterPrinterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

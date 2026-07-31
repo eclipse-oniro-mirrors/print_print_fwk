@@ -30,7 +30,7 @@ using namespace Security::AccessToken;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
-    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new(std::nothrow) PrintCommonDeathRecipient(
+    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
           std::bind(&EventListenerMgr::OnRemoteListenerDied, this, std::placeholders::_1))))
 {}
 

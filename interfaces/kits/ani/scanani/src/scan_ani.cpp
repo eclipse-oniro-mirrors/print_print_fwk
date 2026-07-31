@@ -382,7 +382,7 @@ static void OnScanDeviceFoundNative(ani_env *env, ani_object callback)
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceFound";
-    OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
+    OHOS::sptr<IScanCallback> callbackWrapper = new ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -405,7 +405,7 @@ static void OnScanDeviceSyncNative(ani_env *env, ani_object callback)
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceSync";
-    OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
+    OHOS::sptr<IScanCallback> callbackWrapper = new ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -428,8 +428,7 @@ static void OnScanDeviceAddNative(ani_env *env, ani_object callback)
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceAdd";
-    OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
-    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callbackWrapper, __func__);
+    OHOS::sptr<IScanCallback> callbackWrapper = new ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
@@ -452,7 +451,7 @@ static void OnScanDeviceDelNative(ani_env *env, ani_object callback)
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     std::string typeStr = "scanDeviceDel";
-    OHOS::sptr<IScanCallback> callbackWrapper = new (std::nothrow) ScanAniCallback(env, callback);
+    OHOS::sptr<IScanCallback> callbackWrapper = new ScanAniCallback(env, callback);
     ScanManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 

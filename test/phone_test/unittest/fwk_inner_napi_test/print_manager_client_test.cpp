@@ -153,7 +153,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004_NeedRename, TestSiz
                 EXPECT_EQ(testFdList.size(), fdList.size());
                 return E_PRINT_NONE;
             });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -228,7 +228,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0012_NeedRename, TestSiz
             extensionInfos.assign(testExtensionInfos.begin(), testExtensionInfos.end());
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -305,7 +305,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016_NeedRename, TestSiz
     EXPECT_CALL(*service, StartDiscoverPrinter(_)).Times(1);
     ON_CALL(*service, StartDiscoverPrinter)
         .WillByDefault([&testExtensionList](const std::vector<std::string> &extensionList) { return E_PRINT_NONE; });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -370,7 +370,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020_NeedRename, TestSiz
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, StopDiscoverPrinter()).Times(1);
     ON_CALL(*service, StopDiscoverPrinter).WillByDefault([]() { return E_PRINT_NONE; });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -468,7 +468,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024_NeedRename, TestSiz
         }
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -543,7 +543,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028_NeedRename, TestSiz
         }
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -641,7 +641,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032_NeedRename, TestSiz
         }
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -712,7 +712,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036_NeedRename, TestSiz
         EXPECT_EQ(testPrinterId, printerId);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -785,7 +785,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040_NeedRename, TestSiz
         EXPECT_EQ(testPrinterId, printerId);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -857,7 +857,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044_NeedRename, TestSiz
         EXPECT_EQ(testJob.GetJobId(), jobinfo.GetJobId());
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -930,7 +930,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048_NeedRename, TestSiz
         EXPECT_EQ(testJobId, jobId);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1003,7 +1003,7 @@ HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSASucc_ShouldSucc, Test
         EXPECT_EQ(testJobId, jobId);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1081,7 +1081,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0052_NeedRename, TestSiz
             EXPECT_EQ(testState, state);
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1163,7 +1163,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056_NeedRename, TestSiz
             EXPECT_EQ(testSubState, subState);
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1235,7 +1235,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0060_NeedRename, TestSiz
         EXPECT_EQ(testExtensionId, extensionId);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1312,7 +1312,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0064_NeedRename, TestSiz
             previewResult = testPreviewFilePath;
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1387,7 +1387,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0068_NeedRename, TestSiz
         EXPECT_EQ(testPrintId, printerId);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1463,7 +1463,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0072_NeedRename, TestSiz
         printJobs.assign(testPrintJobs.begin(), testPrintJobs.end());
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1546,7 +1546,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0076_NeedRename, TestSiz
             printJob = testPrintJob;
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1620,7 +1620,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0080_NeedRename, TestSiz
 {
     std::string testTaskId = "taskId-123";
     std::string testType = "type";
-    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
+    sptr<IPrintCallback> testListener = new DummyPrintCallbackStub();
 
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
@@ -1633,7 +1633,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0080_NeedRename, TestSiz
             EXPECT_TRUE(testListener == listener);
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1712,7 +1712,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0084_NeedRename, TestSiz
         EXPECT_EQ(testType, type);
         return E_PRINT_NONE;
     });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1945,7 +1945,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0097_NeedRename, TestSiz
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1970,7 +1970,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0098_NeedRename, TestSiz
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -1995,7 +1995,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0099_NeedRename, TestSiz
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -2020,7 +2020,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0100_NeedRename, TestSiz
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -2073,7 +2073,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0107_NeedRename, TestSiz
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, LoadExtSuccess(_)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     int32_t ret = PrintManagerClient::GetInstance()->LoadExtSuccess(testExtensionId);
@@ -2092,7 +2092,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0108_NeedRename, TestSiz
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, LoadExtSuccess(_)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -2263,7 +2263,7 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_NO_PERMISSION, TestSize.Lev
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
     testPrintJob.SetJobId(testPrintJobId);
-    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
+    sptr<IPrintCallback> testListener = new DummyPrintCallbackStub();
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
@@ -2274,13 +2274,13 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
     testPrintJob.SetJobId(testPrintJobId);
-    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
+    sptr<IPrintCallback> testListener = new DummyPrintCallbackStub();
 
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, On(_, _, _)).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     EXPECT_NE(obj, nullptr);
     EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
@@ -2818,7 +2818,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_RpcCallSuc
     EXPECT_NE(service, nullptr);
     ON_CALL(*service, AddRawPrinter(_)).WillByDefault(Return(E_PRINT_NONE));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -2939,7 +2939,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_Rpc
     EXPECT_CALL(*service, QueryRawAddedPrinter(_))
         .WillOnce(DoAll(SetArgReferee<0>(expectedPrinters), Return(E_PRINT_NONE)));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -3086,7 +3086,7 @@ HWTEST_F(PrintManagerClientTest, RegisterWatermarkCallback_Success, TestSize.Lev
         .Times(1)
         .WillOnce(Return(E_PRINT_NONE));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -3113,7 +3113,7 @@ HWTEST_F(PrintManagerClientTest, UnregisterWatermarkCallback_Success, TestSize.L
         .Times(1)
         .WillOnce(Return(E_PRINT_NONE));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -3142,7 +3142,7 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_Success, TestSize.Level
         .Times(1)
         .WillOnce(Return(E_PRINT_NONE));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -3171,7 +3171,7 @@ HWTEST_F(PrintManagerClientTest, NotifyWatermarkComplete_WithFailureResult, Test
         .Times(1)
         .WillOnce(Return(E_PRINT_NONE));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -3213,7 +3213,7 @@ HWTEST_F(PrintManagerClientTest, AddPrinter_reload, TestSize.Level1)
             EXPECT_EQ(testOptions, options);
             return E_PRINT_NONE;
         });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
@@ -3233,7 +3233,7 @@ HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Le
         .Times(1)
         .WillOnce(Return(E_PRINT_NONE));
 
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);

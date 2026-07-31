@@ -32,10 +32,7 @@ StsPrintExtension *StsPrintExtension::stsExtension_ = nullptr;
 StsPrintExtension* StsPrintExtension::Create(const std::unique_ptr<Runtime>& runtime)
 {
     PRINT_HILOGD("StsPrintExtension begin Create");
-    stsExtension_ = new (std::nothrow) StsPrintExtension(static_cast<ETSRuntime&>(*runtime));
-    if (stsExtension_ == nullptr) {
-        PRINT_HILOGE("StsPrintExtension creation failed due to memory allocation");
-    }
+    stsExtension_ = new StsPrintExtension(static_cast<ETSRuntime&>(*runtime));
     return stsExtension_;
 }
 

@@ -357,7 +357,7 @@ std::string StandardizePrinterUri(const std::string &printerUri, const std::stri
 
 PrintCupsClient::PrintCupsClient()
 {
-    printAbility_ = new (std::nothrow) PrintCupsWrapper();
+    printAbility_ = new PrintCupsWrapper();
 }
 
 PrintCupsClient::~PrintCupsClient()
@@ -2512,11 +2512,7 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
-    params = new (std::nothrow) JobParameters{};
-    if (params == nullptr) {
-        PRINT_HILOGE("new JobParameters returns nullptr");
-        return params;
-    }
+    params = new JobParameters{};
     jobInfo.DupFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();

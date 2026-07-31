@@ -142,11 +142,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
     context->Bind(jsRuntime, shellContextRef.release());
     PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
     napi_set_named_property(engine, extObj, "context", contextObj);
-    auto *workContext = new (std::nothrow) std::weak_ptr<AbilityRuntime::Context>(context);
-    if (workContext == nullptr) {
-        PRINT_HILOGE("Failed to allocate weak_ptr for Print extension context");
-        return false;
-    }
+    auto *workContext = new std::weak_ptr<AbilityRuntime::Context>(context);
     napi_status wrapStatus = napi_wrap(engine, contextObj, workContext,
         [](napi_env, void *data, void *) {
             PRINT_HILOGI("Finalizer for weak_ptr Print extension context is called");
@@ -226,11 +222,7 @@ sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
 {
     PRINT_HILOGI("JsPrintExtension OnConnect begin.");
     Extension::OnConnect(want);
-    auto remoteObj = new (std::nothrow) Print::PrintExtensionAbilityStub();
-    if (remoteObj == nullptr) {
-        PRINT_HILOGE("remoteObj nullptr.");
-        return nullptr;
-    }
+    auto remoteObj = new Print::PrintExtensionAbilityStub();
     return remoteObj;
 }
 
@@ -326,11 +318,7 @@ bool JsPrintExtension::Callback(std::string funcName)
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
-    if (workParam == nullptr) {
-        PRINT_HILOGE("workParam is a nullptr");
-        return false;
-    }
+    WorkParam *workParam = new WorkParam(env, funcName);
     auto workCb = [local](WorkParam *param) {
         if (param == nullptr) {
             PRINT_HILOGE("param is a nullptr");
@@ -370,11 +358,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
-    if (workParam == nullptr) {
-        PRINT_HILOGE("workParam is a nullptr");
-        return false;
-    }
+    WorkParam *workParam = new WorkParam(env, funcName);
     workParam->printerId = printerId;
     
     auto workCb = [local](WorkParam *param) {
@@ -418,11 +402,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
-    if (workParam == nullptr) {
-        PRINT_HILOGE("workParam is a nullptr");
-        return false;
-    }
+    WorkParam *workParam = new WorkParam(env, funcName);
     workParam->job = job;
     
     auto workCb = [local](WorkParam *param) {
