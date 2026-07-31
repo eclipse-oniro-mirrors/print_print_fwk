@@ -125,9 +125,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestS
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088_NeedRename, TestSize.Level1)
 {
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    auto service = std::make_shared<MockPrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<MockPrintServiceHelper> helper = std::make_shared<MockPrintServiceHelper>();
     service->helper_ = helper;
+    EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*service, GetCallerBundleName()).WillRepeatedly(Return("123"));
     std::string extensionCid = "";
     sptr<IPrintExtensionCallback> listener = nullptr;
     auto ret = service->RegisterExtCallback(extensionCid, listener);
@@ -296,6 +298,96 @@ HWTEST_F(PrintServiceAbilityTest, RegisterKiaInterceptorCallbackTest, TestSize.L
 }
 
 #endif  // KIA_INTERCEPTOR_ENABLE
+
+class MockPrintJobEventCallback : public PrintJobEventCallback {
+public:
+    MockPrintJobEventCallback(
+        int32_t userId, pid_t pid, CallbackEventType eventType,
+        sptr<IRemoteObject::DeathRecipient> deathRecipient,
+        bool hasJobManagePermission = false)
+        : PrintJobEventCallback(userId, pid, eventType, deathRecipient, hasJobManagePermission)
+    {}
+};
+
+HWTEST_F(PrintServiceAbilityTest, PrintJobEventCallback_PidMismatch_ShouldSkip, TestSize.Level1)
+{
+    auto callback = std::make_shared<MockPrintJobEventCallback>(100, 200, PRINT_JOB_STATE_CALLBACK,
+        nullptr, false);
+    sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
+    callback->SetListener(listener, "testJob");
+    CallbackInfo info;
+    info.cbEventType = PRINT_JOB_STATE_CALLBACK;
+    info.jobId = "testJob";
+    info.ownerPid = 300;
+    EXPECT_EQ(callback->Execute(info), ExecuteResult::SKIP);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintJobEventCallback_PidMatch_ShouldDispatch, TestSize.Level1)
+{
+    auto callback = std::make_shared<MockPrintJobEventCallback>(100, 200, PRINT_JOB_STATE_CALLBACK,
+        nullptr, false);
+    auto *mockListener = new MockPrintCallbackProxy();
+    EXPECT_CALL(*mockListener, OnCallback(_, An<const PrintJob &>())).WillOnce(Return(true));
+    sptr<IPrintCallback> listener = mockListener;
+    callback->SetListener(listener, "testJob");
+    CallbackInfo info;
+    info.cbEventType = PRINT_JOB_STATE_CALLBACK;
+    info.jobId = "testJob";
+    info.ownerPid = 200;
+    info.printJobInfo = std::make_shared<PrintJob>();
+    info.printJobInfo->SetJobId("testJob");
+    info.printJobInfo->SetJobState(PRINT_JOB_QUEUED);
+    EXPECT_EQ(callback->Execute(info), ExecuteResult::SUCCESS);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintJobEventCallback_JobManagePermission_ShouldBypass, TestSize.Level1)
+{
+    auto callback = std::make_shared<MockPrintJobEventCallback>(100, 200, PRINT_JOB_STATE_CALLBACK,
+        nullptr, true);
+    auto *mockListener = new MockPrintCallbackProxy();
+    EXPECT_CALL(*mockListener, OnCallback(_, An<const PrintJob &>())).WillOnce(Return(true));
+    sptr<IPrintCallback> listener = mockListener;
+    callback->SetListener(listener, "testJob");
+    CallbackInfo info;
+    info.cbEventType = PRINT_JOB_STATE_CALLBACK;
+    info.jobId = "testJob";
+    info.ownerPid = 300;
+    info.printJobInfo = std::make_shared<PrintJob>();
+    info.printJobInfo->SetJobId("testJob");
+    info.printJobInfo->SetJobState(PRINT_JOB_QUEUED);
+    EXPECT_EQ(callback->Execute(info), ExecuteResult::SUCCESS);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintJobEventCallback_AdapterPidMismatch_ShouldSkip, TestSize.Level1)
+{
+    auto callback = std::make_shared<MockPrintJobEventCallback>(100, 200, PRINT_JOB_CALLBACK_ADAPTER,
+        nullptr, false);
+    sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
+    callback->SetListener(listener, "testJob");
+    CallbackInfo info;
+    info.cbEventType = PRINT_JOB_CALLBACK_ADAPTER;
+    info.jobId = "testJob";
+    info.ownerPid = 300;
+    EXPECT_EQ(callback->Execute(info), ExecuteResult::SKIP);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintJobEventCallback_AdapterJobManagePermission_ShouldBypass, TestSize.Level1)
+{
+    auto callback = std::make_shared<MockPrintJobEventCallback>(100, 200, PRINT_JOB_CALLBACK_ADAPTER,
+        nullptr, true);
+    auto *mockListener = new MockPrintCallbackProxy();
+    EXPECT_CALL(*mockListener, OnCallbackAdapterJobStateChanged(_, _, _)).WillOnce(Return(true));
+    sptr<IPrintCallback> listener = mockListener;
+    callback->SetListener(listener, "testJob");
+    CallbackInfo info;
+    info.cbEventType = PRINT_JOB_CALLBACK_ADAPTER;
+    info.jobId = "testJob";
+    info.ownerPid = 300;
+    info.jobState = PRINT_JOB_COMPLETED;
+    info.adapterState = PREVIEW_ABILITY_DESTROY;
+    info.fd = 0;
+    EXPECT_EQ(callback->Execute(info), ExecuteResult::SUCCESS);
+}
 
 }  // namespace Print
 }  // namespace OHOS

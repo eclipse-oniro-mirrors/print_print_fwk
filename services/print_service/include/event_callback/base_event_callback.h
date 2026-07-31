@@ -76,6 +76,7 @@ struct CallbackInfo {
     uint32_t fileCompletedState;
     std::shared_ptr<PrintAttributes> oldAttrs = nullptr;
     std::shared_ptr<PrintAttributes> newAttrs = nullptr;
+    pid_t ownerPid = -1;
 };
 
 enum class ExecuteResult {
