@@ -510,6 +510,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobBlockCallback, TestSize
     CallbackInfo cbInfo;
     cbInfo.cbEventType = PRINT_JOB_BLOCK;
     cbInfo.jobId = TEST_JOB_ID;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallback()).WillOnce(Return(true));
 
@@ -526,6 +527,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobSuccessCallback, TestSi
     CallbackInfo cbInfo;
     cbInfo.cbEventType = PRINT_JOB_SUCCESS;
     cbInfo.jobId = TEST_JOB_ID;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallback()).WillOnce(Return(true));
 
@@ -542,6 +544,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobFailCallback, TestSize.
     CallbackInfo cbInfo;
     cbInfo.cbEventType = PRINT_JOB_FAIL;
     cbInfo.jobId = TEST_JOB_ID;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallback()).WillOnce(Return(true));
 
@@ -558,6 +561,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobCancelCallback, TestSiz
     CallbackInfo cbInfo;
     cbInfo.cbEventType = PRINT_JOB_CANCEL;
     cbInfo.jobId = TEST_JOB_ID;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallback()).WillOnce(Return(true));
 
@@ -636,6 +640,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobFileGetAdapterCallback,
     cbInfo.cbEventType = PRINT_JOB_FILE_GET_ADAPTER;
     cbInfo.jobId = TEST_JOB_ID;
     cbInfo.fileCompletedState = 1;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallbackAdapterGetFile(1)).WillOnce(Return(true));
 
