@@ -1164,6 +1164,10 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
+    if (scannerState_.load() != SCANNER_READY) {
+        SCAN_HILOGE("scannerId %{private}s is not ready", scannerId.c_str());
+        return E_SCAN_DEVICE_BUSY;
+    }
 
     // Check if ESCL scanner's ADF is empty before starting scan in external API call.
     // If the scanner uses ESCL protocol and the scan source is ADF,
@@ -1180,7 +1184,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
             return E_SCAN_NO_DOCS;
         }
     }
-    
+
     int32_t status = StartScanOnceInternal(scannerId);
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
@@ -1213,6 +1217,9 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
+    if (scannerState_.load() == SCANNER_CANCELING) {
+        scanPictureData_.CleanAllCache();
+    }
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }
