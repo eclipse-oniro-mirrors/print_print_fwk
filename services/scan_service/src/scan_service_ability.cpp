@@ -865,15 +865,10 @@ void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string 
         return;
     }
 
-    int32_t currentUserId = GetCurrentUserId();
     for (auto [eventType, listener] : registeredListeners_) {
         std::string type;
         ScanServiceUtils::EncodeTaskEventId(eventType, type);
-        int32_t listenerUserId = -1;
-        if (!ScanServiceUtils::DecodeUserId(eventType, listenerUserId)) {
-            continue;
-        }
-        if (type == event && listenerUserId == currentUserId && listener != nullptr) {
+        if (type == event && listener != nullptr) {
             listener->OnCallback(info.GetDeviceState(), info);
         }
     }
@@ -888,15 +883,10 @@ void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std:
         return;
     }
 
-    int32_t currentUserId = GetCurrentUserId();
     for (auto [eventType, listener] : registeredListeners_) {
         std::string type;
         ScanServiceUtils::EncodeTaskEventId(eventType, type);
-        int32_t listenerUserId = -1;
-        if (!ScanServiceUtils::DecodeUserId(eventType, listenerUserId)) {
-            continue;
-        }
-        if (type == event && listenerUserId == currentUserId && listener != nullptr) {
+        if (type == event && listener != nullptr) {
             listener->OnGetDevicesList(infos);
         }
     }
@@ -911,15 +901,10 @@ void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std:
         return;
     }
     info.Dump();
-    int32_t currentUserId = GetCurrentUserId();
     for (auto [eventType, listener] : registeredListeners_) {
         std::string type;
         ScanServiceUtils::EncodeTaskEventId(eventType, type);
-        int32_t listenerUserId = -1;
-        if (!ScanServiceUtils::DecodeUserId(eventType, listenerUserId)) {
-            continue;
-        }
-        if (type == event && listenerUserId == currentUserId && listener != nullptr) {
+        if (type == event && listener != nullptr) {
             listener->OnCallbackSync(info.GetDeviceState(), info);
         }
     }
@@ -993,15 +978,10 @@ void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     SCAN_HILOGI("NotifyEsclScannerFound [%{private}s]", info.deviceId.c_str());
     info.Dump();
-    int32_t currentUserId = GetCurrentUserId();
     for (auto [eventType, listener] : registeredListeners_) {
         std::string type;
         ScanServiceUtils::EncodeTaskEventId(eventType, type);
-        int32_t listenerUserId = -1;
-        if (!ScanServiceUtils::DecodeUserId(eventType, listenerUserId)) {
-            continue;
-        }
-        if (type == SCAN_DEVICE_FOUND && listenerUserId == currentUserId && listener != nullptr) {
+        if (type == SCAN_DEVICE_FOUND && listener != nullptr) {
             listener->OnCallback(info.GetDeviceState(), info);
         }
     }

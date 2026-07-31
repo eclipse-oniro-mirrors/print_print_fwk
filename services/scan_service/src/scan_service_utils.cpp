@@ -118,19 +118,6 @@ bool ScanServiceUtils::DecodeTaskEventId(const std::string &eventType, int32_t &
     return true;
 }
 
-bool ScanServiceUtils::DecodeUserId(const std::string &eventType, int32_t &userId)
-{
-    size_t pos = eventType.find(TASK_EVENT_DELIMITER);
-    if (pos == std::string::npos) {
-        return false;
-    }
-    if (!ScanUtil::ConvertToInt(eventType.substr(0, pos), userId)) {
-        SCAN_HILOGE("DecodeUserId parse failed, eventType=%{public}s", eventType.c_str());
-        return false;
-    }
-    return true;
-}
-
 ScanErrorCode ScanServiceUtils::ConvertErro(const SaneStatus status)
 {
     auto it = saneStatusToScanErrorCodeMap_.find(status);
