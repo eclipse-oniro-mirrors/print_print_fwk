@@ -110,10 +110,7 @@ void TestOn(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction;
-    sptr<IScanCallback> listener = new (std::nothrow) ScanCallback(callbackFunction);
-    if (listener == nullptr) {
-        return;
-    }
+    sptr<IScanCallback> listener = new ScanCallback(callbackFunction);
     scanManagerPtr->On(taskId, type, listener);
 }
 

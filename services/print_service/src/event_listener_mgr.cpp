@@ -27,7 +27,7 @@ const int32_t UID_TRANSFORM_DIVISOR = 200000;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
-    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new(std::nothrow) PrintCommonDeathRecipient(
+    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
           std::bind(&EventListenerMgr::OnRemoteListenerDied, this, std::placeholders::_1))))
 {}
 

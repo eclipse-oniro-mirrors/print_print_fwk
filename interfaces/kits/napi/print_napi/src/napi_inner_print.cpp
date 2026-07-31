@@ -882,12 +882,8 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
     PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
-    sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
-    if (callback == nullptr) {
-        NapiPrintUtils::DeleteReference(env, callbackRef);
-        PRINT_HILOGE("create print callback object fail");
-        return nullptr;
-    }
+
+    sptr<IPrintCallback> callback = new PrintCallback(env, callbackRef);
     int32_t ret = PrintManagerClient::GetInstance().On("", type, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");
@@ -965,12 +961,8 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
         PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
-        sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
-        if (callback == nullptr) {
-            NapiPrintUtils::DeleteReference(env, callbackRef);
-            PRINT_HILOGE("create startGetPrintFile callback object fail");
-            return nullptr;
-        }
+
+        sptr<IPrintCallback> callback = new PrintCallback(env, callbackRef);
         int32_t retCallback = PrintManagerClient::GetInstance().On(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
         if (retCallback != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to register startGetPrintFile callback");
@@ -1885,13 +1877,7 @@ napi_value NapiInnerPrint::RegisterWatermarkCallback(napi_env env, napi_callback
     }
 
     // Create WatermarkCallback object
-    sptr<WatermarkCallback> callback = new (std::nothrow) WatermarkCallback(env, callbackRef);
-    if (callback == nullptr) {
-        PRINT_HILOGE("Failed to create WatermarkCallback object");
-        NapiPrintUtils::DeleteReference(env, callbackRef);
-        NapiThrowError(env, E_PRINT_GENERIC_FAILURE);
-        return nullptr;
-    }
+    sptr<WatermarkCallback> callback = new WatermarkCallback(env, callbackRef);
 
     // Register to print service
     // Note: If registration fails, WatermarkCallback destructor will clean up callbackRef
@@ -2022,12 +2008,8 @@ napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info i
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
     PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
-    sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
-    if (callback == nullptr) {
-        NapiPrintUtils::DeleteReference(env, callbackRef);
-        PRINT_HILOGE("create print callback object fail");
-        return nullptr;
-    }
+
+    sptr<IPrintCallback> callback = new PrintCallback(env, callbackRef);
     int32_t ret = PrintManagerClient::GetInstance().On("", PRINT_QUERY_INFO_EVENT_TYPE, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");

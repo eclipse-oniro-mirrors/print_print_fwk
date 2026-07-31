@@ -124,11 +124,7 @@ static OHOS::Ace::UIContent *GetUIContent(void *context)
 
 static Print_PrintAttributes *NewPrintAttributes(void)
 {
-    auto attributes = new (std::nothrow) Print_PrintAttributes;
-    if (attributes == nullptr) {
-        PRINT_HILOGE("OH_Print new attributes failed.");
-        return nullptr;
-    }
+    auto attributes = new Print_PrintAttributes;
     if (memset_s(attributes, sizeof(Print_PrintAttributes), 0, sizeof(Print_PrintAttributes)) != 0) {
         PRINT_HILOGE("OH_Print attributes memset failed.");
         delete attributes;
@@ -251,11 +247,7 @@ Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList)
     if (ret != 0 || count == 0) {
         return PRINT_ERROR_INVALID_PRINTER;
     }
-    printerIdList->list = new (std::nothrow) char *[count];
-    if (printerIdList->list == nullptr) {
-        PRINT_HILOGW("printerIdList->list is null");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
+    printerIdList->list = new char *[count];
     if (memset_s(printerIdList->list, count * sizeof(char *), 0, count * sizeof(char *)) != 0) {
         delete[] printerIdList->list;
         printerIdList->list = nullptr;
@@ -370,11 +362,7 @@ Print_ErrorCode OH_Print_StartPrintWithJobStateCallback(const Print_PrintJob *pr
         jobStateChangedCb(jobId.c_str(), static_cast<OH_Print_JobState>(state));
         return true;
     };
-    OHOS::sptr<PrintCallback> callback = new (std::nothrow) PrintCallback;
-    if (callback == nullptr) {
-        PRINT_HILOGE("OH_Print start print callback is null.");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
+    OHOS::sptr<PrintCallback> callback = new PrintCallback;
     callback->SetNativePrintJobChangeCallback(nativePrintJobChangedFunc);
     ret = PrintManagerClient::GetInstance().StartNativePrintJob(curPrintJob, callback);
     PRINT_HILOGI("StartNativePrintJob with callback ,ret = [%{public}d]", ret);
@@ -421,11 +409,7 @@ Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
     if (ret != 0 || count == 0) {
         return PRINT_ERROR_INVALID_PRINTER;
     }
-    printerIdList->list = new (std::nothrow) char *[count];
-    if (printerIdList->list == nullptr) {
-        PRINT_HILOGW("printerIdList->list is null");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
+    printerIdList->list = new char *[count];
     if (memset_s(printerIdList->list, count * sizeof(char *), 0, count * sizeof(char *)) != 0) {
         delete[] printerIdList->list;
         printerIdList->list = nullptr;
@@ -691,11 +675,7 @@ Print_PrintAttributes *PrintDocumentAdapterWrapper::BuildPrintAttributes(const P
     printRange.endPage = range.GetEndPage();
     std::vector<uint32_t> pages;
     range.GetPages(pages);
-    auto pageArray = new (std::nothrow) uint32_t[pages.size()];
-    if (pageArray == nullptr) {
-        PRINT_HILOGE("OH_Print pages array is null.");
-        return nullptr;
-    }
+    auto pageArray = new uint32_t[pages.size()];
     std::copy(pages.begin(), pages.end(), pageArray);
     printRange.pagesArray = pageArray;
     printRange.pagesArrayLen = pages.size();
@@ -736,17 +716,8 @@ Print_ErrorCode OH_Print_StartPrintByNative(
         PRINT_HILOGE("OH_Print start print native ui content is null.");
         return PRINT_ERROR_INVALID_PARAMETER;
     }
-    auto wrapper = new (std::nothrow) PrintDocumentAdapterWrapper(printDocCallback);
-    if (wrapper == nullptr) {
-        PRINT_HILOGE("OH_Print start print print doc adapter is null.");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
-    OHOS::sptr<IPrintCallback> printCb = new (std::nothrow) PrintCallback(wrapper);
-    if (printCb == nullptr) {
-        PRINT_HILOGE("OH_Print start print print callback is null.");
-        delete wrapper;
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
+    auto wrapper = new PrintDocumentAdapterWrapper(printDocCallback);
+    OHOS::sptr<IPrintCallback> printCb = new PrintCallback(wrapper);
     auto attributes = std::make_shared<PrintAttributes>();
     std::string printJobNameStr = printJobName;
     int32_t ret = PrintManagerClient::GetInstance().Print(printJobNameStr, printCb, attributes, uiContent);

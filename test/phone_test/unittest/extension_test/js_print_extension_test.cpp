@@ -53,7 +53,7 @@ void JsPrintExtensionTest::SetUpProxy(void)
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
-    proxyObj_ = new (std::nothrow) MockRemoteObject();
+    proxyObj_ = new MockRemoteObject();
     EXPECT_NE(proxyObj_, nullptr);
     EXPECT_CALL(*proxyObj_, IsProxyObject()).WillRepeatedly(Return(true));
     EXPECT_CALL(*proxyObj_, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));

@@ -38,7 +38,7 @@ static constexpr const char *JOB_OPTIONS =
 void TestOn(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
-    sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
+    sptr <PrintCallback> callback = new PrintCallback(printerAdapterPtr);
     std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->On(taskId, type, callback);
@@ -54,7 +54,7 @@ void TestOff(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintDocumentAdapter *printerAdapterPtr = new PrintDocumentAdapter();
-    sptr <PrintCallback> callback = new(std::nothrow) PrintCallback(printerAdapterPtr);
+    sptr <PrintCallback> callback = new PrintCallback(printerAdapterPtr);
     std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->RegisterPrinterCallback(type, callback);
     PrintServiceAbility::GetInstance()->UnregisterPrinterCallback(type);
@@ -67,7 +67,7 @@ void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
     }
     PrintServiceAbility::GetInstance()->StartDiscoverPrinter(extensionIds);
 
-    sptr<PrintExtensionCallbackStub> extCallback = new(std::nothrow) PrintExtensionCallbackStub();
+    sptr<PrintExtensionCallbackStub> extCallback = new PrintExtensionCallbackStub();
     for (auto &printExtensionInfo: printExtensionInfos) {
         PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), extCallback);
     }

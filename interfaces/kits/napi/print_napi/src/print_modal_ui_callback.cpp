@@ -154,18 +154,8 @@ void PrintModalUICallback::SendMessageBack()
         PRINT_HILOGE("loop is nullptr");
         return;
     }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        PRINT_HILOGE("work is nullptr");
-        return;
-    }
-    BaseContext *printBaseContext = new (std::nothrow) BaseContext(*this->baseContext);
-    if (printBaseContext == nullptr) {
-        PRINT_HILOGE("printBaseContext is nullptr.");
-        delete work;
-        work = nullptr;
-        return;
-    }
+    uv_work_t *work = new uv_work_t;
+    BaseContext *printBaseContext = new BaseContext(*this->baseContext);
     printBaseContext->sessionId = this->sessionId_;
     work->data = reinterpret_cast<void *>(printBaseContext);
 

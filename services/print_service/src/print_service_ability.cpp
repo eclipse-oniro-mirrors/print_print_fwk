@@ -1411,15 +1411,13 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
     size_t valueSize = optionJson["value"].asString().size();
     struct HksBlob plainBlob = { 0, nullptr };
     if (valueSize > 0) {
-        plainBlob.data = new (std::nothrow) uint8_t[valueSize + 1];
-        if (plainBlob.data != nullptr) {
-            if (memcpy_s(plainBlob.data, valueSize + 1, optionJson["value"].asString().c_str(), valueSize) == EOK) {
-                plainBlob.data[valueSize] = '\0';
-                plainBlob.size = valueSize;
-            } else {
-                delete[] plainBlob.data;
-                plainBlob.data = nullptr;
-            }
+        plainBlob.data = new uint8_t[valueSize + 1];
+        if (memcpy_s(plainBlob.data, valueSize + 1, optionJson["value"].asString().c_str(), valueSize) == EOK) {
+            plainBlob.data[valueSize] = '\0';
+            plainBlob.size = valueSize;
+        } else {
+            delete[] plainBlob.data;
+            plainBlob.data = nullptr;
         }
     }
 
@@ -1659,6 +1657,8 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::CHECK_PRINT_JOB_FAILED, PRINT_JOB_BLOCKED_UNKNOWN);
         return E_PRINT_INVALID_PRINTJOB;
     }
     auto printerId = jobInfo.GetPrinterId();
@@ -1716,6 +1716,8 @@ int32_t PrintServiceAbility::DoRestartPrintJob(const std::string &oldJobId,
     std::shared_ptr<PrintJob> &printJob)
 {
     if (!createNewJobWhenRestart(printJob)) {
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::RESTART_CACHE_MISSING, PRINT_JOB_COMPLETED_FAILED);
         return E_PRINT_FILE_IO;
     }
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();

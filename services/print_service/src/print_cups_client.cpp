@@ -45,6 +45,7 @@
 #include "print_constant.h"
 #include "print_utils.h"
 #include "print_service_converter.h"
+#include "hisys_event_util.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
 #include "print_json_util.h"
@@ -375,7 +376,7 @@ std::string StandardizePrinterUri(const std::string &printerUri, const std::stri
 
 PrintCupsClient::PrintCupsClient()
 {
-    printAbility_ = new (std::nothrow) PrintCupsWrapper();
+    printAbility_ = new PrintCupsWrapper();
 }
 
 PrintCupsClient::~PrintCupsClient()
@@ -1055,6 +1056,8 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
     JobParameters *jobParams = BuildJobParameters(jobInfo, userName);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::BUILD_JOB_PARAMS_FAILED, PRINT_JOB_BLOCKED_UNKNOWN);
         return;
     }
     DumpJobParameters(jobParams);
@@ -1805,6 +1808,8 @@ void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, ht
         LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
         PRINT_HILOGW("monitorHttp is null");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::MONITOR_HTTP_CREATE_FAILED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
         return;
     }
     jobParams->cupsJobId = jobId;
@@ -1943,6 +1948,8 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             }
             monitorParams->serviceAbility->UpdatePrintJobState(
                 monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_FAILED);
+            HisysEventUtil::ReportPrintProcessFault(
+                HisysEventUtil::USB_PRINTER_DISCONNECTED, PRINT_JOB_COMPLETED_FAILED);
             return false;
         }
         monitorParams->serviceAbility->UpdatePrintJobState(
@@ -2727,11 +2734,7 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
-    params = new (std::nothrow) JobParameters{};
-    if (params == nullptr) {
-        PRINT_HILOGE("new JobParameters returns nullptr");
-        return params;
-    }
+    params = new JobParameters{};
     jobInfo.DupFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
