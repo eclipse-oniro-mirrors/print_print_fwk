@@ -129,8 +129,8 @@ public:
 
     Json::Value ConvertToJsonObject() const;
 
-    void SetOwnerPid(pid_t pid) { ownerPid_ = pid; }
-    pid_t GetOwnerPid() const { return ownerPid_; }
+    void SetOwnerPid(pid_t pid);
+    pid_t GetOwnerPid() const;
 
 private:
     bool ReadFromParcel(Parcel &parcel);

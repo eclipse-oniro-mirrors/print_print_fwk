@@ -193,6 +193,16 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     ownerPid_ = jobInfo.ownerPid_;
 }
 
+void PrintJob::SetOwnerPid(pid_t pid)
+{
+    ownerPid_ = pid;
+}
+
+pid_t PrintJob::GetOwnerPid() const
+{
+    return ownerPid_;
+}
+
 void PrintJob::GetFdList(std::vector<uint32_t> &fdList) const
 {
     fdList.clear();
