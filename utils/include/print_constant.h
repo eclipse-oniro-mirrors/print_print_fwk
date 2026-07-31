@@ -103,7 +103,7 @@ namespace OHOS::Print {
 
 #define CLOSE_FD_IF_VALID(fd) \
     do { \
-        if ((fd) != INVALID_FD && fd > STD_FD_MAX) { \
+        if ((fd) != INVALID_FD && (fd) > STD_FD_MAX) { \
             close(fd); \
             (fd) = INVALID_FD; \
         } \
