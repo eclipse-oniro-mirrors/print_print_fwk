@@ -1199,8 +1199,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         }
     }
     
-    int32_t status = StartScanOnceInternal(scannerId);
-    if (status != E_SCAN_NONE) {
+    if (int32_t status = StartScanOnceInternal(scannerId); status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
         return status;
     }
