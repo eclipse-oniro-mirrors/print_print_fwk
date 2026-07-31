@@ -467,7 +467,7 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
         return false;
     }
     extensionId = cid.substr(0, pos);
-    int32_t callbackIdTmp = 0;
+    int32_t callbackIdTmp = -1;
     if (!ScanUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
         return false;
     }

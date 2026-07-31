@@ -103,8 +103,12 @@ bool PrintUtils::DecodeExtensionCid(const std::string &cid, std::string &extensi
         return false;
     }
     extensionId = cid.substr(0, pos);
-    int32_t callbackIdTmp = 0;
+    int32_t callbackIdTmp = -1;
     if (!PrintUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
+        return false;
+    }
+    if (callbackIdTmp < 0) {
+        PRINT_HILOGE("invalid callbackId: %{public}d", callbackIdTmp);
         return false;
     }
     callbackId = static_cast<uint32_t>(callbackIdTmp);
