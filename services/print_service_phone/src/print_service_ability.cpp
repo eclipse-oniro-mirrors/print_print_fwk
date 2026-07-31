@@ -2146,6 +2146,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
     cbInfo.jobId = jobId;
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINT_GET_FILE_EVENT_TYPE);
     cbInfo.fileCompletedState = fileCompletedState;
+    cbInfo.ownerPid = GetOwnerPidFromJobList(jobId);
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     return E_PRINT_NONE;
 }
