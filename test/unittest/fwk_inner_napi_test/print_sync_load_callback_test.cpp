@@ -59,9 +59,9 @@ HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_with_printSAid, Te
     int32_t systemAbilityId = PRINT_SERVICE_ID;
     const sptr<IRemoteObject> remoteObject;
     printSyncLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
-    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+    EXPECT_EQ(PrintManagerClient::GetInstance().ready_, false);
     printSyncLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
-    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+    EXPECT_EQ(PrintManagerClient::GetInstance().ready_, false);
 }
 
 /**
@@ -76,9 +76,9 @@ HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001, TestSize.Lev
     int32_t systemAbilityId = 0;
     const sptr<IRemoteObject> remoteObject;
     printSyncLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
-    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+    EXPECT_EQ(PrintManagerClient::GetInstance().ready_, false);
     printSyncLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
-    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+    EXPECT_EQ(PrintManagerClient::GetInstance().ready_, false);
 }
 }  // namespace Print
 }  // namespace OHOS

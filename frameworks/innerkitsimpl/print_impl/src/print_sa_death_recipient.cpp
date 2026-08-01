@@ -24,6 +24,6 @@ PrintSaDeathRecipient::PrintSaDeathRecipient() {}
 void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     PRINT_HILOGE("PrintSaDeathRecipient on remote systemAbility died.");
-    PrintManagerClient::GetInstance()->OnRemoteSaDied(object);
+    PrintManagerClient::GetInstance().OnRemoteSaDied(object);
 }
 } // namespace OHOS::Print
