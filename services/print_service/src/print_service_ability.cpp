@@ -378,6 +378,7 @@ int32_t PrintServiceAbility::Init()
 #endif
     RefreshIpPrinter();
     RefreshThirdDriverPrinter();
+    RefreshAddedPrinterAdvanceOptions();
     StartDiscoverPrinter();
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
     return E_PRINT_NONE;
@@ -1075,7 +1076,6 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     OHOS::Print::PrinterInfo printer;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
         info = printer;
-        SupplementBsuniPrinterAdvanceOptionsIfNeeded(printerId, info);
     } else {
         std::string extensionId = PrintUtils::GetExtensionId(printerId);
         if (!vendorManager.ExtractVendorName(extensionId).empty()) {
@@ -6073,6 +6073,18 @@ void PrintServiceAbility::SupplementBsuniPrinterAdvanceOptionsIfNeeded(
     printSystemData_.InsertAddedPrinter(printerId, info);
     printSystemData_.SavePrinterFile(printerId);
     PRINT_HILOGI("supplement bsuni advance options succeed");
+}
+
+void PrintServiceAbility::RefreshAddedPrinterAdvanceOptions()
+{
+    std::vector<std::string> printerIds = printSystemData_.QueryAddedPrinterIdList();
+    for (const auto &printerId : printerIds) {
+        PrinterInfo printerInfo;
+        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+            continue;
+        }
+        SupplementBsuniPrinterAdvanceOptionsIfNeeded(printerId, printerInfo);
+    }
 }
 
 bool PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
