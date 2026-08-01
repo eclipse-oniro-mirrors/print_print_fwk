@@ -200,12 +200,16 @@ bool PrintSystemData::Init()
     if (ec) {
         PRINT_HILOGW("Failed to open printers directory: %{public}s.", ec.message().c_str());
         return false;
-    } else {
-        for (const auto &entry : std::filesystem::directory_iterator(printersDir)) {
-            if (!entry.is_directory()) {
-                ReadJsonFile(entry.path());
+    }
+    for (const auto &entry : iter) {
+        if (entry.is_directory(ec)) {
+            if (ec) {
+                PRINT_HILOGW("is_directory ec error: %{public}s.", ec.message().c_str());
+                ec.clear();
             }
+            continue;
         }
+        ReadJsonFile(entry.path());
     }
 
     Json::Value printerListJson;
@@ -1672,14 +1676,11 @@ void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::str
         PRINT_HILOGW("empty string detected!");
         return;
     }
-    auto printEventContainer = printEventMap_.Find(printerId);
-    if (printEventContainer == nullptr) {
-        auto eventContainer = std::make_shared<PrintEventContainer>(printerId);
-        eventContainer->AddEventCode(type, code);
-        printEventMap_.Insert(printerId, eventContainer);
-    } else {
-        printEventContainer->AddEventCode(type, code);
-    }
+    auto printEventContainer = printEventMap_.FindOrInsert(printerId,
+        [&printerId]() -> std::shared_ptr<PrintEventContainer> {
+            return std::make_shared<PrintEventContainer>(printerId);
+        });
+    printEventContainer->AddEventCode(type, code);
 }
 void PrintSystemData::ClearPrintEvents(const std::string &printerId, const std::string &type)
 {

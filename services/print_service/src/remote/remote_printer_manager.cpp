@@ -97,11 +97,14 @@ bool RemotePrinterManager::Destroy()
 {
     PRINT_HILOGI("RemotePrinterManager Destroy");
     StopPrinterDiscovery();
-    
-    if (discoveryThread_.joinable()) {
-        discoveryThread_.join();
+
+    {
+        std::lock_guard<std::mutex> lock(controlMutex_);
+        if (discoveryThread_.joinable()) {
+            discoveryThread_.join();
+        }
     }
-    
+
     std::lock_guard<std::mutex> lock(printerMapLock_);
     printerMap_.clear();
     return true;
@@ -191,19 +194,19 @@ bool RemotePrinterManager::BuildPrinterInfo(const Json::Value &item, PrinterInfo
 void RemotePrinterManager::StartPrinterDiscovery()
 {
     PRINT_HILOGI("RemotePrinterManager StartPrinterDiscovery");
-    std::lock_guard<std::mutex> lock(controlMutex_);
-    if (isDiscoveryRunning_) {
+    if (isDiscoveryRunning_.load()) {
         PRINT_HILOGW("Discovery already running, trigger immediate query");
         int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("Immediate RequestPrinterList result: %{public}d", result);
         return;
     }
 
+    std::lock_guard<std::mutex> lock(controlMutex_);
     if (discoveryThread_.joinable()) {
         discoveryThread_.join();
     }
 
-    isDiscoveryRunning_ = true;
+    isDiscoveryRunning_.store(true);
     discoveryThread_ = std::thread([this]() {
         DiscoveryLoop();
     });
@@ -212,15 +215,14 @@ void RemotePrinterManager::StartPrinterDiscovery()
 bool RemotePrinterManager::StopPrinterDiscovery()
 {
     PRINT_HILOGI("RemotePrinterManager StopPrinterDiscovery");
-    std::lock_guard<std::mutex> lock(controlMutex_);
-    isDiscoveryRunning_ = false;
+    isDiscoveryRunning_.store(false);
     return true;
 }
 
 void RemotePrinterManager::DiscoveryLoop()
 {
     PRINT_HILOGI("RemotePrinterManager DiscoveryLoop started");
-    while (isDiscoveryRunning_) {
+    while (isDiscoveryRunning_.load()) {
         int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("RequestPrinterList result: %{public}d", result);
         std::this_thread::sleep_for(std::chrono::milliseconds(DISCOVERY_INTERVAL_MS));

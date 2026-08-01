@@ -496,7 +496,10 @@ void PrintServiceAbility::OnStart()
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility is already running.");
 #ifdef CUPS_ENABLE
-        DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
+        auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+        if (printCupsClient != nullptr) {
+            printCupsClient->InitCupsResources();
+        }
 #endif  // CUPS_ENABLE
         return;
     }
@@ -553,7 +556,10 @@ void PrintServiceAbility::OnStop()
         return;
     }
     vendorManager.UnInit();
-    serviceHandler_ = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        serviceHandler_ = nullptr;
+    }
     state_ = ServiceRunningState::STATE_NOT_START;
     PRINT_HILOGI("OnStop end.");
 }
@@ -1937,7 +1943,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
             UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             return E_PRINT_SERVER_FAILURE;
         }
-        CancelPrintJobHandleCallback(userData, extensionId, jobId);
+        CancelPrintJobHandleCallback(extensionId, jobId, printJob);
     } else {
         SetPrintJobCanceled(*printJob);
     }
@@ -1946,13 +1952,14 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
 }
 
 void PrintServiceAbility::CancelPrintJobHandleCallback(
-    const std::shared_ptr<PrintUserData> userData, const std::string& extensionId, const std::string &jobId)
+    const std::string& extensionId, const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
 {
     PRINT_HILOGI("[Job Id: %{public}s] CancelPrintJobHandleCallback start", jobId.c_str());
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(printJob);
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CallbackEventType::EXTCB_CANCEL_PRINT;
     cbInfo.extensionId = extensionId;
-    cbInfo.printJobInfo = userData->queuedJobList_[jobId];
+    cbInfo.printJobInfo = printJob;
     cbInfo.userId = GetCurrentUserId();
     auto callback = [this, jobId, cbInfo]() {
         if (!DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo)) {
@@ -2025,11 +2032,15 @@ void PrintServiceAbility::CancelUserPrintJobs(const int32_t userId)
         PRINT_HILOGE("PrintUserData is nullptr.");
         return;
     }
-    for (auto jobIt : removedUser->second->queuedJobList_) {
-        PRINT_HILOGI("[Job Id: %{public}s] CancelUserPrintJobs", jobIt.first.c_str());
-        int32_t ret = CancelPrintJob(jobIt.first);
+    std::vector<std::string> jobIds;
+    for (const auto &jobIt : removedUser->second->queuedJobList_) {
+        jobIds.push_back(jobIt.first);
+    }
+    for (const auto &jobId : jobIds) {
+        PRINT_HILOGI("[Job Id: %{public}s] CancelUserPrintJobs", jobId.c_str());
+        int32_t ret = CancelPrintJob(jobId);
         PRINT_HILOGI("CancelUserPrintJobs CancelPrintJob ret: %{public}d", ret);
-        userJobMap_.erase(jobIt.first);
+        userJobMap_.erase(jobId);
     }
     printUserMap_.erase(userId);
     PRINT_HILOGI("remove user-%{public}d success.", userId);
@@ -2048,8 +2059,12 @@ void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
         PRINT_HILOGE("PrintUserData is nullptr.");
         return;
     }
-    for (auto jobIt : blockUser->second->queuedJobList_) {
-        int32_t ret = BlockPrintJob(jobIt.first);
+    std::vector<std::string> jobIds;
+    for (const auto &jobIt : blockUser->second->queuedJobList_) {
+        jobIds.push_back(jobIt.first);
+    }
+    for (const auto &jobId : jobIds) {
+        int32_t ret = BlockPrintJob(jobId);
         PRINT_HILOGI("BlockUserPrintJobs BlockPrintJob ret: %{public}d", ret);
     }
     PRINT_HILOGI("block user-%{public}d success.", userId);
@@ -2097,10 +2112,7 @@ bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     }
 
     auto userData = GetCurrentUserData();
-    if (userData == nullptr) {
-        PRINT_HILOGE("Get user data failed.");
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(userData, false);
     auto jobId = printerJobMap_[printerId].begin()->first;
     auto jobIt = userData->queuedJobList_.find(jobId);
     if (jobIt == userData->queuedJobList_.end()) {
@@ -2130,6 +2142,7 @@ bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     auto callback = [this, printJob, jobId, cbInfo]() {
         PRINT_HILOGI("[Job Id: %{public}s] Start Next Print Job", jobId.c_str());
         if (DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo)) {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
             printJob->SetJobState(PRINT_JOB_QUEUED);
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
             UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
@@ -2721,12 +2734,10 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
 
 bool PrintServiceAbility::UnloadSystemAbility()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        if (!queuedJobList_.empty()) {
-            PRINT_HILOGE("There are still print jobs being executed.");
-            return false;
-        }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (!queuedJobList_.empty()) {
+        PRINT_HILOGE("There are still print jobs being executed.");
+        return false;
     }
     PRINT_HILOGI("unload task begin");
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
@@ -2756,30 +2767,45 @@ void PrintServiceAbility::DiscoveryCallerAppsMonitor()
     bool running = true;
     while (running) {
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
-
-        for (auto iter = discoveryCallerMap_.begin(); iter != discoveryCallerMap_.end();) {
-            PRINT_HILOGI(
-                "check discovery caller process, pid: %{public}d, bundleName: %{public}s",
-                iter->first, iter->second.bundleName_.c_str());
-            if (IsAppAlive(iter->second)) {
-                PRINT_HILOGI("discovery caller app still alive");
-                ++iter;
-            } else {
-                PRINT_HILOGI("discovery caller app not alive, erase it");
-                iter = discoveryCallerMap_.erase(iter);
+        std::vector<std::pair<int32_t, PrintCallerAppInfo>> appList;
+        {
+            std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+            for (const auto &entry : discoveryCallerMap_) {
+                appList.emplace_back(entry.first, entry.second);
             }
         }
-        PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
-
-        if (discoveryCallerMap_.empty() && queuedJobList_.empty()) {
-            PRINT_HILOGI("All discovery caller apps exited or no job is in the queue, stopping discovery");
+        std::vector<int32_t> deadPids;
+        for (const auto &[pid, appInfo] : appList) {
+            PRINT_HILOGI("check discovery caller process, pid: %{public}d, bundleName: %{public}s",
+                pid, appInfo.bundleName_.c_str());
+            if (!IsAppAlive(appInfo)) {
+                PRINT_HILOGI("discovery caller app not alive, erase it");
+                deadPids.push_back(pid);
+            }
+        }
+        bool shouldStopDiscovery = false;
+        {
+            std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+            for (auto pid : deadPids) {
+                discoveryCallerMap_.erase(pid);
+            }
+            PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
+        }
+        {
+            std::lock_guard<std::recursive_mutex> apiLock(apiMutex_);
+            std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+            if (discoveryCallerMap_.empty() && queuedJobList_.empty()) {
+                PRINT_HILOGI("All discovery caller apps exited or no job is in the queue, stopping discovery");
+                shouldStopDiscovery = true;
+            }
+        }
+        if (shouldStopDiscovery) {
             StopDiscoveryInternal();
-            discoveryCallerMonitorThread = false;
             running = false;
         }
     }
+    std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+    discoveryCallerMonitorThread = false;
     PRINT_HILOGI("DiscoveryCallerAppsMonitor thread exited");
 }
 
@@ -2828,6 +2854,7 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
     PRINT_HILOGI("[Printer: %{public}s] Remote printer connect",
         PrintUtils::AnonymizePrinterId(printerId).c_str());
 
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("[Printer: %{public}s] not found in discovery list",
@@ -2840,7 +2867,6 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
     printerInfo->SetSelectedProtocol("auto");
     BuildPrinterPreference(*printerInfo);
 
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printSystemData_.IsPrinterAdded(printerId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
@@ -3276,14 +3302,21 @@ int32_t PrintServiceAbility::SendPrinterDiscoverEvent(int event, const PrinterIn
 
 int32_t PrintServiceAbility::SendPrinterChangeEvent(int event, const PrinterInfo &info)
 {
-    int32_t num = 0;
     PRINT_HILOGD("[Printer: %{private}s] PrintServiceAbility::SendPrinterChangeEvent type, %{public}d",
         info.GetPrinterId().c_str(), event);
-    for (auto &item : printUserDataMap_) {
-        if (item.second != nullptr) {
-            item.second->SendPrinterEvent(PRINTER_CHANGE_EVENT_TYPE, event, info);
-            num++;
+    std::vector<std::shared_ptr<PrintUserData>> userDataList;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        for (auto &item : printUserDataMap_) {
+            if (item.second != nullptr) {
+                userDataList.push_back(item.second);
+            }
         }
+    }
+    int32_t num = 0;
+    for (auto &userData : userDataList) {
+        userData->SendPrinterEvent(PRINTER_CHANGE_EVENT_TYPE, event, info);
+        num++;
     }
     return num;
 }
@@ -4521,6 +4554,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = QueryConnectingPrinterInfoById(globalPrinterId);
     CheckAndUpdateIppRawData(printerInfo);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
@@ -4673,11 +4707,11 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     PRINT_HILOGI("[Printer: %{public}s] OnPrinterAddedToCups start",
         PrintUtils::AnonymizePrinterName(printerInfo->GetPrinterName()).c_str());
     auto globalPrinterId = printerInfo->GetPrinterId();
+    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
     printerInfo->SetPpdHashCode(ppdHashCode);
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
@@ -4701,12 +4735,12 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
     PRINT_HILOGI("[Printer: %{public}s] RemovePrinterFromCups start",
         PrintUtils::AnonymizePrinterId(printerId).c_str());
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PrinterInfo printer;
     if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
         PRINT_HILOGW("cannot find printer");
         return false;
     }
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printer.GetPrinterName());
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());

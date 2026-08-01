@@ -265,6 +265,7 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
 {
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.OH_Print_StartPrinterDiscovery", PRINT_API_COUNTED);
     PRINT_HILOGI("OH_Print_StartPrinterDiscovery");
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(callback, PRINT_ERROR_INVALID_PARAMETER);
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         g_printerDiscoverCallback = callback;
@@ -602,10 +603,16 @@ void PrintDocumentAdapterWrapper::onStartLayoutWrite(const std::string &jobId, c
         if (printDocAdapterMap_.find(jobId) == printDocAdapterMap_.end()) {
             printDocAdapterMap_.insert({jobId, this});
         }
+        writeResultCb_ = writeResultCallback;
     }
-    writeResultCb_ = writeResultCallback;
     auto oldAttrsPtr = BuildPrintAttributes(oldAttrs);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(oldAttrsPtr);
     auto newAttrsPtr = BuildPrintAttributes(newAttrs);
+    if (newAttrsPtr == nullptr) {
+        PRINT_HILOGE("OH_Print build new print attributes failed.");
+        ReleasePrintAttributes(oldAttrsPtr);
+        return;
+    }
     printCb_.startLayoutWriteCb(
         jobId.c_str(), fd, oldAttrsPtr, newAttrsPtr, PrintDocumentAdapterWrapper::WriteResultCallback);
     ReleasePrintAttributes(oldAttrsPtr);
@@ -652,6 +659,7 @@ void PrintDocumentAdapterWrapper::WriteResultCallback(const char *jobId, uint32_
 
 void PrintDocumentAdapterWrapper::OnWriteResultCallback(const std::string &jobId, uint32_t code)
 {
+    std::lock_guard<std::mutex> lock(printDocMutex_);
     if (writeResultCb_ == nullptr) {
         PRINT_HILOGE("OH_Print write callback is null.");
         return;

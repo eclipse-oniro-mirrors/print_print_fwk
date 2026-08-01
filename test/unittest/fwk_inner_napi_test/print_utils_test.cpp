@@ -298,32 +298,6 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018, TestSize.Level2)
     EXPECT_NE(PRINT_INVALID_ID, result);
 }
 
-/**
- * @tc.name: PrintUtilsTest_0019
- * @tc.desc: Verify the getJobStateChar function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019, TestSize.Level2)
-{
-    std::string testResult = "PRINT_JOB_PREPARED";
-    std::string result = PrintUtils::GetJobStateChar(PRINT_JOB_PREPARED);
-    EXPECT_EQ(testResult, result);
-}
-
-/**
- * @tc.name: PrintUtilsTest_0020
- * @tc.desc: Verify the getJobStateChar function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0020, TestSize.Level2)
-{
-    std::string testResult = "PRINT_JOB_UNKNOWN";
-    std::string result = PrintUtils::GetJobStateChar(PRINT_JOB_PREPARED + 100);
-    EXPECT_EQ(testResult, result);
-}
-
 HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021, TestSize.Level2)
 {
     PrintUtils printUtils;

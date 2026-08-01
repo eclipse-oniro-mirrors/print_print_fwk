@@ -103,10 +103,10 @@ bool ScanTask::GetImageOutputDir(ImageFormat imgFmt, std::string& path, std::str
         return false;
     }
 
-    static uint32_t pictureId = 1;
+    static std::atomic<uint32_t> pictureId{1};
     outputPath = canonicalPath;
     outputPath += "/scan_tmp";
-    outputPath += std::to_string(pictureId++);
+    outputPath += std::to_string(pictureId.fetch_add(1));
 
     switch (imgFmt) {
         case ImageFormat::IMAGE_TYPE_JPEG:
