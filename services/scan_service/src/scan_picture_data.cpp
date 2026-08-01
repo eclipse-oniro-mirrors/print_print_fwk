@@ -59,6 +59,13 @@ void ScanPictureData::CleanAllCache()
     callerPid_ = 0;
 }
 
+void ScanPictureData::CleanScanQueue()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::queue<int32_t> empty;
+    scanQueue_.swap(empty);
+}
+
 int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress, int32_t callerPid)
 {
     std::lock_guard<std::mutex> lock(mutex_);

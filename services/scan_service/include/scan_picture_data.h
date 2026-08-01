@@ -35,6 +35,7 @@ public:
     void SetCallerPid(int32_t callerPid);
     int32_t GetPictureProgressInQueue(ScanProgress& scanProgress, int32_t callerPid);
     void CleanAllCache();
+    void CleanScanQueue();
     void CleanDiskCache();
     void PushScanPictureProgress();
     void RegisterExportedResult(const std::string& baseName, int32_t fd, int32_t format);
