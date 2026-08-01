@@ -41,4 +41,5 @@ declare_args() {
   print_fwk_feature_device_isolation = false
   print_fwk_feature_api_metrics = false
   print_fwk_feature_remote_service = false
+  print_fwk_feature_print_fwk_agent_client = false
 }

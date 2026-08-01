@@ -78,6 +78,9 @@
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
 #include "print_failure_ai_notifier.h"
 #endif // HAVE_PRINT_FAILURE_AI_NOTIFIER
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+#include "napi_print_utils.h"
+#endif
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -339,6 +342,27 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
 
 int32_t PrintServiceAbility::Init()
 {
+    int32_t ret = InitServiceDependencies();
+    if (ret != E_PRINT_NONE) {
+        return ret;
+    }
+    ServiceRunningState previousState = state_.load();
+    InitAgentManager();
+    state_ = ServiceRunningState::STATE_RUNNING;
+    PRINT_HILOGI("InitService: 2in1");
+    if (!PublishService(previousState)) {
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PrintCallerAppMonitor::GetInstance().StartCallerAppMonitor([this]() {
+        return this->UnloadSystemAbility();
+    });
+    RefreshPrintersAfterInit();
+    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::InitServiceDependencies()
+{
     if (InitServiceHelper() != E_PRINT_NONE) {
         return E_PRINT_SERVER_FAILURE;
     }
@@ -349,26 +373,47 @@ int32_t PrintServiceAbility::Init()
     RefreshEprinterErrorCapability();
     vendorManager.Init(GetInstance(), true);
 #ifdef CUPS_ENABLE
-    int32_t initCupsRet = DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
-    if (initCupsRet != E_PRINT_NONE) {
-        return initCupsRet;
+    int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
+    if (ret != E_PRINT_NONE) {
+        return ret;
     }
 #endif
     CheckCupsServerAlive();
-    auto tmpState = state_.load();
-    state_ = ServiceRunningState::STATE_RUNNING;
-    PRINT_HILOGI("InitService: 2in1");
-    if (!g_publishState) {
-        if (!Publish(PrintServiceAbility::GetInstance())) {
-            state_ = tmpState;
-            PRINT_HILOGE("PrintServiceAbility Publish failed");
-            return E_PRINT_SERVER_FAILURE;
-        }
-        g_publishState = true;
+    return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::InitAgentManager()
+{
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    agentManager_ = std::make_unique<PrintFwkAgentManager>(printSystemData_, vendorManager, *this);
+    if (!agentManager_->Init()) {
+        PRINT_HILOGE("InitAgentManager failed, Agent printing is unavailable");
     }
-    PrintCallerAppMonitor::GetInstance().StartCallerAppMonitor([this]() {
-        return this->UnloadSystemAbility();
-    });
+#endif
+}
+
+bool PrintServiceAbility::PublishService(ServiceRunningState previousState)
+{
+    if (g_publishState) {
+        return true;
+    }
+    if (!Publish(PrintServiceAbility::GetInstance())) {
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+        if (agentManager_ != nullptr) {
+            agentManager_->Shutdown();
+            agentManager_.reset();
+        }
+#endif
+        state_ = previousState;
+        PRINT_HILOGE("PrintServiceAbility Publish failed");
+        return false;
+    }
+    g_publishState = true;
+    return true;
+}
+
+void PrintServiceAbility::RefreshPrintersAfterInit()
+{
     UpdatePpdForPreinstalledDriverPrinter();
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
@@ -379,8 +424,6 @@ int32_t PrintServiceAbility::Init()
     RefreshIpPrinter();
     RefreshThirdDriverPrinter();
     StartDiscoverPrinter();
-    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
-    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::InitServiceHelper()
@@ -552,6 +595,12 @@ void PrintServiceAbility::OnStop()
     if (state_ != ServiceRunningState::STATE_RUNNING) {
         return;
     }
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    if (agentManager_ != nullptr) {
+        agentManager_->Shutdown();
+        agentManager_.reset();
+    }
+#endif
     vendorManager.UnInit();
     serviceHandler_ = nullptr;
     state_ = ServiceRunningState::STATE_NOT_START;
@@ -658,10 +707,16 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         PRINT_HILOGI("old version printerId, check connected successfully");
         return E_PRINT_NONE;
     }
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
+    auto discoveredPrinter = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (discoveredPrinter == nullptr) {
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
     }
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    if (agentManager_ != nullptr && agentManager_->IsRunning()) {
+        agentManager_->ClaimPendingAgentPrinter(discoveredPrinter->GetUri());
+    }
+#endif
     printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
 
@@ -1164,6 +1219,15 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     }
     ManualStart();
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    if (agentManager_ != nullptr && agentManager_->IsAgentRouteRequested(options)) {
+        if (!agentManager_->IsRunning()) {
+            PRINT_HILOGE("AddPrinter failed, Agent printing is unavailable");
+            return E_PRINT_RPC_FAILURE;
+        }
+        return agentManager_->AddPrinterViaAgent(printerName, uri, options);
+    }
+#endif
 
     std::string callerBundleName = GetCallerBundleName();
     if (callerBundleName != SPOOLER_BUNDLE_NAME) {
@@ -3924,11 +3988,26 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     ManualStart();
     PRINT_HILOGI("[Printer: %{public}s] DeletePrinterFromCups start", printerName.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    if (agentManager_ != nullptr && agentManager_->IsAgentRoutedPrinterByName(printerName)) {
+        if (!agentManager_->IsRunning()) {
+            PRINT_HILOGE("DeletePrinterFromCups failed, Agent printing is unavailable");
+            return E_PRINT_RPC_FAILURE;
+        }
+        return agentManager_->DeletePrinterFromAgent(printerName);
+    }
+#endif
+    std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
+    return ContinueDeletePrinterFromCups(printerId, printerName);
+}
+
+int32_t PrintServiceAbility::ContinueDeletePrinterFromCups(
+    const std::string &printerId, const std::string &printerName)
+{
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
 #endif  // CUPS_ENABLE
-    std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
     printSystemData_.DeleteAddedPrinter(printerId, printerName);
@@ -4409,6 +4488,7 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
+
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (printerInfo == nullptr) {
         PRINT_HILOGI("New printer discovered, adding to discovery list");
@@ -4682,6 +4762,12 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+        if (agentManager_ != nullptr && agentManager_->IsRunning() &&
+            agentManager_->AttachPendingAgentPrinter(*printerInfo)) {
+            PRINT_HILOGI("Attached pending source to discovered printer");
+        }
+#endif
         BuildPrinterPreference(*printerInfo);
         printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
         printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
@@ -6510,4 +6596,24 @@ pid_t PrintServiceAbility::GetOwnerPidFromJobList(const std::string &jobId) cons
     }
     return -1;
 }
+
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+bool PrintServiceAbility::IsCallerSystemApp()
+{
+    return NapiPrintUtils::CheckCallerIsSystemApp();
+}
+
+void PrintServiceAbility::NotifyPrinterInfoChanged(const PrinterInfo &info)
+{
+    SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, info);
+}
+
+void PrintServiceAbility::CommitAgentPrinterDeleted(const std::string &printerId,
+    const std::string &printerName)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    (void)ContinueDeletePrinterFromCups(printerId, printerName);
+}
+
+#endif
 }  // namespace OHOS::Print

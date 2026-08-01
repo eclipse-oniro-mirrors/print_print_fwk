@@ -26,6 +26,7 @@ ohos_unittest("print_service_test") {
     "mock",
     "../fwk_inner_napi_test/mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${_service_path}/include",
@@ -58,6 +59,8 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/print_service_stub_test.cpp",
     "${_test_path}/unittest/service_test/hisys_event_util_test.cpp",
     "${_test_path}/unittest/service_test/print_event_container_test.cpp",
+    "${_test_path}/unittest/service_test/agent/print_fwk_agent_client_loader_test.cpp",
+    "${_service_path}/src/agent/print_fwk_agent_client_loader.cpp",
   ]
 
   deps = [
@@ -118,10 +121,15 @@ ohos_unittest("print_service_test") {
   ]
 
   if (cups_enable) {
+    sources += [
+      "${_test_path}/unittest/service_test/agent/print_fwk_agent_manager_test.cpp",
+      "${_service_path}/src/agent/print_fwk_agent_manager.cpp",
+    ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cups:cups",
       "cups-filters:cupsfilters",
+      "os_account:os_account_innerkits",
       "openssl:libcrypto_shared",
       "openssl:libssl_shared",
     ]

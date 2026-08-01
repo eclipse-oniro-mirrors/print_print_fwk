@@ -1176,6 +1176,39 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055_NeedRename, TestSize.Leve
     systemData->ClearDiscoveredPrinterList();
 }
 
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_Agent_AddToDiscoveryAndAdded, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    std::string printerId = "fwk.driver.printer.driver:com.example.app:HP_LaserJet";
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetPrinterName("HP LaserJet");
+    info->SetUri("ipp://192.168.56.1:631/printers/HP_LaserJet");
+    info->SetPrinterState(PRINTER_CONNECTED);
+
+    auto discoveryInfo = std::make_shared<PrinterInfo>(*info);
+    discoveryInfo->SetPrinterState(PRINTER_ADDED);
+
+    systemData->InsertAddedPrinter(printerId, *info);
+    systemData->AddPrinterToDiscovery(discoveryInfo);
+
+    PrinterInfo addedInfo;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(printerId, addedInfo));
+    EXPECT_EQ(addedInfo.GetPrinterState(), PRINTER_CONNECTED);
+
+    auto discovered = systemData->QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_NE(discovered, nullptr);
+    EXPECT_EQ(discovered->GetPrinterState(), PRINTER_ADDED);
+
+    systemData->RemovePrinterFromDiscovery(printerId);
+    auto removed = systemData->QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_EQ(removed, nullptr);
+
+    PrinterInfo stillAdded;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(printerId, stillAdded));
+    EXPECT_EQ(stillAdded.GetPrinterState(), PRINTER_CONNECTED);
+}
+
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056_NeedRename, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
