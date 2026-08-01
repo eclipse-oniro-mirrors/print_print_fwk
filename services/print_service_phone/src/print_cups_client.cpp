@@ -526,7 +526,7 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         } else if (lstat(destFilePath.c_str(), &destFilestat) == 0) {
             PRINT_HILOGD("symlink lstat %{private}s err: %{public}s", destFilePath.c_str(), strerror(errno));
 
-            if (S_ISLNK(destFilestat.st_mode)) {
+            if (S_ISLNK(destFilestat.st_mode) && access(destFilePath.c_str(), F_OK) == 0) {
                 PRINT_HILOGW("symlink already exists, continue.");
                 continue;
             }
