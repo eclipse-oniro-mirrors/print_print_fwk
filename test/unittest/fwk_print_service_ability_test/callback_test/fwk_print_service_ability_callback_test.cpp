@@ -280,6 +280,7 @@ HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
     info.SetOption(PrintJsonUtil::WriteString(option));
     EXPECT_TRUE(service->OnQueryCallBackEvent(info));
 }
+
 #ifdef KIA_INTERCEPTOR_ENABLE
 
 HWTEST_F(PrintServiceAbilityTest, RegisterKiaInterceptorCallbackTest, TestSize.Level1)

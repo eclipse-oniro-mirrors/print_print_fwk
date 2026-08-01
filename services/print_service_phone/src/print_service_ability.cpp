@@ -4725,6 +4725,9 @@ bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
 {
     int32_t callerUserId = GetCurrentUserId();
     PRINT_HILOGD("callerUserId = %{public}d", callerUserId);
+    if (callerUserId == INVALID_USER_ID) {
+        return false;
+    }
     if (PrintUtils::CheckUserIdInEventType(type, callerUserId)) {
         PRINT_HILOGD("find current user");
         return true;

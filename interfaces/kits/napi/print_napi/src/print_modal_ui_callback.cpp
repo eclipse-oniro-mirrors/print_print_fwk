@@ -291,7 +291,7 @@ napi_status PrintModalUICallback::CreatePrintResult(PrintContext *printContext, 
 
 napi_value PrintModalUICallback::CreateBusinessError(const napi_env &env, int32_t errCode, const std::string &errMsg)
 {
-    PRINT_HILOGD("CreateBusinessError errCode: %{public}d errMsg: %{public}s", errCode, errMsg.c_str());
+    PRINT_HILOGD("CreateBusinessError errCode: %{public}d errMsg: %{private}s", errCode, errMsg.c_str());
 
     napi_value message = nullptr;
     napi_status status = napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
