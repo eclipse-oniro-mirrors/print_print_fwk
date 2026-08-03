@@ -512,7 +512,7 @@ bool PrintSystemData::UpdatePrinterDeviceId(const std::string &printerId, const 
             return false;
         }
         info->SetDeviceId(deviceId);
-        PRINT_HILOGI("UpdatePrinterDeviceId success, deviceId: %{public}s", deviceId.c_str());
+        PRINT_HILOGI("UpdatePrinterDeviceId success, deviceId: %{private}s", deviceId.c_str());
         return true;
     }
     PRINT_HILOGE("Unable to find the corresponding printId.");
