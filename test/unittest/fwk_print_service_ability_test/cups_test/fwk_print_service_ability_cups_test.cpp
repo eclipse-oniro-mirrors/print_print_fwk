@@ -47,6 +47,28 @@ static void CreateFileInIppDirForAbilityTest(const std::string &fileName)
     ofs.close();
 }
 
+static std::string GetTestPpdDir()
+{
+    return "/data/service/el1/public/print_service/cups/datadir/model";
+}
+
+static void CreateTestPpdFile(const std::string &fileName, const std::string &content)
+{
+    std::string dir = GetTestPpdDir();
+    std::filesystem::create_directories(dir);
+    std::string filePath = dir + "/" + fileName;
+    std::ofstream ofs(filePath);
+    ofs << content;
+    ofs.close();
+}
+
+static void RemoveTestPpdFile(const std::string &fileName)
+{
+    std::string filePath = GetTestPpdDir() + "/" + fileName;
+    std::error_code ec;
+    std::filesystem::remove(filePath, ec);
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
@@ -863,6 +885,94 @@ HWTEST_F(PrintServiceAbilityTest, GetPpdNameByPrinterId_QueryPrinterInfoFailed, 
 
     int32_t ret = service->GetPpdNameByPrinterId(printerId, ppdName);
     EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByPpdName_WhenFileNotFound_ShouldReturnFalse, TestSize.Level1)
+{
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PpdInfo info;
+    EXPECT_FALSE(cupsClient->QueryInfoByPpdName("nonexistent_test.ppd", info));
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByPpdName_WhenNickNameExists_ShouldUseNickName, TestSize.Level1)
+{
+    std::string fileName = "test_nick_name.ppd";
+    std::string content =
+        "*Manufacturer:\"HP\"\n"
+        "*NickName:\"HP LaserJet Pro M404dn\"\n"
+        "*ShortNickName:\"LaserJet Pro\"\n"
+        "*ModelName:\"HP LaserJet\"\n";
+    CreateTestPpdFile(fileName, content);
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PpdInfo info;
+    EXPECT_TRUE(cupsClient->QueryInfoByPpdName(fileName, info));
+    EXPECT_EQ(info.GetNickName(), "HP LaserJet Pro M404dn");
+    EXPECT_EQ(info.GetManufacturer(), "HP");
+    RemoveTestPpdFile(fileName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByPpdName_WhenOnlyShortNickName_ShouldUseShortNickName, TestSize.Level1)
+{
+    std::string fileName = "test_short_nick.ppd";
+    std::string content =
+        "*Manufacturer:\"HP\"\n"
+        "*ShortNickName:\"LaserJet Pro\"\n"
+        "*ModelName:\"HP LaserJet\"\n";
+    CreateTestPpdFile(fileName, content);
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PpdInfo info;
+    EXPECT_TRUE(cupsClient->QueryInfoByPpdName(fileName, info));
+    EXPECT_EQ(info.GetNickName(), "LaserJet Pro");
+    RemoveTestPpdFile(fileName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByPpdName_WhenOnlyModelName_ShouldUseModelName, TestSize.Level1)
+{
+    std::string fileName = "test_model_name.ppd";
+    std::string content =
+        "*Manufacturer:\"HP\"\n"
+        "*ModelName:\"HP LaserJet\"\n";
+    CreateTestPpdFile(fileName, content);
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PpdInfo info;
+    EXPECT_TRUE(cupsClient->QueryInfoByPpdName(fileName, info));
+    EXPECT_EQ(info.GetNickName(), "HP LaserJet");
+    RemoveTestPpdFile(fileName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByPpdName_WhenAllNickNameEmpty_ShouldUseFileName, TestSize.Level1)
+{
+    std::string fileName = "test_empty_nick.ppd";
+    std::string content =
+        "*Manufacturer:\"HP\"\n"
+        "*OtherKey:\"value\"\n";
+    CreateTestPpdFile(fileName, content);
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PpdInfo info;
+    EXPECT_TRUE(cupsClient->QueryInfoByPpdName(fileName, info));
+    EXPECT_EQ(info.GetNickName(), fileName);
+    RemoveTestPpdFile(fileName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByPpdName_WhenManufacturerEmpty_ShouldSetDefault, TestSize.Level1)
+{
+    std::string fileName = "test_no_manufacturer.ppd";
+    std::string content = "*NickName:\"Test Printer\"\n";
+    CreateTestPpdFile(fileName, content);
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PpdInfo info;
+    EXPECT_TRUE(cupsClient->QueryInfoByPpdName(fileName, info));
+    EXPECT_EQ(info.GetNickName(), "Test Printer");
+    EXPECT_EQ(info.GetManufacturer(), "Others");
+    RemoveTestPpdFile(fileName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryPpdInfoMap_WhenFileNotOpen_ShouldReturnFalse, TestSize.Level1)
+{
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    std::unordered_map<std::string, std::string> keyValues;
+    PpdInfo info;
+    EXPECT_FALSE(cupsClient->QueryPpdInfoMap("/nonexistent/path/file.ppd", keyValues, info));
 }
 
 }  // namespace Print
