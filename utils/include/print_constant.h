@@ -386,6 +386,7 @@ inline const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
 inline const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 inline const std::string DEFAULT_PPD_NAME = "everywhere";
 inline const std::string RAW_PPD_NAME = "raw";
+inline constexpr const char *PRINT_DRIVER_AGENT = "AGENT";
 inline const std::string RAW_PPD_DRIVER = "driver.raw";
 inline const std::string WEBPRINTER_BUNDLE_NAME = "com.ohos.spooler";
 inline const std::string VENDOR_CUSTOM_DRIVER = "driver.printer.driver";
