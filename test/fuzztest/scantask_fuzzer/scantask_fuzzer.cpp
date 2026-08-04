@@ -147,16 +147,25 @@ void TestWriteImageDataNoInit(const uint8_t* data, size_t size, FuzzedDataProvid
 
 void TestWriteImageDataEmpty(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
-    ScanTask task("fuzz_scanner", FUZZ_DEFAULT_USER_ID, false);
+    std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    ScanTask task(scannerId, userId, dataProvider->ConsumeBool());
+
+    int32_t width = dataProvider->ConsumeIntegralInRange<int32_t>(MIN_IMAGE_DIM, MAX_IMAGE_DIM);
+    int32_t height = dataProvider->ConsumeIntegralInRange<int32_t>(MIN_IMAGE_DIM, MAX_IMAGE_DIM);
+    int32_t frameInt = dataProvider->ConsumeIntegralInRange<int32_t>(0, SCAN_FRAME_BLUE);
+    int32_t depth = dataProvider->ConsumeIntegralInRange<int32_t>(FUZZ_MONO_DEPTH, FUZZ_RGB_DEPTH);
+    int32_t bytesPerLine = width * depth;
 
     ScanParameters parm;
-    parm.SetFormat(SCAN_FRAME_RGB);
-    parm.SetPixelsPerLine(FUZZ_SMALL_IMAGE_WIDTH);
-    parm.SetLines(FUZZ_SMALL_IMAGE_HEIGHT);
-    parm.SetBytesPerLine(FUZZ_SMALL_IMAGE_BYTES_PER_LINE);
-    parm.SetDepth(FUZZ_RGB_DEPTH);
+    parm.SetFormat(static_cast<ScanFrame>(frameInt));
+    parm.SetPixelsPerLine(width);
+    parm.SetLines(height);
+    parm.SetBytesPerLine(bytesPerLine);
+    parm.SetDepth(depth);
 
-    int32_t ret = task.WriteImageHeader(parm, DEFAULT_DPI);
+    uint16_t dpi = dataProvider->ConsumeIntegralInRange<uint16_t>(1, DEFAULT_DPI);
+    int32_t ret = task.WriteImageHeader(parm, dpi);
     if (ret == E_SCAN_NONE) {
         std::vector<uint8_t> emptyData;
         task.WriteImageData(emptyData);
@@ -195,17 +204,26 @@ void TestDestroyCompress(const uint8_t* data, size_t size, FuzzedDataProvider* d
 
 void TestWriteHeaderAlreadyWrited(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
-    ScanTask task("fuzz_scanner", FUZZ_DEFAULT_USER_ID, false);
+    std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    ScanTask task(scannerId, userId, dataProvider->ConsumeBool());
+
+    int32_t width = dataProvider->ConsumeIntegralInRange<int32_t>(MIN_IMAGE_DIM, MAX_IMAGE_DIM);
+    int32_t height = dataProvider->ConsumeIntegralInRange<int32_t>(MIN_IMAGE_DIM, MAX_IMAGE_DIM);
+    int32_t frameInt = dataProvider->ConsumeIntegralInRange<int32_t>(0, SCAN_FRAME_BLUE);
+    int32_t depth = dataProvider->ConsumeIntegralInRange<int32_t>(FUZZ_MONO_DEPTH, FUZZ_RGB_DEPTH);
+    int32_t bytesPerLine = width * depth;
 
     ScanParameters parm;
-    parm.SetFormat(SCAN_FRAME_RGB);
-    parm.SetPixelsPerLine(FUZZ_SMALL_IMAGE_WIDTH);
-    parm.SetLines(FUZZ_SMALL_IMAGE_HEIGHT);
-    parm.SetBytesPerLine(FUZZ_SMALL_IMAGE_BYTES_PER_LINE);
-    parm.SetDepth(FUZZ_RGB_DEPTH);
+    parm.SetFormat(static_cast<ScanFrame>(frameInt));
+    parm.SetPixelsPerLine(width);
+    parm.SetLines(height);
+    parm.SetBytesPerLine(bytesPerLine);
+    parm.SetDepth(depth);
 
-    task.WriteImageHeader(parm, DEFAULT_DPI);
-    task.WriteImageHeader(parm, DEFAULT_DPI);
+    uint16_t dpi = dataProvider->ConsumeIntegralInRange<uint16_t>(1, DEFAULT_DPI);
+    task.WriteImageHeader(parm, dpi);
+    task.WriteImageHeader(parm, dpi);
     task.ImageDestroyCompress();
 }
 

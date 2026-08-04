@@ -70,7 +70,7 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(context->allExtensionInfos);
+        int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(context->allExtensionInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query all ext info");
@@ -119,7 +119,7 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(context->extensionList);
+        int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(context->extensionList);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start discover printer");
@@ -148,7 +148,7 @@ napi_value NapiInnerPrint::StopDiscovery(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
+        int32_t ret = PrintManagerClient::GetInstance().StopDiscoverPrinter();
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to stop discover printer");
@@ -183,7 +183,7 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(context->printerId);
+        int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to connect the printer");
@@ -224,7 +224,7 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env, napi_callback_info in
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(context->printerId);
+        int32_t ret = PrintManagerClient::GetInstance().DisconnectPrinter(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to disconnect the printer");
@@ -267,7 +267,7 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
             return;
         }
         context->printJob.Dump();
-        int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(context->printJob);
+        int32_t ret = PrintManagerClient::GetInstance().StartPrintJob(context->printJob);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print job");
@@ -304,7 +304,7 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         context->printJob.Dump();
-        int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(context->printJob);
+        int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(context->printJob);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start native print job");
@@ -350,7 +350,7 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
             return;
         }
         context->printJob.Dump();
-        int32_t ret = PrintManagerClient::GetInstance()->CancelPrintJob(context->jobId);
+        int32_t ret = PrintManagerClient::GetInstance().CancelPrintJob(context->jobId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print job");
@@ -396,7 +396,7 @@ napi_value NapiInnerPrint::RestartPrintJob(napi_env env, napi_callback_info info
             return;
         }
         context->printJob.Dump();
-        int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(context->jobId);
+        int32_t ret = PrintManagerClient::GetInstance().RestartPrintJob(context->jobId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print job");
@@ -446,7 +446,7 @@ napi_value NapiInnerPrint::CheckPreferencesConflicts(napi_env env, napi_callback
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
+        int32_t ret = PrintManagerClient::GetInstance().CheckPreferencesConflicts(
             context->printerId, context->changedType, context->printerPreference, context->conflictingOptions);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -493,7 +493,7 @@ napi_value NapiInnerPrint::CheckPrintJobConflicts(napi_env env, napi_callback_in
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(context->changedType,
+        int32_t ret = PrintManagerClient::GetInstance().CheckPrintJobConflicts(context->changedType,
             context->printJob, context->conflictingOptions);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -528,7 +528,7 @@ napi_value NapiInnerPrint::GetPrinterDefaultPreferences(napi_env env, napi_callb
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(
+        int32_t ret = PrintManagerClient::GetInstance().GetPrinterDefaultPreferences(
             context->printerId, context->printerPreference);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -573,7 +573,7 @@ napi_value NapiInnerPrint::GetPrinterPreference(napi_env env, napi_callback_info
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(context->printerId,
+        int32_t ret = PrintManagerClient::GetInstance().GetPrinterPreference(context->printerId,
             context->printerPreference);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -618,7 +618,7 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
         }
         PRINT_HILOGD("exec----");
         context->printJob.Dump();
-        int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(context->printJob, context->previewResult);
+        int32_t ret = PrintManagerClient::GetInstance().RequestPreview(context->printJob, context->previewResult);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to request preview of print job");
@@ -659,7 +659,7 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(context->printerId);
+        int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapability(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query capability of printer");
@@ -700,7 +700,7 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(context->allPrintJobs);
+        int32_t ret = PrintManagerClient::GetInstance().QueryAllPrintJob(context->allPrintJobs);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printJobList");
@@ -741,7 +741,7 @@ napi_value NapiInnerPrint::QueryAllActivePrintJob(napi_env env, napi_callback_in
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(context->allPrintJobs);
+        int32_t ret = PrintManagerClient::GetInstance().QueryAllActivePrintJob(context->allPrintJobs);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printJobList");
@@ -782,7 +782,7 @@ napi_value NapiInnerPrint::QueryPrintJobById(napi_env env, napi_callback_info in
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->QueryPrintJobById(context->printerId, context->printJob);
+        int32_t ret = PrintManagerClient::GetInstance().QueryPrintJobById(context->printerId, context->printJob);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printJob from printList");
@@ -832,7 +832,7 @@ napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->SetPrinterPreference(context->printerId, context->printerPreference);
+            PrintManagerClient::GetInstance().SetPrinterPreference(context->printerId, context->printerPreference);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to SetPrinterPreference");
@@ -882,13 +882,9 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
     PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
-    sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
-    if (callback == nullptr) {
-        NapiPrintUtils::DeleteReference(env, callbackRef);
-        PRINT_HILOGE("create print callback object fail");
-        return nullptr;
-    }
-    int32_t ret = PrintManagerClient::GetInstance()->On("", type, callback);
+
+    sptr<IPrintCallback> callback = new PrintCallback(env, callbackRef);
+    int32_t ret = PrintManagerClient::GetInstance().On("", type, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");
         NapiThrowError(env, ret);
@@ -935,7 +931,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
         PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
     }
 
-    int32_t ret = PrintManagerClient::GetInstance()->Off("", type);
+    int32_t ret = PrintManagerClient::GetInstance().Off("", type);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to unregister event");
         NapiThrowError(env, ret);
@@ -965,13 +961,9 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
         PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
-        sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
-        if (callback == nullptr) {
-            NapiPrintUtils::DeleteReference(env, callbackRef);
-            PRINT_HILOGE("create startGetPrintFile callback object fail");
-            return nullptr;
-        }
-        int32_t retCallback = PrintManagerClient::GetInstance()->On(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
+
+        sptr<IPrintCallback> callback = new PrintCallback(env, callbackRef);
+        int32_t retCallback = PrintManagerClient::GetInstance().On(jobId, PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
         if (retCallback != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to register startGetPrintFile callback");
             NapiThrowError(env, retCallback);
@@ -986,7 +978,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     }
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
         uint32_t fd = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_TWO]);
-        int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
+        int32_t ret = PrintManagerClient::GetInstance().StartGetPrintFile(jobId, *printAttributes, fd);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to StartGetPrintFile");
             NapiThrowError(env, ret);
@@ -1033,7 +1025,7 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintService(context->jobId, context->type);
+        int32_t ret = PrintManagerClient::GetInstance().NotifyPrintService(context->jobId, context->type);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to NotifyPrintService");
@@ -1067,7 +1059,7 @@ napi_value NapiInnerPrint::QueryAddedPrinter(napi_env env, napi_callback_info in
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(context->allPrinters);
+        int32_t ret = PrintManagerClient::GetInstance().QueryAddedPrinter(context->allPrinters);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printerList");
@@ -1109,7 +1101,7 @@ napi_value NapiInnerPrint::QueryPrinterInfoByPrinterId(napi_env env, napi_callba
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(context->printerId, context->printerInfo);
+            PrintManagerClient::GetInstance().QueryPrinterInfoByPrinterId(context->printerId, context->printerInfo);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printerInfo from printerList");
@@ -1158,7 +1150,7 @@ napi_value NapiInnerPrint::NotifyPrintServiceEvent(napi_env env, napi_callback_i
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(context->jobId, context->applicationEvent);
+            PrintManagerClient::GetInstance().NotifyPrintServiceEvent(context->jobId, context->applicationEvent);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to NotifyPrintServiceEvent");
@@ -1204,7 +1196,7 @@ napi_value NapiInnerPrint::SetDefaultPrinter(napi_env env, napi_callback_info in
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret =
-            PrintManagerClient::GetInstance()->SetDefaultPrinter(context->printerId, context->defaultPrinterType);
+            PrintManagerClient::GetInstance().SetDefaultPrinter(context->printerId, context->defaultPrinterType);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to set default printer");
@@ -1245,7 +1237,7 @@ napi_value NapiInnerPrint::GetAddedPrinterInfoById(napi_env env, napi_callback_i
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret =
-            PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(context->printerId, context->printerInfo);
+            PrintManagerClient::GetInstance().QueryPrinterInfoByPrinterId(context->printerId, context->printerInfo);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printerInfo from printerList");
@@ -1293,7 +1285,7 @@ napi_value NapiInnerPrint::AnalyzePrintEvents(napi_env env, napi_callback_info i
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         std::string detail;
-        int32_t ret = PrintManagerClient::GetInstance()->AnalyzePrintEvents(context->printerId,
+        int32_t ret = PrintManagerClient::GetInstance().AnalyzePrintEvents(context->printerId,
             context->type, detail);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -1349,7 +1341,7 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->AuthPrintJob(context->jobId, context->userName, context->userPasswd);
+            PrintManagerClient::GetInstance().AuthPrintJob(context->jobId, context->userName, context->userPasswd);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to set default printer");
@@ -1395,7 +1387,7 @@ napi_value NapiInnerPrint::QueryAllPrinterPpds(napi_env env, napi_callback_info 
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->QueryAllPrinterPpds(context->allPpdInfos);
+            PrintManagerClient::GetInstance().QueryAllPrinterPpds(context->allPpdInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query ppdList");
@@ -1440,7 +1432,7 @@ napi_value NapiInnerPrint::QueryPrinterInfoByIp(napi_env env, napi_callback_info
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(context->printerId);
+            PrintManagerClient::GetInstance().QueryPrinterInfoByIp(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to Query printer info");
@@ -1493,7 +1485,7 @@ napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
         return napi_get_boolean(env, context->result, result);
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(context->printerId,
+        int32_t ret = PrintManagerClient::GetInstance().AddPrinter(context->printerId,
             context->fileUri, context->type, context->changedType);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -1542,7 +1534,7 @@ napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(context->printerId,
+            PrintManagerClient::GetInstance().ConnectPrinterByIpAndPpd(context->printerId,
                 context->fileUri, context->type);
             context->result = ret == E_PRINT_NONE;
             if (ret != E_PRINT_NONE) {
@@ -1586,7 +1578,7 @@ napi_value NapiInnerPrint::SavePdfFileJob(napi_env env, napi_callback_info info)
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->SavePdfFileJob(context->jobId, context->fileOffset);
+        int32_t ret = PrintManagerClient::GetInstance().SavePdfFileJob(context->jobId, context->fileOffset);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to save pdf file");
@@ -1634,7 +1626,7 @@ napi_value NapiInnerPrint::QueryRecommendDriversById(napi_env env, napi_callback
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->QueryRecommendDriversById(context->printerId, context->allPpdInfos);
+            PrintManagerClient::GetInstance().QueryRecommendDriversById(context->printerId, context->allPpdInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query ppdList");
@@ -1682,7 +1674,7 @@ napi_value NapiInnerPrint::ConnectPrinterByIdAndPpd(napi_env env, napi_callback_
             return;
         }
         int32_t ret =
-            PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(context->printerId,
+            PrintManagerClient::GetInstance().ConnectPrinterByIdAndPpd(context->printerId,
                 context->fileUri, context->type);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -1726,7 +1718,7 @@ napi_value NapiInnerPrint::GetSharedHosts(napi_env env, napi_callback_info info)
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->GetSharedHosts(context->sharedHosts);
+        int32_t ret = PrintManagerClient::GetInstance().GetSharedHosts(context->sharedHosts);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to get sharedHosts");
@@ -1773,7 +1765,7 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsGuest(napi_env env, napi_callback_info
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,
+        int32_t ret = PrintManagerClient::GetInstance().AuthSmbDevice(context->sharedHost,
             context->userName, context->userPasswd, context->printerInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -1835,7 +1827,7 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,
+        int32_t ret = PrintManagerClient::GetInstance().AuthSmbDevice(context->sharedHost,
             context->userName, context->userPasswd, context->printerInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -1885,17 +1877,11 @@ napi_value NapiInnerPrint::RegisterWatermarkCallback(napi_env env, napi_callback
     }
 
     // Create WatermarkCallback object
-    sptr<WatermarkCallback> callback = new (std::nothrow) WatermarkCallback(env, callbackRef);
-    if (callback == nullptr) {
-        PRINT_HILOGE("Failed to create WatermarkCallback object");
-        NapiPrintUtils::DeleteReference(env, callbackRef);
-        NapiThrowError(env, E_PRINT_GENERIC_FAILURE);
-        return nullptr;
-    }
+    sptr<WatermarkCallback> callback = new WatermarkCallback(env, callbackRef);
 
     // Register to print service
     // Note: If registration fails, WatermarkCallback destructor will clean up callbackRef
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callback);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterWatermarkCallback(callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register watermark callback, ret=%{public}d", ret);
         NapiThrowError(env, ret);
@@ -1928,7 +1914,7 @@ napi_value NapiInnerPrint::UnregisterWatermarkCallback(napi_env env, napi_callba
     }
 
     // Unregister from print service
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    int32_t ret = PrintManagerClient::GetInstance().UnregisterWatermarkCallback();
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to unregister watermark callback, ret=%{public}d", ret);
         NapiThrowError(env, ret);
@@ -1986,7 +1972,7 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
     int32_t result = NapiPrintUtils::GetInt32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
 
     // Notify print service
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(jobId, result);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyWatermarkComplete(jobId, result);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to notify watermark complete, ret=%{public}d", ret);
         NapiThrowError(env, ret);
@@ -2022,13 +2008,9 @@ napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info i
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
     PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
-    sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
-    if (callback == nullptr) {
-        NapiPrintUtils::DeleteReference(env, callbackRef);
-        PRINT_HILOGE("create print callback object fail");
-        return nullptr;
-    }
-    int32_t ret = PrintManagerClient::GetInstance()->On("", PRINT_QUERY_INFO_EVENT_TYPE, callback);
+
+    sptr<IPrintCallback> callback = new PrintCallback(env, callbackRef);
+    int32_t ret = PrintManagerClient::GetInstance().On("", PRINT_QUERY_INFO_EVENT_TYPE, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");
         NapiThrowError(env, ret);
@@ -2060,7 +2042,7 @@ napi_value NapiInnerPrint::OffPrinterInfoQuery(napi_env env, napi_callback_info 
         PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
     }
 
-    int32_t ret = PrintManagerClient::GetInstance()->Off("", PRINT_QUERY_INFO_EVENT_TYPE);
+    int32_t ret = PrintManagerClient::GetInstance().Off("", PRINT_QUERY_INFO_EVENT_TYPE);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to unregister event");
         NapiThrowError(env, ret);
@@ -2155,7 +2137,7 @@ napi_value NapiInnerPrint::StartSharedHostDiscovery(napi_env env, napi_callback_
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->StartSharedHostDiscovery();
+        int32_t ret = PrintManagerClient::GetInstance().StartSharedHostDiscovery();
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start shared host discovery");

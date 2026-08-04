@@ -82,9 +82,9 @@ public:
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
+    static bool ResolveAndValidatePath(const std::string &filePath, std::string &resolvedPath);
     static bool IsPathValidForCreate(const std::string &parentDir, const std::string &fileName);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
-    static std::string GetJobStateChar(const uint32_t state);
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
     static bool ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos);
     static bool IsPrivateIpv4(const std::string &ip);
@@ -93,6 +93,7 @@ public:
     static std::string AnonymizeUUid(const std::string &uuid);
     static std::string AnonymizePrinterId(const std::string &printerId);
     static std::string AnonymizePrinterUri(const std::string &printerUri);
+    static std::string AnonymizePrinterName(const std::string &printerName);
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
     static void AnonymizeAdvancedOptions(Json::Value &advancedOptions);

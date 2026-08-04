@@ -1176,6 +1176,39 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055_NeedRename, TestSize.Leve
     systemData->ClearDiscoveredPrinterList();
 }
 
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_Agent_AddToDiscoveryAndAdded, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    std::string printerId = "fwk.driver.printer.driver:com.example.app:HP_LaserJet";
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetPrinterName("HP LaserJet");
+    info->SetUri("ipp://192.168.56.1:631/printers/HP_LaserJet");
+    info->SetPrinterState(PRINTER_CONNECTED);
+
+    auto discoveryInfo = std::make_shared<PrinterInfo>(*info);
+    discoveryInfo->SetPrinterState(PRINTER_ADDED);
+
+    systemData->InsertAddedPrinter(printerId, *info);
+    systemData->AddPrinterToDiscovery(discoveryInfo);
+
+    PrinterInfo addedInfo;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(printerId, addedInfo));
+    EXPECT_EQ(addedInfo.GetPrinterState(), PRINTER_CONNECTED);
+
+    auto discovered = systemData->QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_NE(discovered, nullptr);
+    EXPECT_EQ(discovered->GetPrinterState(), PRINTER_ADDED);
+
+    systemData->RemovePrinterFromDiscovery(printerId);
+    auto removed = systemData->QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_EQ(removed, nullptr);
+
+    PrinterInfo stillAdded;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(printerId, stillAdded));
+    EXPECT_EQ(stillAdded.GetPrinterState(), PRINTER_CONNECTED);
+}
+
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056_NeedRename, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
@@ -2032,9 +2065,11 @@ HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_EmptyRawData_ShouldNotSave, Tes
 HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_DirNotExist_ShouldNotSave, TestSize.Level1)
 {
     auto systemData = std::make_shared<PrintSystemData>();
-    CleanupIppRawDataDir();
+    std::error_code ec;
+    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
     systemData->SaveIppRawDataFile("printer1", "raw_data");
     EXPECT_FALSE(systemData->HasIppRawDataFile("printer1"));
+    CreateIppRawDataDir();
 }
 
 HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_NormalSave_ShouldCreateFile, TestSize.Level1)
@@ -2060,8 +2095,11 @@ HWTEST_F(PrintSystemDataTest, SaveIppRawDataFile_ReplaceOldFile_ShouldHaveOnlyOn
 HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_DirNotExist_ShouldReturnFalse, TestSize.Level1)
 {
     auto systemData = std::make_shared<PrintSystemData>();
+    std::error_code ec;
+    std::filesystem::remove_all(PRINTER_SERVICE_IPP_RAW_DATA_PATH, ec);
     CleanupIppRawDataDir();
     EXPECT_FALSE(systemData->HasIppRawDataFile("any_printer"));
+    CreateIppRawDataDir();
 }
 
 HWTEST_F(PrintSystemDataTest, HasIppRawDataFile_FileNotExist_ShouldReturnFalse, TestSize.Level1)
@@ -2330,5 +2368,79 @@ HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_VendorAndOptions, 
     EXPECT_EQ(restored.GetVendorJobAttrAbility(), "job");
     EXPECT_TRUE(restored.HasOption());
 }
+
+HWTEST_F(PrintSystemDataTest, ProcessJsonToCapabilityList_ArrayExceedMax_ReturnFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value colorModeList;
+    for (uint32_t i = 0; i <= MAX_CAPABILITY_ARRAY_SIZE; i++) {
+        colorModeList.append(i);
+    }
+    capsJson["supportedColorMode"] = colorModeList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability), false);
+}
+
+HWTEST_F(PrintSystemDataTest, ProcessJsonToCapabilityList_NormalSize_ReturnTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value colorModeList;
+    colorModeList.append(0);
+    colorModeList.append(1);
+    colorModeList.append(2);
+    capsJson["supportedColorMode"] = colorModeList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability), true);
+    std::vector<uint32_t> colorModes;
+    printerCapability.GetSupportedColorMode(colorModes);
+    EXPECT_EQ(colorModes.size(), 3);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrintResolution_ValidAsUInt_ReturnsResolution, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value resolutionList;
+    Json::Value item;
+    item["id"] = "300dpi";
+    item["horizontalDpi"] = 300;
+    item["verticalDpi"] = 600;
+    resolutionList.append(item);
+    capsJson["resolution"] = resolutionList;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToPrintResolution(capsJson, printerCapability), true);
+    std::vector<PrintResolution> resolution;
+    printerCapability.GetResolution(resolution);
+    ASSERT_EQ(resolution.size(), 1);
+    EXPECT_EQ(resolution[0].GetHorizontalDpi(), 300);
+    EXPECT_EQ(resolution[0].GetVerticalDpi(), 600);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrintMargin_ValidAsUInt_ReturnsMargin, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capsJson;
+    Json::Value marginJson;
+    marginJson["top"] = 100;
+    marginJson["bottom"] = 200;
+    marginJson["left"] = 300;
+    marginJson["right"] = 400;
+    capsJson["minMargin"] = marginJson;
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToPrintMargin(capsJson, printerCapability), true);
+    PrintMargin margin;
+    printerCapability.GetMinMargin(margin);
+    EXPECT_EQ(margin.GetTop(), 100);
+    EXPECT_EQ(margin.GetBottom(), 200);
+    EXPECT_EQ(margin.GetLeft(), 300);
+    EXPECT_EQ(margin.GetRight(), 400);
+}
+
 }  // namespace Print
 }  // namespace OHOS

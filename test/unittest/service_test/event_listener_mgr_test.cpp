@@ -23,6 +23,7 @@
 #undef private
 #include "print_log.h"
 #include "print_constant.h"
+#include "ipc_skeleton.h"
 #include "mock_remote_object.h"
 #include "mock_print_callback_proxy.h"
 #include "mock_print_extension_callback_proxy.h"
@@ -575,6 +576,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobStateCallback, TestSize
     cbInfo.cbEventType = PRINT_JOB_STATE_CALLBACK;
     cbInfo.jobId = TEST_JOB_ID;
     cbInfo.printJobInfo = printJob;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallback(printJob->GetJobState(), An<const PrintJob &>())).WillOnce(Return(true));
 
@@ -594,6 +596,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobCallbackAdapterJobState
     cbInfo.jobState = PRINT_JOB_COMPLETED;
     cbInfo.adapterState = PREVIEW_ABILITY_DESTROY;
     cbInfo.fd = 0;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallbackAdapterJobStateChanged(_, _, _)).WillOnce(Return(true));
 
@@ -615,6 +618,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldCallPrintJobCallbackAdapterLayout, 
     cbInfo.oldAttrs = oldAttrs;
     cbInfo.newAttrs = newAttrs;
     cbInfo.fd = 100;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener, OnCallbackAdapterLayout(TEST_JOB_ID, _, _, 100)).WillOnce(Return(true));
 
@@ -722,6 +726,7 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldFilterByJobId, TestSize.Level1)
     cbInfo.cbEventType = PRINT_JOB_STATE_CALLBACK;
     cbInfo.printJobInfo = CreateTestPrintJob(TEST_JOB_ID);
     cbInfo.jobId = TEST_JOB_ID;
+    cbInfo.ownerPid = IPCSkeleton::GetCallingPid();
 
     EXPECT_CALL(*listener1, OnCallback(_, An<const PrintJob &>())).WillOnce(Return(true));
     EXPECT_CALL(*listener2, OnCallback(_, An<const PrintJob &>())).Times(0);

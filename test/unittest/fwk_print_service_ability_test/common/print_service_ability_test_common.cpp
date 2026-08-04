@@ -41,6 +41,9 @@ void PrintServiceAbilityTest::SetUp(void)
     PRINT_HILOGE("PrintServiceAbilityTest_%{public}d", ++testNo);
     parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+    if (PrintServiceAbility::instance_ == nullptr) {
+        PrintServiceAbility::instance_ = new PrintServiceAbility(PRINT_SERVICE_ID, true);
+    }
 }
 
 std::shared_ptr<PrintServiceAbility> PrintServiceAbilityTest::CreateService()
@@ -73,6 +76,11 @@ std::shared_ptr<PrintServiceAbility> PrintServiceAbilityTest::CreateMockService(
 void PrintServiceAbilityTest::TearDown(void)
 {
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+    auto& monitor = PrintCallerAppMonitor::GetInstance();
+    monitor.delayUnload_.store(true);
+    monitor.isMonitoring_.store(false);
+    std::shared_ptr<PrintServiceHelper> nullHelper;
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(nullHelper);
 }
 
 std::string PrintServiceAbilityTest::GetExtensionId(EXTENSION_ID_TYPE type)

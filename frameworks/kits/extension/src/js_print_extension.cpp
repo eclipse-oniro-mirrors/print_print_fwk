@@ -142,11 +142,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
     context->Bind(jsRuntime, shellContextRef.release());
     PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
     napi_set_named_property(engine, extObj, "context", contextObj);
-    auto *workContext = new (std::nothrow) std::weak_ptr<AbilityRuntime::Context>(context);
-    if (workContext == nullptr) {
-        PRINT_HILOGE("Failed to allocate weak_ptr for Print extension context");
-        return false;
-    }
+    auto *workContext = new std::weak_ptr<AbilityRuntime::Context>(context);
     napi_status wrapStatus = napi_wrap(engine, contextObj, workContext,
         [](napi_env, void *data, void *) {
             PRINT_HILOGI("Finalizer for weak_ptr Print extension context is called");
@@ -174,7 +170,7 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
         OnStop();
         return;
     }
-    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
+    PrintManagerClient::GetInstance().LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
 }
 
@@ -226,11 +222,7 @@ sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
 {
     PRINT_HILOGI("JsPrintExtension OnConnect begin.");
     Extension::OnConnect(want);
-    auto remoteObj = new (std::nothrow) Print::PrintExtensionAbilityStub();
-    if (remoteObj == nullptr) {
-        PRINT_HILOGE("remoteObj nullptr.");
-        return nullptr;
-    }
+    auto remoteObj = new Print::PrintExtensionAbilityStub();
     return remoteObj;
 }
 
@@ -255,7 +247,7 @@ void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int star
     napi_value argv[] = { nativeWant };
     CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
     RegisterCb();
-    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
+    PrintManagerClient::GetInstance().LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
 }
 
@@ -292,6 +284,7 @@ napi_value JsPrintExtension::CallObjectMethod(const char *name, napi_value const
 void JsPrintExtension::GetSrcPath(std::string &srcPath)
 {
     PRINT_HILOGI("JsPrintExtension GetSrcPath begin.");
+    PRINT_CHECK_NULL_RETURN_VOID(Extension::abilityInfo_);
     if (!Extension::abilityInfo_->isModuleJson) {
         /* temporary compatibility api8 + config.json */
         srcPath.append(Extension::abilityInfo_->package);
@@ -325,11 +318,7 @@ bool JsPrintExtension::Callback(std::string funcName)
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
-    if (workParam == nullptr) {
-        PRINT_HILOGE("workParam is a nullptr");
-        return false;
-    }
+    WorkParam *workParam = new WorkParam(env, funcName);
     auto workCb = [local](WorkParam *param) {
         if (param == nullptr) {
             PRINT_HILOGE("param is a nullptr");
@@ -369,11 +358,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
-    if (workParam == nullptr) {
-        PRINT_HILOGE("workParam is a nullptr");
-        return false;
-    }
+    WorkParam *workParam = new WorkParam(env, funcName);
     workParam->printerId = printerId;
     
     auto workCb = [local](WorkParam *param) {
@@ -417,11 +402,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
-    if (workParam == nullptr) {
-        PRINT_HILOGE("workParam is a nullptr");
-        return false;
-    }
+    WorkParam *workParam = new WorkParam(env, funcName);
     workParam->job = job;
     
     auto workCb = [local](WorkParam *param) {
@@ -455,7 +436,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
 int32_t JsPrintExtension::RegisterDiscoveryCb()
 {
     PRINT_HILOGD("Register Print Extension Callback");
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStartDiscoverPrinter", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -471,7 +452,7 @@ int32_t JsPrintExtension::RegisterDiscoveryCb()
     if (ret) {
         return ret;
     }
-    ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
+    ret = PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStopDiscoverPrinter", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -489,7 +470,7 @@ int32_t JsPrintExtension::RegisterDiscoveryCb()
 
 int32_t JsPrintExtension::RegisterConnectionCb()
 {
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onConnectPrinter", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -506,7 +487,7 @@ int32_t JsPrintExtension::RegisterConnectionCb()
     if (ret) {
         return ret;
     }
-    ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
+    ret = PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onDisconnectPrinter", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -525,7 +506,7 @@ int32_t JsPrintExtension::RegisterConnectionCb()
 
 int32_t JsPrintExtension::RegisterPrintJobCb()
 {
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
+    int32_t ret = PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onStartPrintJob", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -541,7 +522,7 @@ int32_t JsPrintExtension::RegisterPrintJobCb()
     if (ret) {
         return ret;
     }
-    ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
+    ret = PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onCancelPrintJob", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -559,7 +540,7 @@ int32_t JsPrintExtension::RegisterPrintJobCb()
 
 int32_t JsPrintExtension::RegisterPreviewCb()
 {
-    return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
+    return PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onRequestPreview", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -576,7 +557,7 @@ int32_t JsPrintExtension::RegisterPreviewCb()
 
 int32_t JsPrintExtension::RegisterQueryCapCb()
 {
-    return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
+    return PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onRequestPrinterCapability", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;
@@ -594,7 +575,7 @@ int32_t JsPrintExtension::RegisterQueryCapCb()
 
 int32_t JsPrintExtension::RegisterExtensionCb()
 {
-    return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
+    return PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
             PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.onDestroy", PRINT_API_COUNTED);
             std::shared_ptr<JsPrintExtension> local;

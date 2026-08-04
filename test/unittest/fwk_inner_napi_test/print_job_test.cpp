@@ -497,6 +497,39 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028_NeedRename, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PrintJobTest_ReadLayoutFromParcel_MarginUnmarshallingFails
+ * @tc.desc: Verify ReadLayoutFromParcel returns false when PrintMargin::Unmarshalling fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_ReadLayoutFromParcel_MarginUnmarshallingFails, TestSize.Level1)
+{
+    PrintJob job;
+    Parcel parcel;
+    parcel.WriteUint32(0u);
+    parcel.WriteUint32(0u);
+    parcel.WriteBool(true);
+    EXPECT_FALSE(job.ReadLayoutFromParcel(parcel));
+}
+
+/**
+ * @tc.name: PrintJobTest_ReadLayoutFromParcel_PreviewUnmarshallingFails
+ * @tc.desc: Verify ReadLayoutFromParcel returns false when PrintPreviewAttribute::Unmarshalling fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_ReadLayoutFromParcel_PreviewUnmarshallingFails, TestSize.Level1)
+{
+    PrintJob job;
+    Parcel parcel;
+    parcel.WriteUint32(0u);
+    parcel.WriteUint32(0u);
+    parcel.WriteBool(false);
+    parcel.WriteBool(true);
+    EXPECT_FALSE(job.ReadLayoutFromParcel(parcel));
+}
+
+/**
  * @tc.name: PrintJobTest_ConvertToJsonObject_001
  * @tc.desc: Verify ConvertToJsonObject with all flags false.
  * @tc.type: FUNC

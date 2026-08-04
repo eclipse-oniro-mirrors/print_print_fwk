@@ -53,10 +53,7 @@ T *CopyArray(const std::vector<T> &list, uint32_t &count)
     if (len == 0) {
         return nullptr;
     }
-    T *dest = new (std::nothrow) T[len];
-    if (dest == nullptr) {
-        return nullptr;
-    }
+    T *dest = new T[len];
     if (memset_s(dest, len * sizeof(T), 0, len * sizeof(T)) != 0) {
         delete[] dest;
         dest = nullptr;
@@ -77,10 +74,7 @@ T2 *CopyArray(const std::vector<T1> &list, uint32_t &count, bool (*ConvertFuncti
     if (len == 0) {
         return nullptr;
     }
-    T2 *dest = new (std::nothrow) T2[len];
-    if (dest == nullptr) {
-        return nullptr;
-    }
+    T2 *dest = new T2[len];
     if (memset_s(dest, len * sizeof(T2), 0, len * sizeof(T2)) != 0) {
         delete[] dest;
         dest = nullptr;

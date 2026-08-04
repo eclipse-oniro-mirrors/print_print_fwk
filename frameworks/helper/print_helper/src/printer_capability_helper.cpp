@@ -77,6 +77,7 @@ napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapa
         PrintMargin margin;
         cap.GetMinMargin(margin);
         napi_value jsMargin = PrintMarginHelper::MakeJsObject(env, margin);
+        PRINT_CHECK_NULL_AND_RETURN(jsMargin, nullptr);
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
     }
 
@@ -127,6 +128,7 @@ bool PrinterCapabilityHelper::CreateResolutionList(napi_env env, napi_value &jsP
 
     for (uint32_t index = 0; index < arrLength; index++) {
         napi_value value = PrintResolutionHelper::MakeJsObject(env, resolutionList[index]);
+        PRINT_CHECK_NULL_AND_RETURN(value, false);
         PRINT_CALL_BASE(env, napi_set_element(env, jsResolutionList, index, value), false);
     }
     PRINT_CALL_BASE(env,
@@ -182,6 +184,7 @@ bool PrinterCapabilityHelper::CreateSupportedMediaTypeList(napi_env env, napi_va
     uint32_t arrLength = static_cast<uint32_t>(supportedMediaTypeList.size());
     for (uint32_t index = 0; index < arrLength; index++) {
         napi_value value = NapiPrintUtils::CreateStringUtf8(env, supportedMediaTypeList[index]);
+        PRINT_CHECK_NULL_AND_RETURN(value, false);
         PRINT_CALL_BASE(env, napi_set_element(env, jsSupportedMediaTypeList, index, value), false);
     }
     PRINT_CALL_BASE(

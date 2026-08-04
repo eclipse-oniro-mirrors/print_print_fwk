@@ -61,7 +61,7 @@ void PrintCallbackProxyTest::TearDown(void)
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0001_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -85,7 +85,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0001_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0002_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -121,7 +121,7 @@ MATCHER_P(PrintJobMatcher, oParam, "Match Print Job")
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0003_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -153,7 +153,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0003_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0004_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -185,7 +185,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0004_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0005_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -217,7 +217,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0005_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0006_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -249,7 +249,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0006_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0007_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -273,7 +273,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0007_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0008_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -299,7 +299,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0008_NeedRename, TestSiz
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0009_NeedRename, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -319,7 +319,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0009_NeedRename, TestSiz
 
 HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnTure, TestSize.Level1)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -348,7 +348,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnTure, Tes
 
 HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, TestSize.Level1)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -396,7 +396,7 @@ MATCHER_P(SharedHostsMatcher, oParam, "Match Shared Hosts")
  */
 HWTEST_F(PrintCallbackProxyTest, OnCallback_SharedHosts_Success, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);
@@ -433,7 +433,7 @@ HWTEST_F(PrintCallbackProxyTest, OnCallback_SharedHosts_Success, TestSize.Level0
  */
 HWTEST_F(PrintCallbackProxyTest, OnCallback_SharedHosts_ExceedMaxCount, TestSize.Level0)
 {
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintCallbackProxy>(obj);
     EXPECT_NE(proxy, nullptr);

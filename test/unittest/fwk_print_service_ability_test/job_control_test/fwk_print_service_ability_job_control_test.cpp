@@ -461,7 +461,7 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_SyncMode_ShouldEx
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId("job_001");
     userData->queuedJobList_["job_001"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_001", "job_001");
+    service->CancelPrintJobHandleCallback("ext_001", "job_001", printJob);
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 
@@ -475,7 +475,7 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_AsyncMode_ShouldP
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId("job_002");
     userData->queuedJobList_["job_002"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_002", "job_002");
+    service->CancelPrintJobHandleCallback("ext_002", "job_002", printJob);
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 
@@ -488,7 +488,7 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_ServiceHandlerNul
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId("job_004");
     userData->queuedJobList_["job_004"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_004", "job_004");
+    service->CancelPrintJobHandleCallback("ext_004", "job_004", printJob);
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 
@@ -596,6 +596,29 @@ HWTEST_F(PrintServiceAbilityTest, StartPrintJobInternal, TestSize.Level1)
 }
 
 #endif  // REMOTE_SERVICE_ENABLE
+
+// covers #50: queuedJobList_ entry is null, CancelPrintJob must not deref null
+HWTEST_F(PrintServiceAbilityTest, CancelPrintJob_WhenQueuedJobEntryNull_ShouldReturnInvalid, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string jobId = "123";
+    int32_t userId = 100;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    userData->queuedJobList_[jobId] = nullptr;
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
+}
+
+// covers #49: serviceHandler_ null, notifyAdapterJobChanged must not crash.
+// PostTask path needs a registered print job listener (heavy mock, skipped).
+HWTEST_F(PrintServiceAbilityTest, notifyAdapterJobChanged_WhenServiceHandlerNull_ShouldNotCrash, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    service->serviceHandler_ = nullptr;
+    std::string jobId = "job_005";
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, 0);
+    EXPECT_EQ(service->serviceHandler_, nullptr);
+}
 
 }  // namespace Print
 }  // namespace OHOS

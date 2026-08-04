@@ -93,7 +93,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130_NeedRename, TestS
     EXPECT_EQ(service->AddPrinterToDiscovery(info), E_PRINT_NONE);
     EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
     info.SetPrinterId("1234");
-    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
+    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_INVALID_PARAMETER);
 
     std::shared_ptr<PrinterInfo> info1 = std::make_shared<PrinterInfo>();
     info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);
@@ -479,6 +479,30 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NewPrinter_ShouldA
     std::string globalPrinterId = vendorName + ":" + info.GetPrinterId();
     auto discoveredPrinter = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(discoveredPrinter, nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscoveryDoesNotSkipSameUriAgentPrinter, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string uri = "ipp://10.0.0.2:631/printers/office";
+    PrinterInfo added;
+    added.SetPrinterId("agent-id");
+    added.SetPrinterName("Agent Printer");
+    added.SetUri(uri);
+    added.SetOption(R"({"driver":"AGENT"})");
+    service->printSystemData_.InsertAddedPrinter(added.GetPrinterId(), added);
+
+    const std::string vendorName = "com.test.ext";
+    PrinterInfo discovered;
+    discovered.SetPrinterId("mdns-printer");
+    discovered.SetPrinterName("Discovered Printer");
+    discovered.SetUri(uri);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discovered));
+
+    const std::string globalPrinterId = PrintUtils::GetGlobalId(vendorName, discovered.GetPrinterId());
+    auto discoveredInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    ASSERT_NE(discoveredInfo, nullptr);
+    EXPECT_EQ(discoveredInfo->GetUri(), uri);
 }
 
 /**

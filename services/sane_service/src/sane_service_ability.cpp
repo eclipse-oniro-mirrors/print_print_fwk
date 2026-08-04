@@ -387,6 +387,19 @@ SaneStatus SaneServerManager::GetControlOption(
     SANE_Int option = controlParam.option_;
     int32_t valueType = controlParam.valueType_;
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
+    const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
+    if (saneDesc == nullptr) {
+        SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
+        return SANE_STATUS_INVAL;
+    }
+    /* STRING option must use SCAN_VALUE_STR — otherwise only 4 bytes are
+     * allocated while the SANE backend writes a variable-length string via
+     * strcpy(), causing a stack buffer overflow.
+     */
+    if (saneDesc->type == SANE_TYPE_STRING && valueType != SCAN_VALUE_STR) {
+        SCAN_HILOGE("STRING option accessed with non-STRING valueType %{public}d", valueType);
+        return SANE_STATUS_INVAL;
+    }
     SCAN_HILOGI("valueSize_ = [%{public}d], valueType = [%{public}u]", controlParam.valueSize_, valueType);
     if (valueType == SCAN_VALUE_NUM) {
         int32_t value = 0;
@@ -394,11 +407,6 @@ SaneStatus SaneServerManager::GetControlOption(
             &value, nullptr);
         outParam.valueNumber_ = value;
     } else if (valueType == SCAN_VALUE_STR) {
-        const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
-        if (saneDesc == nullptr) {
-            SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
-            return SANE_STATUS_INVAL;
-        }
         int32_t actualSize = saneDesc->size;
         if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
             SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
@@ -432,14 +440,18 @@ SaneStatus SaneServerManager::SetControlOption(
     SANE_Action action = static_cast<SANE_Action>(controlParam.action_);
     SANE_Int &info = outParam.info_;
     int32_t valueType = controlParam.valueType_;
+    const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
+    if (saneDesc == nullptr) {
+        SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
+        return SANE_STATUS_INVAL;
+    }
+    if (saneDesc->type == SANE_TYPE_STRING && valueType != SCAN_VALUE_STR) {
+        SCAN_HILOGE("STRING option accessed with non-STRING valueType %{public}d", valueType);
+        return SANE_STATUS_INVAL;
+    }
     SCAN_HILOGI("valueType = [%{public}d], option = [%{public}d], action = [%{public}u]", valueType, option, action);
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     if (valueType == SCAN_VALUE_STR) {
-        const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
-        if (saneDesc == nullptr) {
-            SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
-            return SANE_STATUS_INVAL;
-        }
         std::string value = controlParam.valueStr_;
         if (saneDesc->size < 0 || value.size() >= static_cast<size_t>(saneDesc->size)) {
             SCAN_HILOGE("String value too long for option %{public}d", option);

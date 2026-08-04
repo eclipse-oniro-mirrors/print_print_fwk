@@ -55,7 +55,7 @@ sptr<IPrintCallback> CreateMockListener(FuzzedDataProvider *dataProvider)
     if (createNull) {
         return nullptr;
     }
-    sptr<IPrintCallback> listener = new(std::nothrow) MockPrintCallbackStub();
+    sptr<IPrintCallback> listener = new MockPrintCallbackStub();
     return listener;
 }
 
@@ -85,7 +85,7 @@ std::shared_ptr<PrintAttributes> CreateFuzzPrintAttributes(FuzzedDataProvider *d
 void TestExecuteJobBlock(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -104,7 +104,7 @@ void TestExecuteJobBlock(const uint8_t *data, size_t size, FuzzedDataProvider *d
 void TestExecuteJobSuccess(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -123,7 +123,7 @@ void TestExecuteJobSuccess(const uint8_t *data, size_t size, FuzzedDataProvider 
 void TestExecuteJobFail(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -142,7 +142,7 @@ void TestExecuteJobFail(const uint8_t *data, size_t size, FuzzedDataProvider *da
 void TestExecuteJobCancel(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -161,7 +161,7 @@ void TestExecuteJobCancel(const uint8_t *data, size_t size, FuzzedDataProvider *
 void TestExecuteJobStateCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -181,7 +181,7 @@ void TestExecuteJobStateCallback(const uint8_t *data, size_t size, FuzzedDataPro
 void TestExecuteJobCallbackAdapterWithFd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -204,7 +204,7 @@ void TestExecuteJobCallbackAdapterWithFd(const uint8_t *data, size_t size, Fuzze
 void TestExecuteJobCallbackAdapterWithAttrs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -226,7 +226,7 @@ void TestExecuteJobCallbackAdapterWithAttrs(const uint8_t *data, size_t size, Fu
 void TestExecuteJobCallbackAdapterFail(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -248,7 +248,7 @@ void TestExecuteJobCallbackAdapterFail(const uint8_t *data, size_t size, FuzzedD
 void TestExecuteJobFileGetAdapter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -268,7 +268,7 @@ void TestExecuteJobFileGetAdapter(const uint8_t *data, size_t size, FuzzedDataPr
 void TestExecuteUnknownType(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -288,7 +288,7 @@ void TestExecuteUnknownType(const uint8_t *data, size_t size, FuzzedDataProvider
 void TestExecuteNoListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -304,7 +304,7 @@ void TestExecuteNoListener(const uint8_t *data, size_t size, FuzzedDataProvider 
 void TestIsRemoteDied(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -330,7 +330,7 @@ void TestIsRemoteDied(const uint8_t *data, size_t size, FuzzedDataProvider *data
 void TestClear(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -348,7 +348,7 @@ void TestClear(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvide
 void TestSetListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -365,7 +365,7 @@ void TestSetListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
 void TestDeleteListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),
@@ -382,7 +382,7 @@ void TestDeleteListener(const uint8_t *data, size_t size, FuzzedDataProvider *da
 void TestHasJobId(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     sptr<IRemoteObject::DeathRecipient> deathRecipient =
-        new(std::nothrow) PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
+        new PrintCommonDeathRecipient([](const sptr<IRemoteObject> &) {});
     auto callback = std::make_shared<PrintJobEventCallback>(
         dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER),
         dataProvider->ConsumeIntegralInRange<pid_t>(0, MAX_SET_NUMBER),

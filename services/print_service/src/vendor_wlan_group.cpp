@@ -14,6 +14,7 @@
  */
 
 #include "vendor_wlan_group.h"
+#include "print_constant.h"
 #include "print_log.h"
 #include "print_utils.h"
 #include "file_ex.h"
@@ -56,11 +57,7 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
         return true;
     }
 
-    HisysEventUtil::ReportFailureEvent(HisysEventParams{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = NO_VENDOR_SUPPORT,
-        .printerModel = printerModel
-    });
+    HisysEventUtil::ReportConnectFailure(HisysEventUtil::NO_VENDOR_SUPPORT, printerModel);
     PRINT_HILOGE("no vendor can query capability.");
     return false;
 }
@@ -86,11 +83,7 @@ bool VendorWlanGroup::TryConnectWithBsuni(const std::string &printerId, const st
     if (ConnectByBsuni(printerId)) {
         return true;
     }
-    HisysEventUtil::ReportFailureEvent(HisysEventParams{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = BSUNI_DRIVER_SUPPORT_CONNECT_FAIL,
-        .printerModel = printerModel
-    });
+    HisysEventUtil::ReportConnectFailure(HisysEventUtil::BSUNI_DRIVER_SUPPORT_CONNECT_FAIL, printerModel);
     return false;
 }
 
@@ -107,10 +100,7 @@ bool VendorWlanGroup::OnQueryCapabilityByIp(const std::string &printerIp, const 
     } else if (ConnectByIppEverywhere(printerIp, protocol, printQueue)) {
         return true;
     }
-    HisysEventUtil::ReportFailureEvent(HisysEventParams{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = NO_VENDOR_SUPPORT
-    });
+    HisysEventUtil::ReportConnectFailure(HisysEventUtil::NO_VENDOR_SUPPORT);
     PRINT_HILOGE("no vendor can query capability by ip.");
     return false;
 }
@@ -392,19 +382,27 @@ bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 
 void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std::string &groupPrinterId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
-    auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
-    if (retPair.second) {
-        PRINT_HILOGI("add new groupPrinterId");
+    std::string oldGroupPrinterId;
+    {
+        std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
+        auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
+        if (retPair.second) {
+            PRINT_HILOGI("add new groupPrinterId");
+            return;
+        }
+        if (retPair.first->second == groupPrinterId) {
+            PRINT_HILOGD("not need update groupPrinterId");
+            return;
+        }
+        PRINT_HILOGI("update groupPrinterId");
+        oldGroupPrinterId = retPair.first->second;
+        retPair.first->second = groupPrinterId;
+    }
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("parentVendorManager is null.");
         return;
     }
-    if (retPair.first->second == groupPrinterId) {
-        PRINT_HILOGD("not need update groupPrinterId");
-        return;
-    }
-    PRINT_HILOGI("update groupPrinterId");
-    parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), retPair.first->second);
-    retPair.first->second = groupPrinterId;
+    parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), oldGroupPrinterId);
 }
 
 bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)
@@ -621,6 +619,7 @@ bool VendorWlanGroup::ConnectPrinterByIdAndPpd(const std::string &printerId, con
 
 bool VendorWlanGroup::ConnectByBsuni(const std::string &printerId)
 {
+    PRINT_CHECK_NULL_AND_RETURN(parentVendorManager, false);
     SetGroupPrinterFromVendorGroupList(printerId, VENDOR_BSUNI_DRIVER);
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
     auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
