@@ -193,8 +193,6 @@ uint32_t PrintTask::CallSpooler(
         return E_PRINT_NO_PERMISSION;
     }
     size_t argc = NapiPrintUtils::MAX_ARGC;
-    size_t contextIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
-    size_t callBackIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
     size_t argMaxNum = isPrintByAdapter ? NapiPrintUtils::ARGC_FIVE : NapiPrintUtils::ARGC_THREE;
     napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     napi_value thisArg = nullptr;
@@ -210,18 +208,40 @@ uint32_t PrintTask::CallSpooler(
     }
 
     auto asyncContext = std::make_shared<BaseContext>();
+    uint32_t ret = SetupAsyncContext(env, argv, argc, argMaxNum, asyncContext);
+    if (ret != E_PRINT_NONE) {
+        return ret;
+    }
+
+    ret = StartUIExtensionAbility(asyncContext, adapterParam);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("StartUIExtensionAbility failed, ret=%{public}u", ret);
+        if (asyncContext->deferred != nullptr) {
+            napi_reject_deferred(env, asyncContext->deferred,
+                NapiPrintUtils::CreateJsError(env, ret));
+            asyncContext->deferred = nullptr;
+        }
+    }
+    PRINT_HILOGI("end CallSpooler");
+    return ret;
+}
+
+uint32_t PrintTask::SetupAsyncContext(napi_env env, napi_value argv[], size_t argc, size_t argMaxNum,
+    std::shared_ptr<BaseContext> &asyncContext)
+{
     if (asyncContext == nullptr) {
         PRINT_HILOGE("create asyncContext failed.");
         return E_PRINT_SERVER_FAILURE;
     }
     asyncContext->env = env;
     asyncContext->requestType = PrintRequestType::REQUEST_TYPE_START;
+    size_t contextIndex = (argMaxNum == NapiPrintUtils::ARGC_FIVE) ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
     if (!ParseAbilityContextReq(env, argv[contextIndex], asyncContext->context, asyncContext->uiExtensionContext)) {
         PRINT_HILOGE("invalid parameters.");
         return E_PRINT_INVALID_PARAMETER;
     }
-
     if (argc == argMaxNum) {
+        size_t callBackIndex = (argMaxNum == NapiPrintUtils::ARGC_FIVE) ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
         napi_valuetype valueType = napi_undefined;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[callBackIndex], &valueType), E_PRINT_INVALID_PARAMETER);
         if (valueType == napi_function) {
@@ -231,12 +251,11 @@ uint32_t PrintTask::CallSpooler(
             PRINT_HILOGD("is a callback api");
         }
     } else {
+        napi_value result = nullptr;
         PRINT_CALL_BASE(env, napi_create_promise(env, &asyncContext->deferred, &result), E_PRINT_INVALID_PARAMETER);
         PRINT_HILOGD("is a promise api");
     }
-    uint32_t ret = StartUIExtensionAbility(asyncContext, adapterParam);
-    PRINT_HILOGI("end CallSpooler");
-    return ret;
+    return E_PRINT_NONE;
 }
 
 bool PrintTask::ParseAbilityContextReq(napi_env env, const napi_value &obj,

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -458,6 +458,7 @@ int32_t ScanServiceProxy::ExportScanPicture(const std::string scannerId,
         int fd = reply.ReadFileDescriptor();
         if (fd < 0) {
             SCAN_HILOGE("ReadFileDescriptor failed at index %{public}d", i);
+            for (auto &fd : exportedFdList) { CLOSE_FD_IF_VALID(fd); }
             return E_SCAN_RPC_FAILURE;
         }
         exportedFdList.push_back(fd);

@@ -246,7 +246,8 @@ int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *para
         PRINT_HILOGE("failed to allocate cipher buffer");
         return HKS_ERROR_MALLOC_FAIL;
     }
-    
+    cipherBlob.size = bufferSize;
+
     if (memcpy_s(cipherBlob.data, bufferSize, nonce.data, NONCE_LEN) != EOK) {
         PRINT_HILOGE("memcpy nonce failed");
         PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
@@ -260,8 +261,7 @@ int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *para
         PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
         return ret;
     }
-    
-    cipherBlob.size = bufferSize;
+
     return HKS_SUCCESS;
 }
 

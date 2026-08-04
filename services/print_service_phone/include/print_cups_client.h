@@ -55,6 +55,18 @@ struct JobParameters {
     Json::Value advancedOpsJson;
     bool isReverse = false;
     bool isCollate = true;
+
+    ~JobParameters()
+    {
+        for (auto &fd : fdList) {
+            CLOSE_FD_IF_VALID(fd);
+        }
+        fdList.clear();
+    }
+    JobParameters(const JobParameters &) = delete;
+    JobParameters &operator=(const JobParameters &) = delete;
+    JobParameters(JobParameters &&) = delete;
+    JobParameters &operator=(JobParameters &&) = delete;
 };
 
 enum StatePolicy {
@@ -99,6 +111,11 @@ struct JobMonitorParam {
     {
         if (http != nullptr) { httpClose(http); }
     }
+
+    JobMonitorParam(const JobMonitorParam &) = delete;
+    JobMonitorParam &operator=(const JobMonitorParam &) = delete;
+    JobMonitorParam(JobMonitorParam &&) = delete;
+    JobMonitorParam &operator=(JobMonitorParam &&) = delete;
 };
 struct MediaSize {
     std::string name;

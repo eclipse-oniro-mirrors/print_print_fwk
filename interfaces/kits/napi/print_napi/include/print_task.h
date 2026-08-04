@@ -57,6 +57,8 @@ public:
 private:
     uint32_t CallSpooler(napi_env env, napi_callback_info info, const std::shared_ptr<AdapterParam> &adapterParam,
         bool isPrintByAdapter);
+    uint32_t SetupAsyncContext(napi_env env, napi_value argv[], size_t argc, size_t argMaxNum,
+        std::shared_ptr<BaseContext> &asyncContext);
     bool ParseAbilityContextReq(napi_env env, const napi_value &obj,
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext,
         std::shared_ptr<OHOS::AbilityRuntime::UIExtensionContext> &uiExtensionContext);
