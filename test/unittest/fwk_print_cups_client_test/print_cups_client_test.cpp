@@ -160,6 +160,52 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003_NeedRename, TestSize.Leve
 }
 
 /**
+ * @tc.name: PrintCupsClientTest_SymlinkRecreate
+ * @tc.desc: SymlinkDirectory recreates dangling symlink
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_SymlinkRecreate, TestSize.Level0)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string base = std::filesystem::current_path().string();
+    std::string srcDir = base + "/PrintCupsClientTest_SymlinkRecreate_srcDir";
+    std::string destDir = base + "/PrintCupsClientTest_SymlinkRecreate_destDir";
+    const char *fileName = "PrintCupsClientTestFileName";
+
+    if (access(srcDir.c_str(), F_OK) != 0) {
+        mkdir(srcDir.c_str(), DIR_MODE);
+    }
+    if (access(destDir.c_str(), F_OK) != 0) {
+        mkdir(destDir.c_str(), DIR_MODE);
+    }
+
+    std::string srcFilePath = srcDir + "/" + fileName;
+    std::ofstream testSrcFile(srcFilePath.c_str(), std::ios::out);
+    EXPECT_EQ(testSrcFile.is_open(), true);
+    testSrcFile.close();
+
+    std::string destFilePath = destDir + "/" + fileName;
+    std::string missingTarget = base + "/PrintCupsClientTest_SymlinkRecreate_missing";
+    EXPECT_EQ(symlink(missingTarget.c_str(), destFilePath.c_str()), 0);
+
+    struct stat beforeStat = {};
+    EXPECT_EQ(lstat(destFilePath.c_str(), &beforeStat), 0);
+    EXPECT_EQ(S_ISLNK(beforeStat.st_mode), true);
+    EXPECT_NE(access(destFilePath.c_str(), F_OK), 0);
+
+    printCupsClient.SymlinkDirectory(srcDir.c_str(), destDir.c_str());
+
+    struct stat afterStat = {};
+    EXPECT_EQ(lstat(destFilePath.c_str(), &afterStat), 0);
+    EXPECT_EQ(S_ISLNK(afterStat.st_mode), true);
+    EXPECT_EQ(access(destFilePath.c_str(), F_OK), 0);
+
+    EXPECT_GE(std::filesystem::remove_all(srcDir), 0);
+    EXPECT_GE(std::filesystem::remove_all(destDir), 0);
+}
+
+/**
  * @tc.name: PrintCupsClientTest_0004
  * @tc.desc: CopyDirectory
  * @tc.type: FUNC
