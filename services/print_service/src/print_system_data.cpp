@@ -554,11 +554,14 @@ void PrintSystemData::CleanIppRawDataFiles()
             continue;
         }
         std::string timestampStr = fileName.substr(underscorePos + 1);
-        uint64_t fileTimestamp = 0;
         char *endPtr = nullptr;
-        fileTimestamp = std::strtoull(timestampStr.c_str(), &endPtr, DECIMAL_BASE);
+        int64_t fileTimestamp = std::strtoll(timestampStr.c_str(), &endPtr, DECIMAL_BASE);
         if (endPtr == timestampStr.c_str() || *endPtr != '\0') {
             PRINT_HILOGW("Invalid timestamp in file: %{public}s", fileName.c_str());
+            continue;
+        }
+        if (fileTimestamp > nowEpochSeconds) {
+            PRINT_HILOGW("File timestamp is in the future, skip file: %{public}s", fileName.c_str());
             continue;
         }
         if (nowEpochSeconds - fileTimestamp > IPP_RAW_DATA_EXPIRE_SECONDS) {
