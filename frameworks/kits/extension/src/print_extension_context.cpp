@@ -33,7 +33,8 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
     ErrCode innerErr = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     return printErr;
 }
@@ -46,7 +47,8 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want, const AAFwk
     ErrCode innerErr = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     return printErr;
 }
@@ -58,7 +60,8 @@ bool PrintExtensionContext::ConnectAbility(
     ErrCode innerErr = ConnectionManager::GetInstance().ConnectAbility(token_, want, connectCallback);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::ConnectAbility is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::ConnectAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     return printErr == Print::E_PRINT_NONE;
 }
@@ -72,7 +75,8 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, 
     ErrCode innerErr = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     return printErr;
 }
@@ -86,7 +90,8 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(
     ErrCode innerErr = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE, accountId);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     return printErr;
 }
@@ -99,7 +104,8 @@ bool PrintExtensionContext::ConnectAbilityWithAccount(
         connectCallback);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::ConnectAbilityWithAccount is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::ConnectAbilityWithAccount is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     return printErr == Print::E_PRINT_NONE;
 }
@@ -111,7 +117,8 @@ ErrCode PrintExtensionContext::DisconnectAbility(
     ErrCode innerErr = ConnectionManager::GetInstance().DisconnectAbility(token_, want.GetElement(), connectCallback);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("%{public}s end DisconnectAbility error, err=%{public}d", __func__, printErr);
+        PRINT_HILOGE("%{public}s end DisconnectAbility error, err=%{public}d, innerErr=%{public}d",
+            __func__, printErr, innerErr);
     }
     PRINT_HILOGD("%{public}s end DisconnectAbility", __func__);
     return printErr;
@@ -125,7 +132,8 @@ ErrCode PrintExtensionContext::TerminateAbility()
     ErrCode innerErr = client->TerminateAbility(token_, -1, nullptr);
     ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
     if (printErr != Print::E_PRINT_NONE) {
-        PRINT_HILOGE("PrintExtensionContext::TerminateAbility is failed, err=%{public}d", printErr);
+        PRINT_HILOGE("PrintExtensionContext::TerminateAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     PRINT_HILOGD("%{public}s end.", __func__);
     return printErr;
