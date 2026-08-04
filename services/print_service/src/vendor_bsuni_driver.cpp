@@ -18,6 +18,7 @@
 #include "parameter.h"
 #include "print_log.h"
 #include "vendor_helper.h"
+#include "hisys_event_util.h"
 
 using namespace OHOS::Print;
 namespace {
@@ -583,45 +584,72 @@ void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> 
     PRINT_HILOGD("OnPrinterCapabilityQueried enter");
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
+        HisysEventUtil::ReportConnectFault(
+            HisysEventUtil::SCENE_BSUNI_CONNECT,
+            HisysEventUtil::BSUNI_CAPABILITY_INFO_NULL);
         return;
     }
     if (vendorManager == nullptr) {
         PRINT_HILOGW("vendorManager is null");
+        HisysEventUtil::ReportConnectFault(
+            HisysEventUtil::SCENE_BSUNI_CONNECT,
+            HisysEventUtil::BSUNI_CAPABILITY_MANAGER_NULL);
         return;
     }
     printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
-    std::string connectQueue = vendorManager->GetConnectingQueue();
-    std::string connectProtocol = vendorManager->GetConnectingProtocol();
-    if (!connectQueue.empty() && (connectProtocol == "ipp" || connectProtocol == "ipps")
-        && !vendorManager->IsBsunidriverSupport(*printerInfo)) {
-        PRINT_HILOGW("Queue specified but no URI found, connect failed!");
+    if (!TryBuildPrinterUri(*printerInfo)) {
         return;
-    }
-    if (!printerInfo->HasUri()) {
-        PRINT_HILOGW("Building printerInfo!");
-        if (connectProtocol.empty() || connectProtocol == "auto") {
-            PRINT_HILOGW("Require Protocol!");
-            return;
-        }
-        std::string connectIp = vendorManager->GetConnectingPrinter();
-        if (connectIp.empty() || connectIp != printerInfo->GetPrinterId()) {
-            PRINT_HILOGW("Wrong printerIp!");
-            return;
-        }
-        printerInfo->SetPrinterId(connectIp);
-        printerInfo->SetPrinterName(connectIp);
-        std::string printerUri = CreateUriByIpAndProtocol(connectIp, connectProtocol);
-        if (printerUri.empty()) {
-            PRINT_HILOGW("create uri failed.");
-            return;
-        }
-        printerInfo->SetUri(printerUri);
-        PRINT_HILOGI("Building printerInfo Success!");
     }
     vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
     vendorManager->OnPrinterCapabilityQueried(GetVendorName(), *printerInfo);
     syncWait.Notify();
     PRINT_HILOGD("OnPrinterCapabilityQueried quit");
+}
+
+bool VendorBsuniDriver::TryBuildPrinterUri(PrinterInfo &printerInfo)
+{
+    std::string connectQueue = vendorManager->GetConnectingQueue();
+    std::string connectProtocol = vendorManager->GetConnectingProtocol();
+    if (!connectQueue.empty() && (connectProtocol == "ipp" || connectProtocol == "ipps")
+        && !vendorManager->IsBsunidriverSupport(printerInfo)) {
+        PRINT_HILOGW("Queue specified but no URI found, connect failed!");
+        HisysEventUtil::ReportConnectFault(
+            HisysEventUtil::SCENE_BSUNI_CONNECT,
+            HisysEventUtil::BSUNI_CAPABILITY_PROTOCOL_MISMATCH);
+        return false;
+    }
+    if (printerInfo.HasUri()) {
+        return true;
+    }
+    PRINT_HILOGW("Building printerInfo!");
+    if (connectProtocol.empty() || connectProtocol == "auto") {
+        PRINT_HILOGW("Require Protocol!");
+        HisysEventUtil::ReportConnectFault(
+            HisysEventUtil::SCENE_BSUNI_CONNECT,
+            HisysEventUtil::BSUNI_CAPABILITY_NO_URI);
+        return false;
+    }
+    std::string connectIp = vendorManager->GetConnectingPrinter();
+    if (connectIp.empty() || connectIp != printerInfo.GetPrinterId()) {
+        PRINT_HILOGW("Wrong printerIp!");
+        HisysEventUtil::ReportConnectFault(
+            HisysEventUtil::SCENE_BSUNI_CONNECT,
+            HisysEventUtil::BSUNI_CAPABILITY_IP_MISMATCH);
+        return false;
+    }
+    printerInfo.SetPrinterId(connectIp);
+    printerInfo.SetPrinterName(connectIp);
+    std::string printerUri = CreateUriByIpAndProtocol(connectIp, connectProtocol);
+    if (printerUri.empty()) {
+        PRINT_HILOGW("create uri failed.");
+        HisysEventUtil::ReportConnectFault(
+            HisysEventUtil::SCENE_BSUNI_CONNECT,
+            HisysEventUtil::BSUNI_CAPABILITY_UNSUPPORTED_PROTOCOL);
+        return false;
+    }
+    printerInfo.SetUri(printerUri);
+    PRINT_HILOGI("Building printerInfo Success!");
+    return true;
 }
 
 #ifdef ENTERPRISE_ENABLE

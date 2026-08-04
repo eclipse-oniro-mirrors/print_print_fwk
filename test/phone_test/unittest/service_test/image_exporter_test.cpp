@@ -17,6 +17,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include "image_exporter.h"
 #include "scan_picture_data.h"
 #include "scan_constant.h"
@@ -32,7 +33,7 @@ constexpr int32_t TEST_DPI = 300;
 constexpr int32_t RGB_CHANNELS = 3;
 constexpr uint8_t DEFAULT_PIXEL_VALUE = 128;
 constexpr mode_t DIR_PERMISSION_MODE = 0755;
-constexpr int32_t EXPECTED_ROW_BYTES_RGB = TEST_WIDTH * RGB_CHANNELS;
+constexpr int32_t DEFAULT_USER_ID = 100;
 
 class ImageExporterTest : public ::testing::Test {
 public:
@@ -50,8 +51,19 @@ private:
 
 void ImageExporterTest::SetUp()
 {
-    testDir_ = "/tmp/image_exporter_test_" + std::to_string(getpid());
+    testDir_ = "/data/service/el2/" + std::to_string(DEFAULT_USER_ID) +
+               "/print_service/image_exporter_test_" + std::to_string(getpid());
+    // Recursively create all parent directories (mkdir -p behavior)
+    for (size_t pos = 1; pos < testDir_.size();) {
+        size_t slashPos = testDir_.find('/', pos);
+        if (slashPos == std::string::npos) {
+            break;
+        }
+        mkdir(testDir_.substr(0, slashPos).c_str(), DIR_PERMISSION_MODE);
+        pos = slashPos + 1;
+    }
     mkdir(testDir_.c_str(), DIR_PERMISSION_MODE);
+    ASSERT_TRUE(access(testDir_.c_str(), F_OK) == 0) << "Failed to create test directory: " << testDir_;
 }
 
 void ImageExporterTest::TearDown()
@@ -62,7 +74,22 @@ void ImageExporterTest::TearDown()
         }
     }
     createdFiles_.clear();
-    
+
+    // Remove residual files (e.g., exported PNG/TIFF not tracked in createdFiles_)
+    DIR *dir = opendir(testDir_.c_str());
+    if (dir != nullptr) {
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            std::string name(entry->d_name);
+            if (name == "." || name == "..") {
+                continue;
+            }
+            std::string filePath = testDir_ + "/" + name;
+            remove(filePath.c_str());
+        }
+        closedir(dir);
+    }
+
     if (access(testDir_.c_str(), F_OK) == 0) {
         remove(testDir_.c_str());
     }
@@ -105,6 +132,7 @@ void ImageExporterTest::CreateTestMetadata(const std::string& metaPath, int32_t 
 void ImageExporterTest::CreateTestJpegFile(const std::string& jpegPath)
 {
     std::ofstream jpegFile(jpegPath);
+    ASSERT_TRUE(jpegFile.is_open());
     jpegFile << "fake_jpeg_data";
     jpegFile.close();
     createdFiles_.push_back(jpegPath);

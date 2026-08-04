@@ -38,17 +38,11 @@ ScanCallback::~ScanCallback()
         return;
     }
     SCAN_HILOGI("callback has been destroyed");
-    Param *param = new (std::nothrow) Param;
-    if (param == nullptr) {
-        return;
-    }
+    Param *param = new Param;
     param->env = env_;
     param->callbackRef = ref_;
     auto task = [param]() {
         SCAN_HILOGI("napi_send_event ScanCallback DeleteReference");
-        if (param == nullptr) {
-            return;
-        }
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
@@ -139,11 +133,7 @@ bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
     SCAN_HILOGI("Enter OnCallback::ScanDeviceInfo");
 
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        SCAN_HILOGE("Failed to create callback parameter");
-        return false;
-    }
+    CallbackParam *param = new CallbackParam;
 
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(state, info);
@@ -161,11 +151,7 @@ bool ScanCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info
 {
     SCAN_HILOGD("Enter OnCallback::ScanDeviceInfo");
 
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        SCAN_HILOGE("Failed to create callback parameter");
-        return false;
-    }
+    CallbackParam *param = new CallbackParam;
 
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackSyncParam(state, info);

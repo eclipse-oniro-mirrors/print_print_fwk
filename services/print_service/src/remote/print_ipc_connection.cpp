@@ -40,18 +40,16 @@ void PrintIpcConnection::OnAbilityConnectDone(
         remoteObject_ = remoteObject;
         wptr<PrintIpcConnection> weakThis = this;
         deathRecipient_ = sptr<IRemoteObject::DeathRecipient>(
-            new (std::nothrow) PrintCommonDeathRecipient([weakThis](const sptr<IRemoteObject> &remote) {
+            new PrintCommonDeathRecipient([weakThis](const sptr<IRemoteObject> &remote) {
                 sptr<PrintIpcConnection> connection = weakThis.promote();
                 PRINT_CHECK_NULL_RETURN_VOID(connection);
                 PRINT_HILOGI("Remote service died, attempting reconnect");
                 std::lock_guard<std::mutex> lock(connection->mutex_);
                 connection->remoteObject_ = nullptr;
                 connection->deathRecipient_ = nullptr;
-                
                 RemoteServiceAdapter::GetInstance().OnRemoteServiceDied();
             }));
         
-        PRINT_CHECK_NULL_RETURN_VOID(deathRecipient_);
         if (!remoteObject_->AddDeathRecipient(deathRecipient_)) {
             PRINT_HILOGW("AddDeathRecipient failed during connect");
         }

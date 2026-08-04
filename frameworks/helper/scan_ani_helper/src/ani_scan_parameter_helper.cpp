@@ -59,7 +59,9 @@ ani_object AniScanParameterHelper::CreateScanParameter(ani_env *env, const ScanO
     desc.GetOptionConstraintString(constraintString);
     if (!constraintString.empty()) {
         ani_object stringArray = CreateAniStringArray(env, constraintString);
-        SetRefProperty(env, obj, PARAM_OPTION_CONSTRAINT_STRING, stringArray);
+        if (stringArray != nullptr) {
+            SetRefProperty(env, obj, PARAM_OPTION_CONSTRAINT_STRING, stringArray);
+        }
     }
 
     std::vector<int32_t> constraintInt;

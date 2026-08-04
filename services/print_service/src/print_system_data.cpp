@@ -200,12 +200,16 @@ bool PrintSystemData::Init()
     if (ec) {
         PRINT_HILOGW("Failed to open printers directory: %{public}s.", ec.message().c_str());
         return false;
-    } else {
-        for (const auto &entry : std::filesystem::directory_iterator(printersDir)) {
-            if (!entry.is_directory()) {
-                ReadJsonFile(entry.path());
+    }
+    for (const auto &entry : iter) {
+        if (entry.is_directory(ec)) {
+            if (ec) {
+                PRINT_HILOGW("is_directory ec error: %{public}s.", ec.message().c_str());
+                ec.clear();
             }
+            continue;
         }
+        ReadJsonFile(entry.path());
     }
 
     Json::Value printerListJson;
@@ -720,7 +724,8 @@ bool PrintSystemData::UpdatePrinterDeviceId(const std::string &printerId, const 
             return false;
         }
         info->SetDeviceId(deviceId);
-        PRINT_HILOGI("UpdatePrinterDeviceId success, deviceId: %{public}s", deviceId.c_str());
+        PRINT_HILOGI("UpdatePrinterDeviceId success, deviceId: %{public}s",
+            PrintUtils::AnonymizePrinterId(deviceId).c_str());
         return true;
     }
     PRINT_HILOGE("Unable to find the corresponding printId.");
@@ -783,7 +788,8 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
                 }
             }
         }
-        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s",
+            PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
         printerNameList.push_back(info->GetPrinterName());
     }
 }
@@ -807,7 +813,8 @@ void PrintSystemData::GetRawAddedPrinterListFromSystemData(std::vector<std::stri
             if (optionJson.isMember("driver") && optionJson["driver"].isString() &&
                 optionJson["driver"].asString() == "RAW") {
                 PRINT_HILOGD(
-                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s",
+                    PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
                 printerNameList.push_back(info->GetPrinterName());
             }
         }
@@ -1115,8 +1122,8 @@ bool PrintSystemData::ConvertJsonToPrintResolution(Json::Value &capsJson, Printe
                 return false;
             }
             resolution.SetId(item["id"].asString());
-            resolution.SetHorizontalDpi(item["horizontalDpi"].asInt());
-            resolution.SetVerticalDpi(item["verticalDpi"].asInt());
+            resolution.SetHorizontalDpi(item["horizontalDpi"].asUInt());
+            resolution.SetVerticalDpi(item["verticalDpi"].asUInt());
             return true;
         }
     );
@@ -1137,7 +1144,7 @@ bool PrintSystemData::ConvertJsonToSupportedDuplexMode(Json::Value &capsJson, Pr
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedDuplexMode", printerCapability,
         &PrinterCapability::SetSupportedDuplexMode,
         [](const Json::Value &item, uint32_t &duplexMode) -> bool {
-            duplexMode = item.asInt();
+            duplexMode = item.asUInt();
             return true;
         });
 }
@@ -1167,7 +1174,7 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(Json::Value &capsJson, P
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedOrientation", printerCapability,
         &PrinterCapability::SetSupportedOrientation,
         [](const Json::Value &item, uint32_t &orientation) -> bool {
-            orientation = item.asInt();
+            orientation = item.asUInt();
             return true;
         });
 }
@@ -1188,10 +1195,10 @@ bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCap
         PRINT_HILOGE("Invalid format,key is minMargin");
         return false;
     }
-    minMargin.SetTop(marginJson["top"].asInt());
-    minMargin.SetBottom(marginJson["bottom"].asInt());
-    minMargin.SetLeft(marginJson["left"].asInt());
-    minMargin.SetRight(marginJson["right"].asInt());
+    minMargin.SetTop(marginJson["top"].asUInt());
+    minMargin.SetBottom(marginJson["bottom"].asUInt());
+    minMargin.SetLeft(marginJson["left"].asUInt());
+    minMargin.SetRight(marginJson["right"].asUInt());
     printerCapability.SetMinMargin(minMargin);
     PRINT_HILOGD("ProcessJsonToCapabilityList success, key is minMargin");
     return true;
@@ -1670,14 +1677,11 @@ void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::str
         PRINT_HILOGW("empty string detected!");
         return;
     }
-    auto printEventContainer = printEventMap_.Find(printerId);
-    if (printEventContainer == nullptr) {
-        auto eventContainer = std::make_shared<PrintEventContainer>(printerId);
-        eventContainer->AddEventCode(type, code);
-        printEventMap_.Insert(printerId, eventContainer);
-    } else {
-        printEventContainer->AddEventCode(type, code);
-    }
+    auto printEventContainer = printEventMap_.FindOrInsert(printerId,
+        [&printerId]() -> std::shared_ptr<PrintEventContainer> {
+            return std::make_shared<PrintEventContainer>(printerId);
+        });
+    printEventContainer->AddEventCode(type, code);
 }
 void PrintSystemData::ClearPrintEvents(const std::string &printerId, const std::string &type)
 {

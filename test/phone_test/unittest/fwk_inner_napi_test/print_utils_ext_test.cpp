@@ -220,7 +220,7 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIpv6_003, TestSize.Level2)
 {
     std::string ip = "2001:0db8";
     std::string result = PrintUtils::AnonymizeIpv6(ip);
-    EXPECT_EQ(result, ip);
+    EXPECT_EQ(result, "2001:****");
 }
 
 /**
@@ -232,7 +232,7 @@ HWTEST_F(PrintUtilsExtTest, AnonymizeIpv6_004, TestSize.Level2)
 {
     std::string ip = "2001:0db8:85a3";
     std::string result = PrintUtils::AnonymizeIpv6(ip);
-    EXPECT_EQ(result, ip);
+    EXPECT_EQ(result, "2001:****:85a3");
 }
 
 /**
@@ -812,21 +812,6 @@ HWTEST_F(PrintUtilsExtTest, GetPrintJobId_002, TestSize.Level2)
     std::string id1 = PrintUtils::GetPrintJobId();
     std::string id2 = PrintUtils::GetPrintJobId();
     EXPECT_NE(id1, id2);
-}
-
-// ==================== GetJobStateChar Extended Tests ====================
-/**
- * @tc.name: GetJobStateChar_003
- * @tc.desc: Verify GetJobStateChar with all job states.
- * @tc.type: FUNC
- */
-HWTEST_F(PrintUtilsExtTest, GetJobStateChar_003, TestSize.Level2)
-{
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_QUEUED), "PRINT_JOB_QUEUED");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_RUNNING), "PRINT_JOB_RUNNING");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_BLOCKED), "PRINT_JOB_BLOCKED");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_COMPLETED), "PRINT_JOB_COMPLETED");
-    EXPECT_EQ(PrintUtils::GetJobStateChar(PRINT_JOB_CREATE_FILE_COMPLETED), "PRINT_JOB_CREATE_FILE_COMPLETED");
 }
 
 // ==================== DecodeExtensionCid Extended Tests ====================

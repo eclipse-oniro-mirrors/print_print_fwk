@@ -34,8 +34,10 @@ public:
     bool GetUsbDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     bool GetTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     bool GetEsclDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
+    bool IsDeviceIdDiscovered(const std::string& deviceId) const;
 
     bool GetAndRemoveTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info);
+    bool RemoveUsbDevice(const std::string& uniqueId);
     bool GetAndRemoveEsclDevice(const std::string& uniqueId, ScanDeviceInfo& info);
 
     bool UpdateUsbDevice(const std::string& uniqueId, std::function<void(ScanDeviceInfo&)> modifier);

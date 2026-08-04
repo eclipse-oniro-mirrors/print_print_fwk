@@ -42,6 +42,10 @@ napi_value PrintSharedHostHelper::MakeJsObjectArray(napi_env env, const std::vec
     uint32_t index = 0;
     for (const auto& host : sharedHosts) {
         napi_value jsHost = MakeJsObject(env, host);
+        if (jsHost == nullptr) {
+            PRINT_HILOGE("Failed to create shared host js object");
+            continue;
+        }
         status = napi_set_element(env, array, index++, jsHost);
         if (status != napi_ok) {
             PRINT_HILOGE("Failed to set array element");
@@ -57,6 +61,10 @@ std::shared_ptr<PrintSharedHost> PrintSharedHostHelper::BuildFromJs(napi_env env
     std::string ip = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_IP);
     std::string shareName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_SHARE_NAME);
     std::string workgroupName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_WORKGROUP_NAME);
+    if (ip.empty() || shareName.empty() || workgroupName.empty()) {
+        PRINT_HILOGE("illegal PrintSharedHost");
+        return nullptr;
+    }
     nativeObj->SetIp(ip);
     nativeObj->SetShareName(shareName);
     nativeObj->SetWorkgroupName(workgroupName);

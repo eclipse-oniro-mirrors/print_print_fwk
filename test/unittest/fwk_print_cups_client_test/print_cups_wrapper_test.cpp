@@ -80,7 +80,7 @@ void PrintCupsWrapperTest::DoMockTest(MockTestFunc func)
         delete printCupsClient.printAbility_;
         printCupsClient.printAbility_ = nullptr;
     }
-    auto mock = new (std::nothrow) MockPrintCupsWrapper();
+    auto mock = new MockPrintCupsWrapper();
     if (mock == nullptr) {
         PRINT_HILOGE("mock is null");
         return;

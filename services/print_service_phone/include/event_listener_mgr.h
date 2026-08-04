@@ -52,13 +52,11 @@ private:
     bool TryDeletePrintJobListenerFromCallback(const std::shared_ptr<BaseEventCallback> &callback,
         CallbackEventType eventType, const std::string &jobId);
     bool DeletePrintJobListener(CallbackEventType eventType, const std::string &jobId);
-    bool ExecuteForUser(
-        const std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap,
-        CallbackEventType type, const CallbackInfo &callbackInfo);
-    bool ExecuteForAllUsers(CallbackEventType type, const CallbackInfo &callbackInfo);
     std::string FormatPids(const std::vector<pid_t> &pids);
     void ClearListenersForUser(
         std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap);
+
+    bool CheckJobManagePermission() const;
 
     std::mutex mutex_;
     std::unordered_map<int32_t, std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>>>

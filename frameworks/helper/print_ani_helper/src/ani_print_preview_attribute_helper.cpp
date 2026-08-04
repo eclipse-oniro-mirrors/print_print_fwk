@@ -19,6 +19,7 @@
 #include "ani_print_preview_attribute_helper.h"
 #include "ani_print_range_helper.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace {
 const char* PREVIEW_RANGE_STR = "previewRange";
@@ -31,6 +32,7 @@ ani_object AniPrintPreviewAttributeHelper::CreatePreviewAttribute(ani_env *env, 
 {
     PRINT_HILOGI("enter CreatePreviewAttribute");
     ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(obj, nullptr);
 
     PrintRange previewRange;
     preview.GetPreviewRange(previewRange);

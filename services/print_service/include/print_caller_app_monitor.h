@@ -121,6 +121,12 @@ private:
     ~PrintCallerAppMonitor() = default;
 
     void MonitorCallerApps(std::function<bool()> unloadTask);
+    std::vector<std::shared_ptr<PrintCallerAppInfo>> CollectAppsSnapshot();
+    std::vector<int32_t> CheckAppsLiveness(
+        const std::vector<std::shared_ptr<PrintCallerAppInfo>> &appsToCheck);
+    void RemoveDeadApps(const std::vector<int32_t> &deadPids);
+    bool ShouldDelayUnload();
+    void TryUnload(std::function<bool()> &unloadTask);
     sptr<AppExecFwk::IAppMgr> GetAppManager();
     std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(
         const std::string &bundleName, int32_t userId);
@@ -130,7 +136,6 @@ private:
     std::map<int32_t, std::shared_ptr<PrintCallerAppInfo>> callerMap_;
     std::map<std::string, bool> printJobMap_;
     std::mutex callerMapMutex_;
-    std::mutex printJobMapMutex_;
     std::atomic<bool> isMonitoring_{false};
     PrintCounter counter_;
     std::atomic<bool> delayUnload_{false};

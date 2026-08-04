@@ -241,11 +241,7 @@ int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *para
 {
     size_t cipherTextSize = plainBlob.size + AUTH_TAG_SIZE;
     size_t bufferSize = NONCE_LEN + cipherTextSize;
-    cipherBlob.data = new (std::nothrow) uint8_t[bufferSize];
-    if (cipherBlob.data == nullptr) {
-        PRINT_HILOGE("failed to allocate cipher buffer");
-        return HKS_ERROR_MALLOC_FAIL;
-    }
+    cipherBlob.data = new uint8_t[bufferSize];
     cipherBlob.size = bufferSize;
 
     if (memcpy_s(cipherBlob.data, bufferSize, nonce.data, NONCE_LEN) != EOK) {
@@ -271,12 +267,8 @@ int32_t HksAdapter::DoDecrypt(struct HksBlob *keyAlias, struct HksParamSet *para
     size_t cipherWithTagSize = cipherBlob.size - NONCE_LEN;
     struct HksBlob cipherTextWithTag = { .size = cipherWithTagSize, .data = cipherBlob.data + NONCE_LEN };
     
-    plainBlob.data = new (std::nothrow) uint8_t[cipherWithTagSize];
-    if (plainBlob.data == nullptr) {
-        PRINT_HILOGE("failed to allocate plain buffer");
-        return HKS_ERROR_MALLOC_FAIL;
-    }
-    
+    plainBlob.data = new uint8_t[cipherWithTagSize];
+
     plainBlob.size = cipherWithTagSize;
     int32_t ret = HksDecrypt(keyAlias, paramSet, &cipherTextWithTag, &plainBlob);
     if (ret != HKS_SUCCESS) {
@@ -346,12 +338,8 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
     }
     
     size_t decodedLen = base64Blob.size / BASE64_ENCODED_BLOCK_SIZE * BASE64_DECODED_BLOCK_SIZE - paddingCount;
-    cipherBlob.data = new (std::nothrow) uint8_t[decodedLen];
-    if (cipherBlob.data == nullptr) {
-        PRINT_HILOGE("failed to allocate cipher buffer for base64 decode");
-        return false;
-    }
-    
+    cipherBlob.data = new uint8_t[decodedLen];
+
     int ret = EVP_DecodeBlockWrapper(cipherBlob.data, base64Blob.data, static_cast<int>(base64Blob.size));
     if (ret < 0) {
         PRINT_HILOGE("Base64 decode failed");
