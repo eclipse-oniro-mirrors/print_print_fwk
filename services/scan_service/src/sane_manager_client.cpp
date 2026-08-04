@@ -41,34 +41,30 @@ SaneManagerClient &SaneManagerClient::GetInstance()
 
 sptr<ISaneBackends> SaneManagerClient::GetSaneServiceProxy()
 {
-    {
-        std::unique_lock<std::shared_mutex> lock(serviceLock_);
-        if (proxy_ != nullptr) {
-            SCAN_HILOGD("already get proxy_");
-            return proxy_;
-        }
-        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (samgrProxy == nullptr) {
-            SCAN_HILOGE("samgrProxy is a nullptr");
-            return nullptr;
-        }
-        auto object = samgrProxy->CheckSystemAbility(SANE_SERVICE_ID);
-        if (object != nullptr) {
-            object->AddDeathRecipient(deathRecipient_);
-            proxy_ = iface_cast<ISaneBackends>(object);
-            return proxy_;
-        }
+    std::unique_lock<std::shared_mutex> lock(serviceLock_);
+    if (proxy_ != nullptr) {
+        SCAN_HILOGD("already get proxy_");
+        return proxy_;
     }
-    if (LoadSaneService()) {
-        std::unique_lock<std::shared_mutex> lock(serviceLock_);
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        SCAN_HILOGE("samgrProxy is a nullptr");
+        return nullptr;
+    }
+    auto object = samgrProxy->CheckSystemAbility(SANE_SERVICE_ID);
+    if (object != nullptr) {
+        object->AddDeathRecipient(deathRecipient_);
+        proxy_ = iface_cast<ISaneBackends>(object);
+        return proxy_;
+    }
+    if (LoadSaneService(lock)) {
         return proxy_;
     }
     return nullptr;
 }
 
-bool SaneManagerClient::LoadSaneService()
+bool SaneManagerClient::LoadSaneService(std::unique_lock<std::shared_mutex> &lock)
 {
-    std::unique_lock<std::shared_mutex> lock(serviceLock_);
     sptr<SaneServiceLoadCallback> lockCallback = new SaneServiceLoadCallback();
     if (lockCallback == nullptr) {
         SCAN_HILOGE("lockCallback is a nullptr");

@@ -217,6 +217,15 @@ if (!print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
     }
 
+    if (print_fwk_feature_print_fwk_agent_client) {
+      sources += [
+        "${_service_path}/src/agent/print_fwk_agent_client_loader.cpp",
+        "${_service_path}/src/agent/print_fwk_agent_manager.cpp"
+      ]
+      deps += [ "${print_path}/frameworks/helper/print_helper:print_helper" ]
+      cflags_cc += [ "-DPRINT_FWK_AGENT_CLIENT_ENABLE" ]
+    }
+
     if (print_fwk_feature_watermark_enforcing) {
       sources += [
         "${_service_path}/src/watermark_manager.cpp",
@@ -324,6 +333,15 @@ if (!print_fwk_feature_device_isolation) {
         "${_service_path}/src/smb_library.cpp"
       ]
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+    }
+
+    if (print_fwk_feature_print_fwk_agent_client) {
+      sources += [
+        "${_service_path}/src/agent/print_fwk_agent_client_loader.cpp",
+        "${_service_path}/src/agent/print_fwk_agent_manager.cpp"
+      ]
+      deps += [ "${print_path}/frameworks/helper/print_helper:print_helper" ]
+      cflags_cc += [ "-DPRINT_FWK_AGENT_CLIENT_ENABLE" ]
     }
 
     if (print_fwk_feature_watermark_enforcing) {

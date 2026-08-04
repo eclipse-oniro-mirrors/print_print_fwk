@@ -461,7 +461,7 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_SyncMode_ShouldEx
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId("job_001");
     userData->queuedJobList_["job_001"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_001", "job_001");
+    service->CancelPrintJobHandleCallback("ext_001", "job_001", printJob);
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 
@@ -475,7 +475,7 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_AsyncMode_ShouldP
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId("job_002");
     userData->queuedJobList_["job_002"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_002", "job_002");
+    service->CancelPrintJobHandleCallback("ext_002", "job_002", printJob);
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 
@@ -488,7 +488,7 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback_ServiceHandlerNul
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId("job_004");
     userData->queuedJobList_["job_004"] = printJob;
-    service->CancelPrintJobHandleCallback(userData, "ext_004", "job_004");
+    service->CancelPrintJobHandleCallback("ext_004", "job_004", printJob);
     EXPECT_EQ(userData->queuedJobList_.size(), 1);
 }
 

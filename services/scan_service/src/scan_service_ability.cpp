@@ -139,7 +139,10 @@ void ScanServiceAbility::OnStart()
 {
     SCAN_HILOGI("ScanServiceAbility::Enter OnStart.");
     if (instance_ == nullptr) {
-        instance_ = this;
+        std::lock_guard<std::mutex> autoLock(instanceLock_);
+        if (instance_ == nullptr) {
+            instance_ = this;
+        }
     }
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         SCAN_HILOGI("ScanServiceAbility is already running.");
@@ -157,8 +160,13 @@ void ScanServiceAbility::OnStart()
     int32_t ret = ServiceInit();
     if (ret != ERR_OK) {
         auto callback = [=]() { ServiceInit(); };
-        if (serviceHandler_ != nullptr) {
-            serviceHandler_->PostTask(callback, INIT_INTERVAL);
+        std::shared_ptr<AppExecFwk::EventHandler> handler;
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            handler = serviceHandler_;
+        }
+        if (handler != nullptr) {
+            handler->PostTask(callback, INIT_INTERVAL);
             SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
         } else {
             SCAN_HILOGE("ScanServiceAbility Init failed and serviceHandler_ is nullptr");
@@ -194,7 +202,10 @@ void ScanServiceAbility::OnStop()
         SCAN_HILOGW("service is not running");
         return;
     }
-    serviceHandler_ = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        serviceHandler_ = nullptr;
+    }
     state_ = ServiceRunningState::STATE_NOT_START;
     SCAN_HILOGI("OnStop end.");
 }
@@ -506,8 +517,15 @@ int32_t ScanServiceAbility::GetScannerList()
             break;
         }
     };
-    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
-    serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
+    {
+        std::shared_ptr<AppExecFwk::EventHandler> handler;
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            handler = serviceHandler_;
+        }
+        SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(handler, E_SCAN_SERVER_FAILURE, __func__);
+        handler->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
+    }
     SCAN_HILOGI("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
 }
@@ -1164,6 +1182,10 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
+    if (scannerState_.load() != SCANNER_READY) {
+        SCAN_HILOGE("scannerId %{private}s is not ready", scannerId.c_str());
+        return E_SCAN_DEVICE_BUSY;
+    }
 
     // Check if ESCL scanner's ADF is empty before starting scan in external API call.
     // If the scanner uses ESCL protocol and the scan source is ADF,
@@ -1181,8 +1203,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         }
     }
     
-    int32_t status = StartScanOnceInternal(scannerId);
-    if (status != E_SCAN_NONE) {
+    if (int32_t status = StartScanOnceInternal(scannerId); status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
         return status;
     }
@@ -1193,8 +1214,15 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         ScanTask task(scannerId, userId, batchMode);
         StartScanTask(task);
     };
-    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
-    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
+    {
+        std::shared_ptr<AppExecFwk::EventHandler> handler;
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            handler = serviceHandler_;
+        }
+        SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(handler, E_SCAN_SERVER_FAILURE, __func__);
+        handler->PostTask(exe, ASYNC_CMD_DELAY);
+    }
     scanPictureData_.SetCallerPid(IPCSkeleton::GetCallingPid());
     SCAN_HILOGI("StartScan successfully");
     return E_SCAN_NONE;
@@ -1210,9 +1238,13 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
         GeneratePictureSingle(scanTask);
     }
     SCAN_HILOGI("StartScanTask finished, doning scan task free");
+    std::lock_guard<std::mutex> autoLock(lock_);
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
+    if (scannerState_.load() == SCANNER_CANCELING) {
+        scanPictureData_.CleanAllCache();
+    }
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }

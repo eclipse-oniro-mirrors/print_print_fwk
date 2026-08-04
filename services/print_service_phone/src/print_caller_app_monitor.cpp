@@ -104,45 +104,83 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
     std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
     PRINT_HILOGI("start monitor caller apps");
     do {
-        {
-            std::lock_guard<std::mutex> lock(callerMapMutex_);
-            for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
-                if (iter->second == nullptr) {
-                    iter = callerMap_.erase(iter);
-                    continue;
-                }
-                PRINT_HILOGI(
-                    "check caller process, pid: %{public}d, bundleName: %{public}s",
-                    iter->first, iter->second->bundleName_.c_str());
-                if (IsAppAlive(iter->second)) {
-                    PRINT_HILOGI("app still alive");
-                    iter++;
-                    continue;
-                }
-                int value = iter->second->counter_.Value();
-                if (value) {
-                    counter_.Decrement(value);
-                }
-                PRINT_HILOGI("app not alive, erase it");
-                iter = callerMap_.erase(iter);
-            }
-            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
-        }
+        auto appsToCheck = CollectAppsSnapshot();
+        auto deadPids = CheckAppsLiveness(appsToCheck);
+        RemoveDeadApps(deadPids);
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-
-        if (delayUnload_.load()) {
-            PRINT_HILOGW("delay unload print SA");
-            delayUnload_.store(false);
+        if (ShouldDelayUnload()) {
             continue;
         }
-
-        {
-            std::lock_guard<std::mutex> lock(callerMapMutex_);
-            if ((callerMap_.empty() || counter_.Value() == 0) && unloadTask()) {
-                isMonitoring_.store(false);
-            }
-        }
+        TryUnload(unloadTask);
     } while (isMonitoring_.load());
+}
+
+std::vector<std::shared_ptr<PrintCallerAppInfo>> PrintCallerAppMonitor::CollectAppsSnapshot()
+{
+    std::vector<std::shared_ptr<PrintCallerAppInfo>> appsToCheck;
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
+    for (const auto &pair : callerMap_) {
+        if (pair.second != nullptr) {
+            appsToCheck.push_back(pair.second);
+        }
+    }
+    return appsToCheck;
+}
+
+std::vector<int32_t> PrintCallerAppMonitor::CheckAppsLiveness(
+    const std::vector<std::shared_ptr<PrintCallerAppInfo>> &appsToCheck)
+{
+    std::vector<int32_t> deadPids;
+    for (const auto &appInfo : appsToCheck) {
+        PRINT_HILOGI("check caller process, pid: %{public}d, bundleName: %{public}s",
+            appInfo->pid_, appInfo->bundleName_.c_str());
+        if (!IsAppAlive(appInfo)) {
+            PRINT_HILOGI("app not alive, erase it");
+            deadPids.push_back(appInfo->pid_);
+        } else {
+            PRINT_HILOGI("app still alive");
+        }
+    }
+    return deadPids;
+}
+
+void PrintCallerAppMonitor::RemoveDeadApps(const std::vector<int32_t> &deadPids)
+{
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
+    for (auto pid : deadPids) {
+        if (auto iter = callerMap_.find(pid); iter != callerMap_.end()) {
+            int value = iter->second->counter_.Value();
+            if (value) {
+                counter_.Decrement(value);
+            }
+            callerMap_.erase(iter);
+        }
+    }
+    PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+}
+
+bool PrintCallerAppMonitor::ShouldDelayUnload()
+{
+    if (delayUnload_.load()) {
+        PRINT_HILOGW("delay unload print SA");
+        delayUnload_.store(false);
+        return true;
+    }
+    return false;
+}
+
+void PrintCallerAppMonitor::TryUnload(std::function<bool()> &unloadTask)
+{
+    bool shouldUnload = false;
+    {
+        std::lock_guard<std::mutex> lock(callerMapMutex_);
+        if (callerMap_.empty() || counter_.Value() == 0) {
+            shouldUnload = true;
+        }
+    }
+    if (shouldUnload && unloadTask()) {
+        isMonitoring_.store(false);
+    }
 }
 
 sptr<AppExecFwk::IAppMgr> PrintCallerAppMonitor::GetAppManager()
@@ -247,27 +285,25 @@ int32_t PrintCallerAppMonitor::GetCurrentUserId()
 void PrintCallerAppMonitor::IncrementPrintCounter(const std::string &jobId)
 {
     PRINT_HILOGI("IncrementPrintCounter enter");
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
     if (!jobId.empty()) {
-        std::lock_guard<std::mutex> lock(printJobMapMutex_);
         printJobMap_[jobId] = true;
     }
-    std::lock_guard<std::mutex> lock(callerMapMutex_);
     counter_.Increment();
 }
 
 void PrintCallerAppMonitor::DecrementPrintCounter(const std::string &jobId)
 {
     PRINT_HILOGI("DecrementPrintCounter enter");
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
     if (!jobId.empty()) {
-        std::lock_guard<std::mutex> lock(printJobMapMutex_);
-        auto jobIter = printJobMap_.find(jobId);
-        if (jobIter == printJobMap_.end() || jobIter->second == false) {
+        if (auto jobIter = printJobMap_.find(jobId);
+            jobIter == printJobMap_.end() || jobIter->second == false) {
             PRINT_HILOGE("skip this job");
             return;
         }
         printJobMap_[jobId] = false;
     }
-    std::lock_guard<std::mutex> lock(callerMapMutex_);
     counter_.Decrement();
 }
 
@@ -287,9 +323,8 @@ void PrintCallerAppMonitor::IncrementCallerAppCounter()
 void PrintCallerAppMonitor::RemovePrintJobFromMap(const std::string &jobId)
 {
     if (!jobId.empty()) {
-        std::lock_guard<std::mutex> lock(printJobMapMutex_);
-        auto jobIter = printJobMap_.find(jobId);
-        if (jobIter != printJobMap_.end()) {
+        std::lock_guard<std::mutex> lock(callerMapMutex_);
+        if (auto jobIter = printJobMap_.find(jobId); jobIter != printJobMap_.end()) {
             printJobMap_.erase(jobIter);
         }
     }

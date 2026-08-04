@@ -67,6 +67,8 @@ static const std::string PRINTER_PRINTER_NAME = "test_printer_name";
 static const std::string PRINTER_PRINTER_ID = "test_printer_id";
 static const std::string JOB_USER_NAME = "test_user";
 
+void AddUsbPrinter(PrinterInfo &info);
+
 class PrintCupsClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -3064,7 +3066,7 @@ HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_MatchingPrinter_Test, TestSi
     PrinterInfo info;
     info.SetUri("usb://printer");
     info.SetPrinterName("test_printer");
-    GetUsbPrinters().push_back(info);
+    AddUsbPrinter(info);
 
     bool ret = printCupsClient.CheckUsbPrinterOnline("usb://printer");
     EXPECT_TRUE(ret);
@@ -3478,7 +3480,7 @@ HWTEST_F(PrintCupsClientTest, QueryUsbPrinterInfoByPrinterId_MatchingPrinter_Tes
     PrinterInfo info;
     info.SetPrinterId("USB-test_printer");
     info.SetPrinterName("test_printer");
-    GetUsbPrinters().push_back(info);
+    AddUsbPrinter(info);
 
     auto ret = printCupsClient.QueryUsbPrinterInfoByPrinterId("USB-test_printer");
     EXPECT_NE(ret, nullptr);

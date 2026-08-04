@@ -74,20 +74,42 @@ void CallerAppMonitor::MonitorCallerAppIsRunnig(std::function<void()> unloadTask
     }
     while (isMonitoring_.load()) {
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-        std::lock_guard<std::mutex> autoLock(callerMapMutex_);
-        for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
-            if (IsAppAlive(iter->second)) {
-                SCAN_HILOGI("app still alive");
-                iter++;
-                continue;
+        // Collect snapshot under lock (fast)
+        std::vector<std::shared_ptr<CallerAppInfo>> appsToCheck;
+        {
+            std::lock_guard<std::mutex> autoLock(callerMapMutex_);
+            for (const auto &pair : callerMap_) {
+                if (pair.second != nullptr) {
+                    appsToCheck.push_back(pair.second);
+                }
             }
-            SCAN_HILOGI("app pid=%{public}d is dead, cleaning up", iter->first);
-            if (cleanupCallback_) {
-                cleanupCallback_(iter->first);
-            }
-            iter = callerMap_.erase(iter);
         }
-        if (callerMap_.empty()) {
+
+        // Check liveness outside lock (slow IPC calls)
+        std::vector<int32_t> deadPids;
+        for (const auto &info : appsToCheck) {
+            if (!IsAppAlive(info)) {
+                SCAN_HILOGI("app not alive");
+                deadPids.push_back(info->pid_);
+            } else {
+                SCAN_HILOGI("app still alive");
+            }
+        }
+
+        // Remove dead apps and check unload condition under lock (fast)
+        bool shouldUnload = false;
+        {
+            std::lock_guard<std::mutex> autoLock(callerMapMutex_);
+            for (auto pid : deadPids) {
+                callerMap_.erase(pid);
+            }
+            if (callerMap_.empty()) {
+                shouldUnload = true;
+            }
+        }
+
+        // Call unloadTask outside lock to avoid deadlock
+        if (shouldUnload) {
             SCAN_HILOGI("No apps use, start uninstalling scan_service");
             isMonitoring_.store(false);
             unloadTask();

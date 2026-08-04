@@ -56,7 +56,7 @@ void MockAbilityConnectCallback::OnAbilityDisconnectDone(const AppExecFwk::Eleme
 
 sptr<IRemoteObject> MockAbilityConnectCallback::AsObject()
 {
-    return new (std::nothrow) MockRemoteObject();
+    return new MockRemoteObject();
 }
 
 Want CreateFuzzedWant(FuzzedDataProvider *dataProvider)
@@ -88,7 +88,7 @@ void TestStartAbility(const uint8_t *data, size_t size, FuzzedDataProvider *data
 void TestConnectAbility(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     Want want = CreateFuzzedWant(dataProvider);
-    sptr<IAbilityConnection> connect = new (std::nothrow) MockAbilityConnectCallback();
+    sptr<IAbilityConnection> connect = new MockAbilityConnectCallback();
     int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_USER_ID);
     AbilityManagerAdapter::GetInstance().ConnectAbility(want, connect, userId);
 }
@@ -96,8 +96,8 @@ void TestConnectAbility(const uint8_t *data, size_t size, FuzzedDataProvider *da
 void TestConnectAbilityWithExtensionType(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     Want want = CreateFuzzedWant(dataProvider);
-    sptr<IAbilityConnection> connect = new (std::nothrow) MockAbilityConnectCallback();
-    sptr<IRemoteObject> callerToken = new (std::nothrow) MockRemoteObject();
+    sptr<IAbilityConnection> connect = new MockAbilityConnectCallback();
+    sptr<IRemoteObject> callerToken = new MockRemoteObject();
     int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_USER_ID);
     uint32_t extensionTypeVal = dataProvider->ConsumeIntegralInRange<uint32_t>(
         0, static_cast<uint32_t>(AppExecFwk::ExtensionAbilityType::WINDOW));
@@ -108,7 +108,7 @@ void TestConnectAbilityWithExtensionType(const uint8_t *data, size_t size, Fuzze
 
 void TestDisconnectAbility(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    sptr<IAbilityConnection> connect = new (std::nothrow) MockAbilityConnectCallback();
+    sptr<IAbilityConnection> connect = new MockAbilityConnectCallback();
     AbilityManagerAdapter::GetInstance().DisconnectAbility(connect);
 }
 
