@@ -812,6 +812,7 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         return ownerRet;
     }
     SCAN_HILOGI("ScanServiceAbility CancelScan start");
+    scanPictureData_.CleanScanQueue();
     SaneStatus saneStatus = SaneManagerClient::GetInstance().SaneCancel(scannerId);
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneCancel failed, status: [%{public}u]", saneStatus);
@@ -1251,7 +1252,7 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
     if (scannerState_.load() == SCANNER_CANCELING) {
-        scanPictureData_.CleanAllCache();
+        scanPictureData_.CleanScanQueue();
     }
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");

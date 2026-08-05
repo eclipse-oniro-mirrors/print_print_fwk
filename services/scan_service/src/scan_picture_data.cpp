@@ -39,6 +39,13 @@ ScanPictureData::~ScanPictureData()
     CleanAllCache();
 }
 
+void ScanPictureData::CleanScanQueue()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::queue<int32_t> empty;
+    scanQueue_.swap(empty);
+}
+
 void ScanPictureData::CleanAllCache()
 {
     std::lock_guard<std::mutex> lock(mutex_);

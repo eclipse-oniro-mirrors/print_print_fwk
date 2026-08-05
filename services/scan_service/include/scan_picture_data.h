@@ -34,6 +34,7 @@ public:
     bool RegisterCacheFiles(const std::string& baseName);
     int32_t GetPictureProgressInQueue(ScanProgress& scanProgress);
     void CleanAllCache();
+    void CleanScanQueue();
     void CleanDiskCache();
     void PushScanPictureProgress();
     void RegisterExportedResult(const std::string& baseName, int32_t fd, int32_t format);
