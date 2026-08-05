@@ -23,6 +23,7 @@
 #include <queue>
 #include <chrono>
 #include <atomic>
+#include <optional>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
@@ -123,11 +124,12 @@ private:
     int32_t InitializeEsclScannerDriver();
     void AddNetScanner(const std::string& uniqueId, const std::string &discoverMode);
     void AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode);
-    struct ScannerOwner {
+    struct OpenedScanner {
+        std::string scannerId;
         int32_t callerPid;
         int32_t userId;
     };
-    std::map<std::string, ScannerOwner> openedScannerMap_;
+    std::optional<OpenedScanner> openedScanner_;
     std::atomic<ServiceRunningState> state_;
     std::mutex lock_;
     static std::mutex instanceLock_;
