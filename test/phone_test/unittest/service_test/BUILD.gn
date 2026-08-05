@@ -211,6 +211,7 @@ ohos_unittest("scan_task_test") {
     "image_framework:image_native",
     "googletest:gtest_main",
     "googletest:gmock_main",
+    "hilog:libhilog",
   ]
 
   cflags = [
