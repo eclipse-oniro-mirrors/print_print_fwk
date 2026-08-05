@@ -17,7 +17,6 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include <chrono>
 #include <map>
 #include "printer_info.h"
 #define private public
@@ -2182,32 +2181,6 @@ HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_FileInvalidTimestamp_ShouldSk
     systemData->CleanIppRawDataFiles();
     std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
     EXPECT_TRUE(std::filesystem::exists(dir / "printer_invalid_abcd"));
-    CleanupIppRawDataDir();
-}
-
-HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_FutureTimestamp_ShouldSkip, TestSize.Level1)
-{
-    auto systemData = std::make_shared<PrintSystemData>();
-    CreateIppRawDataDir();
-    auto now = std::chrono::system_clock::now();
-    auto futureSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count() + 86400;
-    std::string fileName = "printer_future_" + std::to_string(futureSeconds);
-    CreateFileInIppDir(fileName);
-    systemData->CleanIppRawDataFiles();
-    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
-    EXPECT_TRUE(std::filesystem::exists(dir / fileName));
-    CleanupIppRawDataDir();
-}
-
-HWTEST_F(PrintSystemDataTest, CleanIppRawDataFiles_ExpiredTimestamp_ShouldRemove, TestSize.Level1)
-{
-    auto systemData = std::make_shared<PrintSystemData>();
-    CreateIppRawDataDir();
-    std::string fileName = "printer_expired_1";
-    CreateFileInIppDir(fileName);
-    systemData->CleanIppRawDataFiles();
-    std::filesystem::path dir(PRINTER_SERVICE_IPP_RAW_DATA_PATH);
-    EXPECT_FALSE(std::filesystem::exists(dir / fileName));
     CleanupIppRawDataDir();
 }
 

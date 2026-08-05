@@ -560,11 +560,7 @@ void PrintSystemData::CleanIppRawDataFiles()
             PRINT_HILOGW("Invalid timestamp in file: %{public}s", fileName.c_str());
             continue;
         }
-        if (fileTimestamp > nowEpochSeconds) {
-            PRINT_HILOGW("File timestamp is in the future, skip file: %{public}s", fileName.c_str());
-            continue;
-        }
-        if (nowEpochSeconds - fileTimestamp > IPP_RAW_DATA_EXPIRE_SECONDS) {
+        if (nowEpochSeconds > fileTimestamp + IPP_RAW_DATA_EXPIRE_SECONDS) {
             if (std::filesystem::remove(entry.path(), ec)) {
                 PRINT_HILOGI("Cleaned expired IPP raw data file for removed printer: %{public}s", fileName.c_str());
             }
