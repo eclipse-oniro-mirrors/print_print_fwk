@@ -50,7 +50,7 @@ public:
     void OnRemoteSaDied(const wptr<IRemoteObject>& object);
 
 private:
-    bool LoadSaneService();
+    bool LoadSaneService(std::unique_lock<std::shared_mutex> &lock);
     sptr<ISaneBackends> GetSaneServiceProxy();
     sptr<OHOS::Scan::ISaneBackends> proxy_;
     sptr<SaneSaDeathRecipient> deathRecipient_;

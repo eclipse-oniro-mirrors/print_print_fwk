@@ -45,7 +45,7 @@ class PrintManagerClient : public RefBase {
 public:
     PrintManagerClient();
     ~PrintManagerClient();
-    static PrintManagerClient* GetInstance();
+    static PrintManagerClient& GetInstance();
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 

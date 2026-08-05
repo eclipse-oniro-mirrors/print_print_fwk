@@ -76,22 +76,12 @@ void TestSetImageRealPath(const uint8_t* data, size_t size, FuzzedDataProvider* 
     instance.CleanAllCache();
 }
 
-void TestSetCallerPid(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    auto& instance = ScanPictureData::GetInstance();
-    int32_t callerPid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    instance.SetCallerPid(callerPid);
-    instance.CleanAllCache();
-}
-
 void TestGetPictureProgressInQueue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     auto& instance = ScanPictureData::GetInstance();
-    int32_t callerPid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    instance.SetCallerPid(callerPid);
     instance.PushScanPictureProgress();
     ScanProgress scanProgress;
-    instance.GetPictureProgressInQueue(scanProgress, callerPid);
+    instance.GetPictureProgressInQueue(scanProgress);
     instance.CleanAllCache();
 }
 
@@ -113,8 +103,6 @@ void TestPushScanPictureProgress(const uint8_t* data, size_t size, FuzzedDataPro
 void TestFullWorkflow(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     auto& instance = ScanPictureData::GetInstance();
-    int32_t callerPid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    instance.SetCallerPid(callerPid);
     instance.PushScanPictureProgress();
     std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     instance.RegisterCacheFiles(filePath);
@@ -127,7 +115,7 @@ void TestFullWorkflow(const uint8_t* data, size_t size, FuzzedDataProvider* data
     bool isFinal = dataProvider->ConsumeBool();
     instance.SetNowScanProgressFinished(isFinal);
     ScanProgress scanProgress;
-    instance.GetPictureProgressInQueue(scanProgress, callerPid);
+    instance.GetPictureProgressInQueue(scanProgress);
     instance.CleanAllCache();
 }
 }
@@ -147,7 +135,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestSetNowScanProgressFinished(data, size, &dataProvider);
     OHOS::Scan::TestSetLastScanProgressFinished(data, size, &dataProvider);
     OHOS::Scan::TestSetImageRealPath(data, size, &dataProvider);
-    OHOS::Scan::TestSetCallerPid(data, size, &dataProvider);
     OHOS::Scan::TestGetPictureProgressInQueue(data, size, &dataProvider);
     OHOS::Scan::TestCleanPictureData(data, size, &dataProvider);
     OHOS::Scan::TestPushScanPictureProgress(data, size, &dataProvider);

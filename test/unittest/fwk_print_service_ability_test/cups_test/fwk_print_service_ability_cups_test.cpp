@@ -58,6 +58,42 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035_NeedRename, TestS
     EXPECT_EQ(service->AddPrinterToCups(printerUri, printerName, printerMake), E_PRINT_SERVER_FAILURE);
 }
 
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSourceToFinalPrinter, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string printerId = "fwk.driver.bsuni:mdns-printer";
+    const std::string uri = "ipp://10.0.0.2:631/printers/office";
+    service->agentManager_ = std::make_unique<PrintFwkAgentManager>(
+        service->printSystemData_, service->vendorManager, *service);
+    service->agentManager_->pendingPrinters_[uri] = {
+        "Agent Original",
+        "TEST_BACKEND",
+        PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
+        PrintFwkAgentManager::PendingState::CONNECTING,
+    };
+
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetPrinterName("Discovered Printer");
+    info->SetUri(uri);
+    info->SetOption(R"({"ipp":"original","duplex":true})");
+    service->OnPrinterAddedToCups(info, "");
+
+    PrinterInfo added;
+    ASSERT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, added));
+    Json::Value option;
+    ASSERT_TRUE(PrintJsonUtil::Parse(added.GetOption(), option));
+    EXPECT_EQ(option["ipp"].asString(), "original");
+    EXPECT_TRUE(option["duplex"].asBool());
+    EXPECT_EQ(option["driver"].asString(), PRINT_DRIVER_AGENT);
+    EXPECT_EQ(option["agent"]["printerName"].asString(), "Agent Original");
+    EXPECT_EQ(option["agent"]["uri"].asString(), uri);
+    EXPECT_EQ(option["agent"]["backendType"].asString(), "TEST_BACKEND");
+    EXPECT_TRUE(service->agentManager_->pendingPrinters_.empty());
+}
+#endif
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
@@ -73,6 +109,28 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestS
     service->printerJobMap_[printerId].clear();
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
 }
+
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+HWTEST_F(PrintServiceAbilityTest, CommitAgentPrinterDeletedUsesCommonLocalContinuation, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string printerId = "fwk.driver.bsuni:mdns-printer";
+    const std::string printerName = "Renamed Printer";
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetPrinterName(printerName);
+    info->SetOption(
+        R"({"driver":"AGENT","agent":{"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(*info));
+
+    service->CommitAgentPrinterDeleted(printerId, printerName);
+
+    PrinterInfo deleted;
+    EXPECT_FALSE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, deleted));
+    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
+}
+#endif
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddRawPrinter_ServerFailure, TestSize.Level1)
 {

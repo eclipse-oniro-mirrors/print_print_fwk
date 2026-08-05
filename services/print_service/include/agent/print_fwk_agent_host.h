@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_HISYS_EVENT_UTIL_H
-#define MOCK_HISYS_EVENT_UTIL_H
+#ifndef PRINT_FWK_AGENT_HOST_H
+#define PRINT_FWK_AGENT_HOST_H
 
-#include <gmock/gmock.h>
-#include "hisys_event_util.h"
+#include <string>
 
-namespace OHOS {
-namespace Print {
-class MockHisysEventUtil {
+#include "printer_info.h"
+
+namespace OHOS::Print {
+
+class PrintFwkAgentHost {
 public:
-    MOCK_METHOD3(reportBehaviorEvent, void(std::string name, int behaviorCode, const std::string &msg));
-    MOCK_METHOD1(ReportFailureEvent, void(const HisysEventParams &params));
+    virtual ~PrintFwkAgentHost() = default;
+
+    virtual bool IsCallerSystemApp() = 0;
+    virtual void NotifyPrinterInfoChanged(const PrinterInfo &info) = 0;
+    virtual void CommitAgentPrinterDeleted(const std::string &printerId, const std::string &printerName) = 0;
 };
-}  // namespace Print
-}  // namespace OHOS
-#endif  // MOCK_HISYS_EVENT_UTIL_H
+
+} // namespace OHOS::Print
+
+#endif // PRINT_FWK_AGENT_HOST_H

@@ -20,6 +20,7 @@
 #include <ctime>
 #include <filesystem>
 #include <fcntl.h>
+#include <arpa/inet.h>
 #include <random>
 #include <sstream>
 #include "ability.h"
@@ -35,7 +36,6 @@ static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_PRINT_ATTRIBUTE = "printAttributes";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 
-static std::map<uint32_t, std::string> jobStateMap_;
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
 const std::string USER_ID_DELIMITER = ":";
@@ -189,10 +189,11 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
     if (filePath.find("content://") == 0) {
         return DEFAULT_FD;
     }
-    if (!IsPathValid(filePath)) {
+    std::string resolvedPath;
+    if (!ResolveAndValidatePath(filePath, resolvedPath)) {
         return PRINT_INVALID_ID;
     }
-    int32_t fd = open(filePath.c_str(), O_RDONLY);
+    int32_t fd = open(resolvedPath.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     PRINT_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -203,12 +204,19 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
 
 bool PrintUtils::IsPathValid(const std::string &path)
 {
-    char resolvedPath[PATH_MAX] = {0};
-    if (path.length() >= PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
-        strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
+    std::string resolvedPath;
+    return ResolveAndValidatePath(path, resolvedPath);
+}
+
+bool PrintUtils::ResolveAndValidatePath(const std::string &path, std::string &resolvedPath)
+{
+    char buf[PATH_MAX] = {0};
+    if (path.length() >= PATH_MAX || realpath(path.c_str(), buf) == nullptr ||
+        strcmp(buf, path.c_str()) != 0) {
         PRINT_HILOGE("invalid file path!");
         return false;
     }
+    resolvedPath = buf;
     return true;
 }
 
@@ -256,24 +264,6 @@ uint32_t PrintUtils::GetIdFromFdPath(const std::string &fdPath)
         PRINT_HILOGD("failed to convert to uint32");
     }
     return fd;
-}
-
-std::string PrintUtils::GetJobStateChar(const uint32_t state)
-{
-    if (jobStateMap_.size() == 0) {
-        jobStateMap_[PRINT_JOB_PREPARED] = "PRINT_JOB_PREPARED";
-        jobStateMap_[PRINT_JOB_QUEUED] = "PRINT_JOB_QUEUED";
-        jobStateMap_[PRINT_JOB_RUNNING] = "PRINT_JOB_RUNNING";
-        jobStateMap_[PRINT_JOB_BLOCKED] = "PRINT_JOB_BLOCKED";
-        jobStateMap_[PRINT_JOB_COMPLETED] = "PRINT_JOB_COMPLETED";
-        jobStateMap_[PRINT_JOB_CREATE_FILE_COMPLETED] = "PRINT_JOB_CREATE_FILE_COMPLETED";
-        jobStateMap_[PRINT_JOB_UNKNOWN] = "PRINT_JOB_UNKNOWN";
-    }
-    auto it = jobStateMap_.find(state);
-    if (it != jobStateMap_.end()) {
-        return it->second;
-    }
-    return "PRINT_JOB_UNKNOWN";
 }
 
 bool PrintUtils::ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos)
@@ -327,15 +317,18 @@ bool PrintUtils::IsPrivateIpv4(const std::string &ip)
     return false;
 }
 
+static std::string MaskStringTail(const std::string &value)
+{
+    if (value.length() > ANONYMIZE_ALIAS_LEN) {
+        return value.substr(0, value.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
+    }
+    return "xxx";
+}
+
 void PrintUtils::AnonymizeAlias(Json::Value &optionJson)
 {
     if (PrintJsonUtil::IsMember(optionJson, "alias") && optionJson["alias"].isString()) {
-        std::string alias = optionJson["alias"].asString();
-        if (alias.length() > ANONYMIZE_ALIAS_LEN) {
-            optionJson["alias"] = alias.substr(0, alias.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
-        } else {
-            optionJson["alias"] = "xxx";
-        }
+        optionJson["alias"] = MaskStringTail(optionJson["alias"].asString());
     }
 }
 
@@ -377,11 +370,11 @@ std::string PrintUtils::AnonymizeIpv6(const std::string &ip)
     }
     size_t secondColon = ip.find(':', firstColon + 1);
     if (secondColon == std::string::npos) {
-        return ip;
+        return ip.substr(0, firstColon + 1) + "****";
     }
     size_t thirdColon = ip.find(':', secondColon + 1);
     if (thirdColon == std::string::npos) {
-        return ip;
+        return ip.substr(0, firstColon + 1) + "****" + ip.substr(secondColon);
     }
 
     std::string middlePart = ip.substr(secondColon + 1, thirdColon - secondColon - 1);
@@ -445,6 +438,17 @@ std::string PrintUtils::AnonymizeIp(const std::string &ip)
         return AnonymizeIpv6(ip);
     }
     return ip;
+}
+
+std::string PrintUtils::AnonymizePrinterName(const std::string &printerName)
+{
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET, printerName.c_str(), &addr4) == 1 ||
+        inet_pton(AF_INET6, printerName.c_str(), &addr6) == 1) {
+        return AnonymizeIp(printerName);
+    }
+    return MaskStringTail(printerName);
 }
 
 std::string PrintUtils::AnonymizeJobOption(const std::string &option)

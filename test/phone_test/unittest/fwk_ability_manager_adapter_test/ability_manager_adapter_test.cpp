@@ -72,7 +72,7 @@ void AbilityManagerAdapterTest::TearDown()
 
 HWTEST_F(AbilityManagerAdapterTest, Connect_CallSucceeds, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
     AbilityManagerAdapter::GetInstance().proxy_ = mockProxy;
@@ -83,7 +83,7 @@ HWTEST_F(AbilityManagerAdapterTest, Connect_CallSucceeds, TestSize.Level1)
 
 HWTEST_F(AbilityManagerAdapterTest, StartAbility_CallSucceeds, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
     EXPECT_CALL(*mockProxy, SendRequest(::testing::_, ::testing::_, ::testing::_, ::testing::_))
@@ -108,13 +108,13 @@ HWTEST_F(AbilityManagerAdapterTest, GetAbilityManagerProxy_ReturnsNotNull, TestS
 
 HWTEST_F(AbilityManagerAdapterTest, DisconnectAbility_ErrorResponse, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
-    auto mockConnect = sptr<MockIAbilityConnection>(new (std::nothrow) MockIAbilityConnection());
+    auto mockConnect = sptr<MockIAbilityConnection>(new MockIAbilityConnection());
     ASSERT_NE(mockConnect, nullptr);
 
-    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockRemoteObj, nullptr);
 
     EXPECT_CALL(*mockConnect, AsObject()).WillOnce(testing::Return(mockRemoteObj));
@@ -132,11 +132,11 @@ HWTEST_F(AbilityManagerAdapterTest, DisconnectAbility_ErrorResponse, TestSize.Le
 
 HWTEST_F(AbilityManagerAdapterTest, ResetProxy_CallsRemoveDeathRecipient, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
     auto mockDeathRecipient =
-        sptr<IRemoteObject::DeathRecipient>(new (std::nothrow) AbilityManagerAdapter::AbilityMgrDeathRecipient());
+        sptr<IRemoteObject::DeathRecipient>(new AbilityManagerAdapter::AbilityMgrDeathRecipient());
     ASSERT_NE(mockDeathRecipient, nullptr);
 
     EXPECT_CALL(*mockProxy, RemoveDeathRecipient(::testing::_)).WillOnce(testing::Return(true));
@@ -152,11 +152,11 @@ HWTEST_F(AbilityManagerAdapterTest, ResetProxy_CallsRemoveDeathRecipient, TestSi
 
 HWTEST_F(AbilityManagerAdapterTest, OnRemoteDied_CallsResetProxy, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
     auto mockDeathRecipient =
-        sptr<IRemoteObject::DeathRecipient>(new (std::nothrow) AbilityManagerAdapter::AbilityMgrDeathRecipient());
+        sptr<IRemoteObject::DeathRecipient>(new AbilityManagerAdapter::AbilityMgrDeathRecipient());
     ASSERT_NE(mockDeathRecipient, nullptr);
 
     EXPECT_CALL(*mockProxy, RemoveDeathRecipient(::testing::_)).WillOnce(testing::Return(true));
@@ -173,13 +173,13 @@ HWTEST_F(AbilityManagerAdapterTest, OnRemoteDied_CallsResetProxy, TestSize.Level
 
 HWTEST_F(AbilityManagerAdapterTest, DisconnectAbility_CallSucceeds, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
-    auto mockConnect = sptr<MockIAbilityConnection>(new (std::nothrow) MockIAbilityConnection());
+    auto mockConnect = sptr<MockIAbilityConnection>(new MockIAbilityConnection());
     ASSERT_NE(mockConnect, nullptr);
 
-    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockRemoteObj, nullptr);
 
     EXPECT_CALL(*mockConnect, AsObject()).WillOnce(testing::Return(mockRemoteObj));
@@ -197,7 +197,7 @@ HWTEST_F(AbilityManagerAdapterTest, DisconnectAbility_CallSucceeds, TestSize.Lev
 
 HWTEST_F(AbilityManagerAdapterTest, StartAbility_SendRequestFails, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
     EXPECT_CALL(*mockProxy, SendRequest(::testing::_, ::testing::_, ::testing::_, ::testing::_))
@@ -215,13 +215,13 @@ HWTEST_F(AbilityManagerAdapterTest, StartAbility_SendRequestFails, TestSize.Leve
 
 HWTEST_F(AbilityManagerAdapterTest, ConnectAbility_Success, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
-    auto mockConnect = sptr<MockIAbilityConnection>(new (std::nothrow) MockIAbilityConnection());
+    auto mockConnect = sptr<MockIAbilityConnection>(new MockIAbilityConnection());
     ASSERT_NE(mockConnect, nullptr);
 
-    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockRemoteObj, nullptr);
 
     EXPECT_CALL(*mockConnect, AsObject()).WillOnce(testing::Return(mockRemoteObj));
@@ -241,16 +241,16 @@ HWTEST_F(AbilityManagerAdapterTest, ConnectAbility_Success, TestSize.Level1)
 
 HWTEST_F(AbilityManagerAdapterTest, ConnectAbilityWithExtensionType_Success, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
-    auto mockConnect = sptr<MockIAbilityConnection>(new (std::nothrow) MockIAbilityConnection());
+    auto mockConnect = sptr<MockIAbilityConnection>(new MockIAbilityConnection());
     ASSERT_NE(mockConnect, nullptr);
 
-    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockRemoteObj, nullptr);
 
-    auto mockCallerToken = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockCallerToken = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockCallerToken, nullptr);
 
     EXPECT_CALL(*mockConnect, AsObject()).WillOnce(testing::Return(mockRemoteObj));
@@ -271,10 +271,10 @@ HWTEST_F(AbilityManagerAdapterTest, ConnectAbilityWithExtensionType_Success, Tes
 
 HWTEST_F(AbilityManagerAdapterTest, ConnectAbilityCommon_ConnectAsObjectIsNull, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
-    auto mockConnect = sptr<MockIAbilityConnection>(new (std::nothrow) MockIAbilityConnection());
+    auto mockConnect = sptr<MockIAbilityConnection>(new MockIAbilityConnection());
     ASSERT_NE(mockConnect, nullptr);
 
     EXPECT_CALL(*mockConnect, AsObject()).WillOnce(testing::Return(nullptr));
@@ -295,13 +295,13 @@ HWTEST_F(AbilityManagerAdapterTest, ConnectAbilityCommon_ConnectAsObjectIsNull, 
 
 HWTEST_F(AbilityManagerAdapterTest, ConnectAbilityCommon_SendRequestFails, TestSize.Level1)
 {
-    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockProxy = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockProxy, nullptr);
 
-    auto mockConnect = sptr<MockIAbilityConnection>(new (std::nothrow) MockIAbilityConnection());
+    auto mockConnect = sptr<MockIAbilityConnection>(new MockIAbilityConnection());
     ASSERT_NE(mockConnect, nullptr);
 
-    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new (std::nothrow) MockAbilityMgrRemoteObject());
+    auto mockRemoteObj = sptr<MockAbilityMgrRemoteObject>(new MockAbilityMgrRemoteObject());
     ASSERT_NE(mockRemoteObj, nullptr);
 
     EXPECT_CALL(*mockConnect, AsObject()).WillOnce(testing::Return(mockRemoteObj));

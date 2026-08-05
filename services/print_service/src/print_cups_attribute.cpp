@@ -92,11 +92,11 @@ bool ConvertDuplexModeCode(const char *src, DuplexModeCode &dst)
     if (src == nullptr) {
         return false;
     }
-    if (strcasestr(src, CUPS_SIDES_ONE_SIDED)) {
+    if (strcasecmp(src, CUPS_SIDES_ONE_SIDED) == 0) {
         dst = DUPLEX_MODE_ONE_SIDED;
-    } else if (strcasestr(src, CUPS_SIDES_TWO_SIDED_PORTRAIT)) {
+    } else if (strcasecmp(src, CUPS_SIDES_TWO_SIDED_PORTRAIT) == 0) {
         dst = DUPLEX_MODE_TWO_SIDED_LONG_EDGE;
-    } else if (strcasestr(src, CUPS_SIDES_TWO_SIDED_LANDSCAPE)) {
+    } else if (strcasecmp(src, CUPS_SIDES_TWO_SIDED_LANDSCAPE) == 0) {
         dst = DUPLEX_MODE_TWO_SIDED_SHORT_EDGE;
     } else {
         return false;

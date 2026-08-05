@@ -107,6 +107,7 @@ napi_value PrintAsyncCall::SyncCall(napi_env env, PrintAsyncCall::Context::ExecA
 void PrintAsyncCall::OnExecute(napi_env env, void *data)
 {
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
+    PRINT_CHECK_NULL_RETURN_VOID(context);
     if (context->ctx == nullptr) {
         PRINT_HILOGE("context->ctx is null");
         return;
@@ -136,6 +137,7 @@ uint32_t PrintAsyncCall::GetErrorIndex(AsyncContext *context)
 void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
+    PRINT_CHECK_NULL_RETURN_VOID(context);
     if (context->ctx == nullptr || context->ctx->GetErrorIndex() != E_PRINT_NONE) {
         status = napi_generic_failure;
     }

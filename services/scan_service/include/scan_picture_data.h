@@ -32,8 +32,7 @@ public:
     void SetNowScanProgressFinished(bool isFinal);
     void SetLastScanProgressFinished();
     bool RegisterCacheFiles(const std::string& baseName);
-    void SetCallerPid(int32_t callerPid);
-    int32_t GetPictureProgressInQueue(ScanProgress& scanProgress, int32_t callerPid);
+    int32_t GetPictureProgressInQueue(ScanProgress& scanProgress);
     void CleanAllCache();
     void CleanScanQueue();
     void CleanDiskCache();
@@ -49,7 +48,6 @@ private:
     std::map<std::string, int32_t> scanCacheFdMap_;
     std::map<int32_t, ScanProgress> scanTaskMap_;
     int32_t picId_ = 0;
-    int32_t callerPid_ = 0;
 };
 
 } // namespace OHOS::Scan

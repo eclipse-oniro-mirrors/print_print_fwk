@@ -164,12 +164,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
 
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
         PRINT_CHECK_NULL_AND_RETURN(adapterRef, nullptr);
-        sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
-        if (callback == nullptr) {
-            PRINT_HILOGE("callback parameter error");
-            NapiPrintUtils::DeleteReference(env, adapterRef);
-            return nullptr;
-        }
+        sptr<IPrintCallback> callback = new PrintCallback(env, adapterRef);
 
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
         sptr<IRemoteObject> callerToken = nullptr;
@@ -178,12 +173,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
                 callerToken = abilityContext->GetToken();
             }
         }
-        auto task = new (std::nothrow) PrintTask(printJobName, callback, printAttributes, callerToken);
-
-        if (task == nullptr) {
-            PRINT_HILOGE("print task fail");  // callback结束时自动释放adapterRef
-            return nullptr;
-        }
+        auto task = new PrintTask(printJobName, callback, printAttributes, callerToken);
         auto finalize = [](napi_env env, void *data, void *hint) {
             PRINT_HILOGD("destructed print task");
             PrintTask *task = reinterpret_cast<PrintTask *>(data);
@@ -217,6 +207,7 @@ napi_value NapiPrintTask::GetAbilityContext(
         abilityContext = OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(context);
         if (abilityContext == nullptr) {
             PRINT_HILOGE("GetAbilityContext get Stage model ability context failed.");
+            return nullptr;
         }
         return WrapVoidToJS(env);
     }
@@ -286,11 +277,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
             }
             PRINT_HILOGI("get callerToken:%{public}s", callerToken != nullptr ? "success" : "failed");
         }
-        auto task = new (std::nothrow) PrintTask(printfiles, callerToken);
-        if (task == nullptr) {
-            PRINT_HILOGE("print task fail");
-            return nullptr;
-        }
+        auto task = new PrintTask(printfiles, callerToken);
         auto finalize = [](napi_env env, void *data, void *hint) {
             PRINT_HILOGD("destructed print task");
             PrintTask *task = reinterpret_cast<PrintTask *>(data);
@@ -315,11 +302,12 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
     if (fileName.find("file://") == 0 || fileName.find("fd://") == 0 || fileName.find("content://") == 0) {
         return true;
     }
-    if (!PrintUtils::IsPathValid(fileName)) {
+    std::string resolvedFileName;
+    if (!PrintUtils::ResolveAndValidatePath(fileName, resolvedFileName)) {
         PRINT_HILOGE("invalid file path!");
         return false;
     }
-    auto file = fopen(fileName.c_str(), "rb");
+    auto file = fopen(resolvedFileName.c_str(), "rb");
     if (file != nullptr) {
         int fcloseResult = fclose(file);
         if (fcloseResult != 0) {

@@ -168,8 +168,8 @@ inline bool PrintUtil::ValidatePrinterName(const char *name)
     for (ptr = name; *ptr; ptr++) {
         if (*ptr == '@') {
             break;
-        } else if ((*ptr >= 0 && *ptr <= ' ') || *ptr == DELETE_CHARACTER || *ptr == '/' || *ptr == '\\' ||
-            *ptr == '?' || *ptr == '\'' || *ptr == '\"' || *ptr == '#') {
+        } else if ((*ptr >= 0 && *ptr < ' ') || *ptr == DELETE_CHARACTER || *ptr == '\\' ||
+            *ptr == '?' || *ptr == '\'' || *ptr == '\"') {
             return false;
         }
     }

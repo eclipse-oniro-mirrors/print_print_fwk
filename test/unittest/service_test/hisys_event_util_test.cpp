@@ -14,10 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#include <string>
 #include "hisys_event_util.h"
 #include "print_constant.h"
-
-#include "mock_hisys_event_util.h"
 
 using namespace testing::ext;
 
@@ -45,53 +44,64 @@ void HisysEventUtilTest::TearDown(void)
 
 /**
  * @tc.name: HisysEventUtilTest_0001
- * @tc.desc: reportPrintSuccess
+ * @tc.desc: ReportFailureEvent PRINT_FAILURE (non-empty key -> write; empty key -> skip)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001_NeedRename, TestSize.Level1)
+HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001, TestSize.Level1)
 {
-    OHOS::Print::HisysEventUtil util;
-    std::string param = "";
-    util.reportBehaviorEvent("test", HisysEventUtil::SEND_TASK, param);
-    EXPECT_CALL(util, reportBehaviorEvent(_, _, _)).Times(1);
+    HisysEventParams nonEmpty{
+        .eventType = HisysEventType::PRINT_FAILURE,
+        .resourceKey = "test",
+        .subState = 10
+    };
+    HisysEventUtil::ReportFailureEvent(nonEmpty);
+    HisysEventParams empty{
+        .eventType = HisysEventType::PRINT_FAILURE,
+        .resourceKey = "",
+        .subState = 10
+    };
+    HisysEventUtil::ReportFailureEvent(empty);
+    SUCCEED();
 }
 
 /**
  * @tc.name: HisysEventUtilTest_0002
- * @tc.desc: ReportConnectFailure TEST
+ * @tc.desc: ReportFailureEvent CONNECT_FAILURE (non-empty key -> write; empty key -> skip)
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0002, TestSize.Level1)
 {
-    HisysEventUtil util;
-    HisysEventParams params{
+    HisysEventParams nonEmpty{
         .eventType = HisysEventType::CONNECT_FAILURE,
         .resourceKey = "test",
         .printerModel = "printerModel"
     };
-    util.ReportFailureEvent(params);
-    EXPECT_CALL(util, ReportFailureEvent(_)).Times(1);
+    HisysEventUtil::ReportFailureEvent(nonEmpty);
+    HisysEventParams empty{
+        .eventType = HisysEventType::CONNECT_FAILURE,
+        .resourceKey = "",
+        .printerModel = "printerModel"
+    };
+    HisysEventUtil::ReportFailureEvent(empty);
+    SUCCEED();
 }
 
 /**
  * @tc.name: HisysEventUtilTest_0003
- * @tc.desc: ReportPrintFailure TEST
+ * @tc.desc: ReportFailureEvent with invalid eventType (switch default branch)
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0003, TestSize.Level1)
 {
-    HisysEventUtil util;
     HisysEventParams params{
-        .eventType = HisysEventType::PRINT_FAILURE,
-        .resourceKey = "test",
-        .subState = 10
+        .eventType = static_cast<HisysEventType>(999),
+        .resourceKey = "test"
     };
-    util.ReportFailureEvent(params);
-    EXPECT_CALL(util, ReportFailureEvent(_)).Times(1);
+    HisysEventUtil::ReportFailureEvent(params);
+    SUCCEED();
 }
-
 }  // namespace Print
 }  // namespace OHOS

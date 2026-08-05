@@ -24,6 +24,7 @@
 namespace OHOS::Scan {
 constexpr int32_t YES_VALUE = 1;
 constexpr int32_t NO_VALUE = 0;
+constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
 
 ScanContext::ScanContext()
 {}
@@ -56,19 +57,9 @@ void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
     if (deviceCount > maxDeviceCount) {
         SCAN_HILOGE("deviceCount [%{public}d] exceeded the maximum value", deviceCount);
     }
-    Scan_ScannerDevice** devices = new (std::nothrow) Scan_ScannerDevice* [deviceCount]{};
-    if (devices == nullptr) {
-        SCAN_HILOGE("devices is a nullptr");
-        discoverCallback_(nullptr, 0);
-        return;
-    }
+    Scan_ScannerDevice** devices = new Scan_ScannerDevice* [deviceCount]{};
     for (int i = 0; i < deviceCount; i++) {
-        Scan_ScannerDevice* device = new (std::nothrow) Scan_ScannerDevice();
-        if (device == nullptr) {
-            SCAN_HILOGE("devices is a nullptr");
-            deviceCount = i;
-            break;
-        }
+        Scan_ScannerDevice* device = new Scan_ScannerDevice();
         device->scannerId = infos[i].GetDeviceId().c_str();
         device->manufacturer = infos[i].GetManufacturer().c_str();
         device->model = infos[i].GetModel().c_str();
@@ -105,6 +96,11 @@ int32_t ScanContext::GetScannerParaCount(const std::string &deviceId, int32_t &s
         return StatusConvert(ret);
     }
     scannerParaCount = value.GetNumValue();
+    if (scannerParaCount < 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("scannerParaCount [%{public}d] out of valid range [0, %{public}d]",
+            scannerParaCount, MAX_SCANNER_PARA_COUNT);
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     return SCAN_ERROR_NONE;
 }
 
@@ -134,6 +130,10 @@ bool ScanContext::ParaIndexConvert(const int32_t option, int32_t &innerOption, c
 int32_t ScanContext::GetScannerParameter(
     const std::string &deviceId, int32_t scannerParaCount, ScanParaTable &paraTable)
 {
+    if (scannerParaCount <= 0 || scannerParaCount > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("scannerParaCount [%{public}d] out of range", scannerParaCount);
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     int32_t buffLength = 0;
     for (int i = 1; i < scannerParaCount; i++) {
         ScanOptionDescriptor desc;
@@ -320,25 +320,15 @@ void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions *scannerOptions)
 
 Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
 {
-    constexpr int32_t maxOptionCount = 1000;
-    if (optionCount > maxOptionCount) {
+    if (optionCount > MAX_SCANNER_PARA_COUNT) {
         SCAN_HILOGE("optionCount [%{public}d] exceeded the maximum value", optionCount);
         return nullptr;
     }
-    Scan_ScannerOptions *scannerOptions = new (std::nothrow) Scan_ScannerOptions();
-    if (scannerOptions == nullptr) {
-        SCAN_HILOGE("scannerOptions is a nullptr");
-        return nullptr;
-    }
-    scannerOptions->titles = new (std::nothrow) char *[optionCount]();
-    scannerOptions->descriptions = new (std::nothrow) char *[optionCount]();
-    scannerOptions->ranges = new (std::nothrow) char *[optionCount]();
+    Scan_ScannerOptions *scannerOptions = new Scan_ScannerOptions();
+    scannerOptions->titles = new char *[optionCount]();
+    scannerOptions->descriptions = new char *[optionCount]();
+    scannerOptions->ranges = new char *[optionCount]();
     scannerOptions->optionCount = optionCount;
-    if (scannerOptions->titles == nullptr || scannerOptions->descriptions == nullptr ||
-        scannerOptions->ranges == nullptr) {
-        FreeScannerOptionsMemory(scannerOptions);
-        return nullptr;
-    }
     return scannerOptions;
 }
 
@@ -365,31 +355,25 @@ bool ScanContext::MemSetScannerOptions(
 {
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
-        char *titBuff = new (std::nothrow) char[bufferSize];
+        char *titBuff = new char[bufferSize];
         if (!CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
-            if (titBuff != nullptr) {
-                delete[] titBuff;
-            }
+            delete[] titBuff;
             return false;
         }
         scannerOptions->titles[i] = titBuff;
 
         bufferSize = paraTable.desBuff[i].length() + 1;
-        char *desBuff = new (std::nothrow) char[bufferSize];
+        char *desBuff = new char[bufferSize];
         if (!CopySingleBuf(desBuff, paraTable.desBuff[i].c_str(), bufferSize)) {
-            if (desBuff != nullptr) {
-                delete[] desBuff;
-            }
+            delete[] desBuff;
             return false;
         }
         scannerOptions->descriptions[i] = desBuff;
 
         bufferSize = paraTable.rangesBuff[i].length() + 1;
-        char *rangesBuff = new (std::nothrow) char[bufferSize];
+        char *rangesBuff = new char[bufferSize];
         if (!CopySingleBuf(rangesBuff, paraTable.rangesBuff[i].c_str(), bufferSize)) {
-            if (rangesBuff != nullptr) {
-                delete[] rangesBuff;
-            }
+            delete[] rangesBuff;
             return false;
         }
         scannerOptions->ranges[i] = rangesBuff;
