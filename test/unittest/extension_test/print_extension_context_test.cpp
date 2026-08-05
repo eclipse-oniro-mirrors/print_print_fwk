@@ -17,6 +17,10 @@
 #define private public
 #include "print_extension_context.h"
 #undef private
+#include "print_constant.h"
+#include "ability_manager_client.h"
+#include "ability_manager_errors.h"
+#include "connection_manager.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -33,27 +37,32 @@ public:
 
 void PrintExtensionContextTest::SetUpTestCase(void)
 {}
-
 void PrintExtensionContextTest::TearDownTestCase(void)
 {}
 
 void PrintExtensionContextTest::SetUp(void)
-{}
+{
+    // Reset mock state before each test
+    AAFwk::AbilityManagerClient::ResetInstance();
+    auto &connMgr = AbilityRuntime::ConnectionManager::GetInstance();
+    connMgr.connectAbilityResult_ = ERR_OK;
+    connMgr.disconnectAbilityResult_ = ERR_OK;
+}
 
 void PrintExtensionContextTest::TearDown(void)
-{}
+{
+    AAFwk::AbilityManagerClient::ResetInstance();
+}
 
-/**
- * @tc.name: PrintExtensionContextTest_0001
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0001, TestSize.Level0)
 {
     AAFwk::Want want;
     PrintExtensionContext printExtensionContext;
-    EXPECT_NE(printExtensionContext.StartAbility(want), ERR_OK);
+    EXPECT_EQ(printExtensionContext.StartAbility(want), Print::E_PRINT_SERVER_FAILURE);
+    auto mockClient = std::make_shared<AAFwk::AbilityManagerClient>();
+    mockClient->startAbilityResult_ = ERR_OK;
+    AAFwk::AbilityManagerClient::SetInstance(mockClient);
+    EXPECT_EQ(printExtensionContext.StartAbility(want), Print::E_PRINT_NONE);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Level0)
@@ -61,7 +70,11 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Lev
     AAFwk::Want want;
     AAFwk::StartOptions startOptions;
     PrintExtensionContext printExtensionContext;
-    EXPECT_NE(printExtensionContext.StartAbility(want, startOptions), ERR_OK);
+    EXPECT_EQ(printExtensionContext.StartAbility(want, startOptions), Print::E_PRINT_SERVER_FAILURE);
+    auto mockClient = std::make_shared<AAFwk::AbilityManagerClient>();
+    mockClient->startAbilityResult_ = ERR_OK;
+    AAFwk::AbilityManagerClient::SetInstance(mockClient);
+    EXPECT_EQ(printExtensionContext.StartAbility(want, startOptions), Print::E_PRINT_NONE);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Level0)
@@ -69,7 +82,11 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Lev
     AAFwk::Want want;
     int accountId = 0;
     PrintExtensionContext printExtensionContext;
-    EXPECT_NE(printExtensionContext.StartAbilityWithAccount(want, accountId), ERR_OK);
+    EXPECT_EQ(printExtensionContext.StartAbilityWithAccount(want, accountId), Print::E_PRINT_SERVER_FAILURE);
+    auto mockClient = std::make_shared<AAFwk::AbilityManagerClient>();
+    mockClient->startAbilityResult_ = ERR_OK;
+    AAFwk::AbilityManagerClient::SetInstance(mockClient);
+    EXPECT_EQ(printExtensionContext.StartAbilityWithAccount(want, accountId), Print::E_PRINT_NONE);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Level0)
@@ -78,7 +95,12 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Lev
     int accountId = 0;
     AAFwk::StartOptions startOptions;
     PrintExtensionContext printExtensionContext;
-    EXPECT_NE(printExtensionContext.StartAbilityWithAccount(want, accountId, startOptions), ERR_OK);
+    EXPECT_EQ(printExtensionContext.StartAbilityWithAccount(want, accountId, startOptions),
+        Print::E_PRINT_SERVER_FAILURE);
+    auto mockClient = std::make_shared<AAFwk::AbilityManagerClient>();
+    mockClient->startAbilityResult_ = ERR_OK;
+    AAFwk::AbilityManagerClient::SetInstance(mockClient);
+    EXPECT_EQ(printExtensionContext.StartAbilityWithAccount(want, accountId, startOptions), Print::E_PRINT_NONE);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Level0)
@@ -86,13 +108,21 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Lev
     AAFwk::Want want;
     sptr<AbilityConnectCallback> connectCallback;
     PrintExtensionContext printExtensionContext;
-    EXPECT_NE(printExtensionContext.DisconnectAbility(want, connectCallback), ERR_OK);
+    auto &connMgr = AbilityRuntime::ConnectionManager::GetInstance();
+    connMgr.disconnectAbilityResult_ = AAFwk::CONNECTION_NOT_EXIST;
+    EXPECT_EQ(printExtensionContext.DisconnectAbility(want, connectCallback), Print::E_PRINT_RPC_FAILURE);
+    connMgr.disconnectAbilityResult_ = ERR_OK;
+    EXPECT_EQ(printExtensionContext.DisconnectAbility(want, connectCallback), Print::E_PRINT_NONE);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0006, TestSize.Level0)
 {
     PrintExtensionContext printExtensionContext;
-    EXPECT_NE(printExtensionContext.TerminateAbility(), ERR_OK);
+    EXPECT_EQ(printExtensionContext.TerminateAbility(), Print::E_PRINT_SERVER_FAILURE);
+    auto mockClient = std::make_shared<AAFwk::AbilityManagerClient>();
+    mockClient->terminateAbilityResult_ = ERR_OK;
+    AAFwk::AbilityManagerClient::SetInstance(mockClient);
+    EXPECT_EQ(printExtensionContext.TerminateAbility(), Print::E_PRINT_NONE);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0007, TestSize.Level0)
@@ -106,7 +136,11 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_ConnectAbility, Te
     AAFwk::Want want;
     sptr<AbilityConnectCallback> connectCallback = nullptr;
     PrintExtensionContext printExtensionContext;
-    EXPECT_EQ(printExtensionContext.ConnectAbility(want, connectCallback), ERR_OK);
+    auto &connMgr = AbilityRuntime::ConnectionManager::GetInstance();
+    connMgr.connectAbilityResult_ = ERR_OK;
+    EXPECT_TRUE(printExtensionContext.ConnectAbility(want, connectCallback));
+    connMgr.connectAbilityResult_ = AAFwk::CONNECTION_NOT_EXIST;
+    EXPECT_FALSE(printExtensionContext.ConnectAbility(want, connectCallback));
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_ConnectAbilityWithAccount, TestSize.Level0)
@@ -115,7 +149,11 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_ConnectAbilityWith
     int accountId = 0;
     sptr<AbilityConnectCallback> connectCallback = nullptr;
     PrintExtensionContext printExtensionContext;
-    EXPECT_EQ(printExtensionContext.ConnectAbilityWithAccount(want, accountId, connectCallback), ERR_OK);
+    auto &connMgr = AbilityRuntime::ConnectionManager::GetInstance();
+    connMgr.connectAbilityResult_ = ERR_OK;
+    EXPECT_TRUE(printExtensionContext.ConnectAbilityWithAccount(want, accountId, connectCallback));
+    connMgr.connectAbilityResult_ = AAFwk::CONNECTION_NOT_EXIST;
+    EXPECT_FALSE(printExtensionContext.ConnectAbilityWithAccount(want, accountId, connectCallback));
 }
 }  // namespace AbilityRuntime
 }  // namespace OHOS
