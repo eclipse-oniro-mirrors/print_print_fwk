@@ -57,9 +57,11 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
     std::string bundleName = printBMSHelper->QueryCallerBundleName();
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName, userId);
     int32_t callerPid = IPCSkeleton::GetCallingPid();
-    if (IsProcessForeground(callerPid)) {
-        delayUnload_.store(true);
+    if (!IsProcessForeground(callerPid)) {
+        PRINT_HILOGW("Process background, skip add caller app");
+        return;
     }
+    delayUnload_.store(true);
     for (auto &processInfo : processInfos) {
         PRINT_HILOGD("processName: %{public}s, processId: %{public}d, callerPid: %{public}d",
             processInfo.processName_.c_str(),
@@ -288,6 +290,12 @@ void PrintCallerAppMonitor::IncrementPrintCounter(const std::string &jobId)
     std::lock_guard<std::mutex> lock(callerMapMutex_);
     if (!jobId.empty()) {
         printJobMap_[jobId] = true;
+    }
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    auto callerIter = callerMap_.find(callerPid);
+    if (callerIter == callerMap_.end() || callerIter->second == nullptr) {
+        PRINT_HILOGE("Invalid pid");
+        return;
     }
     counter_.Increment();
 }
