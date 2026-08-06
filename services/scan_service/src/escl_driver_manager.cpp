@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
@@ -81,20 +82,16 @@ bool EsclDriverManager::CreateAirscanConfigFile()
         SCAN_HILOGE("The parent directory does not exist, errno = %{public}d", errno);
         return false;
     }
-    std::ofstream file(CONFIG_FILE_PATH);
-    if (!file.is_open()) {
-        SCAN_HILOGE("Failed to create file");
+    int fd = open(CONFIG_FILE_PATH, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0550);
+    if (fd < 0) {
+        SCAN_HILOGE("Failed to create file, errno = %{public}d", errno);
         return false;
     }
-    file << CONFIG_FILE_CONTENT;
-    file.close();
-    if (file.fail()) {
+    ssize_t written = write(fd, CONFIG_FILE_CONTENT, strlen(CONFIG_FILE_CONTENT));
+    close(fd);
+    if (written != static_cast<ssize_t>(strlen(CONFIG_FILE_CONTENT))) {
         SCAN_HILOGE("Failed to write CONFIG_FILE_CONTENT to file");
-        return false;
-    }
-    mode_t configFileMode = 0550;
-    if (chmod(CONFIG_FILE_PATH, configFileMode) != 0) {
-        SCAN_HILOGE("Failed to set file permissions, errno = %{public}d", errno);
+        unlink(CONFIG_FILE_PATH);
         return false;
     }
     return true;

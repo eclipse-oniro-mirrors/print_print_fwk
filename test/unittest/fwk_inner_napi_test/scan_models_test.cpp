@@ -632,6 +632,28 @@ HWTEST_F(ScanOptionDescriptorTest, ScanOptionDescriptorTest_0010_Dump, TestSize.
     EXPECT_EQ("resolution", descriptor.GetOptionName());
 }
 
+/**
+ * @tc.name: ScanOptionDescriptorTest_0011_Unmarshalling_ScanRangeFails
+ * @tc.desc: Verify Unmarshalling returns nullptr when ScanRange::Unmarshalling fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScanOptionDescriptorTest, ScanOptionDescriptorTest_0011_Unmarshalling_ScanRangeFails, TestSize.Level2)
+{
+    Parcel parcel;
+    parcel.WriteString("resolution");
+    parcel.WriteString("Resolution");
+    parcel.WriteString("desc");
+    parcel.WriteUint32(0u);
+    parcel.WriteUint32(0u);
+    parcel.WriteUint32(0u);
+    std::vector<std::string> emptyStr;
+    std::vector<int32_t> emptyNum;
+    parcel.WriteStringVector(emptyStr);
+    parcel.WriteInt32Vector(emptyNum);
+    EXPECT_EQ(nullptr, ScanOptionDescriptor::Unmarshalling(parcel));
+}
+
 // ==================== ScanDeviceInfoTCP Test ====================
 class ScanDeviceInfoTCPTest : public testing::Test {
 public:

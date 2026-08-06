@@ -133,6 +133,12 @@ bool ScannerDiscoverData::RemoveEsclDevice(const std::string& uniqueId)
     return esclDeviceInfoMap_.erase(uniqueId) > 0;
 }
 
+bool ScannerDiscoverData::RemoveUsbDevice(const std::string& uniqueId)
+{
+    std::lock_guard<std::mutex> lock(usbMutex_);
+    return usbDeviceInfoMap_.erase(uniqueId) > 0;
+}
+
 std::map<std::string, ScanDeviceInfo> ScannerDiscoverData::GetAllEsclDevices() const
 {
     std::lock_guard<std::mutex> lock(esclMutex_);
@@ -143,6 +149,35 @@ void ScannerDiscoverData::ClearEsclDevices()
 {
     std::lock_guard<std::mutex> lock(esclMutex_);
     esclDeviceInfoMap_.clear();
+}
+
+bool ScannerDiscoverData::IsDeviceIdDiscovered(const std::string& deviceId) const
+{
+    {
+        std::lock_guard<std::mutex> lock(usbMutex_);
+        for (const auto& [_, deviceInfo] : usbDeviceInfoMap_) {
+            if (deviceInfo.GetDeviceId() == deviceId) {
+                return true;
+            }
+        }
+    }
+    {
+        std::lock_guard<std::mutex> lock(tcpMutex_);
+        for (const auto& [_, deviceInfo] : tcpDeviceInfoMap_) {
+            if (deviceInfo.GetDeviceId() == deviceId) {
+                return true;
+            }
+        }
+    }
+    {
+        std::lock_guard<std::mutex> lock(esclMutex_);
+        for (const auto& [_, deviceInfo] : esclDeviceInfoMap_) {
+            if (deviceInfo.GetDeviceId() == deviceId) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 } // namespace OHOS::Scan

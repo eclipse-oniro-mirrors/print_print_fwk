@@ -73,7 +73,7 @@ sptr<IScanService> ScanManagerClient::GetScanServiceProxy()
         auto object = samgrProxy->CheckSystemAbility(SCAN_SERVICE_ID);
         if (object != nullptr) {
             if (deathRecipient_ == nullptr) {
-                deathRecipient_ = new (std::nothrow) ScanSaDeathRecipient();
+                deathRecipient_ = new ScanSaDeathRecipient();
             }
             if (deathRecipient_ != nullptr) {
                 object->AddDeathRecipient(deathRecipient_);
@@ -97,11 +97,7 @@ bool ScanManagerClient::LoadScanService()
     }
     {
         std::unique_lock<std::shared_mutex> lock(proxyLock_);
-        sptr<ScanSyncLoadCallback> lockCallback = new (std::nothrow) ScanSyncLoadCallback();
-        if (lockCallback == nullptr) {
-            SCAN_HILOGE("lockCallback is a nullptr");
-            return false;
-        }
+        sptr<ScanSyncLoadCallback> lockCallback = new ScanSyncLoadCallback();
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             SCAN_HILOGE("get samgr failed");
@@ -133,7 +129,7 @@ void ScanManagerClient::LoadServerSuccess(const sptr<IRemoteObject> &remoteObjec
         SCAN_HILOGI("scan_service LoadServerSuccess");
         if (remoteObject != nullptr) {
             if (deathRecipient_ == nullptr) {
-                deathRecipient_ = new (std::nothrow) ScanSaDeathRecipient();
+                deathRecipient_ = new ScanSaDeathRecipient();
             }
             if (deathRecipient_ != nullptr) {
                 remoteObject->AddDeathRecipient(deathRecipient_);

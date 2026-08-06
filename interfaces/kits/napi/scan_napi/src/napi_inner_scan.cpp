@@ -427,13 +427,7 @@ napi_value NapiInnerScan::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_ref callbackRef = NapiScanUtils::CreateReference(env, argv[1]);
-    sptr<IScanCallback> callback = new (std::nothrow) ScanCallback(env, callbackRef);
-    if (callback == nullptr) {
-        SCAN_HILOGE("create scan callback object fail");
-        NapiScanUtils::DeleteReference(env, callbackRef);
-        NapiScanUtils::NapiThrowError(env, E_SCAN_GENERIC_FAILURE);
-        return nullptr;
-    }
+    sptr<IScanCallback> callback = new ScanCallback(env, callbackRef);
     ret = static_cast<uint32_t>(ScanManagerClient::GetInstance()->On("", type, callback));
     if (ret != E_SCAN_NONE) {
         SCAN_HILOGE("Failed to register event");

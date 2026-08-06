@@ -44,18 +44,11 @@ PrintCallback::~PrintCallback()
     } else {
         auto mutexPtr = mutex_;
         std::lock_guard<std::mutex> autoLock(*mutexPtr);
-        Param *param = new (std::nothrow) Param;
-        if (param == nullptr) {
-            return;
-        }
-        param->env = env_;
+    Param *param = new Param;
+    param->env = env_;
         param->callbackRef = ref_;
-        auto task = [param]() {
-            if (param == nullptr) {
-                PRINT_HILOGE("param is a nullptr");
-                return;
-            }
-            napi_handle_scope scope = nullptr;
+    auto task = [param]() {
+        napi_handle_scope scope = nullptr;
             napi_open_handle_scope(param->env, &scope);
             if (scope == nullptr) {
                 PRINT_HILOGE("scope is a nullptr");
@@ -118,7 +111,7 @@ static napi_value WriteResultCallback(napi_env env, napi_callback_info info)
     std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
     uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
-    PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
+    PrintManagerClient::GetInstance().AdapterGetFileCallBack(
         jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
     CLOSE_FD_IF_VALID(cbParam->fd);
     PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
@@ -205,12 +198,8 @@ static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
 bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     std::function<void(CallbackParam*)> workCb)
 {
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        PRINT_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-    
+    CallbackParam *param = new CallbackParam;
+
     {
         std::lock_guard<std::mutex> lock(*mutex_);
         param->env = env_;
@@ -220,10 +209,6 @@ bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     }
 
     auto task = [param, workCb]() {
-        if (param == nullptr) {
-            PRINT_HILOGE("param is a nullptr");
-            return;
-        }
         std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
         workCb(param);
         delete param;
@@ -341,7 +326,7 @@ bool PrintCallback::OnCallbackAdapterLayout(
         PRINT_HILOGI("OnCallbackAdapterLayout run c++");
         adapter_->onStartLayoutWrite(jobId, oldAttrs, newAttrs, fd, [](std::string jobId, uint32_t state) {
             PRINT_HILOGI("onStartLayoutWrite write over, jobId:%{public}s state: %{public}d", jobId.c_str(), state);
-            PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
+            PrintManagerClient::GetInstance().AdapterGetFileCallBack(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, state);
         });
         return true;

@@ -120,6 +120,18 @@ public:
         return list;
     }
 
+    template <typename Creator>
+    std::shared_ptr<T> FindOrInsert(const std::string &key, Creator creator)
+    {
+        std::lock_guard<std::mutex> lock(mapMutex);
+        if (auto it = printMap.find(key); it != printMap.end()) {
+            return it->second;
+        }
+        auto value = creator();
+        printMap.insert(std::make_pair(key, value));
+        return value;
+    }
+
 private:
     std::mutex mapMutex;
     std::map<std::string, std::shared_ptr<T>> printMap;

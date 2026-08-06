@@ -43,11 +43,7 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
         for (uint32_t state : newStates) {
             PrintNotificationBuilder::CreateNotification(state, printerName);
             const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
-            HisysEventUtil::ReportFailureEvent(HisysEventParams{
-                .eventType = HisysEventType::PRINT_FAILURE,
-                .resourceKey = resourceKey,
-                .subState = state
-            });
+            HisysEventUtil::ReportPrintFailure(resourceKey, state);
         }
     } else {
         std::set<uint32_t> oldStates = iter->second;
@@ -58,11 +54,7 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
         for (uint32_t state : newStatesToNotify) {
             PrintNotificationBuilder::CreateNotification(state, printerName);
             const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
-            HisysEventUtil::ReportFailureEvent(HisysEventParams{
-                .eventType = HisysEventType::PRINT_FAILURE,
-                .resourceKey = resourceKey,
-                .subState = state
-            });
+            HisysEventUtil::ReportPrintFailure(resourceKey, state);
         }
         jobStateMap_[jobId] = newStates;
     }

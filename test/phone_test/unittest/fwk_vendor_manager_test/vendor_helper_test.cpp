@@ -32,6 +32,7 @@ const uint32_t DPI_A = 300;
 const uint32_t DPI_B = 600;
 const uint32_t DEFAULT_COUNT = 2;
 const uint32_t TEST_MAX_COPIES = 99;
+const uint32_t MAX_COLOR_MODE_COUNT = 200;
 const std::string PROTOCOL_JSON = "{\"printer_protocols\": {"
                 "\"lpd\": \"lpd://192.168.1.1:515/\", "
                 "\"socket\": \"socket://192.168.1.1:9100/\", "
@@ -324,6 +325,33 @@ HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
     detailInfo = PROTOCOL_JSON;
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+}
+
+bool UpdateColorCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability);
+
+HWTEST_F(VendorHelperTest, UpdateColorCapability_NullCapability_ReturnsFalse, TestSize.Level1)
+{
+    PrinterCapability printerCap;
+    EXPECT_FALSE(UpdateColorCapability(printerCap, nullptr));
+}
+
+HWTEST_F(VendorHelperTest, UpdateColorCapability_CountExceedsMax_ReturnsFalse, TestSize.Level1)
+{
+    PrinterCapability printerCap;
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    std::vector<Print_ColorMode> modes(MAX_COLOR_MODE_COUNT + 1, COLOR_MODE_MONOCHROME);
+    capability.supportedColorModes = modes.data();
+    capability.supportedColorModesCount = MAX_COLOR_MODE_COUNT + 1;
+    EXPECT_FALSE(UpdateColorCapability(printerCap, &capability));
+}
+
+HWTEST_F(VendorHelperTest, UpdateColorCapability_NormalCount_ReturnsTrue, TestSize.Level1)
+{
+    PrinterCapability printerCap;
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    EXPECT_TRUE(UpdateColorCapability(printerCap, &capability));
 }
 }  // namespace Print
 }  // namespace OHOS

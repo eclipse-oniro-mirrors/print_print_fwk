@@ -66,11 +66,7 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
     auto scannerDiscoveryCallback = [](std::vector<ScanDeviceInfo> &infos) {
         ScanContext::GetInstance().ExecuteCallback(infos);
     };
-    OHOS::sptr<IScanCallback> call = new (std::nothrow) ScanCallback(scannerDiscoveryCallback);
-    if (call == nullptr) {
-        SCAN_HILOGE("call is null");
-        return SCAN_ERROR_GENERIC_FAILURE;
-    }
+    OHOS::sptr<IScanCallback> call = new ScanCallback(scannerDiscoveryCallback);
     ret = client->On("", context.GetRegisterType(), call);
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("Failed to register event");

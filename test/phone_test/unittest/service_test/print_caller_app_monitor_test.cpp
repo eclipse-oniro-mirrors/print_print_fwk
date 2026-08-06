@@ -65,22 +65,51 @@ HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_GetCallingPid_returnFals
 
 HWTEST_F(PrintCallerAppMonitorTest, IncrementPrintCounter_jobIdEmpty_countIncrement, TestSize.Level1)
 {
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, -1, "");
+    printCallerAppMonitor.callerMap_[callerPid] = callerAppInfo;
     int count = printCallerAppMonitor.counter_.Value();
     std::string jobId = "";
     printCallerAppMonitor.IncrementPrintCounter(jobId);
     EXPECT_EQ(printCallerAppMonitor.counter_.Value(), count + 1);
     printCallerAppMonitor.DecrementPrintCounter(jobId);
     EXPECT_EQ(printCallerAppMonitor.counter_.Value(), count);
+    printCallerAppMonitor.callerMap_.erase(callerPid);
 }
 
 HWTEST_F(PrintCallerAppMonitorTest, IncrementPrintCounter_jobIdNotEmpty_countIncrement, TestSize.Level1)
 {
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, -1, "");
+    printCallerAppMonitor.callerMap_[callerPid] = callerAppInfo;
     int count = printCallerAppMonitor.counter_.Value();
     std::string jobId = "testJobId";
     printCallerAppMonitor.IncrementPrintCounter(jobId);
     EXPECT_EQ(printCallerAppMonitor.counter_.Value(), count + 1);
     printCallerAppMonitor.DecrementPrintCounter(jobId);
     EXPECT_EQ(printCallerAppMonitor.counter_.Value(), count);
+    printCallerAppMonitor.callerMap_.erase(callerPid);
+}
+
+HWTEST_F(PrintCallerAppMonitorTest, IncrementPrintCounter_pidNotInMap_countNotIncrement, TestSize.Level1)
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    printCallerAppMonitor.callerMap_.erase(callerPid);
+    int count = printCallerAppMonitor.counter_.Value();
+    std::string jobId = "";
+    printCallerAppMonitor.IncrementPrintCounter(jobId);
+    EXPECT_EQ(printCallerAppMonitor.counter_.Value(), count);
+}
+
+HWTEST_F(PrintCallerAppMonitorTest, IncrementPrintCounter_pidInMapButNullptr_countNotIncrement, TestSize.Level1)
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    printCallerAppMonitor.callerMap_[callerPid] = nullptr;
+    int count = printCallerAppMonitor.counter_.Value();
+    std::string jobId = "";
+    printCallerAppMonitor.IncrementPrintCounter(jobId);
+    EXPECT_EQ(printCallerAppMonitor.counter_.Value(), count);
+    printCallerAppMonitor.callerMap_.erase(callerPid);
 }
 
 HWTEST_F(PrintCallerAppMonitorTest, RemovePrintJobFromMap_jobIdEmpty_cannotErase, TestSize.Level1)

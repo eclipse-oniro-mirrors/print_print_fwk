@@ -192,7 +192,12 @@ std::string PrintNotificationBuilder::GetFaultKey(uint32_t subState)
         {PrintJobSubState::PRINT_JOB_BLOCKED_OFFLINE, "printer_offline"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_TONER, "printer_out_of_toner"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_PAPER, "printer_out_of_paper"},
-        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_EXCEPTION, "printer_driver_exception"}
+        {PrintJobSubState::PRINT_JOB_BLOCKED_DRIVER_EXCEPTION, "printer_driver_exception"},
+        {PrintJobSubState::PRINT_JOB_COMPLETED_FILE_CORRUPT, "file_corrupt"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR, "server_connection_error"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_LARGE_FILE_ERROR, "large_file_error"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_FILE_PARSING_ERROR, "file_parsing_error"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_PORT_ERROR, "port_error"},
     };
 
     auto it = resourceKeyMap.find(subState);

@@ -45,6 +45,7 @@
 #include "print_constant.h"
 #include "print_utils.h"
 #include "print_service_converter.h"
+#include "hisys_event_util.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
 #include "print_json_util.h"
@@ -238,7 +239,7 @@ static std::vector<PrinterInfo> usbPrinters;
 
 static std::mutex g_usbPrintersLock;
 static std::vector<PrinterInfo> g_usbPrinters;
-std::vector<PrinterInfo> &GetUsbPrinters()
+std::vector<PrinterInfo> GetUsbPrinters()
 {
     std::lock_guard<std::mutex> lock(g_usbPrintersLock);
     for (uint32_t i = 0; i < g_usbPrinters.size(); i++) {
@@ -270,7 +271,7 @@ void ClearUsbPrinters()
 
 static std::mutex g_backendPrintersLock;
 static std::vector<PrinterInfo> g_backendPrinters;
-std::vector<PrinterInfo> &GetBackendPrinters()
+std::vector<PrinterInfo> GetBackendPrinters()
 {
     std::lock_guard<std::mutex> lock(g_backendPrintersLock);
     return g_backendPrinters;
@@ -375,7 +376,7 @@ std::string StandardizePrinterUri(const std::string &printerUri, const std::stri
 
 PrintCupsClient::PrintCupsClient()
 {
-    printAbility_ = new (std::nothrow) PrintCupsWrapper();
+    printAbility_ = new PrintCupsWrapper();
 }
 
 PrintCupsClient::~PrintCupsClient()
@@ -544,7 +545,7 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         } else if (lstat(destFilePath.c_str(), &destFilestat) == 0) {
             PRINT_HILOGD("symlink lstat %{private}s err: %{public}s", destFilePath.c_str(), strerror(errno));
 
-            if (S_ISLNK(destFilestat.st_mode)) {
+            if (S_ISLNK(destFilestat.st_mode) && access(destFilePath.c_str(), F_OK) == 0) {
                 PRINT_HILOGW("symlink already exists, continue.");
                 continue;
             }
@@ -1061,6 +1062,8 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
     JobParameters *jobParams = BuildJobParameters(jobInfo, userName);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::BUILD_JOB_PARAMS_FAILED, PRINT_JOB_BLOCKED_UNKNOWN);
         return;
     }
     DumpJobParameters(jobParams);
@@ -1074,7 +1077,7 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
 
 JobParameters *PrintCupsClient::GetNextJob()
 {
-    JobParameters *lastJob = nullptr;
+    std::string lastJobServiceId;
     {
         std::lock_guard<std::mutex> lock(jobMutex);
         if (jobQueue_.empty()) {
@@ -1087,12 +1090,14 @@ JobParameters *PrintCupsClient::GetNextJob()
             jobQueue_.erase(jobQueue_.begin());
             return currentJob_;
         }
-        lastJob = jobQueue_.back();
+        auto lastJob = jobQueue_.back();
+        PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(lastJob, nullptr);
+        lastJobServiceId = lastJob->serviceJobId;
         PRINT_HILOGI("a active job is sending, job len: %{public}zd", jobQueue_.size());
     }
-    if (lastJob != nullptr) {
+    if (!lastJobServiceId.empty()) {
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
-            lastJob->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
+            lastJobServiceId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
     }
     return nullptr;
 }
@@ -1508,7 +1513,8 @@ int32_t PrintCupsClient::QueryPrinterAttrList(
 
 int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
-    PRINT_HILOGD("the printerInfo printerName %{public}s", info.GetPrinterName().c_str());
+    PRINT_HILOGD("the printerInfo printerName %{public}s",
+        PrintUtils::AnonymizePrinterName(info.GetPrinterName()).c_str());
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
@@ -1810,6 +1816,8 @@ void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, ht
         LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
         PRINT_HILOGW("monitorHttp is null");
+        HisysEventUtil::ReportPrintProcessFault(
+            HisysEventUtil::MONITOR_HTTP_CREATE_FAILED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
         return;
     }
     jobParams->cupsJobId = jobId;
@@ -1889,9 +1897,11 @@ void PrintCupsClient::StartMonitor()
         }
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         isMonitor = !jobMonitorList_.empty();
+        if (!isMonitor) {
+            isMonitoringRunning_.store(false);
+        }
     }
     PRINT_HILOGI("jobMonitorList is empty, exit monitor");
-    isMonitoringRunning_.store(false);
 }
 
 void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState)
@@ -1948,6 +1958,8 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             }
             monitorParams->serviceAbility->UpdatePrintJobState(
                 monitorParams->serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_FAILED);
+            HisysEventUtil::ReportPrintProcessFault(
+                HisysEventUtil::USB_PRINTER_DISCONNECTED, PRINT_JOB_COMPLETED_FAILED);
             return false;
         }
         monitorParams->serviceAbility->UpdatePrintJobState(
@@ -2732,11 +2744,7 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
-    params = new (std::nothrow) JobParameters{};
-    if (params == nullptr) {
-        PRINT_HILOGE("new JobParameters returns nullptr");
-        return params;
-    }
+    params = new JobParameters{};
     jobInfo.DupFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
@@ -3133,10 +3141,11 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
 std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
-    if (!PrintUtils::IsPathValid(ppdFilePath)) {
+    std::string resolvedPpdFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
         return "";
     }
-    std::ifstream file(ppdFilePath, std::ios::binary | std::ios::ate);
+    std::ifstream file(resolvedPpdFilePath, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         PRINT_HILOGE("ppd %{private}s open failed", ppdName.c_str());
         return "";
@@ -3297,17 +3306,18 @@ int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
 bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &info)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + fileName;
-    if (!PrintUtils::IsPathValid(ppdFilePath)) {
+    std::string resolvedPpdFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
         return false;
     }
     std::unordered_map<std::string, std::string> keyValues;
-    if (!QueryPpdInfoMap(ppdFilePath, keyValues, info)) {
+    if (!QueryPpdInfoMap(resolvedPpdFilePath, keyValues, info)) {
         return false;
     }
-    if (!keyValues["ShortNickName"].empty()) {
-        info.SetNickName(keyValues["ShortNickName"]);
-    } else if (!keyValues["NickName"].empty()) {
+    if (!keyValues["NickName"].empty()) {
         info.SetNickName(keyValues["NickName"]);
+    } else if (!keyValues["ShortNickName"].empty()) {
+        info.SetNickName(keyValues["ShortNickName"]);
     } else if (!keyValues["ModelName"].empty()) {
         info.SetNickName(keyValues["ModelName"]);
     }
@@ -3348,7 +3358,7 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         if (key == "Manufacturer") {
             info.SetManufacturer(value);
         }
-        if (key == "ShortNickName") {
+        if (key == "NickName") {
             info.SetNickName(value);
         }
         if (!info.GetManufacturer().empty() && !info.GetNickName().empty()) {

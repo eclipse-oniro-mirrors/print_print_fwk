@@ -39,6 +39,13 @@ ScanPictureData::~ScanPictureData()
     CleanAllCache();
 }
 
+void ScanPictureData::CleanScanQueue()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::queue<int32_t> empty;
+    scanQueue_.swap(empty);
+}
+
 void ScanPictureData::CleanAllCache()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -56,16 +63,11 @@ void ScanPictureData::CleanAllCache()
     std::queue<int32_t> empty;
     scanQueue_.swap(empty);
     scanTaskMap_.clear();
-    callerPid_ = 0;
 }
 
-int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress, int32_t callerPid)
+int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (callerPid_ != callerPid) {
-        SCAN_HILOGE("No permission to access scanned images");
-        return E_SCAN_NO_PERMISSION;
-    }
     if (scanQueue_.empty()) {
         SCAN_HILOGE("scanQueue is empty");
         return E_SCAN_GENERIC_FAILURE;
@@ -154,12 +156,6 @@ bool ScanPictureData::RegisterCacheFiles(const std::string& baseName)
     scanCacheFdMap_[baseName + META_SUFFIX] = INVALID_FD;
     
     return true;
-}
-
-void ScanPictureData::SetCallerPid(int32_t callerPid)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    callerPid_ = callerPid;
 }
 
 void ScanPictureData::SetScanProgr(int64_t &totalBytes, const int64_t &hundredPercent, const int32_t &curReadSize)

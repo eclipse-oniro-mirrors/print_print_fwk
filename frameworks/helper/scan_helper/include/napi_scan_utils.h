@@ -85,6 +85,7 @@ public:
     static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
+    static bool ResolveAndValidatePath(const std::string &filePath, std::string &resolvedPath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);
     static void NapiThrowError(napi_env env, uint32_t errCode);

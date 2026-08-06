@@ -28,7 +28,7 @@ void PrintSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId, 
         PRINT_HILOGE("start systemAbilityId is not print server");
         return;
     }
-    PrintManagerClient::GetInstance()->LoadServerSuccess(remoteObject);
+    PrintManagerClient::GetInstance().LoadServerSuccess(remoteObject);
 }
 
 void PrintSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
@@ -37,6 +37,6 @@ void PrintSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
         PRINT_HILOGE("start systemAbilityId is not print server");
         return;
     }
-    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance().LoadServerFail();
 }
 } // namespace OHOS::Print

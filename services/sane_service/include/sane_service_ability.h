@@ -17,7 +17,7 @@
 #define SANE_SERVER_MANAGER_H
 
 #include <mutex>
-#include <map>
+#include <optional>
 #include "system_ability.h"
 #include "sane_backends_stub.h"
 #include "scan_log.h"
@@ -56,8 +56,12 @@ private:
     SaneStatus GetControlOption(SANE_Handle& handle, const SaneControlParam& controlParam, SaneOutParam& outParam);
     SaneStatus SetControlOption(SANE_Handle& handle, const SaneControlParam& controlParam, SaneOutParam& outParam);
     void ConvertSaneDescriptor(const SANE_Option_Descriptor* saneDesc, SaneOptionDescriptor& saneOptDes);
-    std::map<std::string, SANE_Handle> scannerHandleList_;
-    std::mutex scannerHandleListlock_;
+    struct OpenedSaneHandle {
+        std::string scannerId;
+        SANE_Handle handle;
+    };
+    std::optional<OpenedSaneHandle> scannerHandle_;
+    std::mutex scannerHandleLock_;
 };
 
 } // namespace  OHOS::Scan

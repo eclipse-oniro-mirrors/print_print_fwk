@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <mutex>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 #include <unordered_map>
 #include <json/json.h>
@@ -38,6 +39,10 @@
 #include "print_user_data.h"
 #include "print_system_data.h"
 #include "vendor_manager.h"
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+#include "agent/print_fwk_agent_host.h"
+#include "agent/print_fwk_agent_manager.h"
+#endif
 #include "os_account_manager.h"
 #include "singleton.h"
 #include "app_mgr_client.h"
@@ -52,7 +57,14 @@ namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
 
-class PrintServiceAbility : public SystemAbility, public PrintServiceStub, public IPrintServiceAbility {
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+using PrintFwkAgentHostBase = PrintFwkAgentHost;
+#else
+class PrintFwkAgentHostBase {};
+#endif
+
+class PrintServiceAbility : public SystemAbility, public PrintServiceStub, public IPrintServiceAbility,
+    public PrintFwkAgentHostBase {
     DECLARE_SYSTEM_ABILITY(PrintServiceAbility);
 
 public:
@@ -173,6 +185,10 @@ protected:
 
 private:
     int32_t Init();
+    int32_t InitServiceDependencies();
+    void InitAgentManager();
+    bool PublishService(ServiceRunningState previousState);
+    void RefreshPrintersAfterInit();
     void InitServiceHandler();
     void ManualStart();
     int32_t ConnectPrinterByType(const std::string &printerId);
@@ -196,7 +212,9 @@ private:
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
     int32_t CallSpooler(
         const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId);
-    void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
+    void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState,
+        pid_t ownerPid = -1);
+    pid_t GetOwnerPidFromJobList(const std::string &jobId) const;
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool createNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
@@ -260,8 +278,8 @@ private:
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
-    void CancelPrintJobHandleCallback(const std::shared_ptr<PrintUserData> userData,
-        const std::string& extensionId, const std::string &jobId);
+    void CancelPrintJobHandleCallback(const std::string& extensionId,
+        const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions,
                                                     const PrinterPreferences &preferences,
                                                     const PrinterUserPreferences &userPrefs);
@@ -283,6 +301,11 @@ private:
     void ProcessSingleCustomOption(const std::string &key,
         const Json::Value &optionJson, PrinterUserPreferences &userPrefs);
     std::string GetCallerBundleName() override;
+    int32_t ValidateExtensionId(const std::string &extensionId);
+    int32_t AddPrinterToCupsInner(
+        const std::string &printerUri, const std::string &printerName, const std::string &printerMake);
+    int32_t ValidatePrinterForUpdateDiscovery(
+        const std::string &extensionId, const PrinterInfo &printerInfo);
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options, const std::string &bundleName);
@@ -311,6 +334,8 @@ private:
     void MonitorModeChange();
     bool IsModeChangeEnd(std::string &lastChangeModeValue);
     bool UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo);
+    void SupplementBsuniPrinterAdvanceOptionsIfNeeded(const std::string &printerId, PrinterInfo &info);
+    void RefreshAddedPrinterAdvanceOptions();
     void ParseSingleAdvanceOptJson(
         const std::string &keyword, const Json::Value &singleOptArray, Json::Value &singleAdvanceOptJson);
     void IncrementPrintCounterByPcSettings();
@@ -319,6 +344,11 @@ private:
     void RefreshIpPrinter();
     void RefreshThirdDriverPrinter();
     bool IsPpdNameValid(const std::string &ppdName) override;
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    bool IsCallerSystemApp() override;
+    void NotifyPrinterInfoChanged(const PrinterInfo &info) override;
+    void CommitAgentPrinterDeleted(const std::string &printerId, const std::string &printerName) override;
+#endif
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName) override;
     int32_t InitServiceHelper();
@@ -362,6 +392,7 @@ private:
     bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData) override;
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
+    int32_t ContinueDeletePrinterFromCups(const std::string &printerId, const std::string &printerName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
@@ -408,6 +439,9 @@ private:
     uint32_t enterLowPowerCount_;
     bool isLowPowerMode_;
     VendorManager vendorManager;
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    std::unique_ptr<PrintFwkAgentManager> agentManager_;
+#endif
 
     std::map<int32_t, PrintCallerAppInfo> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;

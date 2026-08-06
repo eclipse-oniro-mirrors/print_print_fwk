@@ -72,6 +72,7 @@ using SteadyTimePoint = std::chrono::steady_clock::time_point;
 
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
+constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
 
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
@@ -138,7 +139,10 @@ void ScanServiceAbility::OnStart()
 {
     SCAN_HILOGI("ScanServiceAbility::Enter OnStart.");
     if (instance_ == nullptr) {
-        instance_ = this;
+        std::lock_guard<std::mutex> autoLock(instanceLock_);
+        if (instance_ == nullptr) {
+            instance_ = this;
+        }
     }
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         SCAN_HILOGI("ScanServiceAbility is already running.");
@@ -156,8 +160,13 @@ void ScanServiceAbility::OnStart()
     int32_t ret = ServiceInit();
     if (ret != ERR_OK) {
         auto callback = [=]() { ServiceInit(); };
-        if (serviceHandler_ != nullptr) {
-            serviceHandler_->PostTask(callback, INIT_INTERVAL);
+        std::shared_ptr<AppExecFwk::EventHandler> handler;
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            handler = serviceHandler_;
+        }
+        if (handler != nullptr) {
+            handler->PostTask(callback, INIT_INTERVAL);
             SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
         } else {
             SCAN_HILOGE("ScanServiceAbility Init failed and serviceHandler_ is nullptr");
@@ -193,7 +202,10 @@ void ScanServiceAbility::OnStop()
         SCAN_HILOGW("service is not running");
         return;
     }
-    serviceHandler_ = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        serviceHandler_ = nullptr;
+    }
     state_ = ServiceRunningState::STATE_NOT_START;
     SCAN_HILOGI("OnStop end.");
 }
@@ -246,11 +258,11 @@ void ScanServiceAbility::InitializeScanService()
 void ScanServiceAbility::CleanupScanService()
 {
     std::lock_guard<std::mutex> autoLock(lock_);
-    for (const auto &[scannerId, owner] : openedScannerMap_) {
-        SaneManagerClient::GetInstance().SaneCancel(scannerId);
-        SaneManagerClient::GetInstance().SaneClose(scannerId);
+    if (openedScanner_.has_value()) {
+        SaneManagerClient::GetInstance().SaneCancel(openedScanner_->scannerId);
+        SaneManagerClient::GetInstance().SaneClose(openedScanner_->scannerId);
     }
-    openedScannerMap_.clear();
+    openedScanner_.reset();
     SaneManagerClient::GetInstance().SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
     {
@@ -260,6 +272,12 @@ void ScanServiceAbility::CleanupScanService()
     }
     scannerState_.store(SCANNER_READY);
     scanPictureData_.CleanAllCache();
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        SCAN_HILOGI("clear registeredListeners_ on service cleanup, size=%{public}zu",
+                    registeredListeners_.size());
+        registeredListeners_.clear();
+    }
 }
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
@@ -505,8 +523,15 @@ int32_t ScanServiceAbility::GetScannerList()
             break;
         }
     };
-    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
-    serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
+    {
+        std::shared_ptr<AppExecFwk::EventHandler> handler;
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            handler = serviceHandler_;
+        }
+        SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(handler, E_SCAN_SERVER_FAILURE, __func__);
+        handler->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
+    }
     SCAN_HILOGI("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
 }
@@ -525,13 +550,22 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         return E_SCAN_INVALID_PARAMETER;
     }
     
-    if (auto it = openedScannerMap_.find(scannerId); it != openedScannerMap_.end()) {
-        if (it->second.callerPid == IPCSkeleton::GetCallingPid() && it->second.userId == GetCurrentUserId()) {
+    if (openedScanner_.has_value()) {
+        if (openedScanner_->scannerId == scannerId &&
+            openedScanner_->callerPid == IPCSkeleton::GetCallingPid() &&
+            openedScanner_->userId == GetCurrentUserId()) {
             SCAN_HILOGD("scannerId %{private}s is already opened by same caller", scannerId.c_str());
             return E_SCAN_NONE;
         }
-        SCAN_HILOGE("scannerId %{private}s is already opened by another caller", scannerId.c_str());
+        SCAN_HILOGE("scanner %{private}s is already opened, only one scanner can be opened at a time",
+                    openedScanner_->scannerId.c_str());
         return E_SCAN_DEVICE_BUSY;
+    }
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    if (!scannerDiscoverData_.IsDeviceIdDiscovered(scannerId)
+        && !scanData.IsDeviceIdAdded(scannerId)) {
+        SCAN_HILOGE("OpenScanner scannerId is not found in discovered or added devices");
+        return E_SCAN_UNSUPPORTED;
     }
     SaneStatus status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
     if (status != SANE_STATUS_GOOD) {
@@ -542,7 +576,7 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
-    openedScannerMap_[scannerId] = {IPCSkeleton::GetCallingPid(), GetCurrentUserId()};
+    openedScanner_ = OpenedScanner{scannerId, IPCSkeleton::GetCallingPid(), GetCurrentUserId()};
     SCAN_HILOGI("ScanServiceAbility OpenScanner end");
     return E_SCAN_NONE;
 }
@@ -565,7 +599,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
-    openedScannerMap_.erase(scannerId);
+    openedScanner_.reset();
     SCAN_HILOGI("ScanServiceAbility CloseScanner end");
     return E_SCAN_NONE;
 }
@@ -750,6 +784,11 @@ int32_t ScanServiceAbility::GetScanParametersInternal(const std::string &scanner
         SCAN_HILOGE("SaneGetParameters failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
+    int32_t frameValue = static_cast<int32_t>(saneParams.format_);
+    if (frameValue < SANE_FRAME_GRAY || frameValue >= SANE_FRAME_MAX) {
+        SCAN_HILOGE("Invalid scan format: [%{public}d]", frameValue);
+        return E_SCAN_INVALID_PARAMETER;
+    }
     para.SetFormat(static_cast<ScanFrame>(saneParams.format_));
     para.SetLastFrame(saneParams.lastFrame_);
     para.SetBytesPerLine(saneParams.bytesPerLine_);
@@ -773,6 +812,7 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         return ownerRet;
     }
     SCAN_HILOGI("ScanServiceAbility CancelScan start");
+    scanPictureData_.CleanScanQueue();
     SaneStatus saneStatus = SaneManagerClient::GetInstance().SaneCancel(scannerId);
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneCancel failed, status: [%{public}u]", saneStatus);
@@ -908,6 +948,7 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
         return;
     }
     SCAN_HILOGD("DisConnectUsbScanner start deviceId:%{private}s", deviceId.c_str());
+    scannerDiscoverData_.RemoveUsbDevice(serialNumber);
     ScanDeviceInfoSync scanDeviceInfoSync;
     scanDeviceInfoSync.uniqueId = serialNumber;
     scanDeviceInfoSync.deviceId = deviceId;
@@ -1007,7 +1048,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
-    int32_t status = scanPictureData_.GetPictureProgressInQueue(prog, IPCSkeleton::GetCallingPid());
+    int32_t status = scanPictureData_.GetPictureProgressInQueue(prog);
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("scanprogress exception occurred:[%{public}u]", status);
         return status;
@@ -1151,6 +1192,10 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
+    if (scannerState_.load() != SCANNER_READY) {
+        SCAN_HILOGE("scannerId %{private}s is not ready", scannerId.c_str());
+        return E_SCAN_DEVICE_BUSY;
+    }
 
     // Check if ESCL scanner's ADF is empty before starting scan in external API call.
     // If the scanner uses ESCL protocol and the scan source is ADF,
@@ -1168,8 +1213,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         }
     }
     
-    int32_t status = StartScanOnceInternal(scannerId);
-    if (status != E_SCAN_NONE) {
+    if (int32_t status = StartScanOnceInternal(scannerId); status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
         return status;
     }
@@ -1180,9 +1224,15 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         ScanTask task(scannerId, userId, batchMode);
         StartScanTask(task);
     };
-    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
-    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
-    scanPictureData_.SetCallerPid(IPCSkeleton::GetCallingPid());
+    {
+        std::shared_ptr<AppExecFwk::EventHandler> handler;
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            handler = serviceHandler_;
+        }
+        SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(handler, E_SCAN_SERVER_FAILURE, __func__);
+        handler->PostTask(exe, ASYNC_CMD_DELAY);
+    }
     SCAN_HILOGI("StartScan successfully");
     return E_SCAN_NONE;
 }
@@ -1197,9 +1247,13 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
         GeneratePictureSingle(scanTask);
     }
     SCAN_HILOGI("StartScanTask finished, doning scan task free");
+    std::lock_guard<std::mutex> autoLock(lock_);
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
+    if (scannerState_.load() == SCANNER_CANCELING) {
+        scanPictureData_.CleanScanQueue();
+    }
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }
@@ -1394,8 +1448,10 @@ int32_t ScanServiceAbility::GetCurrentUserId()
 
 int32_t ScanServiceAbility::CheckScannerOwner(const std::string& scannerId)
 {
-    if (auto it = openedScannerMap_.find(scannerId); it != openedScannerMap_.end()) {
-        if (it->second.callerPid != IPCSkeleton::GetCallingPid() || it->second.userId != GetCurrentUserId()) {
+    if (openedScanner_.has_value()) {
+        if (openedScanner_->scannerId != scannerId ||
+            openedScanner_->callerPid != IPCSkeleton::GetCallingPid() ||
+            openedScanner_->userId != GetCurrentUserId()) {
             SCAN_HILOGE("operation denied: scanner opened by another caller");
             return E_SCAN_ACCESS_DENIED;
         }
@@ -1408,19 +1464,33 @@ int32_t ScanServiceAbility::CheckScannerOwner(const std::string& scannerId)
 void ScanServiceAbility::CleanupDeadCaller(int32_t deadPid)
 {
     std::lock_guard<std::mutex> autoLock(lock_);
-    for (auto it = openedScannerMap_.begin(); it != openedScannerMap_.end();) {
-        if (it->second.callerPid == deadPid) {
-            SCAN_HILOGI("cleaning up scanner %{private}s for dead pid %{public}d",
-                        it->first.c_str(), deadPid);
-            SaneManagerClient::GetInstance().SaneCancel(it->first);
-            SaneManagerClient::GetInstance().SaneClose(it->first);
-            it = openedScannerMap_.erase(it);
-        } else {
-            ++it;
-        }
+    if (openedScanner_.has_value() && openedScanner_->callerPid == deadPid) {
+        SCAN_HILOGI("cleaning up scanner %{private}s for dead pid %{public}d",
+                    openedScanner_->scannerId.c_str(), deadPid);
+        SaneManagerClient::GetInstance().SaneCancel(openedScanner_->scannerId);
+        SaneManagerClient::GetInstance().SaneClose(openedScanner_->scannerId);
+        openedScanner_.reset();
     }
-    if (scannerState_.load() == SCANNER_SCANING && openedScannerMap_.empty()) {
+    if (scannerState_.load() == SCANNER_SCANING && !openedScanner_.has_value()) {
         scannerState_.store(SCANNER_READY);
+    }
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        for (auto it = registeredListeners_.begin(); it != registeredListeners_.end();) {
+            int32_t listenerUserId = -1;
+            int32_t listenerCallerPid = -1;
+            if (!ScanServiceUtils::DecodeTaskEventId(it->first, listenerUserId, listenerCallerPid)) {
+                ++it;
+                continue;
+            }
+            if (listenerCallerPid == deadPid) {
+                SCAN_HILOGI("remove listener %{public}s for dead pid %{public}d",
+                            it->first.c_str(), deadPid);
+                it = registeredListeners_.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 }
 
@@ -1434,6 +1504,10 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
+    }
+    if (outParam.valueNumber_ <= 0 || outParam.valueNumber_ > MAX_SCANNER_PARA_COUNT) {
+        SCAN_HILOGE("Invalid option count: [%{public}d]", outParam.valueNumber_);
+        return E_SCAN_INVALID_PARAMETER;
     }
     int32_t resolutionIndex = 0;
     for (int32_t optionIndex = 1; optionIndex < outParam.valueNumber_; optionIndex++) {

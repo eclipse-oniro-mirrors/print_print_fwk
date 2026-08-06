@@ -153,7 +153,7 @@ static void QueryAllPrinterExtensionInfosNative(ani_env *env, ani_object callbac
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter QueryAllPrinterExtensionInfosNative");
     std::vector<PrintExtensionInfo> extensionInfos;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllExtension(extensionInfos);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallbackArray(env, callback, stsErrCode,
         AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(env, extensionInfos));
@@ -174,7 +174,7 @@ static void StartDiscoverPrinterNative(ani_env *env, ani_object arrayObj, ani_ob
     for (auto extension : extensionList) {
         PRINT_HILOGD("extension = %{public}s", extension.c_str());
     }
-    int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(extensionList);
+    int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(extensionList);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -184,7 +184,7 @@ static void StopDiscoverPrinterNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter StopDiscoverPrinterNative");
-    int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
+    int32_t ret = PrintManagerClient::GetInstance().StopDiscoverPrinter();
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -202,7 +202,7 @@ static void ConnectPrinterNative(ani_env *env, ani_string printerIdAni, ani_obje
         return;
     }
     PRINT_HILOGD("Printer ID: %{public}s", printerId.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(printerId);
+    int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(printerId);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -220,7 +220,7 @@ static void DisconnectPrinterNative(ani_env *env, ani_string printerId, ani_obje
         return;
     }
     PRINT_HILOGD("Printer ID: %{public}s", id.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(id);
+    int32_t ret = PrintManagerClient::GetInstance().DisconnectPrinter(id);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -238,7 +238,7 @@ static void QueryPrinterCapabilityNative(ani_env *env, ani_string printerId, ani
         return;
     }
     PRINT_HILOGD("Printer ID: %{public}s", id.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(id);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapability(id);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -247,9 +247,10 @@ static void StartPrintJobNative(ani_env *env, ani_object jobInfo, ani_object cal
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(jobInfo);
     PRINT_HILOGI("enter StartPrintJobNative");
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrintJob(job);
+    int32_t ret = PrintManagerClient::GetInstance().StartPrintJob(job);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -267,7 +268,7 @@ static void CancelPrintJobNative(ani_env *env, ani_string jobId, ani_object call
         return;
     }
     PRINT_HILOGD("Job ID: %{public}s", id.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->CancelPrintJob(id);
+    int32_t ret = PrintManagerClient::GetInstance().CancelPrintJob(id);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -279,7 +280,7 @@ static void RequestPrintPreviewCallbackNative(ani_env *env, ani_object jobInfo, 
     PRINT_HILOGI("enter RequestPrintPreviewNative");
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     std::string previewResult;
-    int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(job, previewResult);
+    int32_t ret = PrintManagerClient::GetInstance().RequestPreview(job, previewResult);
     ani_object resultObj = CreateInt(env, ret);
     if (ret != E_PRINT_NONE) {
         StsCallback(env, callback, nullptr);
@@ -292,10 +293,11 @@ static void RequestPrintPreviewAsyncCallbackNative(ani_env *env, ani_object jobI
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(jobInfo);
     PRINT_HILOGI("enter RequestPrintPreviewNative");
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     std::string previewResult;
-    int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(job, previewResult);
+    int32_t ret = PrintManagerClient::GetInstance().RequestPreview(job, previewResult);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, CreateInt(env, ret));
 }
@@ -312,7 +314,7 @@ static void AddPrintersNative(ani_env *env, ani_object printers, ani_object call
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinters(printerList);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinters(printerList);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -355,7 +357,7 @@ static void AddPrinterNative(ani_env *env, ani_string printerNameAni, ani_string
     }
 
     PRINT_HILOGD("printerName: %{public}s, uri: %{private}s", printerName.c_str(), uri.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(printerName, uri, ppdName, options);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinter(printerName, uri, ppdName, options);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -375,7 +377,7 @@ static void RemovePrintersNative(ani_env *env, ani_object printerIds, ani_object
     for (auto id : ids) {
         PRINT_HILOGD("id = %{public}s", id.c_str());
     }
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinters(ids);
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinters(ids);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -392,7 +394,7 @@ static void UpdatePrintersNative(ani_env *env, ani_object printers, ani_object c
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(printerList);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinters(printerList);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -418,7 +420,7 @@ static void UpdatePrinterStateNative(ani_env *env, ani_string printerId, ani_enu
         return;
     }
     PRINT_HILOGD("enumValue = %{public}u", enumValue);
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(id, enumValue);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterState(id, enumValue);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -452,7 +454,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
         return;
     }
     PRINT_HILOGD("jobSubState = %{public}u", jobSubState);
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(id, jobState, jobSubState);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrintJobStateOnlyForSystemApp(id, jobState, jobSubState);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -470,7 +472,7 @@ static void UpdateExtensionInfoNative(ani_env *env, ani_string info, ani_object 
         return;
     }
     PRINT_HILOGD("Extension Info: %{public}s", infoStr.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(infoStr);
+    int32_t ret = PrintManagerClient::GetInstance().UpdateExtensionInfo(infoStr);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -481,7 +483,7 @@ static void QueryAllPrintJobsNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter QueryAllPrintJobsNative");
     std::vector<PrintJob> jobs;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(jobs);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllPrintJob(jobs);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -492,7 +494,7 @@ static void QueryPrintJobListNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter QueryPrintJobListNative");
     std::vector<PrintJob> jobs;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(jobs);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAllPrintJob(jobs);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallbackArray(env, callback, stsErrCode, AniPrintJobHelper::CreatePrintJobArray(env, jobs));
 }
@@ -511,7 +513,7 @@ static void QueryPrintJobByIdNative(ani_env *env, ani_string jobId, ani_object c
     }
     PRINT_HILOGD("Job ID: %{public}s", id.c_str());
     PrintJob job;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrintJobById(id, job);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrintJobById(id, job);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, AniPrintJobHelper::CreatePrintJob(env, job));
 }
@@ -529,12 +531,11 @@ static void StartGettingPrintFileNative(ani_env *env, ani_string jobId,
         return;
     }
     PRINT_HILOGD("Job ID: %{public}s, FD: %{public}d", id.c_str(), fd);
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
     std::string typeStr = "getPrintFileCallback_adapter";
-    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+    PrintManagerClient::GetInstance().On("", typeStr, callbackWrapper);
     PrintAttributes attrs = AniPrintAttributesHelper::ParsePrintAttributes(env, printAttributes);
-    PrintManagerClient::GetInstance()->StartGetPrintFile(id, attrs, fd);
+    PrintManagerClient::GetInstance().StartGetPrintFile(id, attrs, fd);
 }
 
 static void NotifyPrintServiceNative(ani_env *env, ani_string jobId, ani_string typeAni, ani_object callback)
@@ -558,7 +559,7 @@ static void NotifyPrintServiceNative(ani_env *env, ani_string jobId, ani_string 
         return;
     }
     PRINT_HILOGD("Job ID: %{public}s", id.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintService(id, type);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyPrintService(id, type);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -575,7 +576,7 @@ static ani_int GetAddedPrintersNative(ani_env *env, ani_object callback)
         return ANI_ERROR;
     }
     std::vector<std::string> printers;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(printers);
+    int32_t ret = PrintManagerClient::GetInstance().QueryAddedPrinter(printers);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallbackArray(env, callback, stsErrCode, CreateAniStringArray(env, printers));
     return ANI_OK;
@@ -595,7 +596,7 @@ static void GetPrinterInfoByIdNative(ani_env *env, ani_string printerId, ani_obj
     }
     PRINT_HILOGD("Printer ID: %{public}s", id.c_str());
     PrinterInfo info;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(id, info);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterInfoByPrinterId(id, info);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, PrinterInfoAniHelper::CreatePrinterInfo(env, info));
 }
@@ -614,7 +615,7 @@ static void NotifyPrintServiceEventNative(ani_env *env, ani_enum_item enumObj, a
     }
     PRINT_HILOGD("Event: %{public}d", event);
     std::string jobId;
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyPrintServiceEvent(jobId, event);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -623,10 +624,11 @@ static void AddPrinterToDiscoveryNative(ani_env *env, ani_object printerInfo, an
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(printerInfo);
     PRINT_HILOGI("enter AddPrinterToDiscoveryNative");
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
     info.Dump();
-    int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToDiscovery(info);
+    int32_t ret = PrintManagerClient::GetInstance().AddPrinterToDiscovery(info);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -637,7 +639,7 @@ static void UpdatePrinterInDiscoveryNative(ani_env *env, ani_object printerInfo,
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter UpdatePrinterInDiscoveryNative");
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInDiscovery(info);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterInDiscovery(info);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -655,7 +657,7 @@ static void RemovePrinterFromDiscoveryNative(ani_env *env, ani_string printerId,
         return;
     }
     PRINT_HILOGD("Printer ID: %{public}s", id.c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->RemovePrinterFromDiscovery(id);
+    int32_t ret = PrintManagerClient::GetInstance().RemovePrinterFromDiscovery(id);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -680,7 +682,7 @@ static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAn
     }
     PRINT_HILOGD("printerId: %{public}s", printerId.c_str());
     PrinterInfo info;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(printerId, info);
+    int32_t ret = PrintManagerClient::GetInstance().QueryPrinterInfoByPrinterId(printerId, info);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, PrinterInfoAniHelper::CreatePrinterInformation(env, info));
 }
@@ -691,9 +693,9 @@ static void OnPrinterStateChangeNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OnPrinterStateChangeNative");
     std::string typeStr = "printerStateChange";
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
-    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance().On("", typeStr, callbackWrapper);
 }
 
 static void OnJobStateChangeNative(ani_env *env, ani_object callback)
@@ -702,9 +704,9 @@ static void OnJobStateChangeNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OnJobStateChangeNative");
     std::string typeStr = "jobStateChange";
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
-    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance().On("", typeStr, callbackWrapper);
 }
 
 static void OnExtInfoChangeNative(ani_env *env, ani_object callback)
@@ -713,9 +715,9 @@ static void OnExtInfoChangeNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OnExtInfoChangeNative");
     std::string typeStr = "extInfoChange";
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
-    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance().On("", typeStr, callbackWrapper);
 }
 
 static void OnPrintTask(ani_env *env, ani_string type, ani_object callback, ani_object taskObj)
@@ -733,8 +735,7 @@ static void OnPrintTask(ani_env *env, ani_string type, ani_object callback, ani_
         PRINT_HILOGE("printTask is a nullptr");
         return;
     }
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
     printTask->On(typeStr, callbackWrapper);
 }
 
@@ -753,8 +754,7 @@ static void OffPrintTask(ani_env *env, ani_string type, ani_object callback, ani
         PRINT_HILOGE("printTask is a nullptr");
         return;
     }
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
     printTask->Off(typeStr, callbackWrapper);
 }
 
@@ -767,7 +767,7 @@ static void OffNative(ani_env *env, ani_string type, ani_string string_object)
         return;
     }
     PRINT_HILOGD("CallMeWithOptionalString Get = %{public}s", typeStr.c_str());
-    PrintManagerClient::GetInstance()->Off("", typeStr);
+    PrintManagerClient::GetInstance().Off("", typeStr);
 }
 
 static void OffPrinterChangeNative(ani_env *env, ani_string type, ani_object callback)
@@ -779,7 +779,7 @@ static void OffPrinterChangeNative(ani_env *env, ani_string type, ani_object cal
         return;
     }
     PRINT_HILOGD("CallMeWithOptionalString Get = %{public}s", typeStr.c_str());
-    PrintManagerClient::GetInstance()->Off("", typeStr);
+    PrintManagerClient::GetInstance().Off("", typeStr);
 }
 
 static void OnPrinterChangeNative(ani_env *env, ani_object callback)
@@ -788,9 +788,9 @@ static void OnPrinterChangeNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OnPrinterChangeNative");
     std::string typeStr = "printerChange";
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
-    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance().On("", typeStr, callbackWrapper);
 }
 
 static void StartPrintNative(ani_env *env, ani_object job, ani_object callback)
@@ -799,7 +799,7 @@ static void StartPrintNative(ani_env *env, ani_object job, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter StartPrintNative");
     PrintJob printJob = AniPrintJobHelper::ParsePrintJob(env, job);
-    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(printJob);
+    int32_t ret = PrintManagerClient::GetInstance().StartNativePrintJob(printJob);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }
@@ -809,9 +809,9 @@ static void RegisterWatermarkCallbackNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter RegisterWatermarkCallbackNative");
-    OHOS::sptr<IWatermarkCallback> callbackWrapper = new (std::nothrow) WatermarkAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterWatermarkCallback(callbackWrapper);
+
+    OHOS::sptr<IWatermarkCallback> callbackWrapper = new WatermarkAniCallback(env, callback);
+    int32_t ret = PrintManagerClient::GetInstance().RegisterWatermarkCallback(callbackWrapper);
     PRINT_HILOGD("RegisterWatermarkCallback ret = %{public}d", ret);
 }
 
@@ -820,7 +820,7 @@ static void UnregisterWatermarkCallbackNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter UnregisterWatermarkCallbackNative");
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterWatermarkCallback();
+    int32_t ret = PrintManagerClient::GetInstance().UnregisterWatermarkCallback();
     PRINT_HILOGD("UnregisterWatermarkCallback ret = %{public}d", ret);
 }
 
@@ -840,7 +840,7 @@ static void NotifyWatermarkCompleteNative(ani_env *env, ani_string jobId, ani_en
         PRINT_HILOGE("GetEnumValueInt fail");
         return;
     }
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyWatermarkComplete(id, result);
+    int32_t ret = PrintManagerClient::GetInstance().NotifyWatermarkComplete(id, result);
     PRINT_HILOGD("NotifyWatermarkComplete ret = %{public}d", ret);
 }
 
@@ -849,9 +849,9 @@ static void OnPrinterInfoQueryNative(ani_env *env, ani_object callback)
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OnPrinterInfoQueryNative");
-    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
-    PRINT_CHECK_NULL_RETURN_VOID(callbackWrapper);
-    PrintManagerClient::GetInstance()->On("", PRINTER_INFO_QUERY_EVENT_TYPE, callbackWrapper);
+
+    OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance().On("", PRINTER_INFO_QUERY_EVENT_TYPE, callbackWrapper);
 }
 
 static void OffPrinterInfoQueryNative(ani_env *env, ani_string type, ani_object callback)
@@ -859,7 +859,7 @@ static void OffPrinterInfoQueryNative(ani_env *env, ani_string type, ani_object 
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter OffPrinterInfoQueryNative");
-    PrintManagerClient::GetInstance()->Off("", PRINTER_INFO_QUERY_EVENT_TYPE);
+    PrintManagerClient::GetInstance().Off("", PRINTER_INFO_QUERY_EVENT_TYPE);
 }
 
 static void UpdatePrinterInformationNative(ani_env *env, ani_object printerInfo, ani_object callback)
@@ -868,7 +868,7 @@ static void UpdatePrinterInformationNative(ani_env *env, ani_object printerInfo,
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
     PRINT_HILOGI("enter UpdatePrinterInformationNative");
     PrinterInfo info = PrinterInfoAniHelper::ParsePrinterInformation(env, printerInfo);
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(info);
+    int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterInSystem(info);
     ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, nullptr);
 }

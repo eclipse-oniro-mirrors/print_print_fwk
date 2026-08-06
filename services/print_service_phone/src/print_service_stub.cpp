@@ -1034,11 +1034,7 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
         return false;
     }
 
-    char* userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE];
-    if (userPasswd == nullptr) {
-        PRINT_HILOGE("Allocate Password fail.");
-        return false;
-    }
+    char* userPasswd = new char[MAX_AUTH_LENGTH_SIZE];
 
     auto memcpyRet = memcpy_s(userPasswd, MAX_AUTH_LENGTH_SIZE, outData, MAX_AUTH_LENGTH_SIZE);
     if (memcpyRet != E_PRINT_NONE) {
@@ -1252,11 +1248,7 @@ static bool ReadSmbPasswordFromParcel(MessageParcel &data, char *&userPasswd)
         PRINT_HILOGE("Read Password Buffer fail.");
         return false;
     }
-    userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
-    if (userPasswd == nullptr) {
-        PRINT_HILOGE("Allocate Password fail.");
-        return false;
-    }
+    userPasswd = new char[MAX_AUTH_LENGTH_SIZE]{};
     auto memcpyRet = memcpy_s(userPasswd, MAX_AUTH_LENGTH_SIZE, outData, MAX_AUTH_LENGTH_SIZE);
     if (memcpyRet != E_PRINT_NONE) {
         PrintUtil::SafeDeleteAuthInfo(userPasswd);

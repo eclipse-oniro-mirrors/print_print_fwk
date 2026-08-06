@@ -52,6 +52,7 @@ AniPrintTask* AniPrintTaskHelper::UnwrappPrintTask(ani_env *env, ani_object obje
         PRINT_HILOGE("env is a nullptr");
         return nullptr;
     }
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(object, nullptr);
     ani_long printTask;
     if (ANI_OK != env->Object_GetFieldByName_Long(object, "nativeTask", &printTask)) {
         PRINT_HILOGE("UnwrappPrintTask Fail");

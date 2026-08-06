@@ -41,6 +41,16 @@ void PrintServiceAbilityTest::SetUp(void)
     PRINT_HILOGE("PrintServiceAbilityTest_%{public}d", ++testNo);
     parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+    // 确保 instance_ 非空，防止 OnStart/ManualStart 将 instance_ 设为
+    // shared_ptr 管理的对象。sptr 和 shared_ptr 引用计数不共享：
+    // 若 OnStart 把 instance_（sptr）指向 shared_ptr 管理的对象，
+    // 用例结束后 shared_ptr 析构会释放对象，而 instance_（sptr）
+    // 仍指向已释放的内存 → use-after-free。
+    // 预先创建一个 sptr 管理的 dummy service 占位，OnStart 看到
+    // instance_ != nullptr 就跳过赋值，从而避免上述问题。
+    if (PrintServiceAbility::instance_ == nullptr) {
+        PrintServiceAbility::instance_ = new PrintServiceAbility(PRINT_SERVICE_ID, true);
+    }
 }
 
 std::shared_ptr<PrintServiceAbility> PrintServiceAbilityTest::CreateService()
@@ -73,6 +83,16 @@ std::shared_ptr<PrintServiceAbility> PrintServiceAbilityTest::CreateMockService(
 void PrintServiceAbilityTest::TearDown(void)
 {
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+    // 停止 PrintCallerAppMonitor 线程：用例可能通过 ManualStart→OnStart→Init→
+    // StartCallerAppMonitor 启动 detach 线程，lambda 捕获 service 的 this。
+    // 用例结束后 service 析构，this 悬空。delayUnload_=true 让线程跳过
+    // unloadTask() 调用，isMonitoring_=false 让线程退出循环。
+    auto& monitor = PrintCallerAppMonitor::GetInstance();
+    monitor.delayUnload_.store(true);
+    monitor.isMonitoring_.store(false);
+    // 清理 BMS 单例的 helper，防止 gmock 泄漏
+    std::shared_ptr<PrintServiceHelper> nullHelper;
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(nullHelper);
 }
 
 std::string PrintServiceAbilityTest::GetExtensionId(EXTENSION_ID_TYPE type)

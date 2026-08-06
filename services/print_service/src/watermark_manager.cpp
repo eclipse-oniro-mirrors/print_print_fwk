@@ -86,11 +86,7 @@ int32_t WatermarkManager::UpdateExistingCallback(int32_t index, const sptr<IWate
     const sptr<IRemoteObject> &remoteObject, int32_t callerPid)
 {
     auto& info = callbacks_[index];
-    sptr<WatermarkDeathRecipient> newDeathRecipient = new (std::nothrow) WatermarkDeathRecipient(callerPid);
-    if (newDeathRecipient == nullptr) {
-        PRINT_HILOGE("Failed to create death recipient for PID: %{public}d", callerPid);
-        return E_PRINT_SERVER_FAILURE;
-    }
+    sptr<WatermarkDeathRecipient> newDeathRecipient = new WatermarkDeathRecipient(callerPid);
     if (!remoteObject->AddDeathRecipient(newDeathRecipient)) {
         PRINT_HILOGE("Failed to add death recipient for PID: %{public}d", callerPid);
         return E_PRINT_SERVER_FAILURE;
@@ -113,12 +109,7 @@ int32_t WatermarkManager::AddNewCallback(const sptr<IWatermarkCallback> &callbac
     WatermarkCallbackInfo info;
     info.pid = callerPid;
     info.callback = callback;
-    info.deathRecipient = new (std::nothrow) WatermarkDeathRecipient(callerPid);
-
-    if (info.deathRecipient == nullptr) {
-        PRINT_HILOGE("Failed to create death recipient for PID: %{public}d", callerPid);
-        return E_PRINT_SERVER_FAILURE;
-    }
+    info.deathRecipient = new WatermarkDeathRecipient(callerPid);
     if (!remoteObject->AddDeathRecipient(info.deathRecipient)) {
         PRINT_HILOGE("Failed to add death recipient for PID: %{public}d", callerPid);
         return E_PRINT_SERVER_FAILURE;

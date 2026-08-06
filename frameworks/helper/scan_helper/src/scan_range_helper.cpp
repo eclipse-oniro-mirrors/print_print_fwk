@@ -45,17 +45,17 @@ std::shared_ptr<ScanRange> ScanRangeHelper::BuildFromJs(napi_env env, napi_value
     }
 
     auto jsMinValue = NapiScanUtils::GetNamedProperty(env, jsValue, PARAM_RANGE_MINVALUE);
-    if (jsMinValue != nullptr) {
+    if (jsMinValue != nullptr && NapiScanUtils::GetValueType(env, jsMinValue) == napi_number) {
         nativeObj->SetMinValue(NapiScanUtils::GetInt32FromValue(env, jsMinValue));
     }
 
     auto jsMaxValue = NapiScanUtils::GetNamedProperty(env, jsValue, PARAM_RANGE_MAXVALUE);
-    if (jsMaxValue != nullptr) {
+    if (jsMaxValue != nullptr && NapiScanUtils::GetValueType(env, jsMaxValue) == napi_number) {
         nativeObj->SetMaxValue(NapiScanUtils::GetInt32FromValue(env, jsMaxValue));
     }
 
     auto jsQuantValue = NapiScanUtils::GetNamedProperty(env, jsValue, PARAM_RANGE_QUANTVALUE);
-    if (jsQuantValue != nullptr) {
+    if (jsQuantValue != nullptr && NapiScanUtils::GetValueType(env, jsQuantValue) == napi_number) {
         nativeObj->SetQuantValue(NapiScanUtils::GetInt32FromValue(env, jsQuantValue));
     }
 

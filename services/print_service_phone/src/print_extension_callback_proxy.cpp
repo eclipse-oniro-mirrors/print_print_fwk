@@ -28,7 +28,7 @@ bool PrintExtensionCallbackProxy::OnCallback()
     PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -40,13 +40,8 @@ bool PrintExtensionCallbackProxy::OnCallback()
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = false;
-    if (!reply.ReadBool(ret)) {
-        PRINT_HILOGE("ReadBool for ret failed");
-        return false;
-    }
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
-    return ret;
+    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
+    return true;
 }
 
 bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId)
@@ -54,7 +49,7 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId)
     PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), false);
     sptr<IRemoteObject> remote = Remote();
@@ -67,13 +62,8 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId)
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = false;
-    if (!reply.ReadBool(ret)) {
-        PRINT_HILOGE("ReadBool for ret failed");
-        return false;
-    }
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
-    return ret;
+    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
+    return true;
 }
 
 bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
@@ -81,7 +71,7 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
     PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(job.Marshalling(data), false);
     sptr<IRemoteObject> remote = Remote();
@@ -94,13 +84,8 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    bool ret = false;
-    if (!reply.ReadBool(ret)) {
-        PRINT_HILOGE("ReadBool for ret failed");
-        return false;
-    }
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
-    return ret;
+    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
+    return true;
 }
 
 bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId, PrinterCapability &cap)

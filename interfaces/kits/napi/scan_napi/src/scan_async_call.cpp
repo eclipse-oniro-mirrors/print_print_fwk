@@ -25,11 +25,7 @@ ScanAsyncCall::ScanAsyncCall(napi_env env, napi_callback_info info,
         SCAN_HILOGE("context is nullptr");
         return;
     }
-    context_ = new (std::nothrow) AsyncContext();
-    if (context_ == nullptr) {
-        SCAN_HILOGE("context_ is nullptr");
-        return;
-    }
+    context_ = new AsyncContext();
     size_t argc = NapiScanUtils::MAX_ARGC;
     napi_value self = nullptr;
     napi_value argv[NapiScanUtils::MAX_ARGC] = { nullptr };

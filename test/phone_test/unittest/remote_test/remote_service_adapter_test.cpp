@@ -92,6 +92,8 @@ HWTEST_F(RemoteServiceAdapterTest, IsConnected_002, TestSize.Level1)
 HWTEST_F(RemoteServiceAdapterTest, BindService_001, TestSize.Level1)
 {
     RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
     EXPECT_TRUE(client.BindService());
 }
 
