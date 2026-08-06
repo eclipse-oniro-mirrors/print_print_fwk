@@ -3308,10 +3308,10 @@ bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &i
     if (!QueryPpdInfoMap(resolvedPpdFilePath, keyValues, info)) {
         return false;
     }
-    if (!keyValues["ShortNickName"].empty()) {
-        info.SetNickName(keyValues["ShortNickName"]);
-    } else if (!keyValues["NickName"].empty()) {
+    if (!keyValues["NickName"].empty()) {
         info.SetNickName(keyValues["NickName"]);
+    } else if (!keyValues["ShortNickName"].empty()) {
+        info.SetNickName(keyValues["ShortNickName"]);
     } else if (!keyValues["ModelName"].empty()) {
         info.SetNickName(keyValues["ModelName"]);
     }
@@ -3352,7 +3352,7 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         if (key == "Manufacturer") {
             info.SetManufacturer(value);
         }
-        if (key == "ShortNickName") {
+        if (key == "NickName") {
             info.SetNickName(value);
         }
         if (!info.GetManufacturer().empty() && !info.GetNickName().empty()) {
