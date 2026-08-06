@@ -180,6 +180,114 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), true);
 }
 
+HWTEST_F(PrintServiceAbilityTest,
+    SupplementBsuniPrinterAdvanceOptionsIfNeeded_NoSelectedDriver_NoChange, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    service->SupplementBsuniPrinterAdvanceOptionsIfNeeded("printer-no-driver", printerInfo);
+    EXPECT_FALSE(printerInfo.HasSelectedDriver());
+    EXPECT_FALSE(printerInfo.HasCapability());
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    SupplementBsuniPrinterAdvanceOptionsIfNeeded_NotBsuniPpd_NoChange, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdInfo("Generic", "IPP Everywhere", DEFAULT_PPD_NAME);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    service->SupplementBsuniPrinterAdvanceOptionsIfNeeded("printer-not-bsuni", printerInfo);
+    PpdInfo result;
+    printerInfo.GetSelectedDriver(result);
+    EXPECT_EQ(result.GetPpdName(), DEFAULT_PPD_NAME);
+    EXPECT_FALSE(printerInfo.HasCapability());
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    SupplementBsuniPrinterAdvanceOptionsIfNeeded_NoCapability_NoChange, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    service->SupplementBsuniPrinterAdvanceOptionsIfNeeded("printer-no-capability", printerInfo);
+    EXPECT_TRUE(printerInfo.HasSelectedDriver());
+    EXPECT_FALSE(printerInfo.HasCapability());
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    SupplementBsuniPrinterAdvanceOptionsIfNeeded_AdvanceOptionsExist_NoChange, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    cupsOptionsJson["advanceOptions"] = "[]";
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo.SetCapability(printerCaps);
+    service->SupplementBsuniPrinterAdvanceOptionsIfNeeded("printer-adv-exist", printerInfo);
+    PrinterCapability resultCap;
+    printerInfo.GetCapability(resultCap);
+    Json::Value advanceOptionsJson;
+    EXPECT_TRUE(resultCap.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    SupplementBsuniPrinterAdvanceOptionsIfNeeded_UpdateFailed_NoChange, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    cupsOptionsJson["key"] = "value";
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo.SetCapability(printerCaps);
+    service->SupplementBsuniPrinterAdvanceOptionsIfNeeded("printer-update-fail", printerInfo);
+    PrinterCapability resultCap;
+    printerInfo.GetCapability(resultCap);
+    Json::Value advanceOptionsJson;
+    EXPECT_FALSE(resultCap.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    SupplementBsuniPrinterAdvanceOptionsIfNeeded_UpdateSuccess_AdvanceOptionsAdded, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("BsuniTestPrinter");
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    Json::Value supportedArrayJson;
+    supportedArrayJson.append("auto");
+    cupsOptionsJson["media-source-supported"] = PrintJsonUtil::WriteStringUTF8(supportedArrayJson);
+    cupsOptionsJson["media-source-default"] = "auto";
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo.SetCapability(printerCaps);
+    service->SupplementBsuniPrinterAdvanceOptionsIfNeeded("printer-update-success", printerInfo);
+    PrinterCapability resultCap;
+    printerInfo.GetCapability(resultCap);
+    Json::Value advanceOptionsJson;
+    EXPECT_TRUE(resultCap.GetAdvanceOptionsJson(advanceOptionsJson));
+}
+
 /**
 * @tc.name: RefreshThirdDriverPrinter_CustomDriverPrinter_SetIdle
 * @tc.desc: Custom driver printers are set to PRINTER_STATUS_IDLE during refresh

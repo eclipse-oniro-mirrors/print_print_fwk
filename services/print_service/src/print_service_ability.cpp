@@ -423,6 +423,7 @@ void PrintServiceAbility::RefreshPrintersAfterInit()
 #endif
     RefreshIpPrinter();
     RefreshThirdDriverPrinter();
+    RefreshAddedPrinterAdvanceOptions();
     StartDiscoverPrinter();
 }
 
@@ -6219,6 +6220,53 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
         return E_PRINT_SERVER_FAILURE;
     }
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::SupplementBsuniPrinterAdvanceOptionsIfNeeded(
+    const std::string &printerId, PrinterInfo &info)
+{
+    if (!info.HasSelectedDriver()) {
+        PRINT_HILOGW("no selected driver, skip supplement advance options");
+        return;
+    }
+    PpdInfo ppdInfo;
+    info.GetSelectedDriver(ppdInfo);
+    if (ppdInfo.GetPpdName() != BSUNI_PPD_NAME) {
+        PRINT_HILOGI("ppdName is not bsuni, skip supplement advance options");
+        return;
+    }
+    if (!info.HasCapability()) {
+        PRINT_HILOGW("no capability, skip supplement advance options");
+        return;
+    }
+    PrinterCapability capability;
+    info.GetCapability(capability);
+    Json::Value advanceOptionsJson;
+    if (capability.GetAdvanceOptionsJson(advanceOptionsJson)) {
+        PRINT_HILOGI("advanceOptions already exists, skip supplement advance options");
+        return;
+    }
+    auto printerInfoPtr = std::make_shared<PrinterInfo>(info);
+    if (!UpdateBsuniPrinterAdvanceOptions(printerInfoPtr)) {
+        PRINT_HILOGW("UpdateBsuniPrinterAdvanceOptions failed, no need to persist");
+        return;
+    }
+    info = *printerInfoPtr;
+    printSystemData_.InsertAddedPrinter(printerId, info);
+    printSystemData_.SavePrinterFile(printerId);
+    PRINT_HILOGI("supplement bsuni advance options succeed");
+}
+
+void PrintServiceAbility::RefreshAddedPrinterAdvanceOptions()
+{
+    std::vector<std::string> printerIds = printSystemData_.QueryAddedPrinterIdList();
+    for (const auto &printerId : printerIds) {
+        PrinterInfo printerInfo;
+        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+            continue;
+        }
+        SupplementBsuniPrinterAdvanceOptionsIfNeeded(printerId, printerInfo);
+    }
 }
 
 bool PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
