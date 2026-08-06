@@ -29,7 +29,8 @@ PrintJob::PrintJob()
 
 PrintJob::PrintJob(const PrintJob &right)
 {
-    right.DupFdList(fdList_);
+    fdList_.clear();
+    fdList_.assign(right.fdList_.begin(), right.fdList_.end());
 
     printerId_ = right.printerId_;
     jobId_ = right.jobId_;
@@ -55,7 +56,8 @@ PrintJob::PrintJob(const PrintJob &right)
 PrintJob &PrintJob::operator=(const PrintJob &right)
 {
     if (this != &right) {
-        right.DupFdList(fdList_);
+        fdList_.clear();
+        fdList_.assign(right.fdList_.begin(), right.fdList_.end());
 
         printerId_ = right.printerId_;
         jobId_ = right.jobId_;
@@ -81,12 +83,7 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
 }
 
 PrintJob::~PrintJob()
-{
-    for (auto &fd : fdList_) {
-        CLOSE_FD_IF_VALID(fd);
-    }
-    fdList_.clear();
-}
+{}
 
 void PrintJob::SetFdList(const std::vector<uint32_t> &fdList)
 {
@@ -171,7 +168,8 @@ void PrintJob::SetPreview(const PrintPreviewAttribute &preview)
 
 void PrintJob::UpdateParams(const PrintJob &jobInfo)
 {
-    jobInfo.DupFdList(fdList_);
+    fdList_.clear();
+    fdList_.assign(right.fdList_.begin(), right.fdList_.end());
 
     jobId_ = jobInfo.jobId_;
     printerId_ = jobInfo.printerId_;

@@ -100,7 +100,6 @@ bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
-            NapiScanUtils::DeleteReference(param->env, param->ref);
             delete param;
             return;
         }
@@ -118,7 +117,6 @@ bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void
     napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_ok) {
         SCAN_HILOGE("napi_send_event fail");
-        NapiScanUtils::DeleteReference(param->env, param->ref);
         delete param;
         return false;
     }

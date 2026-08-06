@@ -659,13 +659,11 @@ bool UpdateResolutionCapability(PrinterCapability &printerCap, const Print_Print
         PRINT_HILOGW("supportedResolutions is null");
         return false;
     }
-    if (capability->supportedResolutionsCount > MAX_RESOLUTION_COUNT) {
-        PRINT_HILOGE("supportedResolutionsCount %{public}u exceeds max limit", capability->supportedResolutionsCount);
-        return false;
-    }
+    uint32_t supportedResolutionsCount = capability->supportedResolutionsCount > MAX_RESOLUTION_COUNT
+                                            ? MAX_RESOLUTION_COUNT : capability->supportedResolutionsCount;
     std::vector<PrintResolution> resolutionList;
     Json::Value resolutionArray;
-    for (uint32_t i = 0; i < capability->supportedResolutionsCount; ++i) {
+    for (uint32_t i = 0; i < supportedResolutionsCount; ++i) {
         PrintResolution printResolution;
         uint32_t xRes = capability->supportedResolutions[i].horizontalDpi;
         uint32_t yRes = capability->supportedResolutions[i].verticalDpi;
