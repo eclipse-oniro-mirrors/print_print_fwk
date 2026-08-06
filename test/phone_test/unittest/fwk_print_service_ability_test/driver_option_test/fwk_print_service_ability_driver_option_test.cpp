@@ -233,13 +233,13 @@ HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_NameTooLong_InvalidP
  * @tc.name: AddPrinterByPrinterDriver_InvalidNameChar_InvalidParameter
  * @tc.desc: Printer name with invalid characters returns E_PRINT_INVALID_PARAMETER
  * @tc.type: FUNC
- * @tc.require: Input validation: name must not contain /, \\, ?, etc.
+ * @tc.require: Input validation: name must not contain \\, ?, etc.
  */
 HWTEST_F(PrintServiceAbilityTest, AddPrinterByPrinterDriver_InvalidNameChar_InvalidParameter, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
     int32_t ret = service->AddPrinterByPrinterDriver(
-        "test/printer", "ipp://192.168.1.1:631/ipp/print", "", "", "com.example");
+        "test?printer", "ipp://192.168.1.1:631/ipp/print", "", "", "com.example");
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 

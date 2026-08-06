@@ -82,6 +82,8 @@ static const std::string PRINTER_PRINTER_NAME = "test_printer_name";
 static const std::string PRINTER_PRINTER_ID = "test_printer_id";
 static const std::string JOB_USER_NAME = "test_user";
 
+void AddUsbPrinter(PrinterInfo &info);
+
 class PrintCupsClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -170,6 +172,52 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003_NeedRename, TestSize.Leve
 
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_SymlinkRecreate
+ * @tc.desc: SymlinkDirectory recreates dangling symlink
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_SymlinkRecreate, TestSize.Level0)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string base = std::filesystem::current_path().string();
+    std::string srcDir = base + "/PrintCupsClientTest_SymlinkRecreate_srcDir";
+    std::string destDir = base + "/PrintCupsClientTest_SymlinkRecreate_destDir";
+    const char *fileName = "PrintCupsClientTestFileName";
+
+    if (access(srcDir.c_str(), F_OK) != 0) {
+        mkdir(srcDir.c_str(), DIR_MODE);
+    }
+    if (access(destDir.c_str(), F_OK) != 0) {
+        mkdir(destDir.c_str(), DIR_MODE);
+    }
+
+    std::string srcFilePath = srcDir + "/" + fileName;
+    std::ofstream testSrcFile(srcFilePath.c_str(), std::ios::out);
+    EXPECT_EQ(testSrcFile.is_open(), true);
+    testSrcFile.close();
+
+    std::string destFilePath = destDir + "/" + fileName;
+    std::string missingTarget = base + "/PrintCupsClientTest_SymlinkRecreate_missing";
+    EXPECT_EQ(symlink(missingTarget.c_str(), destFilePath.c_str()), 0);
+
+    struct stat beforeStat = {};
+    EXPECT_EQ(lstat(destFilePath.c_str(), &beforeStat), 0);
+    EXPECT_EQ(S_ISLNK(beforeStat.st_mode), true);
+    EXPECT_NE(access(destFilePath.c_str(), F_OK), 0);
+
+    printCupsClient.SymlinkDirectory(srcDir.c_str(), destDir.c_str());
+
+    struct stat afterStat = {};
+    EXPECT_EQ(lstat(destFilePath.c_str(), &afterStat), 0);
+    EXPECT_EQ(S_ISLNK(afterStat.st_mode), true);
+    EXPECT_EQ(access(destFilePath.c_str(), F_OK), 0);
+
+    EXPECT_GE(std::filesystem::remove_all(srcDir), 0);
+    EXPECT_GE(std::filesystem::remove_all(destDir), 0);
 }
 
 /**
@@ -3079,7 +3127,7 @@ HWTEST_F(PrintCupsClientTest, CheckUsbPrinterOnline_MatchingPrinter_Test, TestSi
     PrinterInfo info;
     info.SetPrinterId("USB-test_printer");
     info.SetPrinterName("test_printer");
-    GetUsbPrinters().push_back(info);
+    AddUsbPrinter(info);
 
     bool ret = printCupsClient.CheckUsbPrinterOnline("USB-test_printer");
     EXPECT_TRUE(ret);
@@ -3493,7 +3541,7 @@ HWTEST_F(PrintCupsClientTest, QueryUsbPrinterInfoByPrinterId_MatchingPrinter_Tes
     PrinterInfo info;
     info.SetPrinterId("USB-test_printer");
     info.SetPrinterName("test_printer");
-    GetUsbPrinters().push_back(info);
+    AddUsbPrinter(info);
 
     auto ret = printCupsClient.QueryUsbPrinterInfoByPrinterId("USB-test_printer");
     EXPECT_NE(ret, nullptr);

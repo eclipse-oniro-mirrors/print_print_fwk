@@ -60,7 +60,8 @@ enum SaneFrame {
     SANE_FRAME_RGB, // pixel-interleaved red/green/blue bands
     SANE_FRAME_RED, // red band only
     SANE_FRAME_GREEN, // green band only
-    SANE_FRAME_BLUE // blue band only
+    SANE_FRAME_BLUE, // blue band only
+    SANE_FRAME_MAX
 };
 } // namespace OHOS::SCAN
 #endif // SANE_INFO_H

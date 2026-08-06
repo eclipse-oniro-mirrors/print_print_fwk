@@ -26,8 +26,10 @@ namespace Print {
 class PrintJobEventCallback : public BaseEventCallback {
 public:
     PrintJobEventCallback(
-        int32_t userId, pid_t pid, CallbackEventType eventType, sptr<IRemoteObject::DeathRecipient> deathRecipient)
-        : BaseEventCallback(userId, pid, eventType, deathRecipient)
+        int32_t userId, pid_t pid, CallbackEventType eventType, sptr<IRemoteObject::DeathRecipient> deathRecipient,
+        bool hasJobManagePermission = false)
+        : BaseEventCallback(userId, pid, eventType, deathRecipient),
+          hasJobManagePermission_(hasJobManagePermission)
     {}
 
     virtual ExecuteResult Execute(const CallbackInfo &info) override;
@@ -36,9 +38,12 @@ public:
     uint32_t SetListener(const sptr<IPrintCallback> &listener, const std::string &jobId);
     bool DeleteListener(const std::string &jobId);
     bool HasJobId(const std::string &jobId);
+    bool HasJobManagePermission() { return hasJobManagePermission_; }
 
 private:
+    ExecuteResult DispatchCallback(const sptr<IPrintCallback> &listener, const CallbackInfo &info);
     std::unordered_map<std::string, sptr<IPrintCallback>> listeners_;
+    bool hasJobManagePermission_ = false;
 };
 }  // namespace Print
 }  // namespace OHOS

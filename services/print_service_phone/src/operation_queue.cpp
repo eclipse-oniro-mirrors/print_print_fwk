@@ -41,29 +41,29 @@ void OperationQueue::Run()
 }
 void OperationQueue::Stop()
 {
-    bool expectRunning = true;
-    if (!isRunning.compare_exchange_strong(expectRunning, false)) {
-        PRINT_HILOGW("Operation queue is not running");
-        return;
+    {
+        std::lock_guard<std::mutex> lock(listMutex);
+        bool expectRunning = true;
+        if (!isRunning.compare_exchange_strong(expectRunning, false)) {
+            PRINT_HILOGW("Operation queue is not running");
+            return;
+        }
+        opList.clear();
     }
     syncWait.Notify();
     if (opThread.joinable()) {
         opThread.join();
     }
-    {
-        std::lock_guard<std::mutex> lock(listMutex);
-        opList.clear();
-    }
 }
 
 bool OperationQueue::Push(std::function<void()> op)
 {
-    if (!isRunning.load()) {
-        PRINT_HILOGW("Operation queue is not running");
-        return false;
-    }
     {
         std::lock_guard<std::mutex> lock(listMutex);
+        if (!isRunning.load()) {
+            PRINT_HILOGW("Operation queue is not running");
+            return false;
+        }
         if (opList.size() >= maxCount) {
             PRINT_HILOGW("Operation queue full");
             opList.pop_back();

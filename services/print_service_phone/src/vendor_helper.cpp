@@ -27,6 +27,7 @@ const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
+const uint32_t MAX_COLOR_MODE_COUNT = 200;
 }  // namespace
 
 namespace OHOS::Print {
@@ -34,11 +35,7 @@ namespace OHOS::Print {
 char *CopyString(const std::string &source)
 {
     auto len = source.length();
-    char *dest = new (std::nothrow) char[len + 1];
-    if (dest == nullptr) {
-        PRINT_HILOGE("allocate failed");
-        return nullptr;
-    }
+    char *dest = new char[len + 1];
     if (strcpy_s(dest, len + 1, source.c_str()) != 0) {
         PRINT_HILOGE("CopyString strcpy_s failed");
     }
@@ -607,6 +604,10 @@ bool UpdateColorCapability(PrinterCapability &printerCap, const Print_PrinterCap
         PRINT_HILOGW("supportedColorModes is null");
         return false;
     }
+    if (capability->supportedColorModesCount > MAX_COLOR_MODE_COUNT) {
+        PRINT_HILOGW("supportedColorModesCount exceeds maximum");
+        return false;
+    }
     std::vector<uint32_t> supportedColorModes;
     if (ConvertArrayToList<Print_ColorMode, uint32_t>(
         capability->supportedColorModes,
@@ -863,11 +864,7 @@ bool ConvertStringVectorToStringList(const std::vector<std::string> &stringVecto
         return false;
     }
     stringList.count = 0;
-    stringList.list = new (std::nothrow) char *[count];
-    if (stringList.list == nullptr) {
-        PRINT_HILOGW("stringList list allocate fail");
-        return false;
-    }
+    stringList.list = new char *[count];
     if (memset_s(stringList.list, count * sizeof(char *), 0, count * sizeof(char *)) != 0) {
         PRINT_HILOGW("memset_s fail");
         delete[] stringList.list;

@@ -41,34 +41,30 @@ SaneManagerClient &SaneManagerClient::GetInstance()
 
 sptr<ISaneBackends> SaneManagerClient::GetSaneServiceProxy()
 {
-    {
-        std::unique_lock<std::shared_mutex> lock(serviceLock_);
-        if (proxy_ != nullptr) {
-            SCAN_HILOGD("already get proxy_");
-            return proxy_;
-        }
-        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (samgrProxy == nullptr) {
-            SCAN_HILOGE("samgrProxy is a nullptr");
-            return nullptr;
-        }
-        auto object = samgrProxy->CheckSystemAbility(SANE_SERVICE_ID);
-        if (object != nullptr) {
-            object->AddDeathRecipient(deathRecipient_);
-            proxy_ = iface_cast<ISaneBackends>(object);
-            return proxy_;
-        }
+    std::unique_lock<std::shared_mutex> lock(serviceLock_);
+    if (proxy_ != nullptr) {
+        SCAN_HILOGD("already get proxy_");
+        return proxy_;
     }
-    if (LoadSaneService()) {
-        std::unique_lock<std::shared_mutex> lock(serviceLock_);
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        SCAN_HILOGE("samgrProxy is a nullptr");
+        return nullptr;
+    }
+    auto object = samgrProxy->CheckSystemAbility(SANE_SERVICE_ID);
+    if (object != nullptr) {
+        object->AddDeathRecipient(deathRecipient_);
+        proxy_ = iface_cast<ISaneBackends>(object);
+        return proxy_;
+    }
+    if (LoadSaneService(lock)) {
         return proxy_;
     }
     return nullptr;
 }
 
-bool SaneManagerClient::LoadSaneService()
+bool SaneManagerClient::LoadSaneService(std::unique_lock<std::shared_mutex> &lock)
 {
-    std::unique_lock<std::shared_mutex> lock(serviceLock_);
     sptr<SaneServiceLoadCallback> lockCallback = new SaneServiceLoadCallback();
     if (lockCallback == nullptr) {
         SCAN_HILOGE("lockCallback is a nullptr");
@@ -84,12 +80,8 @@ bool SaneManagerClient::LoadSaneService()
         SCAN_HILOGE("LoadSystemAbility failed");
         return false;
     }
-    auto waitStatus =
-        syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return proxy_ != nullptr; });
-    if (!waitStatus) {
-        return false;
-    }
-    return true;
+    syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS));
+    return proxy_ != nullptr;
 }
 
 void SaneManagerClient::LoadSystemAbilitysuccess(const sptr<IRemoteObject> &remoteObject)
@@ -108,6 +100,7 @@ void SaneManagerClient::LoadSystemAbilityFail()
     std::unique_lock<std::shared_mutex> lock(serviceLock_);
     SCAN_HILOGI("sane_service LoadSystemAbilityFail");
     proxy_ = nullptr;
+    syncCon_.notify_one();
 }
 
 void SaneManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &object)

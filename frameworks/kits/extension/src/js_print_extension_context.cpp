@@ -26,6 +26,7 @@
 #include "napi_common_want.h"
 #include "napi_print_utils.h"
 #include "napi_remote_object.h"
+#include "print_constant.h"
 #include "print_log.h"
 #include "start_options.h"
 #include <shared_mutex>
@@ -86,6 +87,29 @@ public:
     }
 
 private:
+    static NapiAsyncTask::CompleteCallback CreateStartAbilityAccountCallback(
+        std::weak_ptr<PrintExtensionContext> context, AAFwk::Want want, int32_t accountId,
+        AAFwk::StartOptions startOptions, size_t unwrapArgc)
+    {
+        return [weak = context, want, accountId, startOptions, unwrapArgc](
+            napi_env engine, NapiAsyncTask &task, int32_t status) {
+            auto context = weak.lock();
+            if (!context) {
+                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
+                return;
+            }
+            ErrCode errcode = ERR_OK;
+            (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
+                : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
+            if (errcode == E_PRINT_NONE) {
+                napi_value undefineResult = nullptr;
+                napi_get_undefined(engine, &undefineResult);
+                task.Resolve(engine, undefineResult);
+            } else {
+                task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
+            }
+        };
+    }
     std::weak_ptr<PrintExtensionContext> context_;
     std::shared_mutex managersMutex_;
 
@@ -142,7 +166,7 @@ private:
             ErrCode errcode = ERR_OK;
             (unwrapArgc == 1) ? errcode = context->StartAbility(want)
                               : errcode = context->StartAbility(want, startOptions);
-            if (errcode == 0) {
+            if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
                 napi_get_undefined(engine, &undefineResult);
                 task.Resolve(engine, undefineResult);
@@ -170,7 +194,9 @@ private:
 
         decltype(argc) unwrapArgc = 0;
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
+        if (!OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want)) {
+            return GetUndefinedValue(engine);
+        }
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
@@ -185,29 +211,14 @@ private:
         AAFwk::StartOptions startOptions;
         if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO &&
             GetNapiValueType(engine, argv[NapiPrintUtils::INDEX_TWO]) == napi_object) {
-            AppExecFwk::UnwrapStartOptions(engine, argv[NapiPrintUtils::INDEX_TWO], startOptions);
+            if (!AppExecFwk::UnwrapStartOptions(engine, argv[NapiPrintUtils::INDEX_TWO], startOptions)) {
+                return GetUndefinedValue(engine);
+            }
             unwrapArgc++;
         }
 
-        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, accountId, startOptions, unwrapArgc](
-                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
-            auto context = weak.lock();
-            if (!context) {
-                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
-                return;
-            }
-
-            ErrCode errcode = ERR_OK;
-            (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
-                : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
-            if (errcode == 0) {
-                napi_value undefineResult = nullptr;
-                napi_get_undefined(engine, &undefineResult);
-                task.Resolve(engine, undefineResult);
-            } else {
-                task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
-            }
-        };
+        NapiAsyncTask::CompleteCallback complete =
+            CreateStartAbilityAccountCallback(context_, want, accountId, startOptions, unwrapArgc);
 
         napi_value lastParam = (argc == unwrapArgc) ? nullptr : argv[unwrapArgc];
         napi_value result = nullptr;
@@ -237,7 +248,7 @@ private:
             }
 
             auto errcode = context->TerminateAbility();
-            if (errcode == 0) {
+            if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
                 napi_get_undefined(engine, &undefineResult);
                 task.Resolve(engine, undefineResult);
@@ -402,7 +413,7 @@ private:
         auto errcode = context->DisconnectAbility(want, connection);
         napi_value undefineResult = nullptr;
         napi_get_undefined(engine, &undefineResult);
-        errcode == 0 ? task.Resolve(engine, undefineResult)
+        errcode == E_PRINT_NONE ? task.Resolve(engine, undefineResult)
                      : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
     }
 
@@ -451,7 +462,11 @@ napi_value CreateJsMetadata(napi_env &engine, const AppExecFwk::Metadata &Info)
 {
     PRINT_HILOGD("CreateJsMetadata");
     napi_value object = nullptr;
-    napi_create_object(engine, &object);
+    napi_status ret = napi_create_object(engine, &object);
+    if (ret != napi_ok || object == nullptr) {
+        PRINT_HILOGE("napi_create_object failed, status: %{public}d", ret);
+        return nullptr;
+    }
 
     napi_set_named_property(engine, object, "name", CreateJsValue(engine, Info.name));
     napi_set_named_property(engine, object, "value", CreateJsValue(engine, Info.value));
@@ -477,7 +492,11 @@ napi_value CreateJsExtensionAbilityInfoMessage(napi_env &engine, const AppExecFw
 {
     PRINT_HILOGD("CreateJsExtensionAbilityInfoMessage");
     napi_value object = nullptr;
-    napi_create_object(engine, &object);
+    napi_status ret = napi_create_object(engine, &object);
+    if (ret != napi_ok || object == nullptr) {
+        PRINT_HILOGE("napi_create_object failed, status: %{public}d", ret);
+        return nullptr;
+    }
     napi_set_named_property(engine, object, "bundleName", CreateJsValue(engine, info.bundleName));
     napi_set_named_property(engine, object, "moduleName", CreateJsValue(engine, info.moduleName));
     napi_set_named_property(engine, object, "name", CreateJsValue(engine, info.name));

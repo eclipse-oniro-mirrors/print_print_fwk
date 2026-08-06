@@ -76,12 +76,7 @@ bool ScanMdnsService::OnStartDiscoverService()
         MDnsServiceInfo mdnsInfo;
         mdnsInfo.type = type;
         mdnsInfo.port = MDNS_PORT;
-        sptr<ScanMDnsDiscoveryObserver> callbackPtr = new (std::nothrow) ScanMDnsDiscoveryObserver(mdnsInfo);
-        if (callbackPtr == nullptr) {
-            SCAN_HILOGE("scanMDnsDiscoveryCallBack_ is a nullptr.");
-            OnStopDiscoverService();
-            return false;
-        }
+        sptr<ScanMDnsDiscoveryObserver> callbackPtr = new ScanMDnsDiscoveryObserver(mdnsInfo);
         int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->StartDiscoverService(
             mdnsInfo.type, callbackPtr);
         if (ret != NETMANAGER_EXT_SUCCESS) {
@@ -169,11 +164,7 @@ bool ScanMdnsService::FindNetScannerInfoByIp(const std::string& ip, ScanDeviceIn
 int32_t ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGD("Found mdns service info, name = [%{private}s]", info.name.c_str());
-    sptr<ScanMDnsResolveObserver> scanMDnsResolveCallBack_ = new (std::nothrow) ScanMDnsResolveObserver(info);
-    if (scanMDnsResolveCallBack_ == nullptr) {
-        SCAN_HILOGE("scanMDnsResolveCallBack_ is a nullptr.");
-        return NETMANAGER_EXT_ERR_INTERNAL;
-    }
+    sptr<ScanMDnsResolveObserver> scanMDnsResolveCallBack_ = new ScanMDnsResolveObserver(info);
     int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(info, scanMDnsResolveCallBack_);
     if (ret != NETMANAGER_EXT_SUCCESS) {
         SCAN_HILOGE("mdns ResolveService failed, ret = [%{public}d].", ret);
@@ -185,6 +176,10 @@ int32_t ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &inf
 int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGD("MDnsInfo name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
+    if (retCode != NETMANAGER_EXT_SUCCESS) {
+        SCAN_HILOGW("mDNS resolve failed, retCode = [%{public}d]", retCode);
+        return retCode;
+    }
     ScanDeviceInfoTCP tcpInfo;
     tcpInfo.addr = info.addr;
     tcpInfo.deviceName = info.name;
@@ -233,11 +228,7 @@ int32_t ScanMDnsResolveObserver::SyncSysDataAndNotifyScanService(ScanDeviceInfoT
 int32_t ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGI("Loss mdns service info, name = [%{private}s]", info.name.c_str());
-    sptr<ScanMDnsLossResolveObserver> callBack = new (std::nothrow) ScanMDnsLossResolveObserver(info);
-    if (callBack == nullptr) {
-        SCAN_HILOGE("callBack is a nullptr");
-        return NETMANAGER_EXT_ERR_INTERNAL;
-    }
+    sptr<ScanMDnsLossResolveObserver> callBack = new ScanMDnsLossResolveObserver(info);
     int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(info, callBack);
     if (ret != NETMANAGER_EXT_SUCCESS) {
         SCAN_HILOGE("mdns ResolveService failed, ret = %{public}d", ret);

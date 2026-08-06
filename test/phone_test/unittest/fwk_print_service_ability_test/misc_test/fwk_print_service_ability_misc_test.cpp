@@ -787,7 +787,7 @@ HWTEST_F(PrintServiceAbilityTest, IsExtensionPrintJob_notExt, TestSize.Level1)
     EXPECT_FALSE(service->IsExtensionPrintJob(cid));
 }
 
-HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_NonStringItem_ConvertedToString, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_MixedTypes_Processed, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
     std::string keyword = "testKeyword";
@@ -799,6 +799,119 @@ HWTEST_F(PrintServiceAbilityTest, ParseSingleAdvanceOptJson_NonStringItem_Conver
     service->ParseSingleAdvanceOptJson(keyword, singleOptArray, singleAdvanceOptJson);
     EXPECT_TRUE(singleAdvanceOptJson.isMember("choice"));
     EXPECT_EQ(3, singleAdvanceOptJson["choice"]["default"].size());
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckUserIdInEventType_InvalidUserId_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockHelper, QueryAccounts(_)).WillRepeatedly(Return(false));
+    service->SetHelper(mockHelper);
+    EXPECT_EQ(service->CheckUserIdInEventType(PRINTER_CHANGE_EVENT_TYPE), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateExtId_Mismatch_ReturnsNoPermission, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    EXPECT_EQ(service->ValidateExtensionId("com.test.ext"), E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateExtId_Match_ReturnsNone, TestSize.Level1)
+{
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
+    service->SetHelper(helper);
+    service->state_ = ServiceRunningState::STATE_RUNNING;
+    EXPECT_CALL(*service, GetCallerBundleName()).WillRepeatedly(Return("com.test.ext"));
+    EXPECT_EQ(service->ValidateExtensionId("com.test.ext"), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_NotInDiscovery_ReturnsInvalid, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("TestPrinter");
+    EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery("com.test.ext", info), E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_NoConflict_ReturnsNone, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string extId = "com.test.ext";
+    std::string globalId = PrintUtils::GetGlobalId(extId, "printer1");
+    auto discInfo = std::make_shared<PrinterInfo>();
+    discInfo->SetPrinterId(globalId);
+    discInfo->SetPrinterName("TestPrinter");
+    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("TestPrinter");
+    EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery(extId, info), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_NameConflict_ReturnsInvalid, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string extId = "com.test.ext";
+    std::string globalId = PrintUtils::GetGlobalId(extId, "printer1");
+    auto discInfo = std::make_shared<PrinterInfo>();
+    discInfo->SetPrinterId(globalId);
+    discInfo->SetPrinterName("NewPrinter");
+    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    auto added = std::make_shared<PrinterInfo>();
+    added->SetPrinterId("com.other:p2");
+    added->SetPrinterName("NewPrinter");
+    service->printSystemData_.addedPrinterMap_.Insert("com.other:p2", added);
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("NewPrinter");
+    EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery(extId, info), E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_SelfNameUnchanged_ReturnsNone, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string extId = "com.test.ext";
+    std::string globalId = PrintUtils::GetGlobalId(extId, "printer1");
+    auto discInfo = std::make_shared<PrinterInfo>();
+    discInfo->SetPrinterId(globalId);
+    discInfo->SetPrinterName("MyPrinter");
+    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    auto self = std::make_shared<PrinterInfo>();
+    self->SetPrinterId(globalId);
+    self->SetPrinterName("MyPrinter");
+    service->printSystemData_.addedPrinterMap_.Insert(globalId, self);
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("MyPrinter");
+    EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery(extId, info), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_SelfNameChangedConflict_ReturnsInvalid, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string extId = "com.test.ext";
+    std::string globalId = PrintUtils::GetGlobalId(extId, "printer1");
+    auto discInfo = std::make_shared<PrinterInfo>();
+    discInfo->SetPrinterId(globalId);
+    discInfo->SetPrinterName("MyPrinter");
+    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    auto self = std::make_shared<PrinterInfo>();
+    self->SetPrinterId(globalId);
+    self->SetPrinterName("MyPrinter");
+    service->printSystemData_.addedPrinterMap_.Insert(globalId, self);
+    auto other = std::make_shared<PrinterInfo>();
+    other->SetPrinterId("com.other:p2");
+    other->SetPrinterName("ConflictPrinter");
+    service->printSystemData_.addedPrinterMap_.Insert("com.other:p2", other);
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("ConflictPrinter");
+    EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery(extId, info), E_PRINT_INVALID_PARAMETER);
 }
 
 }  // namespace Print

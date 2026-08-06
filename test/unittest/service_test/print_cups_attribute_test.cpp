@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "print_cups_attribute.h"
+#include "print_service_converter.h"
 #include "print_json_util.h"
 
 using namespace testing;
@@ -71,6 +72,7 @@ void TestAttrCount(const std::string &jsonString, int count)
 }  // namespace
 
 namespace OHOS::Print {
+bool ConvertDuplexModeCode(const char *src, DuplexModeCode &dst);
 using PreAttrTestFunc = std::function<void(ipp_t *)>;
 using PostResponseTestFunc = std::function<void(ipp_t *)>;
 using PostAttrTestFunc = std::function<void(PrinterCapability &)>;
@@ -684,6 +686,39 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0025_NeedRename, TestSiz
         EXPECT_STREQ(printerCaps.GetPrinterAttrValue("sides-default"), "");
     };
     DoTest(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0026_DuplexMode_OneSidedLower, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("one-sided", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_ONE_SIDED);
+}
+
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0028_DuplexMode_LongEdge, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("Two-Sided-Long-Edge", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_TWO_SIDED_LONG_EDGE);
+}
+
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0029_DuplexMode_ShortEdge, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("TWO-SIDED-SHORT-EDGE", dst), true);
+    EXPECT_EQ(dst, DUPLEX_MODE_TWO_SIDED_SHORT_EDGE);
+}
+
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0030_DuplexMode_NoMatch, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode("invalid-sides-value", dst), false);
+}
+
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0032_DuplexMode_NullSrc, TestSize.Level1)
+{
+    DuplexModeCode dst;
+    EXPECT_EQ(ConvertDuplexModeCode(nullptr, dst), false);
 }
 
 }  // namespace OHOS::Print

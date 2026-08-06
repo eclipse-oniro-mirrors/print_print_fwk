@@ -32,18 +32,11 @@ WatermarkCallback::~WatermarkCallback()
         napi_ref callbackRef;
     };
 
-    Param *param = new (std::nothrow) Param;
-    if (param == nullptr) {
-        return;
-    }
+    Param *param = new Param;
     param->env = env_;
     param->callbackRef = ref_;
 
     auto task = [param]() {
-        if (param == nullptr) {
-            PRINT_HILOGE("param is a nullptr");
-            return;
-        }
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
@@ -115,12 +108,7 @@ void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
     PRINT_HILOGI("WatermarkCallback OnCallback jobId:%{public}s, fd:%{public}u",
         jobId.c_str(), fd);
 
-    WatermarkCallbackParam *param = new (std::nothrow) WatermarkCallbackParam;
-    if (param == nullptr) {
-        PRINT_HILOGE("Failed to create watermark callback parameter");
-        CLOSE_FD_IF_VALID(fd);
-        return;
-    }
+    WatermarkCallbackParam *param = new WatermarkCallbackParam;
 
     {
         std::lock_guard<std::mutex> lock(*mutex_);

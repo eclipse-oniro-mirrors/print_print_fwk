@@ -313,5 +313,30 @@ HWTEST_F(PrintJobHelperTest, SetOptionInPrintJob_004, TestSize.Level2)
     EXPECT_EQ(json["isDocument"].asBool(), true);
 }
 
+/**
+ * @tc.name: BuildFromJs_InvalidJobState_Test
+ * @tc.desc: Verify BuildFromJs returns nullptr when jobState is invalid (covers #12).
+ * @tc.type: FUNC
+ * @tc.require:
+ * DT SKIPPED: BuildFromJs requires napi_env/napi_value constructed via napi mock;
+ *   no napi mock framework in fwk_print_helper_test. Add when napi mock is introduced.
+ */
+
+/**
+ * @tc.name: CreateMargin_MakeJsObjectFail_Test
+ * @tc.desc: Verify CreateMargin returns false when PrintMarginHelper::MakeJsObject fails (covers #13).
+ * @tc.type: FUNC
+ * @tc.require:
+ * DT SKIPPED: CreateMargin requires napi_env to trigger MakeJsObject nullptr path; no napi mock.
+ */
+
+/**
+ * @tc.name: CreatePreview_MakeJsObjectFail_Test
+ * @tc.desc: Verify CreatePreview returns false when PrintPreviewAttributeHelper::MakeJsObject fails (covers #14).
+ * @tc.type: FUNC
+ * @tc.require:
+ * DT SKIPPED: CreatePreview requires napi_env to trigger MakeJsObject nullptr path; no napi mock.
+ */
+
 }  // namespace Print
 }  // namespace OHOS

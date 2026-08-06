@@ -543,6 +543,61 @@ void ParseDuplexModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printe
     printerCaps.SetPrinterAttrNameAndValue("sides-default", std::to_string(value).c_str());
 }
 
+bool FillMediaTypeEntries(ppd_file_t *ppd, ppd_option_t *typeOption, _ppd_cache_t *ppdCache,
+    Json::Value &jsonArrayDefaultLanguage, Json::Value &jsonArrayCNLanguage,
+    Json::Value &jsonArrayOld, std::vector<std::string> &supportedMediaTypeList)
+{
+    if (ppdCache->types == nullptr) {
+        PRINT_HILOGE("ppdCache types is nullptr!");
+        return false;
+    }
+    for (int i = 0; i < ppdCache->num_types; i++) {
+        if (ppdCache->types[i].ppd == nullptr) {
+            PRINT_HILOGE("ppdCache types[%{public}d] ppd is nullptr!", i);
+            return false;
+        }
+        ppd_choice_t *typeChoice = ppdFindChoice(typeOption, ppdCache->types[i].ppd);
+        if (typeChoice == nullptr) {
+            PRINT_HILOGE("typeChoice is nullptr!");
+            return false;
+        }
+        jsonArrayDefaultLanguage[ppdCache->types[i].pwg] = typeChoice->text;
+        jsonArrayCNLanguage[ppdCache->types[i].pwg] = GetCNFromPpdAttr(ppd, "MediaType",
+            typeChoice->choice, typeChoice->text);
+        // compatible with Spooler USB
+        jsonArrayOld.append(ppdCache->types[i].pwg);
+        supportedMediaTypeList.emplace_back(std::string(ppdCache->types[i].pwg));
+    }
+    return true;
+}
+
+void ApplyMediaTypeAttributes(PrinterCapability &printerCaps,
+    const std::vector<std::string> &supportedMediaTypeList, const Json::Value &jsonArray,
+    const Json::Value &jsonArrayOld)
+{
+    if (supportedMediaTypeList.empty()) {
+        return;
+    }
+    printerCaps.SetPrinterAttrNameAndValue("mediaTypeMap", PrintJsonUtil::WriteString(jsonArray).c_str());
+    // compatible with Spooler USB
+    printerCaps.SetPrinterAttrNameAndValue("media-type-supported",
+        PrintJsonUtil::WriteString(jsonArrayOld).c_str());
+}
+
+void SetMediaTypeDefault(PrinterCapability &printerCaps, _ppd_cache_t *ppdCache, ppd_option_t *typeOption)
+{
+    if (typeOption->defchoice == nullptr) {
+        PRINT_HILOGE("typeOption->defchoice fail!");
+        return;
+    }
+    const char *typeDefault = _ppdCacheGetType(ppdCache, typeOption->defchoice);
+    if (typeDefault == nullptr) {
+        PRINT_HILOGE("_ppdCacheGetType typeDefault fail! typeOption: %{public}s", typeOption->defchoice);
+        return;
+    }
+    printerCaps.SetPrinterAttrNameAndValue("media-type-default", typeDefault);
+}
+
 void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     ppd_option_t *typeOption = ppdFindOption(ppd, "MediaType");
@@ -554,51 +609,18 @@ void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
     Json::Value jsonArray;
     Json::Value jsonArrayDefaultLanguage;
     Json::Value jsonArrayCNLanguage;
-
     // compatible with Spooler USB
     Json::Value jsonArrayOld;
-
     std::vector<std::string> supportedMediaTypeList;
-    for (int i = 0; i < ppdCache->num_types; i++) {
-        if (ppdCache->types + i == nullptr) {
-            PRINT_HILOGE("ppdCache types is nullptr!");
-            return;
-        }
-        ppd_choice_t *typeChoice = ppdFindChoice(typeOption, ppdCache->types[i].ppd);
-        if (typeChoice == nullptr) {
-            PRINT_HILOGE("typeChoice is nullptr!");
-            return;
-        }
-        jsonArrayDefaultLanguage[ppdCache->types[i].pwg] = typeChoice->text;
-        jsonArrayCNLanguage[ppdCache->types[i].pwg] = GetCNFromPpdAttr(ppd, "MediaType",
-            typeChoice->choice, typeChoice->text);
-        // compatible with Spooler USB
-        jsonArrayOld.append(ppdCache->types[i].pwg);
-
-        supportedMediaTypeList.emplace_back(std::string(ppdCache->types[i].pwg));
+    if (!FillMediaTypeEntries(ppd, typeOption, ppdCache, jsonArrayDefaultLanguage,
+        jsonArrayCNLanguage, jsonArrayOld, supportedMediaTypeList)) {
+        return;
     }
     jsonArray["default"] = jsonArrayDefaultLanguage;
     jsonArray["zh_CN"] = jsonArrayCNLanguage;
     printerCaps.SetSupportedMediaType(supportedMediaTypeList);
-
-    if (!supportedMediaTypeList.empty()) {
-        printerCaps.SetPrinterAttrNameAndValue("mediaTypeMap", PrintJsonUtil::WriteString(jsonArray).c_str());
-        // compatible with Spooler USB
-        printerCaps.SetPrinterAttrNameAndValue("media-type-supported",
-            PrintJsonUtil::WriteString(jsonArrayOld).c_str());
-    }
-
-    // handle media type default option
-    if (typeOption->defchoice == nullptr) {
-        PRINT_HILOGE("typeOption->defchoice fail!");
-        return;
-    }
-    const char *typeDefault = _ppdCacheGetType(ppdCache, typeOption->defchoice);
-    if (typeDefault == nullptr) {
-        PRINT_HILOGE("_ppdCacheGetType typeDefault fail! typeOption: %{public}s", typeOption->defchoice);
-        return;
-    }
-    printerCaps.SetPrinterAttrNameAndValue("media-type-default", typeDefault);
+    ApplyMediaTypeAttributes(printerCaps, supportedMediaTypeList, jsonArray, jsonArrayOld);
+    SetMediaTypeDefault(printerCaps, ppdCache, typeOption);
 }
 
 void ParseColorModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
@@ -697,16 +719,17 @@ void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName)
 {
     std::string ppdFilePath = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir() + ppdName;
-    if (!PrintUtils::IsPathValid(ppdFilePath)) {
+    std::string resolvedPpdFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
         return E_PRINT_INVALID_PARAMETER;
     }
-    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", ppdFilePath.c_str());
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", resolvedPpdFilePath.c_str());
     char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
     if (locale == nullptr) {
         PRINT_HILOGE("setlocale fail");
         return E_PRINT_FILE_IO;
     }
-    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
+    ppd_file_t *ppd = ppdOpenFile(resolvedPpdFilePath.c_str());
     if (ppd == nullptr) {
         PRINT_HILOGE("Open PPD File fail");
         return E_PRINT_FILE_IO;

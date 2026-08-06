@@ -41,7 +41,7 @@ public:
      *
      * @param want Indicates the Want containing information about the target ability to start.
      *
-     * @return errCode ERR_OK on success, others on failure.
+     * @return PrintErrorCode E_PRINT_NONE on success, others on failure.
      */
     ErrCode StartAbility(const AAFwk::Want &want) const;
 
@@ -52,7 +52,7 @@ public:
      *
      * @param want Indicates the want containing information about the ability to connect
      *
-     * @param conn Indicates the callback object when the target ability is connected.
+     * @param connectCallback Indicates the callback object when the target ability is connected.
      *
      * @return True means success and false means failure
      */
@@ -67,7 +67,7 @@ public:
      * @param want Indicates the Want containing information about the target ability to start.
      * @param accountId caller user.
      *
-     * @return errCode ERR_OK on success, others on failure.
+     * @return PrintErrorCode E_PRINT_NONE on success, others on failure.
      */
     ErrCode StartAbilityWithAccount(const AAFwk::Want &want, int accountId) const;
 
@@ -81,7 +81,7 @@ public:
      *
      * @param accountId caller user.
      *
-     * @param conn Indicates the callback object when the target ability is connected.
+     * @param connectCallback Indicates the callback object when the target ability is connected.
      *
      * @return True means success and false means failure.
      */
@@ -91,17 +91,18 @@ public:
     /**
      * @brief Disconnects the current ability from an ability.
      *
-     * @param conn Indicates the IAbilityConnection callback object passed by connectAbility after the connection
-     * is set up. The IAbilityConnection object uniquely identifies a connection between two abilities.
+     * @param want Indicates the want containing information about the ability to disconnect.
+     * @param connectCallback Indicates the IAbilityConnection callback object passed by connectAbility after the
+     * connection is set up. The IAbilityConnection object uniquely identifies a connection between two abilities.
      *
-     * @return errCode ERR_OK on success, others on failure.
+     * @return PrintErrorCode E_PRINT_NONE on success, others on failure.
      */
     ErrCode DisconnectAbility(const AAFwk::Want &want, const sptr<AbilityConnectCallback> &connectCallback) const;
 
     /**
      * @brief Destroys the current ability.
      *
-     * @return errCode ERR_OK on success, others on failure.
+     * @return PrintErrorCode E_PRINT_NONE on success, others on failure.
      */
     ErrCode TerminateAbility();
 

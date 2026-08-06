@@ -18,7 +18,7 @@
 #include "ability_connection.h"
 #include "ability_manager_client.h"
 #include "print_log.h"
-#include "print_constant.h"
+#include "print_error_converter.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -29,35 +29,41 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(client, ERR_NO_INIT);
-    ErrCode err = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
-    PRINT_HILOGD("%{public}s. End calling StartAbility. ret=%{public}d", __func__, err);
-    if (err != ERR_OK) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed %{public}d", err);
+    PRINT_CHECK_NULL_AND_RETURN(client, Print::E_PRINT_SERVER_FAILURE);
+    ErrCode innerErr = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
-    return err;
+    return printErr;
 }
 
 ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want, const AAFwk::StartOptions &startOptions) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(client, ERR_NO_INIT);
-    ErrCode err = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
-    PRINT_HILOGD("%{public}s. End calling StartAbility. ret=%{public}d", __func__, err);
-    if (err != ERR_OK) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed %{public}d", err);
+    PRINT_CHECK_NULL_AND_RETURN(client, Print::E_PRINT_SERVER_FAILURE);
+    ErrCode innerErr = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::StartAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
-    return err;
+    return printErr;
 }
 
 bool PrintExtensionContext::ConnectAbility(
     const AAFwk::Want &want, const sptr<AbilityConnectCallback> &connectCallback) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode ret = ConnectionManager::GetInstance().ConnectAbility(token_, want, connectCallback);
-    PRINT_HILOGD("PrintExtensionContext::ConnectAbility ErrorCode = %{public}d", ret);
-    return ret == ERR_OK;
+    ErrCode innerErr = ConnectionManager::GetInstance().ConnectAbility(token_, want, connectCallback);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::ConnectAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
+    }
+    return printErr == Print::E_PRINT_NONE;
 }
 
 ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, int accountId) const
@@ -65,13 +71,14 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, 
     PRINT_HILOGD("%{public}s begin.", __func__);
     PRINT_HILOGD("%{private}d accountId:", accountId);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(client, ERR_NO_INIT);
-    ErrCode err = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
-    PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);
-    if (err != ERR_OK) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed %{public}d", err);
+    PRINT_CHECK_NULL_AND_RETURN(client, Print::E_PRINT_SERVER_FAILURE);
+    ErrCode innerErr = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
-    return err;
+    return printErr;
 }
 
 ErrCode PrintExtensionContext::StartAbilityWithAccount(
@@ -79,47 +86,57 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(client, ERR_NO_INIT);
-    ErrCode err = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE, accountId);
-    PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);
-    if (err != ERR_OK) {
-        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed %{public}d", err);
+    PRINT_CHECK_NULL_AND_RETURN(client, Print::E_PRINT_SERVER_FAILURE);
+    ErrCode innerErr = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE, accountId);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
-    return err;
+    return printErr;
 }
 
 bool PrintExtensionContext::ConnectAbilityWithAccount(
     const AAFwk::Want &want, int accountId, const sptr<AbilityConnectCallback> &connectCallback) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode ret = ConnectionManager::GetInstance().ConnectAbilityWithAccount(token_, want, accountId, connectCallback);
-    PRINT_HILOGD("PrintExtensionContext::ConnectAbilityWithAccount ErrorCode = %{public}d", ret);
-    return ret == ERR_OK;
+    ErrCode innerErr = ConnectionManager::GetInstance().ConnectAbilityWithAccount(token_, want, accountId,
+        connectCallback);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::ConnectAbilityWithAccount is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
+    }
+    return printErr == Print::E_PRINT_NONE;
 }
 
 ErrCode PrintExtensionContext::DisconnectAbility(
     const AAFwk::Want &want, const sptr<AbilityConnectCallback> &connectCallback) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode ret = ConnectionManager::GetInstance().DisconnectAbility(token_, want.GetElement(), connectCallback);
-    if (ret != ERR_OK) {
-        PRINT_HILOGE("%{public}s end DisconnectAbility error, ret=%{public}d", __func__, ret);
+    ErrCode innerErr = ConnectionManager::GetInstance().DisconnectAbility(token_, want.GetElement(), connectCallback);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("%{public}s end DisconnectAbility error, err=%{public}d, innerErr=%{public}d",
+            __func__, printErr, innerErr);
     }
     PRINT_HILOGD("%{public}s end DisconnectAbility", __func__);
-    return ret;
+    return printErr;
 }
 
 ErrCode PrintExtensionContext::TerminateAbility()
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
-    PRINT_CHECK_NULL_AND_RETURN(client, ERR_NO_INIT);
-    ErrCode err = client->TerminateAbility(token_, -1, nullptr);
-    if (err != ERR_OK) {
-        PRINT_HILOGE("PrintExtensionContext::TerminateAbility is failed %{public}d", err);
+    PRINT_CHECK_NULL_AND_RETURN(client, Print::E_PRINT_SERVER_FAILURE);
+    ErrCode innerErr = client->TerminateAbility(token_, -1, nullptr);
+    ErrCode printErr = Print::PrintErrorConverter::FromAafwkError(innerErr);
+    if (printErr != Print::E_PRINT_NONE) {
+        PRINT_HILOGE("PrintExtensionContext::TerminateAbility is failed, err=%{public}d, innerErr=%{public}d",
+            printErr, innerErr);
     }
     PRINT_HILOGD("%{public}s end.", __func__);
-    return err;
+    return printErr;
 }
 
 AppExecFwk::AbilityType PrintExtensionContext::GetAbilityInfoType() const

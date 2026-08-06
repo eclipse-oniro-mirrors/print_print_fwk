@@ -40,11 +40,7 @@ const uint32_t COPIES_NUMBER_DEFAULT = 99;
 char *CopyString(const std::string &source)
 {
     auto len = source.length();
-    char *dest = new (std::nothrow) char[len + 1];
-    if (dest == nullptr) {
-        PRINT_HILOGW("allocate failed");
-        return nullptr;
-    }
+    char *dest = new char[len + 1];
     if (strcpy_s(dest, len + 1, source.c_str()) != 0) {
         PRINT_HILOGW("CopyString strcpy_s failed");
     }
@@ -366,6 +362,7 @@ void ParsePrinterOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinte
     if (PrintJsonUtil::IsMember(cupsOpt, "printer-location") && cupsOpt["printer-location"].isString()) {
         std::string pLocation = cupsOpt["printer-location"].asString();
         PRINT_HILOGD("printer-location: %{public}s", pLocation.c_str());
+        SAFE_DELETE_ARRAY(nativePrinterInfo.location);
         nativePrinterInfo.location = CopyString(pLocation);
     }
     std::string keyword = "orientation-requested-default";
@@ -478,7 +475,9 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
         PRINT_HILOGW("The infoJson does not have a necessary attribute.");
         return E_PRINT_INVALID_PARAMETER;
     }
+    SAFE_DELETE_ARRAY(nativePrinterInfo.makeAndModel);
     nativePrinterInfo.makeAndModel = CopyString(infoJson["make"].asString());
+    SAFE_DELETE_ARRAY(nativePrinterInfo.printerUri);
     nativePrinterInfo.printerUri = CopyString(infoJson["printerUri"].asString());
     if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions") || !infoJson["cupsOptions"].isObject()) {
         PRINT_HILOGW("The infoJson does not have a cupsOptions attribute.");
@@ -567,11 +566,7 @@ char *ParseDetailInfo(const PrinterInfo &info)
 
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
 {
-    Print_PrinterInfo *nativePrinterInfo = new (std::nothrow) Print_PrinterInfo;
-    if (nativePrinterInfo == nullptr) {
-        PRINT_HILOGW("Print_PrinterInfo allocate fail.");
-        return nullptr;
-    }
+    Print_PrinterInfo *nativePrinterInfo = new Print_PrinterInfo;
     if (memset_s(nativePrinterInfo, sizeof(Print_PrinterInfo), 0, sizeof(Print_PrinterInfo)) != 0) {
         PRINT_HILOGW("Print_PrinterInfo memset_s fail.");
         delete nativePrinterInfo;
@@ -605,7 +600,9 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
         PRINT_HILOGW("infoOpt json object: %{public}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
         ParseInfoOption(infoOpt, *nativePrinterInfo);
     }
+    SAFE_DELETE_ARRAY(nativePrinterInfo->makeAndModel);
     nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
+    SAFE_DELETE_ARRAY(nativePrinterInfo->printerUri);
     nativePrinterInfo->printerUri = CopyString(info.GetUri());
     ParseAdvanceOptions(cap, *nativePrinterInfo);
     return nativePrinterInfo;
@@ -794,11 +791,7 @@ Print_ErrorCode ConvertStringVectorToPropertyList(
         PRINT_HILOGW("empty valueList");
         return PRINT_ERROR_INVALID_PRINTER;
     }
-    propertyList->list = new (std::nothrow) Print_Property[valueList.size()];
-    if (propertyList->list == nullptr) {
-        PRINT_HILOGW("propertyList->list is null");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
+    propertyList->list = new Print_Property[valueList.size()];
     if (memset_s(propertyList->list,
         valueList.size() * sizeof(Print_Property),
         0,

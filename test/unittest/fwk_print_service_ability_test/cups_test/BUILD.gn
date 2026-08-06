@@ -95,6 +95,10 @@ ohos_unittest("fwk_print_service_ability_cups_test") {
     cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
   }
 
+  if (print_fwk_feature_print_fwk_agent_client) {
+    cflags_cc += [ "-DPRINT_FWK_AGENT_CLIENT_ENABLE" ]
+  }
+
   if (print_fwk_feature_watermark_enforcing) {
     cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }

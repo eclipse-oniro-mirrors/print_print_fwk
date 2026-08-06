@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
+#include <cmath>
+#include <limits>
 #include "print_service_converter.h"
 #include "print_page_size.h"
 #include "print_log.h"
@@ -24,6 +26,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
+bool ConvertStrToDouble(const std::string& str, double& value);
+bool ConvertCustomPageSizeFromWidthAndLength(const double& widthValue, const double& lengthValue,
+    const std::string& unit, PrintPageSize &dst);
 
 class PrintServiceConverterTest : public testing::Test {
 public:
@@ -216,6 +221,59 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0022_NeedRename, T
     const char *src = "custom_390.03x540.03mm_390.03x540.03cm";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0023_StrToDouble_Valid, TestSize.Level1)
+{
+    double value = 0.0;
+    EXPECT_EQ(ConvertStrToDouble(std::string("100.0"), value), true);
+    EXPECT_EQ(value, 100.0);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0024_StrToDouble_Inf, TestSize.Level1)
+{
+    double value = 0.0;
+    EXPECT_EQ(ConvertStrToDouble(std::string("inf"), value), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0026_CustomPageSize_NegWidth, TestSize.Level1)
+{
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertCustomPageSizeFromWidthAndLength(-1.0, 200.0, std::string("mm"), dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0028_CustomPageSize_InfWidth, TestSize.Level1)
+{
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertCustomPageSizeFromWidthAndLength(
+        std::numeric_limits<double>::infinity(), 200.0, std::string("mm"), dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0030_CustomPageSize_MmOverflow, TestSize.Level1)
+{
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertCustomPageSizeFromWidthAndLength(1e30, 200.0, std::string("mm"), dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0032_CustomPageSize_ValidMm, TestSize.Level1)
+{
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertCustomPageSizeFromWidthAndLength(100.0, 200.0, std::string("mm"), dst), true);
+    EXPECT_EQ(dst.GetWidth(), 3937u);
+    EXPECT_EQ(dst.GetHeight(), 7874u);
+    EXPECT_EQ(dst.GetId(), std::string("Custom.100x200mm"));
+}
+
+/**
+ * @tc.name: PrintServiceConverterTest_0034
+ * @tc.desc: ConvertCustomPageSizeFromWidthAndLength with unsupported unit
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0034_CustomPageSize_InvalidUnit, TestSize.Level1)
+{
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertCustomPageSizeFromWidthAndLength(100.0, 200.0, std::string("cm"), dst), false);
 }
 
 }  // namespace Print

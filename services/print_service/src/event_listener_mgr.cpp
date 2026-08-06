@@ -16,18 +16,21 @@
 #include <unistd.h>
 #include "event_listener_mgr.h"
 #include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
 #include "print_log.h"
 #include "print_common_death_recipient.h"
+#include "print_constant.h"
 
 namespace OHOS {
 namespace Print {
 namespace {
 const int32_t MAX_LISTENERS_COUNT = 1000;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
+using namespace Security::AccessToken;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
-    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new(std::nothrow) PrintCommonDeathRecipient(
+    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
           std::bind(&EventListenerMgr::OnRemoteListenerDied, this, std::placeholders::_1))))
 {}
 
@@ -167,7 +170,8 @@ bool EventListenerMgr::RegisterPrintJobListener(
         PRINT_HILOGE("Exceeded the maximum number of registration.");
         return false;
     }
-    auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType, eventListenerDeathRecipient_);
+    auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType,
+        eventListenerDeathRecipient_, CheckJobManagePermission());
     callback->SetListener(listener, jobId);
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
@@ -356,13 +360,42 @@ void EventListenerMgr::ClearAllListeners()
 
 bool EventListenerMgr::Execute(const CallbackInfo &callbackInfo)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<std::shared_ptr<BaseEventCallback>> callbacks;
     CallbackEventType type = callbackInfo.cbEventType;
-    auto userIt = registeredListeners_.find(callbackInfo.userId);
-    if (userIt != registeredListeners_.end()) {
-        return ExecuteForUser(userIt->second, type, callbackInfo);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (auto userIt = registeredListeners_.find(callbackInfo.userId);
+            userIt != registeredListeners_.end()) {
+            if (auto eventIt = userIt->second.find(type); eventIt != userIt->second.end()) {
+                callbacks = eventIt->second;
+            }
+            // userId matched, no need to search all users
+        } else {
+            for (const auto &[_, eventMap] : registeredListeners_) {
+                if (auto eventIt = eventMap.find(type); eventIt != eventMap.end()) {
+                    callbacks.insert(callbacks.end(), eventIt->second.begin(), eventIt->second.end());
+                }
+            }
+        }
     }
-    return ExecuteForAllUsers(type, callbackInfo);
+    std::vector<pid_t> successPids;
+    std::vector<pid_t> failPids;
+    bool result = true;
+    for (auto &callback : callbacks) {
+        if (!callback) {
+            continue;
+        }
+        ExecuteResult execResult = callback->Execute(callbackInfo);
+        if (execResult == ExecuteResult::FAIL) {
+            result = false;
+            failPids.push_back(callback->GetPid());
+        } else if (execResult == ExecuteResult::SUCCESS) {
+            successPids.push_back(callback->GetPid());
+        }
+    }
+    PRINT_HILOGI("Execute callback for eventType %{public}d: success pids %{public}s, fail pids %{public}s",
+        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
+    return result;
 }
 
 std::string EventListenerMgr::FormatPids(const std::vector<pid_t> &pids)
@@ -378,68 +411,11 @@ std::string EventListenerMgr::FormatPids(const std::vector<pid_t> &pids)
     return result;
 }
 
-bool EventListenerMgr::ExecuteForUser(
-    const std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap,
-    CallbackEventType type, const CallbackInfo &callbackInfo)
+bool EventListenerMgr::CheckJobManagePermission() const
 {
-    auto eventIt = eventMap.find(type);
-    if (eventIt == eventMap.end()) {
-        PRINT_HILOGW("listener not exist, type = %{public}d", type);
-        return true;
-    }
-
-    std::vector<pid_t> successPids;
-    std::vector<pid_t> failPids;
-    bool result = true;
-    
-    for (auto &callback : eventIt->second) {
-        if (!callback) {
-            continue;
-        }
-        ExecuteResult execResult = callback->Execute(callbackInfo);
-        if (execResult == ExecuteResult::FAIL) {
-            result = false;
-            failPids.push_back(callback->GetPid());
-        } else if (execResult == ExecuteResult::SUCCESS) {
-            successPids.push_back(callback->GetPid());
-        }
-    }
-
-    PRINT_HILOGI("Execute callback for eventType %{public}d: success pid %{public}s, fail pid %{public}s",
-        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
-    
-    return result;
-}
-
-bool EventListenerMgr::ExecuteForAllUsers(CallbackEventType type, const CallbackInfo &callbackInfo)
-{
-    std::vector<pid_t> successPids;
-    std::vector<pid_t> failPids;
-    bool result = true;
-    
-    for (const auto &[_, eventMap] : registeredListeners_) {
-        auto eventIt = eventMap.find(type);
-        if (eventIt == eventMap.end()) {
-            continue;
-        }
-        for (auto &callback : eventIt->second) {
-            if (!callback) {
-                continue;
-            }
-            ExecuteResult execResult = callback->Execute(callbackInfo);
-            if (execResult == ExecuteResult::FAIL) {
-                result = false;
-                failPids.push_back(callback->GetPid());
-            } else if (execResult == ExecuteResult::SUCCESS) {
-                successPids.push_back(callback->GetPid());
-            }
-        }
-    }
-    
-    PRINT_HILOGI("Execute callback for eventType %{public}d: success pids %{public}s, fail pids %{public}s",
-        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
-    
-    return result;
+    AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    int result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT_JOB);
+    return result == PERMISSION_GRANTED;
 }
 }  // namespace Print
 }  // namespace OHOS

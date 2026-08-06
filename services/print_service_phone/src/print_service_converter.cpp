@@ -18,6 +18,8 @@
 #include <sstream>
 #include <cstdlib>  // for std::strtod
 #include <cerrno>   // for errno
+#include <cmath>   // for std::isfinite
+#include <cstdint> // for UINT32_MAX
 
 namespace OHOS {
 namespace Print {
@@ -80,6 +82,9 @@ bool ConvertStrToDouble(const std::string& str, double& value)
         errno = 0;
         return false;
     }
+    if (!std::isfinite(value)) {
+        return false;
+    }
     if (*endPtr != '\0') {
         return false;
     }
@@ -89,17 +94,34 @@ bool ConvertStrToDouble(const std::string& str, double& value)
 bool ConvertCustomPageSizeFromWidthAndLength(const double& widthValue, const double& lengthValue,
     const std::string& unit, PrintPageSize &dst)
 {
+    if (widthValue < 0 || lengthValue < 0 ||
+        !std::isfinite(widthValue) || !std::isfinite(lengthValue)) {
+        PRINT_HILOGE("invalid width or length value");
+        return false;
+    }
     uint32_t width = 0;
     uint32_t length = 0;
 
     std::stringstream postfixName;
     if (unit == "mm") {
-        width = round(widthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
-        length = round(lengthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        double widthRounded = round(widthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        double lengthRounded = round(lengthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        if (widthRounded > UINT32_MAX || lengthRounded > UINT32_MAX) {
+            PRINT_HILOGE("width or length value overflow");
+            return false;
+        }
+        width = static_cast<uint32_t>(widthRounded);
+        length = static_cast<uint32_t>(lengthRounded);
         postfixName << round(widthValue) << "x" << round(lengthValue) << "mm";
     } else if (unit == "in") {
-        width = round(widthValue * ONE_THOUSAND_INCH);
-        length = round(lengthValue * ONE_THOUSAND_INCH);
+        double widthRounded = round(widthValue * ONE_THOUSAND_INCH);
+        double lengthRounded = round(lengthValue * ONE_THOUSAND_INCH);
+        if (widthRounded > UINT32_MAX || lengthRounded > UINT32_MAX) {
+            PRINT_HILOGE("width or length value overflow");
+            return false;
+        }
+        width = static_cast<uint32_t>(widthRounded);
+        length = static_cast<uint32_t>(lengthRounded);
         postfixName << round(widthValue * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
             round(lengthValue * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
     } else {
