@@ -235,13 +235,15 @@ uint32_t PrintTask::SetupAsyncContext(napi_env env, napi_value argv[], size_t ar
     }
     asyncContext->env = env;
     asyncContext->requestType = PrintRequestType::REQUEST_TYPE_START;
-    size_t contextIndex = (argMaxNum == NapiPrintUtils::ARGC_FIVE) ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
+    size_t contextIndex =
+        (argMaxNum == NapiPrintUtils::ARGC_FIVE) ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
     if (!ParseAbilityContextReq(env, argv[contextIndex], asyncContext->context, asyncContext->uiExtensionContext)) {
         PRINT_HILOGE("invalid parameters.");
         return E_PRINT_INVALID_PARAMETER;
     }
     if (argc == argMaxNum) {
-        size_t callBackIndex = (argMaxNum == NapiPrintUtils::ARGC_FIVE) ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
+        size_t callBackIndex =
+            (argMaxNum == NapiPrintUtils::ARGC_FIVE) ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
         napi_valuetype valueType = napi_undefined;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[callBackIndex], &valueType), E_PRINT_INVALID_PARAMETER);
         if (valueType == napi_function) {

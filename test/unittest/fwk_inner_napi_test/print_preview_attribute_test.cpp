@@ -14,9 +14,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <unistd.h>
 #include "print_preview_attribute.h"
-#include "print_constant.h"
 #include "printer_capability.h"
 #include "print_margin.h"
 #include "print_range.h"
