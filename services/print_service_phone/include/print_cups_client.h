@@ -63,10 +63,6 @@ struct JobParameters {
         }
         fdList.clear();
     }
-    JobParameters(const JobParameters &) = delete;
-    JobParameters &operator=(const JobParameters &) = delete;
-    JobParameters(JobParameters &&) = delete;
-    JobParameters &operator=(JobParameters &&) = delete;
 };
 
 enum StatePolicy {

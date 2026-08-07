@@ -83,7 +83,6 @@ void CallbackParam::SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSy
 
 bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc)
 {
-    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false, __func__);
     auto task = [param, workFunc]() {
         if (param == nullptr) {
             SCAN_HILOGE("param is a nullptr");

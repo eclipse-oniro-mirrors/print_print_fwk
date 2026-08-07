@@ -400,6 +400,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0023_NeedRename, TestSize.Level1)
     job.SetPreview(attr);
     job.GetPreview(getAttr);
     EXPECT_EQ(job.HasPreview(), true);
+    EXPECT_EQ(getAttr.GetResult(), 1);
 }
 
 /**

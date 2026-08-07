@@ -1701,6 +1701,7 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
             bytes = cupsFileRead(fp, buffer, sizeof(buffer));
         }
         cupsFileClose(fp);
+        jobParams->fdList[i] = INVALID_FD;
         if (status != HTTP_STATUS_CONTINUE ||
             cupsFinishDocument(http, jobParams->printerName.c_str()) != IPP_STATUS_OK) {
             PRINT_HILOGE("[Job Id: %{public}s] Unable to queue, error is %{public}s, cancel the job and return...",

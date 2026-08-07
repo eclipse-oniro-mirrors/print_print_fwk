@@ -14,7 +14,6 @@
  */
 
 #include "print_preview_attribute.h"
-#include <unistd.h>
 #include "message_parcel.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -27,31 +26,14 @@ PrintPreviewAttribute::PrintPreviewAttribute(const PrintPreviewAttribute &right)
 {
     hasResult_ = right.hasResult_;
     result_ = right.result_;
-    if (hasResult_) {
-        int32_t dupFd = dup(result_);
-        if (dupFd < 0) {
-            PRINT_HILOGW("dup fd failed");
-        } else {
-            result_ = static_cast<uint32_t>(dupFd);
-        }
-    }
     previewRange_ = right.previewRange_;
 }
 
 PrintPreviewAttribute &PrintPreviewAttribute::operator=(const PrintPreviewAttribute &right)
 {
     if (this != &right) {
-        CLOSE_FD_IF_VALID(result_);
         hasResult_ = right.hasResult_;
         result_ = right.result_;
-        if (hasResult_) {
-            int32_t dupFd = dup(result_);
-            if (dupFd < 0) {
-                PRINT_HILOGW("dup fd failed");
-            } else {
-                result_ = static_cast<uint32_t>(dupFd);
-            }
-        }
         previewRange_ = right.previewRange_;
     }
     return *this;
@@ -59,13 +41,12 @@ PrintPreviewAttribute &PrintPreviewAttribute::operator=(const PrintPreviewAttrib
 
 PrintPreviewAttribute::~PrintPreviewAttribute()
 {
-    CLOSE_FD_IF_VALID(result_);
 }
 
 void PrintPreviewAttribute::Reset()
 {
-    CLOSE_FD_IF_VALID(result_);
     hasResult_ = false;
+    result_ = PRINT_INVALID_ID;
     previewRange_.Reset();
 }
 

@@ -59,6 +59,14 @@ struct JobParameters {
     bool isReverse = false;
     bool isCollate = true;
     std::string bsuniOutputFormat;
+
+    ~JobParameters()
+    {
+        for (auto &fd : fdList) {
+            CLOSE_FD_IF_VALID(fd);
+        }
+        fdList.clear();
+    }
 };
 
 enum StatePolicy {
@@ -105,6 +113,11 @@ struct JobMonitorParam {
     {
         if (http != nullptr) { httpClose(http); }
     }
+
+    JobMonitorParam(const JobMonitorParam &) = delete;
+    JobMonitorParam &operator=(const JobMonitorParam &) = delete;
+    JobMonitorParam(JobMonitorParam &&) = delete;
+    JobMonitorParam &operator=(JobMonitorParam &&) = delete;
 };
 struct MediaSize {
     std::string name;
