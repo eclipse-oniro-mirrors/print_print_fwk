@@ -35,6 +35,34 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008_NeedRename, TestS
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_NONE);
 }
 
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+HWTEST_F(PrintServiceAbilityTest, ConnectPrinterClaimsPendingAgentPrinterByDiscoveredUri, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string printerId = "fwk.driver.bsuni:mdns-printer";
+    const std::string uri = "ipp://10.0.0.2:631/printers/office";
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetUri(uri);
+    service->printSystemData_.AddPrinterToDiscovery(info);
+
+    service->agentManager_ = std::make_unique<PrintFwkAgentManager>(
+        service->printSystemData_, service->vendorManager, *service);
+    service->agentManager_->pendingPrinters_[uri] = {
+        "Agent Original",
+        "TEST_BACKEND",
+        PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
+        PrintFwkAgentManager::PendingState::WAITING_DISCOVERY,
+    };
+
+    (void)service->ConnectPrinter(printerId);
+
+    auto pending = service->agentManager_->pendingPrinters_.find(uri);
+    ASSERT_NE(pending, service->agentManager_->pendingPrinters_.end());
+    EXPECT_EQ(pending->second.state, PrintFwkAgentManager::PendingState::CONNECTING);
+}
+#endif
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();

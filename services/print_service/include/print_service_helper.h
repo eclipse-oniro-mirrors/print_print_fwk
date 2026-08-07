@@ -71,7 +71,7 @@ private:
         PrintAbilityConnection() = default;
         PrintAbilityConnection(std::function<void()> func) : func_(std::move(func))
         {
-            deathRecipient_ = new (std::nothrow) PrintConnectCallbackRecipient(func_);
+            deathRecipient_ = new PrintConnectCallbackRecipient(func_);
         }
 
     private:

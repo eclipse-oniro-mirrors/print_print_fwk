@@ -40,11 +40,13 @@ static const std::string FILE_INDEX_DELIMITER = "_";
 
 void PrintUserData::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     registeredListeners_[type] = listener;
 }
 
 void PrintUserData::UnregisterPrinterCallback(const std::string &type)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     auto iter = registeredListeners_.find(type);
     if (iter != registeredListeners_.end()) {
         registeredListeners_.erase(iter);
@@ -53,9 +55,16 @@ void PrintUserData::UnregisterPrinterCallback(const std::string &type)
 
 void PrintUserData::SendPrinterEvent(const std::string &type, int event, const PrinterInfo &info)
 {
-    auto iter = registeredListeners_.find(type);
-    if (iter != registeredListeners_.end() && iter->second != nullptr) {
-        iter->second->OnCallback(event, info);
+    sptr<IPrintCallback> callback = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+        auto iter = registeredListeners_.find(type);
+        if (iter != registeredListeners_.end()) {
+            callback = iter->second;
+        }
+    }
+    if (callback != nullptr) {
+        callback->OnCallback(event, info);
     }
 }
 
@@ -266,13 +275,11 @@ bool PrintUserData::CheckIfUseLastUsedPrinterForDefault()
 
 void PrintUserData::DeletePrinter(const std::string &printerId)
 {
-    DeletePrinterFromUsedPrinterList(printerId);
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    DeletePrinterFromUsedPrinterList(printerId);
     if (!strcmp(lastUsedPrinterId_.c_str(), printerId.c_str())) {
-        std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
-        if (usedPrinterList_.size()) {
-            auto it = usedPrinterList_.begin();
-            lastUsedPrinterId_ = *it;
+        if (!usedPrinterList_.empty()) {
+            lastUsedPrinterId_ = usedPrinterList_.front();
             PRINT_HILOGI(
                 "change last used printer for delete printer, printerId: %{private}s", lastUsedPrinterId_.c_str());
         } else {
@@ -282,7 +289,6 @@ void PrintUserData::DeletePrinter(const std::string &printerId)
     }
     if (!SetUserDataToFile()) {
         PRINT_HILOGE("SetUserDataToFile failed.");
-        return;
     }
 }
 
@@ -837,12 +843,13 @@ bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
     }
     filePath.assign(cachePath);
     std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
-    if (!PrintUtils::IsPathValid(printHistoryJobFilePath)) {
+    std::string resolvedJobFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(printHistoryJobFilePath, resolvedJobFilePath)) {
         PRINT_HILOGE("Invalid print history job file path!");
         return false;
     }
     Json::Value printHistoryJobJson;
-    if (GetJsonObjectFromFile(printHistoryJobJson, printHistoryJobFilePath, printerId) &&
+    if (GetJsonObjectFromFile(printHistoryJobJson, resolvedJobFilePath, printerId) &&
         ParseJsonObjectToPrintHistory(printHistoryJobJson, printerId)) {
         PRINT_HILOGI("parse print history job file success");
         return true;
@@ -1090,8 +1097,8 @@ bool PrintUserData::DeletePrintJobFromHistoryList(const std::string &jobId)
 bool PrintUserData::DeletePrintJobFromHistoryListByPrinterId(const std::string &printerId)
 {
     PRINT_HILOGI("DeletePrintJobFromHistoryListByPrinterId Start.");
-    InitPrintHistoryJobList(printerId);
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    InitPrintHistoryJobList(printerId);
     for (auto it = printHistoryJobList_.begin(); it != printHistoryJobList_.end(); ++it) {
         if (it->first == printerId && it->second != nullptr) {
             for (auto innerIt = (it->second)->begin(); innerIt != (it->second)->end(); ++innerIt) {
@@ -1121,10 +1128,10 @@ void PrintUserData::InitPrintHistoryJobList(const std::string &printerId)
 
 bool PrintUserData::ContainsHistoryPrintJob(const std::vector<std::string> &printerIds, const std::string &jobId)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (std::string printerId : printerIds) {
         InitPrintHistoryJobList(printerId);
     }
-    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (auto it = printHistoryJobList_.begin(); it != printHistoryJobList_.end(); it++) {
         if (it->second == nullptr) {
             return false;

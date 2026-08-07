@@ -18,6 +18,7 @@
 #include <climits>
 #include "scan_log.h"
 #include "scan_service_utils.h"
+#include "scan_util.h"
 
 namespace OHOS::Scan {
 const std::string TASK_EVENT_DELIMITER = "-";
@@ -94,6 +95,27 @@ std::string ScanServiceUtils::GetTaskEventId(const std::string &taskId, const st
     }
     eventTypeStream << type;
     return eventTypeStream.str();
+}
+
+bool ScanServiceUtils::DecodeTaskEventId(const std::string &eventType, int32_t &userId, int32_t &callerPid)
+{
+    size_t pos1 = eventType.find(TASK_EVENT_DELIMITER);
+    if (pos1 == std::string::npos) {
+        return false;
+    }
+    if (!ScanUtil::ConvertToInt(eventType.substr(0, pos1), userId)) {
+        SCAN_HILOGE("DecodeTaskEventId userId parse failed, eventType=%{public}s", eventType.c_str());
+        return false;
+    }
+    size_t pos2 = eventType.find(TASK_EVENT_DELIMITER, pos1 + 1);
+    if (pos2 == std::string::npos) {
+        return false;
+    }
+    if (!ScanUtil::ConvertToInt(eventType.substr(pos1 + 1, pos2 - pos1 - 1), callerPid)) {
+        SCAN_HILOGE("DecodeTaskEventId callerPid parse failed, eventType=%{public}s", eventType.c_str());
+        return false;
+    }
+    return true;
 }
 
 ScanErrorCode ScanServiceUtils::ConvertErro(const SaneStatus status)

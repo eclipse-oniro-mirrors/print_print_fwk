@@ -28,6 +28,7 @@ public:
     static bool EncodeTaskEventId(const std::string &eventType, std::string &type);
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type,
         int32_t userId, int32_t callerPid);
+    static bool DecodeTaskEventId(const std::string &eventType, int32_t &userId, int32_t &callerPid);
     static ScanErrorCode ConvertErro(const SaneStatus status);
     static std::vector<std::string> ExtractIpOrPortFromUrl(const std::string& url,
         const char delimiter, const size_t minTokenLength);

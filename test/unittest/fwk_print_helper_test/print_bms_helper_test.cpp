@@ -139,7 +139,7 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0010_NeedRename, TestSize.Level0
     PrintBMSHelper printBMSHelper;
     const wptr<IRemoteObject> testObj = nullptr;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy(testObj);
-    wptr<IRemoteObject> testObj2 = new (std::nothrow) MockBundleMgr();
+    wptr<IRemoteObject> testObj2 = new MockBundleMgr();
     printBMSHelper.ResetProxy(testObj2);
     EXPECT_EQ(printBMSHelper.sptrBundleMgr_, nullptr);
     EXPECT_EQ(printBMSHelper.printBMSDeath_, nullptr);
@@ -157,7 +157,7 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0011_NeedRename, TestSize.Level0
     std::shared_ptr<PrintServiceHelper> temp = std::shared_ptr<PrintServiceHelper>(helper);
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
 
-    sptr<IRemoteObject> bundleMgrObj = new (std::nothrow) MockBundleMgr();
+    sptr<IRemoteObject> bundleMgrObj = new MockBundleMgr();
     DelayedSingleton<PrintBMSHelper>::GetInstance()->sptrBundleMgr_ = iface_cast<AppExecFwk::IBundleMgr>(bundleMgrObj);
 
     EXPECT_CALL(*helper, QueryNameForUid(_, _, _)).WillRepeatedly(Return(false));

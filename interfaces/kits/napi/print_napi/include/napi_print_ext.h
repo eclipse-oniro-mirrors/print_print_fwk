@@ -80,6 +80,8 @@ private:
         const std::shared_ptr<NapiPrintExtContext> &context);
     static napi_status ParsePrinterIdInput(napi_env env, size_t argc, napi_value *argv,
         const std::shared_ptr<NapiPrintExtContext> &context);
+    static napi_status ParseAddPrinterToCupsInput(napi_env env, size_t argc, napi_value *argv,
+        std::shared_ptr<NapiPrintExtContext> context);
 };
 }  // namespace OHOS::Print
 #endif  // NAPI_PRINT_EXT_H

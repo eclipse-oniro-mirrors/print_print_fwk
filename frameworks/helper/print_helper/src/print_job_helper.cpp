@@ -123,10 +123,8 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
         return nullptr;
     }
     FillBasicJobProperties(env, jsValue, nativeObj);
-    if (BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
-        nativeObj->GetSubState(), nativeObj, cvtToPwgSize) == nullptr) {
-        return nullptr;
-    }
+    BuildJsWorkerIsLegal(env, jsValue, nativeObj->GetJobId(), nativeObj->GetJobState(),
+        nativeObj->GetSubState(), nativeObj, cvtToPwgSize);
     nativeObj->Dump();
     return nativeObj;
 }

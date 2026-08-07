@@ -176,7 +176,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0010_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string type = "111";
-    sptr<IPrintCallback> listener = new (std::nothrow) DummyPrintCallbackStub();
+    sptr<IPrintCallback> listener = new DummyPrintCallbackStub();
     PrinterInfo info;
     int event = 0;
     userData->RegisterPrinterCallback(type, listener);

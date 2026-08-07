@@ -74,7 +74,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->AddPrinters(context->printerInfos);
+        int32_t ret = PrintManagerClient::GetInstance().AddPrinters(context->printerInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             context->SetErrorIndex(ret);
@@ -133,7 +133,7 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->RemovePrinters(context->printerIds);
+        int32_t ret = PrintManagerClient::GetInstance().RemovePrinters(context->printerIds);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to remove printers");
@@ -185,7 +185,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(context->printerInfos);
+        int32_t ret = PrintManagerClient::GetInstance().UpdatePrinters(context->printerInfos);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update printers");
@@ -238,7 +238,7 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(context->printerId, context->printerState);
+        int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterState(context->printerId, context->printerState);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update state of printer");
@@ -284,7 +284,7 @@ napi_value NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp(napi_env env, napi_
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+        int32_t ret = PrintManagerClient::GetInstance().UpdatePrintJobStateOnlyForSystemApp(
             context->printJobId, context->printJobState, context->jobSubState);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -333,7 +333,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(context->extInfo);
+        int32_t ret = PrintManagerClient::GetInstance().UpdateExtensionInfo(context->extInfo);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update extension information");
@@ -345,36 +345,37 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
     return asyncCall.Call(env, exec);
 }
 
+napi_status NapiPrintExt::ParseAddPrinterToCupsInput(napi_env env, size_t argc, napi_value *argv,
+    std::shared_ptr<NapiPrintExt::NapiPrintExtContext> context)
+{
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
+    napi_valuetype valuetype;
+    PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
+    PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerName is not a string", napi_string_expected);
+    std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
+    context->printerUri = printerUri;
+    std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+    PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
+    context->printerName = printerName;
+    PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
+    std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+    PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
+    context->printerMake = printerMake;
+    return napi_ok;
+}
+
 napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter AddPrinterToCups---->");
     PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.addPrinterToCups", PRINT_API_COUNTED);
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input =
-        [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
-        napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
-
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerName is not a string", napi_string_expected);
-
-        std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
-        context->printerUri = printerUri;
-
-        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
-        PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
-        context->printerName = printerName;
-
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
-        std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-        PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
-        context->printerMake = printerMake;
-        return napi_ok;
+    auto input = [context](
+        napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        return ParseAddPrinterToCupsInput(env, argc, argv, context);
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);
@@ -382,7 +383,13 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance().AddPrinterToCups(
             context->printerUri, context->printerName, context->printerMake);
         PRINT_HILOGD("ret: %{public}d", ret);
         context->result = (ret == E_PRINT_NONE);
@@ -435,7 +442,7 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
     };
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(
+        int32_t ret = PrintManagerClient::GetInstance().QueryPrinterCapabilityByUri(
             context->printerUri, context->printerId, context->printerCaps);
         context->result = (ret == E_PRINT_NONE);
         PRINT_HILOGD("ret: %d", ret);
@@ -475,7 +482,7 @@ napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info 
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->DeletePrinterFromCups(context->printerName);
+        int32_t ret = PrintManagerClient::GetInstance().DeletePrinterFromCups(context->printerName);
         PRINT_HILOGD("ret: %d", ret);
         context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {
@@ -519,7 +526,7 @@ napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info in
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(context->printerInfos);
+        int32_t ret = PrintManagerClient::GetInstance().DiscoverUsbPrinters(context->printerInfos);
         context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to discover usb printers");
@@ -570,7 +577,7 @@ napi_value NapiPrintExt::AddPrinterToDiscovery(napi_env env, napi_callback_info 
             PRINT_HILOGE("printerInfos is empty!");
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToDiscovery(context->printerInfos.front());
+        int32_t ret = PrintManagerClient::GetInstance().AddPrinterToDiscovery(context->printerInfos.front());
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to add printer");
@@ -622,7 +629,7 @@ napi_value NapiPrintExt::UpdatePrinterInDiscovery(napi_env env, napi_callback_in
             PRINT_HILOGE("printerInfos is empty!");
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInDiscovery(context->printerInfos.front());
+        int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterInDiscovery(context->printerInfos.front());
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update printer");
@@ -668,7 +675,7 @@ napi_value NapiPrintExt::RemovePrinterFromDiscovery(napi_env env, napi_callback_
     };
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->RemovePrinterFromDiscovery(context->printerId);
+        int32_t ret = PrintManagerClient::GetInstance().RemovePrinterFromDiscovery(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to add printer");
@@ -721,7 +728,7 @@ napi_value NapiPrintExt::UpdatePrinterInSystem(napi_env env, napi_callback_info 
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(context->printerInfos.front());
+        int32_t ret = PrintManagerClient::GetInstance().UpdatePrinterInSystem(context->printerInfos.front());
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("UpdatePrinterInSystem Failed to update printer");

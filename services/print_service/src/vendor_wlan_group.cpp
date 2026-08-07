@@ -382,19 +382,27 @@ bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 
 void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std::string &groupPrinterId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
-    auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
-    if (retPair.second) {
-        PRINT_HILOGI("add new groupPrinterId");
+    std::string oldGroupPrinterId;
+    {
+        std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
+        auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
+        if (retPair.second) {
+            PRINT_HILOGI("add new groupPrinterId");
+            return;
+        }
+        if (retPair.first->second == groupPrinterId) {
+            PRINT_HILOGD("not need update groupPrinterId");
+            return;
+        }
+        PRINT_HILOGI("update groupPrinterId");
+        oldGroupPrinterId = retPair.first->second;
+        retPair.first->second = groupPrinterId;
+    }
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("parentVendorManager is null.");
         return;
     }
-    if (retPair.first->second == groupPrinterId) {
-        PRINT_HILOGD("not need update groupPrinterId");
-        return;
-    }
-    PRINT_HILOGI("update groupPrinterId");
-    parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), retPair.first->second);
-    retPair.first->second = groupPrinterId;
+    parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), oldGroupPrinterId);
 }
 
 bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)

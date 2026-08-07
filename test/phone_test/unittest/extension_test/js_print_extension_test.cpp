@@ -53,7 +53,7 @@ void JsPrintExtensionTest::SetUpProxy(void)
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
-    proxyObj_ = new (std::nothrow) MockRemoteObject();
+    proxyObj_ = new MockRemoteObject();
     EXPECT_NE(proxyObj_, nullptr);
     EXPECT_CALL(*proxyObj_, IsProxyObject()).WillRepeatedly(Return(true));
     EXPECT_CALL(*proxyObj_, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
@@ -63,14 +63,14 @@ void JsPrintExtensionTest::SetUpProxy(void)
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    PrintManagerClient::GetInstance()->SetProxy(proxyObj_);
-    PrintManagerClient::GetInstance()->LoadServerSuccess(nullptr);
+    PrintManagerClient::GetInstance().SetProxy(proxyObj_);
+    PrintManagerClient::GetInstance().LoadServerSuccess(nullptr);
 }
 
 void JsPrintExtensionTest::TearDownProxy(void)
 {
-    if (PrintManagerClient::GetInstance()->deathRecipient_ != nullptr && proxyObj_ != nullptr) {
-        PrintManagerClient::GetInstance()->deathRecipient_->OnRemoteDied(proxyObj_);
+    if (PrintManagerClient::GetInstance().deathRecipient_ != nullptr && proxyObj_ != nullptr) {
+        PrintManagerClient::GetInstance().deathRecipient_->OnRemoteDied(proxyObj_);
     }
     proxyObj_ = nullptr;
 }
@@ -136,8 +136,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_E
     ext->RegisterDiscoveryCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_START_DISCOVERY);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     EXPECT_FALSE(it->second->OnCallback());
     delete ext;
     TearDownProxy();
@@ -158,8 +158,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_E
     ext->RegisterDiscoveryCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_STOP_DISCOVERY);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     EXPECT_FALSE(it->second->OnCallback());
     delete ext;
     TearDownProxy();
@@ -180,8 +180,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
     ext->RegisterConnectionCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_CONNECT_PRINTER);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     EXPECT_FALSE(it->second->OnCallback("testPrinterId"));
     delete ext;
     TearDownProxy();
@@ -202,8 +202,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
     ext->RegisterConnectionCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     EXPECT_FALSE(it->second->OnCallback("testPrinterId"));
     delete ext;
     TearDownProxy();
@@ -224,8 +224,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Em
     ext->RegisterPrintJobCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_START_PRINT);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
     EXPECT_FALSE(it->second->OnCallback(job));
     delete ext;
@@ -247,8 +247,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Em
     ext->RegisterPrintJobCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_CANCEL_PRINT);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
     EXPECT_FALSE(it->second->OnCallback(job));
     delete ext;
@@ -270,8 +270,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPreviewCb_Lambda_Emp
     ext->RegisterPreviewCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_REQUEST_PREVIEW);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
     EXPECT_FALSE(it->second->OnCallback(job));
     delete ext;
@@ -293,8 +293,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterQueryCapCb_Lambda_Em
     ext->RegisterQueryCapCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_REQUEST_CAP);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     EXPECT_FALSE(it->second->OnCallback("testPrinterId"));
     delete ext;
     TearDownProxy();
@@ -315,8 +315,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterExtensionCb_Lambda_E
     ext->RegisterExtensionCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(ext->extensionId_, PRINT_EXTCB_DESTROY_EXTENSION);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     EXPECT_FALSE(it->second->OnCallback());
     delete ext;
     TearDownProxy();
@@ -352,8 +352,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_V
     extPtr->RegisterDiscoveryCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_START_DISCOVERY);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     it->second->OnCallback();
 
     JsPrintExtension::jsExtension_.reset();
@@ -375,8 +375,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_V
     extPtr->RegisterDiscoveryCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_STOP_DISCOVERY);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     it->second->OnCallback();
 
     JsPrintExtension::jsExtension_.reset();
@@ -398,8 +398,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
     extPtr->RegisterConnectionCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_CONNECT_PRINTER);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     it->second->OnCallback("testPrinterId");
 
     JsPrintExtension::jsExtension_.reset();
@@ -421,8 +421,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
     extPtr->RegisterConnectionCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     it->second->OnCallback("testPrinterId");
 
     JsPrintExtension::jsExtension_.reset();
@@ -444,8 +444,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Va
     extPtr->RegisterPrintJobCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_START_PRINT);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
     it->second->OnCallback(job);
 
@@ -468,8 +468,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Va
     extPtr->RegisterPrintJobCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_CANCEL_PRINT);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
     it->second->OnCallback(job);
 
@@ -492,8 +492,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPreviewCb_Lambda_Val
     extPtr->RegisterPreviewCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_REQUEST_PREVIEW);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
     it->second->OnCallback(job);
 
@@ -516,8 +516,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterQueryCapCb_Lambda_Va
     extPtr->RegisterQueryCapCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_REQUEST_CAP);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     it->second->OnCallback("testPrinterId");
 
     JsPrintExtension::jsExtension_.reset();
@@ -539,8 +539,8 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterExtensionCb_Lambda_V
     extPtr->RegisterExtensionCb();
 
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_DESTROY_EXTENSION);
-    auto it = PrintManagerClient::GetInstance()->extCallbackMap_.find(cid);
-    ASSERT_NE(it, PrintManagerClient::GetInstance()->extCallbackMap_.end());
+    auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
+    ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     it->second->OnCallback();
 
     JsPrintExtension::jsExtension_.reset();

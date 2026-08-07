@@ -54,13 +54,12 @@ void SaneServerManager::OnStart()
 
 SANE_Handle SaneServerManager::GetScanHandle(const std::string &scannerId)
 {
-    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    auto it = scannerHandleList_.find(scannerId);
-    if (it == scannerHandleList_.end()) {
-        SCAN_HILOGE("ScannerId is not openned!");
-        return nullptr;
+    std::lock_guard<std::mutex> autoLock(scannerHandleLock_);
+    if (scannerHandle_ && scannerHandle_->scannerId == scannerId) {
+        return scannerHandle_->handle;
     }
-    return it->second;
+    SCAN_HILOGE("ScannerId is not openned!");
+    return nullptr;
 }
 
 bool SaneServerManager::CheckPermission()
@@ -113,8 +112,8 @@ ErrCode SaneServerManager::SaneOpen(const std::string &scannerId, int32_t &statu
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    if (scannerHandleList_.find(scannerId) != scannerHandleList_.end()) {
+    std::lock_guard<std::mutex> autoLock(scannerHandleLock_);
+    if (scannerHandle_ && scannerHandle_->scannerId == scannerId) {
         status = SANE_STATUS_GOOD;
         return ERR_OK;
     }
@@ -131,7 +130,7 @@ ErrCode SaneServerManager::SaneOpen(const std::string &scannerId, int32_t &statu
         status = SANE_STATUS_INVAL;
         return ERR_OK;
     }
-    scannerHandleList_.insert({scannerId, handle});
+    scannerHandle_ = OpenedSaneHandle{scannerId, handle};
     SCAN_HILOGI("sane_open end, ret = [%{public}d]", status);
     return ERR_OK;
 }
@@ -143,11 +142,10 @@ ErrCode SaneServerManager::SaneClose(const std::string &scannerId)
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    auto it = scannerHandleList_.find(scannerId);
-    if (it != scannerHandleList_.end()) {
-        SafeSANEAPI::GetInstance().SaneClose(it->second);
-        scannerHandleList_.erase(it);
+    std::lock_guard<std::mutex> autoLock(scannerHandleLock_);
+    if (scannerHandle_ && scannerHandle_->scannerId == scannerId) {
+        SafeSANEAPI::GetInstance().SaneClose(scannerHandle_->handle);
+        scannerHandle_.reset();
     }
     SCAN_HILOGI("SaneClose end");
     return ERR_OK;
@@ -521,8 +519,8 @@ ErrCode SaneServerManager::UnloadSystemAbility()
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    scannerHandleList_.clear();
+    std::lock_guard<std::mutex> autoLock(scannerHandleLock_);
+    scannerHandle_.reset();
     SafeSANEAPI::GetInstance().SaneCloseAllHandles();
     SafeSANEAPI::GetInstance().SaneExit();
     const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;

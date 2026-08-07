@@ -57,19 +57,9 @@ void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
     if (deviceCount > maxDeviceCount) {
         SCAN_HILOGE("deviceCount [%{public}d] exceeded the maximum value", deviceCount);
     }
-    Scan_ScannerDevice** devices = new (std::nothrow) Scan_ScannerDevice* [deviceCount]{};
-    if (devices == nullptr) {
-        SCAN_HILOGE("devices is a nullptr");
-        discoverCallback_(nullptr, 0);
-        return;
-    }
+    Scan_ScannerDevice** devices = new Scan_ScannerDevice* [deviceCount]{};
     for (int i = 0; i < deviceCount; i++) {
-        Scan_ScannerDevice* device = new (std::nothrow) Scan_ScannerDevice();
-        if (device == nullptr) {
-            SCAN_HILOGE("devices is a nullptr");
-            deviceCount = i;
-            break;
-        }
+        Scan_ScannerDevice* device = new Scan_ScannerDevice();
         device->scannerId = infos[i].GetDeviceId().c_str();
         device->manufacturer = infos[i].GetManufacturer().c_str();
         device->model = infos[i].GetModel().c_str();
@@ -334,20 +324,11 @@ Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
         SCAN_HILOGE("optionCount [%{public}d] exceeded the maximum value", optionCount);
         return nullptr;
     }
-    Scan_ScannerOptions *scannerOptions = new (std::nothrow) Scan_ScannerOptions();
-    if (scannerOptions == nullptr) {
-        SCAN_HILOGE("scannerOptions is a nullptr");
-        return nullptr;
-    }
-    scannerOptions->titles = new (std::nothrow) char *[optionCount]();
-    scannerOptions->descriptions = new (std::nothrow) char *[optionCount]();
-    scannerOptions->ranges = new (std::nothrow) char *[optionCount]();
+    Scan_ScannerOptions *scannerOptions = new Scan_ScannerOptions();
+    scannerOptions->titles = new char *[optionCount]();
+    scannerOptions->descriptions = new char *[optionCount]();
+    scannerOptions->ranges = new char *[optionCount]();
     scannerOptions->optionCount = optionCount;
-    if (scannerOptions->titles == nullptr || scannerOptions->descriptions == nullptr ||
-        scannerOptions->ranges == nullptr) {
-        FreeScannerOptionsMemory(scannerOptions);
-        return nullptr;
-    }
     return scannerOptions;
 }
 
@@ -374,31 +355,25 @@ bool ScanContext::MemSetScannerOptions(
 {
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
-        char *titBuff = new (std::nothrow) char[bufferSize];
+        char *titBuff = new char[bufferSize];
         if (!CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
-            if (titBuff != nullptr) {
-                delete[] titBuff;
-            }
+            delete[] titBuff;
             return false;
         }
         scannerOptions->titles[i] = titBuff;
 
         bufferSize = paraTable.desBuff[i].length() + 1;
-        char *desBuff = new (std::nothrow) char[bufferSize];
+        char *desBuff = new char[bufferSize];
         if (!CopySingleBuf(desBuff, paraTable.desBuff[i].c_str(), bufferSize)) {
-            if (desBuff != nullptr) {
-                delete[] desBuff;
-            }
+            delete[] desBuff;
             return false;
         }
         scannerOptions->descriptions[i] = desBuff;
 
         bufferSize = paraTable.rangesBuff[i].length() + 1;
-        char *rangesBuff = new (std::nothrow) char[bufferSize];
+        char *rangesBuff = new char[bufferSize];
         if (!CopySingleBuf(rangesBuff, paraTable.rangesBuff[i].c_str(), bufferSize)) {
-            if (rangesBuff != nullptr) {
-                delete[] rangesBuff;
-            }
+            delete[] rangesBuff;
             return false;
         }
         scannerOptions->ranges[i] = rangesBuff;

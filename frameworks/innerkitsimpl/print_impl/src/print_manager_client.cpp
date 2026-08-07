@@ -46,10 +46,10 @@ PrintManagerClient::PrintManagerClient() : printServiceProxy_(nullptr), deathRec
 
 PrintManagerClient::~PrintManagerClient() {}
 
-PrintManagerClient* PrintManagerClient::GetInstance()
+PrintManagerClient& PrintManagerClient::GetInstance()
 {
     static PrintManagerClient instance;
-    return &instance;
+    return instance;
 }
 
 sptr<IPrintService> PrintManagerClient::GetPrintServiceProxy()
@@ -75,7 +75,7 @@ sptr<IPrintService> PrintManagerClient::GetPrintServiceProxy()
         auto object = samgrProxy->CheckSystemAbility(PRINT_SERVICE_ID);
         if (object != nullptr) {
             if (deathRecipient_ == nullptr) {
-                deathRecipient_ = new (std::nothrow) PrintSaDeathRecipient();
+                deathRecipient_ = new PrintSaDeathRecipient();
             }
             if (deathRecipient_ != nullptr) {
                 object->AddDeathRecipient(deathRecipient_);
@@ -894,11 +894,9 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         std::lock_guard<std::mutex> lock(extCallbackMutex_);
         auto it = extCallbackMap_.find(extensionCID);
         if (it == extCallbackMap_.end()) {
-            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-            if (callbackStub != nullptr) {
-                callbackStub->SetExtCallback(cb);
-                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
-            }
+            callbackStub = new PrintExtensionCallbackStub;
+            callbackStub->SetExtCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         } else {
             callbackStub = it->second;
             callbackStub->SetExtCallback(cb);
@@ -929,11 +927,9 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         std::lock_guard<std::mutex> lock(extCallbackMutex_);
         auto it = extCallbackMap_.find(extensionCID);
         if (it == extCallbackMap_.end()) {
-            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-            if (callbackStub != nullptr) {
-                callbackStub->SetPrintJobCallback(cb);
-                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
-            }
+            callbackStub = new PrintExtensionCallbackStub;
+            callbackStub->SetPrintJobCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         } else {
             callbackStub = it->second;
             callbackStub->SetPrintJobCallback(cb);
@@ -964,11 +960,9 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         std::lock_guard<std::mutex> lock(extCallbackMutex_);
         auto it = extCallbackMap_.find(extensionCID);
         if (it == extCallbackMap_.end()) {
-            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-            if (callbackStub != nullptr) {
-                callbackStub->SetCapabilityCallback(cb);
-                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
-            }
+            callbackStub = new PrintExtensionCallbackStub;
+            callbackStub->SetCapabilityCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         } else {
             callbackStub = it->second;
             callbackStub->SetCapabilityCallback(cb);
@@ -999,11 +993,9 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         std::lock_guard<std::mutex> lock(extCallbackMutex_);
         auto it = extCallbackMap_.find(extensionCID);
         if (it == extCallbackMap_.end()) {
-            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-            if (callbackStub != nullptr) {
-                callbackStub->SetPrinterCallback(cb);
-                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
-            }
+            callbackStub = new PrintExtensionCallbackStub;
+            callbackStub->SetPrinterCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         } else {
             callbackStub = it->second;
             callbackStub->SetPrinterCallback(cb);
@@ -1029,13 +1021,9 @@ int32_t PrintManagerClient::SetNativePrinterChangeCallback(const std::string &ty
     }
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (cb != nullptr) {
-        sptr<PrintCallback> callback = new (std::nothrow) PrintCallback;
-        if (callback != nullptr) {
-            callback->SetNativePrinterChangeCallback(cb);
-            ret = proxy->RegisterPrinterCallback(type, callback);
-        } else {
-            ret = E_PRINT_GENERIC_FAILURE;
-        }
+        sptr<PrintCallback> callback = new PrintCallback;
+        callback->SetNativePrinterChangeCallback(cb);
+        ret = proxy->RegisterPrinterCallback(type, callback);
     } else {
         ret = proxy->UnregisterPrinterCallback(type);
     }
@@ -1072,11 +1060,7 @@ bool PrintManagerClient::LoadServer()
         return false;
     }
 
-    sptr<PrintSyncLoadCallback> loadCallback_ = new (std::nothrow) PrintSyncLoadCallback();
-    if (loadCallback_ == nullptr) {
-        PRINT_HILOGE("new PrintSyncLoadCallback fail");
-        return false;
-    }
+    sptr<PrintSyncLoadCallback> loadCallback_ = new PrintSyncLoadCallback();
 
     int32_t result = sm->LoadSystemAbility(PRINT_SERVICE_ID, loadCallback_);
     if (result != ERR_OK) {
@@ -1103,7 +1087,7 @@ void PrintManagerClient::LoadServerSuccess(const sptr<IRemoteObject> &remoteObje
         PRINT_HILOGI("LoadServerSuccess");
         if (remoteObject != nullptr) {
             if (deathRecipient_ == nullptr) {
-                deathRecipient_ = new (std::nothrow) PrintSaDeathRecipient();
+                deathRecipient_ = new PrintSaDeathRecipient();
             }
             if (deathRecipient_ != nullptr) {
                 remoteObject->AddDeathRecipient(deathRecipient_);
@@ -1138,7 +1122,7 @@ void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)
             deathRecipient_ = nullptr;
         }
     }
-    deathRecipient_ = new (std::nothrow) PrintSaDeathRecipient();
+    deathRecipient_ = new PrintSaDeathRecipient();
     if (deathRecipient_ != nullptr) {
         obj->AddDeathRecipient(deathRecipient_);
         PRINT_HILOGD("Getting PrintManagerClientProxy succeeded.");

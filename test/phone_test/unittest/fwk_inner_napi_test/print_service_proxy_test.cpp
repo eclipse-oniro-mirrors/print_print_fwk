@@ -835,7 +835,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0026, TestSize.Level1)
 HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0028, TestSize.Level1)
 {
     std::string testType = "type";
-    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
+    sptr<IPrintCallback> testListener = new DummyPrintCallbackStub();
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
