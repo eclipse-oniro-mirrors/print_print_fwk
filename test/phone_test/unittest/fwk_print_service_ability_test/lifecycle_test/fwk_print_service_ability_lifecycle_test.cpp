@@ -248,7 +248,7 @@ HWTEST_F(PrintServiceAbilityTest, RegisterExtCallback_CallerMismatch_ShouldRejec
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     std::string extensionCid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_DISCOVERY);
     sptr<IPrintExtensionCallback> listener = new MockPrintExtensionCallbackProxy();
-    EXPECT_EQ(service->RegisterExtCallback(extensionCid, listener), E_PRINT_INVALID_EXTENSION);
+    EXPECT_EQ(service->RegisterExtCallback(extensionCid, listener), E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest, RegisterExtCallback_CallerMatch_ShouldSucceed, TestSize.Level1)
@@ -278,7 +278,7 @@ HWTEST_F(PrintServiceAbilityTest, LoadExtSuccess_CallerMismatch_ShouldReject, Te
     int32_t userId = service->GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
-    EXPECT_EQ(service->LoadExtSuccess(extensionId), E_PRINT_INVALID_EXTENSION);
+    EXPECT_EQ(service->LoadExtSuccess(extensionId), E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest, LoadExtSuccess_CallerMatch_ShouldSucceed, TestSize.Level1)
