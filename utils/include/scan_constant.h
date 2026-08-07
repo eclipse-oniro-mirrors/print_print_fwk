@@ -143,6 +143,15 @@ enum ScanErrorCode {
 
 const uint32_t SCAN_INVALID_ID = 0xFFFFFFFF;   // -1
 constexpr int32_t INVALID_FD = -1;
+constexpr int32_t STD_FD_MAX = 2;
+#define CLOSE_FD_IF_VALID(fd) \
+    do { \
+        if ((fd) != INVALID_FD && (fd) > STD_FD_MAX) { \
+            close(fd); \
+            (fd) = INVALID_FD; \
+        } \
+    } while (0)
+
 const uint16_t USB_VALUE_DESCRIPTOR_INDEX_SERIAL_NUMBER = 0X03;
 const uint8_t USB_REQUESTTYPE_DEVICE_TO_HOST = 0X80;
 const uint8_t USB_REQUEST_GET_DESCRIPTOR = 0X06;

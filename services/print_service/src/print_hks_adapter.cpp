@@ -242,6 +242,7 @@ int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *para
     size_t cipherTextSize = plainBlob.size + AUTH_TAG_SIZE;
     size_t bufferSize = NONCE_LEN + cipherTextSize;
     cipherBlob.data = new uint8_t[bufferSize];
+    cipherBlob.size = bufferSize;
 
     if (memcpy_s(cipherBlob.data, bufferSize, nonce.data, NONCE_LEN) != EOK) {
         PRINT_HILOGE("memcpy nonce failed");
@@ -256,8 +257,7 @@ int32_t HksAdapter::DoEncrypt(struct HksBlob *keyAlias, struct HksParamSet *para
         PrintUtil::SecureDeleteBlob(cipherBlob.data, cipherBlob.size);
         return ret;
     }
-    
-    cipherBlob.size = bufferSize;
+
     return HKS_SUCCESS;
 }
 
