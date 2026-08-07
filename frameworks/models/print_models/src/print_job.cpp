@@ -171,7 +171,7 @@ void PrintJob::SetPreview(const PrintPreviewAttribute &preview)
 void PrintJob::UpdateParams(const PrintJob &jobInfo)
 {
     fdList_.clear();
-    fdList_.assign(right.fdList_.begin(), right.fdList_.end());
+    fdList_.assign(jobInfo.fdList_.begin(), jobInfo.fdList_.end());
 
     jobId_ = jobInfo.jobId_;
     printerId_ = jobInfo.printerId_;
