@@ -305,7 +305,7 @@ int32_t ImageExporter::ExportToFormat(
 
     if (format != EXPORT_FORMAT_PNG && format != EXPORT_FORMAT_TIFF) {
         SCAN_HILOGE("Unsupported format: %{public}d", format);
-        return E_SCAN_UNSUPPORTED;
+        return E_SCAN_INVALID_PARAMETER;
     }
 
     std::string rawPath = baseName + RAW_SUFFIX;
