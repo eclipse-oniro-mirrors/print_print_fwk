@@ -1021,8 +1021,14 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
         return E_PRINT_SERVER_FAILURE;
     }
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
-    if (dinfo == nullptr || dinfo->attrs == nullptr) {
-        PRINT_HILOGE("cupsCopyDestInfo failed");
+    if (dinfo == nullptr) {
+        PRINT_HILOGE("cupsCopyDestInfo failed, dinfo is nullptr");
+        printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (dinfo->attrs == nullptr) {
+        PRINT_HILOGE("cupsCopyDestInfo failed, dinfo->attrs is nullptr");
+        printAbility_->FreeDestInfo(dinfo);
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
         return E_PRINT_SERVER_FAILURE;
     }
@@ -1597,7 +1603,7 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
     /* Pass writable cache fds to MDM callback for watermark embedding, then close them */
     int32_t ret = WatermarkManager::GetInstance().ProcessWatermarkForFiles(
         jobParams->serviceJobId, cacheFdList);
-    for (auto fd : cacheFdList) { close(fd); }
+    for (auto fd : cacheFdList) { CLOSE_FD_IF_VALID(fd); }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("ProcessWatermarkForFiles failed, ret: %{public}d, jobId: %{public}s.",
             ret, jobParams->serviceJobId.c_str());
@@ -1612,7 +1618,7 @@ bool PrintCupsClient::ProcessWatermarkWithCacheFd(JobParameters *jobParams)
             jobParams->serviceJobId.c_str());
         return false;
     }
-    for (auto fd : jobParams->fdList) { close(fd); }
+    for (auto fd : jobParams->fdList) { CLOSE_FD_IF_VALID(fd); }
     jobParams->fdList = std::move(freshFdList);
     return true;
 }

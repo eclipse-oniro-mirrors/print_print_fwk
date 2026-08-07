@@ -549,7 +549,7 @@ napi_value NapiPrintExt::AddPrinterToDiscovery(napi_env env, napi_callback_info 
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_object, " parameter is not an object!", napi_invalid_arg);
 
         auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);

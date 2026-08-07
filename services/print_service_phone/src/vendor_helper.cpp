@@ -22,6 +22,7 @@
 #include "print_cups_client.h"
 
 namespace {
+constexpr uint32_t MAX_RESOLUTION_COUNT = 64;
 const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
@@ -659,9 +660,11 @@ bool UpdateResolutionCapability(PrinterCapability &printerCap, const Print_Print
         PRINT_HILOGW("supportedResolutions is null");
         return false;
     }
+    uint32_t supportedResolutionsCount = capability->supportedResolutionsCount > MAX_RESOLUTION_COUNT
+                                            ? MAX_RESOLUTION_COUNT : capability->supportedResolutionsCount;
     std::vector<PrintResolution> resolutionList;
     Json::Value resolutionArray;
-    for (uint32_t i = 0; i < capability->supportedResolutionsCount; ++i) {
+    for (uint32_t i = 0; i < supportedResolutionsCount; ++i) {
         PrintResolution printResolution;
         uint32_t xRes = capability->supportedResolutions[i].horizontalDpi;
         uint32_t yRes = capability->supportedResolutions[i].verticalDpi;

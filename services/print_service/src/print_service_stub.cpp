@@ -229,10 +229,11 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     }
     std::string taskId;
     if (!data.ReadString(taskId)) {
+        PRINT_HILOGE("PrintServiceStub::OnStartPrint ReadString taskId failed");
         for (auto fd : fdList) {
             fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         }
-        PRINT_HILOGE("%{public}s data.ReadString(taskId) failed", __func__);
+        fdList.clear();
         return false;
     }
     int32_t ret = StartPrint(fileList, fdList, taskId);
@@ -1044,9 +1045,8 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
     userPasswd[MAX_AUTH_LENGTH_SIZE - 1] = '\0';
 
     int32_t ret = AuthPrintJob(jobId, userName, userPasswd);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
-
     PrintUtil::SafeDeleteAuthInfo(userPasswd);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
 
     PRINT_HILOGD("PrintServiceStub::AuthPrintJob out");
     return ret == E_PRINT_NONE;

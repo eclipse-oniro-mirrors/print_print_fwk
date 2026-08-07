@@ -171,6 +171,7 @@ bool SmbHostSearchHelper::SendQuery(const struct in_addr& destAddr)
     
     if (memset_s(&destSockaddr, sizeof(destSockaddr), 0, sizeof(destSockaddr)) != 0) {
         PRINT_HILOGW("SendQuery memset_s failed.");
+        return false;
     }
     destSockaddr.sin_family = AF_INET;
     destSockaddr.sin_port = htons(NB_DGRAM);

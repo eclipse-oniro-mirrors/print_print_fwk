@@ -36,6 +36,21 @@ using namespace testing;
 
 namespace OHOS {
 namespace Print {
+// Mock for IPrintAbilityBase to test code paths through printAbility_
+class MockIPrintAbilityBase : public IPrintAbilityBase {
+public:
+    MOCK_METHOD(cups_dest_t*, GetNamedDest, (http_t *http, const char *name, const char *instance), (override));
+    MOCK_METHOD(void, FreeDests, (int num, cups_dest_t *dests), (override));
+    MOCK_METHOD(cups_dinfo_t*, CopyDestInfo, (http_t *http, cups_dest_t *dest), (override));
+    MOCK_METHOD(void, FreeDestInfo, (cups_dinfo_t *dinfo), (override));
+    MOCK_METHOD(ipp_t*, DoRequest, (http_t *http, ipp_t *request, const char *resource), (override));
+    MOCK_METHOD(void, FreeRequest, (ipp_t *response), (override));
+};
+}  // namespace Print
+}  // namespace OHOS
+
+namespace OHOS {
+namespace Print {
 static constexpr const char *JOB_OPTIONS =
     "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
     "\"printerName\":\"printer1\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\",\"borderless\":true,"
@@ -3532,6 +3547,55 @@ HWTEST_F(PrintCupsClientTest, QueryUsbPrinterInfoByPrinterId_MatchingPrinter_Tes
     EXPECT_NE(ret, nullptr);
 
     ClearUsbPrinters();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_DinfoNonNullAttrsNull
+ * @tc.desc: QueryPrinterCapabilityFromPPD returns E_PRINT_SERVER_FAILURE when dinfo is non-null but attrs is null,
+ *           and calls FreeDestInfo to avoid resource leak
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_DinfoNonNullAttrsNull, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    // Replace printAbility_ with a mock so we can control GetNamedDest/CopyDestInfo/FreeDestInfo
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    // Delete the default PrintCupsWrapper and install mock
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+ 
+    // cups_dinfo_t with attrs = nullptr - allocate a zeroed struct to simulate non-null dinfo with null attrs
+    cups_dinfo_t *dinfo = static_cast<cups_dinfo_t *>(calloc(1, sizeof(cups_dinfo_t)));
+    ASSERT_NE(dinfo, nullptr);
+    // dinfo->attrs is null because calloc zero-initializes
+ 
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _))
+        .WillOnce(Return(static_cast<cups_dest_t *>(calloc(1, sizeof(cups_dest_t)))));
+    EXPECT_CALL(*rawMock, CopyDestInfo(_, _))
+        .WillOnce(Return(dinfo));
+    // FreeDestInfo should be called because dinfo is non-null but attrs is null
+    EXPECT_CALL(*rawMock, FreeDestInfo(dinfo));
+    EXPECT_CALL(*rawMock, FreeDests(_, _));
+ 
+    PrinterCapability printerCap;
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD("test_printer", printerCap, ""), E_PRINT_SERVER_FAILURE);
+}
+ 
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_NullPrintAbility
+ * @tc.desc: QueryPrinterCapabilityFromPPD returns E_PRINT_SERVER_FAILURE when printAbility_ is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_NullPrintAbility, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.printAbility_ = nullptr;
+    PrinterCapability printerCap;
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD("test_printer", printerCap, ""), E_PRINT_SERVER_FAILURE);
 }
 
 /**

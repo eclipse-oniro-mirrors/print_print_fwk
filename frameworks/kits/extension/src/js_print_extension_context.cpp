@@ -264,6 +264,18 @@ private:
         return result;
     }
 
+    static void RemoveConnectById(int64_t connectId)
+    {
+        std::unique_lock<std::shared_mutex> lock(g_connectsMutex_);
+        auto item = std::find_if(connects_.begin(), connects_.end(),
+            [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+                return connectId == obj.first.id;
+            });
+        if (item != connects_.end()) {
+            connects_.erase(item);
+        }
+    }
+
     napi_value OnConnectAbility(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnConnectAbility is called");
@@ -291,16 +303,17 @@ private:
         }
         NapiAsyncTask::CompleteCallback complete = [weak = context_, want, connection, connectId](
                                                    napi_env engine, NapiAsyncTask &task, int32_t status) {
-            PRINT_HILOGD("OnConnectAbility begin");
             auto context = weak.lock();
             if (!context) {
                 PRINT_HILOGW("context is released");
-                    task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
+                RemoveConnectById(connectId);
+                task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
                 return;
             }
             PRINT_HILOGD("context->ConnectAbility connection:%{public}" PRId64, connectId);
             if (!context->ConnectAbility(want, connection)) {
-                    connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
+                connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
+                RemoveConnectById(connectId);
             }
             napi_value undefineResult = nullptr;
             napi_get_undefined(engine, &undefineResult);
@@ -321,6 +334,7 @@ private:
         auto context = weak.lock();
         if (!context) {
             PRINT_HILOGW("context is released");
+            RemoveConnectById(params.connectId);
             task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
             return;
         }
@@ -328,6 +342,7 @@ private:
             static_cast<int32_t>(params.connectId));
         if (!context->ConnectAbilityWithAccount(params.want, params.accountId, params.connection)) {
             params.connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
+            RemoveConnectById(params.connectId);
         }
         napi_value undefineResult = nullptr;
         napi_get_undefined(engine, &undefineResult);

@@ -46,6 +46,7 @@ ScanCallback::~ScanCallback()
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
+            NapiScanUtils::DeleteReference(param->env, param->callbackRef);
             delete param;
             return;
         }
@@ -83,6 +84,7 @@ void CallbackParam::SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSy
 
 bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc)
 {
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false, __func__);
     auto task = [param, workFunc]() {
         if (param == nullptr) {
             SCAN_HILOGE("param is a nullptr");

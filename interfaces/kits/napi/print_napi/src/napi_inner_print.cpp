@@ -38,6 +38,11 @@ const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
 const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 const uint32_t ARRAY_LENGTH_ONE_THOUSAND = 1000;
 
+NapiInnerPrint::InnerPrintContext::~InnerPrintContext()
+{
+    PrintUtil::SafeDeleteAuthInfo(userPasswd);
+}
+
 napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
@@ -959,6 +964,9 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
 
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
+        napi_valuetype callbackType = napi_undefined;
+        napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &callbackType);
+        PRINT_ASSERT(env, callbackType == napi_function, "callback is not a function");
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
         PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
 
@@ -1335,7 +1343,6 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
-            PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
             context->result = false;
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
@@ -1821,8 +1828,6 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!CheckCallerIsSystemApp(context)) {
-            PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
-            context->userPasswd = nullptr;
             context->result = false;
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;

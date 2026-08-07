@@ -109,7 +109,7 @@ bool ScanContext::ParaIndexConvert(const int32_t option, int32_t &innerOption, c
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = innerScanParaTables_.find(deviceId);
     if (it == innerScanParaTables_.end()) {
-        SCAN_HILOGE("cannot find deviceId [%{public}s] in innerScanParaTables", deviceId.c_str());
+        SCAN_HILOGE("cannot find deviceId [%{private}s] in innerScanParaTables", deviceId.c_str());
         return false;
     }
     auto &tablePtr = it->second;

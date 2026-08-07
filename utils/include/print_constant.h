@@ -101,6 +101,14 @@ namespace OHOS::Print {
         return;                                                                     \
     }
 
+#define CLOSE_FD_IF_VALID(fd) \
+    do { \
+        if ((fd) != INVALID_FD && (fd) > STD_FD_MAX) { \
+            close(fd); \
+            (fd) = INVALID_FD; \
+        } \
+    } while (0) \
+
 enum PrintErrorCode {
     E_PRINT_ACCOUNT_ERROR = -5,
     E_PRINT_NETWORK_ERROR = -3,
@@ -397,6 +405,7 @@ const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
 constexpr uint32_t INVALID_FD = -1;
+constexpr uint32_t STD_FD_MAX = 2;
 const int32_t PRINT_API_COUNTED = 1;
 
 inline const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";

@@ -36,6 +36,21 @@ using namespace testing;
 
 namespace OHOS {
 namespace Print {
+// Mock for IPrintAbilityBase to test code paths through printAbility_
+class MockIPrintAbilityBase : public IPrintAbilityBase {
+public:
+    MOCK_METHOD(cups_dest_t*, GetNamedDest, (http_t *http, const char *name, const char *instance), (override));
+    MOCK_METHOD(void, FreeDests, (int num, cups_dest_t *dests), (override));
+    MOCK_METHOD(cups_dinfo_t*, CopyDestInfo, (http_t *http, cups_dest_t *dest), (override));
+    MOCK_METHOD(void, FreeDestInfo, (cups_dinfo_t *dinfo), (override));
+    MOCK_METHOD(ipp_t*, DoRequest, (http_t *http, ipp_t *request, const char *resource), (override));
+    MOCK_METHOD(void, FreeRequest, (ipp_t *response), (override));
+};
+}  // namespace Print
+}  // namespace OHOS
+
+namespace OHOS {
+namespace Print {
 static constexpr const char *JOB_OPTIONS =
     "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
     "\"printerName\":\"printer1\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\",\"borderless\":true,"

@@ -479,7 +479,7 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
     nativePrinterInfo.makeAndModel = CopyString(infoJson["make"].asString());
     SAFE_DELETE_ARRAY(nativePrinterInfo.printerUri);
     nativePrinterInfo.printerUri = CopyString(infoJson["printerUri"].asString());
-    if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions")) {
+    if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions") || !infoJson["cupsOptions"].isObject()) {
         PRINT_HILOGW("The infoJson does not have a cupsOptions attribute.");
         return E_PRINT_NONE;
     }

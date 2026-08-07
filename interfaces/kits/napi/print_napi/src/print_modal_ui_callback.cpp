@@ -180,8 +180,7 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     BaseContext *context = reinterpret_cast<BaseContext *>(work->data);
     if (context == nullptr) {
         PRINT_HILOGE("context is null");
-        delete work;
-        work = nullptr;
+        PRINT_SAFE_DELETE(work);
         return;
     }
 
@@ -193,6 +192,10 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     napi_open_handle_scope(context->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("open handle scope failed");
+        context->callback = nullptr;
+        PRINT_SAFE_DELETE(context);
+        PRINT_SAFE_DELETE(work);
+        return;
     }
 
     napi_value result[2] = {nullptr};
@@ -220,10 +223,8 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
 
     // context.callback will be deleted on other share_ptr, not need delete it!
     context->callback = nullptr;
-    delete context;
-    context = nullptr;
-    delete work;
-    work = nullptr;
+    PRINT_SAFE_DELETE(context);
+    PRINT_SAFE_DELETE(work);
 }
 
 void PrintModalUICallback::CloseModalUIExtension(BaseContext *context)

@@ -181,6 +181,10 @@ bool ScanUsbManager::IsDeviceAvailable(const std::string &firstId, const std::st
         SCAN_HILOGE("[%{public}s][%{public}s] format error", firstId.c_str(), secondId.c_str());
         return false;
     }
+    if (busNum < 0 || busNum > UINT8_MAX || devAddr < 0 || devAddr > UINT8_MAX) {
+        SCAN_HILOGE("busNum[%{public}d] or devAddr[%{public}d] out of uint8_t range", busNum, devAddr);
+        return false;
+    }
     UsbDevice usbDevice;
     usbDevice.SetBusNum(static_cast<uint8_t>(busNum));
     usbDevice.SetDevAddr(static_cast<uint8_t>(devAddr));
@@ -192,7 +196,7 @@ bool ScanUsbManager::IsDeviceAvailable(const std::string &firstId, const std::st
         return false;
     }
     bool closeDeviceRet = UsbSrvClient.Close(usbDevicePipe);
-    SCAN_HILOGD("openDevice ret = %{public}d", closeDeviceRet);
+    SCAN_HILOGD("closeDevice ret = %{public}d", closeDeviceRet);
     return true;
 }
 
