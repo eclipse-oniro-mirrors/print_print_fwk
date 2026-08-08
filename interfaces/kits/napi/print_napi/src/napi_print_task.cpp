@@ -95,6 +95,7 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
         }
         napi_status status = napi_get_reference_value(env, context->ref, result);
         napi_delete_reference(env, context->ref);
+        context->ref = nullptr;
         return status;
     };
     context->SetAction(std::move(input), std::move(output));
@@ -143,6 +144,7 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
         }
         napi_status status = napi_get_reference_value(env, context->ref, result);
         napi_delete_reference(env, context->ref);
+        context->ref = nullptr;
         return status;
     };
     context->SetAction(std::move(input), std::move(output));

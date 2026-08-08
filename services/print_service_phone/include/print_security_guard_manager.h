@@ -17,6 +17,7 @@
 #define BASE_PRINT_SECURITY_GUARD_H
 
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include "print_security_guard_info.h"
@@ -35,6 +36,7 @@ private:
 
 private:
     std::map<std::string, std::shared_ptr<PrintSecurityGuardInfo>> securityMap_;
+    mutable std::mutex securityMapMutex_;
 };
 } // namespace OHOS::Print
 

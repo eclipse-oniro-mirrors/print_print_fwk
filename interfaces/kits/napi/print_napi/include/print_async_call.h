@@ -81,6 +81,8 @@ public:
             return errorIndex_;
         }
 
+        virtual void CleanupRefs(napi_env env) {}
+
     protected:
         friend class PrintAsyncCall;
         InputAction input_ = nullptr;
@@ -110,7 +112,7 @@ private:
         napi_async_work work = nullptr;
         napi_status paramStatus = napi_ok;
     };
-    static void DeleteContext(napi_env env, AsyncContext *context);
+    static void DeleteContext(napi_env env, AsyncContext *&context);
     static uint32_t GetErrorIndex(AsyncContext *context);
 
     AsyncContext *context_ = nullptr;

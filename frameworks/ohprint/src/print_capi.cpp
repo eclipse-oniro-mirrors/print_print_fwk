@@ -456,12 +456,14 @@ Print_ErrorCode OH_Print_QueryPrinterInfo(const char *printerId, Print_PrinterIn
         return PRINT_ERROR_INVALID_PRINTER;
     }
     Print_PrinterInfo *nativePrinterInfo = ConvertToNativePrinterInfo(info);
-    if (nativePrinterInfo != nullptr) {
-        if (ret != 0) {
-            nativePrinterInfo->printerState = PRINTER_UNAVAILABLE;
-        }
-        *printerInfo = nativePrinterInfo;
+    if (nativePrinterInfo == nullptr) {
+        *printerInfo = nullptr;
+        return PRINT_ERROR_GENERIC_FAILURE;
     }
+    if (ret != 0) {
+        nativePrinterInfo->printerState = PRINTER_UNAVAILABLE;
+    }
+    *printerInfo = nativePrinterInfo;
     return ConvertToNativeErrorCode(ret);
 }
 

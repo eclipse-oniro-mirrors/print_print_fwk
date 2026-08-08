@@ -36,17 +36,23 @@ PrintAniCallback::PrintAniCallback(ani_env *env, ani_object aniCallback)
 
 PrintAniCallback::~PrintAniCallback()
 {
-    if (aniCallback_ != nullptr) {
-        if (aniVm_ != nullptr) {
-            ani_env *env = nullptr;
+    if (aniCallback_ != nullptr && aniVm_ != nullptr) {
+        ani_env *env = nullptr;
+        bool isAttached = false;
+        if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
             ani_options aniArgs { 0, nullptr };
-            auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-            if (status == ANI_OK && env != nullptr) {
-                env->GlobalReference_Delete(aniCallback_);
-                aniVm_->DetachCurrentThread();
+            if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) == ANI_OK) {
+                isAttached = true;
+            } else {
+                PRINT_HILOGE("Failed to attach thread, global reference leaked.");
+                aniVm_ = nullptr;
+                aniCallback_ = nullptr;
+                return;
             }
-        } else {
-            PRINT_HILOGW("aniVm_ is nullptr, aniCallback_ may not be released properly");
+        }
+        env->GlobalReference_Delete(aniCallback_);
+        if (isAttached) {
+            aniVm_->DetachCurrentThread();
         }
     }
     aniVm_ = nullptr;
@@ -67,17 +73,19 @@ bool PrintAniCallback::OnCallback(uint32_t state, const PrinterInfo &info)
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -88,17 +96,19 @@ bool PrintAniCallback::OnCallback(uint32_t state, const PrintJob &info)
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -109,17 +119,19 @@ bool PrintAniCallback::OnCallback(const std::string &extensionId, const std::str
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -130,17 +142,19 @@ bool PrintAniCallback::OnCallback(const PrinterInfo &info, const std::vector<Ppd
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -154,17 +168,19 @@ bool PrintAniCallback::OnCallbackAdapterLayout(const std::string &jobId,
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -178,17 +194,19 @@ bool PrintAniCallback::OnCallbackAdapterJobStateChanged(const std::string jobId,
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -199,17 +217,19 @@ bool PrintAniCallback::OnCallbackAdapterGetFile(uint32_t state)
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -220,17 +240,19 @@ bool PrintAniCallback::OnCallback(const std::vector<PrintSharedHost> &sharedHost
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return true;
 }
 
@@ -248,17 +270,23 @@ WatermarkAniCallback::WatermarkAniCallback(ani_env *env, ani_object aniCallback)
 
 WatermarkAniCallback::~WatermarkAniCallback()
 {
-    if (aniCallback_ != nullptr) {
-        if (aniVm_ != nullptr) {
-            ani_env *env = nullptr;
+    if (aniCallback_ != nullptr && aniVm_ != nullptr) {
+        ani_env *env = nullptr;
+        bool isAttached = false;
+        if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
             ani_options aniArgs { 0, nullptr };
-            auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-            if (status == ANI_OK && env != nullptr) {
-                env->GlobalReference_Delete(aniCallback_);
-                aniVm_->DetachCurrentThread();
+            if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) == ANI_OK) {
+                isAttached = true;
+            } else {
+                PRINT_HILOGE("Failed to attach thread, global reference leaked.");
+                aniVm_ = nullptr;
+                aniCallback_ = nullptr;
+                return;
             }
-        } else {
-            PRINT_HILOGW("aniVm_ is nullptr, aniCallback_ may not be released properly");
+        }
+        env->GlobalReference_Delete(aniCallback_);
+        if (isAttached) {
+            aniVm_->DetachCurrentThread();
         }
     }
     aniVm_ = nullptr;
@@ -272,17 +300,19 @@ void WatermarkAniCallback::OnCallback(const std::string &jobId, uint32_t fd)
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return;
     }
-    ani_env *env;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+    ani_env *env = nullptr;
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            PRINT_HILOGE("AttachCurrentThread failed");
             return;
         }
+        isAttached = true;
     }
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
 }
 
 }  // namespace OHOS::Print

@@ -76,6 +76,7 @@ private:
     bool InitializeLibrary();
     bool LoadSymbols();
     void CleanupLibrary();
+    mutable std::mutex mutex_;
     void* smbLibHandle_;
 
     smb2_init_context_func_t smb2_init_context_;

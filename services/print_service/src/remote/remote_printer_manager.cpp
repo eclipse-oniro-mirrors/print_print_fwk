@@ -97,6 +97,7 @@ bool RemotePrinterManager::Destroy()
 {
     PRINT_HILOGI("RemotePrinterManager Destroy");
     StopPrinterDiscovery();
+    serviceAdapter_.SetOnServiceDiedCallback(nullptr);
 
     {
         std::lock_guard<std::mutex> lock(controlMutex_);

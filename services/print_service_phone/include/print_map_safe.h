@@ -132,6 +132,20 @@ public:
         return value;
     }
 
+    void Upsert(const std::string &key, const T &value)
+    {
+        if (key.empty()) {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(mapMutex);
+        auto it = printMap.find(key);
+        if (it != printMap.end()) {
+            *(it->second) = value;
+        } else {
+            printMap.insert(std::make_pair(key, std::make_shared<T>(value)));
+        }
+    }
+
 private:
     std::mutex mapMutex;
     std::map<std::string, std::shared_ptr<T>> printMap;

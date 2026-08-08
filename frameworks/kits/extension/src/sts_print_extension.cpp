@@ -28,6 +28,7 @@ namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
 StsPrintExtension *StsPrintExtension::stsExtension_ = nullptr;
+std::mutex StsPrintExtension::mtx_;
 
 StsPrintExtension* StsPrintExtension::Create(const std::unique_ptr<Runtime>& runtime)
 {
@@ -44,6 +45,7 @@ StsPrintExtension::~StsPrintExtension()
     if (context) {
         context->Unbind();
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     stsExtension_ = nullptr;
 }
 
@@ -366,19 +368,15 @@ void StsPrintExtension::RegisterDiscoveryCb()
     PRINT_HILOGD("Register Print Extension Callback");
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
-            return StsPrintExtension::stsExtension_->Callback("onStartDiscoverPrinter");
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
+            return stsExtension_->Callback("onStartDiscoverPrinter");
     });
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
-            return StsPrintExtension::stsExtension_->Callback("onStopDiscoverPrinter");
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
+            return stsExtension_->Callback("onStopDiscoverPrinter");
     });
 }
 
@@ -386,21 +384,17 @@ void StsPrintExtension::RegisterConnectionCb()
 {
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
             std::string realPrinterId = PrintUtils::GetLocalId(printId, stsExtension_->extensionId_);
-            return StsPrintExtension::stsExtension_->Callback("onConnectPrinter", realPrinterId);
+            return stsExtension_->Callback("onConnectPrinter", realPrinterId);
     });
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
             std::string realPrinterId = PrintUtils::GetLocalId(printId, stsExtension_->extensionId_);
-            return StsPrintExtension::stsExtension_->Callback("onDisconnectPrinter", realPrinterId);
+            return stsExtension_->Callback("onDisconnectPrinter", realPrinterId);
     });
 }
 
@@ -408,19 +402,15 @@ void StsPrintExtension::RegisterPrintJobCb()
 {
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
-            return StsPrintExtension::stsExtension_->Callback("onStartPrintJob", job);
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
+            return stsExtension_->Callback("onStartPrintJob", job);
     });
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
-            return StsPrintExtension::stsExtension_->Callback("onCancelPrintJob", job);
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
+            return stsExtension_->Callback("onCancelPrintJob", job);
     });
 }
 
@@ -428,11 +418,9 @@ void StsPrintExtension::RegisterPreviewCb()
 {
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
-            return StsPrintExtension::stsExtension_->Callback("onRequestPreview", job);
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
+            return stsExtension_->Callback("onRequestPreview", job);
     });
 }
 
@@ -440,12 +428,10 @@ void StsPrintExtension::RegisterQueryCapCb()
 {
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
             std::string realPrinterId = PrintUtils::GetLocalId(printId, stsExtension_->extensionId_);
-            return StsPrintExtension::stsExtension_->Callback("onRequestPrinterCapability", realPrinterId);
+            return stsExtension_->Callback("onRequestPrinterCapability", realPrinterId);
     });
 }
 
@@ -453,11 +439,9 @@ void StsPrintExtension::RegisterExtensionCb()
 {
     PrintManagerClient::GetInstance().RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
-            if (StsPrintExtension::stsExtension_ == nullptr) {
-                PRINT_HILOGE("stsExtension_ is null");
-                return false;
-            }
-            return StsPrintExtension::stsExtension_->Callback("onDestroy");
+            std::lock_guard<std::mutex> lock(mtx_);
+            PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(stsExtension_, false);
+            return stsExtension_->Callback("onDestroy");
     });
 }
 } // AbilityRuntime

@@ -46,6 +46,7 @@ public:
 
 private:
     std::shared_ptr<BaseEventCallback> FindCallback(int32_t userId, pid_t pid, CallbackEventType eventType);
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient();
     void ClearAllListeners();
     bool RemoveDiedListener(std::vector<std::shared_ptr<BaseEventCallback>> &callbacks, CallbackEventType eventType,
         const sptr<IRemoteObject> &listener);

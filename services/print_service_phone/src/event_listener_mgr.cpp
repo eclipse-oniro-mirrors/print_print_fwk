@@ -30,13 +30,26 @@ using namespace Security::AccessToken;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
-    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
-          std::bind(&EventListenerMgr::OnRemoteListenerDied, this, std::placeholders::_1))))
 {}
 
 EventListenerMgr::~EventListenerMgr()
 {
     ClearAllListeners();
+}
+
+sptr<IRemoteObject::DeathRecipient> EventListenerMgr::GetDeathRecipient()
+{
+    if (eventListenerDeathRecipient_ == nullptr) {
+        auto self = DelayedSingleton<EventListenerMgr>::GetInstance();
+        eventListenerDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
+            [weak = std::weak_ptr<EventListenerMgr>(self)](const sptr<IRemoteObject> &remote) {
+                auto mgr = weak.lock();
+                if (mgr != nullptr) {
+                    mgr->OnRemoteListenerDied(remote);
+                }
+            }));
+    }
+    return eventListenerDeathRecipient_;
 }
 
 std::shared_ptr<BaseEventCallback> EventListenerMgr::FindCallback(
@@ -85,7 +98,7 @@ bool EventListenerMgr::RegisterPrinterListener(const CallbackEventType &eventTyp
     }
 
     auto callback =
-        std::make_shared<PrinterEventCallback>(userId, pid, eventType, listener, eventListenerDeathRecipient_);
+        std::make_shared<PrinterEventCallback>(userId, pid, eventType, listener, GetDeathRecipient());
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
     PRINT_HILOGI("RegisterPrinterListener type=%{public}d, counter=%{public}d, pid=%{public}d, userId=%{public}d",
@@ -124,7 +137,7 @@ bool EventListenerMgr::RegisterExtensionListener(
     }
 
     auto callback =
-        std::make_shared<ExtensionEventCallback>(userId, pid, eventType, listener, eventListenerDeathRecipient_);
+        std::make_shared<ExtensionEventCallback>(userId, pid, eventType, listener, GetDeathRecipient());
     callback->SetExtensionId(extensionId);
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
@@ -170,7 +183,7 @@ bool EventListenerMgr::RegisterPrintJobListener(
         return false;
     }
     auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType,
-        eventListenerDeathRecipient_, CheckJobManagePermission());
+        GetDeathRecipient(), CheckJobManagePermission());
     callback->SetListener(listener, jobId);
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;

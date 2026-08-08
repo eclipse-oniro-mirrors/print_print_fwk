@@ -27,6 +27,10 @@ public:
 
     FdListWrapper() = default;
     ~FdListWrapper();
+    FdListWrapper(const FdListWrapper&) = delete;
+    FdListWrapper& operator=(const FdListWrapper&) = delete;
+    FdListWrapper(FdListWrapper&&) = default;
+    FdListWrapper& operator=(FdListWrapper&&) = delete;
 
     bool Add(uint32_t fd);
 

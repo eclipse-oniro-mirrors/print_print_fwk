@@ -17,6 +17,7 @@
 #define OHOS_STS_PRINT_EXTENSION_H
 
 #include <ani.h>
+#include <mutex>
 #include "ets_native_reference.h"
 #include "ets_runtime.h"
 #include "print_extension.h"
@@ -72,6 +73,7 @@ private:
     sptr<IRemoteObject> token_ = nullptr;
     std::shared_ptr<AppExecFwk::ETSNativeReference> etsObj_ = nullptr;
     static StsPrintExtension *stsExtension_;
+    static std::mutex mtx_;
     std::string extensionId_;
 };
 

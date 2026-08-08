@@ -115,7 +115,7 @@ private:
     };
     static void PrepareSuccessResult(napi_env env, napi_value output, AsyncResult& result);
     static void PrepareErrorResult(napi_env env, const AsyncContext* context, AsyncResult& result);
-    static void DeleteContext(napi_env env, AsyncContext *context);
+    static void DeleteContext(napi_env env, AsyncContext *&context);
     static void SetErrorText(uint32_t& code, std::string& message);
 
     AsyncContext *context_ = nullptr;

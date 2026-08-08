@@ -380,14 +380,7 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, 
 
 void PrintSystemData::InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo)
 {
-    auto info = GetAddedPrinterMap().Find(printerId);
-    if (info == nullptr) {
-        PRINT_HILOGI("insert new printer");
-        GetAddedPrinterMap().Insert(printerId, printerInfo);
-    } else {
-        PRINT_HILOGI("update exist printer");
-        *info = printerInfo;
-    }
+    GetAddedPrinterMap().Upsert(printerId, printerInfo);
 }
 
 void PrintSystemData::DeleteAddedPrinter(const std::string &printerId, const std::string &printerName)

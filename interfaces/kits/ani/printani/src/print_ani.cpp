@@ -61,10 +61,10 @@ static void PrintNative(ani_env *env, ani_object arrayObj, ani_object callback)
     for (const auto &file : files) {
         PRINT_HILOGD("Array String Content: = %{private}s", file.c_str());
     }
-    auto nativePrintTask = AniPrintTask(env);
-    int32_t ret = nativePrintTask.StartPrint(files);
+    auto nativePrintTask = new AniPrintTask(env);
+    int32_t ret = nativePrintTask->StartPrint(files);
     ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, &nativePrintTask));
+    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
 }
 
 static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object context, ani_object callback)
@@ -89,10 +89,10 @@ static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
-    auto nativePrintTask = AniPrintTask(env);
-    int32_t ret = nativePrintTask.StartPrint(files);
+    auto nativePrintTask = new AniPrintTask(env);
+    int32_t ret = nativePrintTask->StartPrint(files);
     ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, &nativePrintTask));
+    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
 }
 
 static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object callback)

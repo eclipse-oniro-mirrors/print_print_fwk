@@ -32,7 +32,14 @@ void PrintBMSHelper::SetHelper(std::shared_ptr<PrintServiceHelper> &helper)
     std::lock_guard<std::mutex> lock(mutex_);
     PRINT_HILOGI("SetHelper Enter");
     helper_ = helper;
+    if (sptrBundleMgr_ != nullptr) {
+        auto serviceRemote = sptrBundleMgr_->AsObject();
+        if (serviceRemote != nullptr && printBMSDeath_ != nullptr) {
+            serviceRemote->RemoveDeathRecipient(printBMSDeath_);
+        }
+    }
     sptrBundleMgr_ = nullptr;
+    printBMSDeath_ = nullptr;
 }
 
 bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)

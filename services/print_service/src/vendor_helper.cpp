@@ -876,6 +876,13 @@ bool ConvertStringVectorToStringList(const std::vector<std::string> &stringVecto
 void ReleaseStringList(Print_StringList &stringList)
 {
     if (stringList.list != nullptr) {
+        if (stringList.count > MAX_STRING_COUNT) {
+            PRINT_HILOGE("ReleaseStringList count %{public}u exceeds maximum, possible corruption", stringList.count);
+            delete[] stringList.list;
+            stringList.list = nullptr;
+            stringList.count = 0;
+            return;
+        }
         for (uint32_t i = 0; i < stringList.count; i++) {
             if (stringList.list[i] != nullptr) {
                 delete[] stringList.list[i];

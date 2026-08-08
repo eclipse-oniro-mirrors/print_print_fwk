@@ -42,32 +42,33 @@ ScanContext &ScanContext::GetInstance()
 
 void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (discoverCallback_ == nullptr) {
-        SCAN_HILOGE("discoverCallback_ is a nullptr");
-        return;
-    }
+    Scan_ScannerDiscoveryCallback callback = nullptr;
     int32_t deviceCount = static_cast<int32_t>(infos.size());
-    if (deviceCount == 0) {
-        SCAN_HILOGD("not found devices");
-        discoverCallback_(nullptr, 0);
-        return;
-    }
     constexpr int32_t maxDeviceCount = 1000;
     if (deviceCount > maxDeviceCount) {
-        SCAN_HILOGE("deviceCount [%{public}d] exceeded the maximum value", deviceCount);
+        SCAN_HILOGW("deviceCount [%{public}d] exceeded the maximum value, truncated to %{public}d",
+            deviceCount, maxDeviceCount);
+        deviceCount = maxDeviceCount;
     }
-    Scan_ScannerDevice** devices = new Scan_ScannerDevice* [deviceCount]{};
-    for (int i = 0; i < deviceCount; i++) {
-        Scan_ScannerDevice* device = new Scan_ScannerDevice();
-        device->scannerId = infos[i].GetDeviceId().c_str();
-        device->manufacturer = infos[i].GetManufacturer().c_str();
-        device->model = infos[i].GetModel().c_str();
-        device->serialNumber = infos[i].GetSerialNumber().c_str();
-        device->discoverMode = infos[i].GetDiscoverMode().c_str();
-        devices[i] = device;
+    Scan_ScannerDevice** devices = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(discoverCallback_, __func__);
+        callback = discoverCallback_;
+        if (deviceCount > 0) {
+            devices = new Scan_ScannerDevice* [deviceCount]{};
+            for (int i = 0; i < deviceCount; i++) {
+                Scan_ScannerDevice* device = new Scan_ScannerDevice();
+                device->scannerId = infos[i].GetDeviceId().c_str();
+                device->manufacturer = infos[i].GetManufacturer().c_str();
+                device->model = infos[i].GetModel().c_str();
+                device->serialNumber = infos[i].GetSerialNumber().c_str();
+                device->discoverMode = infos[i].GetDiscoverMode().c_str();
+                devices[i] = device;
+            }
+        }
     }
-    discoverCallback_(devices, deviceCount);
+    callback(devices, deviceCount);
     for (int32_t i = 0; i < deviceCount; i++) {
         DELETE_AND_NULLIFY(devices[i]);
     }

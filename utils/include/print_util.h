@@ -59,7 +59,7 @@ public:
 
     static bool ConvertToInt(const std::string& str, int32_t& value);
     
-    static void SafeDeleteAuthInfo(char *userPasswd);
+    static void SafeDeleteAuthInfo(char *&userPasswd);
 
     static bool ValidatePrinterName(const char *name);
 
@@ -200,7 +200,7 @@ inline bool PrintUtil::ConvertToInt(const std::string& str, int32_t& value)
     return ec == std::errc{} && ptr == str.data() + str.size();
 }
 
-inline void PrintUtil::SafeDeleteAuthInfo(char *userPasswd)
+inline void PrintUtil::SafeDeleteAuthInfo(char *&userPasswd)
 {
     if (userPasswd == nullptr) {
         PRINT_HILOGE("The ptr is nullptr!");

@@ -29,6 +29,13 @@ struct PrintTaskContext : public PrintAsyncCall::Context {
     PrintTaskContext() : Context(nullptr, nullptr) {}
     PrintTaskContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
     virtual ~PrintTaskContext() {}
+    void CleanupRefs(napi_env env) override
+    {
+        if (ref != nullptr) {
+            napi_delete_reference(env, ref);
+            ref = nullptr;
+        }
+    }
 };
 class NapiPrintTask {
 public:
