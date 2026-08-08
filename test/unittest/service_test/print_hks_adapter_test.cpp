@@ -478,7 +478,7 @@ HWTEST_F(PrintHksAdapterTest, Base64Decode_SuccessWithOnePadding_ReturnsTrue, Te
     bool ret = mockAdapter_->Base64Decode(base64Blob, cipherBlob);
     EXPECT_TRUE(ret);
     EXPECT_NE(cipherBlob.data, nullptr);
-    EXPECT_GT(cipherBlob.size, 0u);
+    EXPECT_EQ(cipherBlob.size, 5u);
     delete[] cipherBlob.data;
 }
 
@@ -494,7 +494,7 @@ HWTEST_F(PrintHksAdapterTest, Base64Decode_SuccessWithTwoPadding_ReturnsTrue, Te
     bool ret = mockAdapter_->Base64Decode(base64Blob, cipherBlob);
     EXPECT_TRUE(ret);
     EXPECT_NE(cipherBlob.data, nullptr);
-    EXPECT_GT(cipherBlob.size, 0u);
+    EXPECT_EQ(cipherBlob.size, 1u);
     delete[] cipherBlob.data;
 }
 
@@ -511,6 +511,38 @@ HWTEST_F(PrintHksAdapterTest, Base64Decode_SuccessNoPadding_ReturnsTrue, TestSiz
     EXPECT_TRUE(ret);
     EXPECT_NE(cipherBlob.data, nullptr);
     EXPECT_EQ(cipherBlob.size, 3u);
+    delete[] cipherBlob.data;
+}
+
+HWTEST_F(PrintHksAdapterTest, Base64Decode_NoPaddingABC_ReturnsExactSize, TestSize.Level1)
+{
+    uint8_t base64Data[] = "QUJD";
+    struct HksBlob base64Blob = { .size = 4, .data = base64Data };
+    struct HksBlob cipherBlob = { 0, nullptr };
+
+    EXPECT_CALL(*mockAdapter_, EVP_DecodeBlockWrapper(_, _, _))
+        .WillOnce(Return(3));
+
+    bool ret = mockAdapter_->Base64Decode(base64Blob, cipherBlob);
+    EXPECT_TRUE(ret);
+    EXPECT_NE(cipherBlob.data, nullptr);
+    EXPECT_EQ(cipherBlob.size, 3u);
+    delete[] cipherBlob.data;
+}
+
+HWTEST_F(PrintHksAdapterTest, Base64Decode_OnePaddingAB_ReturnsExactSize, TestSize.Level1)
+{
+    uint8_t base64Data[] = "QUI=";
+    struct HksBlob base64Blob = { .size = 4, .data = base64Data };
+    struct HksBlob cipherBlob = { 0, nullptr };
+
+    EXPECT_CALL(*mockAdapter_, EVP_DecodeBlockWrapper(_, _, _))
+        .WillOnce(Return(2));
+
+    bool ret = mockAdapter_->Base64Decode(base64Blob, cipherBlob);
+    EXPECT_TRUE(ret);
+    EXPECT_NE(cipherBlob.data, nullptr);
+    EXPECT_EQ(cipherBlob.size, 2u);
     delete[] cipherBlob.data;
 }
 

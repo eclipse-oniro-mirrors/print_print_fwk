@@ -2118,5 +2118,71 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPrintMargin_ValidAsUInt_ReturnsMargin
     EXPECT_EQ(margin.GetRight(), 400);
 }
 
+class PrintSystemDataLargeUIntTest : public testing::Test {};
+
+HWTEST_F(PrintSystemDataLargeUIntTest, PageSize_LargeAndNormalValues, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+
+    Json::Value capsJson;
+    Json::Value pageSizeListJson;
+    Json::Value largeItem;
+    largeItem["id"] = "custom_large";
+    largeItem["name"] = "custom_large";
+    largeItem["width"] = static_cast<Json::Value::UInt>(2147483648ULL);
+    largeItem["height"] = static_cast<Json::Value::UInt>(4294967295ULL);
+    pageSizeListJson.append(largeItem);
+    Json::Value a4Item;
+    a4Item["id"] = "iso_a4";
+    a4Item["name"] = "A4";
+    a4Item["width"] = 210000;
+    a4Item["height"] = 297000;
+    pageSizeListJson.append(a4Item);
+    capsJson["pageSize"] = pageSizeListJson;
+
+    PrinterCapability printerCapability;
+    EXPECT_EQ(systemData->ConvertJsonToPageSize(capsJson, printerCapability), true);
+    std::vector<PrintPageSize> pageSizeList;
+    printerCapability.GetSupportedPageSize(pageSizeList);
+    ASSERT_EQ(pageSizeList.size(), 2);
+    EXPECT_EQ(pageSizeList[0].GetWidth(), 2147483648u);
+    EXPECT_EQ(pageSizeList[0].GetHeight(), 4294967295u);
+    EXPECT_EQ(pageSizeList[1].GetWidth(), 210000u);
+    EXPECT_EQ(pageSizeList[1].GetHeight(), 297000u);
+}
+
+HWTEST_F(PrintSystemDataLargeUIntTest, ColorModeAndQuality_LargeUIntValues, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+
+    Json::Value capsJson;
+    Json::Value colorModeList;
+    colorModeList.append(static_cast<Json::Value::UInt>(2147483648ULL));
+    colorModeList.append(static_cast<Json::Value::UInt>(4294967295ULL));
+    capsJson["supportedColorMode"] = colorModeList;
+    PrinterCapability cap1;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedColorMode(capsJson, cap1), true);
+    std::vector<uint32_t> colorModes;
+    cap1.GetSupportedColorMode(colorModes);
+    ASSERT_EQ(colorModes.size(), 2);
+    EXPECT_EQ(colorModes[0], 2147483648u);
+    EXPECT_EQ(colorModes[1], 4294967295u);
+
+    Json::Value capsJson2;
+    Json::Value qualityList;
+    qualityList.append(static_cast<Json::Value::UInt>(2147483648ULL));
+    qualityList.append(static_cast<Json::Value::UInt>(4294967295ULL));
+    capsJson2["supportedQuality"] = qualityList;
+    PrinterCapability cap2;
+    EXPECT_EQ(systemData->ConvertJsonToSupportedQuality(capsJson2, cap2), true);
+    std::vector<uint32_t> qualities;
+    cap2.GetSupportedQuality(qualities);
+    ASSERT_EQ(qualities.size(), 2);
+    EXPECT_EQ(qualities[0], 2147483648u);
+    EXPECT_EQ(qualities[1], 4294967295u);
+}
+
 }  // namespace Print
 }  // namespace OHOS

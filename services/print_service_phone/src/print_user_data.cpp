@@ -930,14 +930,14 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
 void PrintUserData::ParseBasicOptionsToPrintJob(
     const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
 {
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "jobState") && printJobInfoJson["jobState"].isInt()) {
-        printHistoryJob->SetJobState(printJobInfoJson["jobState"].asInt());
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "jobState") && printJobInfoJson["jobState"].isUInt()) {
+        printHistoryJob->SetJobState(printJobInfoJson["jobState"].asUInt());
     }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "subState") && printJobInfoJson["subState"].isInt()) {
-        printHistoryJob->SetSubState(printJobInfoJson["subState"].asInt());
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "subState") && printJobInfoJson["subState"].isUInt()) {
+        printHistoryJob->SetSubState(printJobInfoJson["subState"].asUInt());
     }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "copyNumber") && printJobInfoJson["copyNumber"].isInt()) {
-        printHistoryJob->SetCopyNumber(printJobInfoJson["copyNumber"].asInt());
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "copyNumber") && printJobInfoJson["copyNumber"].isUInt()) {
+        printHistoryJob->SetCopyNumber(printJobInfoJson["copyNumber"].asUInt());
     }
     if (PrintJsonUtil::IsMember(printJobInfoJson, "isSequential") && printJobInfoJson["isSequential"].isBool()) {
         printHistoryJob->SetIsSequential(printJobInfoJson["isSequential"].asBool());
