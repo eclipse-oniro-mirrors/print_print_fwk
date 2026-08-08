@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include <fcntl.h>
+#include <limits>
 #include <vector>
 #include <string>
 #include <map>
@@ -1440,6 +1441,41 @@ HWTEST_F(PrintUserDataTest, DeletePrinterUserPreferences_NeitherPath_NoError, Te
 
     userData->DeletePrinterUserPreferences("no_file", "no_file");
     EXPECT_EQ(userData->printerUserPreferences_.size(), 0);
+}
+
+HWTEST_F(PrintUserDataTest, ParseBasicOptions_UIntValues, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+
+    Json::Value json;
+    json["jobState"] = 4;
+    json["subState"] = 2;
+    json["copyNumber"] = 5;
+    auto job = std::make_shared<PrintJob>();
+    userData->ParseBasicOptionsToPrintJob(json, job);
+    EXPECT_EQ(job->GetJobState(), 4u);
+    EXPECT_EQ(job->GetSubState(), 2u);
+    EXPECT_EQ(job->GetCopyNumber(), 5u);
+
+    Json::Value json2;
+    json2["copyNumber"] = Json::Value::UInt(std::numeric_limits<uint32_t>::max());
+    auto job2 = std::make_shared<PrintJob>();
+    userData->ParseBasicOptionsToPrintJob(json2, job2);
+    EXPECT_EQ(job2->GetCopyNumber(), std::numeric_limits<uint32_t>::max());
+}
+
+HWTEST_F(PrintUserDataTest, ParseBasicOptions_NegativeInt_KeepsDefault, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value json;
+    json["jobState"] = -1;
+    json["subState"] = -5;
+    json["copyNumber"] = -10;
+    auto job = std::make_shared<PrintJob>();
+    userData->ParseBasicOptionsToPrintJob(json, job);
+    EXPECT_EQ(job->GetJobState(), PRINT_JOB_PREPARED);
+    EXPECT_EQ(job->GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
+    EXPECT_EQ(job->GetCopyNumber(), 0u);
 }
 
 // covers #54: printJobList_ has null entry, QueryPrintJobById returns error not E_PRINT_NONE

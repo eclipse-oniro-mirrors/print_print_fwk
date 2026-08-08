@@ -337,8 +337,9 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
         paddingCount++;
     }
     
-    size_t decodedLen = base64Blob.size / BASE64_ENCODED_BLOCK_SIZE * BASE64_DECODED_BLOCK_SIZE - paddingCount;
-    cipherBlob.data = new uint8_t[decodedLen];
+    size_t fullDecodedLen = base64Blob.size / BASE64_ENCODED_BLOCK_SIZE * BASE64_DECODED_BLOCK_SIZE;
+    size_t decodedLen = fullDecodedLen - paddingCount;
+    cipherBlob.data = new uint8_t[fullDecodedLen];
 
     int ret = EVP_DecodeBlockWrapper(cipherBlob.data, base64Blob.data, static_cast<int>(base64Blob.size));
     if (ret < 0) {
@@ -349,6 +350,13 @@ bool HksAdapter::Base64Decode(const struct HksBlob &base64Blob, struct HksBlob &
         return false;
     }
     
+    if (paddingCount > 0 && memset_s(cipherBlob.data + decodedLen, paddingCount, 0, paddingCount) != EOK) {
+        PRINT_HILOGE("failed to clear padding bytes");
+        delete[] cipherBlob.data;
+        cipherBlob.data = nullptr;
+        cipherBlob.size = 0;
+        return false;
+    }
     cipherBlob.size = static_cast<uint32_t>(decodedLen);
     return true;
 }

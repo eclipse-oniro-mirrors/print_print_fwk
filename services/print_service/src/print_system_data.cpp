@@ -1100,8 +1100,8 @@ bool PrintSystemData::ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapabi
             }
             pageSize.SetId(item["id"].asString());
             pageSize.SetName(item["name"].asString());
-            pageSize.SetWidth(item["width"].asInt());
-            pageSize.SetHeight(item["height"].asInt());
+            pageSize.SetWidth(item["width"].asUInt());
+            pageSize.SetHeight(item["height"].asUInt());
             return true;
         }
     );
@@ -1133,7 +1133,7 @@ bool PrintSystemData::ConvertJsonToSupportedColorMode(Json::Value &capsJson, Pri
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedColorMode", printerCapability,
         &PrinterCapability::SetSupportedColorMode,
         [](const Json::Value &item, uint32_t &colorMode) -> bool {
-            colorMode = item.asInt();
+            colorMode = item.asUInt();
             return true;
         });
 }
@@ -1163,7 +1163,7 @@ bool PrintSystemData::ConvertJsonToSupportedQuality(Json::Value &capsJson, Print
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedQuality", printerCapability,
         &PrinterCapability::SetSupportedQuality,
         [](const Json::Value &item, uint32_t &quality) -> bool {
-            quality = item.asInt();
+            quality = item.asUInt();
             return true;
         });
 }
