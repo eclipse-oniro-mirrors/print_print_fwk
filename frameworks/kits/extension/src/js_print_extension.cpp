@@ -246,7 +246,9 @@ void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int star
     napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
     napi_value argv[] = { nativeWant };
     CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
-    RegisterCb();
+    if (!RegisterCb()) {
+        PRINT_HILOGE("RegisterCb failed, extension callbacks not fully registered");
+    }
     PrintManagerClient::GetInstance().LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
 }

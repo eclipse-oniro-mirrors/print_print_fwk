@@ -703,6 +703,10 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     }
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID, data, reply, option);
     ret = GetResult(ret, reply);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGD("PrintServiceProxy QueryPrintJobById Failed.");
+        return ret;
+    }
     auto printJobPtr = PrintJob::Unmarshalling(reply);
     if (printJobPtr == nullptr) {
         PRINT_HILOGE("wrong printJob from data");

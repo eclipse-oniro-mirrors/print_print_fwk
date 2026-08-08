@@ -79,7 +79,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0045_NeedRename, TestS
     std::string printerUri = "111.222.333";
     std::string printerId = "pixlab_0759";
     PrinterCapability printerCaps;
-    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064_NeedRename, TestSize.Level1)
@@ -148,7 +148,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067_NeedRename, TestS
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestSize.Level1)
@@ -159,7 +159,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestS
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069_NeedRename, TestSize.Level1)
@@ -172,7 +172,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069_NeedRename, TestS
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_["456"] = printerInfo;
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0087_NeedRename, TestSize.Level1)

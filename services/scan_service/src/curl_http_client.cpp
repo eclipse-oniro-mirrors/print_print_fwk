@@ -20,6 +20,7 @@
 namespace OHOS::Scan {
 static const long HTTP_STATUS_OK = 200;
 static const long HTTP_REQUEST_TIMEOUT = 1;
+static const long MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
 static const char* SECURE_CIPHER_LIST =
     "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
     "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
@@ -51,6 +52,10 @@ size_t CurlHttpClient::WriteCallback(void* contents, size_t size, size_t nmemb, 
     }
     size_t totalSize = size * nmemb;
     std::string* responseStr = static_cast<std::string*>(userp);
+    if (responseStr->size() + totalSize > static_cast<size_t>(MAX_RESPONSE_SIZE)) {
+        SCAN_HILOGE("response exceeds max size, abort transfer");
+        return 0;
+    }
     responseStr->append(static_cast<char*>(contents), totalSize);
     return totalSize;
 }
@@ -69,6 +74,7 @@ bool CurlHttpClient::PerformHttpRequest(const std::string& url, std::string& res
     curl_easy_setopt(curlHandle, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &responseBuffer);
     curl_easy_setopt(curlHandle, CURLOPT_TIMEOUT, HTTP_REQUEST_TIMEOUT);
+    curl_easy_setopt(curlHandle, CURLOPT_MAXFILESIZE, MAX_RESPONSE_SIZE);
     // Enforce TLS 1.2 or higher
     curl_easy_setopt(curlHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
      // Allow only AEAD ciphers with forward secrecy

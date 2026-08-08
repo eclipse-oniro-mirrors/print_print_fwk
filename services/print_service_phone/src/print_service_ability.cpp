@@ -1250,25 +1250,9 @@ int32_t PrintServiceAbility::ValidatePrinterForUpdateDiscovery(
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
-    const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps)
+int32_t PrintServiceAbility::QueryPrinterCapabilityByUriInternal(
+    const std::string &printerUri, const std::string &standardizeId, PrinterCapability &printerCaps)
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
-            PRINT_HILOGE("no permission to access print service");
-            return E_PRINT_NO_PERMISSION;
-        }
-        ManualStart();
-    }
-    PRINT_HILOGI("QueryPrinterCapabilityByUri start.");
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::string standardizeId = printerId;
-    if (standardizeId.find(extensionId) == std::string::npos && vendorManager.ExtractVendorName(printerId).empty()) {
-        standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
-    }
-    PRINT_HILOGI("[Printer: %{public}s] extensionId = %{public}s",
-        PrintUtils::AnonymizePrinterId(standardizeId).c_str(), extensionId.c_str());
 #ifdef CUPS_ENABLE
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(standardizeId);
@@ -1289,15 +1273,46 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
         }
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
-        DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(
+        int32_t capRet = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(
             printerInfo->GetPrinterName(), printerCaps, ppdName);
+        if (capRet != E_PRINT_NONE) {
+            PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", capRet);
+            return capRet;
+        }
     } else {
-        DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(
-            printerUri, printerId, printerCaps);
+        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(
+            printerUri, standardizeId, printerCaps);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("QueryPrinterCapabilityByUri error = %{public}d.", ret);
+            return ret;
+        }
     }
 #endif  // CUPS_ENABLE
-    PRINT_HILOGI("QueryPrinterCapabilityByUri end.");
     return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(
+    const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGI("QueryPrinterCapabilityByUri start.");
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string standardizeId = printerId;
+    if (extensionId.empty()) {
+        PRINT_HILOGW("extensionId is empty, skip standardize");
+    } else if (standardizeId.find(extensionId) == std::string::npos &&
+        vendorManager.ExtractVendorName(printerId).empty()) {
+        standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    }
+    PRINT_HILOGI("[Printer: %{public}s] extensionId = %{public}s",
+        PrintUtils::AnonymizePrinterId(standardizeId).c_str(), extensionId.c_str());
+    int32_t ret = QueryPrinterCapabilityByUriInternal(printerUri, standardizeId, printerCaps);
+    PRINT_HILOGI("QueryPrinterCapabilityByUri end.");
+    return ret;
 }
 
 int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences)
@@ -1561,7 +1576,10 @@ bool PrintServiceAbility::createNewJobWhenRestart(std::shared_ptr<PrintJob> &pri
 {
     // reopen fd from cache
     std::vector<uint32_t> fdList;
-    OpenCacheFileFd(printJob->GetJobId(), fdList);
+    if (!OpenCacheFileFd(printJob->GetJobId(), fdList)) {
+        PRINT_HILOGE("OpenCacheFileFd failed");
+        return false;
+    }
     if (fdList.empty()) {
         PRINT_HILOGE("not find cache file");
         return false;
@@ -3437,10 +3455,18 @@ std::string PrintServiceAbility::GetCallerUserName()
     int32_t localId = -1;
     auto errCode = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, localId);
     PRINT_HILOGI("GetOsAccountLocalIdFromUid errCode = %{public}d", errCode);
+    if (errCode != 0) {
+        PRINT_HILOGE("GetOsAccountLocalIdFromUid failed, errCode = %{public}d", errCode);
+        return DEFAULT_USER_NAME;
+    }
     PRINT_HILOGD("uid: %{private}d, localId: %{private}d", uid, localId);
     AccountSA::OsAccountInfo osAccountInfo;
     errCode = AccountSA::OsAccountManager::QueryOsAccountById(localId, osAccountInfo);
     PRINT_HILOGI("QueryOsAccountById errCode = %{public}d", errCode);
+    if (errCode != 0) {
+        PRINT_HILOGE("QueryOsAccountById failed, errCode = %{public}d", errCode);
+        return DEFAULT_USER_NAME;
+    }
     PRINT_HILOGD("localName: %{private}s", osAccountInfo.GetLocalName().c_str());
     AccountSA::DomainAccountInfo domainInfo;
     osAccountInfo.GetDomainInfo(domainInfo);

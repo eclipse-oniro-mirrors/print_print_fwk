@@ -197,7 +197,11 @@ int32_t ImageExporter::PackTiffImage(const std::string& tiffPath,
         return E_SCAN_SERVER_FAILURE;
     }
 
-    tiffPacker->AddImage(*pixMap);
+    ret = tiffPacker->AddImage(*pixMap);
+    if (ret != Media::SUCCESS) {
+        SCAN_HILOGE("TIFF AddImage failed: err=%{public}u", ret);
+        return E_SCAN_SERVER_FAILURE;
+    }
 
     ret = tiffPacker->FinalizePacking(packedSize);
     if (ret != Media::SUCCESS) {
@@ -237,7 +241,11 @@ int32_t ImageExporter::ExportToPng(const std::string& baseName, int32_t& pngFd, 
         return E_SCAN_SERVER_FAILURE;
     }
 
-    pngPacker->AddImage(*pixMap);
+    ret = pngPacker->AddImage(*pixMap);
+    if (ret != Media::SUCCESS) {
+        SCAN_HILOGE("PNG AddImage failed: err=%{public}u", ret);
+        return E_SCAN_SERVER_FAILURE;
+    }
 
     int64_t packedSize = 0;
     ret = pngPacker->FinalizePacking(packedSize);

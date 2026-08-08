@@ -904,7 +904,7 @@ bool PrintSystemData::ConvertJsonToSupportedQuality(Json::Value &capsJson, Print
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedQuality", printerCapability,
         &PrinterCapability::SetSupportedQuality,
         [](const Json::Value &item, uint32_t &quality) -> bool {
-            quality = item.asInt();
+            quality = item.asUInt();
             return true;
         });
 }

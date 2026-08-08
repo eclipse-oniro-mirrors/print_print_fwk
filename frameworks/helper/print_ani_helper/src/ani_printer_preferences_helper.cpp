@@ -47,7 +47,7 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
     SetEnumProperty(env, obj, "<set>defaultPrintQuality", "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
 
     ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintOrientationMode",
-                                                          static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
+                                                          static_cast<int32_t>(preferences.GetDefaultOrientation()));
     PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(orientationModeEnum, nullptr);
     SetEnumProperty(env, obj, "<set>defaultOrientation", "C{@ohos.print.print.PrintOrientationMode}:",
         orientationModeEnum);
@@ -109,7 +109,7 @@ void PrinterPreferencesAniHelper::ParseRefPreferences(ani_env *env, PrinterPrefe
     if (GetRefProperty(env, static_cast<ani_object>(preferencesRef),
         PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY, printQualityEnum) &&
         GetEnumValueInt(env, static_cast<ani_enum_item>(printQualityEnum), printQualityValue)) {
-        preferences.SetDefaultDuplexMode(printQualityValue);
+        preferences.SetDefaultPrintQuality(printQualityValue);
     }
     ani_ref orientationEnum;
     uint32_t orientationValue = 0;

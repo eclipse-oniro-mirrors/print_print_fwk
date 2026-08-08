@@ -191,7 +191,9 @@ bool SmbHostSearchHelper::SendQuery(const struct in_addr& destAddr)
     int32_t status = sendto(sock_, reinterpret_cast<char*>(&request), sizeof(request), 0,
         reinterpret_cast<struct sockaddr*>(&destSockaddr), sizeof(destSockaddr));
     if (status < 0) {
-        PRINT_HILOGE("Sendto failed to %s: %s", inet_ntoa(destAddr), strerror(errno));
+        char destAddrBuf[INET_ADDRSTRLEN] = {0};
+        inet_ntop(AF_INET, &destAddr, destAddrBuf, INET_ADDRSTRLEN);
+        PRINT_HILOGE("Sendto failed to %{private}s: %{public}s", destAddrBuf, strerror(errno));
         return false;
     }
     
@@ -316,7 +318,9 @@ bool SmbHostSearchHelper::NetworkIpRange::GetLocalIPAndMask(std::string& ipStr, 
             continue;
         }
 
-        ipStr = inet_ntoa(addr->sin_addr);
+        char ipAddrBuf[INET_ADDRSTRLEN] = {0};
+        inet_ntop(AF_INET, &addr->sin_addr, ipAddrBuf, INET_ADDRSTRLEN);
+        ipStr = ipAddrBuf;
 
         struct ifreq ifrMask;
         if (strncpy_s(ifrMask.ifr_name, sizeof(ifrMask.ifr_name), it->ifr_name, IFNAMSIZ) != 0) {
@@ -324,7 +328,9 @@ bool SmbHostSearchHelper::NetworkIpRange::GetLocalIPAndMask(std::string& ipStr, 
             continue;
         }
         if (ioctl(sock, SIOCGIFNETMASK, &ifrMask) == 0) {
-            netmaskStr = inet_ntoa(((struct sockaddr_in*)&ifrMask.ifr_netmask)->sin_addr);
+            char maskBuf[INET_ADDRSTRLEN] = {0};
+            inet_ntop(AF_INET, &((struct sockaddr_in*)&ifrMask.ifr_netmask)->sin_addr, maskBuf, INET_ADDRSTRLEN);
+            netmaskStr = maskBuf;
             close(sock);
             return true;
         }
@@ -444,7 +450,9 @@ std::vector<PrintSharedHost> SmbHostSearchHelper::HostList::GetPrintSharedHost()
         PrintSharedHost host;
         struct in_addr addr;
         addr.s_addr = ip;
-        std::string ipStr = inet_ntoa(addr);
+        char ipBuf[INET_ADDRSTRLEN] = {0};
+        inet_ntop(AF_INET, &addr, ipBuf, INET_ADDRSTRLEN);
+        std::string ipStr = ipBuf;
         host.SetIp(ipStr);
         host.SetShareName(name);
         host.SetWorkgroupName("workgroup");
@@ -478,7 +486,7 @@ bool SmbHostSearchHelper::TestSmbHostAlive(const std::string& ip, int32_t timeou
     struct timeval selectTimeout;
     long tvUsec = static_cast<long>(timeoutMs) * KILO_FACTOR;
     long tvSec = tvUsec / (KILO_FACTOR * KILO_FACTOR);
-    SetTimeval(selectTimeout, tvSec, tvUsec);
+    SetTimeval(selectTimeout, tvSec, tvUsec % (KILO_FACTOR * KILO_FACTOR));
     int32_t result = select(sock_ + 1, &readSet, nullptr, nullptr, &selectTimeout);
     if (result < 0) {
         PRINT_HILOGW("select error, reason: %{private}s", strerror(errno));

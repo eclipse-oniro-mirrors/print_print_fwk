@@ -283,31 +283,29 @@ void ScanSystemData::GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoLi
 
 bool ScanSystemData::SaveScannerMap()
 {
+    std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     FILE *file = fopen(SCANNER_LIST_FILE.c_str(), "w+");
     if (file == nullptr) {
         SCAN_HILOGW("Failed to open file errno: %{public}u", errno);
         return false;
     }
     Json::Value scannerMapJson;
-    {
-        std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
-        for (auto iter = addedScannerMap_.begin(); iter != addedScannerMap_.end(); ++iter) {
-            auto info = iter->second;
-            if (info == nullptr) {
-                continue;
-            }
-            Json::Value scannerJson;
-            scannerJson["deviceId"] = info->deviceId;
-            scannerJson["manufacturer"] = info->manufacturer;
-            scannerJson["model"] = info->model;
-            scannerJson["deviceType"] = info->deviceType;
-            scannerJson["discoverMode"] = info->discoverMode;
-            scannerJson["serialNumber"] = info->serialNumber;
-            scannerJson["deviceName"] = info->deviceName;
-            scannerJson["uniqueId"] = info->uniqueId;
-            scannerJson["uuid"] = info->uuid;
-            scannerMapJson.append(scannerJson);
+    for (auto iter = addedScannerMap_.begin(); iter != addedScannerMap_.end(); ++iter) {
+        auto info = iter->second;
+        if (info == nullptr) {
+            continue;
         }
+        Json::Value scannerJson;
+        scannerJson["deviceId"] = info->deviceId;
+        scannerJson["manufacturer"] = info->manufacturer;
+        scannerJson["model"] = info->model;
+        scannerJson["deviceType"] = info->deviceType;
+        scannerJson["discoverMode"] = info->discoverMode;
+        scannerJson["serialNumber"] = info->serialNumber;
+        scannerJson["deviceName"] = info->deviceName;
+        scannerJson["uniqueId"] = info->uniqueId;
+        scannerJson["uuid"] = info->uuid;
+        scannerMapJson.append(scannerJson);
     }
     Json::Value jsonObject;
     jsonObject["version"] = SCANNER_LIST_VERSION;

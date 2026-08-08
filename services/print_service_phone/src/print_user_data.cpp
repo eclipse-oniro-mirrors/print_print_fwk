@@ -616,6 +616,29 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
     return true;
 }
 
+bool OpenCacheFdsForJob(const std::string &cacheDir, const std::vector<std::string> &fileNames,
+    std::vector<uint32_t> &fdList, int32_t openMode)
+{
+    char cachePath[PATH_MAX] = { 0 };
+    bool ret = true;
+    for (auto fileName : fileNames) {
+        std::string cacheFile = cacheDir + "/" + fileName;
+        if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
+            PRINT_HILOGE("The realFile is null, errno:%{public}s", std::to_string(errno).c_str());
+            ret = false;
+            break;
+        }
+        int32_t fd = open(cachePath, openMode);
+        if (fd < 0) {
+            PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
+            ret = false;
+            break;
+        }
+        fdList.push_back(fd);
+    }
+    return ret;
+}
+
 bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode)
 {
     PRINT_HILOGI("OpenCacheFileFd Start.");
@@ -647,25 +670,10 @@ bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32
         }
     }
 
-    std::string cacheFile;
-    bool ret = true;
-    for (auto fileName : fileNames) {
-        cacheFile = cacheDir + "/" + fileName;
-        if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
-            PRINT_HILOGE("The realFile is null, errno:%{public}s", std::to_string(errno).c_str());
-            ret = false;
-            break;
-        }
-        int32_t fd = open(cachePath, openMode);
-        if (fd < 0) {
-            PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
-            ret = false;
-            break;
-        }
-        fdList.push_back(fd);
-    }
+    bool ret = OpenCacheFdsForJob(cacheDir, fileNames, fdList, openMode);
     if (!ret) {
         for (auto fd : fdList) { close(fd); }
+        fdList.clear();
     }
     closedir(dir);
     return ret;
@@ -1015,7 +1023,7 @@ PrintRange PrintUserData::ParseJsonObjectToPrintRange(const Json::Value &jsonObj
     }
     if (CheckOptionalParam(jsonObject, "hasEndPage_") &&
         PrintJsonUtil::IsMember(jsonObject, "endPage") && jsonObject["endPage"].isUInt()) {
-        printRange.SetStartPage(jsonObject["endPage"].asUInt());
+        printRange.SetEndPage(jsonObject["endPage"].asUInt());
     }
     if (PrintJsonUtil::IsMember(jsonObject, "pages") && jsonObject["pages"].isArray()) {
         std::vector<uint32_t> pages;
@@ -1039,15 +1047,15 @@ PrintMargin PrintUserData::ParseJsonObjectToMargin(const Json::Value &jsonObject
     }
     if (CheckOptionalParam(jsonObject, "hasLeft_") &&
         PrintJsonUtil::IsMember(jsonObject, "left_") && jsonObject["left_"].isInt()) {
-        margin.SetTop(jsonObject["left_"].asInt());
+        margin.SetLeft(jsonObject["left_"].asInt());
     }
     if (CheckOptionalParam(jsonObject, "hasRight_") &&
         PrintJsonUtil::IsMember(jsonObject, "right_") && jsonObject["right_"].isInt()) {
-        margin.SetTop(jsonObject["right_"].asInt());
+        margin.SetRight(jsonObject["right_"].asInt());
     }
     if (CheckOptionalParam(jsonObject, "hasBottom_") &&
         PrintJsonUtil::IsMember(jsonObject, "bottom_") && jsonObject["bottom_"].isInt()) {
-        margin.SetTop(jsonObject["bottom_"].asInt());
+        margin.SetBottom(jsonObject["bottom_"].asInt());
     }
     return margin;
 }
