@@ -287,6 +287,13 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
     return true;
 }
 
+static bool ReadIntPreference(const Json::Value &json, const std::string &key, int32_t &value)
+{
+    return PrintJsonUtil::IsMember(json, key) && json[key].isString() &&
+        !json[key].asString().empty() &&
+        PrintUtil::ConvertToInt(json[key].asString(), value);
+}
+
 bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences)
 {
     bool updatePreferences = false;
@@ -296,23 +303,17 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, 
         preferences.SetDefaultPageSizeId(settingJson["pagesizeId"].asString());
     }
     int32_t defaultOrientation = PRINT_ORIENTATION_MODE_NONE;
-    if (PrintJsonUtil::IsMember(settingJson, "orientation") && settingJson["orientation"].isString() &&
-        !settingJson["orientation"].asString().empty() &&
-        PrintUtil::ConvertToInt(settingJson["orientation"].asString(), defaultOrientation)) {
+    if (ReadIntPreference(settingJson, "orientation", defaultOrientation)) {
         updatePreferences = true;
         preferences.SetDefaultOrientation(defaultOrientation);
     }
     int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
-    if (PrintJsonUtil::IsMember(settingJson, "duplex") && settingJson["duplex"].isString() &&
-        !settingJson["duplex"].asString().empty() &&
-        PrintUtil::ConvertToInt(settingJson["duplex"].asString(), defaultDuplexMode)) {
+    if (ReadIntPreference(settingJson, "duplex", defaultDuplexMode)) {
         updatePreferences = true;
         preferences.SetDefaultDuplexMode(defaultDuplexMode);
     }
     int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
-    if (PrintJsonUtil::IsMember(settingJson, "quality") && settingJson["quality"].isString() &&
-        !settingJson["quality"].asString().empty() &&
-        PrintUtil::ConvertToInt(settingJson["quality"].asString(), defaultPrintQuality)) {
+    if (ReadIntPreference(settingJson, "quality", defaultPrintQuality)) {
         updatePreferences = true;
         preferences.SetDefaultPrintQuality(defaultPrintQuality);
     }
