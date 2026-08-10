@@ -398,6 +398,19 @@ HWTEST_F(ScanParametersTest, ScanParametersTest_0009_Dump, TestSize.Level2)
     EXPECT_EQ(SCAN_FRAME_RGB, params.GetFormat());
 }
 
+HWTEST_F(ScanParametersTest, ScanParametersTest_0010_Validate_BytesPerLineOverflow_ReturnsFalse, TestSize.Level2)
+{
+    ScanParameters params;
+    params.SetBytesPerLine(100);
+    params.SetPixelsPerLine(200);
+    params.SetLines(300);
+    params.SetDepth(8);
+    EXPECT_TRUE(params.Validate());
+
+    params.SetBytesPerLine(536870912);
+    EXPECT_FALSE(params.Validate());
+}
+
 // ==================== ScanProgress Test ====================
 class ScanProgressTest : public testing::Test {
 public:

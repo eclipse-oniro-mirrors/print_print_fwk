@@ -394,11 +394,12 @@ bool ConvertStringToUint32(const char *src, uint32_t &dst)
     }
     errno = 0;
     char *endPtr = nullptr;
-    dst = strtoul(src, &endPtr, NUMBER_BASE);
-    if (errno == ERANGE || endPtr == src || *endPtr != '\0') {
+    unsigned long result = strtoul(src, &endPtr, NUMBER_BASE);
+    if (errno == ERANGE || endPtr == src || *endPtr != '\0' || result > UINT32_MAX) {
         PRINT_HILOGW("ConvertStringToUint32 fail: %{public}s", src);
         return false;
     }
+    dst = static_cast<uint32_t>(result);
     return true;
 }
 

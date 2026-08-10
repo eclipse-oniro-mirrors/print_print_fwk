@@ -2960,6 +2960,11 @@ std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
         return "";
     }
 
+    if (result != HASH_BUFFER_SIZE) {
+        PRINT_HILOGE("cupsHashData result out of range, ret = %{public}d", result);
+        return "";
+    }
+
     std::ostringstream oss;
     constexpr int32_t HEX_STRING_WIDTH = 2;
     oss << std::hex << std::setfill('0');

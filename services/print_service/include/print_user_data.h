@@ -36,12 +36,15 @@ struct JobIdCmp {
     {
         int32_t numA = 0;
         int32_t numB = 0;
-        if (PrintUtil::ConvertToInt(a, numA) && PrintUtil::ConvertToInt(b, numB)) {
+        bool aOk = PrintUtil::ConvertToInt(a, numA);
+        bool bOk = PrintUtil::ConvertToInt(b, numB);
+        if (aOk && bOk) {
             return numA > numB;
-        } else {
-            // If invalid, By default, the number A is greater than the number B.
-            return true;
         }
+        if (aOk != bOk) {
+            return aOk;
+        }
+        return a > b;
     }
 };
 

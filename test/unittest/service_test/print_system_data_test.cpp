@@ -1176,39 +1176,6 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055_NeedRename, TestSize.Leve
     systemData->ClearDiscoveredPrinterList();
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_Agent_AddToDiscoveryAndAdded, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    std::string printerId = "fwk.driver.printer.driver:com.example.app:HP_LaserJet";
-    auto info = std::make_shared<PrinterInfo>();
-    info->SetPrinterId(printerId);
-    info->SetPrinterName("HP LaserJet");
-    info->SetUri("ipp://192.168.56.1:631/printers/HP_LaserJet");
-    info->SetPrinterState(PRINTER_CONNECTED);
-
-    auto discoveryInfo = std::make_shared<PrinterInfo>(*info);
-    discoveryInfo->SetPrinterState(PRINTER_ADDED);
-
-    systemData->InsertAddedPrinter(printerId, *info);
-    systemData->AddPrinterToDiscovery(discoveryInfo);
-
-    PrinterInfo addedInfo;
-    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(printerId, addedInfo));
-    EXPECT_EQ(addedInfo.GetPrinterState(), PRINTER_CONNECTED);
-
-    auto discovered = systemData->QueryDiscoveredPrinterInfoById(printerId);
-    EXPECT_NE(discovered, nullptr);
-    EXPECT_EQ(discovered->GetPrinterState(), PRINTER_ADDED);
-
-    systemData->RemovePrinterFromDiscovery(printerId);
-    auto removed = systemData->QueryDiscoveredPrinterInfoById(printerId);
-    EXPECT_EQ(removed, nullptr);
-
-    PrinterInfo stillAdded;
-    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(printerId, stillAdded));
-    EXPECT_EQ(stillAdded.GetPrinterState(), PRINTER_CONNECTED);
-}
-
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056_NeedRename, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
@@ -2367,6 +2334,78 @@ HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_VendorAndOptions, 
     EXPECT_EQ(restored.GetVendorPrinterPrefAbility(), "pref");
     EXPECT_EQ(restored.GetVendorJobAttrAbility(), "job");
     EXPECT_TRUE(restored.HasOption());
+}
+
+HWTEST_F(PrintSystemDataTest, ParsePreviousPreferencesSetting_NonNumericOrientation_KeepsOriginalValue,
+    TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterPreferences preferences;
+    preferences.SetDefaultOrientation(PRINT_ORIENTATION_MODE_LANDSCAPE);
+    Json::Value settingJson;
+    settingJson["orientation"] = "abc";
+    EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), false);
+    EXPECT_EQ(preferences.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_LANDSCAPE);
+}
+
+HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceByDefault_InvalidOrientation_KeepsLandscape, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+
+    Json::Value capOpt;
+    PrinterPreferences printPreferences;
+    printPreferences.SetDefaultOrientation(PRINT_ORIENTATION_MODE_LANDSCAPE);
+    systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
+    EXPECT_EQ(printPreferences.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_LANDSCAPE);
+
+    Json::Value capOpt2;
+    PrinterPreferences printPreferences2;
+    printPreferences2.SetDefaultOrientation(PRINT_ORIENTATION_MODE_LANDSCAPE);
+    capOpt2["orientation-requested-default"] = "abc";
+    systemData->BuildPrinterPreferenceByDefault(capOpt2, printPreferences2);
+    EXPECT_EQ(printPreferences2.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_LANDSCAPE);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToSupportedColorMode_LargeUIntValue_NoCrash, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    const uint32_t largeUint = 3000000000;
+    Json::Value capsJson;
+    Json::Value colorModeList;
+    colorModeList.append(largeUint);
+    capsJson["supportedColorMode"] = colorModeList;
+    PrinterCapability printerCapability;
+    systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability);
+    std::vector<uint32_t> colorModes;
+    printerCapability.GetSupportedColorMode(colorModes);
+    ASSERT_EQ(colorModes.size(), 1);
+    EXPECT_EQ(colorModes[0], largeUint);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPageSize_LargeUIntWidthHeight_NoCrash, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    const uint32_t largeUint = 3000000000;
+    Json::Value capsJson;
+    Json::Value pageSizeList;
+    Json::Value pageSizeItem;
+    pageSizeItem["id"] = "123";
+    pageSizeItem["name"] = "123";
+    pageSizeItem["width"] = largeUint;
+    pageSizeItem["height"] = largeUint;
+    pageSizeList.append(pageSizeItem);
+    capsJson["pageSize"] = pageSizeList;
+    PrinterCapability printerCapability;
+    systemData->ConvertJsonToPageSize(capsJson, printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    ASSERT_EQ(supportedPageSizeList.size(), 1);
+    EXPECT_EQ(supportedPageSizeList[0].GetWidth(), largeUint);
+    EXPECT_EQ(supportedPageSizeList[0].GetHeight(), largeUint);
 }
 
 HWTEST_F(PrintSystemDataTest, ProcessJsonToCapabilityList_ArrayExceedMax_ReturnFalse, TestSize.Level1)

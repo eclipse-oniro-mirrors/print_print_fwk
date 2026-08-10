@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <json/json.h>
+#include <climits>
 #include "print_page_size.h"
 #include "print_json_util.h"
 
@@ -41,6 +42,9 @@ const int CONST_VALUE_120 = 120;
 
 inline int DpcToDpi(int dpc)
 {
+    if (dpc > INT_MAX / CONST_VALUE_300 || dpc < INT_MIN / CONST_VALUE_300) {
+        return 0;
+    }
     return dpc * CONST_VALUE_300 / CONST_VALUE_120; // 300 DPI = 120 DPC
 }
 

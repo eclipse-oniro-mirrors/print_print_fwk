@@ -236,5 +236,14 @@ HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle, TestSize.Level1)
     EXPECT_EQ(page.GetName(), "Custom.185x260mm");
 }
 
+HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle_LargeDimensions_NoOverflow, TestSize.Level1)
+{
+    PrintPageSize page;
+    page.SetWidth(50000000);
+    page.SetHeight(50000000);
+    EXPECT_TRUE(page.ConvertToPwgStyle());
+    EXPECT_NE(page.GetName().find("Custom."), std::string::npos);
+}
+
 }  // namespace Print
 }  // namespace OHOS

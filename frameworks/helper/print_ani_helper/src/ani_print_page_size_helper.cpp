@@ -42,11 +42,11 @@ PrintPageSize AniPrintPageSizeHelper::ParsePrintPageSize(ani_env *env, ani_objec
         pageSize.SetName(name);
     }
     int32_t width = 0;
-    if (GetIntProperty(env, pageSizeAni, WIDTH_STR, width)) {
+    if (GetIntProperty(env, pageSizeAni, WIDTH_STR, width) && width >= 0) {
         pageSize.SetWidth(static_cast<uint32_t>(width));
     }
     int32_t height = 0;
-    if (GetIntProperty(env, pageSizeAni, HEIGHT_STR, height)) {
+    if (GetIntProperty(env, pageSizeAni, HEIGHT_STR, height) && height >= 0) {
         pageSize.SetHeight(static_cast<uint32_t>(height));
     }
     return pageSize;

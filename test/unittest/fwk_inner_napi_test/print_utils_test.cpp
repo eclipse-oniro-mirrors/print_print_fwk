@@ -504,6 +504,37 @@ HWTEST_F(PrintUtilsTest, IsUsbPrinter_IncludeUSBString_ReturnTrue, TestSize.Leve
 }
 
 /**
+ * @tc.name: PrintUtilsTest_0032
+ * @tc.desc: Verify DecodeExtensionCid rejects negative and out-of-range callback id.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0032, TestSize.Level2)
+{
+    std::string extensionId;
+    uint32_t callbackId = 0;
+    EXPECT_FALSE(PrintUtils::DecodeExtensionCid("com.sample.ext:-1", extensionId, callbackId));
+
+    uint32_t callbackIdOor = 0;
+    EXPECT_FALSE(PrintUtils::DecodeExtensionCid("com.sample.ext:99999999999", extensionId, callbackIdOor));
+}
+
+/**
+ * @tc.name: PrintUtilsTest_0033
+ * @tc.desc: Verify ToLower handles empty, non-ascii, and already-lowercase input.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0033, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::ToLower(""), "");
+
+    PrintUtils::ToLower("\xC0\xC1");
+
+    EXPECT_EQ(PrintUtils::ToLower("abc"), "abc");
+}
+
+/**
  * @tc.name: MakeExtensionStateKey_001
  * @tc.desc: Verify MakeExtensionStateKey with valid userId and bundleName.
  * @tc.type: FUNC

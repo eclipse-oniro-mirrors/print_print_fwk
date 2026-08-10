@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <atomic>
 #include <sstream>
 #include <fstream>
 #include "scan_task.h"
@@ -430,8 +431,8 @@ void ScanTask::SaveRawData()
     int32_t rowBytes = pixMap_->GetRowBytes();
     int32_t height = pixMap_->GetHeight();
 
-    for (int32_t y = 0; y < height; y++) {
-        rawFile.write(reinterpret_cast<const char*>(srcData + y * rowStride), rowBytes);
+    for (size_t y = 0; y < static_cast<size_t>(height); y++) {
+        rawFile.write(reinterpret_cast<const char*>(srcData + y * static_cast<size_t>(rowStride)), rowBytes);
     }
 
     rawFile.close();
