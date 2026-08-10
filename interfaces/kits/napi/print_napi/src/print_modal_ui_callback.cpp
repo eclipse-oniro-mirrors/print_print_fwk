@@ -156,14 +156,15 @@ void PrintModalUICallback::SendMessageBack()
     }
     this->baseContext->sessionId = this->sessionId_;
     uv_work_t *work = new uv_work_t;
-    auto *ctxPtr = new std::shared_ptr<BaseContext>(this->baseContext);
-    work->data = reinterpret_cast<void *>(ctxPtr);
+    auto ctxPtr = std::make_unipue<std::shared_ptr<BaseContext>>(this->baseContext);
+    work->data = ctxPtr.release();
 
     int ret = uv_queue_work(
         loop, work, [](uv_work_t *work) { (void)work; }, SendMessageBackWork);
     if (ret != 0) {
         PRINT_HILOGE("Failed to get uv_queue_work.");
-        delete ctxPtr;
+        auto *rawPtr = reinterpret_cast<std::shared_Ptr<BaseContext> *>(work->data);
+        delete rawPtr;
         delete work;
         work = nullptr;
     }
@@ -173,14 +174,11 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
 {
     (void)statusIn;
     napi_handle_scope scope = nullptr;
-    if (work == nullptr) {
-        PRINT_HILOGE("work is nullptr");
-        return;
-    }
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(work);
     auto *ctxPtr = reinterpret_cast<std::shared_ptr<BaseContext> *>(work->data);
     if (ctxPtr == nullptr || *ctxPtr == nullptr) {
         PRINT_HILOGE("context is null");
-		delete ctxPtr;
+        delete ctxPtr;
         PRINT_SAFE_DELETE(work);
         return;
     }
