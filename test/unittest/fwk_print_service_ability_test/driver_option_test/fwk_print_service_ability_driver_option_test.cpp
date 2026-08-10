@@ -429,6 +429,10 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_Base64Decode
 {
     auto service = PrintServiceAbilityTest::CreateService();
     auto mockAdapter = std::make_shared<MockHksAdapter>();
+    ON_CALL(*mockAdapter, Base64Decode(_, _))
+        .WillByDefault(Invoke([&mockAdapter](const HksBlob &base64Blob, HksBlob &cipherBlob) -> bool {
+            return mockAdapter->HksAdapter::Base64Decode(base64Blob, cipherBlob);
+        }));
     EXPECT_CALL(*mockAdapter, EVP_DecodeBlockWrapper(_, _, _)).WillOnce(Return(-1));
     service->hksAdapter_ = mockAdapter;
     PrinterUserPreferences userPrefs;
@@ -449,9 +453,11 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_DecryptSucce
     auto service = PrintServiceAbilityTest::CreateService();
     service->currentUserId_ = 100;
     auto mockAdapter = std::make_shared<MockHksAdapter>();
+    ON_CALL(*mockAdapter, Base64Decode(_, _))
+        .WillByDefault(Invoke([&mockAdapter](const HksBlob &base64Blob, HksBlob &cipherBlob) -> bool {
+            return mockAdapter->HksAdapter::Base64Decode(base64Blob, cipherBlob);
+        }));
     EXPECT_CALL(*mockAdapter, EVP_DecodeBlockWrapper(_, _, _)).WillOnce(Return(4));
-    EXPECT_CALL(*mockAdapter, Base64Decode(_, _)).WillOnce(Return(true));
-    EXPECT_CALL(*mockAdapter, HksKeyExist(_, _)).WillOnce(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter, HksInitParamSet(_)).WillRepeatedly(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter, HksAddParams(_, _, _)).WillRepeatedly(Return(HKS_SUCCESS));
     EXPECT_CALL(*mockAdapter, HksBuildParamSet(_)).WillRepeatedly(Return(HKS_SUCCESS));
@@ -460,7 +466,7 @@ HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_DecryptSucce
     service->hksAdapter_ = mockAdapter;
     PrinterUserPreferences userPrefs;
     SecureBlob value;
-    std::string valueStr = "dGVzdA==";
+    std::string valueStr = "AAAAAAAAAAAAAAAA";
     value.SetData(reinterpret_cast<const uint8_t*>(valueStr.c_str()), valueStr.size());
     userPrefs.SetCustomOption("CustomPin", CUSTOM_OPTION_CHOICE, value);
     Json::Value opsJson;

@@ -203,7 +203,7 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     }
 
     napi_value result[2] = {nullptr};
-    CreateResultMessage(context, result, resultLength);
+    CreateResultMessage(context.get(), result, resultLength);
     if (context->deferred) {
         if (context->errorMessage.code == E_PRINT_NONE) {
             status = napi_resolve_deferred(context->env, context->deferred, result[resultIndex]);
