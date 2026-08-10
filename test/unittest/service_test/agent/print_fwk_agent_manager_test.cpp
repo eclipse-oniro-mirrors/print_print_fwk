@@ -42,6 +42,9 @@ constexpr std::chrono::seconds PENDING_TIMEOUT { 30 };
 constexpr std::chrono::seconds BEFORE_PENDING_TIMEOUT = PENDING_TIMEOUT - std::chrono::seconds { 1 };
 constexpr std::chrono::seconds PENDING_REPLACEMENT_DELAY { 10 };
 constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;
+constexpr const char *TIMESTAMPED_QUEUE_NAME = "Office_Printer_1786320000";
+const std::string TIMESTAMPED_IPP_URI =
+    std::string("ipp://10.0.0.2:631/printers/") + TIMESTAMPED_QUEUE_NAME;
 const std::string VALID_AGENT_OPTIONS =
     R"({"driver":"AGENT","agentBackendType":"TEST_BACKEND"})";
 
@@ -399,17 +402,17 @@ TEST_F(PrintFwkAgentManagerTest, AddSynchronousDoneKeepsParametersAliveAndComple
 TEST_F(PrintFwkAgentManagerTest, DeleteBuildsParametersAndSuccessCommits)
 {
     InsertAddedPrinter(systemData, "agent-id", "Renamed Printer", "ipp://10.0.0.1/printers/office",
-        R"({"driver":"AGENT","agent":{"printerName":"Agent Original",)"
+        R"({"driver":"AGENT","agent":{"queueName":"Agent_Original_1786320000",)"
         R"("uri":"ipp://10.0.0.1","backendType":"TEST_BACKEND"}})");
 
     EXPECT_EQ(manager->DeletePrinterFromAgent("Renamed Printer"), E_PRINT_NONE);
     EXPECT_EQ(g_fakeLoaderState.removeCallCount, 1u);
-    EXPECT_EQ(g_fakeLoaderState.name, "Agent_Original");
+    EXPECT_EQ(g_fakeLoaderState.name, "Agent_Original_1786320000");
     EXPECT_EQ(g_fakeLoaderState.backendType, TEST_BACKEND_TYPE);
     ASSERT_NE(g_fakeLoaderState.removeDone, nullptr);
     CompleteRemove(PRINT_FWK_AGENT_CLIENT_OK);
 
-    EXPECT_EQ(g_fakeLoaderState.removeNameReadBeforeAsyncDone, "Agent_Original");
+    EXPECT_EQ(g_fakeLoaderState.removeNameReadBeforeAsyncDone, "Agent_Original_1786320000");
     EXPECT_EQ(g_fakeLoaderState.removeBackendTypeReadBeforeAsyncDone, TEST_BACKEND_TYPE);
     EXPECT_EQ(g_fakeLoaderState.removeNamePtr, nullptr);
     EXPECT_EQ(g_fakeLoaderState.removeBackendTypePtr, nullptr);
@@ -418,11 +421,47 @@ TEST_F(PrintFwkAgentManagerTest, DeleteBuildsParametersAndSuccessCommits)
     EXPECT_EQ(host.lastPrinterName, "Renamed Printer");
 }
 
+TEST_F(PrintFwkAgentManagerTest, DeleteUsesExactTimestampedAgentQueueName)
+{
+    InsertAddedPrinter(systemData, "agent-id", "Office Printer", TIMESTAMPED_IPP_URI,
+        R"({"driver":"AGENT","agent":)"
+        R"({"queueName":"Office_Printer_1786320000",)"
+        R"("sourceUri":"ipp://192.168.1.10:631/printers/office",)"
+        R"("backendType":"TEST_BACKEND"}})");
+
+    EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.name, TIMESTAMPED_QUEUE_NAME);
+    EXPECT_EQ(g_fakeLoaderState.backendType, TEST_BACKEND_TYPE);
+    CompleteRemove(PRINT_FWK_AGENT_CLIENT_OK);
+}
+
+TEST_F(PrintFwkAgentManagerTest, DeleteSuccessReleasesSourceForLaterReadd)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const PrintAddPrinterResult result { TIMESTAMPED_IPP_URI.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    PrinterInfo added;
+    added.SetPrinterId("agent-id");
+    added.SetPrinterName("Office Printer");
+    added.SetUri(TIMESTAMPED_IPP_URI);
+    ASSERT_TRUE(manager->AttachPendingAgentPrinter(added));
+    systemData.InsertAddedPrinter(added.GetPrinterId(), added);
+
+    EXPECT_EQ(manager->DeletePrinterFromAgent(added.GetPrinterName()), E_PRINT_NONE);
+    CompleteRemove(PRINT_FWK_AGENT_CLIENT_OK);
+    systemData.DeleteAddedPrinter(added.GetPrinterId(), added.GetPrinterName());
+
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 2u);
+}
+
 TEST_F(PrintFwkAgentManagerTest, DeleteDoneFailureIsIdempotent)
 {
     InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
-        R"({"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+        R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
 
     EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_NONE);
     CompleteRemove(PRINT_FWK_AGENT_CLIENT_ERR_RPC);
@@ -434,7 +473,7 @@ TEST_F(PrintFwkAgentManagerTest, DeleteNotFoundContinuesLocalDeletion)
 {
     InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
-        R"({"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+        R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
 
     EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_NONE);
     CompleteRemove(PRINT_FWK_AGENT_CLIENT_ERR_NOT_FOUND);
@@ -444,12 +483,18 @@ TEST_F(PrintFwkAgentManagerTest, DeleteNotFoundContinuesLocalDeletion)
     EXPECT_EQ(host.lastPrinterName, "Office Printer");
 }
 
-TEST_F(PrintFwkAgentManagerTest, DeleteRejectsMissingAgentPrinterName)
+TEST_F(PrintFwkAgentManagerTest, DeleteRejectsInvalidAgentQueueName)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
-        R"({"driver":"AGENT"})");
+    InsertAddedPrinter(systemData, "missing-id", "Missing Queue", "ipp://10.0.0.1/printers/missing",
+        R"({"driver":"AGENT","agent":{"backendType":"TEST_BACKEND"}})");
+    InsertAddedPrinter(systemData, "type-id", "Type Queue", "ipp://10.0.0.1/printers/type",
+        R"({"driver":"AGENT","agent":{"queueName":123,"backendType":"TEST_BACKEND"}})");
+    InsertAddedPrinter(systemData, "empty-id", "Empty Queue", "ipp://10.0.0.1/printers/empty",
+        R"({"driver":"AGENT","agent":{"queueName":"","backendType":"TEST_BACKEND"}})");
 
-    EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(manager->DeletePrinterFromAgent("Missing Queue"), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(manager->DeletePrinterFromAgent("Type Queue"), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(manager->DeletePrinterFromAgent("Empty Queue"), E_PRINT_INVALID_PRINTER);
     EXPECT_EQ(g_fakeLoaderState.removeCallCount, 0u);
 }
 
@@ -457,13 +502,13 @@ TEST_F(PrintFwkAgentManagerTest, DeleteRejectsInvalidBackendType)
 {
     InsertAddedPrinter(systemData, "missing-id", "Missing Backend",
         "ipp://10.0.0.1/printers/missing",
-        R"({"driver":"AGENT","agent":{"printerName":"Missing"}})");
+        R"({"driver":"AGENT","agent":{"queueName":"Missing_1786320000"}})");
     InsertAddedPrinter(systemData, "type-id", "Type Backend",
         "ipp://10.0.0.1/printers/type",
-        R"({"driver":"AGENT","agent":{"printerName":"Type","backendType":123}})");
+        R"({"driver":"AGENT","agent":{"queueName":"Type_1786320000","backendType":123}})");
     InsertAddedPrinter(systemData, "empty-id", "Empty Backend",
         "ipp://10.0.0.1/printers/empty",
-        R"({"driver":"AGENT","agent":{"printerName":"Empty","backendType":""}})");
+        R"({"driver":"AGENT","agent":{"queueName":"Empty_1786320000","backendType":""}})");
 
     EXPECT_EQ(manager->DeletePrinterFromAgent("Missing Backend"), E_PRINT_INVALID_PRINTER);
     EXPECT_EQ(manager->DeletePrinterFromAgent("Type Backend"), E_PRINT_INVALID_PRINTER);
@@ -475,7 +520,7 @@ TEST_F(PrintFwkAgentManagerTest, DeleteImmediateFailureDoesNotRetainCallback)
 {
     InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
-        R"({"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+        R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
     g_fakeLoaderState.removeReturn = PRINT_FWK_AGENT_CLIENT_ERR_RPC;
 
     EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_RPC_FAILURE);
@@ -488,13 +533,13 @@ TEST_F(PrintFwkAgentManagerTest, DeleteSynchronousDoneKeepsParametersAliveAndCom
 {
     InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
-        R"({"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+        R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
     g_fakeLoaderState.completeRemoveSynchronously = true;
 
     EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_NONE);
 
     EXPECT_EQ(g_fakeLoaderState.removeCallCount, 1u);
-    EXPECT_EQ(g_fakeLoaderState.nameReadAfterSyncDone, "Agent_Original");
+    EXPECT_EQ(g_fakeLoaderState.nameReadAfterSyncDone, "Agent_Original_1786320000");
     EXPECT_EQ(g_fakeLoaderState.backendTypeReadAfterSyncDone, TEST_BACKEND_TYPE);
     EXPECT_EQ(g_fakeLoaderState.removeNamePtr, nullptr);
     EXPECT_EQ(g_fakeLoaderState.removeBackendTypePtr, nullptr);
@@ -599,7 +644,7 @@ TEST_F(PrintFwkAgentManagerTest, AddDoneSuccessCopiesCallbackResultAndNotifiesPe
 {
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10:631/printers/office",
         VALID_AGENT_OPTIONS), E_PRINT_NONE);
-    const std::string ippUri = "ipp://10.0.0.2:631/printers/office";
+    const std::string ippUri = TIMESTAMPED_IPP_URI;
     {
         const std::string callbackIppUri = ippUri;
         const PrintAddPrinterResult result { callbackIppUri.c_str(), nullptr, 0 };
@@ -618,8 +663,8 @@ TEST_F(PrintFwkAgentManagerTest, AddDoneSuccessCopiesCallbackResultAndNotifiesPe
     EXPECT_EQ(progress["status"].asString(), "PENDING_DISCOVERY");
     EXPECT_TRUE(systemData.QueryAddedPrinterIdList().empty());
     EXPECT_TRUE(manager->ClaimPendingAgentPrinter(ippUri));
+    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "Office Printer");
     EXPECT_EQ(vendorManager.GetConnectingPrinter(), "");
-    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "");
 }
 
 TEST_F(PrintFwkAgentManagerTest, AddDoneNullResultReportsServerFailure)
@@ -662,6 +707,21 @@ TEST_F(PrintFwkAgentManagerTest, AddDoneEmptyUriReportsServerFailure)
     EXPECT_EQ(progress["errorCode"].asInt(), PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
 }
 
+TEST_F(PrintFwkAgentManagerTest, AddDoneInvalidQueueUriReportsServerFailureAndReleasesSource)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const std::string invalidQueueUri = "ipp://10.0.0.2:631/not-printers/Office_Printer_1786320000";
+    const PrintAddPrinterResult result { invalidQueueUri.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    Json::Value progress = GetAgentAddProgress(host.lastInfo);
+    EXPECT_EQ(progress["status"].asString(), "FAILED");
+    EXPECT_EQ(progress["errorCode"].asInt(), PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 2u);
+}
+
 TEST_F(PrintFwkAgentManagerTest, PendingAgentPrinterExpiresAfterThirtySeconds)
 {
     const std::string ippUri = "ipp://10.0.0.2:631/printers/office";
@@ -672,6 +732,52 @@ TEST_F(PrintFwkAgentManagerTest, PendingAgentPrinterExpiresAfterThirtySeconds)
 
     now += PENDING_TIMEOUT;
     EXPECT_FALSE(manager->ClaimPendingAgentPrinter(ippUri));
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10:631/printers/office",
+        VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 2u);
+}
+
+TEST_F(PrintFwkAgentManagerTest, DuplicateInFlightSourceNotifiesPrinterExistsWithoutAgentSubmission)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 1u);
+    EXPECT_EQ(host.notifyPrinterInfoChangedCount, 1u);
+    Json::Value progress = GetAgentAddProgress(host.lastInfo);
+    EXPECT_EQ(progress["status"].asString(), "FAILED");
+    EXPECT_EQ(progress["errorCode"].asInt(), PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
+    EXPECT_EQ(progress["errorMsg"].asString(), "Printer already exists");
+}
+
+TEST_F(PrintFwkAgentManagerTest, DuplicatePendingSourceUsesEquivalentDefaultPortForm)
+{
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10/printers/office",
+        VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const PrintAddPrinterResult result { TIMESTAMPED_IPP_URI.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10:631/printers/office",
+        VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 1u);
+    EXPECT_EQ(GetAgentAddProgress(host.lastInfo)["errorCode"].asInt(),
+        PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
+}
+
+TEST_F(PrintFwkAgentManagerTest, DuplicatePersistedSourceNotifiesPrinterExists)
+{
+    InsertAddedPrinter(systemData, "agent-id", "Office Printer", TIMESTAMPED_IPP_URI,
+        R"({"driver":"AGENT","agent":)"
+        R"({"queueName":"Office_Printer_1786320000",)"
+        R"("sourceUri":"ipp://192.168.1.10:631/printers/office",)"
+        R"("backendType":"TEST_BACKEND"}})");
+
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10/printers/office",
+        VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 0u);
+    EXPECT_EQ(GetAgentAddProgress(host.lastInfo)["errorCode"].asInt(),
+        PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
 }
 
 TEST_F(PrintFwkAgentManagerTest, ClaimPendingAgentPrinterExtendsConnectingWindow)
@@ -703,7 +809,8 @@ TEST_F(PrintFwkAgentManagerTest, DefaultIppPortFormsMatchAndPreserveOriginalUris
         const auto &[agentUri, discoveryUri] = uriPairs[index];
         SCOPED_TRACE(agentUri);
         EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer " + std::to_string(index),
-            "ipp://192.168.1.10:631/printers/office", VALID_AGENT_OPTIONS), E_PRINT_NONE);
+            "ipp://192.168.1.10:631/printers/office-" + std::to_string(index),
+            VALID_AGENT_OPTIONS), E_PRINT_NONE);
         const PrintAddPrinterResult result { agentUri.c_str(), nullptr, 0 };
         CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
 
@@ -740,8 +847,9 @@ TEST_F(PrintFwkAgentManagerTest, PendingUriMatchKeepsNonDefaultComponentsExact)
 
 TEST_F(PrintFwkAgentManagerTest, AttachPendingAgentPrinterPreservesDiscoveryOptionsAndConsumesRecord)
 {
-    const std::string ippUri = "ipp://10.0.0.2:631/printers/office";
-    EXPECT_EQ(manager->AddPrinterViaAgent("Agent Original", "ipp://192.168.1.10:631/printers/office",
+    const std::string ippUri = TIMESTAMPED_IPP_URI;
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Agent Original", sourceUri,
         VALID_AGENT_OPTIONS), E_PRINT_NONE);
     const PrintAddPrinterResult result { ippUri.c_str(), nullptr, 0 };
     CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
@@ -758,8 +866,11 @@ TEST_F(PrintFwkAgentManagerTest, AttachPendingAgentPrinterPreservesDiscoveryOpti
     EXPECT_EQ(option["ipp"].asString(), "original");
     EXPECT_TRUE(option["duplex"].asBool());
     EXPECT_EQ(option["driver"].asString(), PRINT_DRIVER_AGENT);
-    EXPECT_EQ(option["agent"]["printerName"].asString(), "Agent Original");
+    EXPECT_FALSE(option["agent"].isMember("printerName"));
+    EXPECT_EQ(option["agent"]["queueName"].asString(), TIMESTAMPED_QUEUE_NAME);
     EXPECT_EQ(option["agent"]["uri"].asString(), ippUri);
+    EXPECT_EQ(option["agent"]["queueUri"].asString(), ippUri);
+    EXPECT_EQ(option["agent"]["sourceUri"].asString(), sourceUri);
     EXPECT_EQ(option["agent"]["backendType"].asString(), TEST_BACKEND_TYPE);
 
     PrinterInfo repeated;
@@ -788,15 +899,19 @@ TEST_F(PrintFwkAgentManagerTest, SameUriSuccessOverwritesPendingSource)
     info.SetUri(ippUri);
     EXPECT_TRUE(manager->AttachPendingAgentPrinter(info));
     Json::Value option = GetOption(info);
-    EXPECT_EQ(option["agent"]["printerName"].asString(), "Second Name");
+    EXPECT_FALSE(option["agent"].isMember("printerName"));
+    EXPECT_EQ(option["agent"]["queueName"].asString(), "office");
     EXPECT_EQ(option["agent"]["backendType"].asString(), "SECOND_BACKEND");
+    EXPECT_EQ(option["agent"]["sourceUri"].asString(),
+        "ipp://192.168.1.11:631/printers/second");
 }
 
 TEST_F(PrintFwkAgentManagerTest, PendingCapacityIncludesInFlightRequests)
 {
     for (size_t index = 0; index < MAX_PENDING_AGENT_PRINTERS; ++index) {
         EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer",
-            "ipp://192.168.1.10:631/printers/office", VALID_AGENT_OPTIONS), E_PRINT_NONE);
+            "ipp://192.168.1.10:631/printers/office-" + std::to_string(index),
+            VALID_AGENT_OPTIONS), E_PRINT_NONE);
     }
 
     EXPECT_EQ(g_fakeLoaderState.addCallCount, MAX_PENDING_AGENT_PRINTERS);
@@ -814,7 +929,8 @@ TEST_F(PrintFwkAgentManagerTest, ImmediateFailureReleasesPendingCapacity)
     g_fakeLoaderState.addReturn = PRINT_FWK_AGENT_CLIENT_OK;
     for (size_t index = 0; index < MAX_PENDING_AGENT_PRINTERS; ++index) {
         EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer",
-            "ipp://192.168.1.10:631/printers/office", VALID_AGENT_OPTIONS), E_PRINT_NONE);
+            "ipp://192.168.1.10:631/printers/office-" + std::to_string(index),
+            VALID_AGENT_OPTIONS), E_PRINT_NONE);
     }
 }
 
@@ -870,7 +986,7 @@ TEST_F(PrintFwkAgentManagerTest, ShutdownStopsPendingRemoveBusinessSubmission)
 {
     InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
-        R"({"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+        R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
     EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_NONE);
     ASSERT_NE(g_fakeLoaderState.removeDone, nullptr);
 
