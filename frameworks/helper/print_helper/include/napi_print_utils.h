@@ -63,7 +63,6 @@ public:
     static std::string GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName);
     static void SetStringPropertyUtf8(
         napi_env env, napi_value object, const std::string &name, const std::string &value);
-    static std::string GetValueString(napi_env env, napi_value value);
     static bool ValueIsArrayBuffer(napi_env env, napi_value value);
     static void *GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length);
     static napi_value CreateArrayBuffer(napi_env env, size_t length, void **data);

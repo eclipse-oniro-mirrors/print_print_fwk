@@ -669,7 +669,7 @@ void TestNoParmFuncs(const uint8_t* data, size_t size, FuzzedDataProvider* dataP
     NapiScanUtils::CreateReference(env, callback);
     NapiScanUtils::CreateBoolean(env, value);
     NapiScanUtils::GetBooleanFromValue(env, value);
-    NapiScanUtils::GetValueString(env, jsValue);
+    NapiScanUtils::GetStringFromValueUtf8(env, jsValue);
     NapiScanUtils::GetJsVal(env, info, &jsValue, length);
     NapiScanUtils::IsPathValid(filePath);
     NapiScanUtils::DecodeExtensionCid(cid, extensionId, callbackId);

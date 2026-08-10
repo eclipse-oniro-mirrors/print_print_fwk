@@ -412,31 +412,6 @@ std::string NapiScanUtils::ToLower(const std::string &s)
     return res;
 }
 
-std::string NapiScanUtils::GetValueString(napi_env env, napi_value value)
-{
-    if (value == nullptr) {
-        return "";
-    }
-
-    size_t length = 0;
-    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &length);
-    if (status != napi_ok) {
-        return "";
-    }
-
-    if (length == 0 || length + 1 > MAX_STRING_LENGTH) {
-        return "";
-    }
-
-    std::vector<char> buffer(length + 1, 0);
-    status = napi_get_value_string_utf8(env, value, buffer.data(), length + 1, &length);
-    if (status != napi_ok) {
-        return "";
-    }
-    std::string result(buffer.data());
-    return result;
-}
-
 std::string NapiScanUtils::GetExtensionId(const std::string &globalId)
 {
     auto pos = globalId.find(GLOBAL_ID_DELIMITER);

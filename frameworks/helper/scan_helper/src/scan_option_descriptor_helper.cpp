@@ -149,7 +149,7 @@ napi_value ScanOptionDescriptorHelper::ObjSetOptionConstraintString(napi_env env
             napi_value jsConstraintString;
             std::string constraintString;
             SCAN_CALL(env, napi_get_element(env, jsOptionConstraintString, index, &jsConstraintString));
-            constraintString = NapiScanUtils::GetValueString(env, jsConstraintString);
+            constraintString = NapiScanUtils::GetStringFromValueUtf8(env, jsConstraintString);
             optionConstraintString.emplace_back(constraintString);
         }
         nativeObj->SetOptionConstraintString(optionConstraintString);
