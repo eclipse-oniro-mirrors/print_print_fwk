@@ -49,6 +49,10 @@ PrintPageSize AniPrintPageSizeHelper::ParsePrintPageSize(ani_env *env, ani_objec
     if (GetIntProperty(env, pageSizeAni, HEIGHT_STR, height) && height >= 0) {
         pageSize.SetHeight(static_cast<uint32_t>(height));
     }
+    if (pageSize.GetWidth() == 0 || pageSize.GetHeight() == 0) {
+        PRINT_HILOGW("ParsePrintPageSize: width=%{public}u, height=%{public}u, invalid page size",
+            pageSize.GetWidth(), pageSize.GetHeight());
+    }
     return pageSize;
 }
 

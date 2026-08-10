@@ -427,12 +427,12 @@ void ScanTask::SaveRawData()
     }
 
     const uint8_t* srcData = pixMap_->GetPixels();
-    int32_t rowStride = pixMap_->GetRowStride();
     int32_t rowBytes = pixMap_->GetRowBytes();
-    int32_t height = pixMap_->GetHeight();
+    size_t height = static_cast<size_t>(pixMap_->GetHeight());
+    size_t rowStride = static_cast<size_t>(pixMap_->GetRowStride());
 
-    for (size_t y = 0; y < static_cast<size_t>(height); y++) {
-        rawFile.write(reinterpret_cast<const char*>(srcData + y * static_cast<size_t>(rowStride)), rowBytes);
+    for (size_t y = 0; y < height; y++) {
+        rawFile.write(reinterpret_cast<const char*>(srcData + y * rowStride), rowBytes);
     }
 
     rawFile.close();

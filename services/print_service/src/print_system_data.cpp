@@ -338,9 +338,11 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
 
 static bool ReadIntPreference(const Json::Value &json, const std::string &key, int32_t &value)
 {
-    return PrintJsonUtil::IsMember(json, key) && json[key].isString() &&
-        !json[key].asString().empty() &&
-        PrintUtil::ConvertToInt(json[key].asString(), value);
+    if (!PrintJsonUtil::IsMember(json, key) || !json[key].isString() || json[key].asString().empty()) {
+        return false;
+    }
+    PrintUtil::ConvertToInt(json[key].asString(), value);
+    return true;
 }
 
 bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences)
@@ -1490,8 +1492,11 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
 static bool UpdateIntCapOption(const Json::Value &capOpt, const std::string &key,
     bool apply, int32_t &value)
 {
-    return apply && PrintJsonUtil::IsMember(capOpt, key) && capOpt[key].isString() &&
-        PrintUtil::ConvertToInt(capOpt[key].asString(), value);
+    if (!apply || !PrintJsonUtil::IsMember(capOpt, key) || !capOpt[key].isString()) {
+        return false;
+    }
+    PrintUtil::ConvertToInt(capOpt[key].asString(), value);
+    return true;
 }
 
 void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences)
@@ -1637,7 +1642,7 @@ void PrintSystemData::SaveJsonFile(const std::string &fileName, const std::strin
         return;
     }
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonString.length(), file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close file failure.");

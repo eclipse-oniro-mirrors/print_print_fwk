@@ -267,7 +267,7 @@ bool VendorIppEveryWhere::ConvertPrinterIdByUri(std::string &uri)
     auto pos_start = uri.find(VENDOR_IPP_START);
     auto pos_end = uri.find(VENDOR_IPP_END);
     if (pos_start == std::string::npos || uri.length() <= pos_start + VENDOR_IPP_START.length() ||
-        pos_end == std::string::npos || pos_end <= pos_start + VENDOR_IPP_START.length()) {
+        pos_end == std::string::npos || pos_end <= (pos_start + VENDOR_IPP_START.length())) {
         return false;
     }
     uri = uri.substr(pos_start + VENDOR_IPP_START.length(), pos_end - pos_start - VENDOR_IPP_START.length());

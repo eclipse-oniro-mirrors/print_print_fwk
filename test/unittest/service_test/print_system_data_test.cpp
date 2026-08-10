@@ -2336,7 +2336,7 @@ HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_VendorAndOptions, 
     EXPECT_TRUE(restored.HasOption());
 }
 
-HWTEST_F(PrintSystemDataTest, ParsePreviousPreferencesSetting_NonNumericOrientation_KeepsOriginalValue,
+HWTEST_F(PrintSystemDataTest, ParsePreviousPreferencesSetting_NonNumericOrientation_SetsDefault,
     TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
@@ -2345,8 +2345,8 @@ HWTEST_F(PrintSystemDataTest, ParsePreviousPreferencesSetting_NonNumericOrientat
     preferences.SetDefaultOrientation(PRINT_ORIENTATION_MODE_LANDSCAPE);
     Json::Value settingJson;
     settingJson["orientation"] = "abc";
-    EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), false);
-    EXPECT_EQ(preferences.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_LANDSCAPE);
+    EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), true);
+    EXPECT_EQ(preferences.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_NONE);
 }
 
 HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceByDefault_InvalidOrientation_KeepsLandscape, TestSize.Level1)
@@ -2365,7 +2365,7 @@ HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceByDefault_InvalidOrientation
     printPreferences2.SetDefaultOrientation(PRINT_ORIENTATION_MODE_LANDSCAPE);
     capOpt2["orientation-requested-default"] = "abc";
     systemData->BuildPrinterPreferenceByDefault(capOpt2, printPreferences2);
-    EXPECT_EQ(printPreferences2.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_LANDSCAPE);
+    EXPECT_EQ(printPreferences2.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_NONE);
 }
 
 HWTEST_F(PrintSystemDataTest, ConvertJsonToSupportedColorMode_LargeUIntValue_NoCrash, TestSize.Level1)
