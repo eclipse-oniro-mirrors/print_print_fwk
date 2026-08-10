@@ -28,6 +28,8 @@ const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
 const uint32_t MAX_COLOR_MODE_COUNT = 200;
+const uint32_t MAX_DUPLEX_MODE_COUNT = 1000;
+const uint32_t MAX_ARRAY_COUNT = 1000;
 }  // namespace
 
 namespace OHOS::Print {
@@ -57,6 +59,10 @@ bool ConvertArrayToList(const T1 *array, uint32_t count, std::vector<T2> &list, 
         PRINT_HILOGE("array is null");
         return false;
     }
+    if (count > MAX_ARRAY_COUNT) {
+        PRINT_HILOGE("count exceeds maximum");
+        return false;
+    }
     for (uint32_t i = 0; i < count; ++i) {
         T2 data;
         if (convertType(array[i], data)) {
@@ -75,6 +81,10 @@ std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJ
 {
     if (array == nullptr || convertToJson == nullptr) {
         PRINT_HILOGE("invalid params");
+        return "";
+    }
+    if (count > MAX_ARRAY_COUNT) {
+        PRINT_HILOGE("count exceeds maximum");
         return "";
     }
     std::vector<T> list;
@@ -634,6 +644,10 @@ bool UpdateDuplexCapability(PrinterCapability &printerCap, const Print_PrinterCa
 {
     if (capability == nullptr || capability->supportedDuplexModes == nullptr) {
         PRINT_HILOGW("supportedDuplexModes is null");
+        return false;
+    }
+    if (capability->supportedDuplexModesCount > MAX_DUPLEX_MODE_COUNT) {
+        PRINT_HILOGW("supportedDuplexModesCount exceeds maximum");
         return false;
     }
     std::vector<uint32_t> supportedDuplexModes;

@@ -45,7 +45,8 @@ enum SaneStatus {
 enum SaneAction {
     SANE_ACTION_GET_VALUE = 0,
     SANE_ACTION_SET_VALUE,
-    SANE_ACTION_SET_AUTO
+    SANE_ACTION_SET_AUTO,
+    SANE_ACTION_MAX
 };
 
 enum SaneConstraintType {

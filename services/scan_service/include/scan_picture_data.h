@@ -43,6 +43,7 @@ private:
     ScanPictureData() = default;
     int32_t GetRandomNumber(const int32_t &lowerBoundary, const int32_t &upperBoundary);
     int32_t GetElapsedSeconds(const SteadyTimePoint &preTime);
+    int32_t HandleCompletedScanPicture(ScanProgress& scanProgress, ScanProgress& prog);
     mutable std::mutex mutex_;
     std::queue<int32_t> scanQueue_;
     std::map<std::string, int32_t> scanCacheFdMap_;

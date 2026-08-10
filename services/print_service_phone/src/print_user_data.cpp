@@ -333,6 +333,7 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
         !userDataList[std::to_string(userId_)].isObject()) {
         PRINT_HILOGW("can not find current userId");
         SetUserDataToFile();
+        return;
     }
     Json::Value userData = userDataList[std::to_string(userId_)];
     if (!PrintJsonUtil::IsMember(userData, "defaultPrinter") || !userData["defaultPrinter"].isString()) {

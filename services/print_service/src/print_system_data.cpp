@@ -629,6 +629,9 @@ void PrintSystemData::UpdateIppRawDataFileTimestamp(const std::string &printerId
     auto now = std::chrono::system_clock::now();
     auto epochSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
     std::string newFileName = printerId + "_" + std::to_string(epochSeconds);
+    if (!PrintUtils::IsPathValidForCreate(PRINTER_SERVICE_IPP_RAW_DATA_PATH, newFileName)) {
+        return;
+    }
     std::filesystem::path newPath = dir / newFileName;
     std::filesystem::rename(oldPath, newPath, ec);
     if (ec) {

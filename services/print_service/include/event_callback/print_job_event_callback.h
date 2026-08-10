@@ -30,7 +30,9 @@ public:
         bool hasJobManagePermission = false)
         : BaseEventCallback(userId, pid, eventType, deathRecipient),
           hasJobManagePermission_(hasJobManagePermission)
-    {}
+    {
+        category_ = CallbackCategory::JOB;
+    }
 
     virtual ExecuteResult Execute(const CallbackInfo &info) override;
     virtual bool IsRemoteDied(const sptr<IRemoteObject> &listener) override;

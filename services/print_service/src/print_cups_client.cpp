@@ -3088,6 +3088,31 @@ bool PrintCupsClient::IsIpAddress(const char *host)
     }
 }
 
+// SSRF 防护：拦截 loopback、link-local(含云元数据 169.254.169.254)、未指定、IPv4-mapped 地址
+// 放行私网(10/172.16/192.168)与公网，保证本地网络打印机可用
+bool PrintCupsClient::IsSsrfSafeIp(const std::string &ip)
+{
+    struct in_addr addr4;
+    if (inet_pton(AF_INET, ip.c_str(), &addr4) == 1) {
+        uint32_t host = ntohl(addr4.s_addr);
+        // 127.0.0.0/8 loopback | 169.254.0.0/16 link-local(云元数据) | 0.0.0.0 未指定
+        if ((host & 0xFF000000) == 0x7F000000 || (host & 0xFFFF0000) == 0xA9FE0000 || host == 0) {
+            return false;
+        }
+        return true;
+    }
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET6, ip.c_str(), &addr6) == 1) {
+        // loopback | link-local | 未指定 | IPv4-mapped(防 ::ffff:127.0.0.1 旁路)
+        if (IN6_IS_ADDR_LOOPBACK(&addr6) || IN6_IS_ADDR_LINKLOCAL(&addr6) ||
+            IN6_IS_ADDR_UNSPECIFIED(&addr6) || IN6_IS_ADDR_V4MAPPED(&addr6)) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
 IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printerUri)
 {
     char scheme[HTTP_MAX_URI] = {0};

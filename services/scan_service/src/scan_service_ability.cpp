@@ -658,6 +658,10 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
 
 int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex)
 {
+    if (scannerId.empty()) {
+        SCAN_HILOGE("ActionSetAuto scannerId is empty");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_SET_AUTO");
     SaneStatus status = SANE_STATUS_GOOD;
     SaneControlParam controlParam;
@@ -702,6 +706,10 @@ int32_t ScanServiceAbility::ActionGetValue(
 int32_t ScanServiceAbility::ActionSetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
+    if (scannerId.empty()) {
+        SCAN_HILOGE("ActionSetValue scannerId is empty");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
     SaneStatus status = SANE_STATUS_GOOD;
     SaneControlParam controlParam;
@@ -1164,6 +1172,10 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAdde
 
 int32_t ScanServiceAbility::StartScanOnceInternal(const std::string &scannerId)
 {
+    if (scannerId.empty()) {
+        SCAN_HILOGE("StartScanOnceInternal scannerId is empty");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
     if (scannerState_.load() == SCANNER_CANCELING) {
@@ -1496,6 +1508,10 @@ void ScanServiceAbility::CleanupDeadCaller(int32_t deadPid)
 
 int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int32_t& dpi)
 {
+    if (scannerId.empty()) {
+        SCAN_HILOGE("GetScannerImageDpi scannerId is empty");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SaneControlParam controlParam;
     controlParam.action_ = SANE_ACTION_GET_VALUE;
     controlParam.valueType_ = SCAN_VALUE_NUM;

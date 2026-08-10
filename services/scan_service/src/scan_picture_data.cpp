@@ -18,6 +18,7 @@
 #include "directory_ex.h"
 #include "os_account_manager.h"
 #include "scan_picture_data.h"
+#include "scan_service_utils.h"
 #include "scan_constant.h"
 #include "scan_log.h"
 #include "file_ex.h"
@@ -54,7 +55,7 @@ void ScanPictureData::CleanAllCache()
         if (fd != INVALID_FD) {
             fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
         }
-        if (FileExists(path)) {
+        if (ScanServiceUtils::IsPathValid(path)) {
             unlink(path.c_str());
         }
     }
@@ -63,6 +64,27 @@ void ScanPictureData::CleanAllCache()
     std::queue<int32_t> empty;
     scanQueue_.swap(empty);
     scanTaskMap_.clear();
+}
+
+int32_t ScanPictureData::HandleCompletedScanPicture(ScanProgress& scanProgress, ScanProgress& prog)
+{
+    scanProgress = prog;
+    std::string imagePath = scanProgress.GetImageRealPath();
+    if (!ScanServiceUtils::IsPathValid(imagePath)) {
+        SCAN_HILOGE("invalid image real path");
+        return E_SCAN_SERVER_FAILURE;
+    }
+    int32_t fd = open(imagePath.c_str(), O_RDONLY);
+    if (fd == INVALID_FD) {
+        SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+        return E_SCAN_SERVER_FAILURE;
+    }
+    fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
+    scanProgress.SetScanPictureFd(fd);
+    scanCacheFdMap_[scanProgress.GetImageRealPath()] = fd;
+    scanProgress.Dump();
+    scanQueue_.pop();
+    return E_SCAN_NONE;
 }
 
 int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress)
@@ -88,18 +110,7 @@ int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress)
     auto progress = prog.GetScanProgress();
     if (progress == SCAN_PROGRESS_100) {
         SCAN_HILOGI("get scan picture successfully!");
-        scanProgress = prog;
-        int32_t fd = open(scanProgress.GetImageRealPath().c_str(), O_RDONLY);
-        if (fd == INVALID_FD) {
-            SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-            return E_SCAN_SERVER_FAILURE;
-        }
-        fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
-        scanProgress.SetScanPictureFd(fd);
-        scanCacheFdMap_[scanProgress.GetImageRealPath()] = fd;
-        scanProgress.Dump();
-        scanQueue_.pop();
-        return E_SCAN_NONE;
+        return HandleCompletedScanPicture(scanProgress, prog);
     }
     int32_t randomNumber = GetRandomNumber(SCAN_PROGRESS_10, SCAN_PROGRESS_19);
     auto preTime = prog.GetScanTime();
