@@ -156,14 +156,14 @@ void PrintModalUICallback::SendMessageBack()
     }
     this->baseContext->sessionId = this->sessionId_;
     uv_work_t *work = new uv_work_t;
-    auto ctxPtr = std::make_unipue<std::shared_ptr<BaseContext>>(this->baseContext);
+    auto ctxPtr = std::make_unique<std::shared_ptr<BaseContext>>(this->baseContext);
     work->data = ctxPtr.release();
 
     int ret = uv_queue_work(
         loop, work, [](uv_work_t *work) { (void)work; }, SendMessageBackWork);
     if (ret != 0) {
         PRINT_HILOGE("Failed to get uv_queue_work.");
-        auto *rawPtr = reinterpret_cast<std::shared_Ptr<BaseContext> *>(work->data);
+        auto *rawPtr = reinterpret_cast<std::shared_ptr<BaseContext> *>(work->data);
         delete rawPtr;
         delete work;
         work = nullptr;
