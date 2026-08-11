@@ -61,10 +61,19 @@ static void PrintNative(ani_env *env, ani_object arrayObj, ani_object callback)
     for (const auto &file : files) {
         PRINT_HILOGD("Array String Content: = %{private}s", file.c_str());
     }
-    auto nativePrintTask = new AniPrintTask(env);
+    auto nativePrintTask = new (std::nothrow) AniPrintTask(env);
+    if (nativePrintTask == nullptr) {
+        PRINT_HILOGE("nativePrintTask is nullptr");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
     int32_t ret = nativePrintTask->StartPrint(files);
-    ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
+    ani_object taskObj = AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask);
+    if (taskObj == nullptr) {
+        PRINT_HILOGE("CreatePrintTask failed");
+        delete nativePrintTask;
+    }
+    AsyncCallback(env, callback, CreateStsError(env, ret), taskObj);
 }
 
 static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object context, ani_object callback)
@@ -89,10 +98,19 @@ static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
-    auto nativePrintTask = new AniPrintTask(env);
+    auto nativePrintTask = new (std::nothrow) AniPrintTask(env);
+    if (nativePrintTask == nullptr) {
+        PRINT_HILOGE("nativePrintTask is nullptr");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
     int32_t ret = nativePrintTask->StartPrint(files);
-    ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
+    ani_object taskObj = AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask);
+    if (taskObj == nullptr) {
+        PRINT_HILOGE("CreatePrintTask failed");
+        delete nativePrintTask;
+    }
+    AsyncCallback(env, callback, CreateStsError(env, ret), taskObj);
 }
 
 static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object callback)
