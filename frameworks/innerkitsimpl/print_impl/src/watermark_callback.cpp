@@ -32,7 +32,7 @@ WatermarkCallback::~WatermarkCallback()
         napi_ref callbackRef;
     };
 
-    Param *param = new Param;
+    auto param = std::make_shared<Param>();
     param->env = env_;
     param->callbackRef = ref_;
 
@@ -42,24 +42,21 @@ WatermarkCallback::~WatermarkCallback()
         if (scope == nullptr) {
             PRINT_HILOGE("scope is a nullptr");
             NapiPrintUtils::DeleteReference(param->env, param->callbackRef);
-            delete param;
             return;
         }
         napi_ref callbackRef_ = param->callbackRef;
         NapiPrintUtils::DeleteReference(param->env, callbackRef_);
         napi_close_handle_scope(param->env, scope);
-        delete param;
     };
 
     napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_ok) {
         PRINT_HILOGE("napi_send_event fail");
         NapiPrintUtils::DeleteReference(env_, ref_);
-        delete param;
     }
 }
 
-void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
+void WatermarkCallback::ExecuteCallback(std::shared_ptr<WatermarkCallbackParam> param)
 {
     if (param == nullptr) {
         PRINT_HILOGE("param is a nullptr");
@@ -72,7 +69,6 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
         CLOSE_FD_IF_VALID(param->fd);
-        delete param;
         return;
     }
 
@@ -81,7 +77,6 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
         PRINT_HILOGE("WatermarkCallback get reference failed");
         CLOSE_FD_IF_VALID(param->fd);
         napi_close_handle_scope(param->env, scope);
-        delete param;
         return;
     }
 
@@ -100,7 +95,6 @@ void WatermarkCallback::ExecuteCallback(WatermarkCallbackParam *param)
     }
 
     napi_close_handle_scope(param->env, scope);
-    delete param;
 }
 
 void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
@@ -108,7 +102,7 @@ void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
     PRINT_HILOGI("WatermarkCallback OnCallback jobId:%{public}s, fd:%{public}u",
         jobId.c_str(), fd);
 
-    WatermarkCallbackParam *param = new WatermarkCallbackParam;
+    auto param = std::make_shared<WatermarkCallbackParam>();
 
     {
         std::lock_guard<std::mutex> lock(*mutex_);
@@ -125,7 +119,6 @@ void WatermarkCallback::OnCallback(const std::string &jobId, uint32_t fd)
     if (ret != napi_ok) {
         PRINT_HILOGE("napi_send_event fail");
         CLOSE_FD_IF_VALID(fd);
-        delete param;
     }
 }
 } // namespace OHOS::Print

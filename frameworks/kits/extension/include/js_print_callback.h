@@ -37,7 +37,7 @@ class JsPrintCallback {
 public:
     JsPrintCallback() = default;
     ~JsPrintCallback() = default;
-    static bool Call(napi_env env, WorkParam *param, std::function<void(WorkParam*)> workCb);
+    static bool Call(napi_env env, std::shared_ptr<WorkParam> param, std::function<void(WorkParam*)> workCb);
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

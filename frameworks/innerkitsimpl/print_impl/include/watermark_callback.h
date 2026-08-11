@@ -39,7 +39,7 @@ public:
     void OnCallback(const std::string &jobId, uint32_t fd) override;
 
 private:
-    static void ExecuteCallback(WatermarkCallbackParam *param);
+    static void ExecuteCallback(std::shared_ptr<WatermarkCallbackParam> param);
     napi_env env_ = nullptr;
     napi_ref ref_ = nullptr;
     std::shared_ptr<std::mutex> mutex_;

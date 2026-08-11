@@ -61,7 +61,7 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
-    bool ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc);
+    bool ExecuteNapiEventWork(std::shared_ptr<CallbackParam> param, std::function<void(CallbackParam*)> workFunc);
     void NapiCallFunction(CallbackParam* cbParam, size_t argcCount, napi_value* callbackValues);
     napi_env env_;
     napi_ref ref_;

@@ -186,7 +186,7 @@ HWTEST_F(ScanCallbackTest, ScanCallbackTest_ExecuteNapiEventWork_001, TestSize.L
 {
     auto callback = std::make_shared<ScanCallback>(nullptr, nullptr);
     EXPECT_NE(callback, nullptr);
-    CallbackParam *param = nullptr;
+    std::shared_ptr<CallbackParam> param = nullptr;
     auto workFunc = [](CallbackParam *p) {};
     bool result = callback->ExecuteNapiEventWork(param, workFunc);
     EXPECT_EQ(result, false);
@@ -196,7 +196,7 @@ HWTEST_F(ScanCallbackTest, ScanCallbackTest_ExecuteNapiEventWork_002, TestSize.L
 {
     auto callback = std::make_shared<ScanCallback>(nullptr, nullptr);
     EXPECT_NE(callback, nullptr);
-    CallbackParam *param = new CallbackParam();
+    auto param = std::make_shared<CallbackParam>();
     param->env = nullptr;
     param->ref = nullptr;
     param->mutexPtr = std::make_shared<std::mutex>();
