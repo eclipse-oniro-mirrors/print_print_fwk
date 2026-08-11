@@ -610,6 +610,11 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
                 PRINT_HILOGE("The realFile is null, errno:%{public}s", strerror(errno));
                 continue;
             }
+            std::string resolvedPath(cachePath);
+            if (resolvedPath.rfind(cacheDir + '/', 0) != 0) {
+                PRINT_HILOGE("resolved path is not in cache dir, skip delete");
+                continue;
+            }
             if (std::remove(cachePath) != 0) {
                 PRINT_HILOGW("error deleting file %{private}s err: %{public}s", cachePath, strerror(errno));
             }
