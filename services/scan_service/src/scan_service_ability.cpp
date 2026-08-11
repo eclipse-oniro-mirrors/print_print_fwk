@@ -676,13 +676,27 @@ int32_t ScanServiceAbility::ActionGetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
-    SaneStatus status = SANE_STATUS_GOOD;
-    ScanOptionValueType valueType = value.GetScanOptionValueType();
+    SaneOptionDescriptor saneDesc;
+    SaneStatus status = SaneManagerClient::GetInstance().SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}d]", status);
+        return ScanServiceUtils::ConvertErro(status);
+    }
+    if (saneDesc.optionType_ < static_cast<int32_t>(SCAN_VALUE_BOOL) ||
+        saneDesc.optionType_ > static_cast<int32_t>(SCAN_VALUE_GROUP)) {
+        SCAN_HILOGE("invalid optionType_ %{public}d", saneDesc.optionType_);
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    if (saneDesc.optionSize_ < 0) {
+        SCAN_HILOGE("invalid optionSize_ %{public}d", saneDesc.optionSize_);
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    ScanOptionValueType valueType = static_cast<ScanOptionValueType>(saneDesc.optionType_);
     SaneControlParam controlParam;
     controlParam.option_ = optionIndex;
     controlParam.action_ = SANE_ACTION_GET_VALUE;
-    controlParam.valueType_ = static_cast<int32_t>(valueType);
-    controlParam.valueSize_ = value.GetValueSize();
+    controlParam.valueType_ = saneDesc.optionType_;
+    controlParam.valueSize_ = saneDesc.optionSize_;
     SaneOutParam outParam;
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
