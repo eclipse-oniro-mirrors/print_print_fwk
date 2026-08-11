@@ -52,6 +52,7 @@
         "hilog",
         "init",
         "i18n",
+        "icu",
         "ipc",
         "jsoncpp",
         "napi",
