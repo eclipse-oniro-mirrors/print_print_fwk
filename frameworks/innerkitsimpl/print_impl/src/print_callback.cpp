@@ -146,11 +146,19 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
         cbParam->fd = INVALID_FD;
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
             NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", WriteResultCallback, writeData);
+        if (callbackValues[NapiPrintUtils::ARGC_FOUR] == nullptr) {
+            PRINT_HILOGE("CreateFunction failed, release writeData");
+            CLOSE_FD_IF_VALID(writeData->fd);
+            delete writeData;
+            napi_close_handle_scope(cbParam->env, scope);
+            return;
+        }
         napi_status callStatus = napi_call_function(cbParam->env, adapterObj, layoutWriteFunc,
             NapiPrintUtils::ARGC_FIVE, callbackValues, &callbackResult);
         if (callStatus != napi_ok) {
             PRINT_HILOGE("napi_call_function failed");
-            CLOSE_FD_IF_VALID(cbParam->fd);
+            CLOSE_FD_IF_VALID(writeData->fd);
+            delete writeData;
         } else {
             PRINT_HILOGI("OnCallback end run PrintAdapterWorkCb success");
         }
