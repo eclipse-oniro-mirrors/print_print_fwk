@@ -195,7 +195,6 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     if (scope == nullptr) {
         PRINT_HILOGE("open handle scope failed");
         context->callback = nullptr;
-        PRINT_SAFE_DELETE(context);
         PRINT_SAFE_DELETE(work);
         return;
     }
