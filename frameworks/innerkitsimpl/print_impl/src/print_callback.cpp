@@ -119,10 +119,7 @@ static napi_value WriteResultCallback(napi_env env, napi_callback_info info)
 static void PrintAdapterWorkCb(CallbackParam *cbParam)
 {
     PRINT_HILOGI("OnCallback start run PrintAdapterWorkCb");
-    if (cbParam == nullptr) {
-        PRINT_HILOGE("cbParam is nullptr");
-        return;
-    }
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(cbParam);
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
