@@ -39,6 +39,10 @@ SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->info_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueNumber_), nullptr);
+    if (obj->valueNumber_ < 0 || obj->valueNumber_ > SCAN_MAX_COUNT) {
+        SCAN_HILOGE("invalid valueNumber_ %{public}d", obj->valueNumber_);
+        return nullptr;
+    }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&obj->valueNumList_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->valueStr_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(obj->valueBool_), nullptr);
