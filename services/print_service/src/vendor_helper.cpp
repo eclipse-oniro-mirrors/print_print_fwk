@@ -586,6 +586,10 @@ bool UpdateQualityCapability(PrinterCapability &printerCap, const Print_PrinterC
         PRINT_HILOGW("supportedQualities is null");
         return false;
     }
+    if (capability->supportedQualitiesCount > MAX_ARRAY_COUNT) {
+        PRINT_HILOGW("supportedQualitiesCount exceeds maximum");
+        return false;
+    }
     std::vector<uint32_t> supportedQualityList;
     if (ConvertArrayToList<Print_Quality, uint32_t>(
         capability->supportedQualities,
