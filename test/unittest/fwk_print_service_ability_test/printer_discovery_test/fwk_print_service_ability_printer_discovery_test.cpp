@@ -601,11 +601,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterHasActiveJo
     addedPrinter.SetUri(originalUri);
     service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
 
-    auto printJob = std::make_shared<PrintJob>();
-    printJob->SetJobId("job_001");
-    printJob->SetPrinterId(globalPrinterId);
-    printJob->SetJobState(PRINT_JOB_RUNNING);
-    service->printJobList_["job_001"] = printJob;
+    service->printerJobMap_[globalPrinterId]["job_001"] = true;
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");

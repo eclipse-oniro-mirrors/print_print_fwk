@@ -4613,19 +4613,11 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
 
 bool PrintServiceAbility::HasPrinterActiveJob(const std::string &printerId)
 {
-    for (const auto &[jobId, printJob] : printJobList_) {
-        if (printJob == nullptr) {
-            continue;
-        }
-        if (printJob->GetPrinterId() != printerId) {
-            continue;
-        }
-        uint32_t state = printJob->GetJobState();
-        if (state == PRINT_JOB_QUEUED || state == PRINT_JOB_RUNNING || state == PRINT_JOB_BLOCKED) {
-            PRINT_HILOGI("[Printer: %{public}s] Has active job, jobId: %{public}s, state: %{public}u",
-                PrintUtils::AnonymizePrinterId(printerId).c_str(), jobId.c_str(), state);
-            return true;
-        }
+    auto iter = printerJobMap_.find(printerId);
+    if (iter != printerJobMap_.end() && !iter->second.empty()) {
+        PRINT_HILOGI("[Printer: %{public}s] Has active job",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return true;
     }
     return false;
 }
