@@ -1570,10 +1570,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088_NeedRename, TestS
     EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     ret = service->RegisterExtCallback(extensionCid2, listener);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
     std::string extensionCid3 = "123:2";
     ret = service->RegisterExtCallback(extensionCid2, listener);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
 }
 
 
