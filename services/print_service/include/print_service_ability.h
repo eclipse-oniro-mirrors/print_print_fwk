@@ -285,6 +285,7 @@ private:
     void ProcessSingleCustomOption(const std::string &key,
         const Json::Value &optionJson, PrinterUserPreferences &userPrefs);
     std::string GetCallerBundleName() override;
+    int32_t ValidateExtensionId(const std::string &extensionId);
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options, const std::string &bundleName);

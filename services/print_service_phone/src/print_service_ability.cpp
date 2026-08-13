@@ -2760,14 +2760,12 @@ int32_t PrintServiceAbility::RegisterExtCallback(
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    std::string callerName = GetCallerBundleName();
-    if (callerName != extensionId) {
-        PRINT_HILOGE("RegisterExtCallback caller mismatch: caller=%{public}s, extension=%{public}s",
-            callerName.c_str(), extensionId.c_str());
-        return E_PRINT_INVALID_EXTENSION;
-    }
-
     PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
+
+    int32_t verifyRet = ValidateExtensionId(extensionId);
+    if (verifyRet != E_PRINT_NONE) {
+        return verifyRet;
+    }
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
@@ -2806,11 +2804,9 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
-    std::string callerName = GetCallerBundleName();
-    if (callerName != extensionId) {
-        PRINT_HILOGE("LoadExtSuccess caller mismatch: caller=%{public}s, extension=%{public}s",
-            callerName.c_str(), extensionId.c_str());
-        return E_PRINT_INVALID_EXTENSION;
+    int32_t verifyRet = ValidateExtensionId(extensionId);
+    if (verifyRet != E_PRINT_NONE) {
+        return verifyRet;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
@@ -5031,6 +5027,16 @@ int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
 std::string PrintServiceAbility::GetCallerBundleName()
 {
     return DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+}
+
+int32_t PrintServiceAbility::ValidateExtensionId(const std::string &extensionId)
+{
+    std::string callerBundleName = GetCallerBundleName();
+    if (callerBundleName.empty() || callerBundleName != extensionId) {
+        PRINT_HILOGE("extensionId mismatch, caller: %{public}s", callerBundleName.c_str());
+        return E_PRINT_NO_PERMISSION;
+    }
+    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
