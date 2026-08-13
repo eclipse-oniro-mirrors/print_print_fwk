@@ -192,7 +192,6 @@ public:
     int32_t DeleteExtraJobsFromCups();
     std::string getScheme(const std::string &printerUri);
     bool IsIpAddress(const char* host);
-    bool IsSsrfSafeIp(const std::string &ip);
     int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,

@@ -212,11 +212,8 @@ bool EventListenerMgr::UnRegisterPrinterListener(const CallbackEventType &eventT
 bool EventListenerMgr::TryDeletePrintJobListenerFromCallback(const std::shared_ptr<BaseEventCallback> &callback,
     CallbackEventType eventType, const std::string &jobId)
 {
-    if (callback == nullptr || callback->GetCategory() != CallbackCategory::JOB) {
-        return false;
-    }
     auto jobCallback = std::static_pointer_cast<PrintJobEventCallback>(callback);
-    if (jobCallback->DeleteListener(jobId)) {
+    if (jobCallback && jobCallback->DeleteListener(jobId)) {
         counter_--;
         PRINT_HILOGI("UnRegisterPrintJobListener type=%{public}d, counter=%{public}d", eventType, counter_);
         return true;

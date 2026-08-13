@@ -1162,6 +1162,11 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     ManualStart();
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
+    std::string callerBundleName = GetCallerBundleName();
+    if (callerBundleName != SPOOLER_BUNDLE_NAME) {
+        return AddPrinterByPrinterDriver(printerName, uri, ppdName, options, callerBundleName);
+    }
+
     char scheme[HTTP_MAX_URI] = {0};
     char username[HTTP_MAX_URI] = {0};
     char host[HTTP_MAX_URI] = {0};
@@ -1172,14 +1177,9 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
 
     std::string printerIp = host;
     if (ret != HTTP_URI_STATUS_OK ||
-        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsSsrfSafeIp(printerIp)) {
+        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid parameter from uri, ret = %{public}u", ret);
         return E_PRINT_INVALID_PRINTER;
-    }
-
-    std::string callerBundleName = GetCallerBundleName();
-    if (callerBundleName != SPOOLER_BUNDLE_NAME) {
-        return AddPrinterByPrinterDriver(printerName, uri, ppdName, options, callerBundleName);
     }
 
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
@@ -4651,7 +4651,7 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         return E_PRINT_INVALID_PRINTER;
     }
     std::string ip = connectParamJson["ip"].asString();
-    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsSsrfSafeIp(ip)) {
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(ip.c_str())) {
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -5438,7 +5438,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_SERVER_FAILURE);
-    if (!printCupsClient->IsSsrfSafeIp(printerIp)) {
+    if (!printCupsClient->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }

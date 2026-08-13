@@ -28,9 +28,7 @@ public:
     PrinterEventCallback(int32_t userId, pid_t pid, CallbackEventType eventType, const sptr<IPrintCallback> &listener,
         sptr<IRemoteObject::DeathRecipient> deathRecipient)
         : BaseEventCallback(userId, pid, eventType, deathRecipient), listener_(listener)
-    {
-        category_ = CallbackCategory::PRINTER;
-    }
+    {}
 
     virtual ExecuteResult Execute(const CallbackInfo &info) override;
     virtual bool IsRemoteDied(const sptr<IRemoteObject> &listener) override;

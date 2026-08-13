@@ -85,13 +85,6 @@ enum class ExecuteResult {
     SKIP
 };
 
-enum class CallbackCategory {
-    UNKNOWN,
-    PRINTER,
-    EXTENSION,
-    JOB
-};
-
 class BaseEventCallback {
 public:
     BaseEventCallback(
@@ -107,11 +100,6 @@ public:
     virtual pid_t GetPid()
     {
         return pid_;
-    }
-
-    CallbackCategory GetCategory() const
-    {
-        return category_;
     }
 
 protected:
@@ -136,7 +124,6 @@ protected:
     int32_t userId_ = -1;
     pid_t pid_ = -1;
     CallbackEventType eventType_ = CallbackEventType::UNKNOWN_TYPE;
-    CallbackCategory category_ = CallbackCategory::UNKNOWN;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
 };
 }  // namespace Print

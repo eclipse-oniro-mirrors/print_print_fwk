@@ -28,9 +28,7 @@ public:
     ExtensionEventCallback(int32_t userId, pid_t pid, CallbackEventType eventType,
         const sptr<IPrintExtensionCallback> &listener, sptr<IRemoteObject::DeathRecipient> deathRecipient)
         : BaseEventCallback(userId, pid, eventType, deathRecipient), listener_(listener)
-    {
-        category_ = CallbackCategory::EXTENSION;
-    }
+    {}
 
     virtual ExecuteResult Execute(const CallbackInfo &info) override;
     virtual bool IsRemoteDied(const sptr<IRemoteObject> &listener) override;
