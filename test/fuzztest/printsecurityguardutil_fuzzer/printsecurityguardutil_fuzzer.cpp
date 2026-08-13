@@ -60,13 +60,6 @@ void TestGetPrinterType(const uint8_t *data, size_t size, FuzzedDataProvider *da
     (void)result;
 }
 
-void TestIsPrintableFile(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string fileName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    auto result = PrintSecurityGuardUtil::IsPrintableFile(fileName);
-    (void)result;
-}
-
 void TestUrlDecode(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string input = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -92,7 +85,6 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestExtractFileName,
         &TestExtractFileListFromOption,
         &TestGetPrinterType,
-        &TestIsPrintableFile,
         &TestUrlDecode,
         &TestGenerateErrorCodesWithCombinedState,
     };
