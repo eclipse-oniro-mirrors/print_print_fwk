@@ -691,11 +691,17 @@ int32_t ScanServiceAbility::ActionGetValue(
             static_cast<int32_t>(valueType), saneDesc.optionType_);
         return E_SCAN_INVALID_PARAMETER;
     }
+    int32_t valueSize = value.GetValueSize();
+    if (valueSize != saneDesc.optionSize_) {
+        SCAN_HILOGE("valueSize mismatch: client=%{public}d, descriptor=%{public}d",
+            valueSize, saneDesc.optionSize_);
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SaneControlParam controlParam;
     controlParam.option_ = optionIndex;
     controlParam.action_ = SANE_ACTION_GET_VALUE;
-    controlParam.valueType_ = saneDesc.optionType_;
-    controlParam.valueSize_ = saneDesc.optionSize_;
+    controlParam.valueType_ = static_cast<int32_t>(valueType);
+    controlParam.valueSize_ = valueSize;
     SaneOutParam outParam;
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
