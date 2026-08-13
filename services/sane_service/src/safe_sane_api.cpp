@@ -133,13 +133,16 @@ SANE_Status SafeSANEAPI::SaneStart(SANE_Handle handle)
 
 void SafeSANEAPI::SaneCancel(SANE_Handle handle)
 {
-    std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
-    if (!mutexPtr) {
+    if (handle == nullptr) {
+        SCAN_HILOGE("SaneCancel: handle is nullptr");
+        return;
+    }
+    std::lock_guard<std::mutex> lock(handleMutexesLock_);
+    auto it = handleMutexes_.find(handle);
+    if (it == handleMutexes_.end() || !it->second) {
         SCAN_HILOGE("SaneCancel: handle not registered or already closed");
         return;
     }
-    std::lock_guard<std::mutex> lock(*mutexPtr);
-    SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(GetHandleMutex(handle), __func__);
     sane_cancel(handle);
 }
 

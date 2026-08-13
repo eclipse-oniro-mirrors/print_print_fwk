@@ -594,6 +594,9 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         return ownerRet;
     }
     scanPictureData_.CleanAllCache();
+    if (scannerState_.load() == SCANNER_SCANING) {
+        SaneManagerClient::GetInstance().SaneCancel(scannerId);
+    }
     SaneStatus status = SaneManagerClient::GetInstance().SaneClose(scannerId);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
