@@ -402,6 +402,49 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0063_NeedRename, TestS
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
 }
 
+/**
+ * @tc.name: DestroyExtension_LoadedState_TransitionsToUnload
+ * @tc.desc: DestroyExtension transitions a LOADED extension to UNLOAD (verifies auto& iteration fix).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceAbilityTest, DestroyExtension_LoadedState_TransitionsToUnload, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = "com.ohos.spooler:0";
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_.clear();
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADED;
+    EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
+    EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
+}
+
+/**
+ * @tc.name: DestroyExtension_RepeatCall_NoDuplicateCallback
+ * @tc.desc: Repeated DestroyExtension skips already-UNLOAD extensions (no duplicate destroy callback).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceAbilityTest, DestroyExtension_RepeatCall_NoDuplicateCallback, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = "com.ohos.spooler:0";
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_.clear();
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADED;
+    EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
+    EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
+    // TODO: assert EXTCB_DESTROY_EXTENSION callback count once EventListenerMgr is mockable.
+    EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
+    EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();

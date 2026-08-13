@@ -1670,6 +1670,85 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddPriner, TestSize.Level1
     proxy->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
 }
 
+/**
+ * @tc.name: QueryPrinterInfoByPrinterId_GetResultFailed_ReturnsFailureNoPollution
+ * @tc.desc: QueryPrinterInfoByPrinterId returns failure ret and leaves info untouched when GetResult fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, QueryPrinterInfoByPrinterId_GetResultFailed_ReturnsFailureNoPollution, TestSize.Level1)
+{
+    std::string testPrinterId = "printerId-123";
+    PrinterInfo info;
+    info.SetOption("marker");
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).WillOnce(Return(ERR_TRANSACTION_FAILED));
+    int32_t ret = proxy->QueryPrinterInfoByPrinterId(testPrinterId, info);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(info.GetOption(), "marker");
+}
+
+/**
+ * @tc.name: QueryAddedPrinter_GetResultFailed_ReturnsFailureNoPollution
+ * @tc.desc: QueryAddedPrinter returns failure ret and does not clear printerNameList when GetResult fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, QueryAddedPrinter_GetResultFailed_ReturnsFailureNoPollution, TestSize.Level1)
+{
+    std::vector<std::string> printerNameList = {"kept-1", "kept-2"};
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            reply.WriteInt32(E_PRINT_GENERIC_FAILURE);
+            reply.WriteInt32(2);
+            reply.WriteString("leak-1");
+            reply.WriteString("leak-2");
+            return ERR_NONE;
+        });
+    int32_t ret = proxy->QueryAddedPrinter(printerNameList);
+    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+    ASSERT_EQ(printerNameList.size(), static_cast<size_t>(2));
+    EXPECT_EQ(printerNameList[0], "kept-1");
+    EXPECT_EQ(printerNameList[1], "kept-2");
+}
+
+/**
+ * @tc.name: QueryRawAddedPrinter_GetResultFailed_ReturnsFailureNoPollution
+ * @tc.desc: QueryRawAddedPrinter returns failure ret and does not clear printerNameList when GetResult fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, QueryRawAddedPrinter_GetResultFailed_ReturnsFailureNoPollution, TestSize.Level1)
+{
+    std::vector<std::string> printerNameList = {"kept-1", "kept-2"};
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            reply.WriteInt32(E_PRINT_GENERIC_FAILURE);
+            reply.WriteInt32(2);
+            reply.WriteString("leak-1");
+            reply.WriteString("leak-2");
+            return ERR_NONE;
+        });
+    int32_t ret = proxy->QueryRawAddedPrinter(printerNameList);
+    EXPECT_EQ(ret, E_PRINT_GENERIC_FAILURE);
+    ASSERT_EQ(printerNameList.size(), static_cast<size_t>(2));
+    EXPECT_EQ(printerNameList[0], "kept-1");
+    EXPECT_EQ(printerNameList[1], "kept-2");
+}
+
 #ifdef KIA_INTERCEPTOR_ENABLE
 HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_NullCallback, TestSize.Level1)
 {

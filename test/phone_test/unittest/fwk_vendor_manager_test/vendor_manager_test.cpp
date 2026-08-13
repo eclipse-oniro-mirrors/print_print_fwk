@@ -69,7 +69,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level0)
     EXPECT_TRUE(VendorManager::ExtractPrinterId("").empty());
     EXPECT_TRUE(VendorManager::ExtractGlobalVendorName("").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("").empty());
-    EXPECT_STREQ(VendorManager::ExtractPrinterId("fwk.test:").c_str(), "fwk.test:");
+    EXPECT_TRUE(VendorManager::ExtractPrinterId("fwk.test:").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("test").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("fwk.").empty());
 }

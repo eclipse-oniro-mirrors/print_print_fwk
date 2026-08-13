@@ -18,6 +18,7 @@
 #include <fstream>
 #include <filesystem>
 #include <map>
+#include <sstream>
 #include "printer_info.h"
 #define private public
 #include "print_system_data.h"
@@ -2506,6 +2507,87 @@ HWTEST_F(PrintSystemDataLargeUIntTest, ColorModeAndQuality_LargeUIntValues, Test
     ASSERT_EQ(qualities.size(), 2);
     EXPECT_EQ(qualities[0], 2147483648u);
     EXPECT_EQ(qualities[1], 4294967295u);
+}
+
+static void EnsurePrintServiceDir()
+{
+    std::error_code ec;
+    std::filesystem::create_directories(PRINTER_SERVICE_FILE_PATH, ec);
+}
+
+class ScopedVersionJsonFile {
+public:
+    ScopedVersionJsonFile(const std::string &path, const std::string &version)
+        : path_(path), existed_(false)
+    {
+        EnsurePrintServiceDir();
+        std::error_code ec;
+        existed_ = std::filesystem::exists(path_, ec);
+        if (existed_) {
+            std::ifstream ifs(path_, std::ios::binary);
+            std::stringstream ss;
+            ss << ifs.rdbuf();
+            backup_ = ss.str();
+        }
+        std::ofstream ofs(path_, std::ios::binary | std::ios::trunc);
+        ofs << "{\"version\":\"" << version << "\"}";
+    }
+    ~ScopedVersionJsonFile()
+    {
+        if (existed_) {
+            std::ofstream ofs(path_, std::ios::binary | std::ios::trunc);
+            ofs << backup_;
+        } else {
+            std::error_code ec;
+            std::filesystem::remove(path_, ec);
+        }
+    }
+private:
+    std::string path_;
+    bool existed_;
+    std::string backup_;
+};
+
+HWTEST_F(PrintSystemDataTest, GetJsonObjectFromFile_PrinterListPath_MatchingVersion_ReturnsTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    std::string printerListPath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
+    ScopedVersionJsonFile file(printerListPath, PRINTER_LIST_VERSION_V1);
+    Json::Value jsonObject;
+    EXPECT_EQ(systemData->GetJsonObjectFromFile(jsonObject, printerListPath), true);
+    EXPECT_EQ(jsonObject["version"].asString(), PRINTER_LIST_VERSION_V1);
+}
+
+HWTEST_F(PrintSystemDataTest, GetJsonObjectFromFile_PrinterListPath_MismatchedVersion_ReturnsFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    std::string printerListPath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
+    ScopedVersionJsonFile file(printerListPath, "v2");
+    Json::Value jsonObject;
+    EXPECT_EQ(systemData->GetJsonObjectFromFile(jsonObject, printerListPath), false);
+}
+
+HWTEST_F(PrintSystemDataTest, GetJsonObjectFromFile_UserDataPath_MatchingVersion_ReturnsTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    std::string userDataPath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
+    ScopedVersionJsonFile file(userDataPath, PRINT_USER_DATA_VERSION);
+    Json::Value jsonObject;
+    EXPECT_EQ(systemData->GetJsonObjectFromFile(jsonObject, userDataPath), true);
+    EXPECT_EQ(jsonObject["version"].asString(), PRINT_USER_DATA_VERSION);
+}
+
+HWTEST_F(PrintSystemDataTest, GetJsonObjectFromFile_UserDataPath_PrinterListVersion_ReturnsFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    std::string userDataPath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
+    ScopedVersionJsonFile file(userDataPath, PRINTER_LIST_VERSION_V3);
+    Json::Value jsonObject;
+    EXPECT_EQ(systemData->GetJsonObjectFromFile(jsonObject, userDataPath), false);
 }
 
 }  // namespace Print

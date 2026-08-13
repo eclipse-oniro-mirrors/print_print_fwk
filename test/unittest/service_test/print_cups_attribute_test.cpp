@@ -17,6 +17,7 @@
 #include "print_cups_attribute.h"
 #include "print_service_converter.h"
 #include "print_json_util.h"
+#include "ohprint.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -73,6 +74,7 @@ void TestAttrCount(const std::string &jsonString, int count)
 
 namespace OHOS::Print {
 bool ConvertDuplexModeCode(const char *src, DuplexModeCode &dst);
+void ParsePrinterOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinterInfo);
 using PreAttrTestFunc = std::function<void(ipp_t *)>;
 using PostResponseTestFunc = std::function<void(ipp_t *)>;
 using PostAttrTestFunc = std::function<void(PrinterCapability &)>;
@@ -719,6 +721,16 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0032_DuplexMode_NullSrc,
 {
     DuplexModeCode dst;
     EXPECT_EQ(ConvertDuplexModeCode(nullptr, dst), false);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParsePrinterOpt_ResolutionDefault_ValidDpi, TestSize.Level1)
+{
+    Json::Value cupsOpt;
+    cupsOpt["printer-resolution-default"] = "{\"horizontalDpi\":600,\"verticalDpi\":600}";
+    Print_PrinterInfo nativePrinterInfo = {0};
+    ParsePrinterOpt(cupsOpt, nativePrinterInfo);
+    EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.horizontalDpi, 600u);
+    EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.verticalDpi, 600u);
 }
 
 }  // namespace OHOS::Print

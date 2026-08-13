@@ -21,6 +21,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "vendor_ipp_everywhere.h"
+#include "vendor_wlan_group.h"
 #include "mock/mock_print_service_ability.h"
 #include "mock/mock_vendor_ppd_driver.h"
 
@@ -34,6 +35,17 @@ const std::string PRINTER_TEST_IP = "192.168.2.222";
 
 namespace OHOS {
 namespace Print {
+class FakeRoutingWlanGroup : public VendorWlanGroup {
+public:
+    explicit FakeRoutingWlanGroup(VendorManager *vm) : VendorWlanGroup(vm) {}
+    ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override
+    {
+        routedArg = globalPrinterIdOrIp;
+        return IP_AUTO;
+    }
+    std::string routedArg;
+};
+
 class VendorManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -69,7 +81,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level0)
     EXPECT_TRUE(VendorManager::ExtractPrinterId("").empty());
     EXPECT_TRUE(VendorManager::ExtractGlobalVendorName("").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("").empty());
-    EXPECT_STREQ(VendorManager::ExtractPrinterId("fwk.test:").c_str(), "fwk.test:");
+    EXPECT_TRUE(VendorManager::ExtractPrinterId("fwk.test:").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("test").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("fwk.").empty());
 }
@@ -466,6 +478,25 @@ HWTEST_F(VendorManagerTest, SetConnectingPrinter_ClearsQueue, TestSize.Level0)
     EXPECT_EQ(vendorManager.connectingQueue, "test_queue");
     vendorManager.SetConnectingPrinter(ConnectMethod::IP_AUTO, PRINTER_TEST_IP);
     EXPECT_TRUE(vendorManager.GetConnectingQueue().empty());
+}
+
+HWTEST_F(VendorManagerTest, GetConnectingMethod_EmptyBsuniPrefix_ReturnsAuto, TestSize.Level0)
+{
+    VendorManager vendorManager;
+    auto fakeWlan = std::make_shared<FakeRoutingWlanGroup>(&vendorManager);
+    vendorManager.wlanGroupDriver = fakeWlan;
+    EXPECT_EQ(vendorManager.GetConnectingMethod(VENDOR_BSUNI_DRIVER_PREFIX), ID_AUTO);
+    EXPECT_TRUE(fakeWlan->routedArg.empty());
+}
+
+HWTEST_F(VendorManagerTest, GetConnectingMethod_NormalBsuniPrefix_RoutesWlan, TestSize.Level0)
+{
+    VendorManager vendorManager;
+    auto fakeWlan = std::make_shared<FakeRoutingWlanGroup>(&vendorManager);
+    vendorManager.wlanGroupDriver = fakeWlan;
+    std::string printId = VENDOR_BSUNI_DRIVER_PREFIX + "xxx";
+    EXPECT_EQ(vendorManager.GetConnectingMethod(printId), IP_AUTO);
+    EXPECT_EQ(fakeWlan->routedArg, printId);
 }
 
 }  // namespace Print
