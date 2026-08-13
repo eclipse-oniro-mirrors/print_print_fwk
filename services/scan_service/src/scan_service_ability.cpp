@@ -676,28 +676,13 @@ int32_t ScanServiceAbility::ActionGetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
-    SaneOptionDescriptor saneDesc;
-    SaneStatus status = SaneManagerClient::GetInstance().SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}d]", status);
-        return ScanServiceUtils::ConvertErro(status);
-    }
-    CHECK_VALUE_IN_RANGE(saneDesc.optionType_, static_cast<int32_t>(SCAN_VALUE_BOOL),
-        static_cast<int32_t>(SCAN_VALUE_GROUP), E_SCAN_INVALID_PARAMETER);
-    CHECK_VALUE_IN_RANGE(saneDesc.optionSize_, 0, MAX_IMAGE_DIMENSION, E_SCAN_INVALID_PARAMETER);
+    SaneStatus status = SANE_STATUS_GOOD;
     ScanOptionValueType valueType = value.GetScanOptionValueType();
-    int32_t valueSize = value.GetValueSize();
-    if (valueType != static_cast<ScanOptionValueType>(saneDesc.optionType_) || valueSize != saneDesc.optionSize_) {
-        SCAN_HILOGE("mismatch: client type=%{public}d size=%{public}d, "
-            "descriptor type=%{public}d size=%{public}d",
-            static_cast<int32_t>(valueType), valueSize, saneDesc.optionType_, saneDesc.optionSize_);
-        return E_SCAN_INVALID_PARAMETER;
-    }
     SaneControlParam controlParam;
     controlParam.option_ = optionIndex;
     controlParam.action_ = SANE_ACTION_GET_VALUE;
     controlParam.valueType_ = static_cast<int32_t>(valueType);
-    controlParam.valueSize_ = valueSize;
+    controlParam.valueSize_ = value.GetValueSize();
     SaneOutParam outParam;
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
