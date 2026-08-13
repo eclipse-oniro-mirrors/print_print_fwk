@@ -686,15 +686,11 @@ int32_t ScanServiceAbility::ActionGetValue(
         static_cast<int32_t>(SCAN_VALUE_GROUP), E_SCAN_INVALID_PARAMETER);
     CHECK_VALUE_IN_RANGE(saneDesc.optionSize_, 0, MAX_IMAGE_DIMENSION, E_SCAN_INVALID_PARAMETER);
     ScanOptionValueType valueType = value.GetScanOptionValueType();
-    if (valueType != static_cast<ScanOptionValueType>(saneDesc.optionType_)) {
-        SCAN_HILOGE("valueType mismatch: client=%{public}d, descriptor=%{public}d",
-            static_cast<int32_t>(valueType), saneDesc.optionType_);
-        return E_SCAN_INVALID_PARAMETER;
-    }
     int32_t valueSize = value.GetValueSize();
-    if (valueSize != saneDesc.optionSize_) {
-        SCAN_HILOGE("valueSize mismatch: client=%{public}d, descriptor=%{public}d",
-            valueSize, saneDesc.optionSize_);
+    if (valueType != static_cast<ScanOptionValueType>(saneDesc.optionType_) || valueSize != saneDesc.optionSize_) {
+        SCAN_HILOGE("mismatch: client type=%{public}d size=%{public}d, "
+            "descriptor type=%{public}d size=%{public}d",
+            static_cast<int32_t>(valueType), valueSize, saneDesc.optionType_, saneDesc.optionSize_);
         return E_SCAN_INVALID_PARAMETER;
     }
     SaneControlParam controlParam;
