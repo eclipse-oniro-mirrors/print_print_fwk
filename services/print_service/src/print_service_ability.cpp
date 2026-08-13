@@ -5728,11 +5728,7 @@ void PrintServiceAbility::UpdateIsEnterprise()
         return;
     }
     int32_t localId = -1;
-    auto fgRet = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
-    if (fgRet != 0) {
-        PRINT_HILOGE("GetForegroundOsAccountLocalId failed, ret = %{public}d", fgRet);
-        return;
-    }
+    AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     lastUserId_ = localId;
     AccountSA::DomainAccountInfo domainInfo;
     auto ret = AccountSA::OsAccountManager::GetOsAccountDomainInfo(localId, domainInfo);
