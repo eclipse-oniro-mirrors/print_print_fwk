@@ -440,7 +440,6 @@ HWTEST_F(PrintServiceAbilityTest, DestroyExtension_RepeatCall_NoDuplicateCallbac
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADED;
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
     EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
-    // TODO: assert EXTCB_DESTROY_EXTENSION callback count once EventListenerMgr is mockable.
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
     EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
 }

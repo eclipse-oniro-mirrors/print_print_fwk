@@ -31,6 +31,50 @@ namespace Scan {
 
 namespace {
 const int32_t VALUE_BUFFER_LEN = 1024;
+
+SANE_Status GetNumericSaneValue(SANE_Handle handle, SANE_Int option,
+    const SANE_Option_Descriptor *saneDesc, int32_t &outValue)
+{
+    int32_t actualSize = saneDesc->size;
+    if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
+        SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
+        return ::SANE_STATUS_INVAL;
+    }
+    std::vector<char> value(actualSize, 0);
+    SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option,
+        ::SANE_ACTION_GET_VALUE, value.data(), nullptr);
+    if (saneStatus != ::SANE_STATUS_GOOD) {
+        return saneStatus;
+    }
+    size_t copyLen = static_cast<size_t>(actualSize) < sizeof(outValue)
+        ? static_cast<size_t>(actualSize) : sizeof(outValue);
+    if (memcpy_s(&outValue, sizeof(outValue), value.data(), copyLen) != EOK) {
+        SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
+        return ::SANE_STATUS_INVAL;
+    }
+    return ::SANE_STATUS_GOOD;
+}
+
+SANE_Status SetNumericSaneValue(SANE_Handle handle, SANE_Int option,
+    const SANE_Option_Descriptor *saneDesc, SANE_Action action,
+    int32_t inValue, SANE_Int &info)
+{
+    int32_t actualSize = saneDesc->size;
+    if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
+        SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
+        return ::SANE_STATUS_INVAL;
+    }
+    std::vector<char> value(actualSize, 0);
+    size_t copyLen = static_cast<size_t>(actualSize) < sizeof(inValue)
+        ? static_cast<size_t>(actualSize) : sizeof(inValue);
+    if (memcpy_s(value.data(), actualSize, &inValue, copyLen) != EOK) {
+        SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
+        return ::SANE_STATUS_INVAL;
+    }
+    SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option,
+        action, value.data(), &info);
+    return saneStatus;
+}
 constexpr int32_t SANE_SERVICE_ID = 3709;
 constexpr int32_t MAX_WORD_LIST_SIZE = 1000;
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
@@ -403,21 +447,8 @@ SaneStatus SaneServerManager::GetControlOption(
     }
     SCAN_HILOGI("valueSize_ = [%{public}d], valueType = [%{public}u]", controlParam.valueSize_, valueType);
     if (valueType == SCAN_VALUE_NUM) {
-        int32_t actualSize = saneDesc->size;
-        if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
-            SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
-            return SANE_STATUS_INVAL;
-        }
-        std::vector<char> value(actualSize, 0);
-        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
-            value.data(), nullptr);
         int32_t numValue = 0;
-        size_t copyLen = static_cast<size_t>(actualSize) < sizeof(numValue)
-            ? static_cast<size_t>(actualSize) : sizeof(numValue);
-        if (memcpy_s(&numValue, sizeof(numValue), value.data(), copyLen) != EOK) {
-            SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
-            return SANE_STATUS_INVAL;
-        }
+        saneStatus = GetNumericSaneValue(handle, option, saneDesc, numValue);
         outParam.valueNumber_ = numValue;
     } else if (valueType == SCAN_VALUE_STR) {
         int32_t actualSize = saneDesc->size;
@@ -430,21 +461,8 @@ SaneStatus SaneServerManager::GetControlOption(
             value.data(), nullptr);
         outParam.valueStr_ = std::string(value.data());
     } else if (valueType == SCAN_VALUE_BOOL) {
-        int32_t actualSize = saneDesc->size;
-        if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
-            SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
-            return SANE_STATUS_INVAL;
-        }
-        std::vector<char> value(actualSize, 0);
-        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
-            value.data(), nullptr);
         int32_t boolValue = 0;
-        size_t copyLen = static_cast<size_t>(actualSize) < sizeof(boolValue)
-            ? static_cast<size_t>(actualSize) : sizeof(boolValue);
-        if (memcpy_s(&boolValue, sizeof(boolValue), value.data(), copyLen) != EOK) {
-            SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
-            return SANE_STATUS_INVAL;
-        }
+        saneStatus = GetNumericSaneValue(handle, option, saneDesc, boolValue);
         outParam.valueBool_ = boolValue > 0 ? true : false;
     }
     if (saneStatus != ::SANE_STATUS_GOOD) {
@@ -485,21 +503,8 @@ SaneStatus SaneServerManager::SetControlOption(
         saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, value.data(), &info);
         SCAN_HILOGI("SetControlOption, value = [%{public}s]", value.c_str());
     } else {
-        int32_t actualSize = saneDesc->size;
-        if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
-            SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
-            return SANE_STATUS_INVAL;
-        }
-        std::vector<char> value(actualSize, 0);
-        int32_t numValue = controlParam.valueNumber_;
-        size_t copyLen = static_cast<size_t>(actualSize) < sizeof(numValue)
-            ? static_cast<size_t>(actualSize) : sizeof(numValue);
-        if (memcpy_s(value.data(), actualSize, &numValue, copyLen) != EOK) {
-            SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
-            return SANE_STATUS_INVAL;
-        }
-        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, value.data(), &info);
-        SCAN_HILOGI("SetControlOption, value = [%{public}d]", numValue);
+        saneStatus = SetNumericSaneValue(handle, option, saneDesc, action, controlParam.valueNumber_, info);
+        SCAN_HILOGI("SetControlOption, value = [%{public}d]", controlParam.valueNumber_);
     }
     if (saneStatus != ::SANE_STATUS_GOOD) {
         SCAN_HILOGE("Set sane_control_option error, ret = [%{public}u]", saneStatus);
