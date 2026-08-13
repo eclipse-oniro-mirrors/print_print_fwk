@@ -29,6 +29,13 @@ namespace OHOS::Print {
 #define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"
 #define PRINT_GET_FILE_CALLBACK_ADAPTER "getPrintFileCallback_adapter"
 
+#define CHECK_VALUE_IN_RANGE(val, minVal, maxVal, retVal) \
+    do { \
+        if ((val) < (minVal) || (val) > (maxVal)) { \
+            return retVal; \
+        } \
+    } while (0)
+
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \
     do {                                                    \
         if (!(assertion)) {                                 \

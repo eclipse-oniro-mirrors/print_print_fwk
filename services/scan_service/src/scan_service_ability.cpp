@@ -682,15 +682,9 @@ int32_t ScanServiceAbility::ActionGetValue(
         SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
-    if (saneDesc.optionType_ < static_cast<int32_t>(SCAN_VALUE_BOOL) ||
-        saneDesc.optionType_ > static_cast<int32_t>(SCAN_VALUE_GROUP)) {
-        SCAN_HILOGE("invalid optionType_ %{public}d", saneDesc.optionType_);
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    if (saneDesc.optionSize_ < 0) {
-        SCAN_HILOGE("invalid optionSize_ %{public}d", saneDesc.optionSize_);
-        return E_SCAN_INVALID_PARAMETER;
-    }
+    CHECK_VALUE_IN_RANGE(saneDesc.optionType_, static_cast<int32_t>(SCAN_VALUE_BOOL),
+        static_cast<int32_t>(SCAN_VALUE_GROUP), E_SCAN_INVALID_PARAMETER);
+    CHECK_VALUE_IN_RANGE(saneDesc.optionSize_, 0, MAX_IMAGE_DIMENSION, E_SCAN_INVALID_PARAMETER);
     ScanOptionValueType valueType = static_cast<ScanOptionValueType>(saneDesc.optionType_);
     SaneControlParam controlParam;
     controlParam.option_ = optionIndex;
