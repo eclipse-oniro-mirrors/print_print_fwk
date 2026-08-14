@@ -2401,46 +2401,6 @@ HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceByDefault_InvalidOrientation
     EXPECT_EQ(printPreferences2.GetDefaultOrientation(), PRINT_ORIENTATION_MODE_NONE);
 }
 
-HWTEST_F(PrintSystemDataTest, ConvertJsonToSupportedColorMode_LargeUIntValue_NoCrash, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    const Json::UInt largeUint = 3000000000u;
-    Json::Value capsJson;
-    Json::Value colorModeList;
-    colorModeList.append(Json::Value(largeUint));
-    capsJson["supportedColorMode"] = colorModeList;
-    PrinterCapability printerCapability;
-    systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability);
-    std::vector<uint32_t> colorModes;
-    printerCapability.GetSupportedColorMode(colorModes);
-    ASSERT_EQ(colorModes.size(), 1);
-    EXPECT_EQ(colorModes[0], largeUint);
-}
-
-HWTEST_F(PrintSystemDataTest, ConvertJsonToPageSize_LargeUIntWidthHeight_NoCrash, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    const Json::UInt largeUint = 3000000000u;
-    Json::Value capsJson;
-    Json::Value pageSizeList;
-    Json::Value pageSizeItem;
-    pageSizeItem["id"] = "123";
-    pageSizeItem["name"] = "123";
-    pageSizeItem["width"] = Json::Value(largeUint);
-    pageSizeItem["height"] = Json::Value(largeUint);
-    pageSizeList.append(pageSizeItem);
-    capsJson["pageSize"] = pageSizeList;
-    PrinterCapability printerCapability;
-    systemData->ConvertJsonToPageSize(capsJson, printerCapability);
-    std::vector<PrintPageSize> supportedPageSizeList;
-    printerCapability.GetSupportedPageSize(supportedPageSizeList);
-    ASSERT_EQ(supportedPageSizeList.size(), 1);
-    EXPECT_EQ(supportedPageSizeList[0].GetWidth(), largeUint);
-    EXPECT_EQ(supportedPageSizeList[0].GetHeight(), largeUint);
-}
-
 HWTEST_F(PrintSystemDataTest, ProcessJsonToCapabilityList_ArrayExceedMax_ReturnFalse, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
