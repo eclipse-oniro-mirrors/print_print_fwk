@@ -42,6 +42,12 @@ ScanContext &ScanContext::GetInstance()
 
 void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
 {
+    Scan_ScannerDiscoveryCallback callback = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(discoverCallback_, __func__);
+        callback = discoverCallback_;
+    }
     int32_t deviceCount = static_cast<int32_t>(infos.size());
     constexpr int32_t maxDeviceCount = 1000;
     if (deviceCount > maxDeviceCount) {
@@ -61,12 +67,6 @@ void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
             device->discoverMode = infos[i].GetDiscoverMode().c_str();
             devices[i] = device;
         }
-    }
-    Scan_ScannerDiscoveryCallback callback = nullptr;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(discoverCallback_, __func__);
-        callback = discoverCallback_;
     }
     callback(devices, deviceCount);
     for (int32_t i = 0; i < deviceCount; i++) {
