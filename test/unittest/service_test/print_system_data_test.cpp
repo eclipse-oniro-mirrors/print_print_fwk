@@ -2405,10 +2405,10 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToSupportedColorMode_LargeUIntValue_NoC
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
-    const uint32_t largeUint = 3000000000;
+    const Json::UInt largeUint = 3000000000u;
     Json::Value capsJson;
     Json::Value colorModeList;
-    colorModeList.append(largeUint);
+    colorModeList.append(Json::Value(largeUint));
     capsJson["supportedColorMode"] = colorModeList;
     PrinterCapability printerCapability;
     systemData->ConvertJsonToSupportedColorMode(capsJson, printerCapability);
@@ -2422,14 +2422,14 @@ HWTEST_F(PrintSystemDataTest, ConvertJsonToPageSize_LargeUIntWidthHeight_NoCrash
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
-    const uint32_t largeUint = 3000000000;
+    const Json::UInt largeUint = 3000000000u;
     Json::Value capsJson;
     Json::Value pageSizeList;
     Json::Value pageSizeItem;
     pageSizeItem["id"] = "123";
     pageSizeItem["name"] = "123";
-    pageSizeItem["width"] = largeUint;
-    pageSizeItem["height"] = largeUint;
+    pageSizeItem["width"] = Json::Value(largeUint);
+    pageSizeItem["height"] = Json::Value(largeUint);
     pageSizeList.append(pageSizeItem);
     capsJson["pageSize"] = pageSizeList;
     PrinterCapability printerCapability;
