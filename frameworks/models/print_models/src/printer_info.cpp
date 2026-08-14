@@ -750,7 +750,7 @@ void PrinterInfo::SetOptionField(const std::string &key, const std::string &valu
     if (HasOption()) {
         std::string option = GetOption();
         if (!PrintJsonUtil::Parse(option, optionJson)) {
-            PRINT_HILOGI("Parse option fail");
+            PRINT_HILOGE("Parse option fail");
             return;
         }
     }
