@@ -43,7 +43,6 @@ public:
     static int32_t GetPrinterType(const std::string& des);
     static std::string ExtractFileName(const std::string& filePath);
     static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
-    static bool IsPrintableFile(const std::string &fileName);
     static std::string UrlDecode(const std::string &str);
 };
 

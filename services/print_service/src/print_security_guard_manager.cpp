@@ -122,21 +122,9 @@ void PrintSecurityGuardManager::CalculateFileAuditInfo(const std::string &jobId)
         PRINT_HILOGW("CalculateFileAuditInfo empty fileList, jobId: %{public}s", jobId.c_str());
         return;
     }
-    std::vector<std::string> fileNames;
-    for (const auto &fileName : fileList) {
-        if (!PrintSecurityGuardUtil::IsPrintableFile(fileName)) {
-            PRINT_HILOGW("Skip non-printable file: %{public}s", PrintUtils::AnonymizeJobName(fileName).c_str());
-            continue;
-        }
-        fileNames.push_back(fileName);
-    }
-    if (!fileNames.empty()) {
-        SetFileAuditInfo(jobId, fileNames);
-        PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
-            jobId.c_str(), fileNames.size());
-    } else {
-        PRINT_HILOGW("CalculateFileAuditInfo empty result, jobId: %{public}s", jobId.c_str());
-    }
+    SetFileAuditInfo(jobId, fileList);
+    PRINT_HILOGI("Calculated file audit info for jobId: %{public}s, count: %{public}zu",
+        jobId.c_str(), fileList.size());
 }
 
 void PrintSecurityGuardManager::SendJobAuditInfo(const std::string &jobId,
