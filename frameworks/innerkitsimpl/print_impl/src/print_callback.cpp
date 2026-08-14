@@ -102,16 +102,18 @@ static napi_value WriteResultCallback(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     napi_get_cb_info(env, info, &argc, args, nullptr, &data);
-    WriteResultCbData *writeData = static_cast<WriteResultCbData*>(data);
-    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(writeData, nullptr);
+    CallbackParam *cbParam = static_cast<CallbackParam*> (data);
+    if (cbParam == nullptr) {
+        PRINT_HILOGE("cbParam is nullptr.");
+        return nullptr;
+    }
 
     std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
     uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
     PrintManagerClient::GetInstance().AdapterGetFileCallBack(
         jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
-    CLOSE_FD_IF_VALID(writeData->fd);
-    delete writeData;
+    CLOSE_FD_IF_VALID(cbParam->fd);
     PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
     return nullptr;
 }
@@ -139,23 +141,13 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
             PrintAttributesHelper::MakeJsObject(cbParam->env, cbParam->newAttrs);
         callbackValues[NapiPrintUtils::ARGC_THREE] =
             NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
-        auto *writeData = new WriteResultCbData{cbParam->fd};
-        cbParam->fd = INVALID_FD;
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
-            NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", WriteResultCallback, writeData);
-        if (callbackValues[NapiPrintUtils::ARGC_FOUR] == nullptr) {
-            PRINT_HILOGE("CreateFunction failed, release writeData");
-            CLOSE_FD_IF_VALID(writeData->fd);
-            delete writeData;
-            napi_close_handle_scope(cbParam->env, scope);
-            return;
-        }
+            NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", WriteResultCallback, cbParam);
         napi_status callStatus = napi_call_function(cbParam->env, adapterObj, layoutWriteFunc,
             NapiPrintUtils::ARGC_FIVE, callbackValues, &callbackResult);
         if (callStatus != napi_ok) {
             PRINT_HILOGE("napi_call_function failed");
-            CLOSE_FD_IF_VALID(writeData->fd);
-            delete writeData;
+            CLOSE_FD_IF_VALID(cbParam->fd);
         } else {
             PRINT_HILOGI("OnCallback end run PrintAdapterWorkCb success");
         }

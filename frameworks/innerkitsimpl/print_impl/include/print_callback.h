@@ -28,10 +28,6 @@
 #include "ppd_info.h"
 
 namespace OHOS::Print {
-struct WriteResultCbData {
-    uint32_t fd = INVALID_FD;
-};
-
 struct CallbackParam {
     napi_env env;
     napi_ref ref;

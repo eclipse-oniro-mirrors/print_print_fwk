@@ -38,7 +38,6 @@ SmbLibrary::~SmbLibrary()
 
 bool SmbLibrary::InitializeLibrary()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (smbLibHandle_ != nullptr) {
         return true;
     }
@@ -87,7 +86,6 @@ bool SmbLibrary::InitializeLibrary()
 
 void SmbLibrary::CleanupLibrary()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (smbLibHandle_ != nullptr) {
         dlclose(smbLibHandle_);
         smbLibHandle_ = nullptr;
@@ -113,213 +111,138 @@ void SmbLibrary::CleanupLibrary()
 
 struct smb2_context* SmbLibrary::CreateContext() const
 {
-    smb2_init_context_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_init_context_;
-    }
-    if (!fn) {
+    if (!smb2_init_context_) {
         PRINT_HILOGE("smb2_init_context_ is null");
         return nullptr;
     }
-    return fn();
+    return smb2_init_context_();
 }
 
 void SmbLibrary::CloseContext(struct smb2_context* ctx) const
 {
-    smb2_close_context_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_close_context_;
-    }
-    if (!fn) {
+    if (!smb2_close_context_) {
         PRINT_HILOGE("smb2_close_context_ is null");
         return;
     }
-    fn(ctx);
+    smb2_close_context_(ctx);
 }
 
 void SmbLibrary::DestroyContext(struct smb2_context* ctx) const
 {
-    smb2_destroy_context_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_destroy_context_;
-    }
-    if (!fn) {
+    if (!smb2_destroy_context_) {
         PRINT_HILOGE("smb2_destroy_context_ is null");
         return;
     }
-    fn(ctx);
+    smb2_destroy_context_(ctx);
 }
 
 const char* SmbLibrary::GetSmbError(struct smb2_context* ctx) const
 {
-    smb2_get_error_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_get_error_;
-    }
-    if (!fn) {
+    if (!smb2_get_error_) {
         PRINT_HILOGE("smb2_get_error_ is null");
         return "SMB library not initialized";
     }
-    return fn(ctx);
+    return smb2_get_error_(ctx);
 }
 
 int32_t SmbLibrary::ConnectShare(struct smb2_context* ctx, const char* server,
     const char* share, const char* user) const
 {
-    smb2_connect_share_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_connect_share_;
-    }
-    if (!fn) {
+    if (!smb2_connect_share_) {
         PRINT_HILOGE("smb2_connect_share_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return fn(ctx, server, share, user);
+    return smb2_connect_share_(ctx, server, share, user);
 }
 
 int32_t SmbLibrary::DisconnectShare(struct smb2_context* ctx) const
 {
-    smb2_disconnect_share_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_disconnect_share_;
-    }
-    if (!fn) {
+    if (!smb2_disconnect_share_) {
         PRINT_HILOGE("smb2_disconnect_share_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return fn(ctx);
+    return smb2_disconnect_share_(ctx);
 }
 
 int32_t SmbLibrary::ShareEnumAsync(struct smb2_context* ctx, int32_t level,
     void (*callback)(struct smb2_context*, int32_t, void*, void*), void* privateData) const
 {
-    smb2_share_enum_async_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_share_enum_async_;
-    }
-    if (!fn) {
+    if (!smb2_share_enum_async_) {
         PRINT_HILOGE("smb2_share_enum_async_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return fn(ctx, level, callback, privateData);
+    return smb2_share_enum_async_(ctx, static_cast<enum SHARE_INFO_enum>(level), callback, privateData);
 }
 
 void SmbLibrary::FreeData(struct smb2_context* ctx, void* data) const
 {
-    smb2_free_data_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_free_data_;
-    }
-    if (!fn) {
+    if (!smb2_free_data_) {
         PRINT_HILOGE("smb2_free_data_ is null");
         return;
     }
-    fn(ctx, data);
+    smb2_free_data_(ctx, data);
 }
 
 int32_t SmbLibrary::GetFd(struct smb2_context* ctx) const
 {
-    smb2_get_fd_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_get_fd_;
-    }
-    if (!fn) {
+    if (!smb2_get_fd_) {
         PRINT_HILOGE("smb2_get_fd_ is null");
         return INVALID_FD;
     }
-    return fn(ctx);
+    return smb2_get_fd_(ctx);
 }
 
 int32_t SmbLibrary::WhichEvents(struct smb2_context* ctx) const
 {
-    smb2_which_events_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_which_events_;
-    }
-    if (!fn) {
+    if (!smb2_which_events_) {
         PRINT_HILOGE("smb2_which_events_ is null");
         return INVALID_EVENT;
     }
-    return fn(ctx);
+    return smb2_which_events_(ctx);
 }
 
 int32_t SmbLibrary::Service(struct smb2_context* ctx, int32_t revents) const
 {
-    smb2_service_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_service_;
-    }
-    if (!fn) {
+    if (!smb2_service_) {
         PRINT_HILOGE("smb2_service_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return fn(ctx, revents);
+    return smb2_service_(ctx, revents);
 }
 
 void SmbLibrary::SetUser(struct smb2_context* ctx, const char* user) const
 {
-    smb2_set_user_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_set_user_;
-    }
-    if (!fn) {
+    if (!smb2_set_user_) {
         PRINT_HILOGE("smb2_set_user_ is null");
         return;
     }
-    fn(ctx, user);
+    smb2_set_user_(ctx, user);
 }
 
 void SmbLibrary::SetPassword(struct smb2_context* ctx, const char* password) const
 {
-    smb2_set_password_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_set_password_;
-    }
-    if (!fn) {
+    if (!smb2_set_password_) {
         PRINT_HILOGE("smb2_set_password_ is null");
         return;
     }
-    fn(ctx, password);
+    smb2_set_password_(ctx, password);
 }
 
 void SmbLibrary::SetSecurityMode(struct smb2_context* ctx, uint16_t mode) const
 {
-    smb2_set_security_mode_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_set_security_mode_;
-    }
-    if (!fn) {
+    if (!smb2_set_security_mode_) {
         PRINT_HILOGE("smb2_set_security_mode_ is null");
         return;
     }
-    fn(ctx, mode);
+    smb2_set_security_mode_(ctx, mode);
 }
 
 void SmbLibrary::SetTimeout(struct smb2_context* ctx, int32_t timeout) const
 {
-    smb2_set_timeout_t fn;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        fn = smb2_set_timeout_;
-    }
-    if (!fn) {
+    if (!smb2_set_timeout_) {
         PRINT_HILOGE("smb2_set_timeout_ is null");
         return;
     }
-    fn(ctx, timeout);
+    smb2_set_timeout_(ctx, timeout);
 }
 }  // namespace OHOS::Print

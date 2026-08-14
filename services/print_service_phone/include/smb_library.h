@@ -48,7 +48,6 @@ public:
 private:
     bool InitializeLibrary();
     void CleanupLibrary();
-    mutable std::mutex mutex_;
     void* smbLibHandle_;
     using smb2_init_context_t = struct smb2_context* (*)();
     using smb2_close_context_t = void (*)(struct smb2_context*);
