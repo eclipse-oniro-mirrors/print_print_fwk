@@ -25,6 +25,7 @@
 #include "sane_device.h"
 #include "safe_sane_api.h"
 #include <securec.h>
+#include <algorithm>
 
 namespace OHOS {
 namespace Scan {
@@ -32,15 +33,24 @@ namespace Scan {
 namespace {
 const int32_t VALUE_BUFFER_LEN = 1024;
 
-SANE_Status GetNumericSaneValue(SANE_Handle handle, SANE_Int option,
-    const SANE_Option_Descriptor *saneDesc, int32_t &outValue)
+bool ValidateSaneSizeAndCreateBuffer(const SANE_Option_Descriptor *saneDesc, std::vector<char> &buffer)
 {
     int32_t actualSize = saneDesc->size;
     if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
         SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
+        return false;
+    }
+    buffer.assign(actualSize, 0);
+    return true;
+}
+
+SANE_Status GetNumericSaneValue(SANE_Handle handle, SANE_Int option,
+    const SANE_Option_Descriptor *saneDesc, int32_t &outValue)
+{
+    std::vector<char> value;
+    if (!ValidateSaneSizeAndCreateBuffer(saneDesc, value)) {
         return ::SANE_STATUS_INVAL;
     }
-    std::vector<char> value(actualSize, 0);
     SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option,
         ::SANE_ACTION_GET_VALUE, value.data(), nullptr);
     if (saneStatus != ::SANE_STATUS_GOOD) {
@@ -50,8 +60,7 @@ SANE_Status GetNumericSaneValue(SANE_Handle handle, SANE_Int option,
         SCAN_HILOGE("memset_s failed for option %{public}d", option);
         return ::SANE_STATUS_INVAL;
     }
-    size_t copyLen = static_cast<size_t>(actualSize) < sizeof(outValue)
-        ? static_cast<size_t>(actualSize) : sizeof(outValue);
+    size_t copyLen = std::min(static_cast<size_t>(saneDesc->size), sizeof(outValue));
     if (memcpy_s(&outValue, sizeof(outValue), value.data(), copyLen) != EOK) {
         SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
         return ::SANE_STATUS_INVAL;
@@ -63,21 +72,16 @@ SANE_Status SetNumericSaneValue(SANE_Handle handle, SANE_Int option,
     const SANE_Option_Descriptor *saneDesc, SANE_Action action,
     int32_t inValue, SANE_Int &info)
 {
-    int32_t actualSize = saneDesc->size;
-    if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
-        SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
+    std::vector<char> value;
+    if (!ValidateSaneSizeAndCreateBuffer(saneDesc, value)) {
         return ::SANE_STATUS_INVAL;
     }
-    std::vector<char> value(actualSize, 0);
-    size_t copyLen = static_cast<size_t>(actualSize) < sizeof(inValue)
-        ? static_cast<size_t>(actualSize) : sizeof(inValue);
-    if (memcpy_s(value.data(), static_cast<size_t>(actualSize), &inValue, copyLen) != EOK) {
+    size_t copyLen = std::min(static_cast<size_t>(saneDesc->size), sizeof(inValue));
+    if (memcpy_s(value.data(), static_cast<size_t>(saneDesc->size), &inValue, copyLen) != EOK) {
         SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
         return ::SANE_STATUS_INVAL;
     }
-    SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option,
-        action, value.data(), &info);
-    return saneStatus;
+    return SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, value.data(), &info);
 }
 constexpr int32_t SANE_SERVICE_ID = 3709;
 constexpr int32_t MAX_WORD_LIST_SIZE = 1000;
