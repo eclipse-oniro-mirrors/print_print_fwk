@@ -602,6 +602,7 @@ int32_t PrintServiceAbility::CallSpooler(
     printJob->SetFdList(fdList);
     printJob->SetJobId(taskId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
+    printJob->SetOwnerPid(IPCSkeleton::GetCallingPid());
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     auto ret = KiaInterceptorManager::GetInstance().RegisterCallerAppId(taskId, callerPkg, GetCurrentUserId());
     if (ret != E_PRINT_NONE) {
@@ -1576,6 +1577,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     std::string option = nativePrintJob->GetOption();
     securityGuardManager_.InjectFileListIntoOption(jobId, option);
     nativePrintJob->SetOption(option);
+    nativePrintJob->SetOwnerPid(IPCSkeleton::GetCallingPid());
     UpdateQueuedJobList(jobId, nativePrintJob);
     auto printerId = nativePrintJob->GetPrinterId();
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
@@ -1649,6 +1651,7 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     std::vector<std::string> fileList = PrintSecurityGuardUtil::ExtractFileListFromOption(jobInfo.GetOption());
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+    pid_t ownerPid = GetOwnerPidFromJobList(jobId);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
         return E_PRINT_INVALID_PRINTJOB;
@@ -1656,6 +1659,7 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     auto printerId = jobInfo.GetPrinterId();
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
+    printJob->SetOwnerPid(ownerPid);
     std::string option = printJob->GetOption();
     securityGuardManager_.InjectFileListIntoOption(jobId, option);
     printJob->SetOption(option);
@@ -2322,6 +2326,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
     cbInfo.jobId = jobId;
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINT_GET_FILE_EVENT_TYPE);
     cbInfo.fileCompletedState = fileCompletedState;
+    cbInfo.ownerPid = GetOwnerPidFromJobList(jobId);
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     return E_PRINT_NONE;
 }
@@ -2415,7 +2420,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
 
     SendPrintJobEvent(*printJob);
-    notifyAdapterJobChanged(jobId, state, subState);
+    notifyAdapterJobChanged(jobId, state, subState, printJob->GetOwnerPid());
     CheckJobQueueBlocked(*printJob);
 
     PRINT_HILOGI("CheckAndSendQueuePrintJob end.");
@@ -2977,6 +2982,11 @@ int32_t PrintServiceAbility::RegisterExtCallback(
 
     PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
 
+    int32_t verifyRet = ValidateExtensionId(extensionId);
+    if (verifyRet != E_PRINT_NONE) {
+        return verifyRet;
+    }
+
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
@@ -3014,6 +3024,10 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
+    int32_t verifyRet = ValidateExtensionId(extensionId);
+    if (verifyRet != E_PRINT_NONE) {
+        return verifyRet;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
@@ -3229,12 +3243,13 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     CallbackInfo cbInfo;
     cbInfo.printJobInfo = std::make_shared<PrintJob>(jobInfo);
     cbInfo.jobId = jobId;
+    cbInfo.ownerPid = jobInfo.GetOwnerPid();
+    cbInfo.userId = GetCurrentUserId();
+    cbInfo.printJobInfo->SetFdList(std::vector<uint32_t>());
     if (state != PRINT_PRINT_JOB_DEFAULT) {
         HandleJobStateChanged(jobId, cbInfo);
     }
     cbInfo.cbEventType = CB_EVENT_TYPE_MAP.at(PRINTJOB_EVENT_TYPE);
-    cbInfo.userId = GetCurrentUserId();
-    cbInfo.printJobInfo->SetFdList(std::vector<uint32_t>());
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     // notify securityGuard
@@ -3402,6 +3417,7 @@ int32_t PrintServiceAbility::StartGetPrintFile(
         cbInfo.newAttrs = newAttrs;
         cbInfo.fd = fd;
         cbInfo.jobId = jobId;
+        cbInfo.ownerPid = GetOwnerPidFromJobList(jobId);
         DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
     } else {
         PRINT_HILOGW("PrintServiceAbility find event: %{public}s not found", PRINT_ADAPTER_EVENT_TYPE.c_str());
@@ -3419,14 +3435,16 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
 
     if (type == "0" || type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED) {
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for started", jobId.c_str());
-        notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
+        notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED,
+            GetOwnerPidFromJobList(jobId));
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
 
     if (type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED) {
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for canceled", jobId.c_str());
-        notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
+        notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED,
+            GetOwnerPidFromJobList(jobId));
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
@@ -3434,7 +3452,7 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
 }
 
 void PrintServiceAbility::notifyAdapterJobChanged(
-    const std::string jobId, const uint32_t state, const uint32_t subState)
+    const std::string jobId, const uint32_t state, const uint32_t subState, pid_t ownerPid)
 {
     if (state != PRINT_JOB_BLOCKED && state != PRINT_JOB_COMPLETED && state != PRINT_JOB_SPOOLER_CLOSED) {
         return;
@@ -3460,6 +3478,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(
     cbInfo.jobId = jobId;
     cbInfo.jobState = static_cast<PrintJobState>(state);
     cbInfo.adapterState = static_cast<PrintDocumentAdapterState>(printAdapterListeningState);
+    cbInfo.ownerPid = ownerPid;
     DelayedSingleton<EventListenerMgr>::GetInstance()->Execute(cbInfo);
 
     if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
@@ -5317,6 +5336,16 @@ std::string PrintServiceAbility::GetCallerBundleName()
     return DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
 }
 
+int32_t PrintServiceAbility::ValidateExtensionId(const std::string &extensionId)
+{
+    std::string callerBundleName = GetCallerBundleName();
+    if (callerBundleName.empty() || callerBundleName != extensionId) {
+        PRINT_HILOGE("extensionId mismatch, caller: %{public}s", callerBundleName.c_str());
+        return E_PRINT_NO_PERMISSION;
+    }
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
     const std::string &ppdName, const std::string &options, const std::string &bundleName)
 {
@@ -6336,5 +6365,19 @@ bool PrintServiceAbility::IsExtensionPrintJob(const std::string &cid)
     }
 #endif
     return false;
+}
+
+pid_t PrintServiceAbility::GetOwnerPidFromJobList(const std::string &jobId) const
+{
+    auto it = printJobList_.find(jobId);
+    if (it != printJobList_.end() && it->second != nullptr) {
+        return it->second->GetOwnerPid();
+    }
+    auto jobInQueue = std::find_if(queuedJobList_.begin(), queuedJobList_.end(),
+        [&jobId](const auto &entry) { return entry.second != nullptr && entry.second->GetJobId() == jobId; });
+    if (jobInQueue != queuedJobList_.end() && jobInQueue->second != nullptr) {
+        return jobInQueue->second->GetOwnerPid();
+    }
+    return -1;
 }
 }  // namespace OHOS::Print

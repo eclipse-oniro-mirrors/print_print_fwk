@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <mutex>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 #include <unordered_map>
 #include <json/json.h>
@@ -195,7 +196,9 @@ private:
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
     int32_t CallSpooler(
         const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId);
-    void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
+    void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState,
+        pid_t ownerPid = -1);
+    pid_t GetOwnerPidFromJobList(const std::string &jobId) const;
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     bool createNewJobWhenRestart(std::shared_ptr<PrintJob> &printJob);
@@ -282,6 +285,7 @@ private:
     void ProcessSingleCustomOption(const std::string &key,
         const Json::Value &optionJson, PrinterUserPreferences &userPrefs);
     std::string GetCallerBundleName() override;
+    int32_t ValidateExtensionId(const std::string &extensionId);
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options, const std::string &bundleName);

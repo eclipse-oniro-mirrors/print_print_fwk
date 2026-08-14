@@ -23,6 +23,11 @@ namespace Print {
 
 ExecuteResult PrintJobEventCallback::Execute(const CallbackInfo &info)
 {
+    if (!HasJobManagePermission() && pid_ != info.ownerPid) {
+        PRINT_HILOGE("Identity verify failed: listener pid %{public}d != owner pid %{public}d for job %{public}s",
+            pid_, info.ownerPid, info.jobId.c_str());
+        return ExecuteResult::SKIP;
+    }
     auto it = listeners_.find(info.jobId);
     if (it == listeners_.end()) {
         PRINT_HILOGW("listener not exist for jobId=%{public}s", info.jobId.c_str());
@@ -33,6 +38,11 @@ ExecuteResult PrintJobEventCallback::Execute(const CallbackInfo &info)
         PRINT_HILOGW("listener is null");
         return ExecuteResult::FAIL;
     }
+    return DispatchCallback(listener, info);
+}
+
+ExecuteResult PrintJobEventCallback::DispatchCallback(const sptr<IPrintCallback> &listener, const CallbackInfo &info)
+{
     bool ret = false;
     switch (info.cbEventType) {
         case PRINT_JOB_BLOCK:

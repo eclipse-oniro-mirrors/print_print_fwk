@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <sys/types.h>
 
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
@@ -127,6 +128,10 @@ public:
     std::string ConvertToJsonString() const;
 
     Json::Value ConvertToJsonObject() const;
+
+    void SetOwnerPid(pid_t pid);
+    pid_t GetOwnerPid() const;
+
 private:
     bool ReadFromParcel(Parcel &parcel);
     bool ReadParcelFD(Parcel &parcel);
@@ -154,6 +159,7 @@ private:
     std::string option_;
     bool hasVendorOptions_;
     std::string vendorOptions_;
+    pid_t ownerPid_ = -1;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_JOB_H

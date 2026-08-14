@@ -51,6 +51,7 @@ PrintJob::PrintJob(const PrintJob &right)
     option_ = right.option_;
     hasVendorOptions_ = right.hasVendorOptions_;
     vendorOptions_ = right.vendorOptions_;
+    ownerPid_ = right.ownerPid_;
 }
 
 PrintJob &PrintJob::operator=(const PrintJob &right)
@@ -78,6 +79,7 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         option_ = right.option_;
         hasVendorOptions_ = right.hasVendorOptions_;
         vendorOptions_ = right.vendorOptions_;
+        ownerPid_ = right.ownerPid_;
     }
     return *this;
 }
@@ -188,6 +190,17 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     option_ = jobInfo.option_;
     hasVendorOptions_ = jobInfo.hasVendorOptions_;
     vendorOptions_ = jobInfo.vendorOptions_;
+    ownerPid_ = jobInfo.ownerPid_;
+}
+
+void PrintJob::SetOwnerPid(pid_t pid)
+{
+    ownerPid_ = pid;
+}
+
+pid_t PrintJob::GetOwnerPid() const
+{
+    return ownerPid_;
 }
 
 void PrintJob::GetFdList(std::vector<uint32_t> &fdList) const

@@ -1550,19 +1550,19 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088_NeedRename, TestS
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
     std::string extensionCid2 = "123:20";
     ret = service->RegisterExtCallback(extensionCid2, listener);
-    EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     std::string extensionId = "123";
     int32_t userId = service->GetCurrentUserId();
     std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
     ret = service->RegisterExtCallback(extensionCid2, listener);
-    EXPECT_EQ(ret, E_PRINT_INVALID_EXTENSION);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     service->extensionStateList_[stateKey] = PRINT_EXTENSION_LOADING;
     ret = service->RegisterExtCallback(extensionCid2, listener);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     std::string extensionCid3 = "123:2";
     ret = service->RegisterExtCallback(extensionCid2, listener);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 
