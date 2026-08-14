@@ -239,6 +239,7 @@ private:
     uint32_t GetListeningState(uint32_t state, uint32_t subState);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
+    bool HasPrinterActiveJob(const std::string &printerId);
     std::shared_ptr<PrinterInfo> HandleNewPrinterDiscovery(const std::string &globalPrinterId,
         const PrinterInfo &info);
     void SyncAddedPrinterUri(const std::shared_ptr<PrinterInfo> printerInfo);

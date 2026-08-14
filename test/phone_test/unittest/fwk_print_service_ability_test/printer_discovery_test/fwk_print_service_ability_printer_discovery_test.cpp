@@ -559,6 +559,41 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterBusy_Should
 }
 
 /**
+ * @tc.name: AddVendorPrinterToDiscovery_PrinterHasActiveJob_ShouldNotSync
+ * @tc.desc: Test AddVendorPrinterToDiscovery when printer has active print job
+ * @tc.type: FUNC
+ * @tc.require: Should not sync printer uri when printer has active job (QUEUED/RUNNING/BLOCKED)
+ */
+HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterHasActiveJob_ShouldNotSync, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    ASSERT_NE(service, nullptr);
+
+    std::string vendorName = "com.test.ext";
+    std::string globalPrinterId = vendorName + ":TestPrinter_001";
+    std::string originalUri = "ipp://192.168.1.100:631/printers/TestPrinter";
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalPrinterId);
+    addedPrinter.SetPrinterName("TestPrinter_001");
+    addedPrinter.SetUri(originalUri);
+    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+
+    service->printerJobMap_[globalPrinterId]["job_001"] = true;
+
+    PrinterInfo info;
+    info.SetPrinterId("TestPrinter_001");
+    info.SetPrinterName("TestPrinter_001");
+
+    bool result = service->AddVendorPrinterToDiscovery(vendorName, info);
+    EXPECT_TRUE(result);
+
+    PrinterInfo updatedPrinter;
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter);
+    EXPECT_EQ(updatedPrinter.GetUri(), originalUri);
+}
+
+/**
  * @tc.name: AddVendorPrinterToDiscovery_CanSyncPrinterInfo_ShouldSync
  * @tc.desc: Test AddVendorPrinterToDiscovery when can sync printer info from added printer
  * @tc.type: FUNC

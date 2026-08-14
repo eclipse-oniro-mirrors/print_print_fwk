@@ -4085,7 +4085,7 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
     SendPrinterEvent(*printerInfo);
 
     if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
-        !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
+        !HasPrinterActiveJob(printerInfo->GetPrinterId())) {
         SyncAddedPrinterUri(printerInfo);
         PrinterInfo printer = *printerInfo;
         if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
@@ -4120,6 +4120,17 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
 
     PRINT_HILOGD("HandleNewPrinterDiscovery completed");
     return printerInfo;
+}
+
+bool PrintServiceAbility::HasPrinterActiveJob(const std::string &printerId)
+{
+    auto iter = printerJobMap_.find(printerId);
+    if (iter != printerJobMap_.end() && !iter->second.empty()) {
+        PRINT_HILOGI("[Printer: %{public}s] Has active job",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return true;
+    }
+    return false;
 }
 
 void PrintServiceAbility::SyncAddedPrinterUri(const std::shared_ptr<PrinterInfo> printerInfo)
