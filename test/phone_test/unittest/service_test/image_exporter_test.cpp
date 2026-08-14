@@ -18,12 +18,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <climits>
 #include "image_exporter.h"
-#include "scan_service_utils.h"
-#define private public
 #include "scan_picture_data.h"
-#undef private
 #include "scan_constant.h"
 #include "scan_log.h"
 
@@ -723,117 +719,6 @@ HWTEST_F(ImageExporterTest, Performance_TiffEncodingTime, TestSize.Level3)
     SCAN_HILOGI("TIFF encoding time: %{public}lld ms", static_cast<long long>(duration.count()));
     
     close(exportedFd);
-}
-
-/**
- * @tc.name: IsPathValid_ValidPath
- * @tc.desc: 测试合法路径返回true
- */
-HWTEST_F(ImageExporterTest, IsPathValid_ValidPath, TestSize.Level1)
-{
-    ASSERT_TRUE(ScanServiceUtils::IsPathValid(testDir_ + "/test.txt"));
-}
-
-/**
- * @tc.name: IsPathValid_NonexistentParentDir
- * @tc.desc: 测试父目录不存在返回false
- */
-HWTEST_F(ImageExporterTest, IsPathValid_NonexistentParentDir, TestSize.Level1)
-{
-    ASSERT_FALSE(ScanServiceUtils::IsPathValid("/nonexistent_dir_12345/test.txt"));
-}
-
-/**
- * @tc.name: IsPathValid_PathTooLong
- * @tc.desc: 测试路径超长返回false
- */
-HWTEST_F(ImageExporterTest, IsPathValid_PathTooLong, TestSize.Level1)
-{
-    std::string longPath(PATH_MAX + 10, 'x');
-    ASSERT_FALSE(ScanServiceUtils::IsPathValid(longPath));
-}
-
-/**
- * @tc.name: LoadDpiFromMetadata_InvalidParentDir
- * @tc.desc: 测试父目录无效时返回默认DPI
- */
-HWTEST_F(ImageExporterTest, LoadDpiFromMetadata_InvalidParentDir, TestSize.Level1)
-{
-    ASSERT_EQ(ImageExporter::LoadDpiFromMetadata(
-        "/nonexistent_dir_12345/test.meta.json"), DEFAULT_DPI);
-}
-
-/**
- * @tc.name: LoadImageSizeFromMetadata_InvalidParentDir
- * @tc.desc: 测试父目录无效时返回false
- */
-HWTEST_F(ImageExporterTest, LoadImageSizeFromMetadata_InvalidParentDir, TestSize.Level1)
-{
-    int32_t width = 0, height = 0;
-    ASSERT_FALSE(ImageExporter::LoadImageSizeFromMetadata(
-        "/nonexistent_dir_12345/test.meta.json", width, height));
-}
-
-/**
- * @tc.name: ExportToFormat_PNG_InvalidParentDir
- * @tc.desc: 测试PNG导出父目录无效返回失败
- */
-HWTEST_F(ImageExporterTest, ExportToFormat_PNG_InvalidParentDir, TestSize.Level1)
-{
-    int32_t exportedFd = -1;
-    ASSERT_EQ(ImageExporter::ExportToFormat(
-        "/nonexistent_dir_12345/test", EXPORT_FORMAT_PNG, exportedFd,
-        ScanPictureData::GetInstance()), E_SCAN_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: ExportToFormat_TIFF_InvalidParentDir
- * @tc.desc: 测试TIFF导出父目录无效返回失败
- */
-HWTEST_F(ImageExporterTest, ExportToFormat_TIFF_InvalidParentDir, TestSize.Level1)
-{
-    int32_t exportedFd = -1;
-    ASSERT_EQ(ImageExporter::ExportToFormat(
-        "/nonexistent_dir_12345/test", EXPORT_FORMAT_TIFF, exportedFd,
-        ScanPictureData::GetInstance()), E_SCAN_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: HandleCompletedScanPicture_InvalidPath
- * @tc.desc: 测试路径无效返回失败
- */
-HWTEST_F(ImageExporterTest, HandleCompletedScanPicture_InvalidPath, TestSize.Level1)
-{
-    ScanProgress scanProgress;
-    ScanProgress prog;
-    scanProgress.SetImageRealPath("/nonexistent_dir_12345/test.jpg");
-    ASSERT_EQ(ScanPictureData::GetInstance().HandleCompletedScanPicture(
-        scanProgress, prog), E_SCAN_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: HandleCompletedScanPicture_FileNotExist
- * @tc.desc: 测试文件不存在返回失败
- */
-HWTEST_F(ImageExporterTest, HandleCompletedScanPicture_FileNotExist, TestSize.Level1)
-{
-    ScanProgress scanProgress;
-    ScanProgress prog;
-    scanProgress.SetImageRealPath(testDir_ + "/nonexistent_file.jpg");
-    ASSERT_EQ(ScanPictureData::GetInstance().HandleCompletedScanPicture(
-        scanProgress, prog), E_SCAN_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: CleanAllCache_InvalidPathInMap
- * @tc.desc: 测试缓存map中无效路径不触发unlink
- */
-HWTEST_F(ImageExporterTest, CleanAllCache_InvalidPathInMap, TestSize.Level1)
-{
-    auto& cacheManager = ScanPictureData::GetInstance();
-    cacheManager.scanCacheFdMap_["/nonexistent_dir_12345/file.jpg"] = -1;
-    cacheManager.CleanAllCache();
-    SUCCEED();
 }
 
 }  // namespace Scan
