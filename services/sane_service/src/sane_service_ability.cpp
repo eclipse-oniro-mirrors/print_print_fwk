@@ -46,6 +46,10 @@ SANE_Status GetNumericSaneValue(SANE_Handle handle, SANE_Int option,
     if (saneStatus != ::SANE_STATUS_GOOD) {
         return saneStatus;
     }
+    if (memset_s(&outValue, sizeof(outValue), 0, sizeof(outValue)) != EOK) {
+        SCAN_HILOGE("memset_s failed for option %{public}d", option);
+        return ::SANE_STATUS_INVAL;
+    }
     size_t copyLen = static_cast<size_t>(actualSize) < sizeof(outValue)
         ? static_cast<size_t>(actualSize) : sizeof(outValue);
     if (memcpy_s(&outValue, sizeof(outValue), value.data(), copyLen) != EOK) {
@@ -67,7 +71,7 @@ SANE_Status SetNumericSaneValue(SANE_Handle handle, SANE_Int option,
     std::vector<char> value(actualSize, 0);
     size_t copyLen = static_cast<size_t>(actualSize) < sizeof(inValue)
         ? static_cast<size_t>(actualSize) : sizeof(inValue);
-    if (memcpy_s(value.data(), actualSize, &inValue, copyLen) != EOK) {
+    if (memcpy_s(value.data(), static_cast<size_t>(actualSize), &inValue, copyLen) != EOK) {
         SCAN_HILOGE("memcpy_s failed for option %{public}d", option);
         return ::SANE_STATUS_INVAL;
     }
