@@ -100,6 +100,7 @@ if (print_fwk_feature_device_isolation) {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "huks:libhukssdk",
+    "icu:shared_icuuc",
     "init:libbegetutil",
     "i18n:intl_util",
     "ipc:ipc_core",
