@@ -453,6 +453,7 @@ void ParseAdvanceOptions(const OHOS::Print::PrinterCapability &cap, Print_Printe
         Json::Value advancedCapJson;
         if (nativePrinterInfo.capability.advancedCapability != nullptr) {
             if (!PrintJsonUtil::Parse(std::string(nativePrinterInfo.capability.advancedCapability), advancedCapJson)) {
+                PRINT_HILOGE("Parse advancedCapability fail");
                 return;
             }
         }
