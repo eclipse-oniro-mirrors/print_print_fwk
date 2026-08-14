@@ -171,7 +171,7 @@ int32_t SmbLibrary::ShareEnumAsync(struct smb2_context* ctx, int32_t level,
         PRINT_HILOGE("smb2_share_enum_async_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    return smb2_share_enum_async_(ctx, static_cast<enum SHARE_INFO_enum>(level), callback, privateData);
+    return smb2_share_enum_async_(ctx, level, callback, privateData);
 }
 
 void SmbLibrary::FreeData(struct smb2_context* ctx, void* data) const

@@ -400,7 +400,7 @@ void StsPrintExtension::RegisterConnectionCb()
                 return false;
             }
             std::string realPrinterId = PrintUtils::GetLocalId(printId, stsExtension_->extensionId_);
-            return StsPrintExtension::stsExtension_->Callback("onConnectPrinter", realPrinterId);
+            return StsPrintExtension::stsExtension_->Callback("onDisconnectPrinter", realPrinterId);
     });
 }
 
