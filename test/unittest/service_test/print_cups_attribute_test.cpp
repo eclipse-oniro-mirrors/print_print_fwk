@@ -727,7 +727,7 @@ HWTEST_F(PrintCupsAttributeTest, ParsePrinterOpt_ResolutionDefault_ValidDpi, Tes
 {
     Json::Value cupsOpt;
     cupsOpt["printer-resolution-default"] = "{\"horizontalDpi\":600,\"verticalDpi\":600}";
-    Print_PrinterInfo nativePrinterInfo = {0};
+    Print_PrinterInfo nativePrinterInfo = {};
     ParsePrinterOpt(cupsOpt, nativePrinterInfo);
     EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.horizontalDpi, 600u);
     EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.verticalDpi, 600u);
@@ -737,7 +737,7 @@ HWTEST_F(PrintCupsAttributeTest, ParsePrinterOpt_ResolutionDefault_InvalidJson_S
 {
     Json::Value cupsOpt;
     cupsOpt["printer-resolution-default"] = "notjson";
-    Print_PrinterInfo nativePrinterInfo = {0};
+    Print_PrinterInfo nativePrinterInfo = {};
     ParsePrinterOpt(cupsOpt, nativePrinterInfo);
     EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.horizontalDpi, 0u);
     EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.verticalDpi, 0u);
