@@ -36,11 +36,11 @@ PrintCallerAppMonitor& PrintCallerAppMonitor::GetInstance()
 
 void PrintCallerAppMonitor::StartCallerAppMonitor(std::function<bool()> unloadTask)
 {
-    if (isMonitoring_.load()) {
+    bool expected = false;
+    if (!isMonitoring_.compare_exchange_strong(expected, true)) {
         PRINT_HILOGW("The monitoring thread is running");
         return;
     }
-    isMonitoring_.store(true);
     std::thread printCallerAppMonitorThread(&PrintCallerAppMonitor::MonitorCallerApps, this, unloadTask);
     printCallerAppMonitorThread.detach();
 }

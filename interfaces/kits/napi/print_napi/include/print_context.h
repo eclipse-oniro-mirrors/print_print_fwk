@@ -53,10 +53,13 @@ struct BaseContext {
     PrintRequestType requestType = PrintRequestType::REQUEST_TYPE_INVALID;
     ErrorMessage errorMessage;
 
+    BaseContext() = default;
+    BaseContext(const BaseContext&) = delete;
+    BaseContext& operator=(const BaseContext&) = delete;
     ~BaseContext()
     {
         PRINT_HILOGI("release enter");
-        if (this->callback != nullptr) {
+        if (this->env != nullptr && this->callback != nullptr) {
             napi_delete_reference(this->env, this->callback);
             this->callback = nullptr;
             PRINT_HILOGI("release callback");

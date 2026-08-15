@@ -19,6 +19,7 @@
 #include <map>
 #include <mutex>
 #include <vector>
+#include "print_log.h"
 
 namespace OHOS {
 namespace Print {
@@ -130,6 +131,22 @@ public:
         auto value = creator();
         printMap.insert(std::make_pair(key, value));
         return value;
+    }
+
+    void Upsert(const std::string &key, const T &value)
+    {
+        if (key.empty()) {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(mapMutex);
+        auto it = printMap.find(key);
+        if (it != printMap.end() && it->second != nullptr) {
+            PRINT_HILOGI("update exist key");
+            *(it->second) = value;
+        } else {
+            PRINT_HILOGI("insert new key");
+            printMap[key] = std::make_shared<T>(value);
+        }
     }
 
 private:

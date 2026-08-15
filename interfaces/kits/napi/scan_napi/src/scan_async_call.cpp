@@ -158,7 +158,7 @@ void ScanAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     DeleteContext(env, context);
 }
 
-void ScanAsyncCall::DeleteContext(napi_env env, AsyncContext *context)
+void ScanAsyncCall::DeleteContext(napi_env env, AsyncContext *&context)
 {
     if (context == nullptr) {
         return;

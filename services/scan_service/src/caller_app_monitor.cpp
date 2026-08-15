@@ -56,11 +56,11 @@ std::string CallerAppMonitor::QueryCallerBundleName(const int32_t callerPid)
 
 void CallerAppMonitor::StartCallerAppMonitor(std::function<void()> unloadTask, CleanupCallback cleanupCallback)
 {
-    if (isMonitoring_.load()) {
+    bool expected = false;
+    if (!isMonitoring_.compare_exchange_strong(expected, true)) {
         SCAN_HILOGD("The monitoring thread is running");
         return;
     }
-    isMonitoring_.store(true);
     cleanupCallback_ = cleanupCallback;
     std::thread callerAppMonitorThread(&CallerAppMonitor::MonitorCallerAppIsRunnig, this, unloadTask);
     callerAppMonitorThread.detach();

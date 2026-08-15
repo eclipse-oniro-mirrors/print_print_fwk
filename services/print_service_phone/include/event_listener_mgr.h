@@ -46,12 +46,17 @@ public:
 
 private:
     std::shared_ptr<BaseEventCallback> FindCallback(int32_t userId, pid_t pid, CallbackEventType eventType);
+    sptr<IRemoteObject::DeathRecipient> GetDeathRecipient();
     void ClearAllListeners();
     bool RemoveDiedListener(std::vector<std::shared_ptr<BaseEventCallback>> &callbacks, CallbackEventType eventType,
         const sptr<IRemoteObject> &listener);
     bool TryDeletePrintJobListenerFromCallback(const std::shared_ptr<BaseEventCallback> &callback,
         CallbackEventType eventType, const std::string &jobId);
     bool DeletePrintJobListener(CallbackEventType eventType, const std::string &jobId);
+    bool ExecuteForUser(
+        const std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap,
+        CallbackEventType type, const CallbackInfo &callbackInfo);
+    bool ExecuteForAllUsers(CallbackEventType type, const CallbackInfo &callbackInfo);
     std::string FormatPids(const std::vector<pid_t> &pids);
     void ClearListenersForUser(
         std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap);

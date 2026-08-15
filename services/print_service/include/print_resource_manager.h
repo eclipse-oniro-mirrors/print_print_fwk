@@ -43,7 +43,7 @@ private:
 
     std::mutex resConfigMutex_;
     std::unique_ptr<Global::Resource::ResConfig> resConfig_;
-    std::unique_ptr<Global::Resource::ResourceManager> resourceManager_;
+    Global::Resource::ResourceManager* resourceManager_ = nullptr;
     const std::string resourcePath_ = "/system/app/Spooler/Spooler.hap";
 };
 

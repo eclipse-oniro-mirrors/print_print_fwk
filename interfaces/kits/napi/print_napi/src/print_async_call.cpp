@@ -72,7 +72,6 @@ napi_value PrintAsyncCall::Call(napi_env env, Context::ExecAction exec)
     if (status != napi_ok) {
         PRINT_HILOGE("napi_create_async_work failed, status: %{public}d", status);
         DeleteContext(env, context_);
-        context_ = nullptr;
         return nullptr;
     }
     context_->work = work;
@@ -80,7 +79,6 @@ napi_value PrintAsyncCall::Call(napi_env env, Context::ExecAction exec)
     if (status != napi_ok) {
         PRINT_HILOGE("napi_queue_async_work failed, status: %{public}d", status);
         DeleteContext(env, context_);
-        context_ = nullptr;
         return nullptr;
     }
     context_ = nullptr;
@@ -101,6 +99,7 @@ napi_value PrintAsyncCall::SyncCall(napi_env env, PrintAsyncCall::Context::ExecA
     }
     PrintAsyncCall::OnExecute(env, context_);
     PrintAsyncCall::OnComplete(env, napi_ok, context_);
+    context_ = nullptr;
     return promise;
 }
 
@@ -180,12 +179,13 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     DeleteContext(env, context);
 }
 
-void PrintAsyncCall::DeleteContext(napi_env env, AsyncContext *context)
+void PrintAsyncCall::DeleteContext(napi_env env, AsyncContext *&context)
 {
     if (context == nullptr) {
         return;
     }
     if (context->ctx != nullptr) {
+        context->ctx->CleanupRefs(env);
         context->ctx->input_ = nullptr;
         context->ctx->output_ = nullptr;
         context->ctx->exec_ = nullptr;

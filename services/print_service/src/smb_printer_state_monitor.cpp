@@ -64,7 +64,6 @@ void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const Printer
             std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
             if (monitorSmbPrinters_.empty()) {
                 PRINT_HILOGI("monitorSmbPrinters_ is empty, stop monitoring");
-                isMonitoring_.store(false);
                 break;
             }
             localCopy = monitorSmbPrinters_;
@@ -75,6 +74,7 @@ void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const Printer
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_HOST_ALIVE_INTERVAL));
     } while (isMonitoring_.load());
     threadRunning_.store(false);
+    isMonitoring_.store(false);
 }
 
 std::unordered_map<std::string, SmbPrinterStateMonitor::HostStatus> SmbPrinterStateMonitor::GetHostStatusMap(

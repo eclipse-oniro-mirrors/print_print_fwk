@@ -154,16 +154,17 @@ void PrintModalUICallback::SendMessageBack()
         PRINT_HILOGE("loop is nullptr");
         return;
     }
+    this->baseContext->sessionId = this->sessionId_;
     uv_work_t *work = new uv_work_t;
-    BaseContext *printBaseContext = new BaseContext(*this->baseContext);
-    printBaseContext->sessionId = this->sessionId_;
-    work->data = reinterpret_cast<void *>(printBaseContext);
+    auto ctxPtr = std::make_unique<std::shared_ptr<BaseContext>>(this->baseContext);
+    work->data = ctxPtr.release();
 
     int ret = uv_queue_work(
         loop, work, [](uv_work_t *work) { (void)work; }, SendMessageBackWork);
     if (ret != 0) {
         PRINT_HILOGE("Failed to get uv_queue_work.");
-        delete printBaseContext;
+        auto *rawPtr = reinterpret_cast<std::shared_ptr<BaseContext> *>(work->data);
+        delete rawPtr;
         delete work;
         work = nullptr;
     }
@@ -173,16 +174,17 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
 {
     (void)statusIn;
     napi_handle_scope scope = nullptr;
-    if (work == nullptr) {
-        PRINT_HILOGE("work is nullptr");
-        return;
-    }
-    BaseContext *context = reinterpret_cast<BaseContext *>(work->data);
-    if (context == nullptr) {
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(work);
+    auto *ctxPtr = reinterpret_cast<std::shared_ptr<BaseContext> *>(work->data);
+    if (ctxPtr == nullptr || *ctxPtr == nullptr) {
         PRINT_HILOGE("context is null");
+        delete ctxPtr;
         PRINT_SAFE_DELETE(work);
         return;
     }
+    std::shared_ptr<BaseContext> context = *ctxPtr;
+    delete ctxPtr;
+    work->data = nullptr;
 
     napi_status status;
     size_t resultLength = RESULT_LENGTH_TWO;
@@ -193,13 +195,12 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     if (scope == nullptr) {
         PRINT_HILOGE("open handle scope failed");
         context->callback = nullptr;
-        PRINT_SAFE_DELETE(context);
         PRINT_SAFE_DELETE(work);
         return;
     }
 
     napi_value result[2] = {nullptr};
-    CreateResultMessage(context, result, resultLength);
+    CreateResultMessage(context.get(), result, resultLength);
     if (context->deferred) {
         if (context->errorMessage.code == E_PRINT_NONE) {
             status = napi_resolve_deferred(context->env, context->deferred, result[resultIndex]);
@@ -219,11 +220,8 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     PRINT_HILOGD("uv_queue_work callback success");
     napi_close_handle_scope(context->env, scope);
 
-    CloseModalUIExtension(context);
+    CloseModalUIExtension(context.get());
 
-    // context.callback will be deleted on other share_ptr, not need delete it!
-    context->callback = nullptr;
-    PRINT_SAFE_DELETE(context);
     PRINT_SAFE_DELETE(work);
 }
 

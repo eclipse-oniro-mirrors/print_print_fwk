@@ -33,17 +33,23 @@ ScanAniCallback::ScanAniCallback(ani_env *env, ani_object callback)
 
 ScanAniCallback::~ScanAniCallback()
 {
-    if (callback_ != nullptr) {
-        if (aniVm_ != nullptr) {
-            ani_env *env = nullptr;
+    if (callback_ != nullptr && aniVm_ != nullptr) {
+        ani_env *env = nullptr;
+        bool isAttached = false;
+        if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
             ani_options aniArgs { 0, nullptr };
-            auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-            if (status == ANI_OK && env != nullptr) {
-                env->GlobalReference_Delete(callback_);
-                aniVm_->DetachCurrentThread();
+            if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) == ANI_OK) {
+                isAttached = true;
+            } else {
+                SCAN_HILOGE("Failed to attach thread, global reference leaked.");
+                aniVm_ = nullptr;
+                callback_ = nullptr;
+                return;
             }
-        } else {
-            SCAN_HILOGW("aniVm_ is nullptr, callback_ may not be released properly");
+        }
+        env->GlobalReference_Delete(callback_);
+        if (isAttached) {
+            aniVm_->DetachCurrentThread();
         }
     }
     aniVm_ = nullptr;
@@ -56,22 +62,27 @@ bool ScanAniCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(aniVm_, false, __func__);
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(callback_, false, __func__);
     ani_env *env = nullptr;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            SCAN_HILOGE("GetEnv failed");
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            SCAN_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
     ani_object deviceObj = AniScannerDeviceHelper::CreateScannerDevice(env, info);
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
+        if (isAttached) {
+            aniVm_->DetachCurrentThread();
+        }
         return false;
     }
     bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return result;
 }
 
@@ -81,22 +92,27 @@ bool ScanAniCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &i
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(aniVm_, false, __func__);
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(callback_, false, __func__);
     ani_env *env = nullptr;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            SCAN_HILOGE("GetEnv failed");
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            SCAN_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
     ani_object deviceObj = AniScannerSyncDeviceHelper::CreateScannerSyncDevice(env, info);
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
+        if (isAttached) {
+            aniVm_->DetachCurrentThread();
+        }
         return false;
     }
     bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return result;
 }
 
@@ -106,22 +122,27 @@ bool ScanAniCallback::OnGetDevicesList(std::vector<ScanDeviceInfo> &info)
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(aniVm_, false, __func__);
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(callback_, false, __func__);
     ani_env *env = nullptr;
-    ani_options aniArgs { 0, nullptr };
-    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    if (status != ANI_OK) {
-        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
-        if (status != ANI_OK) {
-            SCAN_HILOGE("GetEnv failed");
+    bool isAttached = false;
+    if (aniVm_->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        ani_options aniArgs { 0, nullptr };
+        if (aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env) != ANI_OK) {
+            SCAN_HILOGE("AttachCurrentThread failed");
             return false;
         }
+        isAttached = true;
     }
     ani_object deviceObj = AniScannerDeviceHelper::CreateScannerDeviceArray(env, info);
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
+        if (isAttached) {
+            aniVm_->DetachCurrentThread();
+        }
         return false;
     }
     bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
-    aniVm_->DetachCurrentThread();
+    if (isAttached) {
+        aniVm_->DetachCurrentThread();
+    }
     return result;
 }
 }

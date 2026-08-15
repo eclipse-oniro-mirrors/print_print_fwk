@@ -30,13 +30,26 @@ using namespace Security::AccessToken;
 }  // namespace
 
 EventListenerMgr::EventListenerMgr()
-    : eventListenerDeathRecipient_(sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
-          std::bind(&EventListenerMgr::OnRemoteListenerDied, this, std::placeholders::_1))))
 {}
 
 EventListenerMgr::~EventListenerMgr()
 {
     ClearAllListeners();
+}
+
+sptr<IRemoteObject::DeathRecipient> EventListenerMgr::GetDeathRecipient()
+{
+    if (eventListenerDeathRecipient_ == nullptr) {
+        auto self = DelayedSingleton<EventListenerMgr>::GetInstance();
+        eventListenerDeathRecipient_ = sptr<IRemoteObject::DeathRecipient>(new PrintCommonDeathRecipient(
+            [weak = std::weak_ptr<EventListenerMgr>(self)](const sptr<IRemoteObject> &remote) {
+                auto mgr = weak.lock();
+                if (mgr != nullptr) {
+                    mgr->OnRemoteListenerDied(remote);
+                }
+            }));
+    }
+    return eventListenerDeathRecipient_;
 }
 
 std::shared_ptr<BaseEventCallback> EventListenerMgr::FindCallback(
@@ -85,7 +98,7 @@ bool EventListenerMgr::RegisterPrinterListener(const CallbackEventType &eventTyp
     }
 
     auto callback =
-        std::make_shared<PrinterEventCallback>(userId, pid, eventType, listener, eventListenerDeathRecipient_);
+        std::make_shared<PrinterEventCallback>(userId, pid, eventType, listener, GetDeathRecipient());
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
     PRINT_HILOGI("RegisterPrinterListener type=%{public}d, counter=%{public}d, pid=%{public}d, userId=%{public}d",
@@ -124,7 +137,7 @@ bool EventListenerMgr::RegisterExtensionListener(
     }
 
     auto callback =
-        std::make_shared<ExtensionEventCallback>(userId, pid, eventType, listener, eventListenerDeathRecipient_);
+        std::make_shared<ExtensionEventCallback>(userId, pid, eventType, listener, GetDeathRecipient());
     callback->SetExtensionId(extensionId);
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
@@ -170,7 +183,7 @@ bool EventListenerMgr::RegisterPrintJobListener(
         return false;
     }
     auto callback = std::make_shared<PrintJobEventCallback>(userId, pid, eventType,
-        eventListenerDeathRecipient_, CheckJobManagePermission());
+        GetDeathRecipient(), CheckJobManagePermission());
     callback->SetListener(listener, jobId);
     registeredListeners_[userId][eventType].emplace_back(callback);
     counter_++;
@@ -360,41 +373,13 @@ void EventListenerMgr::ClearAllListeners()
 
 bool EventListenerMgr::Execute(const CallbackInfo &callbackInfo)
 {
-    std::vector<std::shared_ptr<BaseEventCallback>> callbacks;
+    std::lock_guard<std::mutex> lock(mutex_);
     CallbackEventType type = callbackInfo.cbEventType;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (auto userIt = registeredListeners_.find(callbackInfo.userId);
-            userIt != registeredListeners_.end()) {
-            if (auto eventIt = userIt->second.find(type); eventIt != userIt->second.end()) {
-                callbacks = eventIt->second;
-            }
-        } else {
-            for (const auto &[_, eventMap] : registeredListeners_) {
-                if (auto eventIt = eventMap.find(type); eventIt != eventMap.end()) {
-                    callbacks.insert(callbacks.end(), eventIt->second.begin(), eventIt->second.end());
-                }
-            }
-        }
+    auto userIt = registeredListeners_.find(callbackInfo.userId);
+    if (userIt != registeredListeners_.end()) {
+        return ExecuteForUser(userIt->second, type, callbackInfo);
     }
-    std::vector<pid_t> successPids;
-    std::vector<pid_t> failPids;
-    bool result = true;
-    for (auto &callback : callbacks) {
-        if (!callback) {
-            continue;
-        }
-        ExecuteResult execResult = callback->Execute(callbackInfo);
-        if (execResult == ExecuteResult::FAIL) {
-            result = false;
-            failPids.push_back(callback->GetPid());
-        } else if (execResult == ExecuteResult::SUCCESS) {
-            successPids.push_back(callback->GetPid());
-        }
-    }
-    PRINT_HILOGI("Execute callback for eventType %{public}d: success pids %{public}s, fail pids %{public}s",
-        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
-    return result;
+    return ExecuteForAllUsers(type, callbackInfo);
 }
 
 std::string EventListenerMgr::FormatPids(const std::vector<pid_t> &pids)
@@ -407,6 +392,70 @@ std::string EventListenerMgr::FormatPids(const std::vector<pid_t> &pids)
         }
     }
     result += "]";
+    return result;
+}
+
+bool EventListenerMgr::ExecuteForUser(
+    const std::unordered_map<CallbackEventType, std::vector<std::shared_ptr<BaseEventCallback>>> &eventMap,
+    CallbackEventType type, const CallbackInfo &callbackInfo)
+{
+    auto eventIt = eventMap.find(type);
+    if (eventIt == eventMap.end()) {
+        PRINT_HILOGW("listener not exist, type = %{public}d", type);
+        return true;
+    }
+ 
+    std::vector<pid_t> successPids;
+    std::vector<pid_t> failPids;
+    bool result = true;
+    
+    for (auto &callback : eventIt->second) {
+        if (!callback) {
+            continue;
+        }
+        ExecuteResult execResult = callback->Execute(callbackInfo);
+        if (execResult == ExecuteResult::FAIL) {
+            result = false;
+            failPids.push_back(callback->GetPid());
+        } else if (execResult == ExecuteResult::SUCCESS) {
+            successPids.push_back(callback->GetPid());
+        }
+    }
+ 
+    PRINT_HILOGI("Execute callback for eventType %{public}d: success pid %{public}s, fail pid %{public}s",
+        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
+    
+    return result;
+}
+ 
+bool EventListenerMgr::ExecuteForAllUsers(CallbackEventType type, const CallbackInfo &callbackInfo)
+{
+    std::vector<pid_t> successPids;
+    std::vector<pid_t> failPids;
+    bool result = true;
+    
+    for (const auto &[_, eventMap] : registeredListeners_) {
+        auto eventIt = eventMap.find(type);
+        if (eventIt == eventMap.end()) {
+            continue;
+        }
+        for (auto &callback : eventIt->second) {
+            if (!callback) {
+                continue;
+            }
+            ExecuteResult execResult = callback->Execute(callbackInfo);
+            if (execResult == ExecuteResult::FAIL) {
+                result = false;
+                failPids.push_back(callback->GetPid());
+            } else if (execResult == ExecuteResult::SUCCESS) {
+                successPids.push_back(callback->GetPid());
+            }
+        }
+    }
+    
+    PRINT_HILOGI("Execute callback for eventType %{public}d: success pids %{public}s, fail pids %{public}s",
+        type, FormatPids(successPids).c_str(), FormatPids(failPids).c_str());
+    
     return result;
 }
 

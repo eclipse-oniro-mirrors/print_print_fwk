@@ -29,6 +29,7 @@ SaneManagerClient::SaneManagerClient() : proxy_(nullptr)
 }
 SaneManagerClient::~SaneManagerClient()
 {
+    std::unique_lock<std::shared_mutex> lock(serviceLock_);
     proxy_ = nullptr;
     deathRecipient_ = nullptr;
 }

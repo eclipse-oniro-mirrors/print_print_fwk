@@ -1834,6 +1834,7 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_call
         }
         int32_t ret = PrintManagerClient::GetInstance().AuthSmbDevice(context->sharedHost,
             context->userName, context->userPasswd, context->printerInfos);
+        context->userPasswd = nullptr;
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to get sharedHosts");
