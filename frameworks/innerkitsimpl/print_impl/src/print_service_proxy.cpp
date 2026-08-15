@@ -499,7 +499,7 @@ int32_t PrintServiceProxy::QueryPrinterInfoByPrinterId(const std::string &printe
         OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYPRINTERID, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
-        PRINT_HILOGD("PrintServiceProxy QueryPrinterInfoByPrinterId Failed.");
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterInfoByPrinterId Failed, error code = %{public}d", ret);
         return ret;
     }
     auto printerInfoPtr = PrinterInfo::Unmarshalling(reply);
@@ -527,7 +527,7 @@ int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNa
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYADDEDPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
-        PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter Failed.");
+        PRINT_HILOGE("PrintServiceProxy QueryAddedPrinter Failed, error code = %{public}d", ret);
         return ret;
     }
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter out. ret = [%{public}d]", ret);
@@ -551,7 +551,7 @@ int32_t PrintServiceProxy::QueryRawAddedPrinter(std::vector<std::string> &printe
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYRAWADDEDPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
-        PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter Failed.");
+        PRINT_HILOGE("PrintServiceProxy QueryRawAddedPrinter Failed, error code = %{public}d", ret);
         return ret;
     }
     PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter out. ret = [%{public}d]", ret);
