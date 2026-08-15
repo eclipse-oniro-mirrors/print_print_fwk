@@ -1138,7 +1138,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053_NeedRename, TestSize.Le
 
     std::vector<std::string> keyList;
     keyList.resize(TEST_OVER_SIZE);
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintService::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(TEST_LONG_PRINTER_ID));
     EXPECT_TRUE(data.WriteStringVector(keyList));
 
@@ -1165,7 +1165,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053b_EmptyKeyListAllowed, T
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERPROPERTIES);
 
     std::vector<std::string> keyList;
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintService::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(TEST_LONG_PRINTER_ID));
     EXPECT_TRUE(data.WriteStringVector(keyList));
 
