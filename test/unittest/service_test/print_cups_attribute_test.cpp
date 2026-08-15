@@ -733,4 +733,14 @@ HWTEST_F(PrintCupsAttributeTest, ParsePrinterOpt_ResolutionDefault_ValidDpi, Tes
     EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.verticalDpi, 600u);
 }
 
+HWTEST_F(PrintCupsAttributeTest, ParsePrinterOpt_ResolutionDefault_InvalidJson_Skipped, TestSize.Level1)
+{
+    Json::Value cupsOpt;
+    cupsOpt["printer-resolution-default"] = "notjson";
+    Print_PrinterInfo nativePrinterInfo = {0};
+    ParsePrinterOpt(cupsOpt, nativePrinterInfo);
+    EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.horizontalDpi, 0u);
+    EXPECT_EQ(nativePrinterInfo.defaultValue.defaultResolution.verticalDpi, 0u);
+}
+
 }  // namespace OHOS::Print

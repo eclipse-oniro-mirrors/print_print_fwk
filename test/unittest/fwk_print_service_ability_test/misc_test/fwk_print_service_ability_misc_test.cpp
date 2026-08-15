@@ -444,6 +444,26 @@ HWTEST_F(PrintServiceAbilityTest, DestroyExtension_RepeatCall_NoDuplicateCallbac
     EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
 }
 
+/**
+ * @tc.name: DestroyExtension_UnloadState_Skipped
+ * @tc.desc: DestroyExtension skips extensions whose state is below PRINT_EXTENSION_LOADING (continue branch).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceAbilityTest, DestroyExtension_UnloadState_Skipped, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = "com.ohos.spooler:0";
+    int32_t userId = service->GetCurrentUserId();
+    std::string stateKey = PrintUtils::MakeExtensionStateKey(userId, extensionId);
+    service->extensionStateList_.clear();
+    service->extensionStateList_[stateKey] = PRINT_EXTENSION_UNLOAD;
+    EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
+    EXPECT_EQ(service->extensionStateList_[stateKey], PRINT_EXTENSION_UNLOAD);
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
