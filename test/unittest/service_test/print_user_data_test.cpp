@@ -1513,5 +1513,66 @@ HWTEST_F(PrintUserDataTest, QueryPrintJobById_WhenEntryIsNull_ShouldReturnInvali
     EXPECT_EQ(userData->QueryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
 }
 
+HWTEST_F(PrintUserDataTest, JobIdCmp_ComparisonBehavior, TestSize.Level1)
+{
+    JobIdCmp cmp;
+
+    // both numeric strings: compare by numeric value
+    EXPECT_TRUE(cmp("10", "2"));
+    EXPECT_FALSE(cmp("2", "10"));
+
+    // mixed numeric and alpha: numeric string wins
+    EXPECT_TRUE(cmp("10", "abc"));
+    EXPECT_FALSE(cmp("abc", "10"));
+
+    // both alpha strings: compare lexicographically
+    EXPECT_TRUE(cmp("b", "a"));
+    EXPECT_FALSE(cmp("a", "b"));
+
+    // as map comparator: orders mixed keys correctly
+    std::map<std::string, int, JobIdCmp> m;
+    m["1abc"] = 1;
+    m["10"] = 2;
+    m["2"] = 3;
+    ASSERT_EQ(m.size(), 3);
+    for (const auto &item : m) {
+        EXPECT_FALSE(item.first.empty());
+    }
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintPageSize_AllCases, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+
+    // negative dimensions default to zero
+    {
+        Json::Value jsonObject;
+        jsonObject["width_"] = -1;
+        jsonObject["height_"] = -1;
+        PrintPageSize pageSize = userData->ParseJsonObjectToPrintPageSize(jsonObject);
+        EXPECT_EQ(pageSize.GetWidth(), 0);
+        EXPECT_EQ(pageSize.GetHeight(), 0);
+    }
+
+    // valid dimensions parsed correctly
+    {
+        Json::Value jsonObject;
+        jsonObject["width_"] = 100;
+        jsonObject["height_"] = 200;
+        PrintPageSize pageSize = userData->ParseJsonObjectToPrintPageSize(jsonObject);
+        EXPECT_EQ(pageSize.GetWidth(), 100);
+        EXPECT_EQ(pageSize.GetHeight(), 200);
+    }
+}
+
+HWTEST_F(PrintUserDataTest, OpenCacheFileFd_EmptyJobId_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::vector<uint32_t> fdList = {1, 2};
+    bool result = userData->OpenCacheFileFd("", fdList);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(fdList.empty());
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -15,6 +15,7 @@
 
 #include "print_utils.h"
 
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -56,7 +57,8 @@ const int32_t PRIVATE_IPV4_CLASS_C_SECOND = 168;
 std::string PrintUtils::ToLower(const std::string &s)
 {
     std::string res = s;
-    std::transform(res.begin(), res.end(), res.begin(), tolower);
+    std::transform(res.begin(), res.end(), res.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return res;
 }
 

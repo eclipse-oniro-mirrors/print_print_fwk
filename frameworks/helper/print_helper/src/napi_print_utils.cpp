@@ -468,22 +468,6 @@ void NapiPrintUtils::SetBooleanProperty(napi_env env, napi_value object, const s
     napi_set_named_property(env, object, name.c_str(), jsValue);
 }
 
-std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
-{
-    if (value == nullptr) {
-        return "";
-    }
-    std::string resultValue = "";
-    char value_string[256] = { 0 };
-    size_t value_size = 256;
-    size_t result = 0;
-    napi_status status = napi_get_value_string_utf8(env, value, value_string, value_size, &result);
-    if (status == napi_ok && result > 0) {
-        resultValue = value_string;
-    }
-    return resultValue;
-}
-
 size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length)
 {
     size_t argc = length;

@@ -14,6 +14,7 @@
  */
 
 #include "scan_context.h"
+#include <cstdint>
 #include "scan_manager_client.h"
 #include "scan_callback.h"
 #include "scan_log.h"
@@ -188,6 +189,10 @@ std::string ScanContext::SetRangeStrInParaTable(
         int32_t maxValue = range.GetMaxValue();
         int32_t quantValue = range.GetQuantValue();
         if (quantValue != 0) {
+            if (quantValue == -1 && (minValue == INT32_MIN || maxValue == INT32_MIN)) {
+                SCAN_HILOGE("signed division overflow: INT32_MIN / -1");
+                return "";
+            }
             minValue /= quantValue;
             maxValue /= quantValue;
             paraTable.quantMap[buffLength] = quantValue;

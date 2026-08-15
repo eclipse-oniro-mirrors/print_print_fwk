@@ -482,8 +482,9 @@ Json::Value PrintPageSize::ConvertToJsonObject() const
 
 bool PrintPageSize::ConvertToPwgStyle()
 {
-    pwg_media_t *pwgMedia = pwgMediaForSize(round(GetWidth() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH),
-        round(GetHeight() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH));
+    double widthValue = static_cast<uint64_t>(GetWidth()) * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH;
+    double heightValue = static_cast<uint64_t>(GetHeight()) * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH;
+    pwg_media_t *pwgMedia = pwgMediaForSize(round(widthValue), round(heightValue));
     if (!pwgMedia || !pwgMedia->ppd || !pwgMedia->pwg) {
         PRINT_HILOGE("pwgMedia Convert fail!");
         return false;

@@ -630,6 +630,11 @@ bool OpenCacheFdsForJob(const std::string &cacheDir, const std::vector<std::stri
             ret = false;
             break;
         }
+        size_t dirLen = cacheDir.length();
+        if (strncmp(cachePath, cacheDir.c_str(), dirLen) != 0 ||
+            (cachePath[dirLen] != '\0' && cachePath[dirLen] != '/')) {
+            continue;
+        }
         int32_t fd = open(cachePath, openMode);
         if (fd < 0) {
             PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
@@ -645,6 +650,9 @@ bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32
 {
     PRINT_HILOGI("OpenCacheFileFd Start.");
     fdList.clear();
+    if (jobId.empty()) {
+        return false;
+    }
     char cachePath[PATH_MAX] = { 0 };
     std::string cacheDir = ObtainUserCacheDirectory();
     if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
@@ -1018,11 +1026,11 @@ PrintPageSize PrintUserData::ParseJsonObjectToPrintPageSize(const Json::Value &j
     if (PrintJsonUtil::IsMember(jsonObject, "name_") && jsonObject["name_"].isString()) {
         pageSize.SetName(jsonObject["name_"].asString());
     }
-    if (PrintJsonUtil::IsMember(jsonObject, "width_") && jsonObject["width_"].isInt()) {
-        pageSize.SetWidth(jsonObject["width_"].asInt());
+    if (PrintJsonUtil::IsMember(jsonObject, "width_") && jsonObject["width_"].isUInt()) {
+        pageSize.SetWidth(jsonObject["width_"].asUInt());
     }
-    if (PrintJsonUtil::IsMember(jsonObject, "height_") && jsonObject["height_"].isInt()) {
-        pageSize.SetHeight(jsonObject["height_"].asInt());
+    if (PrintJsonUtil::IsMember(jsonObject, "height_") && jsonObject["height_"].isUInt()) {
+        pageSize.SetHeight(jsonObject["height_"].asUInt());
     }
     return pageSize;
 }

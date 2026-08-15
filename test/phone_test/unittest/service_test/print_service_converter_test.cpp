@@ -276,5 +276,30 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0034_CustomPageSiz
     EXPECT_EQ(ConvertCustomPageSizeFromWidthAndLength(100.0, 200.0, std::string("cm"), dst), false);
 }
 
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0035_DpcToDpi_OverflowAndBoundary, TestSize.Level1)
+{
+    // 边界值
+    EXPECT_EQ(DpcToDpi(7158278), 17895695);
+    // 正向溢出
+    EXPECT_EQ(DpcToDpi(7158279), 0);
+    // 负向溢出
+    EXPECT_EQ(DpcToDpi(-7158279), 0);
+    // 负值正常
+    EXPECT_EQ(DpcToDpi(-120), -300);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0039_CustomPageSize_MultiScenario, TestSize.Level1)
+{
+    PrintPageSize dst;
+    // 有效 mm
+    EXPECT_TRUE(ConvertCustomPageSizeFromWidthAndLength(100.0, 200.0, "mm", dst));
+    // 负宽度
+    EXPECT_FALSE(ConvertCustomPageSizeFromWidthAndLength(-100.0, 200.0, "mm", dst));
+    // 溢出
+    EXPECT_FALSE(ConvertCustomPageSizeFromWidthAndLength(200000000.0, 200000000.0, "mm", dst));
+    // 有效 inch
+    EXPECT_TRUE(ConvertCustomPageSizeFromWidthAndLength(1.0, 1.0, "in", dst));
+}
+
 }  // namespace Print
 }  // namespace OHOS

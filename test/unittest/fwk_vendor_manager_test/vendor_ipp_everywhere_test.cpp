@@ -202,5 +202,18 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
     std::vector<std::string> propertyKeys;
     EXPECT_FALSE(vendorDriver.OnQueryProperties(printerId, propertyKeys));
 }
+
+HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0009, TestSize.Level2)
+{
+    VendorIppEveryWhere vendorDriver;
+    std::string uri = "ipp://192.168.1.1:631/ipp/print";
+    EXPECT_TRUE(vendorDriver.ConvertPrinterIdByUri(uri));
+    EXPECT_EQ(uri, "192.168.1.1");
+
+    std::string boundaryUri = "ipp://:631/ipp/print";
+    EXPECT_FALSE(vendorDriver.ConvertPrinterIdByUri(boundaryUri));
+    std::string underflowUri = ":631/ipp/printipp://host";
+    EXPECT_FALSE(vendorDriver.ConvertPrinterIdByUri(underflowUri));
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -3300,5 +3300,23 @@ HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_Success, TestSize.Leve
     EXPECT_EQ(PrintManagerClient::GetInstance().StartSharedHostDiscovery(), E_PRINT_NONE);
 }
 
+/**
+ * @tc.name: PrintManagerClientTest_0167_SetWantParam
+ * @tc.desc: SetWantParam sets spooler element, job id and caller token on Want.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0167_SetWantParam, TestSize.Level1)
+{
+    AAFwk::Want want;
+    std::string taskId = "task_0167";
+    PrintManagerClient::GetInstance().SetWantParam(want, taskId);
+
+    EXPECT_EQ(want.GetElement().GetBundleName(), std::string("com.ohos.spooler"));
+    EXPECT_EQ(want.GetElement().GetAbilityName(), std::string("PrintServiceExtAbility"));
+    EXPECT_EQ(want.GetStringParam("jobId"), taskId);
+    EXPECT_NE(want.GetIntParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, 0), 0);
+}
+
 }  // namespace Print
 }  // namespace OHOS

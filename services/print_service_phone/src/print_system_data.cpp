@@ -287,6 +287,15 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
     return true;
 }
 
+static bool ReadIntPreference(const Json::Value &json, const std::string &key, int32_t &value)
+{
+    if (!PrintJsonUtil::IsMember(json, key) || !json[key].isString() || json[key].asString().empty()) {
+        return false;
+    }
+    PrintUtil::ConvertToInt(json[key].asString(), value);
+    return true;
+}
+
 bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences)
 {
     bool updatePreferences = false;
@@ -295,25 +304,19 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, 
         updatePreferences = true;
         preferences.SetDefaultPageSizeId(settingJson["pagesizeId"].asString());
     }
-    if (PrintJsonUtil::IsMember(settingJson, "orientation") && settingJson["orientation"].isString() &&
-        !settingJson["orientation"].asString().empty()) {
+    int32_t defaultOrientation = PRINT_ORIENTATION_MODE_NONE;
+    if (ReadIntPreference(settingJson, "orientation", defaultOrientation)) {
         updatePreferences = true;
-        int32_t defaultOrientation = 0;
-        PrintUtil::ConvertToInt(settingJson["orientation"].asString(), defaultOrientation);
         preferences.SetDefaultOrientation(defaultOrientation);
     }
-    if (PrintJsonUtil::IsMember(settingJson, "duplex") && settingJson["duplex"].isString() &&
-        !settingJson["duplex"].asString().empty()) {
+    int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
+    if (ReadIntPreference(settingJson, "duplex", defaultDuplexMode)) {
         updatePreferences = true;
-        int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
-        PrintUtil::ConvertToInt(settingJson["duplex"].asString(), defaultDuplexMode);
         preferences.SetDefaultDuplexMode(defaultDuplexMode);
     }
-    if (PrintJsonUtil::IsMember(settingJson, "quality") && settingJson["quality"].isString() &&
-        !settingJson["quality"].asString().empty()) {
+    int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
+    if (ReadIntPreference(settingJson, "quality", defaultPrintQuality)) {
         updatePreferences = true;
-        int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
-        PrintUtil::ConvertToInt(settingJson["quality"].asString(), defaultPrintQuality);
         preferences.SetDefaultPrintQuality(defaultPrintQuality);
     }
     if (PrintJsonUtil::IsMember(settingJson, "mediaType") && settingJson["mediaType"].isString() &&
@@ -1227,6 +1230,16 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
     return E_PRINT_NONE;
 }
 
+static bool UpdateIntCapOption(const Json::Value &capOpt, const std::string &key,
+    bool apply, int32_t &value)
+{
+    if (!apply || !PrintJsonUtil::IsMember(capOpt, key) || !capOpt[key].isString()) {
+        return false;
+    }
+    PrintUtil::ConvertToInt(capOpt[key].asString(), value);
+    return true;
+}
+
 void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences)
 {
     PRINT_HILOGI("BuildPrinterPreferenceByDefault enter");
@@ -1236,24 +1249,20 @@ void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, Print
     }
 
     int32_t defaultOrientation = PRINT_ORIENTATION_MODE_NONE;
-    if (printPreferences.GetDefaultOrientation() != PRINT_ORIENTATION_MODE_NONE &&
-        PrintJsonUtil::IsMember(capOpt, "orientation-requested-default") &&
-        capOpt["orientation-requested-default"].isString()) {
-        PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].asString(), defaultOrientation);
+    if (UpdateIntCapOption(capOpt, "orientation-requested-default",
+        printPreferences.GetDefaultOrientation() != PRINT_ORIENTATION_MODE_NONE, defaultOrientation)) {
+        printPreferences.SetDefaultOrientation(defaultOrientation);
     }
-    printPreferences.SetDefaultOrientation(defaultOrientation);
 
-    if (printPreferences.GetDefaultDuplexMode() != DUPLEX_MODE_NONE &&
-        PrintJsonUtil::IsMember(capOpt, "sides-default") && capOpt["sides-default"].isString()) {
-        int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
-        PrintUtil::ConvertToInt(capOpt["sides-default"].asString(), defaultDuplexMode);
+    int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
+    if (UpdateIntCapOption(capOpt, "sides-default",
+        printPreferences.GetDefaultDuplexMode() != DUPLEX_MODE_NONE, defaultDuplexMode)) {
         printPreferences.SetDefaultDuplexMode(defaultDuplexMode);
     }
 
-    if (printPreferences.GetDefaultPrintQuality() != PRINT_QUALITY_NORMAL &&
-        PrintJsonUtil::IsMember(capOpt, "print-quality-default") && capOpt["print-quality-default"].isString()) {
-        int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
-        PrintUtil::ConvertToInt(capOpt["print-quality-default"].asString(), defaultPrintQuality);
+    int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
+    if (UpdateIntCapOption(capOpt, "print-quality-default",
+        printPreferences.GetDefaultPrintQuality() != PRINT_QUALITY_NORMAL, defaultPrintQuality)) {
         printPreferences.SetDefaultPrintQuality(defaultPrintQuality);
     }
 
@@ -1262,9 +1271,9 @@ void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, Print
         printPreferences.SetDefaultMediaType(capOpt["media-type-default"].asString());
     }
 
-    if (PrintJsonUtil::IsMember(capOpt, "defaultColorMode") && capOpt["defaultColorMode"].isString()) {
-        int32_t defaultColorMode = PRINT_COLOR_MODE_MONOCHROME;
-        PrintUtil::ConvertToInt(capOpt["defaultColorMode"].asString(), defaultColorMode);
+    int32_t defaultColorMode = PRINT_COLOR_MODE_MONOCHROME;
+    if (PrintJsonUtil::IsMember(capOpt, "defaultColorMode") && capOpt["defaultColorMode"].isString() &&
+        PrintUtil::ConvertToInt(capOpt["defaultColorMode"].asString(), defaultColorMode)) {
         printPreferences.SetDefaultColorMode(defaultColorMode);
     }
 
