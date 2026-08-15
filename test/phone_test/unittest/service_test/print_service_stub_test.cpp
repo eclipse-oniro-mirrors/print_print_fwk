@@ -1145,7 +1145,37 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053_NeedRename, TestSize.Le
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
     ON_CALL(*stub, QueryPrinterProperties).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+    EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_GENERIC_FAILURE);
+    int32_t retCode = 0;
+    EXPECT_TRUE(reply.ReadInt32(retCode));
+    EXPECT_EQ(retCode, E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: PrintServiceStubTest_0053b
+ * @tc.desc: Verify that empty keyList is accepted by OnQueryPrinterProperties.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053b_EmptyKeyListAllowed, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERPROPERTIES);
+
+    std::vector<std::string> keyList;
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(TEST_LONG_PRINTER_ID));
+    EXPECT_TRUE(data.WriteStringVector(keyList));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, QueryPrinterProperties).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    int32_t retCode = 0;
+    EXPECT_TRUE(reply.ReadInt32(retCode));
+    EXPECT_EQ(retCode, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0054_NeedRename, TestSize.Level0)
