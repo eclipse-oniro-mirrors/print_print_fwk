@@ -6290,6 +6290,7 @@ void PrintServiceAbility::SupplementBsuniPrinterAdvanceOptionsIfNeeded(
         return;
     }
     info = *printerInfoPtr;
+    BuildPrinterPreference(info);
     printSystemData_.InsertAddedPrinter(printerId, info);
     printSystemData_.SavePrinterFile(printerId);
     PRINT_HILOGI("supplement bsuni advance options succeed");
