@@ -41,7 +41,9 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
     if (iter == jobStateMap_.end()) {
         jobStateMap_[jobId] = newStates;
         for (uint32_t state : newStates) {
-            PrintNotificationBuilder::CreateNotification(state, printerName);
+            if (state != PRINT_JOB_BLOCKED_AUTHENTICATION) {
+                PrintNotificationBuilder::CreateNotification(state, printerName);
+            }
             const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
             HisysEventUtil::ReportPrintFailure(resourceKey, state);
         }
@@ -52,7 +54,9 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
             oldStates.begin(), oldStates.end(),
             std::inserter(newStatesToNotify, newStatesToNotify.begin()));
         for (uint32_t state : newStatesToNotify) {
-            PrintNotificationBuilder::CreateNotification(state, printerName);
+            if (state != PRINT_JOB_BLOCKED_AUTHENTICATION) {
+                PrintNotificationBuilder::CreateNotification(state, printerName);
+            }
             const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
             HisysEventUtil::ReportPrintFailure(resourceKey, state);
         }

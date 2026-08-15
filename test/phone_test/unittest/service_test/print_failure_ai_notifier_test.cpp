@@ -325,5 +325,35 @@ HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_MultipleJobs_ClearOne_OthersR
     EXPECT_NE(printFailureAiNotifier.jobStateMap_.find(jobId2), printFailureAiNotifier.jobStateMap_.end());
 }
 
+HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_AuthState_StateTracked, TestSize.Level1)
+{
+    std::string jobId = "test_job_auth_001";
+    uint32_t subState = PRINT_JOB_BLOCKED_AUTHENTICATION;
+    std::string printerName = "TestPrinter";
+
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
+    auto it = printFailureAiNotifier.jobStateMap_.find(jobId);
+    EXPECT_NE(it, printFailureAiNotifier.jobStateMap_.end());
+    EXPECT_EQ(it->second.size(), 1);
+    EXPECT_NE(it->second.find(PRINT_JOB_BLOCKED_AUTHENTICATION), it->second.end());
+}
+
+HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_CompoundStateWithAuth_StatesParsed, TestSize.Level1)
+{
+    std::string jobId = "test_job_auth_002";
+    std::string printerName = "TestPrinter";
+    uint32_t compoundState = 1 + PRINT_JOB_BLOCKED_AUTHENTICATION * 100;
+
+    printFailureAiNotifier.HandleJobBlocked(jobId, compoundState, printerName);
+
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 2);
+    EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(1),
+        printFailureAiNotifier.jobStateMap_[jobId].end());
+    EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(PRINT_JOB_BLOCKED_AUTHENTICATION),
+        printFailureAiNotifier.jobStateMap_[jobId].end());
+}
+
 }  // namespace Print
 }  // namespace OHOS
