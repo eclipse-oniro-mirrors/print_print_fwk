@@ -44,28 +44,25 @@ PrintCallback::~PrintCallback()
     } else {
         auto mutexPtr = mutex_;
         std::lock_guard<std::mutex> autoLock(*mutexPtr);
-    Param *param = new Param;
-    param->env = env_;
+        auto param = std::make_shared<Param>();
+        param->env = env_;
         param->callbackRef = ref_;
-    auto task = [param]() {
-        napi_handle_scope scope = nullptr;
+        auto task = [param]() {
+            napi_handle_scope scope = nullptr;
             napi_open_handle_scope(param->env, &scope);
             if (scope == nullptr) {
                 PRINT_HILOGE("scope is a nullptr");
                 NapiPrintUtils::DeleteReference(param->env, param->callbackRef);
-                delete param;
                 return;
             }
             napi_ref callbackRef_ = param->callbackRef;
             NapiPrintUtils::DeleteReference(param->env, callbackRef_);
             napi_close_handle_scope(param->env, scope);
-            delete param;
         };
         napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
         if (ret != napi_ok) {
             PRINT_HILOGE("napi_send_event fail");
             NapiPrintUtils::DeleteReference(env_, ref_);
-            delete param;
         }
     }
 }
@@ -195,26 +192,24 @@ static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
 bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     std::function<void(CallbackParam*)> workCb)
 {
-    CallbackParam *param = new CallbackParam;
+    auto param = std::make_shared<CallbackParam>();
 
     {
         std::lock_guard<std::mutex> lock(*mutex_);
         param->env = env_;
         param->ref = ref_;
         param->mutexPtr = mutex_;
-        paramFun(param);
+        paramFun(param.get());
     }
 
     auto task = [param, workCb]() {
         std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
-        workCb(param);
-        delete param;
+        workCb(param.get());
     };
 
     napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_ok) {
         PRINT_HILOGE("napi_send_event fail");
-        delete param;
         return false;
     }
     return true;

@@ -22,7 +22,7 @@ namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::Print;
 
-bool JsPrintCallback::Call(napi_env env, WorkParam *param, std::function<void(WorkParam*)> workCb)
+bool JsPrintCallback::Call(napi_env env, std::shared_ptr<WorkParam> param, std::function<void(WorkParam*)> workCb)
 {
     auto task = [param, workCb]() {
         if (param == nullptr) {
@@ -31,11 +31,9 @@ bool JsPrintCallback::Call(napi_env env, WorkParam *param, std::function<void(Wo
         }
         if (!workCb) {
             PRINT_HILOGE("workCb is a nullptr");
-            delete param;
             return;
         }
-        workCb(param);
-        delete param;
+        workCb(param.get());
     };
 
     napi_status ret = napi_send_event(env, task, napi_eprio_immediate);

@@ -320,7 +320,7 @@ bool JsPrintExtension::Callback(std::string funcName)
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new WorkParam(env, funcName);
+    auto workParam = std::make_shared<WorkParam>(env, funcName);
     auto workCb = [local](WorkParam *param) {
         if (param == nullptr) {
             PRINT_HILOGE("param is a nullptr");
@@ -341,7 +341,6 @@ bool JsPrintExtension::Callback(std::string funcName)
     bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
         PRINT_HILOGE("Callback fail, delete param");
-        delete workParam;
         return false;
     }
     return true;
@@ -360,7 +359,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new WorkParam(env, funcName);
+    auto workParam = std::make_shared<WorkParam>(env, funcName);
     workParam->printerId = printerId;
     
     auto workCb = [local](WorkParam *param) {
@@ -385,7 +384,6 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
     bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
         PRINT_HILOGE("Callback fail, delete param");
-        delete workParam;
         return false;
     }
     return true;
@@ -404,7 +402,7 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     }
     napi_env env = local->jsRuntime_.GetNapiEnv();
     PRINT_CHECK_NULL_AND_RETURN(env, false);
-    WorkParam *workParam = new WorkParam(env, funcName);
+    auto workParam = std::make_shared<WorkParam>(env, funcName);
     workParam->job = job;
     
     auto workCb = [local](WorkParam *param) {
@@ -429,7 +427,6 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
         PRINT_HILOGE("Callback fail, delete param");
-        delete workParam;
         return false;
     }
     return true;

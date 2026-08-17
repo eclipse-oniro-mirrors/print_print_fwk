@@ -38,7 +38,7 @@ ScanCallback::~ScanCallback()
         return;
     }
     SCAN_HILOGI("callback has been destroyed");
-    Param *param = new Param;
+    auto param = std::make_shared<Param>();
     param->env = env_;
     param->callbackRef = ref_;
     auto task = [param]() {
@@ -47,18 +47,15 @@ ScanCallback::~ScanCallback()
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
             NapiScanUtils::DeleteReference(param->env, param->callbackRef);
-            delete param;
             return;
         }
         napi_ref callbackRef = param->callbackRef;
         NapiScanUtils::DeleteReference(param->env, callbackRef);
         napi_close_handle_scope(param->env, scope);
-        delete param;
     };
     if (napi_send_event(env_, task, napi_eprio_low) != napi_ok) {
         SCAN_HILOGE("Failed to send event");
         NapiScanUtils::DeleteReference(env_, ref_);
-        delete param;
     }
 }
 
@@ -82,7 +79,8 @@ void CallbackParam::SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSy
     this->deviceInfoSync = deviceInfoSync;
 }
 
-bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc)
+bool ScanCallback::ExecuteNapiEventWork(std::shared_ptr<CallbackParam> param,
+    std::function<void(CallbackParam*)> workFunc)
 {
     SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(param, false, __func__);
     auto task = [param, workFunc]() {
@@ -94,24 +92,21 @@ bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
-            delete param;
             return;
         }
         napi_value callbackFunc = NapiScanUtils::GetReference(param->env, param->ref);
         if (callbackFunc != nullptr) {
-            workFunc(param);
+            workFunc(param.get());
             SCAN_HILOGI("run napi call deviceInfo callback fun success");
         } else {
             SCAN_HILOGE("get reference failed");
         }
         napi_close_handle_scope(param->env, scope);
-        delete param;
     };
 
     napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
     if (ret != napi_ok) {
         SCAN_HILOGE("napi_send_event fail");
-        delete param;
         return false;
     }
     return true;
@@ -134,7 +129,7 @@ bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
     SCAN_HILOGI("Enter OnCallback::ScanDeviceInfo");
 
-    CallbackParam *param = new CallbackParam;
+    auto param = std::make_shared<CallbackParam>();
 
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(state, info);
@@ -152,7 +147,7 @@ bool ScanCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info
 {
     SCAN_HILOGD("Enter OnCallback::ScanDeviceInfo");
 
-    CallbackParam *param = new CallbackParam;
+    auto param = std::make_shared<CallbackParam>();
 
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackSyncParam(state, info);
