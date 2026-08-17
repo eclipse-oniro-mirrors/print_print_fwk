@@ -99,13 +99,6 @@ bool RemotePrinterManager::Destroy()
     StopPrinterDiscovery();
     serviceAdapter_.SetOnServiceDiedCallback(nullptr);
 
-    {
-        std::lock_guard<std::mutex> lock(controlMutex_);
-        if (discoveryThread_.joinable()) {
-            discoveryThread_.join();
-        }
-    }
-
     std::lock_guard<std::mutex> lock(printerMapLock_);
     printerMap_.clear();
     return true;
@@ -217,6 +210,15 @@ bool RemotePrinterManager::StopPrinterDiscovery()
 {
     PRINT_HILOGI("RemotePrinterManager StopPrinterDiscovery");
     isDiscoveryRunning_.store(false);
+    cv_.notify_all();
+    std::thread threadToJoin;
+    {
+        std::lock_guard<std::mutex> lock(controlMutex_);
+        threadToJoin = std::move(discoveryThread_);
+    }
+    if (threadToJoin.joinable()) {
+        threadToJoin.join();
+    }
     return true;
 }
 
@@ -226,7 +228,9 @@ void RemotePrinterManager::DiscoveryLoop()
     while (isDiscoveryRunning_.load()) {
         int32_t result = serviceAdapter_.RequestPrinterList();
         PRINT_HILOGI("RequestPrinterList result: %{public}d", result);
-        std::this_thread::sleep_for(std::chrono::milliseconds(DISCOVERY_INTERVAL_MS));
+        std::unique_lock<std::mutex> lk(controlMutex_);
+        cv_.wait_for(lk, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS),
+            [this] { return !isDiscoveryRunning_.load(); });
     }
     PRINT_HILOGI("RemotePrinterManager DiscoveryLoop stopped");
 }
@@ -289,15 +293,23 @@ bool RemotePrinterManager::OnPrinterListReceived(const Json::Value &jsonArray)
 
 void RemotePrinterManager::RemoveDeprecatedPrinters(const std::vector<std::string> &currentDevIds)
 {
-    std::lock_guard<std::mutex> lock(printerMapLock_);
-    for (auto it = printerMap_.begin(); it != printerMap_.end();) {
-        if (std::find(currentDevIds.begin(), currentDevIds.end(), it->first) == currentDevIds.end()) {
-            PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(it->first).c_str());
-            PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(it->second->GetUri());
-            it = printerMap_.erase(it);
-        } else {
-            ++it;
+    std::vector<std::string> removedUris;
+    {
+        std::lock_guard<std::mutex> lock(printerMapLock_);
+        for (auto it = printerMap_.begin(); it != printerMap_.end();) {
+            if (std::find(currentDevIds.begin(), currentDevIds.end(), it->first) == currentDevIds.end()) {
+                PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(it->first).c_str());
+                if (it->second) {
+                    removedUris.push_back(it->second->GetUri());
+                }
+                it = printerMap_.erase(it);
+            } else {
+                ++it;
+            }
         }
+    }
+    for (const auto &uri : removedUris) {
+        PrintServiceAbility::GetInstance()->RemoveRemotePrinterInfo(uri);
     }
 }
 
@@ -347,16 +359,24 @@ bool RemotePrinterManager::OnPrinterStatusReceived(const Json::Value &jsonArray)
 void RemotePrinterManager::ClearAllPrinters()
 {
     PRINT_HILOGI("RemotePrinterManager ClearAllPrinters");
-    
+
     auto serviceAbility = PrintServiceAbility::GetInstance();
     PRINT_CHECK_NULL_RETURN_VOID(serviceAbility);
-    
-    std::lock_guard<std::mutex> lock(printerMapLock_);
-    for (const auto &printer : printerMap_) {
-        PRINT_HILOGI("[Printer: %{public}s] removed", printer.first.c_str());
-        serviceAbility->RemoveRemotePrinterInfo(printer.second->GetUri());
+
+    std::vector<std::string> removedUris;
+    {
+        std::lock_guard<std::mutex> lock(printerMapLock_);
+        for (const auto &printer : printerMap_) {
+            PRINT_HILOGI("[Printer: %{public}s] removed", printer.first.c_str());
+            if (printer.second) {
+                removedUris.push_back(printer.second->GetUri());
+            }
+        }
+        printerMap_.clear();
     }
-    printerMap_.clear();
+    for (const auto &uri : removedUris) {
+        serviceAbility->RemoveRemotePrinterInfo(uri);
+    }
 }
 
 } // namespace OHOS::Print

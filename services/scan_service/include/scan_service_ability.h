@@ -131,7 +131,7 @@ private:
     };
     std::optional<OpenedScanner> openedScanner_;
     std::atomic<ServiceRunningState> state_;
-    std::mutex lock_;
+    std::recursive_mutex lock_;
     static std::mutex instanceLock_;
     static sptr<ScanServiceAbility> instance_;
     static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
