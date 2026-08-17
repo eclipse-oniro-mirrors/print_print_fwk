@@ -89,6 +89,13 @@ namespace OHOS::Scan {
 #define CHECK_IS_EXCEED_SCAN_RANGE_VOID(count)     CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_NONE)
 #define CHECK_IS_EXCEED_SCAN_RANGE_INT(count)      CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_INVALID_PARAMETER)
 
+#define CHECK_VALUE_IN_RANGE(val, minVal, maxVal, retVal) \
+    do { \
+        if ((val) < (minVal) || (val) > (maxVal)) { \
+            return retVal; \
+        } \
+    } while (0)
+
 #define SCAN_CHECK_NULL_AND_RETURN(ptr, retVal)         \
     if ((ptr) == nullptr) {                             \
         SCAN_HILOGE("%{public}s is nullptr.", (#ptr));  \

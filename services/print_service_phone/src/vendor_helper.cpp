@@ -20,6 +20,7 @@
 #include <json/json.h>
 #include "print_json_util.h"
 #include "print_cups_client.h"
+#include "print_constant.h"
 
 namespace {
 constexpr uint32_t MAX_RESOLUTION_COUNT = 64;
@@ -28,6 +29,8 @@ const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
 const uint32_t MAX_COLOR_MODE_COUNT = 200;
+const uint32_t MAX_DUPLEX_MODE_COUNT = 1000;
+const uint32_t MAX_ARRAY_COUNT = 1000;
 }  // namespace
 
 namespace OHOS::Print {
@@ -57,6 +60,7 @@ bool ConvertArrayToList(const T1 *array, uint32_t count, std::vector<T2> &list, 
         PRINT_HILOGE("array is null");
         return false;
     }
+    CHECK_VALUE_IN_RANGE(count, 0, MAX_ARRAY_COUNT, false);
     for (uint32_t i = 0; i < count; ++i) {
         T2 data;
         if (convertType(array[i], data)) {
@@ -77,6 +81,7 @@ std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJ
         PRINT_HILOGE("invalid params");
         return "";
     }
+    CHECK_VALUE_IN_RANGE(count, 0, MAX_ARRAY_COUNT, "");
     std::vector<T> list;
     for (uint32_t i = 0; i < count; ++i) {
         AddToUniqueList<T>(list, array[i]);
@@ -581,6 +586,7 @@ bool UpdateQualityCapability(PrinterCapability &printerCap, const Print_PrinterC
         PRINT_HILOGW("supportedQualities is null");
         return false;
     }
+    CHECK_VALUE_IN_RANGE(capability->supportedQualitiesCount, 0, MAX_ARRAY_COUNT, false);
     std::vector<uint32_t> supportedQualityList;
     if (ConvertArrayToList<Print_Quality, uint32_t>(
         capability->supportedQualities,
@@ -636,6 +642,7 @@ bool UpdateDuplexCapability(PrinterCapability &printerCap, const Print_PrinterCa
         PRINT_HILOGW("supportedDuplexModes is null");
         return false;
     }
+    CHECK_VALUE_IN_RANGE(capability->supportedDuplexModesCount, 0, MAX_DUPLEX_MODE_COUNT, false);
     std::vector<uint32_t> supportedDuplexModes;
     if (ConvertArrayToList<Print_DuplexMode, uint32_t>(
         capability->supportedDuplexModes,

@@ -34,6 +34,7 @@ public:
         const char delimiter, const size_t minTokenLength);
     static std::string ExtractBaseName(const std::string& filePath);
     static std::string GetPathFromFd(int32_t fd);
+    static bool IsPathValid(const std::string &filePath);
 private:
     static std::unordered_map<SaneStatus, ScanErrorCode> saneStatusToScanErrorCodeMap_;
 };

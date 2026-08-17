@@ -675,6 +675,8 @@ napi_status NapiInnerScan::ParseExportInput(napi_env env, napi_value *argv, Napi
     napi_value fdArray = argv[NapiScanUtils::INDEX_ONE];
     uint32_t arrayLength = 0;
     SCAN_CALL_BASE(env, napi_get_array_length(env, fdArray, &arrayLength), napi_invalid_arg);
+    SCAN_ASSERT_BASE(env, arrayLength <= static_cast<uint32_t>(MAX_FD_COUNT),
+        "pictureFdList length exceeds maximum", napi_invalid_arg);
     for (uint32_t i = 0; i < arrayLength; i++) {
         napi_value element;
         SCAN_CALL_BASE(env, napi_get_element(env, fdArray, i, &element), napi_invalid_arg);

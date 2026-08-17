@@ -41,6 +41,7 @@ SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
     }
     int32_t format = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(format), nullptr);
+    CHECK_VALUE_IN_RANGE(format, SANE_FRAME_GRAY, SANE_FRAME_MAX - 1, nullptr);
     obj->format_ = static_cast<SaneFrame>(format);
     int32_t lastFrame = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(lastFrame), nullptr);
@@ -49,6 +50,10 @@ SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->pixelsPerLine_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->lines_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->depth_), nullptr);
+    CHECK_VALUE_IN_RANGE(obj->bytesPerLine_, 0, MAX_IMAGE_DIMENSION, nullptr);
+    CHECK_VALUE_IN_RANGE(obj->pixelsPerLine_, 0, MAX_IMAGE_DIMENSION, nullptr);
+    CHECK_VALUE_IN_RANGE(obj->lines_, 0, MAX_IMAGE_DIMENSION, nullptr);
+    CHECK_VALUE_IN_RANGE(obj->depth_, 0, MAX_IMAGE_DIMENSION, nullptr);
     return obj.release();
 }
 }   // namespace OHOS::Scan

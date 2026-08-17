@@ -39,6 +39,7 @@ SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->info_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueNumber_), nullptr);
+    CHECK_VALUE_IN_RANGE(obj->valueNumber_, 0, SCAN_MAX_COUNT, nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32Vector(&obj->valueNumList_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(obj->valueStr_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(obj->valueBool_), nullptr);

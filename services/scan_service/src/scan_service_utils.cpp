@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <unistd.h>
 #include <climits>
+#include <cstdlib>
 #include "scan_log.h"
 #include "scan_service_utils.h"
 #include "scan_util.h"
@@ -167,5 +168,17 @@ std::string ScanServiceUtils::ExtractBaseName(const std::string& filePath)
         return filePath.substr(0, pos);
     }
     return filePath;
+}
+
+bool ScanServiceUtils::IsPathValid(const std::string &filePath)
+{
+    auto path = filePath.substr(0, filePath.rfind('/'));
+    char resolvedPath[PATH_MAX + 1] = { 0 };
+    if (path.length() > PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
+        std::string(resolvedPath) != path) {
+        SCAN_HILOGE("invalid file path!");
+        return false;
+    }
+    return true;
 }
 }  // namespace OHOS::Scan

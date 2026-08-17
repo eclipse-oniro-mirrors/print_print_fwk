@@ -33,6 +33,7 @@ const uint32_t DPI_B = 600;
 const uint32_t DEFAULT_COUNT = 2;
 const uint32_t TEST_MAX_COPIES = 99;
 const uint32_t MAX_COLOR_MODE_COUNT = 200;
+const uint32_t MAX_DUPLEX_MODE_COUNT = 1000;
 const std::string PROTOCOL_JSON = "{\"printer_protocols\": {"
                 "\"lpd\": \"lpd://192.168.1.1:515/\", "
                 "\"socket\": \"socket://192.168.1.1:9100/\", "
@@ -352,6 +353,19 @@ HWTEST_F(VendorHelperTest, UpdateColorCapability_NormalCount_ReturnsTrue, TestSi
     Print_PrinterCapability capability = {0};
     BuildCapability(capability);
     EXPECT_TRUE(UpdateColorCapability(printerCap, &capability));
+}
+
+bool UpdateDuplexCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability);
+
+HWTEST_F(VendorHelperTest, UpdateDuplexCapability_CountExceedsMax_ReturnsFalse, TestSize.Level1)
+{
+    PrinterCapability printerCap;
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    std::vector<Print_DuplexMode> modes(MAX_DUPLEX_MODE_COUNT + 1, DUPLEX_MODE_ONE_SIDED);
+    capability.supportedDuplexModes = modes.data();
+    capability.supportedDuplexModesCount = MAX_DUPLEX_MODE_COUNT + 1;
+    EXPECT_FALSE(UpdateDuplexCapability(printerCap, &capability));
 }
 }  // namespace Print
 }  // namespace OHOS

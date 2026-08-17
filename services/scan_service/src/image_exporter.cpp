@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "image_exporter.h"
+#include "scan_service_utils.h"
 #include "image_packer.h"
 #include "image_source.h"
 #include "media_errors.h"
@@ -39,8 +40,8 @@ bool ImageExporter::FileExists(const std::string& path)
 
 int32_t ImageExporter::LoadDpiFromMetadata(const std::string& metaPath)
 {
-    if (!FileExists(metaPath)) {
-        SCAN_HILOGW("Metadata not found: %{private}s, using default DPI", metaPath.c_str());
+    if (!ScanServiceUtils::IsPathValid(metaPath)) {
+        SCAN_HILOGE("invalid metadata path");
         return DEFAULT_DPI;
     }
 
@@ -76,6 +77,10 @@ int32_t ImageExporter::LoadDpiFromMetadata(const std::string& metaPath)
 
 bool ImageExporter::LoadImageSizeFromMetadata(const std::string& metaPath, int32_t& width, int32_t& height)
 {
+    if (!ScanServiceUtils::IsPathValid(metaPath)) {
+        SCAN_HILOGE("invalid metadata path");
+        return false;
+    }
     std::ifstream metaFile(metaPath);
     if (!metaFile.is_open()) {
         SCAN_HILOGE("Open metadata file failed: %{private}s", metaPath.c_str());
@@ -214,6 +219,10 @@ int32_t ImageExporter::PackTiffImage(const std::string& tiffPath,
 
 int32_t ImageExporter::ExportToPng(const std::string& baseName, int32_t& pngFd, ScanPictureData& cacheManager)
 {
+    if (!ScanServiceUtils::IsPathValid(baseName)) {
+        SCAN_HILOGE("invalid baseName path");
+        return E_SCAN_SERVER_FAILURE;
+    }
     std::string rawPath = baseName + RAW_SUFFIX;
     std::string metaPath = baseName + META_SUFFIX;
     
@@ -269,6 +278,10 @@ int32_t ImageExporter::ExportToPng(const std::string& baseName, int32_t& pngFd, 
 
 int32_t ImageExporter::ExportToTiff(const std::string& baseName, int32_t& tiffFd, ScanPictureData& cacheManager)
 {
+    if (!ScanServiceUtils::IsPathValid(baseName)) {
+        SCAN_HILOGE("invalid baseName path");
+        return E_SCAN_SERVER_FAILURE;
+    }
     std::string rawPath = baseName + RAW_SUFFIX;
     std::string metaPath = baseName + META_SUFFIX;
     

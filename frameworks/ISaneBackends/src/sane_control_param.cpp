@@ -42,6 +42,7 @@ SaneControlParam* SaneControlParam::Unmarshalling(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->option_), nullptr);
     int32_t action = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(action), nullptr);
+    CHECK_VALUE_IN_RANGE(action, SANE_ACTION_GET_VALUE, SANE_ACTION_MAX - 1, nullptr);
     obj->action_ = static_cast<SaneAction>(action);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueType_), nullptr);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadInt32(obj->valueSize_), nullptr);

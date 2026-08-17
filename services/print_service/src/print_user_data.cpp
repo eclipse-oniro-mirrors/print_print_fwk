@@ -335,6 +335,7 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
         !userDataList[std::to_string(userId_)].isObject()) {
         PRINT_HILOGW("can not find current userId");
         SetUserDataToFile();
+        return;
     }
     Json::Value userData = userDataList[std::to_string(userId_)];
     if (!PrintJsonUtil::IsMember(userData, "defaultPrinter") || !userData["defaultPrinter"].isString()) {
@@ -607,6 +608,11 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
             cacheFile = cacheDir + '/' + std::string(file->d_name);
             if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
                 PRINT_HILOGE("The realFile is null, errno:%{public}s", strerror(errno));
+                continue;
+            }
+            std::string resolvedPath(cachePath);
+            if (resolvedPath.rfind(cacheDir + '/', 0) != 0) {
+                PRINT_HILOGE("resolved path is not in cache dir, skip delete");
                 continue;
             }
             if (std::remove(cachePath) != 0) {
