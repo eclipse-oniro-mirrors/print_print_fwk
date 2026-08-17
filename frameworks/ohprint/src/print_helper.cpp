@@ -453,7 +453,10 @@ void ParseAdvanceOptions(const OHOS::Print::PrinterCapability &cap, Print_Printe
     if (PrintJsonUtil::IsMember(cupsOpt, "advanceOptions") && cupsOpt["advanceOptions"].isString()) {
         Json::Value advancedCapJson;
         if (nativePrinterInfo.capability.advancedCapability != nullptr) {
-            PrintJsonUtil::Parse(std::string(nativePrinterInfo.capability.advancedCapability), advancedCapJson);
+            if (!PrintJsonUtil::Parse(std::string(nativePrinterInfo.capability.advancedCapability), advancedCapJson)) {
+                PRINT_HILOGE("Parse advancedCapability fail");
+                return;
+            }
         }
         advancedCapJson["advanceOptions"] = cupsOpt["advanceOptions"].asString();
         SAFE_DELETE_ARRAY(nativePrinterInfo.capability.advancedCapability);
