@@ -835,10 +835,6 @@ std::string PrintUserData::ParsePrintHistoryJobListToJsonString(const std::strin
 bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
 {
     PRINT_HILOGI("GetPrintHistoryJobFromFile Start.");
-    if (printerId.empty()) {
-        PRINT_HILOGE("printerId is empty!");
-        return false;
-    }
     char cachePath[PATH_MAX] = { 0 };
     std::string filePath = ObtainUserCacheDirectory();
     if (realpath(filePath.c_str(), cachePath) == nullptr) {
@@ -846,12 +842,7 @@ bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
         return false;
     }
     filePath.assign(cachePath);
-    std::string fileName = printerId + ".json";
-    if (!PrintUtils::IsPathValidForCreate(filePath, fileName)) {
-        PRINT_HILOGE("Invalid print history job file path!");
-        return false;
-    }
-    std::string printHistoryJobFilePath = filePath + "/" + fileName;
+    std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
     std::string resolvedJobFilePath;
     if (!PrintUtils::ResolveAndValidatePath(printHistoryJobFilePath, resolvedJobFilePath)) {
         PRINT_HILOGE("Invalid print history job file path!");
