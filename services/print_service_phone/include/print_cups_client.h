@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <atomic>
 #include <json/json.h>
 
 #include "singleton.h"
@@ -51,7 +52,7 @@ struct JobParameters {
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOptionCupsOption;
-    bool isCanceled = false;
+    std::atomic<bool> isCanceled{false};
     Json::Value advancedOpsJson;
     bool isReverse = false;
     bool isCollate = true;
@@ -94,8 +95,8 @@ struct JobMonitorParam {
     bool isBlock = false;
     uint32_t substate = 0;
     std::string jobOriginatingUserName;
-    bool isCanceled = false;
-    bool isInterrupt = false;
+    std::atomic<bool> isCanceled{false};
+    std::atomic<bool> isInterrupt{false};
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,

@@ -151,7 +151,7 @@ private:
     std::string connectingPrinterName;
     std::mutex simpleObjectMutex;
 #ifdef ENTERPRISE_ENABLE
-    bool isEnterprise_ = false;
+    std::atomic<bool> isEnterprise_{false};
 #endif  // ENTERPRISE_ENABLE
 };
 }  // namespace Print

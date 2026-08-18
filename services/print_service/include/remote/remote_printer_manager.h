@@ -22,6 +22,7 @@
 #include <atomic>
 #include <memory>
 #include <thread>
+#include <condition_variable>
 #include "printer_info.h"
 #include "printer_capability.h"
 #include "print_constant.h"
@@ -69,6 +70,7 @@ private:
     std::once_flag initFlag_;
     
     std::atomic<bool> isDiscoveryRunning_{false};
+    std::condition_variable cv_;
 };
 
 } // namespace OHOS::Print

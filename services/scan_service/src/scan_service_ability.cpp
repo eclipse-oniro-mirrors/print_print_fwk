@@ -257,7 +257,7 @@ void ScanServiceAbility::InitializeScanService()
 
 void ScanServiceAbility::CleanupScanService()
 {
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (openedScanner_.has_value()) {
         SaneManagerClient::GetInstance().SaneCancel(openedScanner_->scannerId);
         SaneManagerClient::GetInstance().SaneClose(openedScanner_->scannerId);
@@ -543,7 +543,7 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility OpenScanner start");
     if (scannerId.empty()) {
         SCAN_HILOGE("OpenScanner scannerId is empty");
@@ -588,7 +588,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility CloseScanner start");
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
@@ -615,7 +615,7 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc start");
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
@@ -732,7 +732,7 @@ int32_t ScanServiceAbility::OpScanOptionValue(
     }
     ManualStart();
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start");
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
@@ -771,7 +771,7 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
@@ -810,7 +810,7 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
@@ -1047,7 +1047,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
@@ -1167,6 +1167,7 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAdde
 
 int32_t ScanServiceAbility::StartScanOnceInternal(const std::string &scannerId)
 {
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
     if (scannerState_.load() == SCANNER_CANCELING) {
@@ -1191,7 +1192,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (int32_t ownerRet = CheckScannerOwner(scannerId); ownerRet != E_SCAN_NONE) {
         return ownerRet;
     }
@@ -1250,7 +1251,7 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
         GeneratePictureSingle(scanTask);
     }
     SCAN_HILOGI("StartScanTask finished, doning scan task free");
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
@@ -1272,7 +1273,7 @@ bool ScanServiceAbility::CreateAndOpenScanFile(ScanTask &scanTask)
     std::string baseName = ScanServiceUtils::ExtractBaseName(filePath);
     
     {
-        std::lock_guard<std::mutex> autoLock(lock_);
+        std::lock_guard<std::recursive_mutex> autoLock(lock_);
         scanPictureData_.RegisterCacheFiles(baseName);
     }
     return true;
@@ -1466,7 +1467,7 @@ int32_t ScanServiceAbility::CheckScannerOwner(const std::string& scannerId)
 
 void ScanServiceAbility::CleanupDeadCaller(int32_t deadPid)
 {
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
     if (openedScanner_.has_value() && openedScanner_->callerPid == deadPid) {
         SCAN_HILOGI("cleaning up scanner %{private}s for dead pid %{public}d",
                     openedScanner_->scannerId.c_str(), deadPid);
@@ -1552,7 +1553,7 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
         return E_SCAN_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
 
     if (pictureFdList.empty()) {
         SCAN_HILOGE("pictureFdList is empty");
