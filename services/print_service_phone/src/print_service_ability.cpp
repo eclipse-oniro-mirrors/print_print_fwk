@@ -3959,10 +3959,13 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
     SendPrinterEvent(*infoPtr, std::to_string(GetCurrentUserId()));
 
-    if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId()) &&
-        !printSystemData_.CheckPrinterBusy(infoPtr->GetPrinterId())) {
-        SyncAddedPrinterUri(infoPtr);
-        UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
+    if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId())) {
+        if (HasPrinterActiveJob(infoPtr->GetPrinterId())) {
+            UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_BUSY);
+        } else {
+            SyncAddedPrinterUri(infoPtr);
+            UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
+        }
     }
 
     return E_PRINT_NONE;
