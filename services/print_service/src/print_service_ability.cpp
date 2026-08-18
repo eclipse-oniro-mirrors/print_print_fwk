@@ -3763,19 +3763,20 @@ int32_t PrintServiceAbility::CallStatusBar()
         return E_PRINT_NO_PERMISSION;
     }
     ManualStart();
-    std::unique_lock<std::recursive_mutex> lock(apiMutex_);
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_STATUS_BAR_ABILITY_NAME);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = SPOOLER_PACKAGE_NAME;
-    ingressPackage = callerPkg;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        ingressPackage = callerPkg;
+    }
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, callerTokenId);
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_UID, callerUid);
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
-    lock.unlock();
     if (!StartPluginPrintExtAbility(want)) {
         PRINT_HILOGE("Failed to start PluginPrintIconExtAbility");
         return E_PRINT_SERVER_FAILURE;

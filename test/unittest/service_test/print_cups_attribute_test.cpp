@@ -17,7 +17,6 @@
 #include "print_cups_attribute.h"
 #include "print_service_converter.h"
 #include "print_json_util.h"
-#include "ohprint.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -720,4 +719,6 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0032_DuplexMode_NullSrc,
 {
     DuplexModeCode dst;
     EXPECT_EQ(ConvertDuplexModeCode(nullptr, dst), false);
+}
+
 }  // namespace OHOS::Print

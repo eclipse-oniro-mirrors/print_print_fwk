@@ -368,13 +368,6 @@ HWTEST_F(VendorHelperTest, AnonymizeIpInString_MultipleIp_Anonymized, TestSize.L
     EXPECT_EQ(AnonymizeIpInString(input), expected);
 }
 
-HWTEST_F(VendorHelperTest, AnonymizeIpInString_InputTooLarge_Unchanged, TestSize.Level1)
-{
-    std::string input(70000, 'a');
-    ASSERT_TRUE(input.size() > 65536);
-    EXPECT_EQ(AnonymizeIpInString(input), input);
-}
-
 HWTEST_F(VendorHelperTest, AnonymizeIpInString_MaliciousHexPattern_NoCrash, TestSize.Level1)
 {
     std::string input;

@@ -24,7 +24,7 @@ using namespace OHOS::Print;
 namespace {
 std::mutex g_driverMutex;
 VendorBsuniDriver *g_driverWrapper = nullptr;
-
+constexpr size_t MAX_ANONYMIZE_IP_LEN = 65536;
 static const char* CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 #ifdef ENTERPRISE_ENABLE
 static const char* CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
@@ -562,6 +562,10 @@ void VendorBsuniDriver::OnIppRawDataQueried(std::shared_ptr<std::string> printer
     }
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(vendorManager);
     PRINT_HILOGI("IPP raw data queried");
+    if (rawData->size() > MAX_ANONYMIZE_IP_LEN) {
+        PRINT_HILOGW("IPP raw data too large, size = %{public}zu, skip", rawData->size());
+        return;
+    }
     vendorManager->OnPrinterIppRawDataQueried(*printerId, AnonymizeIpInString(*rawData));
 }
 

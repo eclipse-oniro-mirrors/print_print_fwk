@@ -29,7 +29,6 @@ const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
 const uint32_t MAX_COLOR_MODE_COUNT = 200;
-constexpr size_t MAX_ANONYMIZE_IP_LEN = 65536;
 }  // namespace
 
 namespace OHOS::Print {
@@ -47,10 +46,6 @@ char *CopyString(const std::string &source)
 
 std::string AnonymizeIpInString(const std::string &str)
 {
-    if (str.size() > MAX_ANONYMIZE_IP_LEN) {
-        PRINT_HILOGW("AnonymizeIpInString skip: input too large");
-        return str;
-    }
     static const std::regex ipRegex(R"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         R"(|(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){0,6})?::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){0,6})?)"
         R"(|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})");
