@@ -450,6 +450,12 @@ bool PrintServiceStub::OnQueryPrinterProperties(MessageParcel &data, MessageParc
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
     std::vector<std::string> keyList;
     CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadStringVector(&keyList), false);
+    PRINT_HILOGD("OnQueryPrinterProperties keyList len = %{public}zd", keyList.size());
+    if (keyList.size() > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("keyList'size is out of range.");
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(E_PRINT_INVALID_PARAMETER), false);
+        return false;
+    }
     std::vector<std::string> valueList;
     int32_t ret = QueryPrinterProperties(printerId, keyList, valueList);
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
