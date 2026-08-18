@@ -14,6 +14,7 @@
 #ifndef PRINT_FWK_AGENT_CLIENT_API_H
 #define PRINT_FWK_AGENT_CLIENT_API_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -37,6 +38,8 @@ typedef enum {
     PRINT_FWK_AGENT_CLIENT_ERR_INSTALL_FAILED = 9,
     PRINT_FWK_AGENT_CLIENT_ERR_INSTALL_BUSY = 10,
     PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT = 11,
+    PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED = 12,
+    PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED = 13,
 } PrintFwkAgentClientError;
 
 /* 不透明客户端句柄，其内存与生命周期由 .so 管理。 */
@@ -119,6 +122,9 @@ typedef struct {
         PrintAgentAddDoneCb doneCb, PrintAgentProgressCb progressCb, void *userData);
     int32_t (*removePrinter)(PrintFwkAgentClient *self, const char *name, const char *backendType,
         PrintAgentRemoveDoneCb doneCb, void *userData);
+    int32_t (*ensureBackendReady)(PrintFwkAgentClient *self);
+    bool (*isBackendOnline)(PrintFwkAgentClient *self);
+    void (*backendKeepaliveTick)(PrintFwkAgentClient *self);
 } PrintFwkAgentClientApi;
 
 /* 唯一导出符号，返回指向静态常量 vtable 的指针。 */

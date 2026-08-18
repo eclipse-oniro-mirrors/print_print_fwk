@@ -1886,7 +1886,13 @@ void PrintCupsClient::StartMonitor()
             jobMonitorList = jobMonitorList_;
         }
         for (auto monitorParams : jobMonitorList) {
-            if (IfContinueToHandleJobState(monitorParams)) {
+            bool continueMonitoring = IfContinueToHandleJobState(monitorParams);
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+            if (continueMonitoring && monitorParams->serviceAbility != nullptr) {
+                monitorParams->serviceAbility->NotifyAgentJobMonitoring(monitorParams->serviceJobId);
+            }
+#endif
+            if (continueMonitoring) {
                 continue;
             }
             PRINT_HILOGI("delete a completed job");

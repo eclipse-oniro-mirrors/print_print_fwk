@@ -99,6 +99,9 @@ const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
 const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+constexpr int64_t AGENT_BACKEND_READY_STARTUP_DELAY_MS = 5000;
+#endif
 
 
 const uint32_t INDEX_ZERO = 0;
@@ -348,6 +351,24 @@ int32_t PrintServiceAbility::Init()
     }
     ServiceRunningState previousState = state_.load();
     InitAgentManager();
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    {
+        auto resumeTask = [this]() {
+            if (agentManager_ == nullptr || !agentManager_->IsRunning()) {
+                return;
+            }
+            if (HasAgentPrinters()) {
+                PRINT_HILOGI("Agent printers found, ensuring backend ready on startup.");
+                int32_t code = agentManager_->EnsureAgentBackendReady();
+                if (code != E_PRINT_NONE) {
+                    PRINT_HILOGW("Agent backend not ready on startup, code=%{public}d", code);
+                }
+            }
+        };
+        serviceHandler_->PostTask(
+            resumeTask, "EnsureAgentBackendReadyOnStartup", AGENT_BACKEND_READY_STARTUP_DELAY_MS);
+    }
+#endif
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("InitService: 2in1");
     if (!PublishService(previousState)) {
@@ -391,6 +412,53 @@ void PrintServiceAbility::InitAgentManager()
     }
 #endif
 }
+
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+bool PrintServiceAbility::IsAgentPrinter(const std::string &printerId)
+{
+    if (agentManager_ == nullptr || !agentManager_->IsRunning()) {
+        return false;
+    }
+    PrinterInfo info;
+    if (!QueryAddedPrinterInfoByPrinterId(printerId, info)) {
+        return false;
+    }
+    return PrintFwkAgentManager::IsAgentRouted(info.GetOption());
+}
+
+bool PrintServiceAbility::HasAgentPrinters()
+{
+    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    if (printerIdList.empty()) {
+        return false;
+    }
+    for (const auto &printerId : printerIdList) {
+        PrinterInfo info;
+        if (QueryAddedPrinterInfoByPrinterId(printerId, info) &&
+            PrintFwkAgentManager::IsAgentRouted(info.GetOption())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void PrintServiceAbility::NotifyAgentJobMonitoring(const std::string &jobId)
+{
+    if (agentManager_ != nullptr && agentManager_->IsRunning()) {
+        agentManager_->OnCupsJobMonitorTick(jobId);
+    }
+}
+
+void PrintServiceAbility::StopAgentBackendKeepaliveIfNeeded(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    bool shouldStop = state == PRINT_JOB_COMPLETED ||
+        (state == PRINT_JOB_BLOCKED && subState == PRINT_JOB_BLOCKED_INTERRUPT);
+    if (shouldStop && agentManager_ != nullptr) {
+        agentManager_->StopAgentBackendKeepalive(jobId);
+    }
+}
+#endif
 
 bool PrintServiceAbility::PublishService(ServiceRunningState previousState)
 {
@@ -2553,6 +2621,9 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
     }
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    StopAgentBackendKeepaliveIfNeeded(jobId, state, subState);
+#endif
     auto printerInfo = securityGuardManager_.ResolvePrinterInfo(
         printJob->GetPrinterId(), printJob->GetOption(), printSystemData_);
     securityGuardManager_.SendJobAuditInfo(jobId, *printerInfo, *printJob);
@@ -5074,6 +5145,21 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    if (agentManager_ != nullptr && agentManager_->IsRunning()) {
+        std::string printerId = printJob->GetPrinterId();
+        if (IsAgentPrinter(printerId)) {
+            int32_t readyCode = agentManager_->EnsureAgentBackendReady();
+            if (readyCode != E_PRINT_NONE) {
+                PRINT_HILOGE("StartPrintJobInternal: agent backend not ready, code=%{public}d", readyCode);
+                printJob->SetJobState(PRINT_JOB_BLOCKED);
+                UpdatePrintJobState(printJob->GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
+                return readyCode;
+            }
+            agentManager_->StartAgentBackendKeepalive(printJob->GetJobId(), printerId);
+        }
+    }
+#endif
     if (isEprint(printJob->GetPrinterId())) {
         return StartExtPrintJobInternal(printJob);
     }

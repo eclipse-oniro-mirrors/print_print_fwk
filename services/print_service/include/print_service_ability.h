@@ -351,12 +351,18 @@ private:
     bool IsCallerSystemApp() override;
     void NotifyPrinterInfoChanged(const PrinterInfo &info) override;
     void CommitAgentPrinterDeleted(const std::string &printerId, const std::string &printerName) override;
+    bool IsAgentPrinter(const std::string &printerId);
+    bool HasAgentPrinters();
+    void StopAgentBackendKeepaliveIfNeeded(const std::string &jobId, uint32_t state, uint32_t subState);
 #endif
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName) override;
     int32_t InitServiceHelper();
 
 public:
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    void NotifyAgentJobMonitoring(const std::string &jobId);
+#endif
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;

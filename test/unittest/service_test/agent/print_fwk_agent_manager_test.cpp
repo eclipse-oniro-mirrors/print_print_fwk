@@ -58,8 +58,12 @@ struct FakeLoaderState {
     uint32_t destroyCount = 0;
     int32_t addReturn = PRINT_FWK_AGENT_CLIENT_OK;
     int32_t removeReturn = PRINT_FWK_AGENT_CLIENT_OK;
+    int32_t ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_OK;
     uint32_t addCallCount = 0;
     uint32_t removeCallCount = 0;
+    uint32_t ensureBackendReadyCallCount = 0;
+    uint32_t backendKeepaliveTickCount = 0;
+    bool backendOnline = true;
     bool completeAddSynchronously = false;
     bool completeRemoveSynchronously = false;
     PrintAgentAddDoneCb addDone = nullptr;
@@ -161,6 +165,22 @@ int32_t FakeRemovePrinter(PrintFwkAgentClient *, const char *name, const char *b
     return g_fakeLoaderState.removeReturn;
 }
 
+int32_t FakeEnsureBackendReady(PrintFwkAgentClient *)
+{
+    ++g_fakeLoaderState.ensureBackendReadyCallCount;
+    return g_fakeLoaderState.ensureBackendReadyReturn;
+}
+
+bool FakeIsBackendOnline(PrintFwkAgentClient *)
+{
+    return g_fakeLoaderState.backendOnline;
+}
+
+void FakeBackendKeepaliveTick(PrintFwkAgentClient *)
+{
+    ++g_fakeLoaderState.backendKeepaliveTickCount;
+}
+
 PrintFwkAgentClientApi CreateFakeLoaderApi()
 {
     return {
@@ -169,6 +189,9 @@ PrintFwkAgentClientApi CreateFakeLoaderApi()
         FakeDestroy,
         FakeAddPrinter,
         FakeRemovePrinter,
+        FakeEnsureBackendReady,
+        FakeIsBackendOnline,
+        FakeBackendKeepaliveTick,
     };
 }
 
@@ -312,6 +335,49 @@ TEST_F(PrintFwkAgentManagerTest, RecognizesAgentRouteOnlyForSystemApp)
 
     host.isSystemApp = false;
     EXPECT_FALSE(manager->IsAgentRouteRequested(R"({"driver":"AGENT"})"));
+}
+
+TEST_F(PrintFwkAgentManagerTest, BackendLifecycleDelegatesToLoader)
+{
+    g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED;
+    EXPECT_EQ(manager->EnsureAgentBackendReady(), E_PRINT_AGENT_BACKEND_STOPPED);
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 1u);
+
+    g_fakeLoaderState.backendOnline = false;
+    EXPECT_FALSE(manager->IsAgentBackendOnline());
+
+    manager->OnCupsJobMonitorTick("ordinary-job");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 0u);
+
+    manager->StartAgentBackendKeepalive("job-id", "printer-id");
+    manager->OnCupsJobMonitorTick("ordinary-job");
+    manager->OnCupsJobMonitorTick("job-id");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 0u);
+
+    now += std::chrono::seconds { 59 };
+    manager->OnCupsJobMonitorTick("job-id");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 0u);
+
+    now += std::chrono::seconds { 1 };
+    manager->OnCupsJobMonitorTick("ordinary-job");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 0u);
+
+    manager->OnCupsJobMonitorTick("job-id");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 1u);
+
+    manager->StartAgentBackendKeepalive("second-job-id", "second-printer-id");
+    manager->OnCupsJobMonitorTick("second-job-id");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 1u);
+
+    now += std::chrono::seconds { 60 };
+    manager->OnCupsJobMonitorTick("second-job-id");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 2u);
+
+    manager->StopAgentBackendKeepalive("job-id");
+    manager->StopAgentBackendKeepalive("second-job-id");
+    now += std::chrono::seconds { 60 };
+    manager->OnCupsJobMonitorTick("second-job-id");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 2u);
 }
 
 TEST(PrintFwkAgentManagerLifecycleTest, InitFailureKeepsManagerStopped)

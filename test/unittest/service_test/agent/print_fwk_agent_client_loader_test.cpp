@@ -27,16 +27,24 @@ static_assert(PRINT_FWK_AGENT_CLIENT_ERR_NO_PACKAGE_MGR == 8);
 static_assert(PRINT_FWK_AGENT_CLIENT_ERR_INSTALL_FAILED == 9);
 static_assert(PRINT_FWK_AGENT_CLIENT_ERR_INSTALL_BUSY == 10);
 static_assert(PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT == 11);
+static_assert(PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED == 12);
+static_assert(PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED == 13);
 static_assert(PRINT_AGENT_PROGRESS_RETRYING_ADD == 3);
 static_assert(PRINT_AGENT_PROGRESS_DONE == 4);
 
 namespace {
 PrintFwkAgentClient g_client;
 uint32_t g_destroyCount = 0;
+uint32_t g_backendKeepaliveTickCount = 0;
+int32_t g_ensureBackendReadyResult = PRINT_FWK_AGENT_CLIENT_OK;
+bool g_backendOnline = true;
 
 void ResetFakeApiState()
 {
     g_destroyCount = 0;
+    g_backendKeepaliveTickCount = 0;
+    g_ensureBackendReadyResult = PRINT_FWK_AGENT_CLIENT_OK;
+    g_backendOnline = true;
 }
 
 PrintFwkAgentClient *FakeCreate()
@@ -61,6 +69,21 @@ int32_t FakeRemovePrinter(PrintFwkAgentClient *, const char *, const char *,
     return PRINT_FWK_AGENT_CLIENT_OK;
 }
 
+int32_t FakeEnsureBackendReady(PrintFwkAgentClient *)
+{
+    return g_ensureBackendReadyResult;
+}
+
+bool FakeIsBackendOnline(PrintFwkAgentClient *)
+{
+    return g_backendOnline;
+}
+
+void FakeBackendKeepaliveTick(PrintFwkAgentClient *)
+{
+    ++g_backendKeepaliveTickCount;
+}
+
 PrintFwkAgentClientApi CreateFakeApi()
 {
     return {
@@ -69,6 +92,9 @@ PrintFwkAgentClientApi CreateFakeApi()
         FakeDestroy,
         FakeAddPrinter,
         FakeRemovePrinter,
+        FakeEnsureBackendReady,
+        FakeIsBackendOnline,
+        FakeBackendKeepaliveTick,
     };
 }
 } // namespace
@@ -99,6 +125,10 @@ TEST(PrintFwkAgentClientLoaderTest, MapErrorCoversAllCodes)
               E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(PrintFwkAgentClientLoader::MapError(PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT),
               E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(PrintFwkAgentClientLoader::MapError(PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED),
+              E_PRINT_AGENT_BACKEND_STOPPED);
+    EXPECT_EQ(PrintFwkAgentClientLoader::MapError(PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED),
+              E_PRINT_AGENT_BACKEND_RESUME_FAILED);
 }
 
 TEST(PrintFwkAgentClientLoaderTest, NotLoadedCallsReturnRpcFailure)
@@ -107,6 +137,9 @@ TEST(PrintFwkAgentClientLoaderTest, NotLoadedCallsReturnRpcFailure)
     PrintAddPrinterParam params {};
     EXPECT_EQ(loader.AddPrinter(params, nullptr, nullptr, nullptr), E_PRINT_RPC_FAILURE);
     EXPECT_EQ(loader.RemovePrinter("", "", nullptr, nullptr), E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_AGENT_BACKEND_RESUME_FAILED);
+    EXPECT_FALSE(loader.IsBackendOnline());
+    loader.BackendKeepaliveTick();
 }
 
 TEST(PrintFwkAgentClientLoaderTest, ValidateApiRejectsWrongAbiVersion)
@@ -125,6 +158,34 @@ TEST(PrintFwkAgentClientLoaderTest, ValidateApiRejectsMissingDestroy)
     api.destroy = nullptr;
 
     EXPECT_FALSE(loader.ValidateApi(&api));
+}
+
+TEST(PrintFwkAgentClientLoaderTest, ValidateApiRejectsMissingBackendLifecycleFunction)
+{
+    PrintFwkAgentClientLoader loader;
+    auto api = CreateFakeApi();
+    api.ensureBackendReady = nullptr;
+
+    EXPECT_FALSE(loader.ValidateApi(&api));
+}
+
+TEST(PrintFwkAgentClientLoaderTest, BackendLifecycleCallsUseLoadedApi)
+{
+    ResetFakeApiState();
+    PrintFwkAgentClientLoader loader;
+    auto api = CreateFakeApi();
+    loader.SetApiForTest(&api, &g_client);
+
+    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_NONE);
+    EXPECT_TRUE(loader.IsBackendOnline());
+    loader.BackendKeepaliveTick();
+    EXPECT_EQ(g_backendKeepaliveTickCount, 1u);
+
+    g_ensureBackendReadyResult = PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT;
+    g_backendOnline = false;
+    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_AGENT_BACKEND_RESUME_TIMEOUT);
+    EXPECT_FALSE(loader.IsBackendOnline());
+    loader.Unload();
 }
 
 TEST(PrintFwkAgentClientLoaderTest, UnloadDestroysOnlyOnce)

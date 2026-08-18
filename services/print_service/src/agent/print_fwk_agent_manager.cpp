@@ -64,6 +64,10 @@ const char *MapAgentErrorMessage(int32_t errCode)
             return "Driver install busy";
         case PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT:
             return "Operation timeout";
+        case PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED:
+            return "Backend Stopped";
+        case PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED:
+            return "Backend resume failed";
         default:
             return "Unknown error";
     }
@@ -168,6 +172,11 @@ void PrintFwkAgentManager::Shutdown()
         pendingPrinters_.clear();
         activeSourceKeys_.clear();
         inFlightAddCount_ = 0;
+    }
+    {
+        std::lock_guard<std::mutex> lock(keepaliveMutex_);
+        keepaliveJobs_.clear();
+        keepaliveLastTick_ = {};
     }
     if (loader_ != nullptr) {
         loader_->Unload();
@@ -303,6 +312,65 @@ bool PrintFwkAgentManager::AttachPendingAgentPrinter(PrinterInfo &printerInfo)
     option["agent"]["backendType"] = pending.backendType;
     printerInfo.SetOption(PrintJsonUtil::WriteString(option));
     return true;
+}
+
+int32_t PrintFwkAgentManager::EnsureAgentBackendReady()
+{
+    if (loader_ == nullptr) {
+        return E_PRINT_AGENT_BACKEND_RESUME_FAILED;
+    }
+    return loader_->EnsureBackendReady();
+}
+
+bool PrintFwkAgentManager::IsAgentBackendOnline()
+{
+    if (loader_ == nullptr) {
+        return false;
+    }
+    return loader_->IsBackendOnline();
+}
+
+void PrintFwkAgentManager::StartAgentBackendKeepalive(
+    const std::string &jobId, const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(keepaliveMutex_);
+    bool wasEmpty = keepaliveJobs_.empty();
+    keepaliveJobs_[jobId] = printerId;
+    if (wasEmpty) {
+        keepaliveLastTick_ = nowProvider_();
+    }
+    PRINT_HILOGI("StartAgentBackendKeepalive: jobId=%{public}s", jobId.c_str());
+}
+
+void PrintFwkAgentManager::StopAgentBackendKeepalive(const std::string &jobId)
+{
+    std::lock_guard<std::mutex> lock(keepaliveMutex_);
+    auto it = keepaliveJobs_.find(jobId);
+    if (it != keepaliveJobs_.end()) {
+        keepaliveJobs_.erase(it);
+        if (keepaliveJobs_.empty()) {
+            keepaliveLastTick_ = {};
+        }
+        PRINT_HILOGI("StopAgentBackendKeepalive: jobId=%{public}s", jobId.c_str());
+    }
+}
+
+void PrintFwkAgentManager::OnCupsJobMonitorTick(const std::string &jobId)
+{
+    {
+        std::lock_guard<std::mutex> lock(keepaliveMutex_);
+        if (keepaliveJobs_.find(jobId) == keepaliveJobs_.end()) {
+            return;
+        }
+        Clock::time_point now = nowProvider_();
+        if (now - keepaliveLastTick_ < BACKEND_KEEPALIVE_INTERVAL) {
+            return;
+        }
+        keepaliveLastTick_ = now;
+    }
+    if (loader_ != nullptr) {
+        loader_->BackendKeepaliveTick();
+    }
 }
 
 bool PrintFwkAgentManager::IsAgentRouted(const std::string &options)
@@ -522,6 +590,37 @@ int32_t PrintFwkAgentManager::SubmitAddPrinter(std::unique_ptr<AddPrinterContext
     return E_PRINT_NONE;
 }
 
+bool PrintFwkAgentManager::PrepareAgentAddSlot(
+    const std::string &printerName, const std::string &sourceKey, int32_t &result)
+{
+    if (IsSourceUriAdded(sourceKey)) {
+        PrinterInfo info = BuildAgentFailureInfo(
+            printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
+        host_.NotifyPrinterInfoChanged(info);
+        result = E_PRINT_NONE;
+        return false;
+    }
+    result = EnsureAgentBackendReady();
+    if (result != E_PRINT_NONE) {
+        PRINT_HILOGE("AddPrinterViaAgent: agent backend not ready, code=%{public}d", result);
+        return false;
+    }
+    const AddSlotResult slotResult = TryReserveAddSlot(sourceKey);
+    if (slotResult == AddSlotResult::DUPLICATE_SOURCE) {
+        PrinterInfo info = BuildAgentFailureInfo(
+            printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
+        host_.NotifyPrinterInfoChanged(info);
+        result = E_PRINT_NONE;
+        return false;
+    }
+    if (slotResult == AddSlotResult::CAPACITY_REACHED) {
+        PRINT_HILOGW("AddPrinterViaAgent pending capacity reached");
+        result = E_PRINT_SERVER_FAILURE;
+        return false;
+    }
+    return true;
+}
+
 int32_t PrintFwkAgentManager::AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
     const std::string &options)
 {
@@ -541,23 +640,9 @@ int32_t PrintFwkAgentManager::AddPrinterViaAgent(const std::string &printerName,
     }
 
     const std::string sourceKey = BuildUriMatchKey(uri);
-    if (IsSourceUriAdded(sourceKey)) {
-        PrinterInfo info = BuildAgentFailureInfo(
-            printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
-        host_.NotifyPrinterInfoChanged(info);
-        return E_PRINT_NONE;
-    }
-
-    const AddSlotResult slotResult = TryReserveAddSlot(sourceKey);
-    if (slotResult == AddSlotResult::DUPLICATE_SOURCE) {
-        PrinterInfo info = BuildAgentFailureInfo(
-            printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
-        host_.NotifyPrinterInfoChanged(info);
-        return E_PRINT_NONE;
-    }
-    if (slotResult == AddSlotResult::CAPACITY_REACHED) {
-        PRINT_HILOGW("AddPrinterViaAgent pending capacity reached");
-        return E_PRINT_SERVER_FAILURE;
+    int32_t prepareResult = E_PRINT_NONE;
+    if (!PrepareAgentAddSlot(printerName, sourceKey, prepareResult)) {
+        return prepareResult;
     }
 
     vendorManager_.SetConnectingPrinterName(printerName);

@@ -51,11 +51,19 @@ public:
 
     bool IsAgentRouteRequested(const std::string &options) const;
     bool IsAgentRoutedPrinterByName(const std::string &printerName) const;
+    static bool IsAgentRouted(const std::string &options);
     int32_t AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
         const std::string &options);
     int32_t DeletePrinterFromAgent(const std::string &printerName);
     bool ClaimPendingAgentPrinter(const std::string &uri);
     bool AttachPendingAgentPrinter(PrinterInfo &printerInfo);
+
+    // Agent backend lifecycle management
+    int32_t EnsureAgentBackendReady();
+    bool IsAgentBackendOnline();
+    void StartAgentBackendKeepalive(const std::string &jobId, const std::string &printerId);
+    void StopAgentBackendKeepalive(const std::string &jobId);
+    void OnCupsJobMonitorTick(const std::string &jobId);
 
 private:
     enum class State {
@@ -87,7 +95,6 @@ private:
     static void HandleAddProgress(int32_t progress, void *userData);
     static void HandleRemoveDone(int32_t errCode, void *userData);
 
-    static bool IsAgentRouted(const std::string &options);
     static bool ExtractAgentAddOptions(
         const std::string &options, std::string &backendType, std::string &driverInstall);
     static bool ExtractAgentPrinterMetadata(
@@ -97,6 +104,7 @@ private:
     static bool ExtractQueueNameFromIppUri(const std::string &uri, std::string &queueName);
     static bool ExtractPrinterIpFromUri(const std::string &uri, std::string &printerIp);
     int32_t SubmitAddPrinter(std::unique_ptr<AddPrinterContext> context);
+    bool PrepareAgentAddSlot(const std::string &printerName, const std::string &sourceKey, int32_t &result);
     AddSlotResult TryReserveAddSlot(const std::string &sourceKey);
     void ReleaseAddSlot(const std::string &sourceKey);
     bool CompleteAddSlotWithPending(
@@ -108,6 +116,7 @@ private:
 
     static constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;
     static constexpr std::chrono::seconds PENDING_TIMEOUT { 30 };
+    static constexpr std::chrono::seconds BACKEND_KEEPALIVE_INTERVAL { 60 };
 
     PrintSystemData &systemData_;
     VendorManager &vendorManager_;
@@ -119,6 +128,11 @@ private:
     std::unordered_set<std::string> activeSourceKeys_;
     size_t inFlightAddCount_ = 0;
     NowProvider nowProvider_;
+
+    // Agent backend keepalive management
+    std::mutex keepaliveMutex_;
+    std::unordered_map<std::string, std::string> keepaliveJobs_; // jobId -> printerId
+    Clock::time_point keepaliveLastTick_ {};
 };
 
 } // namespace OHOS::Print
