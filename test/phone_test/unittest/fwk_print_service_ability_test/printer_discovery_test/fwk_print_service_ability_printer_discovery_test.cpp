@@ -591,6 +591,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterHasActiveJo
     PrinterInfo updatedPrinter;
     service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter);
     EXPECT_EQ(updatedPrinter.GetUri(), originalUri);
+    EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_BUSY);
 }
 
 /**
@@ -619,6 +620,10 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_CanSyncPrinterInfo
 
     bool result = service->AddVendorPrinterToDiscovery(vendorName, info);
     EXPECT_TRUE(result);
+
+    PrinterInfo updatedPrinter;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
 /**

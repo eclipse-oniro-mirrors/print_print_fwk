@@ -4576,14 +4576,16 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
     SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
     SendPrinterEvent(*printerInfo);
 
-    if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
-        !HasPrinterActiveJob(printerInfo->GetPrinterId())) {
-        SyncAddedPrinterUri(printerInfo);
+    if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId())) {
+        bool hasActiveJob = HasPrinterActiveJob(printerInfo->GetPrinterId());
+        if (!hasActiveJob) {
+            SyncAddedPrinterUri(printerInfo);
+        }
         PrinterInfo printer = *printerInfo;
         if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
             PRINT_HILOGW("cannot update printer info by added printer info");
         }
-        UpdatePrinterStatus(printer, PRINTER_STATUS_IDLE);
+        UpdatePrinterStatus(printer, hasActiveJob ? PRINTER_STATUS_BUSY : PRINTER_STATUS_IDLE);
     }
     return true;
 }
