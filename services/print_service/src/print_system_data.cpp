@@ -276,15 +276,15 @@ bool PrintSystemData::GetJsonObjectFromFile(Json::Value &jsonObject, const std::
     }
     std::string version = jsonObject["version"].asString();
     PRINT_HILOGI("json version: %{public}s", version.c_str());
-    std::string fileVersion = "";
+    std::string fileVersion;
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
-    if (strcmp(fileName.c_str(), printerListFilePath.c_str())) {
+    if (fileName == printerListFilePath) {
         fileVersion = PRINTER_LIST_VERSION_V1;
     } else {
         fileVersion = PRINT_USER_DATA_VERSION;
     }
-    if (strcmp(version.c_str(), PRINTER_LIST_VERSION_V1.c_str())) {
-        PRINT_HILOGW("printer list version is error.");
+    if (version != fileVersion) {
+        PRINT_HILOGW("file version is error.");
         return false;
     }
     return true;

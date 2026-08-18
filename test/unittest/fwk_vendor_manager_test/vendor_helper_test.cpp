@@ -369,6 +369,19 @@ HWTEST_F(VendorHelperTest, AnonymizeIpInString_MultipleIp_Anonymized, TestSize.L
     EXPECT_EQ(AnonymizeIpInString(input), expected);
 }
 
+HWTEST_F(VendorHelperTest, AnonymizeIpInString_MaliciousHexPattern_NoCrash, TestSize.Level1)
+{
+    std::string input;
+    for (int i = 0; i < 1000; ++i) {
+        input += "1:2:3:4:5:6:7:8:9:a:b:c:d:e:f:0:";
+    }
+    input += "zzz";
+    ASSERT_TRUE(input.size() < 65536);
+    std::string result;
+    EXPECT_NO_FATAL_FAILURE(result = AnonymizeIpInString(input));
+    EXPECT_FALSE(result.empty());
+}
+
 bool UpdateColorCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability);
 
 HWTEST_F(VendorHelperTest, UpdateColorCapability_NullCapability_ReturnsFalse, TestSize.Level1)

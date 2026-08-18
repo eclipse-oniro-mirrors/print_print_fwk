@@ -379,7 +379,7 @@ void ParsePrinterOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinte
     if (PrintJsonUtil::IsMember(cupsOpt, keyword) && cupsOpt[keyword].isString()) {
         std::string resolutionString = cupsOpt[keyword].asString();
         Json::Value resolutionJson;
-        if (!PrintJsonUtil::Parse(resolutionString, resolutionJson)) {
+        if (PrintJsonUtil::Parse(resolutionString, resolutionJson)) {
             if (!ParseResolutionObject(resolutionJson, nativePrinterInfo.defaultValue.defaultResolution)) {
                 PRINT_HILOGW("ParseResolutionObject fail");
             }

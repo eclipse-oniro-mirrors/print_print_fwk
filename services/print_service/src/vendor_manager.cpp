@@ -70,8 +70,11 @@ std::string VendorManager::ExtractGlobalVendorName(const std::string &globalPrin
 std::string VendorManager::ExtractPrinterId(const std::string &globalPrinterId)
 {
     auto pos = globalPrinterId.find(GLOBAL_ID_DELIMITER);
-    if (pos == std::string::npos || globalPrinterId.length() <= pos + 1) {
+    if (pos == std::string::npos) {
         return globalPrinterId;
+    }
+    if (globalPrinterId.length() <= pos + 1) {
+        return "";
     }
     return globalPrinterId.substr(pos + 1);
 }
@@ -646,6 +649,9 @@ bool VendorManager::IsWlanGroupDriver(const std::string &bothPrinterId)
 ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinterIdOrIp)
 {
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER_PREFIX) == 0 && wlanGroupDriver != nullptr) {
+        if (ExtractPrinterId(globalPrinterIdOrIp).empty()) {
+            return ID_AUTO;
+        }
         return wlanGroupDriver->GetConnectingMethod(globalPrinterIdOrIp);
     }
     if (!IsConnectingPrinter(globalPrinterIdOrIp, "")) {

@@ -927,7 +927,7 @@ int32_t PrintServiceAbility::DestroyExtension()
     PRINT_HILOGI("DestroyExtension start.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    for (auto extension : extensionStateList_) {
+    for (auto &extension : extensionStateList_) {
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
         }
@@ -3763,12 +3763,14 @@ int32_t PrintServiceAbility::CallStatusBar()
         return E_PRINT_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_STATUS_BAR_ABILITY_NAME);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = SPOOLER_PACKAGE_NAME;
-    ingressPackage = callerPkg;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        ingressPackage = callerPkg;
+    }
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, callerTokenId);
