@@ -133,17 +133,17 @@ bool PrintJobHelper::FillFdListFromJs(napi_env env, napi_value jsValue, std::sha
 {
     napi_value jsFdList = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_FDLIST);
     bool isFileArray = false;
-    napi_is_array(env, jsFdList, &isFileArray);
+    PRINT_CALL_BASE(env, napi_is_array(env, jsFdList, &isFileArray), false);
     if (!isFileArray) {
         PRINT_HILOGE("Invalid file list of print job");
         return false;
     }
     std::vector<uint32_t> printFdList;
     uint32_t arrayReLength = 0;
-    napi_get_array_length(env, jsFdList, &arrayReLength);
+    PRINT_CALL_BASE(env, napi_get_array_length(env, jsFdList, &arrayReLength), false);
     for (uint32_t index = 0; index < arrayReLength; index++) {
         napi_value filesValue;
-        napi_get_element(env, jsFdList, index, &filesValue);
+        PRINT_CALL_BASE(env, napi_get_element(env, jsFdList, index, &filesValue), false);
         uint32_t fd = NapiPrintUtils::GetUint32FromValue(env, filesValue);
         PRINT_HILOGD("printJob_value fd %{public}d", fd);
         printFdList.emplace_back(fd);
@@ -445,13 +445,13 @@ bool PrintJobHelper::GetFileDescriptorList(napi_env env, napi_value jsValue, std
     napi_value jsFdList = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_FDLIST);
     if (jsFdList != nullptr) {
         bool isFileArray = false;
-        napi_is_array(env, jsFdList, &isFileArray);
+        PRINT_CALL_BASE(env, napi_is_array(env, jsFdList, &isFileArray), false);
         if (!isFileArray) {
             PRINT_HILOGE("Invalid file list of print job");
             return false;
         }
         uint32_t arrayReLength = 0;
-        napi_get_array_length(env, jsFdList, &arrayReLength);
+        PRINT_CALL_BASE(env, napi_get_array_length(env, jsFdList, &arrayReLength), false);
         for (uint32_t index = 0; index < arrayReLength; index++) {
             napi_value filesValue;
             napi_get_element(env, jsFdList, index, &filesValue);

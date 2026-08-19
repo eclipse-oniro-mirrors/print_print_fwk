@@ -103,7 +103,7 @@ private:
                 : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
             if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
-                napi_get_undefined(engine, &undefineResult);
+                PRINT_CALL_RETURN_VOID(engine, napi_get_undefined(engine, &undefineResult));
                 task.Resolve(engine, undefineResult);
             } else {
                 task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
@@ -117,14 +117,14 @@ private:
     {
         PRINT_HILOGE("params count or value is error");
         napi_value undefineResult = nullptr;
-        napi_get_undefined(engine, &undefineResult);
+        PRINT_CALL(engine, napi_get_undefined(engine, &undefineResult));
         return undefineResult;
     }
 
     napi_valuetype GetNapiValueType(napi_env &engine, napi_value &argv)
     {
         napi_valuetype valueType = napi_undefined;
-        napi_typeof(engine, argv, &valueType);
+        PRINT_CALL_BASE(engine, napi_typeof(engine, argv, &valueType), napi_undefined);
         return valueType;
     }
 
@@ -133,7 +133,7 @@ private:
         PRINT_HILOGD("OnStartAbility is called");
         size_t argc = NapiPrintUtils::MAX_ARGC;
         napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        PRINT_CALL(engine, napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr));
         if (argc != NapiPrintUtils::ARGC_ONE && argc != NapiPrintUtils::ARGC_TWO &&
             argc != NapiPrintUtils::ARGC_THREE) {
             return GetUndefinedValue(engine);
@@ -168,7 +168,7 @@ private:
                               : errcode = context->StartAbility(want, startOptions);
             if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
-                napi_get_undefined(engine, &undefineResult);
+                PRINT_CALL_RETURN_VOID(engine, napi_get_undefined(engine, &undefineResult));
                 task.Resolve(engine, undefineResult);
             } else {
                 task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
@@ -186,7 +186,7 @@ private:
     {
         size_t argc = NapiPrintUtils::MAX_ARGC;
         napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        PRINT_CALL(engine, napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr));
         if (argc != NapiPrintUtils::ARGC_TWO && argc != NapiPrintUtils::ARGC_THREE &&
             argc != NapiPrintUtils::ARGC_FOUR) {
             return GetUndefinedValue(engine);
@@ -232,7 +232,7 @@ private:
         PRINT_HILOGD("OnTerminateAbility is called");
         size_t argc = NapiPrintUtils::MAX_ARGC;
         napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        PRINT_CALL(engine, napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr));
         if (argc != NapiPrintUtils::ARGC_ZERO && argc != NapiPrintUtils::ARGC_ONE) {
             return GetUndefinedValue(engine);
         }
@@ -250,7 +250,7 @@ private:
             auto errcode = context->TerminateAbility();
             if (errcode == E_PRINT_NONE) {
                 napi_value undefineResult = nullptr;
-                napi_get_undefined(engine, &undefineResult);
+                PRINT_CALL_RETURN_VOID(engine, napi_get_undefined(engine, &undefineResult));
                 task.Resolve(engine, undefineResult);
             } else {
                 task.Reject(engine, CreateJsError(engine, errcode, "Terminate Ability failed."));
@@ -281,7 +281,7 @@ private:
         PRINT_HILOGD("OnConnectAbility is called");
         size_t argc = NapiPrintUtils::MAX_ARGC;
         napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        PRINT_CALL(engine, napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr));
         if (argc != NapiPrintUtils::ARGC_TWO) {
             return GetUndefinedValue(engine);
         }
@@ -316,14 +316,14 @@ private:
                 RemoveConnectById(connectId);
             }
             napi_value undefineResult = nullptr;
-            napi_get_undefined(engine, &undefineResult);
+            PRINT_CALL_RETURN_VOID(engine, napi_get_undefined(engine, &undefineResult));
             task.Resolve(engine, undefineResult);
         };
         napi_value result = nullptr;
         NapiAsyncTask::Schedule("PrintExtensionContext::OnConnectAbility", engine,
             CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
         napi_value numberResult = nullptr;
-        napi_create_double(engine, connectId, &numberResult);
+        PRINT_CALL(engine, napi_create_double(engine, connectId, &numberResult));
         return numberResult;
     }
 
@@ -345,17 +345,16 @@ private:
             RemoveConnectById(params.connectId);
         }
         napi_value undefineResult = nullptr;
-        napi_get_undefined(engine, &undefineResult);
+        PRINT_CALL_RETURN_VOID(engine, napi_get_undefined(engine, &undefineResult));
         task.Resolve(engine, undefineResult);
     }
- 	
 
     napi_value OnConnectAbilityWithAccount(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnConnectAbilityWithAccount is called");
         size_t argc = NapiPrintUtils::MAX_ARGC;
         napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        PRINT_CALL(engine, napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr));
         if (argc != NapiPrintUtils::ARGC_THREE) {
             return GetUndefinedValue(engine);
         }
@@ -389,7 +388,7 @@ private:
         NapiAsyncTask::Schedule("PrintExtensionContext::OnConnectAbilityWithAccount", engine,
             CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
         napi_value numberResult = nullptr;
-        napi_create_double(engine, params.connectId, &numberResult);
+        PRINT_CALL(engine, napi_create_double(engine, params.connectId, &numberResult));
         return numberResult;
     }
 
@@ -412,7 +411,7 @@ private:
         PRINT_HILOGD("context->DisconnectAbility");
         auto errcode = context->DisconnectAbility(want, connection);
         napi_value undefineResult = nullptr;
-        napi_get_undefined(engine, &undefineResult);
+        PRINT_CALL_RETURN_VOID(engine, napi_get_undefined(engine, &undefineResult));
         errcode == E_PRINT_NONE ? task.Resolve(engine, undefineResult)
                      : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
     }
@@ -422,7 +421,7 @@ private:
         PRINT_HILOGD("OnDisconnectAbility is called");
         size_t argc = NapiPrintUtils::MAX_ARGC;
         napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        PRINT_CALL(engine, napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr));
         if (argc != NapiPrintUtils::ARGC_ONE && argc != NapiPrintUtils::ARGC_TWO) {
             return GetUndefinedValue(engine);
         }
@@ -482,7 +481,7 @@ napi_value CreateJsMetadataArray(napi_env &engine, const std::vector<AppExecFwk:
     if (ret == napi_ok && arrayValue != nullptr) {
         uint32_t index = 0;
         for (const auto &item: info) {
-            napi_set_element(engine, arrayValue, index++, CreateJsMetadata(engine, item));
+            PRINT_CALL(engine, napi_set_element(engine, arrayValue, index++, CreateJsMetadata(engine, item)));
         }
     }
     return arrayValue;
@@ -501,25 +500,32 @@ napi_value CreateJsExtensionAbilityInfoMessage(napi_env &engine, const AppExecFw
     napi_set_named_property(engine, object, "moduleName", CreateJsValue(engine, info.moduleName));
     napi_set_named_property(engine, object, "name", CreateJsValue(engine, info.name));
     napi_set_named_property(engine, object, "labelId", CreateJsValue(engine, info.labelId));
-    napi_set_named_property(engine, object, "descriptionId", CreateJsValue(engine, info.descriptionId));
+    napi_set_named_property(engine, object, "descriptionId",
+        CreateJsValue(engine, info.descriptionId));
     napi_set_named_property(engine, object, "iconId", CreateJsValue(engine, info.iconId));
     napi_set_named_property(engine, object, "isVisible", CreateJsValue(engine, info.visible));
-    napi_set_named_property(engine, object, "extensionAbilityType", CreateJsValue(engine, info.type));
+    napi_set_named_property(engine, object, "extensionAbilityType",
+        CreateJsValue(engine, info.type));
 
     napi_value permissionArrayValue = nullptr;
-    napi_create_array_with_length(engine, info.permissions.size(), &permissionArrayValue);
+    PRINT_CALL(engine, napi_create_array_with_length(engine, info.permissions.size(), &permissionArrayValue));
     if (permissionArrayValue != nullptr) {
         uint32_t index = 0;
         for (auto permission : info.permissions) {
-            napi_set_element(engine, permissionArrayValue, index++, CreateJsValue(engine, permission));
+            PRINT_CALL(engine, napi_set_element(engine, permissionArrayValue, index++,
+                CreateJsValue(engine, permission)));
         }
     }
     napi_set_named_property(engine, object, "permissions", permissionArrayValue);
-    napi_set_named_property(engine, object, "applicationInfo", CreateJsApplicationInfo(engine, info.applicationInfo));
-    napi_set_named_property(engine, object, "metadata", CreateJsMetadataArray(engine, info.metadata));
+    napi_set_named_property(engine, object, "applicationInfo",
+        CreateJsApplicationInfo(engine, info.applicationInfo));
+    napi_set_named_property(engine, object, "metadata",
+        CreateJsMetadataArray(engine, info.metadata));
     napi_set_named_property(engine, object, "enabled", CreateJsValue(engine, info.enabled));
-    napi_set_named_property(engine, object, "readPermission", CreateJsValue(engine, info.readPermission));
-    napi_set_named_property(engine, object, "writePermission", CreateJsValue(engine, info.writePermission));
+    napi_set_named_property(engine, object, "readPermission",
+        CreateJsValue(engine, info.readPermission));
+    napi_set_named_property(engine, object, "writePermission",
+        CreateJsValue(engine, info.writePermission));
     return object;
 }
 
@@ -531,7 +537,8 @@ napi_value CreateJsPrintExtensionContext(napi_env engine,
     napi_value object = objValue;
 
     std::unique_ptr<JsPrintExtensionContext> jsContext = std::make_unique<JsPrintExtensionContext>(context);
-    napi_wrap(engine, object, jsContext.release(), JsPrintExtensionContext::Finalizer, nullptr, nullptr);
+    PRINT_CALL(engine, napi_wrap(engine, object, jsContext.release(),
+        JsPrintExtensionContext::Finalizer, nullptr, nullptr));
 
     // make handler
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());

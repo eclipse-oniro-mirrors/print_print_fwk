@@ -84,7 +84,8 @@ void JSPrintExtensionConnection::HandleOnAbilityConnectDone(const AppExecFwk::El
     }
     PRINT_HILOGD("JSPrintExtensionConnection::napi_call_function onConnect, success");
     napi_value callResult = nullptr;
-    napi_call_function(engine_, obj, methodOnConnect, NapiPrintUtils::ARGC_TWO, argv, &callResult);
+    PRINT_CALL_RETURN_VOID(engine_,
+        napi_call_function(engine_, obj, methodOnConnect, NapiPrintUtils::ARGC_TWO, argv, &callResult));
     PRINT_HILOGD("OnAbilityConnectDone end");
 }
 
@@ -152,13 +153,14 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     }
     PRINT_HILOGD("OnAbilityDisconnectDone napi_call_function success");
     napi_value callResult = nullptr;
-    napi_call_function(engine_, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult);
+    PRINT_CALL_RETURN_VOID(engine_,
+        napi_call_function(engine_, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult));
 }
 
 void JSPrintExtensionConnection::SetJsConnectionObject(napi_value jsConnectionObject)
 {
     napi_ref jsRef = nullptr;
-    napi_create_reference(engine_, jsConnectionObject, 1, &jsRef);
+    PRINT_CALL_RETURN_VOID(engine_, napi_create_reference(engine_, jsConnectionObject, 1, &jsRef));
     jsConnectionObject_.reset(reinterpret_cast<NativeReference*>(jsRef));
 }
 
@@ -183,11 +185,12 @@ void JSPrintExtensionConnection::CallJsFailed(int32_t errorCode)
     }
 
     napi_value result = nullptr;
-    napi_create_int32(engine_, errorCode, &result);
+    PRINT_CALL_RETURN_VOID(engine_, napi_create_int32(engine_, errorCode, &result));
     napi_value argv[] = { result };
     PRINT_HILOGD("CallJsFailed napi_call_function success");
     napi_value callResult = nullptr;
-    napi_call_function(engine_, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult);
+    PRINT_CALL_RETURN_VOID(engine_,
+        napi_call_function(engine_, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult));
     PRINT_HILOGD("CallJsFailed end");
 }
 }  // namespace AbilityRuntime

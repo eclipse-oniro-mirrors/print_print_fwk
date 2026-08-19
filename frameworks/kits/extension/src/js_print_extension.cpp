@@ -58,7 +58,6 @@ JsPrintExtension::~JsPrintExtension()
     PRINT_HILOGI("JsPrintExtension destroyed");
 }
 
-
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
     const sptr<IRemoteObject> &token)
@@ -141,7 +140,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
     PRINT_HILOGD("JsPrintExtension::Init Bind.");
     context->Bind(jsRuntime, shellContextRef.release());
     PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
-    napi_set_named_property(engine, extObj, "context", contextObj);
+    PRINT_CALL_BASE(engine, napi_set_named_property(engine, extObj, "context", contextObj), false);
     auto *workContext = new std::weak_ptr<AbilityRuntime::Context>(context);
     napi_status wrapStatus = napi_wrap(engine, contextObj, workContext,
         [](napi_env, void *data, void *) {
@@ -279,7 +278,7 @@ napi_value JsPrintExtension::CallObjectMethod(const char *name, napi_value const
     }
     PRINT_HILOGD("JsPrintExtension::napi_call_function(%{public}s), success", name);
     napi_value callResult = nullptr;
-    napi_call_function(nativeEngine, obj, method, argc, argv, &callResult);
+    PRINT_CALL(nativeEngine, napi_call_function(nativeEngine, obj, method, argc, argv, &callResult));
     return callResult;
 }
 

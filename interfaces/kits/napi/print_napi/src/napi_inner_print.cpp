@@ -56,7 +56,7 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        napi_status status = napi_create_array(env, result);
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto extInfo : context->allExtensionInfos) {
             PRINT_HILOGD("ExtensionId = %{public}s", extInfo.GetExtensionId().c_str());
@@ -64,7 +64,8 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
             PRINT_HILOGD("VendorName = %{public}s", extInfo.GetVendorName().c_str());
             PRINT_HILOGD("VendorIcon = %{public}d", extInfo.GetVendorIcon());
             PRINT_HILOGD("Version = %{public}s", extInfo.GetVersion().c_str());
-            status = napi_set_element(env, *result, index++, PrintExtensionInfoHelper::MakeJsObject(env, extInfo));
+            napi_set_element(env, *result, index++,
+                PrintExtensionInfoHelper::MakeJsObject(env, extInfo));
         }
         return napi_ok;
     };
@@ -97,11 +98,11 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+        PRINT_CALL_BASE(env, napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
 
         uint32_t len = 0;
-        napi_get_array_length(env, argv[0], &len);
+        PRINT_CALL_BASE(env, napi_get_array_length(env, argv[0], &len), napi_invalid_arg);
         if (len > ARRAY_LENGTH_ONE_THOUSAND) {
             PRINT_HILOGE("The length of array is too long");
             return napi_invalid_arg;
@@ -109,7 +110,8 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            PRINT_CALL_BASE(env, napi_get_element(env, 
+                argv[NapiPrintUtils::INDEX_ZERO], index, &value), napi_invalid_arg);
             std::string extensionId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
             PRINT_HILOGD("output for :---- extensionList value is :[%{public}s]", extensionId.c_str());
             if (extensionId != "") {
@@ -119,9 +121,8 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance().StartDiscoverPrinter(context->extensionList);
@@ -148,9 +149,8 @@ napi_value NapiInnerPrint::StopDiscovery(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance().StopDiscoverPrinter();
@@ -183,9 +183,8 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance().ConnectPrinter(context->printerId);
@@ -218,9 +217,8 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env, napi_callback_info in
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -260,9 +258,8 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -303,9 +300,8 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         context->printJob.Dump();
@@ -343,9 +339,8 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -389,9 +384,8 @@ napi_value NapiInnerPrint::RestartPrintJob(napi_env env, napi_callback_info info
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -411,6 +405,19 @@ napi_value NapiInnerPrint::RestartPrintJob(napi_env env, napi_callback_info info
     context->SetAction(std::move(input), std::move(output));
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
     return asyncCall.Call(env, exec);
+}
+
+static napi_status CreateStringArrayFromOptions(
+    napi_env env, const std::vector<std::string> &options, napi_value *result)
+{
+    PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
+    uint32_t index = 0;
+    for (const auto &option : options) {
+        PRINT_HILOGD("conflictingOption = %{public}s", option.c_str());
+        PRINT_CALL_BASE(env, napi_set_element(env, *result, index++,
+            NapiPrintUtils::CreateStringUtf8(env, option)), napi_generic_failure);
+    }
+    return napi_ok;
 }
 
 napi_value NapiInnerPrint::CheckPreferencesConflicts(napi_env env, napi_callback_info info)
@@ -442,13 +449,7 @@ napi_value NapiInnerPrint::CheckPreferencesConflicts(napi_env env, napi_callback
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_array(env, result);
-        uint32_t index = 0;
-        for (auto conflictingOption : context->conflictingOptions) {
-            PRINT_HILOGD("conflictingOption = %{public}s", conflictingOption.c_str());
-            status = napi_set_element(env, *result, index++, NapiPrintUtils::CreateStringUtf8(env, conflictingOption));
-        }
-        return napi_ok;
+        return CreateStringArrayFromOptions(env, context->conflictingOptions, result);
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance().CheckPreferencesConflicts(
@@ -489,13 +490,7 @@ napi_value NapiInnerPrint::CheckPrintJobConflicts(napi_env env, napi_callback_in
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_array(env, result);
-        uint32_t index = 0;
-        for (auto conflictingOption : context->conflictingOptions) {
-            PRINT_HILOGD("conflictingOption = %{public}s", conflictingOption.c_str());
-            status = napi_set_element(env, *result, index++, NapiPrintUtils::CreateStringUtf8(env, conflictingOption));
-        }
-        return napi_ok;
+        return CreateStringArrayFromOptions(env, context->conflictingOptions, result);
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance().CheckPrintJobConflicts(context->changedType,
@@ -565,7 +560,7 @@ napi_value NapiInnerPrint::GetPrinterPreference(napi_env env, napi_callback_info
         PRINT_HILOGD("NapiInnerPrint::GetPrinterPreference output enter.");
         if (!context->result) {
             PRINT_HILOGE("GetPrinterPreference exec failed, skip output.");
-            napi_get_undefined(env, result);
+            PRINT_CALL_BASE(env, napi_get_undefined(env, result), napi_generic_failure);
             return napi_ok;
         }
         *result = PrinterPreferencesHelper::MakeJsObject(env, context->printerPreference);
@@ -610,9 +605,9 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_string_utf8(env, context->previewResult.c_str(), NAPI_AUTO_LENGTH, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_create_string_utf8(env, 
+            context->previewResult.c_str(), NAPI_AUTO_LENGTH, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -653,9 +648,8 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -689,12 +683,13 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        napi_status status = napi_create_array(env, result);
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto printJob : context->allPrintJobs) {
             PRINT_HILOGD("PrinterId = %{public}s", printJob.GetPrinterId().c_str());
             PRINT_HILOGD("JobId = %{public}s", printJob.GetJobId().c_str());
-            status = napi_set_element(env, *result, index++, PrintJobHelper::MakeJsObject(env, printJob));
+            PRINT_CALL_BASE(env, napi_set_element(env, *result, index++,
+                PrintJobHelper::MakeJsObject(env, printJob)), napi_generic_failure);
         }
         return napi_ok;
     };
@@ -730,12 +725,13 @@ napi_value NapiInnerPrint::QueryAllActivePrintJob(napi_env env, napi_callback_in
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        napi_status status = napi_create_array(env, result);
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto printJob : context->allPrintJobs) {
             PRINT_HILOGD("PrinterId = %{public}s", printJob.GetPrinterId().c_str());
             PRINT_HILOGD("JobId = %{public}s", printJob.GetJobId().c_str());
-            status = napi_set_element(env, *result, index++, PrintJobHelper::MakeJsObject(env, printJob));
+            PRINT_CALL_BASE(env, napi_set_element(env, *result, index++,
+                PrintJobHelper::MakeJsObject(env, printJob)), napi_generic_failure);
         }
         return napi_ok;
     };
@@ -825,9 +821,8 @@ napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -882,7 +877,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     }
 
     valuetype = napi_undefined;
-    napi_typeof(env, argv[1], &valuetype);
+    PRINT_CALL(env, napi_typeof(env, argv[1], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
@@ -932,7 +927,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
 
     if (argc == NapiPrintUtils::ARGC_TWO) {
         valuetype = napi_undefined;
-        napi_typeof(env, argv[1], &valuetype);
+        PRINT_CALL(env, napi_typeof(env, argv[1], &valuetype));
         PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
     }
 
@@ -965,7 +960,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
 
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
         napi_valuetype callbackType = napi_undefined;
-        napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &callbackType);
+        PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &callbackType));
         PRINT_ASSERT(env, callbackType == napi_function, "callback is not a function");
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
         PRINT_CHECK_NULL_AND_RETURN(callbackRef, nullptr);
@@ -1022,9 +1017,8 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1058,11 +1052,12 @@ napi_value NapiInnerPrint::QueryAddedPrinter(napi_env env, napi_callback_info in
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        napi_status status = napi_create_array(env, result);
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto printerId : context->allPrinters) {
             PRINT_HILOGD("PrinterId = %{public}s", printerId.c_str());
-            status = napi_set_element(env, *result, index++, NapiPrintUtils::CreateStringUtf8(env, printerId));
+            PRINT_CALL_BASE(env, napi_set_element(env, *result, index++,
+                NapiPrintUtils::CreateStringUtf8(env, printerId)), napi_generic_failure);
         }
         return napi_ok;
     };
@@ -1146,9 +1141,8 @@ napi_value NapiInnerPrint::NotifyPrintServiceEvent(napi_env env, napi_callback_i
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1198,9 +1192,8 @@ napi_value NapiInnerPrint::SetDefaultPrinter(napi_env env, napi_callback_info in
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret =
@@ -1286,9 +1279,9 @@ napi_value NapiInnerPrint::AnalyzePrintEvents(napi_env env, napi_callback_info i
     };
 
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_string_utf8(env, context->stateType_.c_str(), NAPI_AUTO_LENGTH, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_create_string_utf8(env, 
+            context->stateType_.c_str(), NAPI_AUTO_LENGTH, result), napi_generic_failure);
+        return napi_ok;
     };
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
@@ -1336,9 +1329,8 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1373,16 +1365,11 @@ napi_value NapiInnerPrint::QueryAllPrinterPpds(napi_env env, napi_callback_info 
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGI("QueryAllPrinterPpds output Enter ---->");
-        napi_status status = napi_create_array(env, result);
-        if (status != napi_ok) {
-            return status;
-        }
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto &ppdInfo : context->allPpdInfos) {
-            status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
-            if (status != napi_ok) {
-                return status;
-            }
+            PRINT_CALL_BASE(env, napi_set_element(env, *result, index++,
+                PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo)), napi_generic_failure);
         }
         return napi_ok;
     };
@@ -1428,8 +1415,8 @@ napi_value NapiInnerPrint::QueryPrinterInfoByIp(napi_env env, napi_callback_info
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1482,7 +1469,8 @@ napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
         }
 
         if (argc == NapiPrintUtils::ARGC_FOUR) {
-            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &valueType), napi_invalid_arg);
+            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE],
+                &valueType), napi_invalid_arg);
             PRINT_ASSERT_BASE(env, valueType == napi_string, "options is not a string", napi_string_expected);
             context->changedType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_THREE]);
         }
@@ -1530,8 +1518,8 @@ napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1575,8 +1563,8 @@ napi_value NapiInnerPrint::SavePdfFileJob(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1615,13 +1603,12 @@ napi_value NapiInnerPrint::QueryRecommendDriversById(napi_env env, napi_callback
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGI("QueryRecommendDriversById output Enter ---->");
-        napi_status status = napi_create_array(env, result);
-        if (status != napi_ok) { return status; }
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto &ppdInfo : context->allPpdInfos) {
             PRINT_HILOGD("ppdName = %{public}s", ppdInfo.GetPpdName().c_str());
-            status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
-            if (status != napi_ok) { return status; }
+            PRINT_CALL_BASE(env, napi_set_element(env, *result, index++,
+                PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo)), napi_generic_failure);
         }
         return napi_ok;
     };
@@ -1670,8 +1657,8 @@ napi_value NapiInnerPrint::ConnectPrinterByIdAndPpd(napi_env env, napi_callback_
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -1707,10 +1694,12 @@ napi_value NapiInnerPrint::GetSharedHosts(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        napi_status status = napi_create_array(env, result);
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
+        napi_status status = napi_ok;
         for (auto sharedHost : context->sharedHosts) {
-            status = napi_set_element(env, *result, index++, PrintSharedHostHelper::MakeJsObject(env, sharedHost));
+            status = napi_set_element(env, *result, index++,
+                PrintSharedHostHelper::MakeJsObject(env, sharedHost));
             if (status != napi_ok) {
                 PRINT_HILOGE("napi_set_element failed");
                 break;
@@ -1754,10 +1743,12 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsGuest(napi_env env, napi_callback_info
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_array(env, result);
+        PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
+        napi_status status = napi_ok;
         for (const auto& printerInfo : context->printerInfos) {
-            status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, printerInfo));
+            status = napi_set_element(env, *result, index++,
+                PrinterInfoHelper::MakeJsObject(env, printerInfo));
             if (status != napi_ok) {
                 PRINT_HILOGE("napi_set_element failed");
                 break;
@@ -1788,10 +1779,12 @@ napi_value NapiInnerPrint::AuthSmbDeviceAsGuest(napi_env env, napi_callback_info
 napi_status NapiInnerPrint::BuildPrinterInfoArrayOutput(std::shared_ptr<InnerPrintContext> context,
     napi_env env, napi_value* result)
 {
-    napi_status status = napi_create_array(env, result);
+    PRINT_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
     uint32_t index = 0;
+    napi_status status = napi_ok;
     for (const auto& printerInfo : context->printerInfos) {
-        status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, printerInfo));
+        status = napi_set_element(env, *result, index++,
+            PrinterInfoHelper::MakeJsObject(env, printerInfo));
         if (status != napi_ok) {
             PRINT_HILOGE("napi_set_element failed");
             break;
@@ -1856,7 +1849,7 @@ napi_value NapiInnerPrint::RegisterWatermarkCallback(napi_env env, napi_callback
     napi_value thisVal = nullptr;
     void *data = nullptr;
 
-    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
 
     // Check parameter count
     if (argc != NapiPrintUtils::ARGC_ONE) {
@@ -1867,7 +1860,7 @@ napi_value NapiInnerPrint::RegisterWatermarkCallback(napi_env env, napi_callback
 
     // Check callback is function
     napi_valuetype valuetype = napi_undefined;
-    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+    PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
     if (valuetype != napi_function) {
         PRINT_HILOGE("callback is not a function");
         NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
@@ -1896,7 +1889,7 @@ napi_value NapiInnerPrint::RegisterWatermarkCallback(napi_env env, napi_callback
 
     PRINT_HILOGD("RegisterWatermarkCallback success");
     napi_value result = nullptr;
-    napi_get_undefined(env, &result);
+    PRINT_CALL(env, napi_get_undefined(env, &result));
     return result;
 }
 
@@ -1910,7 +1903,7 @@ napi_value NapiInnerPrint::UnregisterWatermarkCallback(napi_env env, napi_callba
     napi_value thisVal = nullptr;
     void *data = nullptr;
 
-    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
 
     // Check parameter count
     if (argc != NapiPrintUtils::ARGC_ZERO) {
@@ -1929,7 +1922,7 @@ napi_value NapiInnerPrint::UnregisterWatermarkCallback(napi_env env, napi_callba
 
     PRINT_HILOGD("UnregisterWatermarkCallback success");
     napi_value result = nullptr;
-    napi_get_undefined(env, &result);
+    PRINT_CALL(env, napi_get_undefined(env, &result));
     return result;
 }
 
@@ -1943,7 +1936,7 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
     napi_value thisVal = nullptr;
     void *data = nullptr;
 
-    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
 
     // Check parameter count
     if (argc != NapiPrintUtils::ARGC_TWO) {
@@ -1954,7 +1947,7 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
 
     // Parse jobId (string)
     napi_valuetype jobIdType;
-    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &jobIdType);
+    PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &jobIdType));
     if (jobIdType != napi_string) {
         PRINT_HILOGE("Invalid jobId type, expected string");
         NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
@@ -1969,7 +1962,7 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
 
     // Parse result (number)
     napi_valuetype valueType;
-    napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType);
+    PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType));
     if (valueType != napi_number) {
         PRINT_HILOGE("Invalid result type, expected number");
         NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
@@ -1987,7 +1980,7 @@ napi_value NapiInnerPrint::NotifyWatermarkComplete(napi_env env, napi_callback_i
 
     PRINT_HILOGD("NotifyWatermarkComplete success, jobId=%{public}s, result=%{public}d", jobId.c_str(), result);
     napi_value retValue = nullptr;
-    napi_get_undefined(env, &retValue);
+    PRINT_CALL(env, napi_get_undefined(env, &retValue));
     return retValue;
 }
 
@@ -2009,7 +2002,7 @@ napi_value NapiInnerPrint::OnPrinterInfoQuery(napi_env env, napi_callback_info i
     }
 
     napi_valuetype valuetype = napi_undefined;
-    napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+    PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ZERO]);
@@ -2044,7 +2037,7 @@ napi_value NapiInnerPrint::OffPrinterInfoQuery(napi_env env, napi_callback_info 
 
     if (argc == NapiPrintUtils::ARGC_ONE) {
         napi_valuetype valuetype = napi_undefined;
-        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
         PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
     }
 
@@ -2099,11 +2092,11 @@ bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
 void NapiInnerPrint::NapiThrowError(napi_env env, const int32_t errCode)
 {
     napi_value result = nullptr;
-    napi_create_error(env,
+    PRINT_CALL_RETURN_VOID(env, napi_create_error(env,
         NapiPrintUtils::CreateInt32(env, errCode),
         NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)),
-        &result);
-    napi_throw(env, result);
+        &result));
+    PRINT_CALL_RETURN_VOID(env, napi_throw(env, result));
 }
 
 bool NapiInnerPrint::CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> context)
@@ -2132,9 +2125,8 @@ napi_value NapiInnerPrint::StartSharedHostDiscovery(napi_env env, napi_callback_
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
+        PRINT_CALL_BASE(env, napi_get_boolean(env, context->result, result), napi_generic_failure);
+        return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {

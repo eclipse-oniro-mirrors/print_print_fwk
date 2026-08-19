@@ -86,7 +86,7 @@ void NapiPrintUtils::SetNamedProperty(napi_env env, napi_value object, const std
     if (object == nullptr) {
         return;
     }
-    (void)napi_set_named_property(env, object, name.c_str(), value);
+    PRINT_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), value));
 }
 
 std::vector<std::string> NapiPrintUtils::GetPropertyNames(napi_env env, napi_value object)
@@ -154,7 +154,7 @@ void NapiPrintUtils::SetUint32Property(napi_env env, napi_value object, const st
         return;
     }
 
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    PRINT_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* INT32 */
@@ -199,7 +199,7 @@ void NapiPrintUtils::SetInt32Property(napi_env env, napi_value object, const std
         return;
     }
 
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    PRINT_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* String UTF8 */
@@ -330,7 +330,7 @@ void NapiPrintUtils::SetStringPropertyUtf8(
     if (GetValueType(env, jsValue) != napi_string) {
         return;
     }
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    PRINT_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* array buffer */
@@ -425,7 +425,7 @@ void NapiPrintUtils::DeleteReference(napi_env env, napi_ref callbackRef)
     if (env == nullptr || callbackRef == nullptr) {
         return;
     }
-    (void)napi_delete_reference(env, callbackRef);
+    PRINT_CALL_RETURN_VOID(env, napi_delete_reference(env, callbackRef));
 }
 
 /* boolean */
@@ -465,7 +465,7 @@ void NapiPrintUtils::SetBooleanProperty(napi_env env, napi_value object, const s
         return;
     }
 
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    PRINT_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length)
@@ -473,7 +473,7 @@ size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_valu
     size_t argc = length;
     napi_value thisVal = nullptr;
     void *data = nullptr;
-    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+    PRINT_CALL_BASE(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data), 0);
     return argc;
 }
 

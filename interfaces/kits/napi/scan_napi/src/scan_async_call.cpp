@@ -32,7 +32,7 @@ ScanAsyncCall::ScanAsyncCall(napi_env env, napi_callback_info info,
     SCAN_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
     context_->paramStatus = (*context)(env, argc, argv, self);
     context_->ctx = std::move(context);
-    napi_create_reference(env, self, 1, &context_->self);
+    SCAN_CALL_RETURN_VOID(env, napi_create_reference(env, self, 1, &context_->self));
 }
 
 ScanAsyncCall::~ScanAsyncCall()
@@ -54,10 +54,10 @@ napi_value ScanAsyncCall::Call(napi_env env, Context::ExecAction exec)
         return nullptr;
     }
     napi_value promise = nullptr;
-    napi_create_promise(env, &context_->defer, &promise);
+    SCAN_CALL(env, napi_create_promise(env, &context_->defer, &promise));
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "ScanAsyncCall", NAPI_AUTO_LENGTH, &resource);
+    SCAN_CALL(env, napi_create_string_utf8(env, "ScanAsyncCall", NAPI_AUTO_LENGTH, &resource));
     napi_status status = napi_create_async_work(env, nullptr, resource, ScanAsyncCall::OnExecute,
         ScanAsyncCall::OnComplete, context_, &work);
     if (status != napi_ok) {
@@ -88,12 +88,12 @@ void ScanAsyncCall::OnExecute(napi_env env, void *data)
 
 void ScanAsyncCall::PrepareSuccessResult(napi_env env, napi_value output, AsyncResult& result)
 {
-    napi_get_undefined(env, &result.error);
+    SCAN_CALL_RETURN_VOID(env, napi_get_undefined(env, &result.error));
     if (output != nullptr) {
         result.data = output;
         SCAN_HILOGD("async call napi_ok.");
     } else {
-        napi_get_undefined(env, &result.data);
+        SCAN_CALL_RETURN_VOID(env, napi_get_undefined(env, &result.data));
     }
 }
 
@@ -112,20 +112,21 @@ void ScanAsyncCall::PrepareErrorResult(napi_env env, const AsyncContext* context
         errorMessage.c_str(), errorCode);
 
     napi_value businessError = nullptr;
-    napi_create_object(env, &businessError);
-    
+    SCAN_CALL_RETURN_VOID(env, napi_create_object(env, &businessError));
+
     napi_value codeValue = nullptr;
-    napi_create_uint32(env, errorCode, &codeValue);
-    napi_set_named_property(env, businessError, "code", codeValue);
-        
+    SCAN_CALL_RETURN_VOID(env, napi_create_uint32(env, errorCode, &codeValue));
+    SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, businessError, "code", codeValue));
+
     if (!errorMessage.empty()) {
         napi_value messageValue = nullptr;
-        napi_create_string_utf8(env, errorMessage.c_str(), errorMessage.length(), &messageValue);
-        napi_set_named_property(env, businessError, "message", messageValue);
+        SCAN_CALL_RETURN_VOID(env,
+            napi_create_string_utf8(env, errorMessage.c_str(), errorMessage.length(), &messageValue));
+        SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, businessError, "message", messageValue));
     }
 
     result.error = businessError;
-    napi_get_undefined(env, &result.data);
+    SCAN_CALL_RETURN_VOID(env, napi_get_undefined(env, &result.data));
 }
 
 void ScanAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
@@ -151,9 +152,15 @@ void ScanAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         PrepareErrorResult(env, context, result);
     }
     if (status == napi_ok && runStatus == napi_ok) {
-        napi_resolve_deferred(env, context->defer, result.data);
+        napi_status resolveStatus = napi_resolve_deferred(env, context->defer, result.data);
+        if (resolveStatus != napi_ok) {
+            SCAN_HILOGE("napi_resolve_deferred failed, status: %{public}d", resolveStatus);
+        }
     } else {
-        napi_reject_deferred(env, context->defer, result.error);
+        napi_status rejectStatus = napi_reject_deferred(env, context->defer, result.error);
+        if (rejectStatus != napi_ok) {
+            SCAN_HILOGE("napi_reject_deferred failed, status: %{public}d", rejectStatus);
+        }
     }
     DeleteContext(env, context);
 }

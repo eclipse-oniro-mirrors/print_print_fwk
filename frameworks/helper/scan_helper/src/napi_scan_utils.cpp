@@ -87,7 +87,7 @@ void NapiScanUtils::SetNamedProperty(napi_env env, napi_value object, const std:
     if (object == nullptr) {
         return;
     }
-    (void)napi_set_named_property(env, object, name.c_str(), value);
+    SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), value));
 }
 
 std::vector<std::string> NapiScanUtils::GetPropertyNames(napi_env env, napi_value object)
@@ -155,7 +155,7 @@ void NapiScanUtils::SetUint32Property(napi_env env, napi_value object, const std
         return;
     }
 
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* INT32 */
@@ -200,7 +200,7 @@ void NapiScanUtils::SetInt32Property(napi_env env, napi_value object, const std:
         return;
     }
 
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* String UTF8 */
@@ -260,7 +260,7 @@ void NapiScanUtils::SetStringPropertyUtf8(
     if (GetValueType(env, jsValue) != napi_string) {
         return;
     }
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* array buffer */
@@ -345,7 +345,7 @@ napi_value NapiScanUtils::GetReference(napi_env env, napi_ref callbackRef)
 void NapiScanUtils::DeleteReference(napi_env env, napi_ref callbackRef)
 {
     if (env != nullptr && callbackRef != nullptr) {
-        (void)napi_delete_reference(env, callbackRef);
+        SCAN_CALL_RETURN_VOID(env, napi_delete_reference(env, callbackRef));
     }
 }
 
@@ -394,7 +394,7 @@ void NapiScanUtils::SetBooleanProperty(napi_env env, napi_value object, const st
         return;
     }
 
-    napi_set_named_property(env, object, name.c_str(), jsValue);
+    SCAN_CALL_RETURN_VOID(env, napi_set_named_property(env, object, name.c_str(), jsValue));
 }
 
 /* define properties */
@@ -402,7 +402,7 @@ void NapiScanUtils::DefineProperties(
     napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
 {
     std::vector<napi_property_descriptor> descriptors(properties.begin(), properties.end());
-    (void)napi_define_properties(env, object, descriptors.size(), descriptors.data());
+    SCAN_CALL_RETURN_VOID(env, napi_define_properties(env, object, descriptors.size(), descriptors.data()));
 }
 
 std::string NapiScanUtils::ToLower(const std::string &s)
@@ -521,8 +521,9 @@ void NapiScanUtils::NapiThrowError(napi_env env, uint32_t errCode)
     std::string message;
     SetErrorText(errCode, message);
     napi_value result = nullptr;
-    napi_create_error(env, CreateUint32(env, errCode), CreateStringUtf8(env, message), &result);
-    napi_throw(env, result);
+    SCAN_CALL_RETURN_VOID(env,
+        napi_create_error(env, CreateUint32(env, errCode), CreateStringUtf8(env, message), &result));
+    SCAN_CALL_RETURN_VOID(env, napi_throw(env, result));
 }
 
 void NapiScanUtils::SetErrorText(uint32_t& code, std::string& message)

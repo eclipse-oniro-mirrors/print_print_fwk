@@ -85,10 +85,10 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
             PRINT_HILOGE("Failed to start print task");
             context->SetErrorIndex(ret);
         }
-        napi_create_reference(env, proxy, 1, &(context->ref));
+        PRINT_CALL_BASE(env, napi_create_reference(env, proxy, 1, &(context->ref)), napi_generic_failure);
         return napi_ok;
     };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+    context->SetAction(std::move(input), [context](napi_env env, napi_value *result) -> napi_status {
         if (context->ref == nullptr) {
             *result = NapiPrintUtils::GetUndefined(env);
             return napi_generic_failure;
@@ -97,8 +97,7 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
         napi_delete_reference(env, context->ref);
         context->ref = nullptr;
         return status;
-    };
-    context->SetAction(std::move(input), std::move(output));
+    });
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
     return asyncCall.Call(env);
 }
@@ -134,10 +133,10 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
             PRINT_HILOGE("Failed to start print task");
             context->SetErrorIndex(ret);
         }
-        napi_create_reference(env, proxy, 1, &(context->ref));
+        PRINT_CALL_BASE(env, napi_create_reference(env, proxy, 1, &(context->ref)), napi_generic_failure);
         return napi_ok;
     };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+    context->SetAction(std::move(input), [context](napi_env env, napi_value *result) -> napi_status {
         if (context->ref == nullptr) {
             *result = NapiPrintUtils::GetUndefined(env);
             return napi_generic_failure;
@@ -146,8 +145,7 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
         napi_delete_reference(env, context->ref);
         context->ref = nullptr;
         return status;
-    };
-    context->SetAction(std::move(input), std::move(output));
+    });
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
     return asyncCall.Call(env);
 }
@@ -182,8 +180,9 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
             delete task;
         };
         if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
-            finalize(
-                env, task, nullptr);  // finalize里释放了tack，然后函数走完后释放callback，callback中自动释放adapterRef
+            finalize(env, task, nullptr);
+            // finalize里释放了task，函数走完后释放callback，
+            // callback中自动释放adapterRef
             return nullptr;
         }
         PRINT_HILOGD("Succeed to allocate print task");
@@ -263,7 +262,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         PRINT_CALL(env, napi_get_array_length(env, argv[0], &arrayReLength));
         for (uint32_t index = 0; index < arrayReLength; index++) {
             napi_value filesValue;
-            napi_get_element(env, argv[0], index, &filesValue);
+            PRINT_CALL(env, napi_get_element(env, argv[0], index, &filesValue));
             std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
             PRINT_HILOGD("file[%{public}d] %{private}s.", index, files.c_str());
             if (IsValidFile(files)) {
@@ -336,7 +335,7 @@ napi_status NapiPrintTask::VerifyParameters(
 
     bool isFileArray = false;
 
-    napi_is_array(env, argv[0], &isFileArray);
+    PRINT_CALL_BASE(env, napi_is_array(env, argv[0], &isFileArray), napi_generic_failure);
     PRINT_ASSERT_BASE(env, isFileArray == true, "parameter type isn't list", napi_invalid_arg);
 
     uint32_t len = 0;

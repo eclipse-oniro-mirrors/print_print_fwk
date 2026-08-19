@@ -38,9 +38,9 @@ WatermarkCallback::~WatermarkCallback()
 
     auto task = [param]() {
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(param->env, &scope);
-        if (scope == nullptr) {
-            PRINT_HILOGE("scope is a nullptr");
+        napi_status scopeStatus = napi_open_handle_scope(param->env, &scope);
+        if (scopeStatus != napi_ok || scope == nullptr) {
+            PRINT_HILOGE("napi_open_handle_scope failed, status: %{public}d", scopeStatus);
             NapiPrintUtils::DeleteReference(param->env, param->callbackRef);
             return;
         }
@@ -65,9 +65,9 @@ void WatermarkCallback::ExecuteCallback(std::shared_ptr<WatermarkCallbackParam> 
     std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
 
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(param->env, &scope);
-    if (scope == nullptr) {
-        PRINT_HILOGE("fail to open scope");
+    napi_status scopeStatus = napi_open_handle_scope(param->env, &scope);
+    if (scopeStatus != napi_ok || scope == nullptr) {
+        PRINT_HILOGE("napi_open_handle_scope failed, status: %{public}d", scopeStatus);
         CLOSE_FD_IF_VALID(param->fd);
         return;
     }
@@ -87,9 +87,7 @@ void WatermarkCallback::ExecuteCallback(std::shared_ptr<WatermarkCallbackParam> 
     napi_value result = nullptr;
     napi_status status = napi_call_function(param->env, nullptr, callbackFunc,
         NapiPrintUtils::ARGC_TWO, callbackValues, &result);
-    if (status == napi_ok) {
-        PRINT_HILOGI("WatermarkCallback call JS function success");
-    } else {
+    if (status != napi_ok) {
         PRINT_HILOGE("WatermarkCallback call JS function failed, status:%{public}d", status);
         CLOSE_FD_IF_VALID(param->fd);
     }

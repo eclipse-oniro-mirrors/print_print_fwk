@@ -311,10 +311,11 @@ napi_value NapiInnerScan::GetScanParameters(napi_env env, napi_callback_info inf
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_array(env, result);
+        SCAN_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto desc : context->allDesc) {
-            status = napi_set_element(env, *result, index++, ScanOptionDescriptorHelper::MakeJsObject(env, desc));
+            SCAN_CALL_BASE(env, napi_set_element(env, *result, index++,
+                ScanOptionDescriptorHelper::MakeJsObject(env, desc)), napi_generic_failure);
         }
         return napi_ok;
     };
@@ -603,13 +604,11 @@ napi_value NapiInnerScan::GetAddedScanner(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_create_array(env, result);
+        SCAN_CALL_BASE(env, napi_create_array(env, result), napi_generic_failure);
         uint32_t index = 0;
         for (auto scanDeviceInfo : context->allAddedScanner) {
-            status = napi_set_element(env, *result, index++, ScannerInfoHelper::MakeJsObject(env, scanDeviceInfo));
-            if (status != napi_ok) {
-                SCAN_HILOGE("napi_set_element from allAddedScanner failed");
-            }
+            SCAN_CALL_BASE(env, napi_set_element(env, *result, index++,
+                ScannerInfoHelper::MakeJsObject(env, scanDeviceInfo)), napi_generic_failure);
         }
         return napi_ok;
     };

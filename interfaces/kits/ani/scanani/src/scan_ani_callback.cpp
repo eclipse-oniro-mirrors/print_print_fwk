@@ -26,9 +26,9 @@ ScanAniCallback::ScanAniCallback(ani_env *env, ani_object callback)
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(env, __func__);
     SCAN_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback, __func__);
     ani_vm *vm = nullptr;
-    env->GetVM(&vm);
+    SCAN_CALL_RETURN_VOID(env, env->GetVM(&vm));
     aniVm_ = vm;
-    env->GlobalReference_Create(reinterpret_cast<ani_ref>(callback), &callback_);
+    SCAN_CALL_RETURN_VOID(env, env->GlobalReference_Create(reinterpret_cast<ani_ref>(callback), &callback_));
 }
 
 ScanAniCallback::~ScanAniCallback()
@@ -47,7 +47,10 @@ ScanAniCallback::~ScanAniCallback()
                 return;
             }
         }
-        env->GlobalReference_Delete(callback_);
+        ani_status delStatus = env->GlobalReference_Delete(callback_);
+        if (delStatus != ANI_OK) {
+            SCAN_HILOGW("GlobalReference_Delete failed, status: %{public}d", delStatus);
+        }
         if (isAttached) {
             aniVm_->DetachCurrentThread();
         }
@@ -75,13 +78,13 @@ bool ScanAniCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
         if (isAttached) {
-            aniVm_->DetachCurrentThread();
+            SCAN_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
         }
         return false;
     }
     bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        SCAN_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return result;
 }
@@ -105,13 +108,13 @@ bool ScanAniCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &i
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
         if (isAttached) {
-            aniVm_->DetachCurrentThread();
+            SCAN_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
         }
         return false;
     }
     bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        SCAN_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return result;
 }
@@ -135,13 +138,13 @@ bool ScanAniCallback::OnGetDevicesList(std::vector<ScanDeviceInfo> &info)
     if (deviceObj == nullptr) {
         SCAN_HILOGE("deviceObj is nullptr");
         if (isAttached) {
-            aniVm_->DetachCurrentThread();
+            SCAN_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
         }
         return false;
     }
     bool result = Callback(env, reinterpret_cast<ani_object>(callback_), deviceObj);
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        SCAN_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return result;
 }

@@ -29,9 +29,9 @@ PrintAniCallback::PrintAniCallback(ani_env *env, ani_object aniCallback)
         return;
     }
     ani_vm *vm = nullptr;
-    env->GetVM(&vm);
+    PRINT_CALL_RETURN_VOID(env, env->GetVM(&vm));
     aniVm_ = vm;
-    env->GlobalReference_Create(reinterpret_cast<ani_ref>(aniCallback), &aniCallback_);
+    PRINT_CALL_RETURN_VOID(env, env->GlobalReference_Create(reinterpret_cast<ani_ref>(aniCallback), &aniCallback_));
 }
 
 PrintAniCallback::~PrintAniCallback()
@@ -50,7 +50,10 @@ PrintAniCallback::~PrintAniCallback()
                 return;
             }
         }
-        env->GlobalReference_Delete(aniCallback_);
+        ani_status delStatus = env->GlobalReference_Delete(aniCallback_);
+        if (delStatus != ANI_OK) {
+            PRINT_HILOGW("GlobalReference_Delete failed, status: %{public}d", delStatus);
+        }
         if (isAttached) {
             aniVm_->DetachCurrentThread();
         }
@@ -58,7 +61,6 @@ PrintAniCallback::~PrintAniCallback()
     aniVm_ = nullptr;
     aniCallback_ = nullptr;
 }
-
 
 bool PrintAniCallback::OnCallback()
 {
@@ -84,7 +86,7 @@ bool PrintAniCallback::OnCallback(uint32_t state, const PrinterInfo &info)
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -107,7 +109,7 @@ bool PrintAniCallback::OnCallback(uint32_t state, const PrintJob &info)
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -130,7 +132,7 @@ bool PrintAniCallback::OnCallback(const std::string &extensionId, const std::str
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -153,7 +155,7 @@ bool PrintAniCallback::OnCallback(const PrinterInfo &info, const std::vector<Ppd
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -179,11 +181,10 @@ bool PrintAniCallback::OnCallbackAdapterLayout(const std::string &jobId,
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
-
 
 bool PrintAniCallback::OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
                                                         const uint32_t subState)
@@ -205,7 +206,7 @@ bool PrintAniCallback::OnCallbackAdapterJobStateChanged(const std::string jobId,
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -228,7 +229,7 @@ bool PrintAniCallback::OnCallbackAdapterGetFile(uint32_t state)
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -251,7 +252,7 @@ bool PrintAniCallback::OnCallback(const std::vector<PrintSharedHost> &sharedHost
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_BASE(env, aniVm_->DetachCurrentThread(), false);
     }
     return true;
 }
@@ -263,9 +264,9 @@ WatermarkAniCallback::WatermarkAniCallback(ani_env *env, ani_object aniCallback)
         return;
     }
     ani_vm *vm = nullptr;
-    env->GetVM(&vm);
+    PRINT_CALL_RETURN_VOID(env, env->GetVM(&vm));
     aniVm_ = vm;
-    env->GlobalReference_Create(reinterpret_cast<ani_ref>(aniCallback), &aniCallback_);
+    PRINT_CALL_RETURN_VOID(env, env->GlobalReference_Create(reinterpret_cast<ani_ref>(aniCallback), &aniCallback_));
 }
 
 WatermarkAniCallback::~WatermarkAniCallback()
@@ -284,7 +285,10 @@ WatermarkAniCallback::~WatermarkAniCallback()
                 return;
             }
         }
-        env->GlobalReference_Delete(aniCallback_);
+        ani_status delStatus = env->GlobalReference_Delete(aniCallback_);
+        if (delStatus != ANI_OK) {
+            PRINT_HILOGW("GlobalReference_Delete failed, status: %{public}d", delStatus);
+        }
         if (isAttached) {
             aniVm_->DetachCurrentThread();
         }
@@ -311,7 +315,7 @@ void WatermarkAniCallback::OnCallback(const std::string &jobId, uint32_t fd)
         isAttached = true;
     }
     if (isAttached) {
-        aniVm_->DetachCurrentThread();
+        PRINT_CALL_RETURN_VOID(env, aniVm_->DetachCurrentThread());
     }
 }
 
