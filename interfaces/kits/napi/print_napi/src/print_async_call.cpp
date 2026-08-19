@@ -32,15 +32,15 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
     }
     if (pos < NapiPrintUtils::MAX_ARGC && pos < argc) {
         napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[pos], &valueType);
+        PRINT_CALL_RETURN_VOID(env, napi_typeof(env, argv[pos], &valueType));
         if (valueType == napi_function) {
-            napi_create_reference(env, argv[pos], 1, &context_->callback);
+            PRINT_CALL_RETURN_VOID(env, napi_create_reference(env, argv[pos], 1, &context_->callback));
             argc = pos;
         }
     }
     context_->paramStatus = (*context)(env, argc, argv, self, info);
     context_->ctx = std::move(context);
-    napi_create_reference(env, self, 1, &context_->self);
+    PRINT_CALL_RETURN_VOID(env, napi_create_reference(env, self, 1, &context_->self));
 }
 
 PrintAsyncCall::~PrintAsyncCall()
@@ -60,13 +60,13 @@ napi_value PrintAsyncCall::Call(napi_env env, Context::ExecAction exec)
     }
     napi_value promise = nullptr;
     if (context_->callback == nullptr) {
-        napi_create_promise(env, &context_->defer, &promise);
+        PRINT_CALL(env, napi_create_promise(env, &context_->defer, &promise));
     } else {
-        napi_get_undefined(env, &promise);
+        PRINT_CALL(env, napi_get_undefined(env, &promise));
     }
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "PrintAsyncCall", NAPI_AUTO_LENGTH, &resource);
+    PRINT_CALL(env, napi_create_string_utf8(env, "PrintAsyncCall", NAPI_AUTO_LENGTH, &resource));
     napi_status status = napi_create_async_work(env, nullptr, resource, PrintAsyncCall::OnExecute,
         PrintAsyncCall::OnComplete, context_, &work);
     if (status != napi_ok) {
@@ -93,9 +93,9 @@ napi_value PrintAsyncCall::SyncCall(napi_env env, PrintAsyncCall::Context::ExecA
     }
     napi_value promise = nullptr;
     if (context_ != nullptr && context_->callback == nullptr) {
-        napi_create_promise(env, &context_->defer, &promise);
+        PRINT_CALL(env, napi_create_promise(env, &context_->defer, &promise));
     } else {
-        napi_get_undefined(env, &promise);
+        PRINT_CALL(env, napi_get_undefined(env, &promise));
     }
     PrintAsyncCall::OnExecute(env, context_);
     PrintAsyncCall::OnComplete(env, napi_ok, context_);
@@ -133,6 +133,14 @@ uint32_t PrintAsyncCall::GetErrorIndex(AsyncContext *context)
     return errorIndex;
 }
 
+void PrintAsyncCall::InvokeCallback(napi_env env, AsyncContext *context, napi_value *result)
+{
+    napi_value callback = nullptr;
+    PRINT_CALL_RETURN_VOID(env, napi_get_reference_value(env, context->callback, &callback));
+    napi_value returnValue = nullptr;
+    PRINT_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue));
+}
+
 void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
@@ -160,9 +168,14 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         uint32_t errorIndex = GetErrorIndex(context);
         PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);
-        napi_create_uint32(env, errorIndex, &errCode);
-        result[ARG_ERROR] = errCode;
-        napi_get_undefined(env, &result[ARG_DATA]);
+        if (napi_create_uint32(env, errorIndex, &errCode) != napi_ok) {
+            PRINT_HILOGE("napi_create_uint32 failed");
+        } else {
+            result[ARG_ERROR] = errCode;
+        }
+        if (napi_get_undefined(env, &result[ARG_DATA]) != napi_ok) {
+            PRINT_HILOGE("napi_get_undefined failed");
+        }
     }
     if (context->defer != nullptr) {
         if (status == napi_ok && runStatus == napi_ok) {
@@ -171,10 +184,7 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_reject_deferred(env, context->defer, result[ARG_ERROR]);
         }
     } else {
-        napi_value callback = nullptr;
-        napi_get_reference_value(env, context->callback, &callback);
-        napi_value returnValue;
-        napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
+        InvokeCallback(env, context, result);
     }
     DeleteContext(env, context);
 }

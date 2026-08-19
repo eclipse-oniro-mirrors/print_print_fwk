@@ -217,8 +217,11 @@ uint32_t PrintTask::CallSpooler(
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("StartUIExtensionAbility failed, ret=%{public}u", ret);
         if (asyncContext->deferred != nullptr) {
-            napi_reject_deferred(env, asyncContext->deferred,
+            napi_status rejectStatus = napi_reject_deferred(env, asyncContext->deferred,
                 NapiPrintUtils::CreateJsError(env, ret));
+            if (rejectStatus != napi_ok) {
+                PRINT_HILOGE("napi_reject_deferred failed, status: %{public}d", rejectStatus);
+            }
             asyncContext->deferred = nullptr;
         }
     }
@@ -444,7 +447,7 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
     }
 
     valuetype = napi_undefined;
-    napi_typeof(env, argv[1], &valuetype);
+    PRINT_CALL(env, napi_typeof(env, argv[1], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
     PrintTask *task;

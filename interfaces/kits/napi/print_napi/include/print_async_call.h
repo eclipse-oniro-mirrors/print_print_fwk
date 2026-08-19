@@ -99,8 +99,9 @@ public:
     napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
     napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
 
-private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
+
+private:
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
     static std::string GetErrorText(uint32_t code);
@@ -114,6 +115,7 @@ private:
     };
     static void DeleteContext(napi_env env, AsyncContext *&context);
     static uint32_t GetErrorIndex(AsyncContext *context);
+    static void InvokeCallback(napi_env env, AsyncContext *context, napi_value *result);
 
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;

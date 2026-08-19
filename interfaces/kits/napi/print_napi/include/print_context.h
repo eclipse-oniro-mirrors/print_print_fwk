@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS {

@@ -34,7 +34,7 @@ AniPrintTask::AniPrintTask(ani_env *env)
         return;
     }
     ani_vm *vm = nullptr;
-    env->GetVM(&vm);
+    PRINT_CALL_RETURN_VOID(env, env->GetVM(&vm));
     aniVm_ = vm;
     jobId_ = PrintUtils::GetPrintJobId();
 }
@@ -245,6 +245,5 @@ bool AniPrintTask::CheckPermission(const std::string &name)
     }
     return result == PERMISSION_GRANTED;
 }
-
 
 } // namespace OHOS::Print

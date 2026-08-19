@@ -74,12 +74,12 @@ bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_obj
     }
     if (stsErrCode == nullptr) {
         ani_ref nullRef = nullptr;
-        env->GetNull(&nullRef);
+        PRINT_CALL_BASE(env, env->GetNull(&nullRef), false);
         stsErrCode = reinterpret_cast<ani_object>(nullRef);
     }
     if (retObj == nullptr) {
         ani_ref undefinedRef = nullptr;
-        env->GetUndefined(&undefinedRef);
+        PRINT_CALL_BASE(env, env->GetUndefined(&undefinedRef), false);
         retObj = reinterpret_cast<ani_object>(undefinedRef);
     }
     if ((status = env->Object_CallMethod_Void(call, method, stsErrCode, retObj)) != ANI_OK) {
@@ -107,7 +107,7 @@ bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
     }
     if (retObj == nullptr) {
         ani_ref undefinedRef = nullptr;
-        env->GetUndefined(&undefinedRef);
+        PRINT_CALL_BASE(env, env->GetUndefined(&undefinedRef), false);
         retObj = reinterpret_cast<ani_object>(undefinedRef);
     }
     if ((status = env->Object_CallMethod_Void(call, method, retObj)) != ANI_OK) {
@@ -135,12 +135,12 @@ bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_obj
     }
     if (error == nullptr) {
         ani_ref undefinedRef = nullptr;
-        env->GetUndefined(&undefinedRef);
+        PRINT_CALL_BASE(env, env->GetUndefined(&undefinedRef), false);
         error = reinterpret_cast<ani_object>(undefinedRef);
     }
     if (result == nullptr) {
         ani_ref undefinedRef = nullptr;
-        env->GetUndefined(&undefinedRef);
+        PRINT_CALL_BASE(env, env->GetUndefined(&undefinedRef), false);
         result = reinterpret_cast<ani_object>(undefinedRef);
     }
     if ((status = env->Object_CallMethod_Void(call, method, error, result)) != ANI_OK) {
@@ -198,7 +198,7 @@ bool Callback(ani_env *env, ani_object call, ani_object data)
     }
     if (data == nullptr) {
         ani_ref undefinedRef = nullptr;
-        env->GetUndefined(&undefinedRef);
+        PRINT_CALL_BASE(env, env->GetUndefined(&undefinedRef), false);
         data = reinterpret_cast<ani_object>(undefinedRef);
     }
     if ((status = env->Object_CallMethod_Void(call, method, data)) != ANI_OK) {

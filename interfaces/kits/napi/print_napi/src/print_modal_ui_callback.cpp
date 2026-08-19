@@ -149,9 +149,9 @@ void PrintModalUICallback::SendMessageBack()
     }
 
     uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(this->baseContext->env, &loop);
-    if (loop == nullptr) {
-        PRINT_HILOGE("loop is nullptr");
+    napi_status loopStatus = napi_get_uv_event_loop(this->baseContext->env, &loop);
+    if (loopStatus != napi_ok || loop == nullptr) {
+        PRINT_HILOGE("napi_get_uv_event_loop failed, status: %{public}d", loopStatus);
         return;
     }
     this->baseContext->sessionId = this->sessionId_;
@@ -186,41 +186,43 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     delete ctxPtr;
     work->data = nullptr;
 
-    napi_status status;
     size_t resultLength = RESULT_LENGTH_TWO;
     size_t errorIndex = NapiPrintUtils::INDEX_ZERO;
     size_t resultIndex = NapiPrintUtils::INDEX_ONE;
 
-    napi_open_handle_scope(context->env, &scope);
-    if (scope == nullptr) {
-        PRINT_HILOGE("open handle scope failed");
+    napi_status scopeStatus = napi_open_handle_scope(context->env, &scope);
+    if (scopeStatus != napi_ok || scope == nullptr) {
+        PRINT_HILOGE("napi_open_handle_scope failed, status: %{public}d", scopeStatus);
         context->callback = nullptr;
         PRINT_SAFE_DELETE(work);
         return;
     }
 
+    napi_status status;
     napi_value result[2] = {nullptr};
     CreateResultMessage(context.get(), result, resultLength);
     if (context->deferred) {
         if (context->errorMessage.code == E_PRINT_NONE) {
-            status = napi_resolve_deferred(context->env, context->deferred, result[resultIndex]);
-            PRINT_HILOGD("promise SUCCEED status %{public}d", (status == napi_ok));
+            napi_resolve_deferred(context->env, context->deferred, result[resultIndex]);
         } else {
-            status = napi_reject_deferred(context->env, context->deferred, result[errorIndex]);
-            PRINT_HILOGE("promise FAILD status %{public}d", (status == napi_ok));
+            napi_reject_deferred(context->env, context->deferred, result[errorIndex]);
         }
     } else {
         napi_value callback = nullptr;
         status = napi_get_reference_value(context->env, context->callback, &callback);
-        status =
-            napi_call_function(context->env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, nullptr);
-        PRINT_HILOGD("callBack status %{public}d", (status == napi_ok));
+        if (status != napi_ok) {
+            PRINT_HILOGE("napi_get_reference_value failed, status: %{public}d", status);
+        } else {
+            napi_call_function(context->env, nullptr, callback,
+                PrintAsyncCall::ARG_BUTT, result, nullptr);
+        }
     }
 
     PRINT_HILOGD("uv_queue_work callback success");
     napi_close_handle_scope(context->env, scope);
 
     CloseModalUIExtension(context.get());
+    context->callback = nullptr;
 
     PRINT_SAFE_DELETE(work);
 }

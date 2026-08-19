@@ -169,7 +169,7 @@ bool StsPrintExtension::CallObjectMethod(bool withResult, const char *name, cons
         PRINT_HILOGE("status: %{public}d", status);
         return false;
     }
-    env->ResetError();
+    PRINT_CALL_BASE(env, env->ResetError(), false);
     if (withResult) {
         ani_boolean res = 0;
         va_list args;
@@ -299,7 +299,10 @@ void StsPrintExtension::BindContext(ani_env*env, std::shared_ptr<AAFwk::Want> wa
 
     if ((status = env->Object_SetField_Ref(etsObj_->aniObj, contextField, contextRef)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
-        env->GlobalReference_Delete(contextRef);
+        ani_status delStatus = env->GlobalReference_Delete(contextRef);
+        if (delStatus != ANI_OK) {
+            PRINT_HILOGW("GlobalReference_Delete failed, status: %{public}d", delStatus);
+        }
         ResetEnv(env);
     }
 }

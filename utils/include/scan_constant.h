@@ -21,6 +21,9 @@
 namespace OHOS::Scan {
 
 #define SCAN_RET_NONE
+
+constexpr int SCAN_CALL_OK = 0;
+
 #define SCAN_MAX_COUNT 1000
 
 #define SCAN_ASSERT_BASE(env, assertion, message, retVal)  \
@@ -35,11 +38,14 @@ namespace OHOS::Scan {
 
 #define SCAN_ASSERT_RETURN_VOID(env, assertion, message) SCAN_ASSERT_BASE(env, assertion, message, SCAN_RET_NONE)
 
-#define SCAN_CALL_BASE(env, theCall, retVal)   \
-    do {                                        \
-        if ((theCall) != napi_ok) {             \
-            return retVal;                      \
-        }                                       \
+#define SCAN_CALL_BASE(env, theCall, retVal)       \
+    do {                                            \
+        auto _scanCallStatus = (theCall);            \
+        if (_scanCallStatus != SCAN_CALL_OK) {         \
+            SCAN_HILOGE("%{public}s failed in %{public}s, status: %{public}d", \
+                #theCall, __func__, static_cast<int>(_scanCallStatus)); \
+            return retVal;                          \
+        }                                           \
     } while (0)
 
 #define SCAN_CALL(env, theCall) SCAN_CALL_BASE(env, theCall, nullptr)

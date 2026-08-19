@@ -44,8 +44,9 @@ ScanCallback::~ScanCallback()
     auto task = [param]() {
         SCAN_HILOGI("napi_send_event ScanCallback DeleteReference");
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(param->env, &scope);
-        if (scope == nullptr) {
+        napi_status scopeStatus = napi_open_handle_scope(param->env, &scope);
+        if (scopeStatus != napi_ok || scope == nullptr) {
+            SCAN_HILOGE("napi_open_handle_scope failed, status: %{public}d", scopeStatus);
             NapiScanUtils::DeleteReference(param->env, param->callbackRef);
             return;
         }
@@ -90,8 +91,10 @@ bool ScanCallback::ExecuteNapiEventWork(std::shared_ptr<CallbackParam> param,
         }
         std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
         napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(param->env, &scope);
-        if (scope == nullptr) {
+        napi_status scopeStatus = napi_open_handle_scope(param->env, &scope);
+        if (scopeStatus != napi_ok || scope == nullptr) {
+            SCAN_HILOGE("napi_open_handle_scope failed, status: %{public}d", scopeStatus);
+            NapiScanUtils::DeleteReference(param->env, param->ref);
             return;
         }
         napi_value callbackFunc = NapiScanUtils::GetReference(param->env, param->ref);
@@ -120,8 +123,8 @@ void ScanCallback::NapiCallFunction(CallbackParam* cbParam, size_t argcCount, na
     }
     napi_value callbackFunc = NapiScanUtils::GetReference(cbParam->env, cbParam->ref);
     if (callbackFunc != nullptr) {
-        napi_call_function(cbParam->env, nullptr, callbackFunc,
-            argcCount, callbackValues, nullptr);
+        SCAN_CALL_RETURN_VOID(cbParam->env, napi_call_function(cbParam->env, nullptr, callbackFunc,
+            argcCount, callbackValues, nullptr));
     }
 }
 

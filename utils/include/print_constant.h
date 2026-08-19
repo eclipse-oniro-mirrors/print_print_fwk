@@ -22,6 +22,8 @@
 namespace OHOS::Print {
 #define PRINT_RET_NONE
 
+constexpr int PRINT_CALL_OK = 0;
+
 #define PRINT_MAX_PRINT_COUNT 1000
 #define PRINT_MAX_FILE_LIST_SIZE 100
 #define PRINT_MAX_PPD_COUNT 4096
@@ -48,11 +50,14 @@ namespace OHOS::Print {
 
 #define PRINT_ASSERT_RETURN_VOID(env, assertion, message) PRINT_ASSERT_BASE(env, assertion, message, PRINT_RET_NONE)
 
-#define PRINT_CALL_BASE(env, theCall, retVal)   \
-    do {                                        \
-        if ((theCall) != napi_ok) {             \
-            return retVal;                      \
-        }                                       \
+#define PRINT_CALL_BASE(env, theCall, retVal)       \
+    do {                                            \
+        auto _printCallStatus = (theCall);          \
+        if (_printCallStatus != PRINT_CALL_OK) {      \
+            PRINT_HILOGE("%{public}s failed in %{public}s, status: %{public}d", \
+                #theCall, __func__, static_cast<int>(_printCallStatus)); \
+            return retVal;                          \
+        }                                           \
     } while (0)
 
 #define PRINT_CALL(env, theCall) PRINT_CALL_BASE(env, theCall, nullptr)

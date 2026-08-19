@@ -28,13 +28,14 @@ napi_status NapiPrintExt::ParsePrinterInfoInput(napi_env env, size_t argc, napi_
 {
     PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
     bool isArray = false;
-    napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+    PRINT_CALL_BASE(env, napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray), napi_invalid_arg);
     PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
     uint32_t len = 0;
-    napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+    PRINT_CALL_BASE(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len), napi_invalid_arg);
     for (uint32_t index = 0; index < len; index++) {
         napi_value value;
-        napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+        napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO],
+            index, &value);
         if (status != napi_ok) {
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
@@ -90,13 +91,14 @@ napi_status NapiPrintExt::ParsePrinterIdInput(napi_env env, size_t argc, napi_va
 {
     PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
     bool isArray = false;
-    napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+    PRINT_CALL_BASE(env, napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray), napi_invalid_arg);
     PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
     uint32_t len = 0;
-    napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+    PRINT_CALL_BASE(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len), napi_invalid_arg);
     for (uint32_t index = 0; index < len; index++) {
         napi_value value;
-        napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+        napi_status status = napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO],
+            index, &value);
         if (status != napi_ok) {
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
@@ -152,17 +154,17 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
         napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+        PRINT_CALL_BASE(env, napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
         uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+        PRINT_CALL_BASE(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len), napi_invalid_arg);
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            PRINT_CALL_BASE(env, napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO],
+                index, &value), napi_invalid_arg);
             auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, value);
             if (printerInfoPtr == nullptr) {
                 context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-                PRINT_HILOGE("PrinterInfo format error!");
                 return napi_invalid_arg;
             }
             context->printerInfos.emplace_back(*printerInfoPtr);
@@ -175,8 +177,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        return status;
+        return napi_get_boolean(env, context->result, result);
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
@@ -601,7 +602,7 @@ napi_value NapiPrintExt::UpdatePrinterInDiscovery(napi_env env, napi_callback_in
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_object, " parameter is not an object!", napi_invalid_arg);
 
         auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
@@ -699,7 +700,7 @@ napi_value NapiPrintExt::UpdatePrinterInSystem(napi_env env, napi_callback_info 
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_object, " parameter is not an object!", napi_invalid_arg);
 
         auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
@@ -768,10 +769,10 @@ bool NapiPrintExt::IsValidPrintJobSubState(uint32_t subState)
 void NapiPrintExt::NapiThrowError(napi_env env, const int32_t errCode)
 {
     napi_value result = nullptr;
-    napi_create_error(env,
+    PRINT_CALL_RETURN_VOID(env, napi_create_error(env,
         NapiPrintUtils::CreateInt32(env, errCode),
         NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)),
-        &result);
-    napi_throw(env, result);
+        &result));
+    PRINT_CALL_RETURN_VOID(env, napi_throw(env, result));
 }
 }  // namespace OHOS::Print

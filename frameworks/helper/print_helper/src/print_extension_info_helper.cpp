@@ -27,7 +27,7 @@ napi_value PrintExtensionInfoHelper::MakeJsObject(napi_env env, const PrintExten
 {
     napi_value jsObj = nullptr;
 
-    napi_create_object(env, &jsObj);
+    PRINT_CALL(env, napi_create_object(env, &jsObj));
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_EXTENSION_ID, info.GetExtensionId());
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_VENDOR_ID, info.GetVendorId());
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_VENDOR_NAME, info.GetVendorName());
