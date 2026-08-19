@@ -61,10 +61,6 @@ std::shared_ptr<PrintSharedHost> PrintSharedHostHelper::BuildFromJs(napi_env env
     std::string ip = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_IP);
     std::string shareName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_SHARE_NAME);
     std::string workgroupName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_WORKGROUP_NAME);
-    if (ip.empty() || shareName.empty() || workgroupName.empty()) {
-        PRINT_HILOGE("illegal PrintSharedHost");
-        return nullptr;
-    }
     nativeObj->SetIp(ip);
     nativeObj->SetShareName(shareName);
     nativeObj->SetWorkgroupName(workgroupName);
