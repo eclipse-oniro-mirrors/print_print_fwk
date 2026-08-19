@@ -28,6 +28,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
     std::shared_ptr<ScanServiceStub> stubSpr;
 
     using ScanCmdHandler = bool (ScanServiceStub::*)(MessageParcel &, MessageParcel &);
@@ -62,6 +63,9 @@ void ScanServiceStubTest::SetUp(void)
     EXPECT_TRUE(scanSa != nullptr);
     EXPECT_TRUE(scannerId != nullptr && scannerId != "")
 }
+
+void ScanServiceStubTest::TearDown(void)
+{}
 
 /**
  * @tc.name: ScanMdnsServiceTest_0001

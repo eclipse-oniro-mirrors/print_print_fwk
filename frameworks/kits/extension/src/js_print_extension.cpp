@@ -98,6 +98,7 @@ bool JsPrintExtension::InitExtensionObj(JsRuntime &jsRuntime)
         return false;
     }
 
+    PRINT_CHECK_NULL_AND_RETURN(abilityInfo_, false);
     std::string moduleName(abilityInfo_->moduleName);
     moduleName.append("::").append(abilityInfo_->name);
     PRINT_HILOGD("Init module:%{public}s,srcPath:%{public}s.", moduleName.c_str(), srcPath.c_str());

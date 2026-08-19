@@ -84,7 +84,7 @@ public:
 private:
     void ReadFromParcel(Parcel &parcel);
 
-    void ReadValueFromParcel(Parcel &parcel);
+    bool ReadValueFromParcel(Parcel &parcel);
 
 private:
     std::string optionName_;

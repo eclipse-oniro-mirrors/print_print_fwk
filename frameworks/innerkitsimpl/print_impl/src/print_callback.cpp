@@ -18,6 +18,7 @@
 #include "print_job_helper.h"
 #include "printer_info_helper.h"
 #include "print_attributes_helper.h"
+#include "print_shared_host_helper.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -107,12 +108,12 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
         close(cbParam->fd);
+        cbParam->fd = INVALID_FD;
         return;
     }
     napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
     if (adapterObj != nullptr) {
-        napi_value layoutWriteFunc =
-            NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
+        napi_value layoutWriteFunc = NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
         auto successCallback = [](napi_env env, napi_callback_info info) -> napi_value {
             PRINT_HILOGI("parse from js callback data start");
             size_t argc = NapiPrintUtils::ARGC_TWO;
@@ -122,7 +123,7 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
             std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
             uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
+            PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
             PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
             return nullptr;
@@ -137,13 +138,13 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
             NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
             NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", successCallback, nullptr);
-
         napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
             callbackValues, &callbackResult);
         PRINT_HILOGI("OnCallback end run PrintAdapterWorkCb success");
     }
     if (napi_close_handle_scope(cbParam->env, scope) != napi_ok) {
         close(cbParam->fd);
+        cbParam->fd = INVALID_FD;
     }
 }
 
@@ -159,6 +160,7 @@ static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
         close(cbParam->fd);
+        cbParam->fd = INVALID_FD;
         return;
     }
     napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
@@ -319,7 +321,7 @@ bool PrintCallback::OnCallbackAdapterLayout(
         PRINT_HILOGI("OnCallbackAdapterLayout run c++");
         adapter_->onStartLayoutWrite(jobId, oldAttrs, newAttrs, fd, [](std::string jobId, uint32_t state) {
             PRINT_HILOGI("onStartLayoutWrite write over, jobId:%{public}s state: %{public}d", jobId.c_str(), state);
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
+            PrintManagerClient::GetInstance()->AdapterGetFileCallBack(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, state);
         });
         return true;
@@ -366,6 +368,21 @@ bool PrintCallback::OnCallbackAdapterGetFile(uint32_t state)
             PRINT_HILOGI("OnCallback start run PrinterInfoWorkCb");
             napi_value callbackValues[1] = { 0 };
             callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            NapiCallFunction(cbParam, NapiPrintUtils::ARGC_ONE, callbackValues);
+        });
+}
+
+bool PrintCallback::OnCallback(const std::vector<PrintSharedHost> &sharedHosts)
+{
+    PRINT_HILOGI("SharedHostDiscover Notification in, host count: %{public}zu", sharedHosts.size());
+    return OnBaseCallback(
+        [sharedHosts](CallbackParam* param) {
+            param->sharedHosts = sharedHosts;
+        },
+        [](CallbackParam *cbParam) {
+            PRINT_HILOGI("OnCallback start run SharedHostDiscoverWorkCb");
+            napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
+            callbackValues[0] = PrintSharedHostHelper::MakeJsObjectArray(cbParam->env, cbParam->sharedHosts);
             NapiCallFunction(cbParam, NapiPrintUtils::ARGC_ONE, callbackValues);
         });
 }

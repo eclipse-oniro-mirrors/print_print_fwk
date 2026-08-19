@@ -19,9 +19,12 @@
 #include <condition_variable>
 #include <map>
 #include <mutex>
+#include <shared_mutex>
 
 #include "want.h"
 #include "iprint_callback.h"
+#include "iwatermark_callback.h"
+#include "ikia_interceptor_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
 #include "print_extension_callback_stub.h"
@@ -63,7 +66,7 @@ public:
     int32_t CancelPrintJob(const std::string &jobId);
     int32_t RestartPrintJob(const std::string &jobId);
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state);
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState);
+    int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdateExtensionInfo(const std::string &extensionId);
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
@@ -119,7 +122,7 @@ public:
 
     int32_t SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb);
 
-    void LoadServerSuccess();
+    void LoadServerSuccess(const sptr<IRemoteObject> &remoteObject = nullptr);
     void LoadServerFail();
     void SetProxy(const sptr<IRemoteObject> &obj);
     void ResetProxy();
@@ -129,27 +132,34 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
-    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
-    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
-        const std::string &ppdName);
     int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions);
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences);
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName);
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts);
+    int32_t StartSharedHostDiscovery();
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos);
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback);
+    int32_t UnregisterWatermarkCallback();
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result);
+    int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback);
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);
-    bool LoadServer();
-    bool GetPrintServiceProxy();
+    virtual bool LoadServer();
+    virtual sptr<IPrintService> GetPrintServiceProxy();
     int32_t runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func);
 #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
 private:
-    std::recursive_mutex proxyLock_;
+    std::shared_mutex proxyLock_;
     sptr<IPrintService> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;
 

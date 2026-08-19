@@ -34,6 +34,7 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
+    void TearDown();
 
 private:
     constexpr int32_t DEFAULT_NUMBER = 0;
@@ -80,6 +81,9 @@ void ScanServiceAbilityTest::SetUp(void)
         E_SCAN_NO_MEM,
         E_SCAN_ACCESS_DENIED}) SCAN_HILOGD("ScanServiceAbilityTest : %{public}d", ++testNo);
 }
+
+void ScanServiceAbilityTest::TearDown(void)
+{}
 
 void ScanServiceAbilityTest::SetScannerId(const std::string &scannerId)
 {

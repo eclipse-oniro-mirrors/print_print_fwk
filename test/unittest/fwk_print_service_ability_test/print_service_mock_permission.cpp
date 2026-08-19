@@ -22,11 +22,15 @@ namespace OHOS {
 namespace Print {
 void PrintServiceMockPermission::MockPermission()
 {
-    static const char *PERMS[] = {"ohos.permission.PRINT", "ohos.permission.MANAGE_PRINT_JOB"};
+    static const char *PERMS[] = {
+        "ohos.permission.PRINT",
+        "ohos.permission.MANAGE_PRINT_JOB",
+        "ohos.permission.ENTERPRISE_MANAGE_PRINT"
+    };
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
-        .permsNum = 2,
+        .permsNum = 3,
         .aclsNum = 0,
         .dcaps = nullptr,
         .perms = PERMS,

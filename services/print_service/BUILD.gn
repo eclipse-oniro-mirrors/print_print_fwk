@@ -17,15 +17,21 @@ import("//build/ohos.gni")
 cflags_cc = []
 
 _sources = [
+  "src/event_callback/extension_event_callback.cpp",
+  "src/event_callback/printer_event_callback.cpp",
+  "src/event_callback/print_job_event_callback.cpp",
+  "src/event_listener_mgr.cpp",
   "src/hisys_event_util.cpp",
   "src/operation_queue.cpp",
   "src/print_bms_death_recipient.cpp",
   "src/print_bms_helper.cpp",
   "src/print_callback_proxy.cpp",
   "src/print_caller_app_monitor.cpp",
+  "src/print_common_death_recipient.cpp",
   "src/print_event_container.cpp",
   "src/print_event_subscriber.cpp",
   "src/print_extension_callback_proxy.cpp",
+  "src/print_resource_manager.cpp",
   "src/print_security_guard_info.cpp",
   "src/print_security_guard_manager.cpp",
   "src/print_service_ability.cpp",
@@ -44,6 +50,9 @@ _sources = [
   "src/vendor_manager.cpp",
   "src/vendor_ppd_driver.cpp",
   "src/vendor_wlan_group.cpp",
+  "src/watermark_callback_proxy.cpp",
+  "enterprise/src/kia_interceptor_callback_proxy.cpp",
+  "enterprise/src/kia_interceptor_manager.cpp"
 ]
 
 _deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
@@ -63,18 +72,24 @@ _external_deps = [
   "common_event_service:cesfwk_innerkits",
   "data_share:datashare_consumer",
   "drivers_interface_usb:libusb_proxy_1.0",
+  "distributed_notification_service:ans_innerkits",
   "eventhandler:libeventhandler",
   "hilog:libhilog",
   "hisysevent:libhisysevent",
   "init:libbegetutil",
+  "i18n:intl_util",
   "ipc:ipc_core",
   "jsoncpp:jsoncpp",
   "napi:ace_napi",
   "openssl:libssl_shared",
   "os_account:os_account_innerkits",
+  "resource_management:global_resmgr",
   "safwk:system_ability_fwk",
   "samgr:samgr_proxy",
   "usb_manager:usbsrv_client",
+  "udmf:udmf_client",
+  "udmf:utd_client",
+  "udmf:libudmf",
   "wifi:wifi_sdk",
 ]
 
@@ -83,6 +98,8 @@ _public_configs = [ ":print_service_config" ]
 _include_dirs = [
   "${print_path}/frameworks/innerkitsimpl/print_impl/include",
   "${print_path}/frameworks/ohprint/include",
+  "${print_path}/services/print_service/include/event_callback",
+  "${print_path}/services/print_service/enterprise/include",
   "${print_utils_path}/include",
 ]
 
@@ -110,6 +127,7 @@ config("print_service_config") {
     "-fno-unwind-tables",
     "-flto",
     "-Os",
+    "-fno-exceptions",
   ]
 }
 
@@ -150,16 +168,16 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
   }
 
+  if (print_fwk_feature_virtual_printer) {
+    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
+
   if (print_fwk_feature_edm_service) {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
     external_deps += [
       "enterprise_device_management:edmservice_kits",
       "security_guard:libsg_collect_sdk"
     ]
-  }
-
-  if (print_fwk_feature_virtual_printer) {
-    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
   }
 
   if (build_variant == "user") {
@@ -176,6 +194,26 @@ ohos_shared_library("print_service") {
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
   }
 
+  if (print_fwk_feature_watermark_enforcing) {
+      sources += [
+        "src/watermark_manager.cpp",
+        "src/watermark_death_recipient.cpp",
+      ]
+      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
+  if (print_fwk_feature_print_failure_ai_notifier) {
+      sources += [
+        "src/print_failure_ai_notifier.cpp",
+        "src/print_notification_builder.cpp",
+      ]
+      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
+  if (print_fwk_feature_phone_isolation) {
+      cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
@@ -188,6 +226,8 @@ ohos_static_library("print_service_test") {
   include_dirs = _include_dirs
   deps = _deps
   external_deps = _external_deps
+
+  cflags_cc += [ "-DUNIT_TEST" ]
 
   if (cups_enable) {
     sources += [
@@ -216,15 +256,19 @@ ohos_static_library("print_service_test") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
 
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+
+  if (print_fwk_feature_virtual_printer) {
+    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
+
   if (print_fwk_feature_edm_service) {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
     external_deps += [
       "enterprise_device_management:edmservice_kits"
     ]
-  }
-
-  if (print_fwk_feature_virtual_printer) {
-    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
   }
 
   if (print_fwk_feature_smb_printer) {
@@ -236,6 +280,27 @@ ohos_static_library("print_service_test") {
       ]
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
   }
+
+  if (print_fwk_feature_watermark_enforcing) {
+      sources += [
+        "src/watermark_manager.cpp",
+        "src/watermark_death_recipient.cpp",
+      ]
+      cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
+  if (print_fwk_feature_print_failure_ai_notifier) {
+      sources += [
+        "src/print_failure_ai_notifier.cpp",
+        "src/print_notification_builder.cpp",
+      ]
+      cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
+  if (print_fwk_feature_phone_isolation) {
+      cflags_cc += [ "-DPHONE_ISOLATION_ENABLE" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }

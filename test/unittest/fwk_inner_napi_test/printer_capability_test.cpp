@@ -26,6 +26,8 @@ class PrinterCapabilityTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrinterCapabilityTest::SetUpTestCase(void)
@@ -34,13 +36,19 @@ void PrinterCapabilityTest::SetUpTestCase(void)
 void PrinterCapabilityTest::TearDownTestCase(void)
 {}
 
+void PrinterCapabilityTest::SetUp(void)
+{}
+
+void PrinterCapabilityTest::TearDown(void)
+{}
+
 /**
  * @tc.name: PrinterCapabilityTest_0002
  * @tc.desc: Verify settings and obtain colorMode function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0002_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0002, TestSize.Level2)
 {
     PrinterCapability capability;
     capability.SetColorMode(6);
@@ -54,7 +62,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0002_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0003_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0003, TestSize.Level2)
 {
     PrinterCapability capability;
     PrintMargin margin;
@@ -68,7 +76,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0003_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0004_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0004, TestSize.Level2)
 {
     PrinterCapability capability;
     PrintMargin margin, copyMargin;
@@ -83,7 +91,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0004_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level2)
 {
     PrinterCapability capability;
     std::vector<PrintPageSize> pagesize, getPagesize;
@@ -101,7 +109,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006, TestSize.Level2)
 {
     PrinterCapability capability;
     std::vector<PrintResolution> resolution, getResolution;
@@ -119,7 +127,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0007_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0007, TestSize.Level2)
 {
     PrinterCapability capability;
     std::vector<PrintResolution> resolution;
@@ -133,7 +141,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0007_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0008_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0008, TestSize.Level2)
 {
     PrinterCapability capability;
     capability.SetColorMode(6);
@@ -146,7 +154,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0008_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0009_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0009, TestSize.Level2)
 {
     PrinterCapability capability;
     capability.SetDuplexMode(6);
@@ -159,7 +167,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0009_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010, TestSize.Level2)
 {
     PrinterCapability capability;
     PrintMargin margin, getMargin;
@@ -181,7 +189,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011, TestSize.Level2)
 {
     PrinterCapability capability;
     PrintMargin margin, getMargin;
@@ -200,7 +208,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012, TestSize.Level2)
 {
     PrinterCapability capability;
     PrintMargin margin, getMargin;
@@ -224,7 +232,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0013_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0013, TestSize.Level2)
 {
     PrinterCapability capability;
     capability.SetColorMode(6);
@@ -238,7 +246,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0013_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0014_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0014, TestSize.Level2)
 {
     PrinterCapability capability;
     capability.SetColorMode(6);
@@ -252,7 +260,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0014_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0015_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0015, TestSize.Level2)
 {
     PrinterCapability capability;
     capability.GetPrinterAttrGroupJson();
@@ -269,7 +277,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0015_NeedRename, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0016_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0016, TestSize.Level2)
 {
     PrinterCapability capability;
     std::vector<PrintPageSize> pagesize, getPagesize;

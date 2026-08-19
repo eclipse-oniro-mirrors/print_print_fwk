@@ -51,6 +51,7 @@ public:
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
     void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
+    void UpdatePrinterOption(const std::string &printerId, const std::string &option);
     bool QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool QueryPpdHashCodeByPrinterName(const std::string &standardPrinterName, std::string &ppdHashCode);
     bool CheckPrinterBusy(const std::string &printerId);
@@ -79,6 +80,7 @@ public:
     std::optional<PrinterInfo> FindInfoInSmbPrinterDiscoverList(const std::string &printerId);
     void GetSmbAddedPrinterListFromSystemData(std::vector<PrinterInfo> &printerInfoList);
 #endif // HAVE_SMB_PRINTER
+    void GetWebPrinterListFromSystemData(std::vector<std::string> &printerIdList);
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);
@@ -121,6 +123,9 @@ private:
     PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();
     const std::string& GetPrintersPath();
     void ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson);
+    std::string HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri,
+        const std::string &printerId);
+    bool ParseSelectedDriverFromJson(Json::Value &object, PpdInfo &selectedDriver);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,

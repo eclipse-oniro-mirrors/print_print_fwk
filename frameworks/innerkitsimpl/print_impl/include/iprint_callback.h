@@ -20,7 +20,9 @@
 #include "iremote_object.h"
 #include "print_job.h"
 #include "printer_info.h"
+#include "iprint_ipc_interface_code.h"
 #include "ppd_info.h"
+#include "print_shared_host.h"
 
 namespace OHOS::Print {
 class IPrintCallback : public IRemoteBroker {
@@ -36,6 +38,7 @@ public:
     virtual bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) = 0;
     virtual bool OnCallbackAdapterGetFile(uint32_t state) = 0;
+    virtual bool OnCallback(const std::vector<PrintSharedHost> &sharedHosts) = 0;
 };
 
 enum {
@@ -48,6 +51,7 @@ enum {
     PRINT_CALLBACK_PRINT_JOB_ADAPTER_TEST,
     PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER,
     PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER,
+    PRINT_CALLBACK_SHARED_HOST_DISCOVER,
 };
 } // namespace OHOS::Print
 #endif // IPRINT_CALLBACK_H

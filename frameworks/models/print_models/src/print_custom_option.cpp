@@ -20,7 +20,6 @@
 namespace OHOS::Print {
 PrintCustomOption::PrintCustomOption() : optionName_(""), type_(0), bundleName_(""), optionResourceName_(""),
     hasValue_(false), isSelect_(false), hasErrorResourceName_(false), errorResourceName_("") {
-    menuOption_.clear();
 }
 
 PrintCustomOption::PrintCustomOption(const PrintCustomOption &right)
@@ -155,24 +154,55 @@ void PrintCustomOption::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGE("no data in parcel");
         return;
     }
-    SetOptionName(parcel.ReadString());
-    SetType(parcel.ReadUint32());
-    SetBundleName(parcel.ReadString());
-    SetOptionResourceName(parcel.ReadString());
-    hasValue_ = parcel.ReadBool();
-    if (hasValue_) {
-        ReadValueFromParcel(parcel);
+    std::string optionName;
+    uint32_t type;
+    if (!parcel.ReadString(optionName) || !parcel.ReadUint32(type)) {
+        PRINT_HILOGE("Read optionName or type failed.");
+        return;
     }
-    hasErrorResourceName_ = parcel.ReadBool();
+    SetOptionName(optionName);
+    SetType(type);
+    std::string bundleName;
+    std::string optionResourceName;
+    if (!parcel.ReadString(bundleName) || !parcel.ReadString(optionResourceName)) {
+        PRINT_HILOGE("Read bundleName or optionResourceName failed.");
+        return;
+    }
+    SetBundleName(bundleName);
+    SetOptionResourceName(optionResourceName);
+    if (!parcel.ReadBool(hasValue_)) {
+        PRINT_HILOGE("Read hasValue failed.");
+        return;
+    }
+    if (hasValue_) {
+        if (!ReadValueFromParcel(parcel)) {
+            PRINT_HILOGE("ReadValueFromParcel failed.");
+            return;
+        }
+    }
+    if (!parcel.ReadBool(hasErrorResourceName_)) {
+        PRINT_HILOGE("Read hasErrorResourceName failed.");
+        return;
+    }
     if (hasErrorResourceName_) {
-        SetErrorResourceName(parcel.ReadString());
+        std::string errorResourceName;
+        if (!parcel.ReadString(errorResourceName)) {
+            PRINT_HILOGE("Read errorResourceName failed.");
+            return;
+        }
+        SetErrorResourceName(errorResourceName);
     }
 }
 
-void PrintCustomOption::ReadValueFromParcel(Parcel &parcel)
+bool PrintCustomOption::ReadValueFromParcel(Parcel &parcel)
 {
     if (static_cast<ComponentType>(type_) == ComponentType::SWITCH) {
-        SetIsSelect(parcel.ReadBool());
+        bool isSelect;
+        if (!parcel.ReadBool(isSelect)) {
+            PRINT_HILOGE("Read isSelect failed.");
+            return false;
+        }
+        SetIsSelect(isSelect);
     } else if (static_cast<ComponentType>(type_) == ComponentType::MENU) {
         PrintUtils::readListFromParcel<PrintMenuOption>(parcel, menuOption_,
             [](Parcel& p) -> std::optional<PrintMenuOption> {
@@ -183,26 +213,51 @@ void PrintCustomOption::ReadValueFromParcel(Parcel &parcel)
                 return std::nullopt;
             });
     }
+    return true;
 }
 
 bool PrintCustomOption::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetOptionName());
-    parcel.WriteUint32(GetType());
-    parcel.WriteString(GetBundleName());
-    parcel.WriteString(GetOptionResourceName());
-    parcel.WriteBool(hasValue_);
+    if (!parcel.WriteString(GetOptionName())) {
+        PRINT_HILOGE("Write optionName failed.");
+        return false;
+    }
+    if (!parcel.WriteUint32(GetType())) {
+        PRINT_HILOGE("Write type failed.");
+        return false;
+    }
+    if (!parcel.WriteString(GetBundleName())) {
+        PRINT_HILOGE("Write bundleName failed.");
+        return false;
+    }
+    if (!parcel.WriteString(GetOptionResourceName())) {
+        PRINT_HILOGE("Write optionResourceName failed.");
+        return false;
+    }
+    if (!parcel.WriteBool(hasValue_)) {
+        PRINT_HILOGE("Write hasValue failed.");
+        return false;
+    }
     if (hasValue_) {
         if (static_cast<ComponentType>(type_) == ComponentType::SWITCH) {
-            parcel.WriteBool(GetIsSelect());
+            if (!parcel.WriteBool(GetIsSelect())) {
+                PRINT_HILOGE("Write isSelect failed.");
+                return false;
+            }
         } else if (static_cast<ComponentType>(type_) == ComponentType::MENU) {
             PrintUtils::WriteListToParcel(
                 parcel, menuOption_, [](Parcel &p, const PrintMenuOption &item) { item.Marshalling(p); });
         }
     }
-    parcel.WriteBool(hasErrorResourceName_);
+    if (!parcel.WriteBool(hasErrorResourceName_)) {
+        PRINT_HILOGE("Write hasErrorResourceName failed.");
+        return false;
+    }
     if (hasErrorResourceName_) {
-        parcel.WriteString(GetErrorResourceName());
+        if (!parcel.WriteString(GetErrorResourceName())) {
+            PRINT_HILOGE("Write errorResourceName failed.");
+            return false;
+        }
     }
     return true;
 }

@@ -433,7 +433,7 @@ void PrinterPreferences::Dump() const
         PRINT_HILOGD("defaultReverse: %{public}d", defaultReverse_);
     }
     if (hasOption_) {
-        PRINT_HILOGD("option: %{public}s", option_.c_str());
+        PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
 }
 
@@ -467,7 +467,7 @@ void PrinterPreferences::DumpInfo() const
         PRINT_HILOGI("defaultReverse: %{public}d", defaultReverse_);
     }
     if (hasOption_) {
-        PRINT_HILOGI("option: %{public}s", option_.c_str());
+        PRINT_HILOGI("option: %{private}s", option_.c_str());
     }
 }
 
@@ -503,7 +503,8 @@ Json::Value PrinterPreferences::ConvertToJson()
     }
 
     if (hasOption_) {
-        if (!PrintJsonUtil::Parse(option_, preferencesJson["options"])) {
+        std::istringstream iss(option_);
+        if (!PrintJsonUtil::ParseFromStream(iss, preferencesJson["options"])) {
             PRINT_HILOGE("json accept preferences options fail");
         }
     }

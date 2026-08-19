@@ -65,7 +65,7 @@ public:
 private:
 #endif
     bool LoadScanService();
-    sptr<IScanService> GetScanServiceProxy();
+    virtual sptr<IScanService> GetScanServiceProxy();
 
 #ifndef TDD_ENABLE
 private:

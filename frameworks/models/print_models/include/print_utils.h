@@ -53,8 +53,8 @@ struct PrintJobParams {
     PrintPageSize pageSize;
     std::string jobId;
     std::vector<uint32_t> printFdList;
-    void* binaryData;
-    size_t dataLength;
+    void* binaryData = nullptr;
+    size_t dataLength = 0;
     int32_t printQuality = PARAM_NOT_SET;
     std::string mediaType;
     int32_t isBorderless = PARAM_NOT_SET;
@@ -81,10 +81,12 @@ public:
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
+    static bool IsPathValidForCreate(const std::string &parentDir, const std::string &fileName);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static std::string GetJobStateChar(const uint32_t state);
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
     static bool ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos);
+    static bool IsPrivateIpv4(const std::string &ip);
     static std::string AnonymizeIpv4(const std::string &ip);
     static std::string AnonymizeIpv6(const std::string &ip);
     static std::string AnonymizeUUid(const std::string &uuid);
@@ -92,7 +94,10 @@ public:
     static std::string AnonymizePrinterUri(const std::string &printerUri);
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
+    static void AnonymizeAlias(Json::Value &optionJson);
+    static void AnonymizeFileArray(Json::Value &optionJson, const std::string &key);
     static std::string AnonymizeJobName(const std::string &jobName);
+    static std::string AnonymizeFilePath(const std::string &filePath);
 
     static void BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
     static void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
@@ -110,6 +115,10 @@ public:
     static int CreateTempFileWithData(void* data, size_t length, std::string &tmpPath);
     static std::string GenerateTempFilePath(const std::string &filesDir);
     static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
+    
+    static std::string MakeExtensionStateKey(int32_t userId, const std::string& bundleName);
+    static int32_t GetUserIdFromKey(const std::string& key);
+    static std::string GetBundleNameFromKey(const std::string& key);
 
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
@@ -178,9 +187,9 @@ public:
     }
 
 private:
-    static Json::Value CreatePageRangeJson(const PrintAttributes &attrParam);
-    static Json::Value CreatePageSizeJson(const PrintAttributes &attrParam);
-    static Json::Value CreateMarginJson(const PrintAttributes &attrParam);
+    static Json::Value GetPageRangeForJson(const PrintAttributes &attrParam);
+    static Json::Value GetPageSizeForJson(const PrintAttributes &attrParam);
+    static Json::Value GetMarginForJson(const PrintAttributes &attrParam);
     static Json::Value GetCustomOptionForJson(const PrintAttributes &attrParam);
 
 private:

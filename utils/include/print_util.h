@@ -30,6 +30,8 @@
 
 namespace OHOS::Print {
 const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
+const uint32_t MAX_DRIVER_PRINTER_NAME_LENGTH = 124;
+const uint32_t DELETE_CHARACTER = 127;
 const uint32_t MIN_INT_LIST_STRLENGTH = 2;
 const uint32_t MAX_AUTH_LENGTH_SIZE = 64;
 class PrintUtil {
@@ -55,6 +57,8 @@ public:
     static bool ConvertToInt(const std::string& str, int32_t& value);
     
     static void SafeDeleteAuthInfo(char *userPasswd);
+
+    static bool ValidatePrinterName(const char *name);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -149,6 +153,20 @@ inline std::string PrintUtil::StandardizePrinterName(std::string printerName)
         return name;
     }
     return name.substr(0, MAX_PRINTER_NAME_LENGTH - 1);
+}
+
+inline bool PrintUtil::ValidatePrinterName(const char *name)
+{
+    const char *ptr;
+    for (ptr = name; *ptr; ptr++) {
+        if (*ptr == '@') {
+            break;
+        } else if ((*ptr >= 0 && *ptr <= ' ') || *ptr == DELETE_CHARACTER || *ptr == '/' || *ptr == '\\' ||
+            *ptr == '?' || *ptr == '\'' || *ptr == '\"' || *ptr == '#') {
+            return false;
+        }
+    }
+    return ((ptr - name) <= MAX_PRINTER_NAME_LENGTH);
 }
 
 inline std::string PrintUtil::RemoveUnderlineFromPrinterName(std::string printerName)

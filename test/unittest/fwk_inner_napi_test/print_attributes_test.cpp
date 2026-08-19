@@ -29,6 +29,8 @@ class PrintAttributesTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
     OHOS::Print::PrintAttributes GetDefaultPrintAttributes();
 };
 
@@ -36,6 +38,12 @@ void PrintAttributesTest::SetUpTestCase(void)
 {}
 
 void PrintAttributesTest::TearDownTestCase(void)
+{}
+
+void PrintAttributesTest::SetUp(void)
+{}
+
+void PrintAttributesTest::TearDown(void)
 {}
 
 OHOS::Print::PrintAttributes PrintAttributesTest::GetDefaultPrintAttributes()

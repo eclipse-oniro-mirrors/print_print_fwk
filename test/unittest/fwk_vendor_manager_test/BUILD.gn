@@ -22,6 +22,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
     "${print_path}/services/print_service/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -80,6 +81,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "os_account:os_account_innerkits",
     "selinux_adapter:librestorecon",
     "safwk:system_ability_fwk",
+    "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]

@@ -24,6 +24,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/frameworks/ohprint/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -35,7 +36,7 @@ ohos_unittest("fwk_print_cups_client_test") {
   }
 
   sources = []
-  cflags_cc = []
+  cflags_cc = [ "-DUNIT_TEST" ]
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
@@ -90,6 +91,10 @@ ohos_unittest("fwk_print_cups_client_test") {
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+
+  if (print_fwk_feature_watermark_enforcing) {
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
   }
 }
 

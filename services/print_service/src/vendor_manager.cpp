@@ -118,18 +118,16 @@ bool VendorManager::Init(sptr<PrintServiceAbility> sa, bool loadDefault)
 void VendorManager::UnInit()
 {
     PRINT_HILOGI("UnInit enter");
-    StopStatusMonitor();
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        PRINT_HILOGD("UnInit %{public}s", pair.first.c_str());
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnDestroy();
-        pair.second->UnInit();
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        PRINT_HILOGD("UnInit %{public}s", driver->GetVendorName().c_str());
+        driver->OnDestroy();
+        driver->UnInit();
+    });
+    // Clear vendorMap
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        vendorMap.clear();
     }
-    vendorMap.clear();
     if (wlanGroupDriver != nullptr) {
         wlanGroupDriver->OnDestroy();
         wlanGroupDriver->UnInit();
@@ -150,21 +148,26 @@ bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDri
         PRINT_HILOGW("vendorDriver init fail");
         return false;
     }
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    vendorMap.insert(std::make_pair(vendorDriver->GetVendorName(), vendorDriver));
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        vendorMap.insert(std::make_pair(vendorDriver->GetVendorName(), vendorDriver));
+    }
     vendorDriver->OnCreate();
     return true;
 }
 bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 {
-    PRINT_HILOGI("LoadVendorDriver enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    auto iter = vendorMap.find(vendorName);
-    if (iter == vendorMap.end()) {
-        return false;
+    PRINT_HILOGI("UnloadVendorDriver enter");
+    std::shared_ptr<VendorDriverBase> vendorDriver;
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        auto iter = vendorMap.find(vendorName);
+        if (iter == vendorMap.end()) {
+            return false;
+        }
+        vendorDriver = iter->second;
+        vendorMap.erase(iter);
     }
-    auto vendorDriver = iter->second;
-    vendorMap.erase(iter);
     if (vendorDriver != nullptr) {
         vendorDriver->OnDestroy();
         vendorDriver->UnInit();
@@ -179,7 +182,7 @@ bool VendorManager::ConnectPrinterByIp(const std::string &printerIp, const std::
         PRINT_HILOGE("no driver to connect printer by ip");
         return false;
     }
-    return wlanGroupDriver->OnQueryCapabilityByIp(printerIp, protocol);
+    return wlanGroupDriver->OnQueryCapabilityByIp(printerIp, protocol, "");
 }
 
 bool VendorManager::QueryPrinterInfo(const std::string &globalPrinterId, int timeout)
@@ -204,28 +207,18 @@ bool VendorManager::QueryPrinterInfo(const std::string &globalPrinterId, int tim
 void VendorManager::StartDiscovery()
 {
     PRINT_HILOGI("StartDiscovery enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        PRINT_HILOGD("StartDiscovery %{public}s", pair.first.c_str());
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnStartDiscovery();
-    }
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        PRINT_HILOGD("StartDiscovery %{public}s", driver->GetVendorName().c_str());
+        driver->OnStartDiscovery();
+    });
     PRINT_HILOGI("StartDiscovery quit");
 }
 void VendorManager::StopDiscovery()
 {
     PRINT_HILOGI("StopDiscovery enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnStopDiscovery();
-    }
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        driver->OnStopDiscovery();
+    });
     PRINT_HILOGI("StopDiscovery quit");
 }
 
@@ -359,7 +352,7 @@ bool VendorManager::OnPrinterPpdQueried(
         PRINT_HILOGW("not connecting");
         return false;
     }
-    if (AddPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData) != EXTENSION_ERROR_NONE) {
+    if (AddPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData) != EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
         return false;
     }
@@ -410,96 +403,9 @@ std::shared_ptr<VendorDriverBase> VendorManager::FindDriverByVendorName(const st
     return iter->second;
 }
 
-void VendorManager::StartStatusMonitor()
-{
-    PRINT_HILOGI("StartStatusMonitor Enter");
-    std::lock_guard<std::mutex> lock(apiMutex);
-    {
-        std::unique_lock<std::mutex> lock(statusMonitorMutex);
-        if (statusMonitorOn) {
-            PRINT_HILOGW("already on");
-            return;
-        }
-        statusMonitorOn = true;
-    }
-    PRINT_HILOGI("StartStatusMonitor Now");
-    statusMonitorThread = std::thread(&VendorManager::StatusMonitorProcess, this);
-    PRINT_HILOGI("StartStatusMonitor Quit");
-}
-
-void VendorManager::StopStatusMonitor()
-{
-    PRINT_HILOGI("StopStatusMonitor Enter");
-    std::lock_guard<std::mutex> lock(apiMutex);
-    {
-        std::unique_lock<std::mutex> lock(statusMonitorMutex);
-        statusMonitorOn = false;
-    }
-    statusMonitorCondition.notify_one();
-    if (statusMonitorThread.joinable()) {
-        statusMonitorThread.join();
-    }
-    PRINT_HILOGI("StopStatusMonitor Quit");
-}
-
-void VendorManager::StatusMonitorProcess()
-{
-    PRINT_HILOGI("StatusMonitorProcess Enter");
-    while (WaitNext()) {
-        UpdateAllPrinterStatus();
-    }
-    PRINT_HILOGI("StatusMonitorProcess Quit");
-}
-
-void VendorManager::UpdateAllPrinterStatus()
-{
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->UpdateAllPrinterStatus();
-    }
-}
-
-bool VendorManager::WaitNext()
-{
-    std::unique_lock<std::mutex> lock(statusMonitorMutex);
-    if (!statusMonitorOn) {
-        return false;
-    }
-    statusMonitorCondition.wait_for(lock, std::chrono::milliseconds(MONITOR_CHECK_INTERVAL_MS));
-    if (!statusMonitorOn) {
-        return false;
-    }
-    return true;
-}
-
 bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName)
 {
     return vendorName == VENDOR_PPD_DRIVER;
-}
-
-bool VendorManager::MonitorPrinterStatus(const std::string &globalPrinterId, bool on)
-{
-    std::string globalVendorName = ExtractGlobalVendorName(globalPrinterId);
-    std::string printerId = ExtractPrinterId(globalPrinterId);
-    if (globalVendorName.empty() || printerId.empty()) {
-        PRINT_HILOGW("invalid printer id: %{private}s", globalPrinterId.c_str());
-        return false;
-    }
-    std::string vendorName = ExtractVendorName(globalVendorName);
-    if (vendorName.empty()) {
-        PRINT_HILOGW("vendor name empty");
-        return false;
-    }
-    auto vendorDriver = FindDriverByVendorName(vendorName);
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGW("vendor driver is null");
-        return false;
-    }
-    return vendorDriver->MonitorPrinterStatus(printerId, on);
 }
 
 bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri)
@@ -532,8 +438,9 @@ void VendorManager::SetConnectingPrinter(ConnectMethod method, const std::string
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingMethod = method;
     connectingPrinter = globalPrinterIdOrIp;
-    connectingProtocol = "auto";
     connectingPpdName = "auto";
+    connectingProtocol = "auto";
+    connectingQueue.clear();
     connectingState = ConnectState::STATE_CONNECTING;
 }
 
@@ -545,6 +452,8 @@ void VendorManager::ClearConnectingPrinter()
     connectingPrinter.clear();
     connectingPpdName.clear();
     connectingProtocol.clear();
+    connectingQueue.clear();
+    connectingPrinterName.clear();
 }
 
 std::string VendorManager::GetConnectingPpdName()
@@ -557,6 +466,18 @@ std::string VendorManager::GetConnectingProtocol()
 {
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     return connectingProtocol;
+}
+
+std::string VendorManager::GetConnectingQueue()
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    return connectingQueue;
+}
+
+std::string VendorManager::GetConnectingPrinterName()
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    return connectingPrinterName;
 }
 
 std::string VendorManager::GetConnectingPrinter()
@@ -607,7 +528,7 @@ bool VendorManager::OnQueryCallBackEvent(const PrinterInfo &info)
 }
 
 bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-    const std::string &ppdName)
+    const std::string &ppdName, const std::string &printQueue)
 {
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     if (wlanGroupDriver == nullptr) {
@@ -622,8 +543,15 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
             connectingProtocol = "auto";
         }
         connectingPpdName = ppdName;
+        connectingQueue = printQueue;
     }
-    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName);
+    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName, printQueue);
+}
+
+void VendorManager::SetConnectingPrinterName(const std::string &printerName)
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    connectingPrinterName = printerName;
 }
 
 bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap)
@@ -647,6 +575,7 @@ bool VendorManager::QueryPrinterStatusByUri(const std::string &uri, PrinterStatu
 std::shared_ptr<PrinterInfo> VendorManager::QueryDiscoveredPrinterInfoById(
     const std::string &vendorName, const std::string &printerId)
 {
+    PRINT_CHECK_NULL_AND_RETURN(printServiceAbility, nullptr);
     auto targetVendorName = IsWlanGroupDriver(printerId) ? VENDOR_WLAN_GROUP : vendorName;
     auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(targetVendorName), printerId);
     return printServiceAbility->QueryDiscoveredPrinterInfoById(globalPrinterId);
@@ -732,6 +661,43 @@ bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
     return false;
 }
 
+void VendorManager::ForEachDriver(const DriverCallback& callback)
+{
+    std::vector<std::shared_ptr<VendorDriverBase>> drivers;
+    {
+        std::lock_guard<std::mutex> lock(vendorMapMutex);
+        for (auto const &pair : vendorMap) {
+            if (pair.second != nullptr) {
+                drivers.push_back(pair.second);
+            }
+        }
+    }
+    for (auto &driver : drivers) {
+        callback(driver);
+    }
+}
+
+#ifdef ENTERPRISE_ENABLE
+void VendorManager::SwitchSpace()
+{
+    PRINT_HILOGI("SwitchSpace enter");
+    ForEachDriver([](std::shared_ptr<VendorDriverBase> driver) {
+        driver->OnSwitchSpace();
+    });
+    PRINT_HILOGI("SwitchSpace quit");
+}
+
+void VendorManager::UpdateIsEnterprise(bool isEnterprise)
+{
+    isEnterprise_ = isEnterprise;
+}
+
+bool VendorManager::IsEnterprise()
+{
+    return isEnterprise_;
+}
+#endif  // ENTERPRISE_ENABLE
+
 bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId, const std::string &protocol,
     const std::string &ppdName)
 {
@@ -767,29 +733,3 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
     }
     return vendorDriver->OnQueryCapability(printerId, 0);
 }
-
-#ifdef ENTERPRISE_ENABLE
-void VendorManager::SwitchSpace()
-{
-    PRINT_HILOGI("SwitchSpace enter");
-    std::lock_guard<std::mutex> lock(vendorMapMutex);
-    for (auto const &pair : vendorMap) {
-        if (pair.second == nullptr) {
-            PRINT_HILOGW("vendor extension is null");
-            continue;
-        }
-        pair.second->OnSwitchSpace();
-    }
-    PRINT_HILOGI("SwitchSpace quit");
-}
-
-void VendorManager::UpdateIsEnterprise(bool isEnterprise)
-{
-    isEnterprise_ = isEnterprise;
-}
-
-bool VendorManager::IsEnterprise()
-{
-    return isEnterprise_;
-}
-#endif  // ENTERPRISE_ENABLE

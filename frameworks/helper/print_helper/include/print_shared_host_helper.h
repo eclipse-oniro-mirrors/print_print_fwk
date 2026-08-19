@@ -23,6 +23,7 @@ namespace OHOS::Print {
 class PrintSharedHostHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintSharedHost &sharedHost);
+    static napi_value MakeJsObjectArray(napi_env env, const std::vector<PrintSharedHost> &sharedHosts);
     static std::shared_ptr<PrintSharedHost> BuildFromJs(napi_env env, napi_value jsValue);
 };
 }  // namespace OHOS::Print

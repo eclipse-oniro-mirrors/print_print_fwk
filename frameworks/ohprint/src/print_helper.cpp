@@ -19,6 +19,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_util.h"
+#include "print_utils.h"
 #include "ability_manager_client.h"
 #include "print_converter.h"
 #include "print_manager_client.h"
@@ -430,6 +431,31 @@ void ParseCupsOptions(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrint
     nativePrinterInfo.capability.advancedCapability = CopyString((PrintJsonUtil::WriteString(advancedCapJson)).c_str());
 }
 
+void ParseAdvanceOptions(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    if (!cap.HasOption()) {
+        return;
+    }
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(cap.GetOption(), capJson) ||
+        !PrintJsonUtil::IsMember(capJson, "cupsOptions") || !capJson["cupsOptions"].isObject()) {
+        return;
+    }
+    Json::Value cupsOpt = capJson["cupsOptions"];
+    if (PrintJsonUtil::IsMember(cupsOpt, "advanceOptions") && cupsOpt["advanceOptions"].isString()) {
+        Json::Value advancedCapJson;
+        if (nativePrinterInfo.capability.advancedCapability != nullptr) {
+            PrintJsonUtil::Parse(std::string(nativePrinterInfo.capability.advancedCapability), advancedCapJson);
+        }
+        advancedCapJson["advanceOptions"] = cupsOpt["advanceOptions"].asString();
+        SAFE_DELETE_ARRAY(nativePrinterInfo.capability.advancedCapability);
+        nativePrinterInfo.capability.advancedCapability = CopyString(PrintJsonUtil::WriteString(advancedCapJson));
+    }
+    if (PrintJsonUtil::IsMember(cupsOpt, "advanceDefault") && cupsOpt["advanceDefault"].isString()) {
+        nativePrinterInfo.defaultValue.otherDefaultValues = CopyString(cupsOpt["advanceDefault"].asString());
+    }
+}
+
 int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &nativePrinterInfo)
 {
     Json::Value infoJson;
@@ -485,11 +511,11 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
 char *ParseDetailInfo(const PrinterInfo &info)
 {
     Json::Value detailInfoJson;
-    if (info.HasAlias()) {
-        detailInfoJson["alias"] = info.GetAlias();
-    }
-
     Json::Value opsJson;
+    
+    if (info.HasAlias()) {
+        detailInfoJson["printerAlias"] = info.GetAlias();
+    }
     if (info.HasOption() && PrintJsonUtil::Parse(info.GetOption(), opsJson)) {
         if (PrintJsonUtil::IsMember(opsJson, "vendorId") && opsJson["vendorId"].isInt()) {
             detailInfoJson["vendorId"] = opsJson["vendorId"].asInt();
@@ -497,6 +523,26 @@ char *ParseDetailInfo(const PrinterInfo &info)
 
         if (PrintJsonUtil::IsMember(opsJson, "productId") && opsJson["productId"].isInt()) {
             detailInfoJson["productId"] = opsJson["productId"].asInt();
+        }
+
+        if (PrintJsonUtil::IsMember(opsJson, "protocol") && opsJson["protocol"].isArray()) {
+            detailInfoJson["protocol"] = opsJson["protocol"];
+        }
+
+        if (PrintJsonUtil::IsMember(opsJson, "ipp") && opsJson["ipp"].isString()) {
+            detailInfoJson["ipp"] = opsJson["ipp"].asString();
+        }
+
+        if (PrintJsonUtil::IsMember(opsJson, "ipps") && opsJson["ipps"].isString()) {
+            detailInfoJson["ipps"] = opsJson["ipps"].asString();
+        }
+
+        if (PrintJsonUtil::IsMember(opsJson, "lpd") && opsJson["lpd"].isString()) {
+            detailInfoJson["lpd"] = opsJson["lpd"].asString();
+        }
+
+        if (PrintJsonUtil::IsMember(opsJson, "socket") && opsJson["socket"].isString()) {
+            detailInfoJson["socket"] = opsJson["socket"].asString();
         }
     }
 
@@ -544,11 +590,12 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     ParsePrinterPreference(info, *nativePrinterInfo);
     if (info.HasOption()) {
         std::string infoOpt = info.GetOption();
-        PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
+        PRINT_HILOGW("infoOpt json object: %{private}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
         ParseInfoOption(infoOpt, *nativePrinterInfo);
     }
     nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
     nativePrinterInfo->printerUri = CopyString(info.GetUri());
+    ParseAdvanceOptions(cap, *nativePrinterInfo);
     return nativePrinterInfo;
 }
 
@@ -647,8 +694,9 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
         }
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
+
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("SetOptionInPrintJob %{public}s", option.c_str());
+    PRINT_HILOGD("SetOptionInPrintJob %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());
     printJob.SetOption(option);
     PRINT_HILOGI("SetOptionInPrintJob out.");
 }

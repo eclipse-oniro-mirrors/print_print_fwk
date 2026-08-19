@@ -81,9 +81,6 @@ public:
     bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
-    bool MonitorPrinterStatus(const std::string &globalPrinterId, bool on);
-    void StartStatusMonitor();
-    void StopStatusMonitor();
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIP, const std::string &uri) override;
     ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
@@ -92,11 +89,14 @@ public:
     std::string GetConnectingPrinter() override;
     std::string GetConnectingPpdName() override;
     std::string GetConnectingProtocol() override;
+    std::string GetConnectingQueue() override;
     bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
     void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnQueryCallBackEvent(const PrinterInfo &info) override;
     bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName) override;
+        const std::string &ppdName, const std::string &printQueue) override;
+    void SetConnectingPrinterName(const std::string &printerName);
+    std::string GetConnectingPrinterName();
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) override;
@@ -119,11 +119,11 @@ public:
 #endif  // ENTERPRISE_ENABLE
 
 private:
-    void StatusMonitorProcess();
-    void UpdateAllPrinterStatus();
-    bool WaitNext();
     bool IsPrivatePpdDriver(const std::string &vendorName);
     bool IsWlanGroupDriver(const std::string &bothPrinterId);
+    // ForEachDriver: Traverse all vendor drivers and execute callback outside of lock to avoid deadlock
+    using DriverCallback = std::function<void(std::shared_ptr<VendorDriverBase>)>;
+    void ForEachDriver(const DriverCallback& callback);
 
 private:
     std::atomic<bool> defaultLoaded{false};
@@ -131,17 +131,15 @@ private:
     std::map<std::string, std::shared_ptr<VendorDriverBase>> vendorMap;
     std::mutex vendorMapMutex;
     std::shared_ptr<VendorDriverGroup> wlanGroupDriver = nullptr;
-    std::thread statusMonitorThread;
-    bool statusMonitorOn = false;
-    std::mutex statusMonitorMutex;
     std::mutex apiMutex;
-    std::condition_variable statusMonitorCondition;
     ConnectState connectingState = ConnectState::STATE_NONE;
     bool isConnecting = false;
     ConnectMethod connectingMethod = ID_AUTO;
     std::string connectingPrinter;
     std::string connectingProtocol;
     std::string connectingPpdName;
+    std::string connectingQueue;
+    std::string connectingPrinterName;
     std::mutex simpleObjectMutex;
 #ifdef ENTERPRISE_ENABLE
     bool isEnterprise_ = false;

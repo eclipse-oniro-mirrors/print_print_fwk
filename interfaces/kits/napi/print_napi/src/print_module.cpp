@@ -74,14 +74,21 @@ static constexpr const char *FUNCTION_QUERY_ALL_PRINTER_PPDS = "queryAllPrinterP
 static constexpr const char *FUNCTION_QUERY_PRINTER_INFO_BY_IP = "queryPrinterInfoByIp";
 static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_IP_AND_PPD = "connectPrinterByIpAndPpd";
 static constexpr const char *FUNCTION_SAVE_PDF_FILE_JOB = "savePdfFileJob";
-static constexpr const char *FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID = "queryRecommendDriversById";
-static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD = "connectPrinterByIdAndPpd";
 static constexpr const char *FUNCTION_CHECK_PREFERENCES_CONFLICTS = "checkPreferencesConflicts";
 static constexpr const char *FUNCTION_CHECK_PRINTJOB_CONFLICTS = "checkPrintJobConflicts";
 static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrinterDefaultPreferences";
+static constexpr const char *FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID = "queryRecommendDriversById";
+static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD = "connectPrinterByIdAndPpd";
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
+static constexpr const char *FUNCTION_START_SHARED_HOST_DISCOVERY = "startSharedHostDiscovery";
 static constexpr const char *AUTH_SMB_DEVICE_AS_GUEST = "authSmbDeviceAsGuest";
 static constexpr const char *AUTH_SMB_DEVICE_AS_REGISTERED_USER = "authSmbDeviceAsRegisteredUser";
+static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWatermarkCallback";
+static constexpr const char *FUNCTION_UNREGISTER_WATERMARK_CALLBACK = "unregisterWatermarkCallback";
+static constexpr const char *FUNCTION_NOTIFY_WATERMARK_COMPLETE = "notifyWatermarkComplete";
+static constexpr const char *FUNCTION_ON_PRINTER_INFO_QUERY = "onPrinterInfoQuery";
+static constexpr const char *FUNCTION_OFF_PRINTER_INFO_QUERY = "offPrinterInfoQuery";
+static constexpr const char *FUNCTION_ADD_PRINTER_NEW = "addPrinter";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_COMPLETED_SUCCESS", PRINT_JOB_COMPLETED_SUCCESS},
@@ -439,6 +446,19 @@ static napi_value NapiCreateDefaultPrinterTypeEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreateWatermarkHandleResultEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "WATERMARK_HANDLE_SUCCESS", static_cast<int32_t>(WATERMARK_HANDLE_SUCCESS));
+    SetEnumProperty(env, object, "WATERMARK_HANDLE_FAILURE", static_cast<int32_t>(WATERMARK_HANDLE_FAILURE));
+    return object;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
@@ -460,6 +480,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrinterEvent", NapiCreatePrintEventEnum(env)),
         PRINT_NAPI_PROPERTY("ApplicationEvent", NapiCreateApplicationEventEnum(env)),
         PRINT_NAPI_PROPERTY("DefaultPrinterType", NapiCreateDefaultPrinterTypeEnum(env)),
+        PRINT_NAPI_PROPERTY("WatermarkHandleResult", NapiCreateWatermarkHandleResultEnum(env)),
 
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
@@ -510,14 +531,21 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTER_INFO_BY_IP, NapiInnerPrint::QueryPrinterInfoByIp),
         PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINTER_BY_IP_AND_PPD, NapiInnerPrint::ConnectPrinterByIpAndPpd),
         PRINT_NAPI_METHOD(FUNCTION_SAVE_PDF_FILE_JOB, NapiInnerPrint::SavePdfFileJob),
-        PRINT_NAPI_METHOD(FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID, NapiInnerPrint::QueryRecommendDriversById),
-        PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD, NapiInnerPrint::ConnectPrinterByIdAndPpd),
         PRINT_NAPI_METHOD(FUNCTION_CHECK_PREFERENCES_CONFLICTS, NapiInnerPrint::CheckPreferencesConflicts),
         PRINT_NAPI_METHOD(FUNCTION_CHECK_PRINTJOB_CONFLICTS, NapiInnerPrint::CheckPrintJobConflicts),
         PRINT_NAPI_METHOD(FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES, NapiInnerPrint::GetPrinterDefaultPreferences),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID, NapiInnerPrint::QueryRecommendDriversById),
+        PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD, NapiInnerPrint::ConnectPrinterByIdAndPpd),
         PRINT_NAPI_METHOD(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
+        PRINT_NAPI_METHOD(FUNCTION_START_SHARED_HOST_DISCOVERY, NapiInnerPrint::StartSharedHostDiscovery),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_GUEST, NapiInnerPrint::AuthSmbDeviceAsGuest),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_REGISTERED_USER, NapiInnerPrint::AuthSmbDeviceAsRegisteredUser),
+        PRINT_NAPI_METHOD(FUNCTION_REGISTER_WATERMARK_CALLBACK, NapiInnerPrint::RegisterWatermarkCallback),
+        PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_WATERMARK_CALLBACK, NapiInnerPrint::UnregisterWatermarkCallback),
+        PRINT_NAPI_METHOD(FUNCTION_NOTIFY_WATERMARK_COMPLETE, NapiInnerPrint::NotifyWatermarkComplete),
+        PRINT_NAPI_METHOD(FUNCTION_ON_PRINTER_INFO_QUERY, NapiInnerPrint::OnPrinterInfoQuery),
+        PRINT_NAPI_METHOD(FUNCTION_OFF_PRINTER_INFO_QUERY, NapiInnerPrint::OffPrinterInfoQuery),
+        PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER_NEW, NapiInnerPrint::AddPrinter),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

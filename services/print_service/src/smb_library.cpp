@@ -20,11 +20,13 @@
 namespace OHOS::Print {
 static constexpr int32_t INVALID_EVENT = -1;
 const char* LIB_SMB2_SO_PATH = "print.libsmb2.so.path";
-SmbLibrary::SmbLibrary() :smbLibHandle_(nullptr), smb2_init_context_(nullptr), smb2_destroy_context_(nullptr),
+SmbLibrary::SmbLibrary() :smbLibHandle_(nullptr), smb2_init_context_(nullptr),
+    smb2_close_context_(nullptr), smb2_destroy_context_(nullptr),
     smb2_connect_share_(nullptr), smb2_disconnect_share_(nullptr), smb2_set_user_(nullptr),
     smb2_set_password_(nullptr), smb2_set_domain_(nullptr), smb2_get_error_(nullptr),
     smb2_set_security_mode_(nullptr), smb2_set_timeout_(nullptr), smb2_share_enum_async_(nullptr),
-    smb2_free_data_(nullptr), smb2_get_fd_(nullptr), smb2_which_events_(nullptr), smb2_service_(nullptr)
+    smb2_free_data_(nullptr), smb2_get_fd_(nullptr), smb2_which_events_(nullptr),
+    smb2_service_(nullptr)
 {
     InitializeLibrary();
 }
@@ -53,6 +55,7 @@ bool SmbLibrary::InitializeLibrary()
     }
     dlerror();
     smb2_init_context_ = reinterpret_cast<smb2_init_context_t>(dlsym(smbLibHandle_, "smb2_init_context"));
+    smb2_close_context_ = reinterpret_cast<smb2_close_context_t>(dlsym(smbLibHandle_, "smb2_close_context"));
     smb2_destroy_context_ = reinterpret_cast<smb2_destroy_context_t>(dlsym(smbLibHandle_, "smb2_destroy_context"));
     smb2_connect_share_ = reinterpret_cast<smb2_connect_share_t>(dlsym(smbLibHandle_, "smb2_connect_share"));
     smb2_disconnect_share_ = reinterpret_cast<smb2_disconnect_share_t>(dlsym(smbLibHandle_, "smb2_disconnect_share"));
@@ -68,9 +71,11 @@ bool SmbLibrary::InitializeLibrary()
     smb2_get_fd_ = reinterpret_cast<smb2_get_fd_t>(dlsym(smbLibHandle_, "smb2_get_fd"));
     smb2_which_events_ = reinterpret_cast<smb2_which_events_t>(dlsym(smbLibHandle_, "smb2_which_events"));
     smb2_service_ = reinterpret_cast<smb2_service_t>(dlsym(smbLibHandle_, "smb2_service"));
-    if (!smb2_init_context_ || !smb2_destroy_context_ || !smb2_connect_share_ || !smb2_disconnect_share_ ||
-        !smb2_set_user_ || !smb2_set_password_ || !smb2_get_error_ ||!smb2_set_security_mode_ || !smb2_set_timeout_ ||
-        !smb2_share_enum_async_ || !smb2_free_data_ || !smb2_get_fd_ || !smb2_which_events_ || !smb2_service_) {
+    if (!smb2_init_context_ || !smb2_close_context_ || !smb2_destroy_context_ ||
+        !smb2_connect_share_ || !smb2_disconnect_share_ || !smb2_set_user_ ||
+        !smb2_set_password_ || !smb2_get_error_ || !smb2_set_security_mode_ ||
+        !smb2_set_timeout_ || !smb2_share_enum_async_ || !smb2_free_data_ ||
+        !smb2_get_fd_ || !smb2_which_events_ || !smb2_service_) {
         PRINT_HILOGE("Failed to load required SMB functions");
         CleanupLibrary();
         return false;
@@ -85,6 +90,7 @@ void SmbLibrary::CleanupLibrary()
         dlclose(smbLibHandle_);
         smbLibHandle_ = nullptr;
         smb2_init_context_ = nullptr;
+        smb2_close_context_ = nullptr;
         smb2_destroy_context_ = nullptr;
         smb2_connect_share_ = nullptr;
         smb2_disconnect_share_ = nullptr;
@@ -110,6 +116,15 @@ struct smb2_context* SmbLibrary::CreateContext() const
         return nullptr;
     }
     return smb2_init_context_();
+}
+
+void SmbLibrary::CloseContext(struct smb2_context* ctx) const
+{
+    if (!smb2_close_context_) {
+        PRINT_HILOGE("smb2_close_context_ is null");
+        return;
+    }
+    smb2_close_context_(ctx);
 }
 
 void SmbLibrary::DestroyContext(struct smb2_context* ctx) const

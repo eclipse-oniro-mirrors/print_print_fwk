@@ -147,8 +147,12 @@ void ScanServiceAbility::OnStart()
     int32_t ret = ServiceInit();
     if (ret != ERR_OK) {
         auto callback = [=]() { ServiceInit(); };
-        serviceHandler_->PostTask(callback, INIT_INTERVAL);
-        SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
+        if (serviceHandler_ != nullptr) {
+            serviceHandler_->PostTask(callback, INIT_INTERVAL);
+            SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
+        } else {
+            SCAN_HILOGE("ScanServiceAbility Init failed and serviceHandler_ is nullptr");
+        }
         return;
     }
     
@@ -250,7 +254,7 @@ void ScanServiceAbility::CleanupScanService()
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
-    constexpr int32_t TOKEN_SIZE_FOUR = 4;
+    constexpr size_t TOKEN_SIZE_FOUR = 4;
     std::vector<std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
@@ -260,13 +264,13 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     constexpr size_t STRING_POS_TWO = 2;
     constexpr size_t STRING_POS_THREE = 3;
     if (tokens[STRING_POS_ONE] != "libusb") {
-        SCAN_HILOGE("parse [%{private}s] fail since no libusb", deviceId.c_str());
+        SCAN_HILOGE("parse [%{private}s] fail", deviceId.c_str());
         return false;
     }
     static const std::regex pattern(R"(([0-9]{3}))");
     if (!std::regex_match(tokens[STRING_POS_TWO], pattern) ||
         !std::regex_match(tokens[STRING_POS_THREE], pattern)) {
-        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", tokens[STRING_POS_TWO].c_str(),
+        SCAN_HILOGE("parse [%{private}s]:[%{private}s] fail", tokens[STRING_POS_TWO].c_str(),
                     tokens[STRING_POS_THREE].c_str());
         return false;
     }
@@ -276,7 +280,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     const std::string secondIdTmp = tokens[STRING_POS_THREE];
     if (!ScanUtil::ConvertToInt(firstIdTmp, firstNumTmp) ||
         !ScanUtil::ConvertToInt(secondIdTmp, secondNumTmp)) {
-        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
+        SCAN_HILOGE("parse [%{private}s]:[%{private}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
         return false;
     }
     firstId = std::to_string(firstNumTmp);
@@ -286,7 +290,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
-    constexpr int32_t TOKEN_SIZE_TWO = 2;
+    constexpr size_t TOKEN_SIZE_TWO = 2;
     std::vector <std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
@@ -312,6 +316,7 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
     std::string ip;
     if (!GetTcpDeviceIp(info.deviceId, ip)) {
         SCAN_HILOGE("cannot get device's ip");
+        info.SetDeviceAvailable(false);
         return;
     }
     info.uniqueId = ip;
@@ -468,6 +473,7 @@ int32_t ScanServiceAbility::GetScannerList()
     auto exec_sane_getscaner = [=]() {
         SaneGetScanner();
     };
+    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
     SCAN_HILOGI("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
@@ -995,6 +1001,7 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
             SCAN_HILOGE("discoverMode is invalid.");
         }
     };
+    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
 }
@@ -1135,6 +1142,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         ScanTask task(scannerId, userId, batchMode);
         StartScanTask(task);
     };
+    SCAN_CHECK_NULL_AND_RETURN(serviceHandler_, E_SCAN_SERVER_FAILURE);
     serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
     scanPictureData_.SetCallerPid(IPCSkeleton::GetCallingPid());
     SCAN_HILOGI("StartScan successfully");
@@ -1150,13 +1158,10 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
         SCAN_HILOGI("start single mode scan");
         GeneratePictureSingle(scanTask);
     }
-    {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        SCAN_HILOGI("StartScanTask finished, doning scan task free");
-        SaneManagerClient::GetInstance()->SaneCancel(scanTask.GetScannerId());
-        SaneManagerClient::GetInstance()->SaneClose(scanTask.GetScannerId());
-        SaneManagerClient::GetInstance()->SaneOpen(scanTask.GetScannerId());
-    }
+    SCAN_HILOGI("StartScanTask finished, doning scan task free");
+    SaneManagerClient::GetInstance()->SaneCancel(scanTask.GetScannerId());
+    SaneManagerClient::GetInstance()->SaneClose(scanTask.GetScannerId());
+    SaneManagerClient::GetInstance()->SaneOpen(scanTask.GetScannerId());
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }
@@ -1244,9 +1249,9 @@ int32_t ScanServiceAbility::DoScanTask(ScanTask &scanTask)
             if (scanStatus != E_SCAN_NONE) {
                 SCAN_HILOGW("GetScannerImageDpi fail");
             }
-            scanStatus = scanTask.WriteJpegHeader(parm, dpi);
+            scanStatus = scanTask.WriteImageHeader(parm, static_cast<uint16_t>(dpi));
             if (scanStatus != E_SCAN_NONE) {
-                SCAN_HILOGE("StartScanTask error exit after WriteJpegHeader");
+                SCAN_HILOGE("StartScanTask error exit after WriteiImageHeader");
                 break;
             }
         }
@@ -1284,10 +1289,10 @@ int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
 void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus)
 {
     if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
-        scanTask.JpegDestroyCompress();
+        scanTask.ImageDestroyCompress();
         SCAN_HILOGE("End of failed scan ");
     } else {
-        scanTask.JpegFinishCompress();
+        scanTask.ImageFinishCompress();
         SCAN_HILOGI("End of normal scan");
     }
 }
@@ -1295,7 +1300,6 @@ void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus
 void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, ScanParameters &parm)
 {
     int64_t totalBytes = 0;
-    int32_t jpegrow = 0;
     int64_t hundredPercent =
         ((int64_t)parm.GetBytesPerLine()) * parm.GetLines() *
         (((SaneFrame)parm.GetFormat() == SANE_FRAME_RGB || (SaneFrame)parm.GetFormat() == SANE_FRAME_GRAY)
@@ -1312,9 +1316,10 @@ void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, Sc
             break;
         }
         scanPictureData_.SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
-        if (scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm) != E_SCAN_NONE) {
-            SCAN_HILOGE("WritePicData fail");
-            scanStatus = E_SCAN_GENERIC_FAILURE;
+        int32_t writeImgDataRet = scanTask.WriteImageData(pictureData.dataBuffer_);
+        if (writeImgDataRet != E_SCAN_NONE) {
+            SCAN_HILOGE("WriteImageData fail");
+            scanStatus = writeImgDataRet;
             break;
         }
         if (scanStatus == SANE_STATUS_EOF) {

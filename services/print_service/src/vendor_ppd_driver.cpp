@@ -99,12 +99,6 @@ std::string VendorPpdDriver::QueryPpdName(const std::string &makeAndModel)
     return ppdName;
 }
 
-void VendorPpdDriver::UpdateAllPrinterStatus()
-{
-    // not need update vendor backend printer by monitor. use default status by discovered state.
-    return;
-}
-
 void VendorPpdDriver::DiscoverBackendPrinters()
 {
     std::vector<PrinterInfo> printers = {};

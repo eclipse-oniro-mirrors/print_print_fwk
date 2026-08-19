@@ -65,4 +65,27 @@ void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const 
     PRINT_HILOGI("end to push data to security_guard service status:%{public}d", res);
 #endif
 }
+
+std::shared_ptr<PrinterInfo> PrintSecurityGuardManager::ResolvePrinterInfo(
+    const std::string &printerId, const std::string &option, PrintSystemData &printSystemData)
+{
+    auto printerInfo = printSystemData.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo != nullptr) {
+        return printerInfo;
+    }
+    PrinterInfo addedInfo;
+    if (printSystemData.QueryAddedPrinterInfoByPrinterId(printerId, addedInfo)) {
+        PRINT_HILOGI("[Job Id: %{public}s] printerInfo from added list", printerId.c_str());
+        return std::make_shared<PrinterInfo>(addedInfo);
+    }
+    auto fallback = std::make_shared<PrinterInfo>();
+    Json::Value optionJson;
+    if (PrintJsonUtil::Parse(option, optionJson) &&
+        PrintJsonUtil::IsMember(optionJson, "printerName") && optionJson["printerName"].isString()) {
+        fallback->SetPrinterName(optionJson["printerName"].asString());
+    }
+    PRINT_HILOGW("[Job Id: %{public}s] printerInfo not found, audit may lack printer data",
+        printerId.c_str());
+    return fallback;
+}
 } // namespace OHOS::Print

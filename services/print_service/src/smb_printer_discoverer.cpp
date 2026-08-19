@@ -55,6 +55,7 @@ SmbPrinterDiscoverer::~SmbPrinterDiscoverer()
 {
     if (smbCtx_) {
         if (smbLib_) {
+            smbLib_->CloseContext(smbCtx_);
             smbLib_->DestroyContext(smbCtx_);
         }
         smbCtx_ = nullptr;
@@ -96,9 +97,11 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
     ret = smbLib_->ConnectShare(smbCtx_, sharedHost.GetIp().c_str(), "IPC$", nullptr);
     if (ret != 0) {
         const char* errorReason = smbLib_->GetSmbError(smbCtx_);
+        std::string errorStr = errorReason ? errorReason : "null";
         PRINT_HILOGE("smb2_connect_share fail, ret = %{public}d, reason = %{public}s",
-            ret, errorReason ? errorReason : "null");
-        return ParseSmbErrorCode(errorReason ? errorReason : "null");
+            ret, errorStr.c_str());
+        smbLib_->DisconnectShare(smbCtx_);
+        return ParseSmbErrorCode(errorStr);
     }
     if (smbLib_->ShareEnumAsync(smbCtx_, SHARE_INFO_1,
         [](struct smb2_context* smb2, int32_t status, void* commandData, void* privateData) {
@@ -181,6 +184,12 @@ void SmbPrinterDiscoverer::ShareEnumCallback(struct smb2_context* smb2, int32_t 
     }
     auto* rep = static_cast<struct srvsvc_NetrShareEnum_rep*>(commandData);
     if (rep->ses.ShareInfo.Level1.EntriesRead > 0) {
+        if (rep->ses.ShareInfo.Level1.Buffer == nullptr ||
+            rep->ses.ShareInfo.Level1.Buffer->share_info_1 == nullptr) {
+            PRINT_HILOGE("Buffer or share_info_1 is null");
+            smbLib_->FreeData(smb2, rep);
+            return;
+        }
         for (uint32_t i = 0; i < rep->ses.ShareInfo.Level1.EntriesRead; i++) {
             const auto& share = rep->ses.ShareInfo.Level1.Buffer->share_info_1[i];
             if ((share.type & PRINTER_TYPE) == SHARE_TYPE_PRINTQ) {
@@ -271,6 +280,8 @@ bool SmbPrinterDiscoverer::IsSmbPrinterId(const std::string& printerId)
 int32_t SmbPrinterDiscoverer::ParseSmbErrorCode(const std::string& errorReason)
 {
     if (errorReason.find("STATUS_LOGON_FAILURE") != std::string::npos) {
+        return E_PRINT_INVALID_TOKEN;
+    } else if (errorReason.find("STATUS_ACCESS_DENIED") != std::string::npos) {
         return E_PRINT_INVALID_TOKEN;
     } else if (errorReason.find("signature") != std::string::npos) {
         return E_PRINT_INVALID_TOKEN;

@@ -52,7 +52,6 @@ public:
 private:
     void ReadFromParcel(Parcel &parcel);
 
-private:
     std::string menuItemResourceName_;
     bool isSelect_;
 };

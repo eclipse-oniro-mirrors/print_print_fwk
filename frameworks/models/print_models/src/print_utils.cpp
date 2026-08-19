@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <fcntl.h>
 #include <random>
 #include <sstream>
@@ -41,8 +42,15 @@ const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
 const uint32_t URI_HOST_START_STR_LEN = 3;
+const uint32_t ANONYMIZE_ALIAS_LEN = 3;
 const uint32_t ANONYMIZE_IPV4_LEN = 3;
 const uint32_t ANONYMIZE_IPV6_LEN = 2;
+const int32_t PRIVATE_IPV4_CLASS_A_FIRST = 10;
+const int32_t PRIVATE_IPV4_CLASS_B_FIRST = 172;
+const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MIN = 16;
+const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MAX = 31;
+const int32_t PRIVATE_IPV4_CLASS_C_FIRST = 192;
+const int32_t PRIVATE_IPV4_CLASS_C_SECOND = 168;
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -101,6 +109,31 @@ bool PrintUtils::DecodeExtensionCid(const std::string &cid, std::string &extensi
     return true;
 }
 
+std::string PrintUtils::MakeExtensionStateKey(int32_t userId, const std::string& bundleName)
+{
+    return std::to_string(userId) + "_" + bundleName;
+}
+
+int32_t PrintUtils::GetUserIdFromKey(const std::string& key)
+{
+    auto pos = key.find('_');
+    if (pos == std::string::npos) {
+        return -1;
+    }
+    int32_t userId = -1;
+    PrintUtil::ConvertToInt(key.substr(0, pos), userId);
+    return userId;
+}
+
+std::string PrintUtils::GetBundleNameFromKey(const std::string& key)
+{
+    auto pos = key.find('_');
+    if (pos == std::string::npos) {
+        return "";
+    }
+    return key.substr(pos + 1);
+}
+
 std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::string &type)
 {
     return type + TASK_EVENT_DELIMITER + taskId;
@@ -132,7 +165,7 @@ std::string PrintUtils::GetBundleName(const std::string &printerId)
         return "";
     }
     std::string bundleName = printerId.substr(0, userIdPos);
-    PRINT_HILOGD("bundleName: %{private}s", bundleName.c_str());
+    PRINT_HILOGD("bundleName: %{public}s", bundleName.c_str());
     return bundleName;
 }
 
@@ -174,6 +207,41 @@ bool PrintUtils::IsPathValid(const std::string &path)
     if (path.length() >= PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
         strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         PRINT_HILOGE("invalid file path!");
+        return false;
+    }
+    return true;
+}
+
+bool PrintUtils::IsPathValidForCreate(const std::string &parentDir, const std::string &fileName)
+{
+    if (parentDir.empty() || fileName.empty()) {
+        PRINT_HILOGE("invalid input parameters!");
+        return false;
+    }
+
+    if (!IsPathValid(parentDir)) {
+        PRINT_HILOGE("parent directory is not valid!");
+        return false;
+    }
+
+    if (fileName.find('/') != std::string::npos ||
+        fileName.find('\0') != std::string::npos ||
+        fileName == "." || fileName == "..") {
+        PRINT_HILOGE("invalid file name!");
+        return false;
+    }
+
+    std::string originalPath = parentDir + "/" + fileName;
+    if (originalPath.length() >= PATH_MAX) {
+        PRINT_HILOGE("combined path is too long!");
+        return false;
+    }
+
+    std::filesystem::path fullPath(originalPath);
+    fullPath = fullPath.lexically_normal();
+    std::string completePath = fullPath.generic_string();
+    if (completePath.length() != originalPath.length()) {
+        PRINT_HILOGE("path traversal detected!");
         return false;
     }
     return true;
@@ -230,6 +298,63 @@ bool PrintUtils::ExtractIpv6(const std::string &str, std::string &ip, size_t &st
         return true;
     }
     return false;
+}
+
+bool PrintUtils::IsPrivateIpv4(const std::string &ip)
+{
+    size_t firstDot = ip.find('.');
+    if (firstDot == std::string::npos) {
+        return false;
+    }
+    size_t secondDot = ip.find('.', firstDot + 1);
+    if (secondDot == std::string::npos) {
+        return false;
+    }
+    int first = 0;
+    if (!PrintUtil::ConvertToInt(ip.substr(0, firstDot), first)) {
+        return false;
+    }
+    int second = 0;
+    if (!PrintUtil::ConvertToInt(ip.substr(firstDot + 1, secondDot - firstDot - 1), second)) {
+        return false;
+    }
+    if ((first == PRIVATE_IPV4_CLASS_A_FIRST) ||
+        (first == PRIVATE_IPV4_CLASS_B_FIRST && second >= PRIVATE_IPV4_CLASS_B_SECOND_MIN &&
+         second <= PRIVATE_IPV4_CLASS_B_SECOND_MAX) ||
+        (first == PRIVATE_IPV4_CLASS_C_FIRST && second == PRIVATE_IPV4_CLASS_C_SECOND)) {
+        return true;
+    }
+    return false;
+}
+
+void PrintUtils::AnonymizeAlias(Json::Value &optionJson)
+{
+    if (PrintJsonUtil::IsMember(optionJson, "alias") && optionJson["alias"].isString()) {
+        std::string alias = optionJson["alias"].asString();
+        if (alias.length() > ANONYMIZE_ALIAS_LEN) {
+            optionJson["alias"] = alias.substr(0, alias.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
+        } else {
+            optionJson["alias"] = "xxx";
+        }
+    }
+}
+
+void PrintUtils::AnonymizeFileArray(Json::Value &optionJson, const std::string &key)
+{
+    if (PrintJsonUtil::IsMember(optionJson, key) && optionJson[key].isArray()) {
+        Json::Value fileArr = optionJson[key];
+        if (fileArr.size() > PRINT_MAX_FILE_LIST_SIZE) {
+            PRINT_HILOGE("fileArr size %{public}u exceeds max limit.", fileArr.size());
+            optionJson.removeMember(key);
+            return;
+        }
+        for (Json::Value::ArrayIndex i = 0; i < fileArr.size(); i++) {
+            if (fileArr[i].isString()) {
+                fileArr[i] = AnonymizeFilePath(fileArr[i].asString());
+            }
+        }
+        optionJson[key] = fileArr;
+    }
 }
 
 std::string PrintUtils::AnonymizeIpv4(const std::string &ip)
@@ -289,17 +414,27 @@ std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
 
 std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
 {
-    std::string ip;
-    size_t startPos;
-    std::string result = printerUri;
-    if (ExtractIpv4(printerUri, ip, startPos)) {
-        std::string anonymizeIpv4 = AnonymizeIpv4(ip);
-        return result.replace(startPos, ip.length(), anonymizeIpv4);
-    } else if (ExtractIpv6(printerUri, ip, startPos)) {
-        std::string anonymizeIpv6 = AnonymizeIpv6(ip);
-        return result.replace(startPos, ip.length(), anonymizeIpv6);
+    // The URI for remote printing is an SN (composed entirely of letters and digits), which needs to be anonymized.
+    if (std::all_of(printerUri.begin(), printerUri.end(), [](unsigned char c) { return std::isalnum(c); })) {
+        return std::string(printerUri.length(), '*');
     }
-    return result;
+    std::string host = ExtractHostFromUri(printerUri);
+    if (host.empty()) {
+        return printerUri;
+    }
+    size_t hostPos = printerUri.find(host);
+    if (host.find(':') != std::string::npos) {
+        std::string result = printerUri;
+        return result.replace(hostPos, host.length(), AnonymizeIpv6(host));
+    }
+    if (host.find('.') != std::string::npos) {
+        if (IsPrivateIpv4(host)) {
+            return printerUri;
+        }
+        std::string result = printerUri;
+        return result.replace(hostPos, host.length(), AnonymizeIpv4(host));
+    }
+    return printerUri;
 }
 
 std::string PrintUtils::AnonymizeIp(const std::string &ip)
@@ -334,6 +469,12 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
         optionJson["printerId"] = AnonymizePrinterId(optionJson["printerId"].asString());
     }
+    if (PrintJsonUtil::IsMember(optionJson, "printerUri") && optionJson["printerUri"].isString()) {
+        optionJson["printerUri"] = AnonymizePrinterUri(optionJson["printerUri"].asString());
+    }
+    AnonymizeAlias(optionJson);
+    AnonymizeFileArray(optionJson, "files");
+    AnonymizeFileArray(optionJson, "fileList");
     return PrintJsonUtil::WriteString(optionJson);
 }
 
@@ -345,6 +486,17 @@ std::string PrintUtils::AnonymizeJobName(const std::string &jobName)
         return "xxx" + extension;
     }
     return "xxx";
+}
+
+std::string PrintUtils::AnonymizeFilePath(const std::string &filePath)
+{
+    size_t lastSlashPos = filePath.find_last_of('/');
+    if (lastSlashPos != std::string::npos) {
+        std::string fileName = filePath.substr(lastSlashPos + 1);
+        std::string anonymizedName = AnonymizeJobName(fileName);
+        return "/xxx/" + anonymizedName;
+    }
+    return AnonymizeJobName(filePath);
 }
 void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
 {
@@ -387,7 +539,7 @@ void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &
     PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", (PrintJsonUtil::WriteString(attrJson)).c_str());
 }
 
-Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetPageRangeForJson(const PrintAttributes &attrParam)
 {
     Json::Value pageRangeJson;
     PrintRange printRangeAttr;
@@ -410,7 +562,7 @@ Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
     return pageRangeJson;
 }
 
-Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetPageSizeForJson(const PrintAttributes &attrParam)
 {
     Json::Value pageSizeJson;
     PrintPageSize pageSizeAttr;
@@ -422,7 +574,7 @@ Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
     return pageSizeJson;
 }
 
-Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::GetMarginForJson(const PrintAttributes &attrParam)
 {
     Json::Value marginJson;
     PrintMargin marginAttr;
@@ -456,13 +608,13 @@ Json::Value PrintUtils::GetCustomOptionForJson(const PrintAttributes &attrParam)
 void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson)
 {
     if (attrParam.HasPageRange()) {
-        attrJson["pageRange"] = CreatePageRangeJson(attrParam);
+        attrJson["pageRange"] = GetPageRangeForJson(attrParam);
     }
     if (attrParam.HasPageSize()) {
-        attrJson["pageSize"] = CreatePageSizeJson(attrParam);
+        attrJson["pageSize"] = GetPageSizeForJson(attrParam);
     }
     if (attrParam.HasMargin()) {
-        attrJson["margin"] = CreateMarginJson(attrParam);
+        attrJson["margin"] = GetMarginForJson(attrParam);
     }
     if (attrParam.HasCustomOption()) {
         attrJson["customOption"] = GetCustomOptionForJson(attrParam);
@@ -614,7 +766,8 @@ int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &t
     }
 
     tmpPath = GenerateTempFilePath(filesDir);
-    if (!IsPathValid(tmpPath)) {
+    if (tmpPath.empty()) {
+        PRINT_HILOGE("Failed to generate valid temp file path.");
         return -1;
     }
     std::ofstream tempFile(tmpPath, std::ios::binary);
@@ -647,8 +800,14 @@ std::string PrintUtils::GenerateTempFilePath(const std::string &filesDir)
     localtime_r(&now_time_t, &now_tm);
 
     std::ostringstream oss;
-    oss<< filesDir << "/job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
-    return oss.str();
+    oss << "job_" << std::put_time(&now_tm, "%Y%m%d_%H%M%S");
+    std::string fileName = oss.str();
+    if (!IsPathValidForCreate(filesDir, fileName)) {
+        PRINT_HILOGE("Invalid temp file path!");
+        return "";
+    }
+
+    return filesDir + "/" + fileName;
 }
 
 void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj)
@@ -692,7 +851,7 @@ void PrintUtils::SetOptionInPrintJob(const PrintJobParams &params, std::shared_p
         jsonOptions["cupsOptions"] = params.cupsOptions;
     }
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
-    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", option.c_str());
+    PRINT_HILOGD("PrintUtils::SetOptionInPrintJob: %{public}s", AnonymizeJobOption(option).c_str());
     nativeObj->SetOption(option);
 }
 }  // namespace OHOS::Print

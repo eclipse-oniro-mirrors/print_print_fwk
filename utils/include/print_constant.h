@@ -23,6 +23,7 @@ namespace OHOS::Print {
 #define PRINT_RET_NONE
 
 #define PRINT_MAX_PRINT_COUNT 1000
+#define PRINT_MAX_FILE_LIST_SIZE 100
 #define PRINT_MAX_PPD_COUNT 4096
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"
@@ -76,6 +77,12 @@ namespace OHOS::Print {
         return (retVal);                                \
     }
 
+#define PRINT_CHECK_NULL_RETURN_VOID(ptr)               \
+    if ((ptr) == nullptr) {                             \
+        PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
+        return;                                         \
+    }
+
 enum PrintErrorCode {
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,
@@ -95,9 +102,16 @@ enum PrintErrorCode {
     E_PRINT_BANNED = 13100011,
     E_PRINT_WINDOWS_LOGIN_LOCKOUT = 13100012,
     E_PRINT_WINDOWS_CONNECTION_FAILURE = 13100013,
+    E_PRINT_KIA_INTERCEPTED = 13100014,
 };
 
 const uint32_t PRINT_INVALID_ID = 0xFFFFFFFF;   // -1
+
+enum IpAddressType {
+    IP_ADDRESS_TYPE_INVALID = 0,
+    IP_ADDRESS_TYPE_IPV4 = 1,
+    IP_ADDRESS_TYPE_IPV6 = 2,
+};
 
 enum PrinterState {
     PRINTER_ADDED = 0,          // new printers arrival
@@ -166,6 +180,8 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_AUTHENTICATION = 36,  // print job need authenticate.
     PRINT_JOB_BLOCKED_BANNED = 37,  // print job has been banned by organization.
     PRINT_JOB_BLOCKED_SMB_PRINTER = 38,  // SMB print job transmission failed.
+    PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING = 39,  // Input tray is missing or not properly installed
+    PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 40, // print job restricted by security policy.
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -286,10 +302,18 @@ enum DefaultPrinterType {
     DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
 };
 
+enum WatermarkHandleResult {
+    WATERMARK_HANDLE_SUCCESS = 0,  // Processing completed successfully
+    WATERMARK_HANDLE_FAILURE = 1,  // Processing failed
+};
+
 const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
+const std::string SHARED_HOST_DISCOVER_EVENT_TYPE = "sharedHostDiscover";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
+static const std::string PERMISSION_NAME_PRINTER_DRIVER = "ohos.permission.PRINTER_DRIVER";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
+static const std::string PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT = "ohos.permission.ENTERPRISE_MANAGE_PRINT";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =
@@ -330,11 +354,14 @@ const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 const std::string RAW_PPD_NAME = "raw";
 const std::string RAW_PPD_DRIVER = "driver.raw";
+const std::string WEBPRINTER_BUNDLE_NAME = "com.ohos.spooler";
+const std::string VENDOR_CUSTOM_DRIVER = "driver.printer.driver";
 
 const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
+constexpr uint32_t INVALID_FD = -1;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";
 const std::string PRINT_PARAM_TYPE_QUALITY = "defaultPrintQuality";

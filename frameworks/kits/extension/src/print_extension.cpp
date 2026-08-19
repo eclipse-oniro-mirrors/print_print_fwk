@@ -22,6 +22,7 @@
 #include "print_log.h"
 #include "runtime.h"
 #include "sts_print_extension.h"
+#include "print_constant.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -69,7 +70,9 @@ std::shared_ptr<PrintExtensionContext> PrintExtension::CreateAndInitContext(
 void PrintExtension::OnStop()
 {
     Extension::OnStop();
-    GetContext()->TerminateAbility();
+    auto context = GetContext();
+    PRINT_CHECK_NULL_RETURN_VOID(context);
+    context->TerminateAbility();
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

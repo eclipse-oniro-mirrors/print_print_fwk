@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "print_security_guard_info.h"
+#include "print_system_data.h"
 
 namespace OHOS::Print {
 class PrintSecurityGuardManager {
@@ -28,6 +29,9 @@ public:
     void receiveBaseInfo(const std::string jobId, const std::string callerPkg,
         const std::vector<std::string> &fileList);
     void receiveJobStateUpdate(const std::string jobId, const PrinterInfo &printerInfo, const PrintJob &printJob);
+    // Resolve PrinterInfo with fallback chain: discovered -> added -> option JSON
+    std::shared_ptr<PrinterInfo> ResolvePrinterInfo(
+        const std::string &printerId, const std::string &option, PrintSystemData &printSystemData);
 
 private:
     void ReportSecurityInfo(const int32_t eventId, const std::string version, const std::string content);

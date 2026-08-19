@@ -65,14 +65,21 @@ public:
     static napi_value QueryPrinterInfoByIp(napi_env env, napi_callback_info info);
     static napi_value ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info);
     static napi_value SavePdfFileJob(napi_env env, napi_callback_info info);
-    static napi_value QueryRecommendDriversById(napi_env env, napi_callback_info info);
-    static napi_value ConnectPrinterByIdAndPpd(napi_env env, napi_callback_info info);
     static napi_value CheckPreferencesConflicts(napi_env env, napi_callback_info info);
     static napi_value CheckPrintJobConflicts(napi_env env, napi_callback_info info);
     static napi_value GetPrinterDefaultPreferences(napi_env env, napi_callback_info info);
+    static napi_value QueryRecommendDriversById(napi_env env, napi_callback_info info);
+    static napi_value ConnectPrinterByIdAndPpd(napi_env env, napi_callback_info info);
     static napi_value GetSharedHosts(napi_env env, napi_callback_info info);
+    static napi_value StartSharedHostDiscovery(napi_env env, napi_callback_info info);
     static napi_value AuthSmbDeviceAsGuest(napi_env env, napi_callback_info info);
     static napi_value AuthSmbDeviceAsRegisteredUser(napi_env env, napi_callback_info info);
+    static napi_value RegisterWatermarkCallback(napi_env env, napi_callback_info info);
+    static napi_value UnregisterWatermarkCallback(napi_env env, napi_callback_info info);
+    static napi_value NotifyWatermarkComplete(napi_env env, napi_callback_info info);
+    static napi_value OnPrinterInfoQuery(napi_env env, napi_callback_info info);
+    static napi_value OffPrinterInfoQuery(napi_env env, napi_callback_info info);
+    static napi_value AddPrinter(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);

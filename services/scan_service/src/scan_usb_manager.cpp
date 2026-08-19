@@ -216,6 +216,11 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
         syncInfo.discoverMode = ScannerDiscoveryMode::USB_MODE;
         syncInfo.syncMode = ScannerSyncMode::UPDATE_MODE;
         ScanServiceAbility::GetInstance()->UpdateScannerId(syncInfo);
+        ScanSystemData::GetInstance().UpdateScannerIdByUsbDevicePort(
+            ScannerDiscoveryMode::USB_MODE + serialNumber, usbDevicePort);
+        if (!ScanSystemData::GetInstance().SaveScannerMap()) {
+            SCAN_HILOGE("UpdateUsbScannerId SaveScannerMap fail");
+        }
     } else {
         SCAN_HILOGD("not find scanner, start discover");
         ScanServiceAbility::GetInstance()->GetScannerList();

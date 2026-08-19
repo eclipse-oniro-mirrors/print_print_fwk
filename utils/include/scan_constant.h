@@ -89,6 +89,12 @@ namespace OHOS::Scan {
 #define CHECK_IS_EXCEED_SCAN_RANGE_VOID(count)     CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_NONE)
 #define CHECK_IS_EXCEED_SCAN_RANGE_INT(count)      CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_INVALID_PARAMETER)
 
+#define SCAN_CHECK_NULL_AND_RETURN(ptr, retVal)         \
+    if ((ptr) == nullptr) {                             \
+        SCAN_HILOGE("%{public}s is nullptr.", (#ptr));  \
+        return (retVal);                                \
+    }
+
 enum ScanErrorCode {
     E_SCAN_NONE = 0, // no error
     E_SCAN_NO_PERMISSION = 201, // no permission
@@ -201,6 +207,7 @@ constexpr int32_t BYTE_BITS = 8;
 constexpr int32_t CHANNEL_ONE = 1;
 constexpr int32_t CHANNEL_THREE = 3;
 constexpr int32_t JPEG_QUALITY_SEVENTY_FIVE = 75;
+constexpr uint32_t IMAGE_COMPRESS_QUALITY_MAX = 100;
 constexpr int32_t BUFFER_SIZE = 1024 * 100; // 100KB
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

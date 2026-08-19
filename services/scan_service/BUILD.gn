@@ -96,7 +96,6 @@ _external_deps = [
   "init:libbegetutil",
   "ipc:ipc_core",
   "jsoncpp:jsoncpp",
-  "libjpeg-turbo:turbojpeg",
   "napi:ace_napi",
   "netmanager_ext:mdns_manager_if",
   "netmanager_ext:mdns_manager_if",
@@ -104,6 +103,8 @@ _external_deps = [
   "safwk:system_ability_fwk",
   "samgr:samgr_proxy",
   "usb_manager:usbsrv_client",
+  "image_framework:image_ndk",
+  "image_framework:image_native",
 ]
 
 ohos_shared_library("scan_service") {

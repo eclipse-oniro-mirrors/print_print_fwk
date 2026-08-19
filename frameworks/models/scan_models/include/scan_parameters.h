@@ -47,9 +47,10 @@ public:
 
     virtual bool Marshalling(Parcel &parcel) const override;
     static std::shared_ptr<ScanParameters> Unmarshalling(Parcel &parcel);
+    bool Validate() const;
+
 private:
     void ReadFromParcel(Parcel &parcel);
-    bool Validate() const;
 
 private:
     ScanFrame format_;
