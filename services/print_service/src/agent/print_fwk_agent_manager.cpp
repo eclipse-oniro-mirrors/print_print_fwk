@@ -879,6 +879,42 @@ void PrintFwkAgentManager::HandleAddProgress(int32_t progress, void *userData)
     context->manager->host_->NotifyPrinterInfoChanged(info);
 }
 
+void PrintFwkAgentManager::ProcessAddResult(
+    int32_t errCode, const PrintAddPrinterResult *result, AddPrinterContext &context)
+{
+    auto *manager = context.manager;
+    if (manager == nullptr) {
+        PRINT_HILOGW("AddPrinter done without manager");
+        return;
+    }
+    if (!manager->IsRunning()) {
+        return;
+    }
+    if (errCode != PRINT_FWK_AGENT_CLIENT_OK) {
+        PrinterInfo info = BuildAgentFailureInfo(context.printerName, "ENV_INIT", errCode);
+        manager->host_->NotifyPrinterInfoChanged(info);
+        return;
+    }
+    std::string ippUri = result != nullptr && result->ippUri != nullptr ? result->ippUri : "";
+    AgentQueueIdentity queue;
+    if (ippUri.empty() || !BuildAgentQueueIdentity(ippUri, queue)) {
+        PrinterInfo info = BuildAgentFailureInfo(
+            context.printerName, "DONE", PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
+        manager->host_->NotifyPrinterInfoChanged(info);
+        return;
+    }
+    PendingAgentPrinterMetadata metadata {
+        context.source, std::move(queue), context.printerName, context.backendType
+    };
+    if (!manager->CompleteAddSlotWithPending(std::move(metadata))) {
+        return;
+    }
+    context.reservation->Commit();
+    PrinterInfo info = BuildAgentProgressInfo(context.printerName, "DONE", "PENDING_DISCOVERY");
+    info.SetUri(ippUri);
+    manager->host_->NotifyPrinterInfoChanged(info);
+}
+
 void PrintFwkAgentManager::HandleAddDone(int32_t errCode, const PrintAddPrinterResult *result, void *userData)
 {
     auto *context = static_cast<AddPrinterContext *>(userData);
@@ -886,35 +922,7 @@ void PrintFwkAgentManager::HandleAddDone(int32_t errCode, const PrintAddPrinterR
         return;
     }
 
-    auto *manager = context->manager;
-    if (manager == nullptr) {
-        PRINT_HILOGW("AddPrinter done without manager");
-    } else if (manager->IsRunning()) {
-        if (errCode != PRINT_FWK_AGENT_CLIENT_OK) {
-            PrinterInfo info = BuildAgentFailureInfo(context->printerName, "ENV_INIT", errCode);
-            manager->host_->NotifyPrinterInfoChanged(info);
-        } else {
-            std::string ippUri = result != nullptr && result->ippUri != nullptr ? result->ippUri : "";
-            AgentQueueIdentity queue;
-            if (ippUri.empty() || !BuildAgentQueueIdentity(ippUri, queue)) {
-                PrinterInfo info = BuildAgentFailureInfo(
-                    context->printerName, "DONE", PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
-                manager->host_->NotifyPrinterInfoChanged(info);
-            } else {
-                PendingAgentPrinterMetadata metadata {
-                    context->source, std::move(queue), context->printerName, context->backendType
-                };
-                if (manager->CompleteAddSlotWithPending(std::move(metadata))) {
-                    context->reservation->Commit();
-                    PrinterInfo info = BuildAgentProgressInfo(
-                        context->printerName, "DONE", "PENDING_DISCOVERY");
-                    info.SetUri(ippUri);
-                    manager->host_->NotifyPrinterInfoChanged(info);
-                }
-            }
-        }
-    }
-
+    ProcessAddResult(errCode, result, *context);
     FinishAsyncContext(context);
 }
 

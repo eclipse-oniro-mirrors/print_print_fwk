@@ -395,9 +395,12 @@ void PrintServiceAbility::InitAgentManager()
         PRINT_HILOGE("Agent manager initialization failed");
         return;
     }
-    serviceHandler_->PostTask([]() {
-        (void)PrintFwkAgentManager::GetInstance().EnsureBackendReadyForPersistedPrinters();
-    }, "EnsureAgentBackendReadyOnStartup", AGENT_BACKEND_READY_STARTUP_DELAY_MS);
+    serviceHandler_->PostTask(
+        []() {
+            (void)PrintFwkAgentManager::GetInstance().EnsureBackendReadyForPersistedPrinters();
+        },
+        "EnsureAgentBackendReadyOnStartup",
+        AGENT_BACKEND_READY_STARTUP_DELAY_MS);
 }
 #endif
 

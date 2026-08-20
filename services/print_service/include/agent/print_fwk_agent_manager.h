@@ -140,6 +140,8 @@ private:
     static void HandleAddDone(int32_t errCode, const PrintAddPrinterResult *result, void *userData);
     static void HandleAddProgress(int32_t progress, void *userData);
     static void HandleRemoveDone(int32_t errCode, void *userData);
+    static void ProcessAddResult(
+        int32_t errCode, const PrintAddPrinterResult *result, AddPrinterContext &context);
 
     static std::string BuildUriMatchKey(const std::string &uri);
     static SourcePrinterIdentity BuildSourcePrinterIdentity(const std::string &uri);
