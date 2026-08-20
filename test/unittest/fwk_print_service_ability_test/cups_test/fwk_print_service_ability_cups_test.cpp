@@ -85,14 +85,19 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
 {
     auto service = PrintServiceAbilityTest::CreateService();
     const std::string printerId = "fwk.driver.bsuni:mdns-printer";
-    const std::string uri = "ipp://10.0.0.2:631/printers/office";
+    const std::string uri = "ipp://10.0.0.2:631/printers/Office_Printer_1786320000";
     service->agentManager_ = std::make_unique<PrintFwkAgentManager>(
         service->printSystemData_, service->vendorManager, *service);
-    service->agentManager_->pendingPrinters_[uri] = {
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
+    service->agentManager_->pendingPrinters_[PrintFwkAgentManager::BuildUriMatchKey(uri)] = {
+        uri,
+        "Office_Printer_1786320000",
         "Agent Original",
+        sourceUri,
+        sourceKey,
         "TEST_BACKEND",
         PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
-        PrintFwkAgentManager::PendingState::CONNECTING,
     };
 
     auto info = std::make_shared<PrinterInfo>();
@@ -109,8 +114,11 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
     EXPECT_EQ(option["ipp"].asString(), "original");
     EXPECT_TRUE(option["duplex"].asBool());
     EXPECT_EQ(option["driver"].asString(), PRINT_DRIVER_AGENT);
-    EXPECT_EQ(option["agent"]["printerName"].asString(), "Agent Original");
+    EXPECT_FALSE(option["agent"].isMember("printerName"));
+    EXPECT_EQ(option["agent"]["queueName"].asString(), "Office_Printer_1786320000");
     EXPECT_EQ(option["agent"]["uri"].asString(), uri);
+    EXPECT_EQ(option["agent"]["queueUri"].asString(), uri);
+    EXPECT_EQ(option["agent"]["sourceUri"].asString(), sourceUri);
     EXPECT_EQ(option["agent"]["backendType"].asString(), "TEST_BACKEND");
     EXPECT_TRUE(service->agentManager_->pendingPrinters_.empty());
 }
@@ -142,7 +150,8 @@ HWTEST_F(PrintServiceAbilityTest, CommitAgentPrinterDeletedUsesCommonLocalContin
     info->SetPrinterId(printerId);
     info->SetPrinterName(printerName);
     info->SetOption(
-        R"({"driver":"AGENT","agent":{"printerName":"Agent Original","backendType":"TEST_BACKEND"}})");
+        R"({"driver":"AGENT","agent":{"queueName":"Agent_Original_1786320000",)"
+        R"("backendType":"TEST_BACKEND"}})");
     service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
     service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(*info));
 

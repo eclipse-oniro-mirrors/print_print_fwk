@@ -24,6 +24,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "agent/print_fwk_agent_client_loader.h"
 #include "agent/print_fwk_agent_host.h"
@@ -47,7 +48,7 @@ public:
     bool Init();
     void Shutdown();
     bool IsRunning() const;
-    
+
     bool IsAgentRouteRequested(const std::string &options) const;
     bool IsAgentRoutedPrinterByName(const std::string &printerName) const;
     int32_t AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
@@ -65,9 +66,18 @@ private:
 
     struct PendingAgentPrinter {
         std::string agentIppUri;
-        std::string agentPrinterName;
+        std::string agentQueueName;
+        std::string displayPrinterName;
+        std::string sourceUri;
+        std::string sourceKey;
         std::string backendType;
         Clock::time_point expiresAt;
+    };
+
+    enum class AddSlotResult {
+        RESERVED,
+        DUPLICATE_SOURCE,
+        CAPACITY_REACHED,
     };
 
     struct AddPrinterContext;
@@ -81,14 +91,19 @@ private:
     static bool ExtractAgentAddOptions(
         const std::string &options, std::string &backendType, std::string &driverInstall);
     static bool ExtractAgentPrinterMetadata(
-        const std::string &options, std::string &printerName, std::string &backendType);
-    static std::string BuildPendingUriMatchKey(const std::string &uri);
+        const std::string &options, std::string &queueName, std::string &backendType,
+        std::string &sourceUri);
+    static std::string BuildUriMatchKey(const std::string &uri);
+    static bool ExtractQueueNameFromIppUri(const std::string &uri, std::string &queueName);
     static bool ExtractPrinterIpFromUri(const std::string &uri, std::string &printerIp);
     int32_t SubmitAddPrinter(std::unique_ptr<AddPrinterContext> context);
-    bool TryReserveAddSlot();
-    void ReleaseAddSlot();
+    AddSlotResult TryReserveAddSlot(const std::string &sourceKey);
+    void ReleaseAddSlot(const std::string &sourceKey);
     bool CompleteAddSlotWithPending(
-        const std::string &uri, const std::string &agentPrinterName, const std::string &backendType);
+        const std::string &queueUri, const std::string &queueName, const std::string &displayPrinterName,
+        const std::string &sourceUri, const std::string &sourceKey, const std::string &backendType);
+    bool IsSourceUriAdded(const std::string &sourceKey) const;
+    void ReleaseSourceKey(const std::string &sourceKey);
     void PruneExpiredPendingLocked(Clock::time_point now);
 
     static constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;
@@ -101,6 +116,7 @@ private:
     std::atomic<State> state_ { State::STOPPED };
     std::mutex pendingMutex_;
     std::unordered_map<std::string, PendingAgentPrinter> pendingPrinters_;
+    std::unordered_set<std::string> activeSourceKeys_;
     size_t inFlightAddCount_ = 0;
     NowProvider nowProvider_;
 };
