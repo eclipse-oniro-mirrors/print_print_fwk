@@ -72,13 +72,25 @@ private:
         STOPPING,
     };
 
-    struct PendingAgentPrinter {
-        std::string agentIppUri;
-        std::string agentQueueName;
-        std::string displayPrinterName;
-        std::string sourceUri;
-        std::string sourceKey;
+    struct SourcePrinterIdentity {
+        std::string uri;
+        std::string matchKey;
+    };
+
+    struct AgentQueueIdentity {
+        std::string uri;
+        std::string name;
+    };
+
+    struct AgentPrinterMetadata {
+        SourcePrinterIdentity source;
+        AgentQueueIdentity queue;
+        std::string displayName;
         std::string backendType;
+    };
+
+    struct PendingAgentPrinter {
+        AgentPrinterMetadata metadata;
         Clock::time_point expiresAt;
     };
 
@@ -97,21 +109,19 @@ private:
 
     static bool ExtractAgentAddOptions(
         const std::string &options, std::string &backendType, std::string &driverInstall);
-    static bool ExtractAgentPrinterMetadata(
-        const std::string &options, std::string &queueName, std::string &backendType,
-        std::string &sourceUri);
+    static bool ExtractAgentPrinterMetadata(const std::string &options, AgentPrinterMetadata &metadata);
     static std::string BuildUriMatchKey(const std::string &uri);
-    static bool ExtractQueueNameFromIppUri(const std::string &uri, std::string &queueName);
+    static SourcePrinterIdentity BuildSourcePrinterIdentity(const std::string &uri);
+    static bool BuildAgentQueueIdentity(const std::string &uri, AgentQueueIdentity &queue);
     static bool ExtractPrinterIpFromUri(const std::string &uri, std::string &printerIp);
     int32_t SubmitAddPrinter(std::unique_ptr<AddPrinterContext> context);
-    bool PrepareAgentAddSlot(const std::string &printerName, const std::string &sourceKey, int32_t &result);
-    AddSlotResult TryReserveAddSlot(const std::string &sourceKey);
-    void ReleaseAddSlot(const std::string &sourceKey);
-    bool CompleteAddSlotWithPending(
-        const std::string &queueUri, const std::string &queueName, const std::string &displayPrinterName,
-        const std::string &sourceUri, const std::string &sourceKey, const std::string &backendType);
-    bool IsSourceUriAdded(const std::string &sourceKey) const;
-    void ReleaseSourceKey(const std::string &sourceKey);
+    bool PrepareAgentAddSlot(
+        const std::string &printerName, const SourcePrinterIdentity &source, int32_t &result);
+    AddSlotResult TryReserveAddSlot(const SourcePrinterIdentity &source);
+    void ReleaseAddSlot(const SourcePrinterIdentity &source);
+    bool CompleteAddSlotWithPending(AgentPrinterMetadata metadata);
+    bool IsSourcePrinterAdded(const SourcePrinterIdentity &source) const;
+    void ReleaseSource(const SourcePrinterIdentity &source);
     void PruneExpiredPendingLocked(Clock::time_point now);
 
     static constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;

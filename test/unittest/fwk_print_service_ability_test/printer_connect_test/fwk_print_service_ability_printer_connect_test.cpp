@@ -54,12 +54,12 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterClaimsPendingAgentPrinterByDisco
     const std::string uriKey = PrintFwkAgentManager::BuildUriMatchKey(uri);
     const auto originalExpiry = PrintFwkAgentManager::Clock::now() + std::chrono::seconds(1);
     service->agentManager_->pendingPrinters_[uriKey] = {
-        uri,
-        "Office_Printer_1786320000",
-        "Agent Original",
-        sourceUri,
-        sourceKey,
-        "TEST_BACKEND",
+        {
+            { sourceUri, sourceKey },
+            { uri, "Office_Printer_1786320000" },
+            "Agent Original",
+            "TEST_BACKEND",
+        },
         originalExpiry,
     };
 

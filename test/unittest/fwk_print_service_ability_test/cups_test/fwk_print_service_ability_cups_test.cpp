@@ -91,12 +91,12 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
     const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
     const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
     service->agentManager_->pendingPrinters_[PrintFwkAgentManager::BuildUriMatchKey(uri)] = {
-        uri,
-        "Office_Printer_1786320000",
-        "Agent Original",
-        sourceUri,
-        sourceKey,
-        "TEST_BACKEND",
+        {
+            { sourceUri, sourceKey },
+            { uri, "Office_Printer_1786320000" },
+            "Agent Original",
+            "TEST_BACKEND",
+        },
         PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
     };
 
