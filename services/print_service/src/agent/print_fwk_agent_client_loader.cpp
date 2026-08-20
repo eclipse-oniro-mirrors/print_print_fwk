@@ -181,13 +181,9 @@ int32_t PrintFwkAgentClientLoader::EnsureBackendReady()
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsLoaded()) {
         PRINT_HILOGE("client_loader EnsureBackendReady: loader not loaded");
-        return E_PRINT_AGENT_BACKEND_RESUME_FAILED;
+        return E_PRINT_RPC_FAILURE;
     }
-    int32_t ret = api_->ensureBackendReady(handle_);
-    if (ret == PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT) {
-        return E_PRINT_AGENT_BACKEND_RESUME_TIMEOUT;
-    }
-    return MapError(ret);
+    return MapError(api_->ensureBackendReady(handle_));
 }
 
 bool PrintFwkAgentClientLoader::IsBackendOnline()
@@ -246,9 +242,8 @@ int32_t PrintFwkAgentClientLoader::MapError(int32_t e)
         case PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT:
             return E_PRINT_RPC_FAILURE;
         case PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED:
-            return E_PRINT_AGENT_BACKEND_STOPPED;
         case PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED:
-            return E_PRINT_AGENT_BACKEND_RESUME_FAILED;
+            return E_PRINT_RPC_FAILURE;
         default:
             return E_PRINT_RPC_FAILURE;
     }

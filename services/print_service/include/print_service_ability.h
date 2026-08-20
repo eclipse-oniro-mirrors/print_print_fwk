@@ -17,7 +17,6 @@
 #define PRINT_SERVICE_ABILITY_H
 
 #include <fcntl.h>
-#include <memory>
 #include <mutex>
 #include <string>
 #include <sys/types.h>
@@ -189,7 +188,9 @@ protected:
 private:
     int32_t Init();
     int32_t InitServiceDependencies();
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
     void InitAgentManager();
+#endif
     bool PublishService(ServiceRunningState previousState);
     void RefreshPrintersAfterInit();
     void InitServiceHandler();
@@ -313,8 +314,6 @@ private:
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options, const std::string &bundleName);
-    int32_t AddPrinterInternal(const std::string &printerName, const std::string &uri,
-        const std::string &ppdName, const std::string &options);
     int32_t SetPrinterCapabilityAndRegister(const std::string &printerName, const std::string &ppdName,
         const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void RefreshPrinterInfoByPpd();
@@ -354,20 +353,12 @@ private:
     bool IsCallerSystemApp() override;
     void NotifyPrinterInfoChanged(const PrinterInfo &info) override;
     void CommitAgentPrinterDeleted(const std::string &printerId, const std::string &printerName) override;
-    bool IsAgentPrinter(const std::string &printerId);
-    bool HasAgentPrinters();
-    std::shared_ptr<PrintFwkAgentManager> GetAgentManager() const;
-    void ShutdownAgentManager();
-    void StopAgentBackendKeepaliveIfNeeded(const std::string &jobId, uint32_t state, uint32_t subState);
 #endif
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName) override;
     int32_t InitServiceHelper();
 
 public:
-#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    void NotifyAgentJobMonitoring(const std::string &jobId);
-#endif
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;
@@ -453,11 +444,6 @@ private:
     uint32_t enterLowPowerCount_;
     bool isLowPowerMode_;
     VendorManager vendorManager;
-#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    mutable std::mutex agentManagerMutex_;
-    std::shared_ptr<PrintFwkAgentManager> agentManager_;
-#endif
-
     std::map<int32_t, PrintCallerAppInfo> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;

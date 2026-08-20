@@ -126,9 +126,9 @@ TEST(PrintFwkAgentClientLoaderTest, MapErrorCoversAllCodes)
     EXPECT_EQ(PrintFwkAgentClientLoader::MapError(PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT),
               E_PRINT_RPC_FAILURE);
     EXPECT_EQ(PrintFwkAgentClientLoader::MapError(PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED),
-              E_PRINT_AGENT_BACKEND_STOPPED);
+              E_PRINT_RPC_FAILURE);
     EXPECT_EQ(PrintFwkAgentClientLoader::MapError(PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED),
-              E_PRINT_AGENT_BACKEND_RESUME_FAILED);
+              E_PRINT_RPC_FAILURE);
 }
 
 TEST(PrintFwkAgentClientLoaderTest, NotLoadedCallsReturnRpcFailure)
@@ -137,7 +137,7 @@ TEST(PrintFwkAgentClientLoaderTest, NotLoadedCallsReturnRpcFailure)
     PrintAddPrinterParam params {};
     EXPECT_EQ(loader.AddPrinter(params, nullptr, nullptr, nullptr), E_PRINT_RPC_FAILURE);
     EXPECT_EQ(loader.RemovePrinter("", "", nullptr, nullptr), E_PRINT_RPC_FAILURE);
-    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_AGENT_BACKEND_RESUME_FAILED);
+    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_RPC_FAILURE);
     EXPECT_FALSE(loader.IsBackendOnline());
     loader.BackendKeepaliveTick();
 }
@@ -183,7 +183,7 @@ TEST(PrintFwkAgentClientLoaderTest, BackendLifecycleCallsUseLoadedApi)
 
     g_ensureBackendReadyResult = PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT;
     g_backendOnline = false;
-    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_AGENT_BACKEND_RESUME_TIMEOUT);
+    EXPECT_EQ(loader.EnsureBackendReady(), E_PRINT_RPC_FAILURE);
     EXPECT_FALSE(loader.IsBackendOnline());
     loader.Unload();
 }

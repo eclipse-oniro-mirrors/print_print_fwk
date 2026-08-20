@@ -40,12 +40,11 @@ public:
     using Clock = std::chrono::steady_clock;
     using NowProvider = std::function<Clock::time_point()>;
 
-    PrintFwkAgentManager(PrintSystemData &systemData, PrintFwkAgentHost &host,
+    static PrintFwkAgentManager &GetInstance();
+
+    bool Init(PrintSystemData &systemData, PrintFwkAgentHost &host,
         std::unique_ptr<PrintFwkAgentClientLoader> loader = nullptr,
         NowProvider nowProvider = []() { return Clock::now(); });
-    ~PrintFwkAgentManager();
-
-    bool Init();
     void Shutdown();
     bool IsRunning() const;
 
@@ -64,22 +63,32 @@ public:
     // Agent backend lifecycle management
     int32_t EnsureAgentBackendReady();
     bool IsAgentBackendOnline();
+    int32_t EnsureBackendReadyForPersistedPrinters();
+    void PreparePrintJob(const std::string &jobId, const std::string &printerId);
+    void OnPrintJobStateChanged(const std::string &jobId, uint32_t state, uint32_t subState);
     void StartAgentBackendKeepalive(const std::string &jobId, const std::string &printerId);
     void StopAgentBackendKeepalive(const std::string &jobId);
     void OnCupsJobMonitorTick(const std::string &jobId);
 
 private:
+    PrintFwkAgentManager() = default;
+    ~PrintFwkAgentManager();
+    PrintFwkAgentManager(const PrintFwkAgentManager &) = delete;
+    PrintFwkAgentManager &operator=(const PrintFwkAgentManager &) = delete;
+
     enum class State {
         STOPPED,
         RUNNING,
         STOPPING,
     };
 
+    // Keeps both the original URI for persistence and a canonical key for duplicate checks.
     struct SourcePrinterIdentity {
         std::string uri;
         std::string matchKey;
     };
 
+    // The actual timestamped CUPS queue returned by the Agent.
     struct AgentQueueIdentity {
         std::string uri;
         std::string name;
@@ -99,6 +108,7 @@ private:
 
     struct PersistedAgentPrinterMetadata {
         SourcePrinterIdentity source;
+        // Exact Agent queue name used by RemovePrinter; it must not be reconstructed.
         std::string queueName;
         std::string backendType;
     };
@@ -143,6 +153,8 @@ private:
     AddSlotResult TryReserveAddSlot(const SourcePrinterIdentity &source);
     void ReleaseAddSlot(const SourcePrinterIdentity &source);
     bool CompleteAddSlotWithPending(PendingAgentPrinterMetadata metadata);
+    bool IsAgentPrinter(const std::string &printerId) const;
+    bool HasPersistedAgentPrinters() const;
     bool IsSourcePrinterAdded(const SourcePrinterIdentity &source) const;
     void ReleaseTrackedSource(const SourcePrinterIdentity &source);
     void PruneExpiredPendingLocked(Clock::time_point now);
@@ -151,19 +163,22 @@ private:
     static constexpr std::chrono::seconds PENDING_TIMEOUT { 30 };
     static constexpr std::chrono::seconds BACKEND_KEEPALIVE_INTERVAL { 60 };
 
-    PrintSystemData &systemData_;
-    PrintFwkAgentHost &host_;
+    PrintSystemData *systemData_ = nullptr;
+    PrintFwkAgentHost *host_ = nullptr;
     std::unique_ptr<PrintFwkAgentClientLoader> loader_;
     std::atomic<State> state_ { State::STOPPED };
+    std::mutex lifecycleMutex_;
+    // Protects the following three add-state containers.
     std::mutex pendingMutex_;
-    std::unordered_map<std::string, PendingAgentPrinter> pendingPrinters_;
-    std::unordered_set<std::string> inFlightSources_;
-    std::unordered_map<std::string, std::string> pendingQueueBySource_;
-    NowProvider nowProvider_;
+    std::unordered_map<std::string, PendingAgentPrinter> pendingPrinters_; // queue key -> pending discovery
+    std::unordered_set<std::string> inFlightSources_; // source keys reserved by active adds
+    std::unordered_map<std::string, std::string> pendingQueueBySource_; // source key -> pending queue key
+    NowProvider nowProvider_ = []() { return Clock::now(); };
 
     // Agent backend keepalive management
     std::mutex keepaliveMutex_;
     std::unordered_map<std::string, std::string> keepaliveJobs_; // jobId -> printerId
+    // Shared throttle time for all active Agent jobs.
     Clock::time_point keepaliveLastTick_ {};
 };
 

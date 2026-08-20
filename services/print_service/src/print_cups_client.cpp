@@ -41,6 +41,9 @@
 #include "parameter.h"
 #include <json/json.h>
 #include "print_service_ability.h"
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+#include "agent/print_fwk_agent_manager.h"
+#endif
 #include "print_log.h"
 #include "print_constant.h"
 #include "print_utils.h"
@@ -1886,13 +1889,10 @@ void PrintCupsClient::StartMonitor()
             jobMonitorList = jobMonitorList_;
         }
         for (auto monitorParams : jobMonitorList) {
-            bool continueMonitoring = IfContinueToHandleJobState(monitorParams);
+            if (IfContinueToHandleJobState(monitorParams)) {
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-            if (continueMonitoring && monitorParams->serviceAbility != nullptr) {
-                monitorParams->serviceAbility->NotifyAgentJobMonitoring(monitorParams->serviceJobId);
-            }
+                PrintFwkAgentManager::GetInstance().OnCupsJobMonitorTick(monitorParams->serviceJobId);
 #endif
-            if (continueMonitoring) {
                 continue;
             }
             PRINT_HILOGI("delete a completed job");

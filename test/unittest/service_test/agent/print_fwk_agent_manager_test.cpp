@@ -279,13 +279,13 @@ class PrintFwkAgentManagerTest : public testing::Test {
 public:
     void SetUp() override
     {
+        manager = &PrintFwkAgentManager::GetInstance();
+        manager->Shutdown();
         ResetFakeLoaderState();
         api = CreateFakeLoaderApi();
         auto loader = std::make_unique<PrintFwkAgentClientLoader>();
         loader->SetApiForTest(&api, &g_fakeClient);
-        manager = std::make_unique<PrintFwkAgentManager>(
-            systemData, host, std::move(loader), [this]() { return now; });
-        ASSERT_TRUE(manager->Init());
+        ASSERT_TRUE(manager->Init(systemData, host, std::move(loader), [this]() { return now; }));
     }
 
     void TearDown() override
@@ -296,6 +296,7 @@ public:
         if (g_fakeLoaderState.removeDone != nullptr) {
             CompleteRemove(PRINT_FWK_AGENT_CLIENT_ERR_RPC);
         }
+        manager->Shutdown();
     }
 
 protected:
@@ -303,7 +304,7 @@ protected:
     VendorManager vendorManager;
     FakeAgentHost host;
     PrintFwkAgentClientApi api {};
-    std::unique_ptr<PrintFwkAgentManager> manager;
+    PrintFwkAgentManager *manager = nullptr;
     PrintFwkAgentManager::Clock::time_point now {};
 };
 
@@ -352,7 +353,7 @@ TEST_F(PrintFwkAgentManagerTest, RecognizesAgentRouteOnlyForSystemApp)
 TEST_F(PrintFwkAgentManagerTest, BackendLifecycleDelegatesToLoader)
 {
     g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED;
-    EXPECT_EQ(manager->EnsureAgentBackendReady(), E_PRINT_AGENT_BACKEND_STOPPED);
+    EXPECT_EQ(manager->EnsureAgentBackendReady(), E_PRINT_RPC_FAILURE);
     EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 1u);
 
     g_fakeLoaderState.backendOnline = false;
@@ -392,19 +393,48 @@ TEST_F(PrintFwkAgentManagerTest, BackendLifecycleDelegatesToLoader)
     EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 2u);
 }
 
+TEST_F(PrintFwkAgentManagerTest, PersistedAgentPrinterDrivesBestEffortBackendAndJobLifecycle)
+{
+    EXPECT_EQ(manager->EnsureBackendReadyForPersistedPrinters(), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 0u);
+
+    InsertAddedPrinter(systemData, "agent-id", "Agent Printer", "ipp://10.0.0.1/printers/agent",
+        R"({"driver":"AGENT"})");
+    EXPECT_EQ(manager->EnsureBackendReadyForPersistedPrinters(), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 1u);
+
+    manager->PreparePrintJob("ordinary-job", "ordinary-id");
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 1u);
+
+    g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED;
+    manager->PreparePrintJob("agent-job", "agent-id");
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 2u);
+
+    now += std::chrono::seconds { 60 };
+    manager->OnCupsJobMonitorTick("agent-job");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 1u);
+
+    manager->OnPrintJobStateChanged("agent-job", PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
+    now += std::chrono::seconds { 60 };
+    manager->OnCupsJobMonitorTick("agent-job");
+    EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 1u);
+}
+
 TEST(PrintFwkAgentManagerLifecycleTest, InitFailureKeepsManagerStopped)
 {
     auto loader = std::make_unique<FailingPrintFwkAgentClientLoader>();
     PrintSystemData systemData;
     FakeAgentHost host;
-    PrintFwkAgentManager manager(systemData, host, std::move(loader));
+    auto &manager = PrintFwkAgentManager::GetInstance();
+    manager.Shutdown();
 
-    EXPECT_FALSE(manager.Init());
+    EXPECT_FALSE(manager.Init(systemData, host, std::move(loader)));
     EXPECT_FALSE(manager.IsRunning());
     host.isSystemApp = true;
     EXPECT_TRUE(manager.IsAgentRouteRequested(VALID_AGENT_OPTIONS));
     EXPECT_EQ(manager.AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10:631/printers/office",
         VALID_AGENT_OPTIONS), E_PRINT_RPC_FAILURE);
+    manager.Shutdown();
 }
 
 TEST_F(PrintFwkAgentManagerTest, RejectsMalformedAgentRouteOptions)
@@ -1030,7 +1060,7 @@ TEST_F(PrintFwkAgentManagerTest, BackendReadyFailureReleasesSourceReservation)
     const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
     g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED;
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS),
-        E_PRINT_AGENT_BACKEND_STOPPED);
+        E_PRINT_RPC_FAILURE);
 
     g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_OK;
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
@@ -1134,24 +1164,22 @@ TEST_F(PrintFwkAgentManagerTest, ShutdownStopsPendingRemoveBusinessSubmission)
     EXPECT_EQ(g_fakeLoaderState.removeUserData, nullptr);
 }
 
-TEST(PrintFwkAgentManagerLifecycleTest, ShutdownUnloadsInjectedLoaderOnlyOnce)
+TEST(PrintFwkAgentManagerLifecycleTest, RepeatedShutdownUnloadsInjectedLoaderOnlyOnce)
 {
+    auto &manager = PrintFwkAgentManager::GetInstance();
+    manager.Shutdown();
     ResetFakeLoaderState();
     auto api = CreateFakeLoaderApi();
     auto loader = std::make_unique<PrintFwkAgentClientLoader>();
     loader->SetApiForTest(&api, &g_fakeClient);
 
-    {
-        PrintSystemData systemData;
-        FakeAgentHost host;
-        PrintFwkAgentManager manager(systemData, host, std::move(loader));
-        EXPECT_TRUE(manager.Init());
-        EXPECT_TRUE(manager.IsRunning());
+    PrintSystemData systemData;
+    FakeAgentHost host;
+    EXPECT_TRUE(manager.Init(systemData, host, std::move(loader)));
+    EXPECT_TRUE(manager.IsRunning());
+    EXPECT_EQ(&manager, &PrintFwkAgentManager::GetInstance());
 
-        manager.Shutdown();
-        manager.Shutdown();
-        EXPECT_EQ(g_fakeLoaderState.destroyCount, 1u);
-    }
-
+    manager.Shutdown();
+    manager.Shutdown();
     EXPECT_EQ(g_fakeLoaderState.destroyCount, 1u);
 }
