@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <ctime>
+#include <optional>
 #include <string>
 #include <sys/time.h>
 #include <thread>
@@ -354,12 +355,13 @@ int32_t PrintServiceAbility::Init()
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
     {
         auto resumeTask = [this]() {
-            if (agentManager_ == nullptr || !agentManager_->IsRunning()) {
+            auto agentManager = GetAgentManager();
+            if (agentManager == nullptr || !agentManager->IsRunning()) {
                 return;
             }
             if (HasAgentPrinters()) {
                 PRINT_HILOGI("Agent printers found, ensuring backend ready on startup.");
-                int32_t code = agentManager_->EnsureAgentBackendReady();
+                int32_t code = agentManager->EnsureAgentBackendReady();
                 if (code != E_PRINT_NONE) {
                     PRINT_HILOGW("Agent backend not ready on startup, code=%{public}d", code);
                 }
@@ -406,19 +408,38 @@ int32_t PrintServiceAbility::InitServiceDependencies()
 void PrintServiceAbility::InitAgentManager()
 {
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    agentManager_ = std::make_unique<PrintFwkAgentManager>(printSystemData_, vendorManager, *this);
-    if (!agentManager_->Init()) {
+    auto agentManager = std::make_shared<PrintFwkAgentManager>(printSystemData_, *this);
+    {
+        std::lock_guard<std::mutex> lock(agentManagerMutex_);
+        agentManager_ = agentManager;
+    }
+    if (!agentManager->Init()) {
         PRINT_HILOGE("InitAgentManager failed, Agent printing is unavailable");
     }
 #endif
 }
 
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+std::shared_ptr<PrintFwkAgentManager> PrintServiceAbility::GetAgentManager() const
+{
+    std::lock_guard<std::mutex> lock(agentManagerMutex_);
+    return agentManager_;
+}
+
+void PrintServiceAbility::ShutdownAgentManager()
+{
+    std::shared_ptr<PrintFwkAgentManager> agentManager;
+    {
+        std::lock_guard<std::mutex> lock(agentManagerMutex_);
+        agentManager = std::move(agentManager_);
+    }
+    if (agentManager != nullptr) {
+        agentManager->Shutdown();
+    }
+}
+
 bool PrintServiceAbility::IsAgentPrinter(const std::string &printerId)
 {
-    if (agentManager_ == nullptr || !agentManager_->IsRunning()) {
-        return false;
-    }
     PrinterInfo info;
     if (!QueryAddedPrinterInfoByPrinterId(printerId, info)) {
         return false;
@@ -444,8 +465,9 @@ bool PrintServiceAbility::HasAgentPrinters()
 
 void PrintServiceAbility::NotifyAgentJobMonitoring(const std::string &jobId)
 {
-    if (agentManager_ != nullptr && agentManager_->IsRunning()) {
-        agentManager_->OnCupsJobMonitorTick(jobId);
+    auto agentManager = GetAgentManager();
+    if (agentManager != nullptr && agentManager->IsRunning()) {
+        agentManager->OnCupsJobMonitorTick(jobId);
     }
 }
 
@@ -454,8 +476,9 @@ void PrintServiceAbility::StopAgentBackendKeepaliveIfNeeded(
 {
     bool shouldStop = state == PRINT_JOB_COMPLETED ||
         (state == PRINT_JOB_BLOCKED && subState == PRINT_JOB_BLOCKED_INTERRUPT);
-    if (shouldStop && agentManager_ != nullptr) {
-        agentManager_->StopAgentBackendKeepalive(jobId);
+    auto agentManager = GetAgentManager();
+    if (shouldStop && agentManager != nullptr) {
+        agentManager->StopAgentBackendKeepalive(jobId);
     }
 }
 #endif
@@ -467,10 +490,7 @@ bool PrintServiceAbility::PublishService(ServiceRunningState previousState)
     }
     if (!Publish(PrintServiceAbility::GetInstance())) {
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-        if (agentManager_ != nullptr) {
-            agentManager_->Shutdown();
-            agentManager_.reset();
-        }
+        ShutdownAgentManager();
 #endif
         state_ = previousState;
         PRINT_HILOGE("PrintServiceAbility Publish failed");
@@ -668,10 +688,7 @@ void PrintServiceAbility::OnStop()
         return;
     }
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    if (agentManager_ != nullptr) {
-        agentManager_->Shutdown();
-        agentManager_.reset();
-    }
+    ShutdownAgentManager();
 #endif
     vendorManager.UnInit();
     {
@@ -788,8 +805,9 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         return TryConnectPrinterByIp(printerId);
     }
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    if (agentManager_ != nullptr && agentManager_->IsRunning()) {
-        agentManager_->ClaimPendingAgentPrinter(discoveredPrinter->GetUri());
+    auto agentManager = GetAgentManager();
+    if (agentManager != nullptr && agentManager->IsRunning()) {
+        agentManager->ClaimPendingAgentPrinter(*discoveredPrinter);
     }
 #endif
     printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
@@ -1293,17 +1311,22 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
         return E_PRINT_NO_PERMISSION;
     }
     ManualStart();
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    if (agentManager_ != nullptr && agentManager_->IsAgentRouteRequested(options)) {
-        if (!agentManager_->IsRunning()) {
-            PRINT_HILOGE("AddPrinter failed, Agent printing is unavailable");
-            return E_PRINT_RPC_FAILURE;
+    auto agentManager = GetAgentManager();
+    if (agentManager != nullptr) {
+        std::optional<int32_t> agentResult = agentManager->TryAddPrinterViaAgent(printerName, uri, options);
+        if (agentResult.has_value()) {
+            return *agentResult;
         }
-        return agentManager_->AddPrinterViaAgent(printerName, uri, options);
     }
 #endif
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    return AddPrinterInternal(printerName, uri, ppdName, options);
+}
 
+int32_t PrintServiceAbility::AddPrinterInternal(const std::string &printerName, const std::string &uri,
+    const std::string &ppdName, const std::string &options)
+{
     std::string callerBundleName = GetCallerBundleName();
     if (callerBundleName != SPOOLER_BUNDLE_NAME) {
         return AddPrinterByPrinterDriver(printerName, uri, ppdName, options, callerBundleName);
@@ -4123,12 +4146,13 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     PRINT_HILOGI("[Printer: %{public}s] DeletePrinterFromCups start", printerName.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    if (agentManager_ != nullptr && agentManager_->IsAgentRoutedPrinterByName(printerName)) {
-        if (!agentManager_->IsRunning()) {
+    auto agentManager = GetAgentManager();
+    if (agentManager != nullptr && agentManager->IsAgentRoutedPrinterByName(printerName)) {
+        if (!agentManager->IsRunning()) {
             PRINT_HILOGE("DeletePrinterFromCups failed, Agent printing is unavailable");
             return E_PRINT_RPC_FAILURE;
         }
-        return agentManager_->DeletePrinterFromAgent(printerName);
+        return agentManager->DeletePrinterFromAgent(printerName);
     }
 #endif
     std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
@@ -4909,14 +4933,21 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-        if (agentManager_ != nullptr && agentManager_->IsRunning() &&
-            agentManager_->AttachPendingAgentPrinter(*printerInfo)) {
+        auto agentManager = GetAgentManager();
+        bool agentPrinterAttached = agentManager != nullptr && agentManager->IsRunning() &&
+            agentManager->AttachPendingAgentPrinter(*printerInfo);
+        if (agentPrinterAttached) {
             PRINT_HILOGI("Attached pending source to discovered printer");
         }
 #endif
         BuildPrinterPreference(*printerInfo);
         printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
         printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+        if (agentPrinterAttached) {
+            agentManager->ConfirmAgentPrinterPersisted(*printerInfo);
+        }
+#endif
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
@@ -5146,17 +5177,18 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
         return E_PRINT_BANNED;
     }
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    if (agentManager_ != nullptr && agentManager_->IsRunning()) {
+    auto agentManager = GetAgentManager();
+    if (agentManager != nullptr && agentManager->IsRunning()) {
         std::string printerId = printJob->GetPrinterId();
         if (IsAgentPrinter(printerId)) {
-            int32_t readyCode = agentManager_->EnsureAgentBackendReady();
+            int32_t readyCode = agentManager->EnsureAgentBackendReady();
             if (readyCode != E_PRINT_NONE) {
                 PRINT_HILOGE("StartPrintJobInternal: agent backend not ready, code=%{public}d", readyCode);
                 printJob->SetJobState(PRINT_JOB_BLOCKED);
                 UpdatePrintJobState(printJob->GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
                 return readyCode;
             }
-            agentManager_->StartAgentBackendKeepalive(printJob->GetJobId(), printerId);
+            agentManager->StartAgentBackendKeepalive(printJob->GetJobId(), printerId);
         }
     }
 #endif

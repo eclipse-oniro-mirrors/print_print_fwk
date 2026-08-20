@@ -284,7 +284,7 @@ public:
         auto loader = std::make_unique<PrintFwkAgentClientLoader>();
         loader->SetApiForTest(&api, &g_fakeClient);
         manager = std::make_unique<PrintFwkAgentManager>(
-            systemData, vendorManager, host, std::move(loader), [this]() { return now; });
+            systemData, host, std::move(loader), [this]() { return now; });
         ASSERT_TRUE(manager->Init());
     }
 
@@ -324,6 +324,18 @@ void InsertAddedPrinter(PrintSystemData &systemData, const std::string &printerI
     info.SetUri(uri);
     info.SetOption(option);
     systemData.InsertAddedPrinter(printerId, info);
+}
+
+bool ClaimPendingPrinter(
+    PrintFwkAgentManager &manager, const std::string &uri, PrinterInfo *claimedPrinter = nullptr)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetUri(uri);
+    bool claimed = manager.ClaimPendingAgentPrinter(printerInfo);
+    if (claimedPrinter != nullptr) {
+        *claimedPrinter = printerInfo;
+    }
+    return claimed;
 }
 } // namespace
 
@@ -384,9 +396,8 @@ TEST(PrintFwkAgentManagerLifecycleTest, InitFailureKeepsManagerStopped)
 {
     auto loader = std::make_unique<FailingPrintFwkAgentClientLoader>();
     PrintSystemData systemData;
-    VendorManager vendorManager;
     FakeAgentHost host;
-    PrintFwkAgentManager manager(systemData, vendorManager, host, std::move(loader));
+    PrintFwkAgentManager manager(systemData, host, std::move(loader));
 
     EXPECT_FALSE(manager.Init());
     EXPECT_FALSE(manager.IsRunning());
@@ -402,6 +413,26 @@ TEST_F(PrintFwkAgentManagerTest, RejectsMalformedAgentRouteOptions)
     EXPECT_FALSE(manager->IsAgentRouteRequested(""));
     EXPECT_FALSE(manager->IsAgentRouteRequested("not a json"));
     EXPECT_FALSE(manager->IsAgentRouteRequested(R"({"driver":123})"));
+}
+
+TEST_F(PrintFwkAgentManagerTest, TryAddPrinterRoutesOnlyValidSystemAgentRequest)
+{
+    EXPECT_FALSE(manager->TryAddPrinterViaAgent("Office Printer",
+        "ipp://192.168.1.10:631/printers/office", VALID_AGENT_OPTIONS).has_value());
+
+    host.isSystemApp = true;
+    EXPECT_FALSE(manager->TryAddPrinterViaAgent("Office Printer",
+        "ipp://192.168.1.10:631/printers/office", R"({"driver":"RAW"})").has_value());
+    auto invalidResult = manager->TryAddPrinterViaAgent("Office Printer",
+        "ipp://192.168.1.10:631/printers/office", R"({"driver":"AGENT"})");
+    ASSERT_TRUE(invalidResult.has_value());
+    EXPECT_EQ(*invalidResult, E_PRINT_INVALID_PARAMETER);
+
+    auto result = manager->TryAddPrinterViaAgent("Office Printer",
+        "ipp://192.168.1.10:631/printers/office", VALID_AGENT_OPTIONS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 1u);
 }
 
 TEST_F(PrintFwkAgentManagerTest, IsAgentRoutedPrinterByNameRequiresSystemAgentPrinter)
@@ -641,7 +672,7 @@ TEST_F(PrintFwkAgentManagerTest, AddRejectsInvalidAgentOptionsBeforeClient)
     EXPECT_EQ(g_fakeLoaderState.addCallCount, 0u);
 }
 
-TEST_F(PrintFwkAgentManagerTest, AddImmediateFailureClearsConnectingState)
+TEST_F(PrintFwkAgentManagerTest, AddImmediateFailureDoesNotTouchConnectingState)
 {
     g_fakeLoaderState.addReturn = PRINT_FWK_AGENT_CLIENT_ERR_RPC;
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10:631/printers/office",
@@ -728,8 +759,10 @@ TEST_F(PrintFwkAgentManagerTest, AddDoneSuccessCopiesCallbackResultAndNotifiesPe
     EXPECT_EQ(progress["stage"].asString(), "DONE");
     EXPECT_EQ(progress["status"].asString(), "PENDING_DISCOVERY");
     EXPECT_TRUE(systemData.QueryAddedPrinterIdList().empty());
-    EXPECT_TRUE(manager->ClaimPendingAgentPrinter(ippUri));
-    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "Office Printer");
+    PrinterInfo claimedPrinter;
+    EXPECT_TRUE(ClaimPendingPrinter(*manager, ippUri, &claimedPrinter));
+    EXPECT_EQ(claimedPrinter.GetPrinterName(), "Office Printer");
+    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "");
     EXPECT_EQ(vendorManager.GetConnectingPrinter(), "");
 }
 
@@ -744,7 +777,7 @@ TEST_F(PrintFwkAgentManagerTest, AddDoneNullResultReportsServerFailure)
     EXPECT_EQ(progress["status"].asString(), "FAILED");
     EXPECT_EQ(progress["errorCode"].asInt(), PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
     EXPECT_EQ(progress["errorMsg"].asString(), "Server error");
-    EXPECT_FALSE(manager->ClaimPendingAgentPrinter(""));
+    EXPECT_FALSE(ClaimPendingPrinter(*manager, ""));
 }
 
 TEST_F(PrintFwkAgentManagerTest, AddDoneNullUriReportsServerFailure)
@@ -797,7 +830,7 @@ TEST_F(PrintFwkAgentManagerTest, PendingAgentPrinterExpiresAfterThirtySeconds)
     CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
 
     now += PENDING_TIMEOUT;
-    EXPECT_FALSE(manager->ClaimPendingAgentPrinter(ippUri));
+    EXPECT_FALSE(ClaimPendingPrinter(*manager, ippUri));
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", "ipp://192.168.1.10:631/printers/office",
         VALID_AGENT_OPTIONS), E_PRINT_NONE);
     EXPECT_EQ(g_fakeLoaderState.addCallCount, 2u);
@@ -810,6 +843,7 @@ TEST_F(PrintFwkAgentManagerTest, DuplicateInFlightSourceNotifiesPrinterExistsWit
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
 
     EXPECT_EQ(g_fakeLoaderState.addCallCount, 1u);
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 1u);
     EXPECT_EQ(host.notifyPrinterInfoChangedCount, 1u);
     Json::Value progress = GetAgentAddProgress(host.lastInfo);
     EXPECT_EQ(progress["status"].asString(), "FAILED");
@@ -855,7 +889,7 @@ TEST_F(PrintFwkAgentManagerTest, ClaimPendingAgentPrinterExtendsConnectingWindow
     CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
 
     now += BEFORE_PENDING_TIMEOUT;
-    EXPECT_TRUE(manager->ClaimPendingAgentPrinter(ippUri));
+    EXPECT_TRUE(ClaimPendingPrinter(*manager, ippUri));
     now += BEFORE_PENDING_TIMEOUT;
     PrinterInfo info;
     info.SetUri(ippUri);
@@ -880,7 +914,7 @@ TEST_F(PrintFwkAgentManagerTest, DefaultIppPortFormsMatchAndPreserveOriginalUris
         const PrintAddPrinterResult result { agentUri.c_str(), nullptr, 0 };
         CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
 
-        EXPECT_TRUE(manager->ClaimPendingAgentPrinter(discoveryUri));
+        EXPECT_TRUE(ClaimPendingPrinter(*manager, discoveryUri));
         PrinterInfo info;
         info.SetUri(discoveryUri);
         EXPECT_TRUE(manager->AttachPendingAgentPrinter(info));
@@ -898,7 +932,7 @@ TEST_F(PrintFwkAgentManagerTest, PendingUriMatchKeepsNonDefaultComponentsExact)
     const PrintAddPrinterResult result { agentUri.c_str(), nullptr, 0 };
     CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
 
-    EXPECT_FALSE(manager->ClaimPendingAgentPrinter("ipp://10.0.0.2:8631/printers/office"));
+    EXPECT_FALSE(ClaimPendingPrinter(*manager, "ipp://10.0.0.2:8631/printers/office"));
     PrinterInfo differentPath;
     differentPath.SetUri("ipp://10.0.0.2:631/printers/other");
     EXPECT_FALSE(manager->AttachPendingAgentPrinter(differentPath));
@@ -938,6 +972,10 @@ TEST_F(PrintFwkAgentManagerTest, AttachPendingAgentPrinterPreservesDiscoveryOpti
     EXPECT_EQ(option["agent"]["queueUri"].asString(), ippUri);
     EXPECT_EQ(option["agent"]["sourceUri"].asString(), sourceUri);
     EXPECT_EQ(option["agent"]["backendType"].asString(), TEST_BACKEND_TYPE);
+    const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
+    EXPECT_EQ(manager->pendingQueueBySource_.count(sourceKey), 1u);
+    manager->ConfirmAgentPrinterPersisted(info);
+    EXPECT_EQ(manager->pendingQueueBySource_.count(sourceKey), 0u);
 
     PrinterInfo repeated;
     repeated.SetUri(ippUri);
@@ -984,6 +1022,35 @@ TEST_F(PrintFwkAgentManagerTest, PendingCapacityIncludesInFlightRequests)
     EXPECT_EQ(manager->AddPrinterViaAgent("Overflow Printer",
         "ipp://192.168.1.11:631/printers/overflow", VALID_AGENT_OPTIONS), E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(g_fakeLoaderState.addCallCount, MAX_PENDING_AGENT_PRINTERS);
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, MAX_PENDING_AGENT_PRINTERS);
+}
+
+TEST_F(PrintFwkAgentManagerTest, BackendReadyFailureReleasesSourceReservation)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED;
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS),
+        E_PRINT_AGENT_BACKEND_STOPPED);
+
+    g_fakeLoaderState.ensureBackendReadyReturn = PRINT_FWK_AGENT_CLIENT_OK;
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 2u);
+    EXPECT_EQ(g_fakeLoaderState.addCallCount, 1u);
+}
+
+TEST_F(PrintFwkAgentManagerTest, ConcurrentAddsDoNotChangeVendorConnectingContext)
+{
+    vendorManager.SetConnectingPrinterName("Existing Printer");
+    vendorManager.SetConnectingPrinter(IP_AUTO, "192.168.1.20");
+
+    EXPECT_EQ(manager->AddPrinterViaAgent("First Printer",
+        "ipp://192.168.1.10:631/printers/first", VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    EXPECT_EQ(manager->AddPrinterViaAgent("Second Printer",
+        "ipp://192.168.1.11:631/printers/second", VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_ERR_RPC);
+
+    EXPECT_EQ(vendorManager.GetConnectingPrinterName(), "Existing Printer");
+    EXPECT_EQ(vendorManager.GetConnectingPrinter(), "192.168.1.20");
 }
 
 TEST_F(PrintFwkAgentManagerTest, ImmediateFailureReleasesPendingCapacity)
@@ -1045,7 +1112,7 @@ TEST_F(PrintFwkAgentManagerTest, ShutdownStopsPendingAddBusinessSubmission)
     EXPECT_EQ(g_fakeLoaderState.addDone, nullptr);
     EXPECT_EQ(g_fakeLoaderState.addProgress, nullptr);
     EXPECT_EQ(g_fakeLoaderState.addUserData, nullptr);
-    EXPECT_FALSE(manager->ClaimPendingAgentPrinter(ippUri));
+    EXPECT_FALSE(ClaimPendingPrinter(*manager, ippUri));
 }
 
 TEST_F(PrintFwkAgentManagerTest, ShutdownStopsPendingRemoveBusinessSubmission)
@@ -1076,9 +1143,8 @@ TEST(PrintFwkAgentManagerLifecycleTest, ShutdownUnloadsInjectedLoaderOnlyOnce)
 
     {
         PrintSystemData systemData;
-        VendorManager vendorManager;
         FakeAgentHost host;
-        PrintFwkAgentManager manager(systemData, vendorManager, host, std::move(loader));
+        PrintFwkAgentManager manager(systemData, host, std::move(loader));
         EXPECT_TRUE(manager.Init());
         EXPECT_TRUE(manager.IsRunning());
 

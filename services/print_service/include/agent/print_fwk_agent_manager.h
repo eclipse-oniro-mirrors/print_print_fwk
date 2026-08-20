@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -33,15 +34,14 @@ namespace OHOS::Print {
 
 class PrintSystemData;
 class PrinterInfo;
-class VendorManager;
 
 class PrintFwkAgentManager {
 public:
     using Clock = std::chrono::steady_clock;
     using NowProvider = std::function<Clock::time_point()>;
 
-    PrintFwkAgentManager(PrintSystemData &systemData, VendorManager &vendorManager,
-        PrintFwkAgentHost &host, std::unique_ptr<PrintFwkAgentClientLoader> loader = nullptr,
+    PrintFwkAgentManager(PrintSystemData &systemData, PrintFwkAgentHost &host,
+        std::unique_ptr<PrintFwkAgentClientLoader> loader = nullptr,
         NowProvider nowProvider = []() { return Clock::now(); });
     ~PrintFwkAgentManager();
 
@@ -52,11 +52,14 @@ public:
     bool IsAgentRouteRequested(const std::string &options) const;
     bool IsAgentRoutedPrinterByName(const std::string &printerName) const;
     static bool IsAgentRouted(const std::string &options);
+    std::optional<int32_t> TryAddPrinterViaAgent(const std::string &printerName, const std::string &uri,
+        const std::string &options);
     int32_t AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
         const std::string &options);
     int32_t DeletePrinterFromAgent(const std::string &printerName);
-    bool ClaimPendingAgentPrinter(const std::string &uri);
+    bool ClaimPendingAgentPrinter(PrinterInfo &printerInfo);
     bool AttachPendingAgentPrinter(PrinterInfo &printerInfo);
+    void ConfirmAgentPrinterPersisted(const PrinterInfo &printerInfo);
 
     // Agent backend lifecycle management
     int32_t EnsureAgentBackendReady();
@@ -82,15 +85,26 @@ private:
         std::string name;
     };
 
-    struct AgentPrinterMetadata {
+    struct AgentAddOptions {
+        std::string backendType;
+        std::string driverInstall;
+    };
+
+    struct PendingAgentPrinterMetadata {
         SourcePrinterIdentity source;
         AgentQueueIdentity queue;
         std::string displayName;
         std::string backendType;
     };
 
+    struct PersistedAgentPrinterMetadata {
+        SourcePrinterIdentity source;
+        std::string queueName;
+        std::string backendType;
+    };
+
     struct PendingAgentPrinter {
-        AgentPrinterMetadata metadata;
+        PendingAgentPrinterMetadata metadata;
         Clock::time_point expiresAt;
     };
 
@@ -98,8 +112,18 @@ private:
         RESERVED,
         DUPLICATE_SOURCE,
         CAPACITY_REACHED,
+        NOT_RUNNING,
     };
 
+    enum class RoutedAddOptionsResult {
+        NOT_AGENT_ROUTE,
+        INVALID_OPTIONS,
+        VALID_OPTIONS,
+    };
+
+    class AgentPrinterOptionCodec;
+    struct AddReservation;
+    struct PrepareAddResult;
     struct AddPrinterContext;
     struct RemovePrinterContext;
 
@@ -107,21 +131,20 @@ private:
     static void HandleAddProgress(int32_t progress, void *userData);
     static void HandleRemoveDone(int32_t errCode, void *userData);
 
-    static bool ExtractAgentAddOptions(
-        const std::string &options, std::string &backendType, std::string &driverInstall);
-    static bool ExtractAgentPrinterMetadata(const std::string &options, AgentPrinterMetadata &metadata);
     static std::string BuildUriMatchKey(const std::string &uri);
     static SourcePrinterIdentity BuildSourcePrinterIdentity(const std::string &uri);
+    static bool ParseSourcePrinterUri(const std::string &uri, SourcePrinterIdentity &source);
     static bool BuildAgentQueueIdentity(const std::string &uri, AgentQueueIdentity &queue);
-    static bool ExtractPrinterIpFromUri(const std::string &uri, std::string &printerIp);
+    int32_t AddPrinterViaAgent(
+        const std::string &printerName, const std::string &uri, AgentAddOptions addOptions);
     int32_t SubmitAddPrinter(std::unique_ptr<AddPrinterContext> context);
-    bool PrepareAgentAddSlot(
-        const std::string &printerName, const SourcePrinterIdentity &source, int32_t &result);
+    PrepareAddResult PrepareAgentAdd(
+        const std::string &printerName, const SourcePrinterIdentity &source);
     AddSlotResult TryReserveAddSlot(const SourcePrinterIdentity &source);
     void ReleaseAddSlot(const SourcePrinterIdentity &source);
-    bool CompleteAddSlotWithPending(AgentPrinterMetadata metadata);
+    bool CompleteAddSlotWithPending(PendingAgentPrinterMetadata metadata);
     bool IsSourcePrinterAdded(const SourcePrinterIdentity &source) const;
-    void ReleaseSource(const SourcePrinterIdentity &source);
+    void ReleaseTrackedSource(const SourcePrinterIdentity &source);
     void PruneExpiredPendingLocked(Clock::time_point now);
 
     static constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;
@@ -129,14 +152,13 @@ private:
     static constexpr std::chrono::seconds BACKEND_KEEPALIVE_INTERVAL { 60 };
 
     PrintSystemData &systemData_;
-    VendorManager &vendorManager_;
     PrintFwkAgentHost &host_;
     std::unique_ptr<PrintFwkAgentClientLoader> loader_;
     std::atomic<State> state_ { State::STOPPED };
     std::mutex pendingMutex_;
     std::unordered_map<std::string, PendingAgentPrinter> pendingPrinters_;
-    std::unordered_set<std::string> activeSourceKeys_;
-    size_t inFlightAddCount_ = 0;
+    std::unordered_set<std::string> inFlightSources_;
+    std::unordered_map<std::string, std::string> pendingQueueBySource_;
     NowProvider nowProvider_;
 
     // Agent backend keepalive management

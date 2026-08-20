@@ -46,8 +46,8 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterClaimsPendingAgentPrinterByDisco
     info->SetUri(uri);
     service->printSystemData_.AddPrinterToDiscovery(info);
 
-    service->agentManager_ = std::make_unique<PrintFwkAgentManager>(
-        service->printSystemData_, service->vendorManager, *service);
+    service->agentManager_ = std::make_shared<PrintFwkAgentManager>(
+        service->printSystemData_, *service);
     service->agentManager_->state_.store(PrintFwkAgentManager::State::RUNNING);
     const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
     const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
@@ -62,12 +62,14 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterClaimsPendingAgentPrinterByDisco
         },
         originalExpiry,
     };
+    service->agentManager_->pendingQueueBySource_[sourceKey] = uriKey;
 
     (void)service->ConnectPrinter(printerId);
 
     auto pending = service->agentManager_->pendingPrinters_.find(uriKey);
     ASSERT_NE(pending, service->agentManager_->pendingPrinters_.end());
     EXPECT_GT(pending->second.expiresAt, originalExpiry);
+    EXPECT_EQ(info->GetPrinterName(), "Agent Original");
 }
 #endif
 
