@@ -613,6 +613,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterHasActiveJo
     PrinterInfo updatedPrinter;
     service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter);
     EXPECT_EQ(updatedPrinter.GetUri(), originalUri);
+    EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_BUSY);
 }
 
 /**
@@ -641,6 +642,10 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_CanSyncPrinterInfo
 
     bool result = service->AddVendorPrinterToDiscovery(vendorName, info);
     EXPECT_TRUE(result);
+
+    PrinterInfo updatedPrinter;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
 /**
@@ -793,6 +798,72 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToInvalid_Shou
     ASSERT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
     EXPECT_EQ(printerInfo->GetOption(), "ipv4-option");
+}
+
+/**
+ * @tc.name: AddSinglePrinterInfo_HasActiveJob_ShouldSetBusy
+ * @tc.desc: Test AddSinglePrinterInfo when printer has active print job, status should be BUSY
+ * @tc.type: FUNC
+ * @tc.require: Re-adding a printer with active job to discovery should restore BUSY, not IDLE
+ */
+HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_HasActiveJob_ShouldSetBusy, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    ASSERT_NE(service, nullptr);
+
+    std::string extensionId = "com.test.ext";
+    std::string printerId = "TestPrinter_001";
+    std::string globalPrinterId = extensionId + ":" + printerId;
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalPrinterId);
+    addedPrinter.SetPrinterName("TestPrinter_001");
+    addedPrinter.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+
+    service->printerJobMap_[globalPrinterId]["job_001"] = true;
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName("TestPrinter_001");
+
+    EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
+
+    PrinterInfo updatedPrinter;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_BUSY);
+}
+
+/**
+ * @tc.name: AddSinglePrinterInfo_NoActiveJob_ShouldSetIdle
+ * @tc.desc: Test AddSinglePrinterInfo when printer has no active print job, status should be IDLE
+ * @tc.type: FUNC
+ * @tc.require: Re-adding a printer without active job to discovery should set IDLE
+ */
+HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_NoActiveJob_ShouldSetIdle, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    ASSERT_NE(service, nullptr);
+
+    std::string extensionId = "com.test.ext";
+    std::string printerId = "TestPrinter_001";
+    std::string globalPrinterId = extensionId + ":" + printerId;
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId(globalPrinterId);
+    addedPrinter.SetPrinterName("TestPrinter_001");
+    addedPrinter.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName("TestPrinter_001");
+
+    EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
+
+    PrinterInfo updatedPrinter;
+    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
 }  // namespace Print
