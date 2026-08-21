@@ -2423,6 +2423,8 @@ HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest, TestSize.Level1)
     EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
     param->printerId = "driver.ppd:";
     EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = "fwk.driver.printer.driver:";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
 }
 
 HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest_when_SA_is_null, TestSize.Level1)
@@ -2441,6 +2443,8 @@ HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest_when_SA_is_null, TestSize.L
     param->printerId = "com.ohos.spooler:";
     EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
     param->printerId = "driver.ppd:";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = "fwk.driver.printer.driver:";
     EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
 }
 
