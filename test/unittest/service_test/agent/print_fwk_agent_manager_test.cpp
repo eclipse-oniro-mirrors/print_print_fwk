@@ -42,6 +42,7 @@ constexpr std::chrono::seconds PENDING_TIMEOUT { 30 };
 constexpr std::chrono::seconds BEFORE_PENDING_TIMEOUT = PENDING_TIMEOUT - std::chrono::seconds { 1 };
 constexpr std::chrono::seconds PENDING_REPLACEMENT_DELAY { 10 };
 constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;
+constexpr int64_t EXPECTED_BACKEND_KEEPALIVE_DELAY_MS = 60'000;
 constexpr const char *TIMESTAMPED_QUEUE_NAME = "Office_Printer_1786320000";
 const std::string TIMESTAMPED_IPP_URI =
     std::string("ipp://10.0.0.2:631/printers/") + TIMESTAMPED_QUEUE_NAME;
@@ -372,7 +373,7 @@ TEST_F(PrintFwkAgentManagerTest, BackendLifecycleDelegatesToLoader)
     manager->StartAgentBackendKeepalive("job-id");
     ASSERT_EQ(delayedTasks.size(), 1u);
     EXPECT_EQ(delayedTasks.front().name, "AgentBackendKeepalive");
-    EXPECT_EQ(delayedTasks.front().delayMs, 60000);
+    EXPECT_EQ(delayedTasks.front().delayMs, EXPECTED_BACKEND_KEEPALIVE_DELAY_MS);
     EXPECT_EQ(postTaskCallCount, 1u);
     EXPECT_EQ(g_fakeLoaderState.backendKeepaliveTickCount, 0u);
 
