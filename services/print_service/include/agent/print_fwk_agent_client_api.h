@@ -14,7 +14,6 @@
 #ifndef PRINT_FWK_AGENT_CLIENT_API_H
 #define PRINT_FWK_AGENT_CLIENT_API_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -123,7 +122,6 @@ typedef struct {
     int32_t (*removePrinter)(PrintFwkAgentClient *self, const char *name, const char *backendType,
         PrintAgentRemoveDoneCb doneCb, void *userData);
     int32_t (*ensureBackendReady)(PrintFwkAgentClient *self);
-    bool (*isBackendOnline)(PrintFwkAgentClient *self);
     void (*backendKeepaliveTick)(PrintFwkAgentClient *self);
 } PrintFwkAgentClientApi;
 

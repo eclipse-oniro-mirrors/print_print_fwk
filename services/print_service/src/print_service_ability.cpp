@@ -391,7 +391,12 @@ int32_t PrintServiceAbility::InitServiceDependencies()
 void PrintServiceAbility::InitAgentManager()
 {
     auto &agentManager = PrintFwkAgentManager::GetInstance();
-    if (!agentManager.Init(printSystemData_, *this)) {
+    auto serviceHandler = serviceHandler_;
+    auto delayedTaskPoster = [serviceHandler](PrintFwkAgentManager::DelayedTask task,
+                                 const std::string &name, int64_t delayMs) {
+        return serviceHandler != nullptr && serviceHandler->PostTask(task, name, delayMs);
+    };
+    if (!agentManager.Init(printSystemData_, *this, std::move(delayedTaskPoster))) {
         PRINT_HILOGE("Agent manager initialization failed");
         return;
     }

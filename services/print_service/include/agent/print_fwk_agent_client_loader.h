@@ -39,7 +39,6 @@ public:
         PrintAgentRemoveDoneCb doneCb, void *userData);
 
     int32_t EnsureBackendReady();
-    bool IsBackendOnline();
     void BackendKeepaliveTick();
 
     void SetApiForTest(const PrintFwkAgentClientApi *api,

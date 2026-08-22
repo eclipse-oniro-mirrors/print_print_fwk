@@ -35,6 +35,7 @@
 #include <sstream>
 #include <iomanip>
 #include <unordered_map>
+#include <utility>
 #include <algorithm>
 
 #include "system_ability_definition.h"
@@ -61,6 +62,31 @@
 
 namespace OHOS::Print {
 using namespace std;
+
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+namespace {
+class AgentKeepaliveHandoffGuard {
+public:
+    explicit AgentKeepaliveHandoffGuard(std::string jobId) : jobId_(std::move(jobId)) {}
+
+    ~AgentKeepaliveHandoffGuard()
+    {
+        if (!handedOff_) {
+            PrintFwkAgentManager::GetInstance().StopAgentBackendKeepalive(jobId_);
+        }
+    }
+
+    void HandOff()
+    {
+        handedOff_ = true;
+    }
+
+private:
+    std::string jobId_;
+    bool handedOff_ = false;
+};
+} // namespace
+#endif
 
 const uint32_t THOUSAND_INCH = 1000;
 const uint32_t TIME_OUT = 2000;
@@ -1073,6 +1099,9 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
         HisysEventUtil::ReportPrintProcessFault(
             HisysEventUtil::BUILD_JOB_PARAMS_FAILED, PRINT_JOB_BLOCKED_UNKNOWN);
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+        PrintFwkAgentManager::GetInstance().StopAgentBackendKeepalive(jobInfo.GetJobId());
+#endif
         return;
     }
     DumpJobParameters(jobParams);
@@ -1784,6 +1813,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         PRINT_HILOGW("jobParams is null");
         return;
     }
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    AgentKeepaliveHandoffGuard keepaliveGuard(jobParams->serviceJobId);
+#endif
     PRINT_HILOGI("[Job Id: %{public}s] StartCupsJob start", jobParams->serviceJobId.c_str());
     http_t *http = nullptr;
     int num_options = 0;
@@ -1806,20 +1838,24 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     }
 #endif // WATERMARK_ENFORCING_ENABLE
 
-    HandleFilesAndStartMonitoring(jobParams, http, jobId);
+    if (HandleFilesAndStartMonitoring(jobParams, http, jobId)) {
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+        keepaliveGuard.HandOff();
+#endif
+    }
     PRINT_HILOGI("StartCupsJob end.");
 }
 
-void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, http_t *http, uint32_t jobId)
+bool PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, http_t *http, uint32_t jobId)
 {
     if (!jobParams) {
         PRINT_HILOGW("jobParams is null");
-        return;
+        return false;
     }
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}u", num_files);
     if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {
-        return;
+        return false;
     }
     http_t *monitorHttp = nullptr;
     monitorHttp = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1,
@@ -1828,7 +1864,7 @@ void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, ht
         PRINT_HILOGW("monitorHttp is null");
         HisysEventUtil::ReportPrintProcessFault(
             HisysEventUtil::MONITOR_HTTP_CREATE_FAILED, PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
-        return;
+        return false;
     }
     jobParams->cupsJobId = jobId;
     AddPrintCupsJobId(jobParams->serviceJobId, jobId);
@@ -1848,6 +1884,7 @@ void PrintCupsClient::HandleFilesAndStartMonitoring(JobParameters *jobParams, ht
             startMonitotThread.detach();
         }
     }
+    return true;
 }
 
 void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams)
@@ -1890,9 +1927,6 @@ void PrintCupsClient::StartMonitor()
         }
         for (auto monitorParams : jobMonitorList) {
             if (IfContinueToHandleJobState(monitorParams)) {
-#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-                PrintFwkAgentManager::GetInstance().OnCupsJobMonitorTick(monitorParams->serviceJobId);
-#endif
                 continue;
             }
             PRINT_HILOGI("delete a completed job");

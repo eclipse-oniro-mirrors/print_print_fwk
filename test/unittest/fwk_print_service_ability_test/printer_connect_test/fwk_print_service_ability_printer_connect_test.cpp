@@ -62,7 +62,6 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterClaimsPendingAgentPrinterByDisco
         },
         originalExpiry,
     };
-    agentManager.pendingQueueBySource_[sourceKey] = uriKey;
 
     (void)service->ConnectPrinter(printerId);
 

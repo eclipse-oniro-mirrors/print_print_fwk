@@ -101,7 +101,6 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
         },
         PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
     };
-    agentManager.pendingQueueBySource_[sourceKey] = uriKey;
 
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
@@ -124,7 +123,6 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
     EXPECT_EQ(option["agent"]["sourceUri"].asString(), sourceUri);
     EXPECT_EQ(option["agent"]["backendType"].asString(), "TEST_BACKEND");
     EXPECT_TRUE(agentManager.pendingPrinters_.empty());
-    EXPECT_TRUE(agentManager.pendingQueueBySource_.empty());
     agentManager.Shutdown();
 }
 #endif

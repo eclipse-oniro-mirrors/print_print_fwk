@@ -135,8 +135,7 @@ bool PrintFwkAgentClientLoader::ValidateApi(
     }
     if (api->create == nullptr || api->destroy == nullptr ||
         api->addPrinter == nullptr || api->removePrinter == nullptr ||
-        api->ensureBackendReady == nullptr || api->isBackendOnline == nullptr ||
-        api->backendKeepaliveTick == nullptr) {
+        api->ensureBackendReady == nullptr || api->backendKeepaliveTick == nullptr) {
         PRINT_HILOGE(
             "print_fwk_agent_client_loader: vtable contains null "
             "function pointer");
@@ -184,16 +183,6 @@ int32_t PrintFwkAgentClientLoader::EnsureBackendReady()
         return E_PRINT_RPC_FAILURE;
     }
     return MapError(api_->ensureBackendReady(handle_));
-}
-
-bool PrintFwkAgentClientLoader::IsBackendOnline()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsLoaded()) {
-        PRINT_HILOGE("client_loader IsBackendOnline: loader not loaded");
-        return false;
-    }
-    return api_->isBackendOnline(handle_);
 }
 
 void PrintFwkAgentClientLoader::BackendKeepaliveTick()

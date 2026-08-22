@@ -285,7 +285,7 @@ private:
     void BuildCupsOptionParamsByAdvJson(const Json::Value &jsonAdvOpt, StdStringMap &mapParams);
     void DumpCupsConflicts(const StdStringMap &mapParams, const std::string& typeChanged,
         const std::vector<std::string>& conflictTypes);
-    void HandleFilesAndStartMonitoring(JobParameters *jobParams, http_t *http, uint32_t jobId);
+    bool HandleFilesAndStartMonitoring(JobParameters *jobParams, http_t *http, uint32_t jobId);
 
 private:
     bool toCups_ = true;
