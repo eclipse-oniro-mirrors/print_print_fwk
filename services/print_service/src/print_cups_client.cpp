@@ -2483,12 +2483,8 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
     bool isRawPrinter = PrintUtil::startsWith(printerId, RAW_PPD_DRIVER);
     bool isIPPOverUsbPrinter = printerId.find(IPPOVERUSB_PREFIX) != std::string::npos;
-    if (isRawPrinter || printerId == VIRTUAL_PRINTER_ID) {
-        PRINT_HILOGI("printer is raw or virtual printer.");
-        return true;
-    }
-    if (isCustomDriver) {
-        PRINT_HILOGI("printer is custom driver printer.");
+    if (isRawPrinter || printerId == VIRTUAL_PRINTER_ID || isCustomDriver) {
+        PRINT_HILOGI("printer is raw, virtual or custom driver printer.");
         return true;
     }
 #ifdef HAVE_SMB_PRINTER
