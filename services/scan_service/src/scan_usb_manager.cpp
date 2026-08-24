@@ -27,6 +27,7 @@
 #include "scanner_info.h"
 #include "scan_service_utils.h"
 #include "scan_util.h"
+#include "v1_0/usb_types.h"
 
 namespace OHOS::Scan {
 using namespace OHOS;
