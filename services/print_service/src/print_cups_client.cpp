@@ -2477,14 +2477,18 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     PRINT_HILOGD("[Printer: %{public}s] CheckPrinterOnline", printerId.c_str());
     bool isUsbPrinter = monitorParams->printerUri.length() > USB_PRINTER.length() &&
                         monitorParams->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
-    bool isVendorPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr ||
-        strstr(printerId.c_str(), VENDOR_CUSTOM_DRIVER.c_str()) != nullptr;
+    bool isVendorPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
+    bool isCustomDriver = strstr(printerId.c_str(), VENDOR_CUSTOM_DRIVER.c_str()) != nullptr;
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
     bool isRawPrinter = PrintUtil::startsWith(printerId, RAW_PPD_DRIVER);
     bool isIPPOverUsbPrinter = printerId.find(IPPOVERUSB_PREFIX) != std::string::npos;
     if (isRawPrinter || printerId == VIRTUAL_PRINTER_ID) {
         PRINT_HILOGI("printer is raw or virtual printer.");
+        return true;
+    }
+    if (isCustomDriver) {
+        PRINT_HILOGI("printer is custom driver printer.");
         return true;
     }
 #ifdef HAVE_SMB_PRINTER

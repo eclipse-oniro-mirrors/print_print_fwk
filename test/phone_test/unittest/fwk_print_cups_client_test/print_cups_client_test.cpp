@@ -2424,7 +2424,7 @@ HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest, TestSize.Level1)
     param->printerId = "driver.ppd:";
     EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
     param->printerId = "fwk.driver.printer.driver:";
-    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    EXPECT_TRUE(printCupsClient.CheckPrinterOnline(param));
 }
 
 HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest_when_SA_is_null, TestSize.Level1)
@@ -2445,7 +2445,7 @@ HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest_when_SA_is_null, TestSize.L
     param->printerId = "driver.ppd:";
     EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
     param->printerId = "fwk.driver.printer.driver:";
-    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    EXPECT_TRUE(printCupsClient.CheckPrinterOnline(param));
 }
 
 HWTEST_F(PrintCupsClientTest, TestHandleProcessingState, TestSize.Level1)
