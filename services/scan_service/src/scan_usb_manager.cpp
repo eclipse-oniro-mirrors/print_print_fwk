@@ -183,7 +183,7 @@ bool ScanUsbManager::IsDeviceAvailable(const std::string &firstId, const std::st
         return false;
     }
     if (busNum < 0 || busNum > UINT8_MAX || devAddr < 0 || devAddr > UINT8_MAX) {
-        SCAN_HILOGE("busNum[%{public}d] or devAddr[%{public}d] out of uint8_t range", busNum, devAddr);
+        SCAN_HILOGE("busNum[%{public}d] or devAddr[%{private}d] out of uint8_t range", busNum, devAddr);
         return false;
     }
     UsbDevice usbDevice;
