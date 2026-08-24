@@ -510,5 +510,18 @@ HWTEST_F(PrinterCapabilityTest, GetCustomOptionKeys_HasCustomParamTypeNoKeyword_
     std::set<std::string> keys = capability.GetCustomOptionKeys();
     EXPECT_EQ(true, keys.empty());
 }
+
+HWTEST_F(PrinterCapabilityTest, SetSupportedMediaType_DuplicateValues_KeepFirstOccurrence, TestSize.Level2)
+{
+    PrinterCapability capability;
+    capability.SetSupportedMediaType(
+        {"stationery-coated", "stationery-coated", "stationery", "stationery-coated", "stationery"});
+
+    std::vector<std::string> mediaTypes;
+    capability.GetSupportedMediaType(mediaTypes);
+    ASSERT_EQ(mediaTypes.size(), 2);
+    EXPECT_EQ(mediaTypes[0], "stationery-coated");
+    EXPECT_EQ(mediaTypes[1], "stationery");
+}
 }  // namespace Print
 }  // namespace OHOS

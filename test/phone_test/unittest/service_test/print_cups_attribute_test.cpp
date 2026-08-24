@@ -59,6 +59,11 @@ const char *const ATTR_TEST_DOCUMENT_HANDLING_ARRAY[] = {"separate-uncollated", 
 const int ATTR_TEST_MEDIA_TYPE_COUNT = 3;
 const char *const ATTR_TEST_MEDIA_TYPE_ARRAY[ATTR_TEST_MEDIA_TYPE_COUNT] = {"envelope", "stationery", "transparency"};
 
+const int ATTR_TEST_DUPLICATE_MEDIA_TYPE_COUNT = 5;
+const int ATTR_TEST_UNIQUE_MEDIA_TYPE_COUNT = 2;
+const char *const ATTR_TEST_DUPLICATE_MEDIA_TYPE_ARRAY[ATTR_TEST_DUPLICATE_MEDIA_TYPE_COUNT] = {
+    "stationery-coated", "stationery-coated", "stationery-coated", "stationery", "stationery"};
+
 void TestAttrCount(const std::string &jsonString, int count)
 {
     Json::Value jsonArrayObject;
@@ -586,6 +591,40 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0019_NeedRename, TestSiz
     PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
         std::string mediaTypeString = printerCaps.GetPrinterAttrValue("media-type-supported");
         TestAttrCount(mediaTypeString, ATTR_TEST_MEDIA_TYPE_COUNT);
+    };
+    DoTest(preFunc, postFunc);
+}
+
+/**
+ * @tc.name: SetOptionAttribute_DuplicateMediaTypes_KeepFirstOccurrence
+ * @tc.desc: media-type-supported values are deduplicated consistently
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsAttributeTest, SetOptionAttribute_DuplicateMediaTypes_KeepFirstOccurrence, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddStrings(response,
+            IPP_TAG_PRINTER,
+            IPP_CONST_TAG(IPP_TAG_KEYWORD),
+            "media-type-supported",
+            ATTR_TEST_DUPLICATE_MEDIA_TYPE_COUNT,
+            nullptr,
+            ATTR_TEST_DUPLICATE_MEDIA_TYPE_ARRAY);
+    };
+    PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
+        std::vector<std::string> mediaTypes;
+        printerCaps.GetSupportedMediaType(mediaTypes);
+        ASSERT_EQ(mediaTypes.size(), ATTR_TEST_UNIQUE_MEDIA_TYPE_COUNT);
+        EXPECT_EQ(mediaTypes[0], "stationery-coated");
+        EXPECT_EQ(mediaTypes[1], "stationery");
+
+        std::string mediaTypeString = printerCaps.GetPrinterAttrValue("media-type-supported");
+        TestAttrCount(mediaTypeString, ATTR_TEST_UNIQUE_MEDIA_TYPE_COUNT);
+
+        Json::Value optionJson;
+        ASSERT_FALSE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
+        ASSERT_TRUE(optionJson["cupsOptions"]["media-type-supported"].isString());
+        EXPECT_EQ(optionJson["cupsOptions"]["media-type-supported"].asString(), mediaTypeString);
     };
     DoTest(preFunc, postFunc);
 }

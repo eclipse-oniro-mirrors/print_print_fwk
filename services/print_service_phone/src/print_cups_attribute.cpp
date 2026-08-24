@@ -460,8 +460,10 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
             if (attrString == nullptr) {
                 continue;
             }
-            jsonArray.append(attrString);
-            list.emplace_back(attrString);
+            AddToUniqueList<std::string>(list, attrString);
+        }
+        for (const auto &mediaType : list) {
+            jsonArray.append(mediaType);
         }
         supportTypes = PrintJsonUtil::WriteString(jsonArray);
     }
