@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -33,92 +34,165 @@ namespace OHOS::Print {
 
 class PrintSystemData;
 class PrinterInfo;
-class VendorManager;
 
 class PrintFwkAgentManager {
 public:
     using Clock = std::chrono::steady_clock;
     using NowProvider = std::function<Clock::time_point()>;
+    using DelayedTask = std::function<void()>;
+    using DelayedTaskPoster = std::function<bool(DelayedTask, const std::string &, int64_t)>;
 
-    PrintFwkAgentManager(PrintSystemData &systemData, VendorManager &vendorManager,
-        PrintFwkAgentHost &host, std::unique_ptr<PrintFwkAgentClientLoader> loader = nullptr,
+    static PrintFwkAgentManager &GetInstance();
+
+    bool Init(PrintSystemData &systemData, PrintFwkAgentHost &host, DelayedTaskPoster delayedTaskPoster,
+        std::unique_ptr<PrintFwkAgentClientLoader> loader = nullptr,
         NowProvider nowProvider = []() { return Clock::now(); });
-    ~PrintFwkAgentManager();
-
-    bool Init();
     void Shutdown();
     bool IsRunning() const;
 
-    bool IsAgentRouteRequested(const std::string &options) const;
     bool IsAgentRoutedPrinterByName(const std::string &printerName) const;
-    int32_t AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
+    std::optional<int32_t> TryAddPrinterViaAgent(const std::string &printerName, const std::string &uri,
         const std::string &options);
     int32_t DeletePrinterFromAgent(const std::string &printerName);
-    bool ClaimPendingAgentPrinter(const std::string &uri);
+    bool ClaimPendingAgentPrinter(PrinterInfo &printerInfo);
     bool AttachPendingAgentPrinter(PrinterInfo &printerInfo);
+    void ConfirmAgentPrinterPersisted(const PrinterInfo &printerInfo);
+
+    // Agent backend lifecycle management
+    int32_t EnsureBackendReadyForPersistedPrinters();
+    void PreparePrintJob(const std::string &jobId, const std::string &printerId);
+    void OnPrintJobStateChanged(const std::string &jobId, uint32_t state, uint32_t subState);
+    void StopAgentBackendKeepalive(const std::string &jobId);
 
 private:
+    PrintFwkAgentManager() = default;
+    ~PrintFwkAgentManager();
+    PrintFwkAgentManager(const PrintFwkAgentManager &) = delete;
+    PrintFwkAgentManager &operator=(const PrintFwkAgentManager &) = delete;
+
     enum class State {
         STOPPED,
         RUNNING,
         STOPPING,
     };
 
-    struct PendingAgentPrinter {
-        std::string agentIppUri;
-        std::string agentQueueName;
-        std::string displayPrinterName;
-        std::string sourceUri;
-        std::string sourceKey;
+    // Keeps both the original URI for persistence and a canonical key for duplicate checks.
+    struct SourcePrinterIdentity {
+        std::string uri;
+        std::string matchKey;
+    };
+
+    // The actual timestamped CUPS queue returned by the Agent.
+    struct AgentQueueIdentity {
+        std::string uri;
+        std::string name;
+    };
+
+    struct AgentAddOptions {
         std::string backendType;
+        std::string driverInstall;
+    };
+
+    struct PendingAgentPrinterMetadata {
+        SourcePrinterIdentity source;
+        AgentQueueIdentity queue;
+        std::string displayName;
+        std::string backendType;
+    };
+
+    struct PersistedAgentPrinterMetadata {
+        SourcePrinterIdentity source;
+        // Exact Agent queue name used by RemovePrinter; it must not be reconstructed.
+        std::string queueName;
+        std::string backendType;
+    };
+
+    struct PendingAgentPrinter {
+        PendingAgentPrinterMetadata metadata;
         Clock::time_point expiresAt;
+        bool attached = false;
+    };
+
+    struct InFlightAgentPrinter {
+        std::string displayName;
+        std::string stage;
     };
 
     enum class AddSlotResult {
         RESERVED,
-        DUPLICATE_SOURCE,
+        IN_FLIGHT,
+        PENDING_DISCOVERY,
         CAPACITY_REACHED,
+        NOT_RUNNING,
     };
 
+    enum class RoutedAddOptionsResult {
+        NOT_AGENT_ROUTE,
+        INVALID_OPTIONS,
+        VALID_OPTIONS,
+    };
+
+    class AgentPrinterOptionCodec;
+    struct AddReservation;
+    struct PrepareAddResult;
     struct AddPrinterContext;
     struct RemovePrinterContext;
 
     static void HandleAddDone(int32_t errCode, const PrintAddPrinterResult *result, void *userData);
     static void HandleAddProgress(int32_t progress, void *userData);
     static void HandleRemoveDone(int32_t errCode, void *userData);
+    static void ProcessAddResult(
+        int32_t errCode, const PrintAddPrinterResult *result, AddPrinterContext &context);
 
-    static bool IsAgentRouted(const std::string &options);
-    static bool ExtractAgentAddOptions(
-        const std::string &options, std::string &backendType, std::string &driverInstall);
-    static bool ExtractAgentPrinterMetadata(
-        const std::string &options, std::string &queueName, std::string &backendType,
-        std::string &sourceUri);
     static std::string BuildUriMatchKey(const std::string &uri);
-    static bool ExtractQueueNameFromIppUri(const std::string &uri, std::string &queueName);
-    static bool ExtractPrinterIpFromUri(const std::string &uri, std::string &printerIp);
+    static SourcePrinterIdentity BuildSourcePrinterIdentity(const std::string &uri);
+    static bool ParseSourcePrinterUri(const std::string &uri, SourcePrinterIdentity &source);
+    static bool BuildAgentQueueIdentity(const std::string &uri, AgentQueueIdentity &queue);
+    std::string FindPendingPrinterKeyLocked(const std::string &uri) const;
+    std::string FindPendingPrinterKeyBySourceLocked(const std::string &sourceKey) const;
+    int32_t AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
+        const std::string &options);
+    int32_t AddPrinterViaAgent(
+        const std::string &printerName, const std::string &uri, AgentAddOptions addOptions);
     int32_t SubmitAddPrinter(std::unique_ptr<AddPrinterContext> context);
-    AddSlotResult TryReserveAddSlot(const std::string &sourceKey);
-    void ReleaseAddSlot(const std::string &sourceKey);
-    bool CompleteAddSlotWithPending(
-        const std::string &queueUri, const std::string &queueName, const std::string &displayPrinterName,
-        const std::string &sourceUri, const std::string &sourceKey, const std::string &backendType);
-    bool IsSourceUriAdded(const std::string &sourceKey) const;
-    void ReleaseSourceKey(const std::string &sourceKey);
+    PrepareAddResult PrepareAgentAdd(
+        const std::string &printerName, const SourcePrinterIdentity &source);
+    AddSlotResult TryReserveAddSlot(const SourcePrinterIdentity &source,
+        const std::string &printerName, PrinterInfo &currentInfo);
+    void ReleaseAddSlot(const SourcePrinterIdentity &source);
+    bool UpdateInFlightProgress(const SourcePrinterIdentity &source, const std::string &stage);
+    bool CompleteAddSlotWithPending(PendingAgentPrinterMetadata metadata);
+    bool IsAgentPrinter(const std::string &printerId) const;
+    bool HasPersistedAgentPrinters() const;
+    bool IsSourcePrinterAdded(const SourcePrinterIdentity &source) const;
+    int32_t EnsureAgentBackendReady();
+    void ReleaseTrackedSource(const SourcePrinterIdentity &source, const std::string &queueName = "");
     void PruneExpiredPendingLocked(Clock::time_point now);
+    void StartAgentBackendKeepalive(const std::string &jobId);
+    void ScheduleBackendKeepaliveTask(uint64_t generation);
+    void HandleBackendKeepaliveTask(uint64_t generation);
 
     static constexpr size_t MAX_PENDING_AGENT_PRINTERS = 32;
     static constexpr std::chrono::seconds PENDING_TIMEOUT { 30 };
+    static constexpr std::chrono::seconds BACKEND_KEEPALIVE_INTERVAL { 60 };
 
-    PrintSystemData &systemData_;
-    VendorManager &vendorManager_;
-    PrintFwkAgentHost &host_;
+    PrintSystemData *systemData_ = nullptr;
+    PrintFwkAgentHost *host_ = nullptr;
     std::unique_ptr<PrintFwkAgentClientLoader> loader_;
     std::atomic<State> state_ { State::STOPPED };
+    std::mutex lifecycleMutex_;
+    // Protects the following two add-state containers.
     std::mutex pendingMutex_;
-    std::unordered_map<std::string, PendingAgentPrinter> pendingPrinters_;
-    std::unordered_set<std::string> activeSourceKeys_;
-    size_t inFlightAddCount_ = 0;
-    NowProvider nowProvider_;
+    std::unordered_map<std::string, PendingAgentPrinter> pendingPrinters_; // queue key -> pending discovery
+    std::unordered_map<std::string, InFlightAgentPrinter> inFlightPrinters_; // source key -> active add
+    NowProvider nowProvider_ = []() { return Clock::now(); };
+
+    // Agent backend keepalive management
+    std::mutex keepaliveMutex_;
+    std::unordered_set<std::string> keepaliveJobIds_;
+    DelayedTaskPoster delayedTaskPoster_;
+    uint64_t keepaliveTaskGeneration_ = 0;
+    bool keepaliveTaskScheduled_ = false;
 };
 
 } // namespace OHOS::Print

@@ -75,6 +75,9 @@ std::shared_ptr<PrintServiceAbility> PrintServiceAbilityTest::CreateMockService(
 
 void PrintServiceAbilityTest::TearDown(void)
 {
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    PrintFwkAgentManager::GetInstance().Shutdown();
+#endif
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
     auto& monitor = PrintCallerAppMonitor::GetInstance();
     monitor.delayUnload_.store(true);

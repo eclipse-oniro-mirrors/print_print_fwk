@@ -86,17 +86,19 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
     auto service = PrintServiceAbilityTest::CreateService();
     const std::string printerId = "fwk.driver.bsuni:mdns-printer";
     const std::string uri = "ipp://10.0.0.2:631/printers/Office_Printer_1786320000";
-    service->agentManager_ = std::make_unique<PrintFwkAgentManager>(
-        service->printSystemData_, service->vendorManager, *service);
+    auto &agentManager = PrintFwkAgentManager::GetInstance();
+    agentManager.Shutdown();
+    agentManager.state_.store(PrintFwkAgentManager::State::RUNNING);
     const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
     const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
-    service->agentManager_->pendingPrinters_[PrintFwkAgentManager::BuildUriMatchKey(uri)] = {
-        uri,
-        "Office_Printer_1786320000",
-        "Agent Original",
-        sourceUri,
-        sourceKey,
-        "TEST_BACKEND",
+    const std::string uriKey = PrintFwkAgentManager::BuildUriMatchKey(uri);
+    agentManager.pendingPrinters_[uriKey] = {
+        {
+            { sourceUri, sourceKey },
+            { uri, "Office_Printer_1786320000" },
+            "Agent Original",
+            "TEST_BACKEND",
+        },
         PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
     };
 
@@ -120,7 +122,8 @@ HWTEST_F(PrintServiceAbilityTest, OnPrinterAddedToCupsAttachesPendingAgentSource
     EXPECT_EQ(option["agent"]["queueUri"].asString(), uri);
     EXPECT_EQ(option["agent"]["sourceUri"].asString(), sourceUri);
     EXPECT_EQ(option["agent"]["backendType"].asString(), "TEST_BACKEND");
-    EXPECT_TRUE(service->agentManager_->pendingPrinters_.empty());
+    EXPECT_TRUE(agentManager.pendingPrinters_.empty());
+    agentManager.Shutdown();
 }
 #endif
 

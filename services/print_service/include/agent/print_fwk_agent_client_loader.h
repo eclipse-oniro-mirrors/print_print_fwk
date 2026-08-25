@@ -38,6 +38,9 @@ public:
     int32_t RemovePrinter(const std::string &name, const std::string &backendType,
         PrintAgentRemoveDoneCb doneCb, void *userData);
 
+    int32_t EnsureBackendReady();
+    void BackendKeepaliveTick();
+
     void SetApiForTest(const PrintFwkAgentClientApi *api,
         PrintFwkAgentClient *client);
     static int32_t MapError(int32_t e);

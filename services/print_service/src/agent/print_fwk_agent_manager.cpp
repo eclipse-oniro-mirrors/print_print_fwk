@@ -15,6 +15,7 @@
 
 #include "agent/print_fwk_agent_manager.h"
 
+#include <arpa/inet.h>
 #include <atomic>
 #include <cups/http.h>
 
@@ -23,21 +24,70 @@
 #include <string>
 #include <utility>
 
-#include "print_constant.h"
-#include "print_cups_client.h"
 #include "agent/print_fwk_agent_client_api.h"
+#include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
 #include "print_system_data.h"
 #include "print_util.h"
 #include "printer_info.h"
-#include "singleton.h"
-#include "vendor_manager.h"
 
 namespace OHOS::Print {
 namespace {
 constexpr int IPP_DEFAULT_PORT = 631;
 constexpr const char *CUPS_PRINTER_RESOURCE_PREFIX = "/printers/";
+constexpr const char *AGENT_BACKEND_KEEPALIVE_TASK = "AgentBackendKeepalive";
+
+struct ParsedIppUri {
+    std::string scheme;
+    std::string username;
+    std::string host;
+    int port = IPP_DEFAULT_PORT;
+    std::string resource;
+};
+
+bool ParseIppUri(const std::string &uri, ParsedIppUri &parsed)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
+    if (status != HTTP_URI_STATUS_OK ||
+        (std::string(scheme) != "ipp" && std::string(scheme) != "ipps")) {
+        parsed = {};
+        return false;
+    }
+    parsed = { scheme, username, host, port > 0 ? port : IPP_DEFAULT_PORT, resource };
+    return true;
+}
+
+std::string BuildParsedUriMatchKey(const ParsedIppUri &parsed, size_t uriLength)
+{
+    std::string key;
+    key.reserve(uriLength + sizeof(parsed.port));
+    auto appendPart = [&key](const std::string &part) {
+        key.append(part);
+        key.push_back('\0');
+    };
+    appendPart(parsed.scheme);
+    appendPart(parsed.username);
+    appendPart(parsed.host);
+    key.append(std::to_string(parsed.port));
+    key.push_back('\0');
+    key.append(parsed.resource);
+    return key;
+}
+
+bool IsIpAddress(const std::string &host)
+{
+    struct in_addr addr4 = {};
+    struct in6_addr addr6 = {};
+    return inet_pton(AF_INET, host.c_str(), &addr4) == 1 ||
+        inet_pton(AF_INET6, host.c_str(), &addr6) == 1;
+}
 
 const char *MapAgentErrorMessage(int32_t errCode)
 {
@@ -64,6 +114,10 @@ const char *MapAgentErrorMessage(int32_t errCode)
             return "Driver install busy";
         case PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT:
             return "Operation timeout";
+        case PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED:
+            return "Backend Stopped";
+        case PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED:
+            return "Backend resume failed";
         default:
             return "Unknown error";
     }
@@ -95,6 +149,7 @@ PrinterInfo BuildAgentFailureInfo(
     return BuildAgentProgressInfo(printerName, stage, "FAILED", errCode);
 }
 
+// Supports callbacks that may complete either during the loader call or asynchronously afterwards.
 enum class AsyncContextOwnership {
     SUBMITTING,
     ASYNC,
@@ -114,13 +169,155 @@ void FinishAsyncContext(Context *context)
 
 } // namespace
 
+class PrintFwkAgentManager::AgentPrinterOptionCodec {
+public:
+    static bool IsAgentRouted(const std::string &options)
+    {
+        Json::Value root;
+        std::string driver;
+        return PrintJsonUtil::Parse(options, root) &&
+            PrintJsonUtil::FindJsonStringMember(root, "driver", driver) &&
+            driver == PRINT_DRIVER_AGENT;
+    }
+
+    static bool ParseAddOptions(const std::string &options, AgentAddOptions &addOptions)
+    {
+        Json::Value root;
+        if (!PrintJsonUtil::Parse(options, root)) {
+            return false;
+        }
+        return ParseAddOptions(root, addOptions);
+    }
+
+    static RoutedAddOptionsResult ParseRoutedAddOptions(
+        const std::string &options, AgentAddOptions &addOptions)
+    {
+        Json::Value root;
+        std::string driver;
+        if (!PrintJsonUtil::Parse(options, root) ||
+            !PrintJsonUtil::FindJsonStringMember(root, "driver", driver) ||
+            driver != PRINT_DRIVER_AGENT) {
+            return RoutedAddOptionsResult::NOT_AGENT_ROUTE;
+        }
+        return ParseAddOptions(root, addOptions) ? RoutedAddOptionsResult::VALID_OPTIONS :
+            RoutedAddOptionsResult::INVALID_OPTIONS;
+    }
+
+    static bool ParseAddOptions(const Json::Value &root, AgentAddOptions &addOptions)
+    {
+        if (!root.isMember("agentBackendType") || !root["agentBackendType"].isString()) {
+            return false;
+        }
+        addOptions = {};
+        addOptions.backendType = root["agentBackendType"].asString();
+        if (addOptions.backendType.empty()) {
+            return false;
+        }
+        if (!root.isMember("agentDriverInstall")) {
+            return true;
+        }
+        if (!root["agentDriverInstall"].isObject()) {
+            return false;
+        }
+        addOptions.driverInstall = PrintJsonUtil::WriteString(root["agentDriverInstall"]);
+        return true;
+    }
+
+    static bool ParsePersistedMetadata(
+        const std::string &options, PersistedAgentPrinterMetadata &metadata)
+    {
+        Json::Value option;
+        if (!ParsePersistedOption(options, option)) {
+            return false;
+        }
+        metadata = {};
+        metadata.queueName = option["agent"]["queueName"].asString();
+        metadata.backendType = option["agent"]["backendType"].asString();
+        if (option["agent"].isMember("sourceUri") && option["agent"]["sourceUri"].isString()) {
+            metadata.source = PrintFwkAgentManager::BuildSourcePrinterIdentity(
+                option["agent"]["sourceUri"].asString());
+        }
+        return !metadata.queueName.empty() && !metadata.backendType.empty();
+    }
+
+    static bool ParseSourceIdentity(const std::string &options, SourcePrinterIdentity &source)
+    {
+        Json::Value option;
+        if (!PrintJsonUtil::Parse(options, option) ||
+            !option.isMember("driver") || !option["driver"].isString() ||
+            option["driver"].asString() != PRINT_DRIVER_AGENT ||
+            !option.isMember("agent") || !option["agent"].isObject() ||
+            !option["agent"].isMember("sourceUri") || !option["agent"]["sourceUri"].isString()) {
+            return false;
+        }
+        source = PrintFwkAgentManager::BuildSourcePrinterIdentity(
+            option["agent"]["sourceUri"].asString());
+        return !source.uri.empty();
+    }
+
+    static void ApplyPendingMetadata(const PendingAgentPrinterMetadata &metadata, PrinterInfo &printerInfo)
+    {
+        Json::Value option(Json::objectValue);
+        Json::Value parsedOption;
+        if (PrintJsonUtil::Parse(printerInfo.GetOption(), parsedOption) && parsedOption.isObject()) {
+            option = parsedOption;
+        }
+        option["driver"] = PRINT_DRIVER_AGENT;
+        option["agent"]["queueName"] = metadata.queue.name;
+        option["agent"]["uri"] = metadata.queue.uri;
+        option["agent"]["queueUri"] = metadata.queue.uri;
+        option["agent"]["sourceUri"] = metadata.source.uri;
+        option["agent"]["backendType"] = metadata.backendType;
+        printerInfo.SetOption(PrintJsonUtil::WriteString(option));
+    }
+
+private:
+    static bool ParsePersistedOption(const std::string &options, Json::Value &option)
+    {
+        return PrintJsonUtil::Parse(options, option) &&
+            option.isMember("driver") && option["driver"].isString() &&
+            option["driver"].asString() == PRINT_DRIVER_AGENT &&
+            option.isMember("agent") && option["agent"].isObject() &&
+            option["agent"].isMember("queueName") && option["agent"]["queueName"].isString() &&
+            option["agent"].isMember("backendType") && option["agent"]["backendType"].isString();
+    }
+};
+
+struct PrintFwkAgentManager::AddReservation {
+    AddReservation(PrintFwkAgentManager &owner, SourcePrinterIdentity sourceIdentity)
+        : manager(&owner), source(std::move(sourceIdentity))
+    {}
+
+    ~AddReservation()
+    {
+        if (active && manager != nullptr) {
+            manager->ReleaseAddSlot(source);
+        }
+    }
+
+    void Commit()
+    {
+        active = false;
+    }
+
+    PrintFwkAgentManager *manager = nullptr;
+    SourcePrinterIdentity source;
+    // True while the destructor must release the in-flight source.
+    bool active = true;
+};
+
+struct PrintFwkAgentManager::PrepareAddResult {
+    int32_t code = E_PRINT_NONE;
+    std::unique_ptr<AddReservation> reservation;
+};
+
 struct PrintFwkAgentManager::AddPrinterContext {
     PrintFwkAgentManager *manager = nullptr;
     std::string printerName;
-    std::string sourceUri;
-    std::string sourceKey;
+    SourcePrinterIdentity source;
     std::string driverInstall;
     std::string backendType;
+    std::unique_ptr<AddReservation> reservation;
     std::atomic<AsyncContextOwnership> ownership { AsyncContextOwnership::SUBMITTING };
 };
 
@@ -128,23 +325,40 @@ struct PrintFwkAgentManager::RemovePrinterContext {
     PrintFwkAgentManager *manager = nullptr;
     std::string finalPrinterId;
     std::string finalPrinterName;
-    std::string sourceKey;
+    SourcePrinterIdentity source;
     std::atomic<AsyncContextOwnership> ownership { AsyncContextOwnership::SUBMITTING };
 };
 
-PrintFwkAgentManager::PrintFwkAgentManager(PrintSystemData &systemData, VendorManager &vendorManager,
-    PrintFwkAgentHost &host, std::unique_ptr<PrintFwkAgentClientLoader> loader, NowProvider nowProvider)
-    : systemData_(systemData), vendorManager_(vendorManager), host_(host), loader_(std::move(loader)),
-      nowProvider_(std::move(nowProvider))
-{}
+PrintFwkAgentManager &PrintFwkAgentManager::GetInstance()
+{
+    static PrintFwkAgentManager instance;
+    return instance;
+}
 
 PrintFwkAgentManager::~PrintFwkAgentManager()
 {
     Shutdown();
 }
 
-bool PrintFwkAgentManager::Init()
+bool PrintFwkAgentManager::Init(PrintSystemData &systemData, PrintFwkAgentHost &host,
+    DelayedTaskPoster delayedTaskPoster, std::unique_ptr<PrintFwkAgentClientLoader> loader,
+    NowProvider nowProvider)
 {
+    std::lock_guard<std::mutex> lock(lifecycleMutex_);
+    if (state_.load() == State::RUNNING) {
+        return true;
+    }
+    if (!delayedTaskPoster) {
+        PRINT_HILOGE("agent manager Init: delayed task poster unavailable");
+        return false;
+    }
+    systemData_ = &systemData;
+    host_ = &host;
+    nowProvider_ = std::move(nowProvider);
+    delayedTaskPoster_ = std::move(delayedTaskPoster);
+    if (loader != nullptr) {
+        loader_ = std::move(loader);
+    }
     if (loader_ == nullptr) {
         loader_ = std::make_unique<PrintFwkAgentClientLoader>();
     }
@@ -159,16 +373,23 @@ bool PrintFwkAgentManager::Init()
 
 void PrintFwkAgentManager::Shutdown()
 {
-    State expected = State::RUNNING;
-    if (!state_.compare_exchange_strong(expected, State::STOPPING)) {
+    std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+    if (state_.load() == State::STOPPING) {
         return;
     }
+    state_.store(State::STOPPING);
     {
         std::lock_guard<std::mutex> lock(pendingMutex_);
         pendingPrinters_.clear();
-        activeSourceKeys_.clear();
-        inFlightAddCount_ = 0;
+        inFlightPrinters_.clear();
     }
+    {
+        std::lock_guard<std::mutex> lock(keepaliveMutex_);
+        keepaliveJobIds_.clear();
+        ++keepaliveTaskGeneration_;
+        keepaliveTaskScheduled_ = false;
+    }
+    delayedTaskPoster_ = {};
     if (loader_ != nullptr) {
         loader_->Unload();
     }
@@ -184,7 +405,6 @@ void PrintFwkAgentManager::PruneExpiredPendingLocked(Clock::time_point now)
 {
     for (auto it = pendingPrinters_.begin(); it != pendingPrinters_.end();) {
         if (it->second.expiresAt <= now) {
-            activeSourceKeys_.erase(it->second.sourceKey);
             it = pendingPrinters_.erase(it);
         } else {
             ++it;
@@ -192,80 +412,130 @@ void PrintFwkAgentManager::PruneExpiredPendingLocked(Clock::time_point now)
     }
 }
 
-PrintFwkAgentManager::AddSlotResult PrintFwkAgentManager::TryReserveAddSlot(const std::string &sourceKey)
+PrintFwkAgentManager::AddSlotResult PrintFwkAgentManager::TryReserveAddSlot(
+    const SourcePrinterIdentity &source, const std::string &printerName, PrinterInfo &currentInfo)
 {
     const auto now = nowProvider_();
     std::lock_guard<std::mutex> lock(pendingMutex_);
     PruneExpiredPendingLocked(now);
-    if (activeSourceKeys_.find(sourceKey) != activeSourceKeys_.end()) {
-        return AddSlotResult::DUPLICATE_SOURCE;
+    if (state_.load() != State::RUNNING) {
+        return AddSlotResult::NOT_RUNNING;
     }
-    if (state_.load() != State::RUNNING ||
-        inFlightAddCount_ + pendingPrinters_.size() >= MAX_PENDING_AGENT_PRINTERS) {
+    auto inFlight = inFlightPrinters_.find(source.matchKey);
+    if (inFlight != inFlightPrinters_.end()) {
+        currentInfo = BuildAgentProgressInfo(
+            inFlight->second.displayName, inFlight->second.stage, "RUNNING");
+        return AddSlotResult::IN_FLIGHT;
+    }
+    const std::string pendingKey = FindPendingPrinterKeyBySourceLocked(source.matchKey);
+    auto pending = pendingPrinters_.find(pendingKey);
+    if (pending != pendingPrinters_.end()) {
+        currentInfo = BuildAgentProgressInfo(
+            pending->second.metadata.displayName, "DONE", "PENDING_DISCOVERY");
+        currentInfo.SetUri(pending->second.metadata.queue.uri);
+        return AddSlotResult::PENDING_DISCOVERY;
+    }
+    if (inFlightPrinters_.size() + pendingPrinters_.size() >= MAX_PENDING_AGENT_PRINTERS) {
         return AddSlotResult::CAPACITY_REACHED;
     }
-    ++inFlightAddCount_;
-    activeSourceKeys_.insert(sourceKey);
+    inFlightPrinters_[source.matchKey] = { printerName, "ENV_INIT" };
     return AddSlotResult::RESERVED;
 }
 
-void PrintFwkAgentManager::ReleaseAddSlot(const std::string &sourceKey)
+void PrintFwkAgentManager::ReleaseAddSlot(const SourcePrinterIdentity &source)
 {
     std::lock_guard<std::mutex> lock(pendingMutex_);
-    if (inFlightAddCount_ > 0) {
-        --inFlightAddCount_;
-    }
-    activeSourceKeys_.erase(sourceKey);
+    inFlightPrinters_.erase(source.matchKey);
 }
 
-bool PrintFwkAgentManager::CompleteAddSlotWithPending(
-    const std::string &queueUri, const std::string &queueName, const std::string &displayPrinterName,
-    const std::string &sourceUri, const std::string &sourceKey, const std::string &backendType)
+bool PrintFwkAgentManager::UpdateInFlightProgress(
+    const SourcePrinterIdentity &source, const std::string &stage)
 {
-    const std::string uriKey = BuildUriMatchKey(queueUri);
+    std::lock_guard<std::mutex> lock(pendingMutex_);
+    auto inFlight = inFlightPrinters_.find(source.matchKey);
+    if (inFlight == inFlightPrinters_.end()) {
+        return false;
+    }
+    inFlight->second.stage = stage;
+    return true;
+}
+
+bool PrintFwkAgentManager::CompleteAddSlotWithPending(PendingAgentPrinterMetadata metadata)
+{
+    const std::string uriKey = BuildUriMatchKey(metadata.queue.uri);
     const auto now = nowProvider_();
     std::lock_guard<std::mutex> lock(pendingMutex_);
     PruneExpiredPendingLocked(now);
-    if (state_.load() != State::RUNNING || inFlightAddCount_ == 0) {
-        activeSourceKeys_.erase(sourceKey);
+    if (state_.load() != State::RUNNING ||
+        inFlightPrinters_.erase(metadata.source.matchKey) == 0) {
         return false;
     }
-    --inFlightAddCount_;
-    auto existing = pendingPrinters_.find(uriKey);
-    if (existing != pendingPrinters_.end() && existing->second.sourceKey != sourceKey) {
-        activeSourceKeys_.erase(existing->second.sourceKey);
+    const std::string sameSourceKey = FindPendingPrinterKeyBySourceLocked(metadata.source.matchKey);
+    if (!sameSourceKey.empty() && sameSourceKey != uriKey) {
+        pendingPrinters_.erase(sameSourceKey);
     }
     pendingPrinters_[uriKey] = {
-        queueUri,
-        queueName,
-        displayPrinterName,
-        sourceUri,
-        sourceKey,
-        backendType,
+        std::move(metadata),
         now + PENDING_TIMEOUT,
+        false,
     };
     return true;
 }
 
-bool PrintFwkAgentManager::ClaimPendingAgentPrinter(const std::string &uri)
+std::string PrintFwkAgentManager::FindPendingPrinterKeyLocked(const std::string &uri) const
 {
+    const std::string exactKey = BuildUriMatchKey(uri);
+    if (pendingPrinters_.find(exactKey) != pendingPrinters_.end()) {
+        return exactKey;
+    }
+
+    AgentQueueIdentity discoveredQueue;
+    if (!BuildAgentQueueIdentity(uri, discoveredQueue)) {
+        return {};
+    }
+
+    std::string matchedKey;
+    for (const auto &[key, pending] : pendingPrinters_) {
+        if (pending.metadata.queue.name != discoveredQueue.name) {
+            continue;
+        }
+        if (!matchedKey.empty()) {
+            PRINT_HILOGW("Agent pending queue name is ambiguous");
+            return {};
+        }
+        matchedKey = key;
+    }
+    return matchedKey;
+}
+
+std::string PrintFwkAgentManager::FindPendingPrinterKeyBySourceLocked(const std::string &sourceKey) const
+{
+    for (const auto &[key, pending] : pendingPrinters_) {
+        if (pending.metadata.source.matchKey == sourceKey) {
+            return key;
+        }
+    }
+    return {};
+}
+
+bool PrintFwkAgentManager::ClaimPendingAgentPrinter(PrinterInfo &printerInfo)
+{
+    const std::string uri = printerInfo.GetUri();
     if (uri.empty()) {
         return false;
     }
-    const std::string uriKey = BuildUriMatchKey(uri);
     const auto now = nowProvider_();
-    std::string displayPrinterName;
     {
         std::lock_guard<std::mutex> lock(pendingMutex_);
         PruneExpiredPendingLocked(now);
+        const std::string uriKey = FindPendingPrinterKeyLocked(uri);
         auto it = pendingPrinters_.find(uriKey);
-        if (it == pendingPrinters_.end()) {
+        if (it == pendingPrinters_.end() || it->second.attached) {
             return false;
         }
         it->second.expiresAt = now + PENDING_TIMEOUT;
-        displayPrinterName = it->second.displayPrinterName;
+        printerInfo.SetPrinterName(it->second.metadata.displayName);
     }
-    vendorManager_.SetConnectingPrinterName(displayPrinterName);
     return true;
 }
 
@@ -275,243 +545,311 @@ bool PrintFwkAgentManager::AttachPendingAgentPrinter(PrinterInfo &printerInfo)
     if (uri.empty()) {
         return false;
     }
-    const std::string uriKey = BuildUriMatchKey(uri);
-
     PendingAgentPrinter pending;
     {
         const auto now = nowProvider_();
         std::lock_guard<std::mutex> lock(pendingMutex_);
         PruneExpiredPendingLocked(now);
+        const std::string uriKey = FindPendingPrinterKeyLocked(uri);
         auto it = pendingPrinters_.find(uriKey);
-        if (it == pendingPrinters_.end()) {
+        if (it == pendingPrinters_.end() || it->second.attached) {
             return false;
         }
         pending = it->second;
-        pendingPrinters_.erase(it);
+        it->second.attached = true;
     }
-
-    Json::Value option(Json::objectValue);
-    Json::Value parsedOption;
-    if (PrintJsonUtil::Parse(printerInfo.GetOption(), parsedOption) && parsedOption.isObject()) {
-        option = parsedOption;
-    }
-    option["driver"] = PRINT_DRIVER_AGENT;
-    option["agent"]["queueName"] = pending.agentQueueName;
-    option["agent"]["uri"] = pending.agentIppUri;
-    option["agent"]["queueUri"] = pending.agentIppUri;
-    option["agent"]["sourceUri"] = pending.sourceUri;
-    option["agent"]["backendType"] = pending.backendType;
-    printerInfo.SetOption(PrintJsonUtil::WriteString(option));
+    AgentPrinterOptionCodec::ApplyPendingMetadata(pending.metadata, printerInfo);
     return true;
 }
 
-bool PrintFwkAgentManager::IsAgentRouted(const std::string &options)
+void PrintFwkAgentManager::ConfirmAgentPrinterPersisted(const PrinterInfo &printerInfo)
 {
-    if (options.empty()) {
-        return false;
+    PersistedAgentPrinterMetadata metadata;
+    if (!AgentPrinterOptionCodec::ParsePersistedMetadata(printerInfo.GetOption(), metadata)) {
+        return;
     }
-    Json::Value root;
-    if (!PrintJsonUtil::Parse(options, root)) {
-        return false;
-    }
-    std::string driver;
-    if (!PrintJsonUtil::FindJsonStringMember(root, "driver", driver)) {
-        return false;
-    }
-    return driver == PRINT_DRIVER_AGENT;
+    ReleaseTrackedSource(metadata.source, metadata.queueName);
 }
 
-bool PrintFwkAgentManager::IsAgentRouteRequested(const std::string &options) const
+int32_t PrintFwkAgentManager::EnsureAgentBackendReady()
 {
-    return host_.IsCallerSystemApp() && IsAgentRouted(options);
+    std::lock_guard<std::mutex> lock(lifecycleMutex_);
+    if (state_.load() != State::RUNNING || loader_ == nullptr) {
+        return E_PRINT_RPC_FAILURE;
+    }
+    return loader_->EnsureBackendReady();
 }
 
-bool PrintFwkAgentManager::IsAgentRoutedPrinterByName(const std::string &printerName) const
+bool PrintFwkAgentManager::IsAgentPrinter(const std::string &printerId) const
 {
-    if (!host_.IsCallerSystemApp()) {
+    if (systemData_ == nullptr) {
         return false;
     }
-    std::string standardizedName = PrintUtil::StandardizePrinterName(printerName);
-    std::string printerId = systemData_.QueryPrinterIdByStandardizeName(standardizedName);
-    if (printerId.empty()) {
-        return false;
-    }
-    PrinterInfo printerInfo;
-    return systemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
-        IsAgentRouted(printerInfo.GetOption());
+    PrinterInfo info;
+    return systemData_->QueryAddedPrinterInfoByPrinterId(printerId, info) &&
+        AgentPrinterOptionCodec::IsAgentRouted(info.GetOption());
 }
 
-bool PrintFwkAgentManager::ExtractAgentAddOptions(
-    const std::string &options, std::string &backendType, std::string &driverInstall)
+bool PrintFwkAgentManager::HasPersistedAgentPrinters() const
 {
-    Json::Value root;
-    if (!PrintJsonUtil::Parse(options, root) ||
-        !root.isMember("agentBackendType") ||
-        !root["agentBackendType"].isString()) {
+    if (systemData_ == nullptr) {
         return false;
     }
-    backendType = root["agentBackendType"].asString();
-    if (backendType.empty()) {
-        return false;
-    }
-    driverInstall.clear();
-    if (!root.isMember("agentDriverInstall")) {
-        return true;
-    }
-    if (!root["agentDriverInstall"].isObject()) {
-        return false;
-    }
-    driverInstall = PrintJsonUtil::WriteString(root["agentDriverInstall"]);
-    return true;
-}
-
-bool PrintFwkAgentManager::ExtractAgentPrinterMetadata(
-    const std::string &options, std::string &queueName, std::string &backendType,
-    std::string &sourceUri)
-{
-    Json::Value option;
-    if (!PrintJsonUtil::Parse(options, option) ||
-        !option.isMember("driver") ||
-        !option["driver"].isString() ||
-        option["driver"].asString() != PRINT_DRIVER_AGENT ||
-        !option.isMember("agent") ||
-        !option["agent"].isObject() ||
-        !option["agent"].isMember("queueName") ||
-        !option["agent"]["queueName"].isString() ||
-        !option["agent"].isMember("backendType") ||
-        !option["agent"]["backendType"].isString()) {
-        return false;
-    }
-    queueName = option["agent"]["queueName"].asString();
-    backendType = option["agent"]["backendType"].asString();
-    sourceUri.clear();
-    if (option["agent"].isMember("sourceUri") && option["agent"]["sourceUri"].isString()) {
-        sourceUri = option["agent"]["sourceUri"].asString();
-    }
-    return !queueName.empty() && !backendType.empty();
-}
-
-std::string PrintFwkAgentManager::BuildUriMatchKey(const std::string &uri)
-{
-    char scheme[HTTP_MAX_URI] = {0};
-    char username[HTTP_MAX_URI] = {0};
-    char host[HTTP_MAX_URI] = {0};
-    char resource[HTTP_MAX_URI] = {0};
-    int port = 0;
-    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
-        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    if (status != HTTP_URI_STATUS_OK ||
-        (std::string(scheme) != "ipp" && std::string(scheme) != "ipps")) {
-        return uri;
-    }
-    if (port <= 0) {
-        port = IPP_DEFAULT_PORT;
-    }
-
-    std::string key;
-    key.reserve(uri.size() + sizeof(port));
-    // Keep URI components exact while using unambiguous separators in the internal-only map key.
-    auto appendPart = [&key](const char *part) {
-        key.append(part);
-        key.push_back('\0');
-    };
-    appendPart(scheme);
-    appendPart(username);
-    appendPart(host);
-    key.append(std::to_string(port));
-    key.push_back('\0');
-    key.append(resource);
-    return key;
-}
-
-bool PrintFwkAgentManager::ExtractQueueNameFromIppUri(const std::string &uri, std::string &queueName)
-{
-    char scheme[HTTP_MAX_URI] = {0};
-    char username[HTTP_MAX_URI] = {0};
-    char host[HTTP_MAX_URI] = {0};
-    char resource[HTTP_MAX_URI] = {0};
-    int port = 0;
-    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
-        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    const std::string resourcePath = resource;
-    const size_t prefixLength = std::char_traits<char>::length(CUPS_PRINTER_RESOURCE_PREFIX);
-    if (status != HTTP_URI_STATUS_OK ||
-        (std::string(scheme) != "ipp" && std::string(scheme) != "ipps") ||
-        resourcePath.compare(0, prefixLength, CUPS_PRINTER_RESOURCE_PREFIX) != 0 ||
-        resourcePath.size() <= prefixLength ||
-        resourcePath.find('/', prefixLength) != std::string::npos) {
-        queueName.clear();
-        return false;
-    }
-    queueName = resourcePath.substr(prefixLength);
-    return true;
-}
-
-bool PrintFwkAgentManager::IsSourceUriAdded(const std::string &sourceKey) const
-{
-    for (const auto &printerId : systemData_.QueryAddedPrinterIdList()) {
-        PrinterInfo printerInfo;
-        if (!systemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
-            continue;
-        }
-        Json::Value option;
-        if (!PrintJsonUtil::Parse(printerInfo.GetOption(), option) ||
-            !option.isMember("driver") ||
-            !option["driver"].isString() ||
-            option["driver"].asString() != PRINT_DRIVER_AGENT ||
-            !option.isMember("agent") ||
-            !option["agent"].isObject() ||
-            !option["agent"].isMember("sourceUri") ||
-            !option["agent"]["sourceUri"].isString()) {
-            continue;
-        }
-        const std::string sourceUri = option["agent"]["sourceUri"].asString();
-        if (!sourceUri.empty() && BuildUriMatchKey(sourceUri) == sourceKey) {
+    for (const auto &printerId : systemData_->QueryAddedPrinterIdList()) {
+        if (IsAgentPrinter(printerId)) {
             return true;
         }
     }
     return false;
 }
 
-void PrintFwkAgentManager::ReleaseSourceKey(const std::string &sourceKey)
+int32_t PrintFwkAgentManager::EnsureBackendReadyForPersistedPrinters()
 {
-    if (sourceKey.empty()) {
+    if (!IsRunning() || !HasPersistedAgentPrinters()) {
+        return E_PRINT_NONE;
+    }
+    PRINT_HILOGI("Agent printers found, ensuring backend ready on startup.");
+    int32_t code = EnsureAgentBackendReady();
+    if (code != E_PRINT_NONE) {
+        PRINT_HILOGW("Agent backend not ready on startup, code=%{public}d", code);
+    }
+    return code;
+}
+
+void PrintFwkAgentManager::PreparePrintJob(const std::string &jobId, const std::string &printerId)
+{
+    if (!IsAgentPrinter(printerId) || !IsRunning()) {
+        return;
+    }
+    int32_t code = EnsureAgentBackendReady();
+    if (code != E_PRINT_NONE) {
+        PRINT_HILOGW("PreparePrintJob: backend wakeup failed, continue printing, code=%{public}d", code);
+    }
+    StartAgentBackendKeepalive(jobId);
+}
+
+void PrintFwkAgentManager::OnPrintJobStateChanged(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    if (state == PRINT_JOB_COMPLETED ||
+        (state == PRINT_JOB_BLOCKED && subState == PRINT_JOB_BLOCKED_INTERRUPT)) {
+        StopAgentBackendKeepalive(jobId);
+    }
+}
+
+void PrintFwkAgentManager::StartAgentBackendKeepalive(const std::string &jobId)
+{
+    uint64_t generation = 0;
+    {
+        std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+        if (state_.load() != State::RUNNING) {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(keepaliveMutex_);
+        keepaliveJobIds_.insert(jobId);
+        if (keepaliveTaskScheduled_) {
+            PRINT_HILOGI("StartAgentBackendKeepalive: jobId=%{public}s", jobId.c_str());
+            return;
+        }
+        generation = ++keepaliveTaskGeneration_;
+        keepaliveTaskScheduled_ = true;
+    }
+    PRINT_HILOGI("StartAgentBackendKeepalive: jobId=%{public}s", jobId.c_str());
+    ScheduleBackendKeepaliveTask(generation);
+}
+
+void PrintFwkAgentManager::StopAgentBackendKeepalive(const std::string &jobId)
+{
+    std::lock_guard<std::mutex> lock(keepaliveMutex_);
+    if (keepaliveJobIds_.erase(jobId) != 0) {
+        if (keepaliveJobIds_.empty()) {
+            ++keepaliveTaskGeneration_;
+            keepaliveTaskScheduled_ = false;
+        }
+        PRINT_HILOGI("StopAgentBackendKeepalive: jobId=%{public}s", jobId.c_str());
+    }
+}
+
+void PrintFwkAgentManager::ScheduleBackendKeepaliveTask(uint64_t generation)
+{
+    DelayedTaskPoster delayedTaskPoster;
+    {
+        std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+        std::lock_guard<std::mutex> keepaliveLock(keepaliveMutex_);
+        if (state_.load() != State::RUNNING || generation != keepaliveTaskGeneration_ ||
+            !keepaliveTaskScheduled_ || keepaliveJobIds_.empty()) {
+            return;
+        }
+        delayedTaskPoster = delayedTaskPoster_;
+    }
+
+    const int64_t delayMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        BACKEND_KEEPALIVE_INTERVAL).count();
+    bool posted = delayedTaskPoster && delayedTaskPoster(
+        [this, generation]() { HandleBackendKeepaliveTask(generation); },
+        AGENT_BACKEND_KEEPALIVE_TASK, delayMs);
+    if (posted) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+    std::lock_guard<std::mutex> keepaliveLock(keepaliveMutex_);
+    if (generation == keepaliveTaskGeneration_) {
+        keepaliveTaskScheduled_ = false;
+    }
+    PRINT_HILOGW("ScheduleBackendKeepaliveTask: post task failed");
+}
+
+void PrintFwkAgentManager::HandleBackendKeepaliveTask(uint64_t generation)
+{
+    {
+        std::lock_guard<std::mutex> lifecycleLock(lifecycleMutex_);
+        std::lock_guard<std::mutex> keepaliveLock(keepaliveMutex_);
+        if (state_.load() != State::RUNNING || loader_ == nullptr ||
+            generation != keepaliveTaskGeneration_ || !keepaliveTaskScheduled_ || keepaliveJobIds_.empty()) {
+            return;
+        }
+        loader_->BackendKeepaliveTick();
+    }
+    ScheduleBackendKeepaliveTask(generation);
+}
+
+std::optional<int32_t> PrintFwkAgentManager::TryAddPrinterViaAgent(
+    const std::string &printerName, const std::string &uri, const std::string &options)
+{
+    if (host_ == nullptr || !host_->IsCallerSystemApp()) {
+        return std::nullopt;
+    }
+    AgentAddOptions addOptions;
+    RoutedAddOptionsResult parseResult = AgentPrinterOptionCodec::ParseRoutedAddOptions(options, addOptions);
+    if (parseResult == RoutedAddOptionsResult::NOT_AGENT_ROUTE) {
+        return std::nullopt;
+    }
+    if (!IsRunning()) {
+        return E_PRINT_RPC_FAILURE;
+    }
+    if (parseResult == RoutedAddOptionsResult::INVALID_OPTIONS) {
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    return AddPrinterViaAgent(printerName, uri, std::move(addOptions));
+}
+
+bool PrintFwkAgentManager::IsAgentRoutedPrinterByName(const std::string &printerName) const
+{
+    if (host_ == nullptr || systemData_ == nullptr || !host_->IsCallerSystemApp()) {
+        return false;
+    }
+    std::string standardizedName = PrintUtil::StandardizePrinterName(printerName);
+    std::string printerId = systemData_->QueryPrinterIdByStandardizeName(standardizedName);
+    if (printerId.empty()) {
+        return false;
+    }
+    PrinterInfo printerInfo;
+    return systemData_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+        AgentPrinterOptionCodec::IsAgentRouted(printerInfo.GetOption());
+}
+
+std::string PrintFwkAgentManager::BuildUriMatchKey(const std::string &uri)
+{
+    ParsedIppUri parsed;
+    if (!ParseIppUri(uri, parsed)) {
+        return uri;
+    }
+    return BuildParsedUriMatchKey(parsed, uri.size());
+}
+
+PrintFwkAgentManager::SourcePrinterIdentity PrintFwkAgentManager::BuildSourcePrinterIdentity(
+    const std::string &uri)
+{
+    return { uri, BuildUriMatchKey(uri) };
+}
+
+bool PrintFwkAgentManager::ParseSourcePrinterUri(const std::string &uri, SourcePrinterIdentity &source)
+{
+    ParsedIppUri parsed;
+    if (!ParseIppUri(uri, parsed) || !IsIpAddress(parsed.host)) {
+        source = {};
+        PRINT_HILOGW("AddPrinterViaAgent invalid source uri");
+        return false;
+    }
+    source = { uri, BuildParsedUriMatchKey(parsed, uri.size()) };
+    return true;
+}
+
+bool PrintFwkAgentManager::BuildAgentQueueIdentity(const std::string &uri, AgentQueueIdentity &queue)
+{
+    ParsedIppUri parsed;
+    if (!ParseIppUri(uri, parsed)) {
+        queue = {};
+        return false;
+    }
+    const std::string &resourcePath = parsed.resource;
+    const size_t prefixLength = std::char_traits<char>::length(CUPS_PRINTER_RESOURCE_PREFIX);
+    if (resourcePath.compare(0, prefixLength, CUPS_PRINTER_RESOURCE_PREFIX) != 0 ||
+        resourcePath.size() <= prefixLength ||
+        resourcePath.find('/', prefixLength) != std::string::npos) {
+        queue = {};
+        return false;
+    }
+    queue = { uri, resourcePath.substr(prefixLength) };
+    return true;
+}
+
+bool PrintFwkAgentManager::IsSourcePrinterAdded(const SourcePrinterIdentity &source) const
+{
+    if (systemData_ == nullptr) {
+        return false;
+    }
+    for (const auto &printerId : systemData_->QueryAddedPrinterIdList()) {
+        PrinterInfo printerInfo;
+        if (!systemData_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+            continue;
+        }
+        SourcePrinterIdentity persistedSource;
+        if (!AgentPrinterOptionCodec::ParseSourceIdentity(printerInfo.GetOption(), persistedSource)) {
+            continue;
+        }
+        if (persistedSource.matchKey == source.matchKey) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void PrintFwkAgentManager::ReleaseTrackedSource(
+    const SourcePrinterIdentity &source, const std::string &queueName)
+{
+    if (source.matchKey.empty()) {
         return;
     }
     std::lock_guard<std::mutex> lock(pendingMutex_);
-    activeSourceKeys_.erase(sourceKey);
-}
-
-bool PrintFwkAgentManager::ExtractPrinterIpFromUri(const std::string &uri, std::string &printerIp)
-{
-    char scheme[HTTP_MAX_URI] = {0};
-    char username[HTTP_MAX_URI] = {0};
-    char host[HTTP_MAX_URI] = {0};
-    char resource[HTTP_MAX_URI] = {0};
-    int port = 0;
-    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
-        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    printerIp = host;
-    if (status != HTTP_URI_STATUS_OK ||
-        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
-        PRINT_HILOGW("AddPrinterViaAgent invalid uri, ret=%{public}u", status);
-        return false;
+    const std::string pendingKey = FindPendingPrinterKeyBySourceLocked(source.matchKey);
+    auto pending = pendingPrinters_.find(pendingKey);
+    if (pending == pendingPrinters_.end()) {
+        return;
     }
-    return true;
+    if (!queueName.empty() && pending->second.metadata.queue.name != queueName) {
+        return;
+    }
+    pendingPrinters_.erase(pending);
 }
 
 int32_t PrintFwkAgentManager::SubmitAddPrinter(std::unique_ptr<AddPrinterContext> context)
 {
     PrintAddPrinterParam param = {};
-    param.uri = context->sourceUri.c_str();
+    param.uri = context->source.uri.c_str();
     param.name = context->printerName.c_str();
     param.driverInstall = context->driverInstall.empty() ? nullptr : context->driverInstall.c_str();
     param.backendType = context->backendType.c_str();
 
-    int32_t ret = loader_->AddPrinter(param, HandleAddDone, HandleAddProgress, context.get());
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    {
+        std::lock_guard<std::mutex> lock(lifecycleMutex_);
+        if (state_.load() == State::RUNNING && loader_ != nullptr) {
+            ret = loader_->AddPrinter(param, HandleAddDone, HandleAddProgress, context.get());
+        }
+    }
     if (ret != E_PRINT_NONE) {
-        ReleaseAddSlot(context->sourceKey);
-        vendorManager_.ClearConnectingPrinter();
         return ret;
     }
 
@@ -522,54 +860,81 @@ int32_t PrintFwkAgentManager::SubmitAddPrinter(std::unique_ptr<AddPrinterContext
     return E_PRINT_NONE;
 }
 
-int32_t PrintFwkAgentManager::AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
-    const std::string &options)
+PrintFwkAgentManager::PrepareAddResult PrintFwkAgentManager::PrepareAgentAdd(
+    const std::string &printerName, const SourcePrinterIdentity &source)
 {
-    if (!IsRunning() || loader_ == nullptr) {
-        return E_PRINT_RPC_FAILURE;
-    }
-
-    std::string backendType;
-    std::string driverInstall;
-    if (!ExtractAgentAddOptions(options, backendType, driverInstall)) {
-        return E_PRINT_INVALID_PARAMETER;
-    }
-
-    std::string printerIp;
-    if (!ExtractPrinterIpFromUri(uri, printerIp)) {
-        return E_PRINT_INVALID_PRINTER;
-    }
-
-    const std::string sourceKey = BuildUriMatchKey(uri);
-    if (IsSourceUriAdded(sourceKey)) {
+    PrepareAddResult result;
+    if (IsSourcePrinterAdded(source)) {
         PrinterInfo info = BuildAgentFailureInfo(
             printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
-        host_.NotifyPrinterInfoChanged(info);
-        return E_PRINT_NONE;
+        host_->NotifyPrinterInfoChanged(info);
+        return result;
     }
-
-    const AddSlotResult slotResult = TryReserveAddSlot(sourceKey);
-    if (slotResult == AddSlotResult::DUPLICATE_SOURCE) {
-        PrinterInfo info = BuildAgentFailureInfo(
-            printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
-        host_.NotifyPrinterInfoChanged(info);
-        return E_PRINT_NONE;
+    PrinterInfo currentInfo;
+    const AddSlotResult slotResult = TryReserveAddSlot(source, printerName, currentInfo);
+    if (slotResult == AddSlotResult::IN_FLIGHT ||
+        slotResult == AddSlotResult::PENDING_DISCOVERY) {
+        host_->NotifyPrinterInfoChanged(currentInfo);
+        return result;
     }
     if (slotResult == AddSlotResult::CAPACITY_REACHED) {
         PRINT_HILOGW("AddPrinterViaAgent pending capacity reached");
-        return E_PRINT_SERVER_FAILURE;
+        result.code = E_PRINT_SERVER_FAILURE;
+        return result;
+    }
+    if (slotResult == AddSlotResult::NOT_RUNNING) {
+        result.code = E_PRINT_RPC_FAILURE;
+        return result;
+    }
+    result.reservation = std::make_unique<AddReservation>(*this, source);
+    if (IsSourcePrinterAdded(source)) {
+        PrinterInfo info = BuildAgentFailureInfo(
+            printerName, "ENV_INIT", PRINT_FWK_AGENT_CLIENT_ERR_PRINTER_EXISTS);
+        host_->NotifyPrinterInfoChanged(info);
+        result.reservation.reset();
+        return result;
+    }
+    result.code = EnsureAgentBackendReady();
+    if (result.code != E_PRINT_NONE) {
+        PRINT_HILOGE("AddPrinterViaAgent: agent backend not ready, code=%{public}d", result.code);
+    }
+    return result;
+}
+
+int32_t PrintFwkAgentManager::AddPrinterViaAgent(const std::string &printerName, const std::string &uri,
+    const std::string &options)
+{
+    if (!IsRunning()) {
+        return E_PRINT_RPC_FAILURE;
     }
 
-    vendorManager_.SetConnectingPrinterName(printerName);
-    vendorManager_.SetConnectingPrinter(IP_AUTO, printerIp);
+    AgentAddOptions addOptions;
+    if (!AgentPrinterOptionCodec::ParseAddOptions(options, addOptions)) {
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    return AddPrinterViaAgent(printerName, uri, std::move(addOptions));
+}
+
+int32_t PrintFwkAgentManager::AddPrinterViaAgent(
+    const std::string &printerName, const std::string &uri, AgentAddOptions addOptions)
+{
+    SourcePrinterIdentity source;
+    if (!ParseSourcePrinterUri(uri, source)) {
+        return E_PRINT_INVALID_PRINTER;
+    }
+
+    PrepareAddResult prepared = PrepareAgentAdd(printerName, source);
+    if (prepared.reservation == nullptr || prepared.code != E_PRINT_NONE) {
+        return prepared.code;
+    }
 
     auto context = std::make_unique<AddPrinterContext>();
     context->manager = this;
     context->printerName = printerName;
-    context->sourceUri = uri;
-    context->sourceKey = sourceKey;
-    context->driverInstall = driverInstall;
-    context->backendType = backendType;
+    context->source = std::move(source);
+    context->driverInstall = std::move(addOptions.driverInstall);
+    context->backendType = std::move(addOptions.backendType);
+    context->reservation = std::move(prepared.reservation);
     return SubmitAddPrinter(std::move(context));
 }
 
@@ -600,8 +965,47 @@ void PrintFwkAgentManager::HandleAddProgress(int32_t progress, void *userData)
         default:
             break;
     }
+    if (!context->manager->UpdateInFlightProgress(context->source, stage)) {
+        return;
+    }
     PrinterInfo info = BuildAgentProgressInfo(context->printerName, stage, "RUNNING");
-    context->manager->host_.NotifyPrinterInfoChanged(info);
+    context->manager->host_->NotifyPrinterInfoChanged(info);
+}
+
+void PrintFwkAgentManager::ProcessAddResult(
+    int32_t errCode, const PrintAddPrinterResult *result, AddPrinterContext &context)
+{
+    auto *manager = context.manager;
+    if (manager == nullptr) {
+        PRINT_HILOGW("AddPrinter done without manager");
+        return;
+    }
+    if (!manager->IsRunning()) {
+        return;
+    }
+    if (errCode != PRINT_FWK_AGENT_CLIENT_OK) {
+        PrinterInfo info = BuildAgentFailureInfo(context.printerName, "ENV_INIT", errCode);
+        manager->host_->NotifyPrinterInfoChanged(info);
+        return;
+    }
+    std::string ippUri = result != nullptr && result->ippUri != nullptr ? result->ippUri : "";
+    AgentQueueIdentity queue;
+    if (ippUri.empty() || !BuildAgentQueueIdentity(ippUri, queue)) {
+        PrinterInfo info = BuildAgentFailureInfo(
+            context.printerName, "DONE", PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
+        manager->host_->NotifyPrinterInfoChanged(info);
+        return;
+    }
+    PendingAgentPrinterMetadata metadata {
+        context.source, std::move(queue), context.printerName, context.backendType
+    };
+    if (!manager->CompleteAddSlotWithPending(std::move(metadata))) {
+        return;
+    }
+    context.reservation->Commit();
+    PrinterInfo info = BuildAgentProgressInfo(context.printerName, "DONE", "PENDING_DISCOVERY");
+    info.SetUri(ippUri);
+    manager->host_->NotifyPrinterInfoChanged(info);
 }
 
 void PrintFwkAgentManager::HandleAddDone(int32_t errCode, const PrintAddPrinterResult *result, void *userData)
@@ -611,52 +1015,22 @@ void PrintFwkAgentManager::HandleAddDone(int32_t errCode, const PrintAddPrinterR
         return;
     }
 
-    auto *manager = context->manager;
-    if (manager == nullptr) {
-        PRINT_HILOGW("AddPrinter done without manager");
-    } else if (!manager->IsRunning()) {
-        manager->ReleaseAddSlot(context->sourceKey);
-    } else if (errCode != PRINT_FWK_AGENT_CLIENT_OK) {
-        manager->ReleaseAddSlot(context->sourceKey);
-        PrinterInfo info = BuildAgentFailureInfo(context->printerName, "ENV_INIT", errCode);
-        manager->host_.NotifyPrinterInfoChanged(info);
-    } else {
-        std::string ippUri = result != nullptr && result->ippUri != nullptr ? result->ippUri : "";
-        std::string queueName;
-        if (ippUri.empty() || !ExtractQueueNameFromIppUri(ippUri, queueName)) {
-            manager->ReleaseAddSlot(context->sourceKey);
-            PrinterInfo info = BuildAgentFailureInfo(
-                context->printerName, "DONE", PRINT_FWK_AGENT_CLIENT_ERR_SERVER);
-            manager->host_.NotifyPrinterInfoChanged(info);
-        } else if (manager->CompleteAddSlotWithPending(
-            ippUri, queueName, context->printerName, context->sourceUri, context->sourceKey,
-            context->backendType)) {
-            PrinterInfo info = BuildAgentProgressInfo(context->printerName, "DONE", "PENDING_DISCOVERY");
-            info.SetUri(ippUri);
-            manager->host_.NotifyPrinterInfoChanged(info);
-        }
-    }
-
-    if (manager != nullptr) {
-        manager->vendorManager_.ClearConnectingPrinter();
-    }
+    ProcessAddResult(errCode, result, *context);
     FinishAsyncContext(context);
 }
 
 int32_t PrintFwkAgentManager::DeletePrinterFromAgent(const std::string &printerName)
 {
-    if (!IsRunning() || loader_ == nullptr) {
+    if (!IsRunning() || systemData_ == nullptr) {
         return E_PRINT_RPC_FAILURE;
     }
 
     std::string standardizedName = PrintUtil::StandardizePrinterName(printerName);
-    std::string printerId = systemData_.QueryPrinterIdByStandardizeName(standardizedName);
+    std::string printerId = systemData_->QueryPrinterIdByStandardizeName(standardizedName);
     PrinterInfo printerInfo;
-    std::string agentQueueName;
-    std::string backendType;
-    std::string sourceUri;
-    if (printerId.empty() || !systemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) ||
-        !ExtractAgentPrinterMetadata(printerInfo.GetOption(), agentQueueName, backendType, sourceUri)) {
+    PersistedAgentPrinterMetadata metadata;
+    if (printerId.empty() || !systemData_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) ||
+        !AgentPrinterOptionCodec::ParsePersistedMetadata(printerInfo.GetOption(), metadata)) {
         PRINT_HILOGW("DeletePrinterFromAgent missing persisted agent metadata");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -665,9 +1039,15 @@ int32_t PrintFwkAgentManager::DeletePrinterFromAgent(const std::string &printerN
     context->manager = this;
     context->finalPrinterName = printerInfo.GetPrinterName();
     context->finalPrinterId = printerId;
-    context->sourceKey = sourceUri.empty() ? "" : BuildUriMatchKey(sourceUri);
-    int32_t ret = loader_->RemovePrinter(
-        agentQueueName, backendType, HandleRemoveDone, context.get());
+    context->source = std::move(metadata.source);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    {
+        std::lock_guard<std::mutex> lock(lifecycleMutex_);
+        if (state_.load() == State::RUNNING && loader_ != nullptr) {
+            ret = loader_->RemovePrinter(
+                metadata.queueName, metadata.backendType, HandleRemoveDone, context.get());
+        }
+    }
     if (ret != E_PRINT_NONE) {
         return ret;
     }
@@ -690,8 +1070,8 @@ void PrintFwkAgentManager::HandleRemoveDone(int32_t errCode, void *userData)
     const bool canContinue = errCode == PRINT_FWK_AGENT_CLIENT_OK ||
         errCode == PRINT_FWK_AGENT_CLIENT_ERR_NOT_FOUND;
     if (manager != nullptr && manager->IsRunning() && canContinue) {
-        manager->host_.CommitAgentPrinterDeleted(context->finalPrinterId, context->finalPrinterName);
-        manager->ReleaseSourceKey(context->sourceKey);
+        manager->host_->CommitAgentPrinterDeleted(context->finalPrinterId, context->finalPrinterName);
+        manager->ReleaseTrackedSource(context->source);
     }
 
     FinishAsyncContext(context);

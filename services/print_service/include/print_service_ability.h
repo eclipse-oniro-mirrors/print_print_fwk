@@ -188,7 +188,9 @@ protected:
 private:
     int32_t Init();
     int32_t InitServiceDependencies();
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
     void InitAgentManager();
+#endif
     bool PublishService(ServiceRunningState previousState);
     void RefreshPrintersAfterInit();
     void InitServiceHandler();
@@ -442,10 +444,6 @@ private:
     uint32_t enterLowPowerCount_;
     bool isLowPowerMode_;
     VendorManager vendorManager;
-#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    std::unique_ptr<PrintFwkAgentManager> agentManager_;
-#endif
-
     std::map<int32_t, PrintCallerAppInfo> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;

@@ -134,7 +134,8 @@ bool PrintFwkAgentClientLoader::ValidateApi(
         return false;
     }
     if (api->create == nullptr || api->destroy == nullptr ||
-        api->addPrinter == nullptr || api->removePrinter == nullptr) {
+        api->addPrinter == nullptr || api->removePrinter == nullptr ||
+        api->ensureBackendReady == nullptr || api->backendKeepaliveTick == nullptr) {
         PRINT_HILOGE(
             "print_fwk_agent_client_loader: vtable contains null "
             "function pointer");
@@ -174,6 +175,26 @@ int32_t PrintFwkAgentClientLoader::RemovePrinter(const std::string &name,
     return mapped;
 }
 
+int32_t PrintFwkAgentClientLoader::EnsureBackendReady()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!IsLoaded()) {
+        PRINT_HILOGE("client_loader EnsureBackendReady: loader not loaded");
+        return E_PRINT_RPC_FAILURE;
+    }
+    return MapError(api_->ensureBackendReady(handle_));
+}
+
+void PrintFwkAgentClientLoader::BackendKeepaliveTick()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!IsLoaded()) {
+        PRINT_HILOGE("client_loader BackendKeepaliveTick: loader not loaded");
+        return;
+    }
+    api_->backendKeepaliveTick(handle_);
+}
+
 void PrintFwkAgentClientLoader::SetApiForTest(const PrintFwkAgentClientApi *api,
     PrintFwkAgentClient *client)
 {
@@ -208,6 +229,9 @@ int32_t PrintFwkAgentClientLoader::MapError(int32_t e)
         case PRINT_FWK_AGENT_CLIENT_ERR_INSTALL_BUSY:
             return E_PRINT_SERVER_FAILURE;
         case PRINT_FWK_AGENT_CLIENT_ERR_TIMEOUT:
+            return E_PRINT_RPC_FAILURE;
+        case PRINT_FWK_AGENT_CLIENT_BACKEND_STOPPED:
+        case PRINT_FWK_AGENT_CLIENT_BACKEND_RESUME_FAILED:
             return E_PRINT_RPC_FAILURE;
         default:
             return E_PRINT_RPC_FAILURE;
