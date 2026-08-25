@@ -113,6 +113,9 @@ private:
 
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
+    #ifdef EDM_PRINT_POLICY_ENABLE
+    std::shared_ptr<PrintEventSubscriber> edmPolicyEventListener;
+    #endif
     bool isSubscribeCommonEvent = false;
     static std::mutex connectionListLock_;
     std::map<ExtensionAbilityType, std::list<sptr<PrintAbilityConnection>>> extConnectionMap_;

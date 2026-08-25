@@ -107,12 +107,14 @@ public:
     static void ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson);
     static std::string GetBundleNameForUid(const int uid);
     static std::string GetPrintJobId();
+    static std::string GetCurrentTimestampMillis();
     static std::string GetEventTypeWithToken(int32_t userId, int64_t pid, const std::string &type);
     static std::string GetEventType(const std::string &type);
     static std::string GetBundleName(const std::string &printerId);
     static bool CheckUserIdInEventType(const std::string &type, int32_t callerUserId);
     static bool IsUsbPrinter(const std::string &printerId);
     static std::string ExtractHostFromUri(const std::string &uri);
+    static std::string ExtractIpFromUri(const std::string &uri);
 
     static std::string MakeExtensionStateKey(int32_t userId, const std::string &bundleName);
     static int32_t GetUserIdFromKey(const std::string &key);

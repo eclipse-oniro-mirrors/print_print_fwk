@@ -23,6 +23,11 @@
 #include "remote_printer_manager.h"
 #endif
 
+#ifdef EDM_PRINT_POLICY_ENABLE
+#include "edm_print_policy_manager.h"
+#include "print_constant.h"
+#endif
+
 namespace OHOS {
 namespace Print {
 PrintEventSubscriber::PrintEventSubscriber(
@@ -69,8 +74,12 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
             return;
         }
         PrintServiceAbility::GetInstance()->HandleWebPrinterUninstall();
+    } else if (action == EDM_PRINT_POLICY_EVENT) {
+#ifdef EDM_PRINT_POLICY_ENABLE
+        PRINT_HILOGI("Received EDM print policy update event");
+        EdmPrintPolicyManager::GetInstance().UpdatePrintPolicyFromEdm(data.GetData());
+#endif
     }
 }
-
 }  // namespace Print
 }  // namespace OHOS

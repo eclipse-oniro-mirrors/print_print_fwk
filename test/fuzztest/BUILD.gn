@@ -56,6 +56,7 @@ if (!print_fwk_feature_device_isolation) {
       "vendormanager_fuzzer:fuzztest",
       "printsecurityguardmanager_fuzzer:fuzztest",
       "printsecurityguardutil_fuzzer:fuzztest",
+      "EdmPrintPolicy_fuzzer:fuzztest",
     ]
   }
 } else {

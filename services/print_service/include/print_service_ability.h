@@ -52,6 +52,9 @@
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
 #include "print_caller_app_monitor.h"
+#ifdef EDM_PRINT_POLICY_ENABLE
+#include "edm_print_policy_manager.h"
+#endif // EDM_PRINT_POLICY_ENABLE
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -314,6 +317,8 @@ private:
     int32_t ConnectUsbPrinter(const std::string &printerId);
     int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options, const std::string &bundleName);
+    bool ParsePrinterUri(const std::string &uri, std::string &printerIp,
+        std::string &protocol, std::string &printQueue);
     int32_t SetPrinterCapabilityAndRegister(const std::string &printerName, const std::string &ppdName,
         const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void RefreshPrinterInfoByPpd();
@@ -463,12 +468,23 @@ public:
     bool RefreshPrinterStatusOnSwitchUser();
 #endif  // ENTERPRISE_ENABLE
 
+#if defined(EDM_SERVICE_ENABLE) || defined(EDM_PRINT_POLICY_ENABLE)
+public:
+    int32_t ReportAuditEvent(int32_t eventId, const std::string &version, const Json::Value &contentJson);
+#endif
+
 #ifdef EDM_SERVICE_ENABLE
 public:
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
     void ReportEventAndUpdateJobState(std::string option, std::string jobId);
 #endif // EDM_SERVICE_ENABLE
+
+#ifdef EDM_PRINT_POLICY_ENABLE
+public:
+    void ReportJobBlockedEvent(const std::shared_ptr<PrintJob> &printJob);
+    void ReportPrinterBlockedEvent(const std::string &printerIp);
+#endif // EDM_PRINT_POLICY_ENABLE
 
 #ifdef REMOTE_SERVICE_ENABLE
 public:

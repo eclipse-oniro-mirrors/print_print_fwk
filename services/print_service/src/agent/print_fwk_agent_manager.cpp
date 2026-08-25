@@ -616,6 +616,19 @@ int32_t PrintFwkAgentManager::EnsureBackendReadyForPersistedPrinters()
     return code;
 }
 
+std::string PrintFwkAgentManager::ExtractSourceUriFromOption(const std::string &option)
+{
+    Json::Value root;
+    if (!PrintJsonUtil::Parse(option, root) || !root.isObject() ||
+        !root.isMember("driver") || !root["driver"].isString() ||
+        root["driver"].asString() != PRINT_DRIVER_AGENT ||
+        !root.isMember("agent") || !root["agent"].isObject() ||
+        !root["agent"].isMember("sourceUri") || !root["agent"]["sourceUri"].isString()) {
+        return "";
+    }
+    return root["agent"]["sourceUri"].asString();
+}
+
 void PrintFwkAgentManager::PreparePrintJob(const std::string &jobId, const std::string &printerId)
 {
     if (!IsAgentPrinter(printerId) || !IsRunning()) {

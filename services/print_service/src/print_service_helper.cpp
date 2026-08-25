@@ -268,5 +268,25 @@ void PrintServiceHelper::PrintSubscribeCommonEvent()
         return;
     }
     isSubscribeCommonEvent = true;
+
+#ifdef EDM_PRINT_POLICY_ENABLE
+    // Subscribe EDM print policy event with sender permission check
+    EventFwk::MatchingSkills edmMatchingSkills;
+    edmMatchingSkills.AddEvent(EDM_PRINT_POLICY_EVENT);
+    EventFwk::CommonEventSubscribeInfo edmSubscribeInfo(edmMatchingSkills);
+    edmSubscribeInfo.SetPermission(EDM_PERMISSION_MANAGE_POLICY);
+    edmSubscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
+
+    edmPolicyEventListener = std::make_shared<PrintEventSubscriber>(edmSubscribeInfo);
+    if (edmPolicyEventListener == nullptr) {
+        PRINT_HILOGE("create edmPolicyEventListener failed.");
+        return;
+    }
+    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(edmPolicyEventListener)) {
+        PRINT_HILOGE("subscribe EDM print policy event failed");
+        return;
+    }
+    PRINT_HILOGI("subscribe EDM print policy event success");
+#endif
 }
 }  // namespace OHOS

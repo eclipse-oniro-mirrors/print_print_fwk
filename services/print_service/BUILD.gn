@@ -200,6 +200,20 @@ if (!print_fwk_feature_device_isolation) {
       ]
     }
 
+    if (print_fwk_feature_edm_print_policy) {
+      cflags_cc += [ 
+        "-DEDM_PRINT_POLICY_ENABLE",
+        "-DFEATURE_PC_ONLY",
+      ]
+      sources += [
+        "${_service_path}/enterprise/src/edm_print_policy_manager.cpp",
+      ]
+      external_deps += [
+        "enterprise_device_management:edmservice_kits",
+        "security_guard:libsg_collect_sdk",
+      ]
+    }
+
     if (print_fwk_feature_virtual_printer) {
       cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
     }
@@ -311,6 +325,20 @@ if (!print_fwk_feature_device_isolation) {
       cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
       external_deps += [
         "enterprise_device_management:edmservice_kits"
+      ]
+    }
+
+    if (print_fwk_feature_edm_print_policy) {
+      cflags_cc += [ 
+        "-DEDM_PRINT_POLICY_ENABLE",
+        "-DFEATURE_PC_ONLY",
+      ]
+      sources += [
+        "${_service_path}/enterprise/src/edm_print_policy_manager.cpp",
+      ]
+      external_deps += [
+        "enterprise_device_management:edmservice_kits",
+        "security_guard:libsg_collect_sdk",
       ]
     }
 

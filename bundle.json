@@ -25,7 +25,8 @@
       "print_fwk_feature_print_failure_ai_notifier",
       "print_fwk_feature_device_isolation",
       "print_fwk_feature_api_metrics",
-      "print_fwk_feature_print_fwk_agent_client"
+      "print_fwk_feature_print_fwk_agent_client",
+      "print_fwk_feature_edm_print_policy"
     ],
     "adapted_system_type": [
       "standard"
