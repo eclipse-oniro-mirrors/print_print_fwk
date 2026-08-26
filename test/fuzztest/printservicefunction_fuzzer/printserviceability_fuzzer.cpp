@@ -256,6 +256,15 @@ void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     std::string result = PrintServiceAbility::GetInstance()->GetConnectUri(printerInfo, connectProtocol);
 }
 
+void TestAddPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string options = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddPrinter(printerName, printerUri, ppdName, options);
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -284,6 +293,7 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     TestParseSingleAdvanceOptJson(data, size, dataProvider);
     TestBlockPrintJob(data, size, dataProvider);
     TestGetConnectUri(data, size, dataProvider);
+    TestAddPrinter(data, size, dataProvider);
 }
 
 }  // namespace Print

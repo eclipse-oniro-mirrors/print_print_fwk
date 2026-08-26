@@ -18,6 +18,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 #include <mutex>
 #include <functional>
 #include <future>
@@ -29,9 +31,9 @@ class SmbPrinterStateMonitor {
 public:
     static SmbPrinterStateMonitor& GetInstance();
     void StartSmbPrinterStatusMonitor(std::function<void(const PrinterInfo& printerInfo)> notify);
-    void StopSmbPrinterStatusMonitor();
     void SetSmbPrinterInMonitorList(const PrinterInfo& info);
     void EraseSmbPrinterInMonitorListById(const std::string& printerId);
+    bool IsSmbPrinterOnline(const std::string& printerId);
 
 private:
     enum class HostStatus {
@@ -42,12 +44,19 @@ private:
     SmbPrinterStateMonitor() = default;
     ~SmbPrinterStateMonitor();
     void MonitorSmbPrinters(std::function<void(const PrinterInfo& printerInfo)> notify);
+    std::unordered_map<std::string, HostStatus> GetHostStatusMap(
+        const std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>>& localCopy);
+    std::vector<std::pair<PrinterInfo, HostStatus>> BuildNotifyPrintersList(
+        const std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>>& localCopy,
+        const std::unordered_map<std::string, HostStatus>& hostStatusMap);
+    void UpdateAndNotifyPrinters(
+        const std::vector<std::pair<PrinterInfo, HostStatus>>& notifyPrinters,
+        std::function<void(const PrinterInfo& printerInfo)> notify);
 
     std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> monitorSmbPrinters_;
     std::mutex monitorSmbPrintersLock_;
     std::atomic<bool> isMonitoring_{false};
-    std::thread monitorThread_;
-    std::mutex threadMutex_;
+    std::atomic<bool> threadRunning_{false};
 };
 
 } // namespace OHOS::Print

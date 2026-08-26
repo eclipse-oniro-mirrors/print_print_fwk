@@ -21,10 +21,9 @@
 
 namespace OHOS {
 namespace Print {
-class VendorBsuniDriver : public VendorDriverBase, public std::enable_shared_from_this<VendorBsuniDriver> {
+class VendorBsuniDriver : public VendorDriverBase {
 public:
-    static void SetDriverWrapper(const std::shared_ptr<VendorBsuniDriver>& driver);
-    static std::shared_ptr<VendorBsuniDriver> GetActiveInstance();
+    static void SetDriverWrapper(VendorBsuniDriver *driver);
     static bool CheckVendorExtension(Print_VendorExtension *extension);
     static int32_t AddPrinterToDiscovery(const Print_DiscoveryItem *discoveryItem);
     static int32_t RemovePrinterFromDiscovery(const char *printerId);
@@ -45,7 +44,8 @@ public:
     void OnStopDiscovery() override;
     std::string GetVendorName() override;
     bool OnQueryCapability(const std::string &printerId, int timeout) override;
-    bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol) override;
+    bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+        const std::string &printQueue) override;
     bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys) override;
 #ifdef ENTERPRISE_ENABLE
     void OnSwitchSpace() override;

@@ -104,7 +104,7 @@ ScanErrorCode ScanServiceUtils::ConvertErro(const SaneStatus status)
 }
 
 std::vector<std::string> ScanServiceUtils::ExtractIpOrPortFromUrl(const std::string& url,
-    const char delimiter, const int32_t minTokenLength)
+    const char delimiter, const size_t minTokenLength)
 {
     std::vector<std::string> tokens;
     size_t start = 0;
@@ -115,8 +115,8 @@ std::vector<std::string> ScanServiceUtils::ExtractIpOrPortFromUrl(const std::str
         end = url.find(delimiter, start);
     }
     tokens.push_back(url.substr(start));
-    if (tokens.size() < static_cast<size_t>(minTokenLength)) {
-        SCAN_HILOGE("Url size < %{public}d ", minTokenLength);
+    if (tokens.size() < minTokenLength) {
+        SCAN_HILOGE("Url size < %{public}zu ", minTokenLength);
         tokens.clear();
     }
     return tokens;

@@ -35,6 +35,7 @@ napi_value PrintPreviewAttributeHelper::MakeJsObject(napi_env env, const PrintPr
     preview.GetPreviewRange(range);
 
     napi_value jsPreviewRange = PrintRangeHelper::MakeJsObject(env,  range);
+    PRINT_CHECK_NULL_AND_RETURN(jsPreviewRange, nullptr);
     PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_PREATTRIBUTE_RANGE, jsPreviewRange));
     return jsObj;
 }

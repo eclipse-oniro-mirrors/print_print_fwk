@@ -47,7 +47,7 @@ private:
     bool OnStartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnCancelPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply);
-    bool OnUpdatePrintJobStateForNormalApp(MessageParcel &data, MessageParcel &reply);
+    bool OnAdapterGetFileCallBack(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);
@@ -87,13 +87,19 @@ private:
     bool OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinterByIpAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnSavePdfFileJob(MessageParcel &data, MessageParcel &reply);
-    bool OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply);
-    bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPreferencesConflicts(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply);
     bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply);
+    bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);
     bool OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterKiaInterceptorCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnStartSharedHostDiscovery(MessageParcel &data, MessageParcel &reply);
+    bool OnAddPrinter(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

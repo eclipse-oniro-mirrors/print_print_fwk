@@ -26,12 +26,20 @@ class PrintBMSDeathRecipientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintBMSDeathRecipientTest::SetUpTestCase(void)
 {}
 
 void PrintBMSDeathRecipientTest::TearDownTestCase(void)
+{}
+
+void PrintBMSDeathRecipientTest::SetUp(void)
+{}
+
+void PrintBMSDeathRecipientTest::TearDown(void)
 {}
 
 }  // namespace Print

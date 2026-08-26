@@ -309,9 +309,8 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0009_NeedRename, TestSiz
             response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", nullptr, ATTR_TEST_PAGE_SIZE_ARRAY[0]);
     };
     PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
-        std::vector<PrintPageSize> pageSizeList;
-        printerCaps.GetSupportedPageSize(pageSizeList);
-        EXPECT_EQ(pageSizeList.size(), ATTR_TEST_PAGE_SIZE_COUNT);
+        std::string pageSizeString = printerCaps.GetPrinterAttrValue("supportedPageSizeArray");
+        TestAttrCount(pageSizeString, ATTR_TEST_PAGE_SIZE_COUNT);
         EXPECT_STREQ(printerCaps.GetPrinterAttrValue("defaultPageSizeId"), "ISO_B3");
     };
     DoTest(preFunc, postFunc);
@@ -404,15 +403,14 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0013_NeedRename, TestSiz
         std::string supportedResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-supported");
         TestAttrCount(supportedResolutionString, 1);
         std::string defaultResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-default");
-        std::istringstream iss(defaultResolutionString);
         Json::Value defaultResolutionJson;
-        EXPECT_TRUE(OHOS::Print::PrintJsonUtil::ParseFromStream(iss, defaultResolutionJson));
+        EXPECT_TRUE(OHOS::Print::PrintJsonUtil::Parse(defaultResolutionString, defaultResolutionJson));
         EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "horizontalDpi"));
         EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "verticalDpi"));
         EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].isInt());
         EXPECT_TRUE(defaultResolutionJson["verticalDpi"].isInt());
-        EXPECT_EQ(defaultResolutionJson["horizontalDpi"], ATTR_TEST_RESOLUTION_DEFAULT);
-        EXPECT_EQ(defaultResolutionJson["verticalDpi"], ATTR_TEST_RESOLUTION_DEFAULT);
+        EXPECT_EQ(defaultResolutionJson["horizontalDpi"].asInt(), ATTR_TEST_RESOLUTION_DEFAULT);
+        EXPECT_EQ(defaultResolutionJson["verticalDpi"].asInt(), ATTR_TEST_RESOLUTION_DEFAULT);
     };
     DoTest(preFunc, postFunc);
 }
@@ -435,15 +433,14 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0014_NeedRename, TestSiz
         std::string supportedResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-supported");
         EXPECT_TRUE(supportedResolutionString.empty());
         std::string defaultResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-default");
-        std::istringstream iss(defaultResolutionString);
         Json::Value defaultResolutionJson;
-        EXPECT_TRUE(OHOS::Print::PrintJsonUtil::ParseFromStream(iss, defaultResolutionJson));
-        EXPECT_TRUE(defaultResolutionJson.isMember("horizontalDpi"));
-        EXPECT_TRUE(defaultResolutionJson.isMember("verticalDpi"));
+        EXPECT_TRUE(OHOS::Print::PrintJsonUtil::Parse(defaultResolutionString, defaultResolutionJson));
+        EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "horizontalDpi"));
+        EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "verticalDpi"));
         EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].isInt());
         EXPECT_TRUE(defaultResolutionJson["verticalDpi"].isInt());
-        EXPECT_EQ(defaultResolutionJson["horizontalDpi"], ATTR_TEST_RESOLUTION_SMALL);
-        EXPECT_EQ(defaultResolutionJson["verticalDpi"], ATTR_TEST_RESOLUTION_SMALL);
+        EXPECT_EQ(defaultResolutionJson["horizontalDpi"].asInt(), ATTR_TEST_RESOLUTION_SMALL);
+        EXPECT_EQ(defaultResolutionJson["verticalDpi"].asInt(), ATTR_TEST_RESOLUTION_SMALL);
     };
     DoTest(preFunc, postFunc);
 }

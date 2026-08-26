@@ -15,6 +15,7 @@
 #include "print_callback_proxy.h"
 
 #include "message_parcel.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -235,6 +236,41 @@ bool PrintCallbackProxy::OnCallbackAdapterGetFile(uint32_t state)
         return false;
     }
     PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterGetFile End");
+    return true;
+}
+
+bool PrintCallbackProxy::OnCallback(const std::vector<PrintSharedHost> &sharedHosts)
+{
+    PRINT_HILOGI("PrintCallbackProxy::OnCallback sharedHosts Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        PRINT_HILOGE("write descriptor failed");
+        return false;
+    }
+
+    if (sharedHosts.size() > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("too much sharedHosts");
+        return false;
+    }
+    data.WriteUint32(sharedHosts.size());
+    for (const auto &host : sharedHosts) {
+        host.Marshalling(data);
+    }
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_SHARED_HOST_DISCOVER, data, reply, option);
+    if (error != 0) {
+        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+        return false;
+    }
+    PRINT_HILOGI("PrintCallbackProxy::OnCallback sharedHosts End");
     return true;
 }
 } // namespace OHOS::Print

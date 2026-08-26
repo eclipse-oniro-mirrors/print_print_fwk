@@ -23,6 +23,7 @@
 #include "print_log.h"
 #include "print_util.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_service_ability.h"
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
@@ -60,22 +61,22 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     if (!PrintJsonUtil::FindJsonStringMember(object, "name", name)) {return false;}
     std::string uri;
     if (!PrintJsonUtil::FindJsonStringMember(object, "uri", uri)) {return false;}
-    std::string selectedProtocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri);
-    if (selectedProtocol.empty()) {return false;}
+    
+    std::string selectedProtocol;
+    bool needOtaUpdate = !PrintJsonUtil::FindJsonStringMember(object, "selectedProtocol", selectedProtocol);
+    if (needOtaUpdate) {
+        selectedProtocol = HandleOtaProtocolUpgrade(object, uri, id);
+    }
+    
     std::string maker;
     if (!PrintJsonUtil::FindJsonStringMember(object, "maker", maker)) {return false;}
+
     PpdInfo selectedDriver;
-    if (!PrintJsonUtil::IsMember(object, "selectedDriver") || !object["selectedDriver"].isObject()) {
-        PRINT_HILOGW("old version file, cannot find selectedDriver");
-        selectedDriver.SetPpdInfo("auto", "auto", "auto");
-    } else {
-        Json::Value driverJson = object["selectedDriver"];
-        if (!selectedDriver.ConvertFromJson(driverJson)) {
-            PRINT_HILOGW("convert json to selectedDriver failed");
-            return false;
-        }
+    if (!ParseSelectedDriverFromJson(object, selectedDriver)) {
+        PRINT_HILOGW("Parse selectedDriver failed");
+        return false;
     }
-    selectedDriver.Dump();
+
     PrinterCapability printerCapability;
     Json::Value capsJson = object["capability"];
     if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
@@ -97,6 +98,52 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     }
     ConvertInnerJsonToPrinterInfo(object, info);
     InsertAddedPrinter(id, info);
+    
+    if (needOtaUpdate) {
+        SavePrinterFile(id);
+        PRINT_HILOGI("OTA update: saved printer file for %{public}s", id.c_str());
+    }
+    
+    PRINT_HILOGI("ConvertJsonToPrinterInfo success, id: %{public}s", id.c_str());
+    return true;
+}
+
+std::string PrintSystemData::HandleOtaProtocolUpgrade(Json::Value &object, const std::string &uri,
+    const std::string &printerId)
+{
+    PRINT_HILOGI("OTA upgrade: handling protocol for printer %{public}s", printerId.c_str());
+
+    std::string uriProtocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri);
+    PpdInfo tempDriver;
+
+    if (ParseSelectedDriverFromJson(object, tempDriver) && tempDriver.GetPpdName() != BSUNI_PPD_NAME) {
+        if (uriProtocol == "lpd") {
+            PRINT_HILOGI("OTA upgrade: set protocol to lpd for printer %{public}s", printerId.c_str());
+            return "lpd";
+        }
+        if (uriProtocol == "socket") {
+            PRINT_HILOGI("OTA upgrade: set protocol to socket for printer %{public}s", printerId.c_str());
+            return "socket";
+        }
+    }
+
+    PRINT_HILOGI("OTA upgrade: set protocol to auto for printer %{public}s", printerId.c_str());
+    return "auto";
+}
+
+bool PrintSystemData::ParseSelectedDriverFromJson(Json::Value &object, PpdInfo &selectedDriver)
+{
+    if (!PrintJsonUtil::IsMember(object, "selectedDriver") || !object["selectedDriver"].isObject()) {
+        PRINT_HILOGW("old version file, cannot find selectedDriver");
+        selectedDriver.SetPpdInfo("auto", "auto", "auto");
+        return true;
+    }
+    Json::Value driverJson = object["selectedDriver"];
+    if (!selectedDriver.ConvertFromJson(driverJson)) {
+        PRINT_HILOGW("convert json to selectedDriver failed");
+        return false;
+    }
+    selectedDriver.Dump();
     return true;
 }
 
@@ -122,6 +169,9 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
         GLOBAL_ID_DELIMITER)) {
         std::string host = PrintUtils::ExtractHostFromUri(info.GetUri());
         info.SetOriginId(VENDOR_MANAGER_PREFIX + VENDOR_BSUNI_DRIVER + GLOBAL_ID_DELIMITER + host);
+    }
+    if (PrintJsonUtil::IsMember(object, "option") && object["option"].isString()) {
+        info.SetOption(object["option"].asString());
     }
 }
 
@@ -239,7 +289,8 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
             BuildPrinterPreference(capability, preferences);
             UpdatePrinterPreferences(printerId, preferences);
             Json::Value printPreferenceJson = object[printerId];
-            if (!PrintJsonUtil::IsMember(jsonObject, "setting") || !printPreferenceJson["setting"].isObject()) {
+            if (!PrintJsonUtil::IsMember(printPreferenceJson, "setting") ||
+                !printPreferenceJson["setting"].isObject()) {
                 PRINT_HILOGW("can not find setting");
                 continue;
             }
@@ -357,10 +408,14 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
     printerJson["capability"] = capsJson;
     printerJson["preferences"] = preference.ConvertToJson();
     printerJson["selectedDriver"] = ppdInfo.ConvertToJson();
+    printerJson["selectedProtocol"] = info->GetSelectedProtocol();
     if (info->HasOriginId()) {
         printerJson["originId"] = info->GetOriginId();
     } else {
         PRINT_HILOGD("no originId");
+    }
+    if (info->HasOption()) {
+        printerJson["option"] = info->GetOption();
     }
 }
 
@@ -370,13 +425,13 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     if (info == nullptr) {
         return;
     }
-    std::string printerListFilePath =
-        GetPrintersPath() + "/" + PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
-    char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+    std::string printersPath = GetPrintersPath();
+    std::string fileName = PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
+    if (!PrintUtils::IsPathValidForCreate(printersPath, fileName)) {
+        PRINT_HILOGE("Invalid printer file path!");
         return;
     }
+    std::string printerListFilePath = printersPath + "/" + fileName;
     FILE *file = fopen(printerListFilePath.c_str(), "w+");
     if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -453,7 +508,8 @@ void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterS
     auto info = GetAddedPrinterMap().Find(printerId);
     if (info != nullptr) {
         info->SetPrinterStatus(printerStatus);
-        PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", info->GetPrinterStatus());
+        PRINT_HILOGI("[Printer: %{public}s] UpdatePrinterStatus success, printerName: %{public}s, status: %{public}d",
+ 	        info->GetPrinterId().c_str(), info->GetPrinterName().c_str(), info->GetPrinterStatus());
     }
 }
 
@@ -477,9 +533,7 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
 {
     auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
     if (info != nullptr) {
-        std::string uri = printerInfo->GetUri();
-        info->SetUri(uri);
-        info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
+        info->SetUri(printerInfo->GetUri());
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }
@@ -501,6 +555,15 @@ void PrintSystemData::UpdatePpdHashCode(const std::string &printerId, const std:
     if (info != nullptr) {
         info->SetPpdHashCode(ppdHashCode);
         PRINT_HILOGI("UpdatePpdHashCode success");
+    }
+}
+
+void PrintSystemData::UpdatePrinterOption(const std::string &printerId, const std::string &option)
+{
+    auto info = GetAddedPrinterMap().Find(printerId);
+    if (info != nullptr) {
+        info->SetOption(option);
+        PRINT_HILOGI("UpdatePrinterOption success");
     }
 }
 
@@ -572,6 +635,8 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertPrintMarginToJson(printerCapability, capsJson);
     }
 
+    ConvertPageSizeToJson(printerCapability, capsJson);
+
     if (printerCapability.HasResolution()) {
         ConvertPrintResolutionToJson(printerCapability, capsJson);
     }
@@ -594,7 +659,8 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
 
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
-        if (!PrintJsonUtil::Parse(options, capsJson["options"])) {
+        std::istringstream iss(options);
+        if (!PrintJsonUtil::ParseFromStream(iss, capsJson["options"])) {
             PRINT_HILOGE("json accept capability options fail");
             return;
         }
@@ -1411,5 +1477,19 @@ void PrintSystemData::GetSmbAddedPrinterListFromSystemData(std::vector<PrinterIn
     return;
 }
 #endif // HAVE_SMB_PRINTER
+
+void PrintSystemData::GetWebPrinterListFromSystemData(std::vector<std::string> &printerIdList)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    for (const auto& pair : discoveredPrinterInfoList_) {
+        std::string printerId = pair.first;
+        std::string bundleName = PrintUtils::GetBundleName(printerId);
+        if (bundleName == WEBPRINTER_BUNDLE_NAME) {
+            PRINT_HILOGD("GetWebPrinterListFromSystemData: %{public}s.", printerId.c_str());
+            printerIdList.push_back(printerId);
+        }
+    }
+    return;
+}
 }  // namespace Print
 }  // namespace OHOS

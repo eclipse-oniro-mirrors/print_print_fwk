@@ -14,6 +14,7 @@
  */
 #include "print_shared_host_helper.h"
 #include "napi_print_utils.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 static constexpr const char *PARAM_IP = "ip";
@@ -27,6 +28,26 @@ napi_value PrintSharedHostHelper::MakeJsObject(napi_env env, const PrintSharedHo
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_SHARE_NAME, SharedHost.GetShareName());
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_WORKGROUP_NAME, SharedHost.GetWorkgroupName());
     return jsObj;
+}
+
+napi_value PrintSharedHostHelper::MakeJsObjectArray(napi_env env, const std::vector<PrintSharedHost> &sharedHosts)
+{
+    napi_value array = nullptr;
+    napi_status status = napi_create_array(env, &array);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create array");
+        return nullptr;
+    }
+    
+    uint32_t index = 0;
+    for (const auto& host : sharedHosts) {
+        napi_value jsHost = MakeJsObject(env, host);
+        status = napi_set_element(env, array, index++, jsHost);
+        if (status != napi_ok) {
+            PRINT_HILOGE("Failed to set array element");
+        }
+    }
+    return array;
 }
 
 std::shared_ptr<PrintSharedHost> PrintSharedHostHelper::BuildFromJs(napi_env env, napi_value jsValue)

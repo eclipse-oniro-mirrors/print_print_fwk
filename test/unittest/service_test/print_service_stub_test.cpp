@@ -30,12 +30,20 @@ class PrintServiceStubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintServiceStubTest::SetUpTestCase(void)
 {}
 
 void PrintServiceStubTest::TearDownTestCase(void)
+{}
+
+void PrintServiceStubTest::SetUp(void)
+{}
+
+void PrintServiceStubTest::TearDown(void)
 {}
 
 /**
@@ -619,7 +627,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0026_NeedRename, TestSize.Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_UPDATEPRINTJOBSTATE_FORNORMALAPP);
+    uint32_t code = static_cast<uint32_t>(CMD_ADAPTERGETFILECALLBACK);
 
     std::string testJobId = "jodId:1234";
     uint32_t testState = static_cast<uint32_t>(PRINT_JOB_COMPLETED);
@@ -1555,7 +1563,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnAddRawPrinter_InvalidInput
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, AnalyzePrintEvents_ShouldReturnTrue, TestSize.Level0)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_ShouldReturnTrue_When, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1713,6 +1721,30 @@ HWTEST_F(PrintServiceStubTest, OnAuthSmbDeviceTest, TestSize.Level0)
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
     ON_CALL(*stub, AuthSmbDevice).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+HWTEST_F(PrintServiceStubTest, OnAddPrinterTest, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADDPRINTER);
+
+    std::string printerName = "test-printer";
+    std::string uri = "ipp://192.168.1.1:631/printers/ipp/queue";
+    std::string ppdName = DEFAULT_PPD_NAME;
+    std::string options = "";
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(printerName));
+    EXPECT_TRUE(data.WriteString(uri));
+    EXPECT_TRUE(data.WriteString(ppdName));
+    EXPECT_TRUE(data.WriteString(options));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddPrinter).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 }  // namespace Print

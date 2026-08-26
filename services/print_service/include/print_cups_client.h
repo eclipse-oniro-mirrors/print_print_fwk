@@ -87,7 +87,6 @@ struct JobMonitorParam {
     std::string jobOriginatingUserName;
     bool isCanceled = false;
     bool isInterrupt = false;
-    bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,
@@ -159,24 +158,27 @@ public:
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
     bool ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri);
     std::string GetPpdHashCode(const std::string& ppdName);
+    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     bool AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri, const std::string &userName,
         char *userPasswd);
-    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     int32_t StartCupsdServiceNotAlive();
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
+    bool ExtractPpdKeyAndValue(const std::string &line, std::string &key, std::string &value);
 #ifdef VIRTUAL_PRINTER_ENABLE
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
 #endif
+    int32_t DeleteExtraJobsFromCups();
+    std::string getScheme(const std::string &printerUri);
+    bool IsIpAddress(const char* host);
     int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
-    int32_t DeleteExtraJobsFromCups();
-    std::string getScheme(std::string &printerUri);
-    bool IsIpAddress(const char* host);
+    IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
+    std::string GetCurCupsModelDir();
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
@@ -189,6 +191,7 @@ private:
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
@@ -197,7 +200,7 @@ private:
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
     void StartMonitor();
     bool JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
-    bool SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    void SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     bool GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
@@ -234,14 +237,17 @@ private:
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
     const std::string& GetCurCupsRootDir();
-    std::string GetCurCupsModelDir();
     const std::string& GetCurCupsdControlParam();
-    bool CheckUsbPrinterOnline(const std::string &printerId);
+    bool CheckUsbPrinterOnline(const std::string &printerUri);
     int32_t HandleSystemAuthInfo(const std::string &jobId);
     void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
     void RemovePrintCupsJobId(const std::string &jobId);
     uint32_t GetPrintCupsJobId(const std::string &jobId);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    bool ProcessWatermarkWithCacheFd(JobParameters *jobParams);
+#endif // WATERMARK_ENFORCING_ENABLE
 
     using StdStringMap = std::map<std::string, std::string>;
     int32_t CheckOptionConflicts(ppd_file_t *ppd, const StdStringMap &mapParams, const std::string& typeChanged,
@@ -260,6 +266,8 @@ private:
     JobParameters *currentJob_ = nullptr;
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList_;
     std::mutex jobMonitorMutex_;
+    std::atomic<bool> isMonitoringRunning_{false};
+    std::mutex envMutex_;
     std::map<std::string, uint32_t> cupsJobIdMap_;
     std::mutex cupsJobIdMapMutex_;
 };

@@ -31,12 +31,20 @@ class PrintSyncLoadCallbackTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintSyncLoadCallbackTest::SetUpTestCase(void)
 {}
 
 void PrintSyncLoadCallbackTest::TearDownTestCase(void)
+{}
+
+void PrintSyncLoadCallbackTest::SetUp(void)
+{}
+
+void PrintSyncLoadCallbackTest::TearDown(void)
 {}
 
 /**
@@ -62,7 +70,7 @@ HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_with_printSAid, Te
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001_NeedRename, TestSize.Level1)
+HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintSyncLoadCallback printSyncLoadCallback;
     int32_t systemAbilityId = 0;

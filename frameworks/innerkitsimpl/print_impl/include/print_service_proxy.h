@@ -43,7 +43,7 @@ public:
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
+    int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extensionId) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
@@ -90,17 +90,24 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName) override;
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd) override;
-    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds) override;
-    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
-        const std::string &ppdName) override;
     int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences) override;
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds) override;
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName) override;
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
+    int32_t StartSharedHostDiscovery() override;
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName, char *userPasswd,
         std::vector<PrinterInfo>& printerInfos) override;
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
+    int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override;
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

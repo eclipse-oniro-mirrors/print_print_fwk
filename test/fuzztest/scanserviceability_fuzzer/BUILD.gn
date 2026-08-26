@@ -65,7 +65,6 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
-    "libjpeg-turbo:turbojpeg",
     "napi:ace_napi",
     "netmanager_ext:mdns_manager_if",
     "os_account:os_account_innerkits",

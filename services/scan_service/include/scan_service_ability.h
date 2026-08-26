@@ -35,7 +35,6 @@
 #include "scanner_info.h"
 #include "scan_mdns_service.h"
 #include "scan_option_descriptor.h"
-#include "jpeglib.h"
 #include "scan_discover_data.h"
 #include "scan_task.h"
 #include "scan_picture_data.h"

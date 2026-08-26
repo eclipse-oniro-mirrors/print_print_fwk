@@ -67,14 +67,30 @@ void PrintMenuOption::SetIsSelect(const bool isSelect)
 
 void PrintMenuOption::ReadFromParcel(Parcel &parcel)
 {
-    SetMenuItemResourceName(parcel.ReadString());
-    SetIsSelect(parcel.ReadBool());
+    std::string menuItemResourceName;
+    if (!parcel.ReadString(menuItemResourceName)) {
+        PRINT_HILOGE("Read menuItemResourceName failed.");
+        return;
+    }
+    SetMenuItemResourceName(menuItemResourceName);
+    bool isSelect;
+    if (!parcel.ReadBool(isSelect)) {
+        PRINT_HILOGE("Read isSelect failed.");
+        return;
+    }
+    SetIsSelect(isSelect);
 }
 
 bool PrintMenuOption::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteString(GetMenuItemResourceName());
-    parcel.WriteBool(GetIsSelect());
+    if (!parcel.WriteString(GetMenuItemResourceName())) {
+        PRINT_HILOGE("Write menuItemResourceName failed.");
+        return false;
+    }
+    if (!parcel.WriteBool(GetIsSelect())) {
+        PRINT_HILOGE("Write isSelect failed.");
+        return false;
+    }
     return true;
 }
 

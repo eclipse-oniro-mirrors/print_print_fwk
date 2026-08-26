@@ -44,6 +44,10 @@ std::shared_ptr<PrintMenuOption> PrintMenuOptionHelper::BuildFromJs(napi_env env
             PRINT_HILOGE("nativeObj is nullptr");
             return nullptr;
         }
+        if (menuItemResourceName.empty()) {
+            PRINT_HILOGE("Invalid menuItemResourceName");
+            return nullptr;
+        }
         nativeObj->SetMenuItemResourceName(menuItemResourceName);
         nativeObj->SetIsSelect(isSelect);
     }

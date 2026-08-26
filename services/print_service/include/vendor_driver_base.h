@@ -67,11 +67,12 @@ public:
     virtual std::string GetConnectingPpdName() = 0;
     virtual std::string GetConnectingProtocol() = 0;
     virtual std::string GetConnectingPrinter() = 0;
+    virtual std::string GetConnectingQueue() = 0;
     virtual bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) = 0;
     virtual void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
     virtual bool OnQueryCallBackEvent(const PrinterInfo &info) = 0;
     virtual bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
-        const std::string &ppdName) = 0;
+        const std::string &ppdName, const std::string &printQueue) = 0;
     virtual bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) = 0;
     virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) = 0;
@@ -102,14 +103,14 @@ public:
     virtual void OnStartDiscovery();
     virtual void OnStopDiscovery();
     virtual bool OnQueryCapability(const std::string &printerId, int timeout);
-    virtual bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol);
+    virtual bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol,
+        const std::string &printQueue);
     virtual bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys);
     virtual std::string GetVendorName() = 0;
     virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on);
     virtual bool IsStatusMonitoring(const std::string &printerId);
     virtual bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value);
-    virtual void UpdateAllPrinterStatus();
 #ifdef ENTERPRISE_ENABLE
     virtual void OnSwitchSpace();
 #endif // ENTERPRISE_ENABLE

@@ -25,11 +25,9 @@
 #define private public
 #include "print_service_ability.h"
 #undef private
-#include "mock/mock_print_service_ability.h"
-#include "mock/mock_print_cups_client.h"
 
-using namespace testing;
 using namespace testing::ext;
+using namespace testing;
 
 namespace OHOS {
 namespace Print {
@@ -808,12 +806,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_COMPLETED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -864,12 +856,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_CANCELED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -892,12 +878,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052_NeedRename, TestSize.Leve
         nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_ABORTED;
-    param->isBlock = false;
-    param->timesOfSameState = 0;
-    EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
-    param->isBlock = true;
-    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-    param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_FALSE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -2214,6 +2194,35 @@ HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_RealPathError_Test, TestSize.Lev
 }
 #endif
 
+/**
+ * @tc.name: PrintCupsClientTest_0090
+ * @tc.desc: FillLandscapeOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_VIRTUAL_PRINTER, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("fwk.driver.ppd:Virtual PDF Printer");
+    testJob.SetIsLandscape(true);
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->isAutoRotate = false;
+    jobParams->isLandscape = true;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
+    delete jobParams;
+    delete options;
+}
+
 HWTEST_F(PrintCupsClientTest, CheckPreferencesConflicts_InvalidPpdName_Test, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
@@ -2317,6 +2326,57 @@ HWTEST_F(PrintCupsClientTest, CheckOptionConflicts_Test, TestSize.Level1)
     mapParams.emplace(PRINT_PARAM_TYPE_QUALITY, "Normal");
     ret = printCupsClient.CheckOptionConflicts(nullptr, mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
     EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(PrintCupsClientTest, IPPOVERUSB_ONLINETEST, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        ":IPP-",
+        nullptr);
+    EXPECT_FALSE(printCupsClient.IfContinueToHandleJobState(param));
+}
+
+HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        ":IPP-",
+        nullptr);
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = ":USB-";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = "com.ohos.spooler:";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = "driver.ppd:";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+}
+
+HWTEST_F(PrintCupsClientTest, CheckPrinterOnlineTest_when_SA_is_null, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(nullptr,
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        ":IPP-",
+        nullptr);
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = ":USB-";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = "com.ohos.spooler:";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
+    param->printerId = "driver.ppd:";
+    EXPECT_FALSE(printCupsClient.CheckPrinterOnline(param));
 }
 
 HWTEST_F(PrintCupsClientTest, TestHandleProcessingState, TestSize.Level1)
@@ -2424,49 +2484,358 @@ HWTEST_F(PrintCupsClientTest, TestHandleCompletedState, TestSize.Level1)
         PRINTER_PRINTER_NAME,
         PRINTER_PRINTER_ID,
         nullptr);
-    param->isBlock = false;
     PrintCupsClient printCupsClient;
     bool ret = printCupsClient.HandleCompletedState(param);
     EXPECT_FALSE(ret);
-    param->isBlock = true;
-    param->timesOfSameState = 0;
-    ret = printCupsClient.HandleCompletedState(param);
-    EXPECT_TRUE(ret);
-    param->timesOfSameState = 10;
-    ret = printCupsClient.HandleCompletedState(param);
-    EXPECT_FALSE(ret);
 }
 
-HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_001
+ * @tc.desc: GetInputSlotFromAdvancedOps with null json
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_NullJson_Test, TestSize.Level1)
 {
-    const std::string ippOverUsbPrinter = PRINTER_PRINTER_ID + ":IPP-" + PRINTER_URI;
-    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
-    auto param = std::make_shared<JobMonitorParam>(
-        mock,
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        ippOverUsbPrinter,
-        ippOverUsbPrinter,
-        nullptr
-    );
-    param->isBlock = false;
+    Json::Value json;
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "");
+}
 
-    PrinterInfo info;
-    info.SetPrinterId(ippOverUsbPrinter);
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_002
+ * @tc.desc: GetInputSlotFromAdvancedOps with InputSlot key
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_InputSlotKey_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = "Tray1";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray1");
+}
 
-    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
-        .WillOnce(Return(std::make_shared<PrinterInfo>(info)))
-        .WillOnce(Return(nullptr))
-        .WillOnce(Return(std::make_shared<PrinterInfo>(info)));
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_003
+ * @tc.desc: GetInputSlotFromAdvancedOps with media-source key
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_MediaSourceKey_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray2");
+}
 
-    PrintCupsClient printCupsClient;
-    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
-    EXPECT_FALSE(param->isIPPOverUsbOffline);
-    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
-    EXPECT_TRUE(param->isIPPOverUsbOffline);
-    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
-    EXPECT_TRUE(param->isIPPOverUsbOffline);
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_004
+ * @tc.desc: GetInputSlotFromAdvancedOps with both keys (InputSlot priority)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_BothKeysPriority_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = "Tray1";
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray1");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_005
+ * @tc.desc: GetInputSlotFromAdvancedOps with non-string value
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_NonStringValue_Test, TestSize.Level1)
+{
+    Json::Value json;
+    json["InputSlot"] = 123;
+    json["media-source"] = "Tray2";
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "Tray2");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetInputSlotFromAdvancedOps_006
+ * @tc.desc: GetInputSlotFromAdvancedOps with empty json object
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetInputSlotFromAdvancedOps_EmptyJson_Test, TestSize.Level1)
+{
+    Json::Value json(Json::objectValue);
+    std::string result = OHOS::Print::PrintCupsClient::GetInputSlotFromAdvancedOps(json);
+    EXPECT_EQ(result, "");
+}
+
+// ExtractPpdKeyAndValue parameterized test structure
+struct ExtractPpdKeyAndValueTestCase {
+    std::string testName;
+    std::string inputLine;
+    bool expectedSuccess;
+    std::string expectedKey;
+    std::string expectedValue;
+};
+
+class ExtractPpdKeyAndValueCommon {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
+};
+
+class ExtractPpdKeyAndValueTest : public ExtractPpdKeyAndValueCommon,
+                                   public testing::TestWithParam<ExtractPpdKeyAndValueTestCase> {
+public:
+    using ExtractPpdKeyAndValueCommon::SetUpTestCase;
+    using ExtractPpdKeyAndValueCommon::TearDownTestCase;
+};
+
+INSTANTIATE_TEST_SUITE_P(ExtractPpdKeyAndValueTest, ExtractPpdKeyAndValueTest,
+    testing::Values(
+        ExtractPpdKeyAndValueTestCase{
+            "NormalLine", "*NickName: \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyLeadingWhitespace", "*  NickName: \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyTrailingWhitespace", "*NickName : \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "KeyMiddleWhitespace", "*Nick Name: \"HP LaserJet 1020\"", true, "Nick Name", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueLeadingWhitespace", "*NickName:   \"HP LaserJet 1020\"", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueTrailingWhitespace", "*NickName: \"HP LaserJet 1020\"   ", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "ValueNewline", "*NickName: \"HP LaserJet 1020\"\r\n", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "NoQuotes", "*NickName: HP LaserJet 1020", true, "NickName", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "EmptyKey", "*: HP LaserJet 1020", true, "", "HP LaserJet 1020"},
+        ExtractPpdKeyAndValueTestCase{
+            "EmptyValue", "*NickName: ", true, "NickName", ""},
+        // Error cases
+        ExtractPpdKeyAndValueTestCase{
+            "NoColon", "*NickName \"HP LaserJet 1020\"", false, "", ""}));
+
+/**
+ * @tc.name: PrintCupsClientTest_ExtractPpdKeyAndValue_001
+ * @tc.desc: ExtractPpdKeyAndValue parameterized test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_P(ExtractPpdKeyAndValueTest, ExtractPpdKeyAndValue_Parameterized_Test, TestSize.Level1)
+{
+    const ExtractPpdKeyAndValueTestCase& testCase = GetParam();
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string key, value;
+
+    bool ret = printCupsClient.ExtractPpdKeyAndValue(testCase.inputLine, key, value);
+
+    EXPECT_EQ(ret, testCase.expectedSuccess);
+    if (ret) {
+        EXPECT_EQ(key, testCase.expectedKey);
+        EXPECT_EQ(value, testCase.expectedValue);
+    }
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_001
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4Address_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://192.168.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_002
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6Address_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[2001:db8::1]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_003
+ * @tc.desc: GetIpAddressTypeFromUri with hostname (not IP address)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Hostname_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://test.local:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_004
+ * @tc.desc: GetIpAddressTypeFromUri with empty URI
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_EmptyUri_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_005
+ * @tc.desc: GetIpAddressTypeFromUri with malformed URI (no host)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_MalformedUri_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp:///printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_006
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address without port
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv4NoPort_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://10.0.0.1/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_007
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address with version prefix and scope ID
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithVersionPrefix_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "lpd://[v1.fe00::decd:2fff:febb:f5d5+wlan0]:515/auto";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_008
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 address with scope ID (%eth0)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6WithScopePercent_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[fe80::1%eth0]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_009
+ * @tc.desc: GetIpAddressTypeFromUri with IPv6 global address with scope ID
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_Ipv6GlobalWithScope_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://[2001:db8:85a3::8a2e:370:7334+wlan0]:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV6);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_010
+ * @tc.desc: GetIpAddressTypeFromUri with link-local IPv4 address (169.254.x.x)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_LinkLocalAddress_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.254.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_011
+ * @tc.desc: GetIpAddressTypeFromUri with link-local IPv4 address boundary (169.254.0.1)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_LinkLocalBoundaryLow_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.254.0.1:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_012
+ * @tc.desc: GetIpAddressTypeFromUri with link-local IPv4 address boundary (169.254.255.255)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_LinkLocalBoundaryHigh_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.254.255.255:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_INVALID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_013
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address close to link-local range (169.253.x.x)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_NearLinkLocalLow_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.253.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_GetIpAddressTypeFromUri_014
+ * @tc.desc: GetIpAddressTypeFromUri with IPv4 address close to link-local range (169.255.x.x)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetIpAddressTypeFromUri_NearLinkLocalHigh_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string uri = "ipp://169.255.1.100:631/printers/TestPrinter";
+    IpAddressType result = printCupsClient.GetIpAddressTypeFromUri(uri);
+    EXPECT_EQ(result, IP_ADDRESS_TYPE_IPV4);
 }
 }  // namespace Print
 }  // namespace OHOS

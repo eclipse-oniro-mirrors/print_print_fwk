@@ -31,6 +31,7 @@
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
 #include "mock_print_manager_client.h"
+#include "mock_kia_interceptor_callback_stub.h"
 #include "print_shared_host.h"
 
 using namespace testing;
@@ -42,6 +43,8 @@ class PrintManagerClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
     void CallRemoteObject(const std::shared_ptr<MockPrintService> service, const sptr<MockRemoteObject> &obj,
         sptr<IRemoteObject::DeathRecipient> &dr);
 };
@@ -50,6 +53,12 @@ void PrintManagerClientTest::SetUpTestCase(void)
 {}
 
 void PrintManagerClientTest::TearDownTestCase(void)
+{}
+
+void PrintManagerClientTest::SetUp(void)
+{}
+
+void PrintManagerClientTest::TearDown(void)
 {}
 
 void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintService> service,
@@ -2339,8 +2348,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSiz
 {
     std::string jobId = "1";
     PrintAttributes testPrintAttributes;
-    uint32_t fd = open("/data/test/testFile", O_CREAT | O_WRONLY | O_TRUNC, 0664);
-    EXPECT_TRUE(fd >= 0);
+    uint32_t fd = static_cast<uint32_t>(dup(1));
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
@@ -2826,36 +2834,36 @@ HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_GetPrintServiceProxyFail, Test
 }
 
 /**
- * @tc.name: UpdatePrintJobStateForNormalApp_LoadServerFailed
- * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.name: AdapterGetFileCallBack_LoadServerFailed
+ * @tc.desc: AdapterGetFileCallBack
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_LoadServerFailed, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_LoadServerFailed, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
- * @tc.name: UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail
- * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.name: AdapterGetFileCallBack_GetPrintServiceProxyFail
+ * @tc.desc: AdapterGetFileCallBack
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, AdapterGetFileCallBack_GetPrintServiceProxyFail, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     std::string testJobId = "printId-123";
     uint32_t testState = 1;
     uint32_t testSubState = 1;
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+    int32_t ret = PrintManagerClient::GetInstance()->AdapterGetFileCallBack(testJobId,
         testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -2934,6 +2942,33 @@ HWTEST_F(PrintManagerClientTest, AnalyzePrintEvents_ShouldReturnNoPermission_Whe
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, CheckPreferencesConflictsTest, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, CheckPrintJobConflictsTest, TestSize.Level1)
+{
+    PrintJob printerJob;
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, printerJob, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences defaultPreferences;
+    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_LoadServerFailed, TestSize.Level1)
 {
     std::string printerId = "testId";
@@ -2976,41 +3011,13 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_GetPrintServiceProxyFa
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
-HWTEST_F(PrintManagerClientTest, CheckPreferencesConflictsTest, TestSize.Level1)
-{
-    std::string printerId = "test";
-    PrinterPreferences printerPreference;
-    std::vector<std::string> conflictingOptions;
-    int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
-        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, CheckPrintJobConflictsTest, TestSize.Level1)
-{
-    PrintJob printerJob;
-    std::vector<std::string> conflictingOptions;
-    int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(
-        PRINT_PARAM_TYPE_PAGE_SIZE, printerJob, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
-{
-    std::string printerId = "test";
-    PrinterPreferences defaultPreferences;
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-
 HWTEST_F(PrintManagerClientTest, GetSharedHosts_Test, TestSize.Level1)
 {
     std::vector<PrintSharedHost> sharedHosts;
     PrintManagerClient::GetInstance()->GetSharedHosts(sharedHosts);
     EXPECT_TRUE(sharedHosts.empty());
 }
- 
+
 HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
 {
     PrintSharedHost sharedHost;
@@ -3019,6 +3026,131 @@ HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
     EXPECT_TRUE(printerInfos.empty());
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_StartPrint_noPermission, TestSize.Level0)
+{
+    std::vector<std::string> testFileList = {
+        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, RegisterKiaInterceptorCallbackTest, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, RegisterKiaInterceptorCallback(_))
+        .Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+
+    sptr<MockKiaInterceptorCallbackStub> callback = new MockKiaInterceptorCallbackStub();
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterKiaInterceptorCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+
+    dr->OnRemoteDied(obj);
+}
+
+HWTEST_F(PrintManagerClientTest, AddPrinter_pass, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string testPrinterName = "test-printer";
+    std::string testUri = "ipp://192.168.1.1:631/ipp/print";
+    std::string testPpdName = DEFAULT_PPD_NAME;
+    std::string testOptions = "";
+    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, AddPrinter_reload, TestSize.Level1)
+{
+    std::string testPrinterName = "test-printer";
+    std::string testUri = "ipp://192.168.1.1:631/ipp/print";
+    std::string testPpdName = DEFAULT_PPD_NAME;
+    std::string testOptions = "";
+
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, AddPrinter(_, _, _, _)).Times(1);
+    ON_CALL(*service, AddPrinter)
+        .WillByDefault([&testPrinterName, &testUri, &testPpdName, &testOptions](
+            const std::string &printerName, const std::string &uri,
+            const std::string &ppdName, const std::string &options) {
+            EXPECT_EQ(testPrinterName, printerName);
+            EXPECT_EQ(testUri, uri);
+            EXPECT_EQ(testPpdName, ppdName);
+            EXPECT_EQ(testOptions, options);
+            return E_PRINT_NONE;
+        });
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance()->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
+}
+
+/**
+ * @tc.name: StartSharedHostDiscovery_RpcFailure
+ * @tc.desc: Test behavior when RPC send request fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_RpcFailure, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr;
+    
+    EXPECT_NE(obj, nullptr);
+    EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
+    EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly([&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
+        dr = recipient;
+        return true;
+    });
+    PrintManagerClient::GetInstance()->SetProxy(obj);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_RPC_FAILURE;
+        });
+    
+    EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: StartSharedHostDiscovery_Success
+ * @tc.desc: Test successful client call
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, StartSharedHostDiscovery_Success, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr;
+    
+    CallRemoteObject(service, obj, dr);
+    
+    EXPECT_CALL(*service, StartSharedHostDiscovery())
+        .Times(Exactly(1))
+        .WillOnce(Return(E_PRINT_NONE));
+    
+    EXPECT_EQ(PrintManagerClient::GetInstance()->StartSharedHostDiscovery(), E_PRINT_NONE);
 }
 }  // namespace Print
 }  // namespace OHOS

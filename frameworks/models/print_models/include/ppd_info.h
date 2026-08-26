@@ -28,7 +28,8 @@ public:
     PpdInfo(const PpdInfo &right);
 
     PpdInfo &operator=(const PpdInfo &right);
-
+    bool operator==(const PpdInfo &right) const;
+    
     virtual ~PpdInfo();
 
     void SetManufacturer(const std::string &manufacturer);

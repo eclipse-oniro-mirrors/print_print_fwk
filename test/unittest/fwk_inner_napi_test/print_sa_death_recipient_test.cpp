@@ -29,12 +29,20 @@ class PrintSaDeathRecipientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintSaDeathRecipientTest::SetUpTestCase(void)
 {}
 
 void PrintSaDeathRecipientTest::TearDownTestCase(void)
+{}
+
+void PrintSaDeathRecipientTest::SetUp(void)
+{}
+
+void PrintSaDeathRecipientTest::TearDown(void)
 {}
 
 }  // namespace Print

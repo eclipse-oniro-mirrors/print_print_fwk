@@ -22,8 +22,10 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "mock",
     "../service_test/mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/services/print_service/include",
+    "${print_path}/services/scan_service/include",
     "${print_utils_path}/include",
   ]
 
@@ -33,6 +35,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     debug = false
     blocklist = "${print_path}/cfi_blocklist.txt"
   }
+
+  cflags_cc = [ "-DUNIT_TEST" ]
 
   sources = [
     "print_attributes_test.cpp",
@@ -56,13 +60,16 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "ppd_info_test.cpp",
     "print_shared_host_test.cpp",
     "print_custom_option_test.cpp",
-    "print_menu_option_test.cpp"
+    "print_menu_option_test.cpp",
+    "scan_manager_client_test.cpp",
+    "kia_interceptor_callback_stub_test.cpp",
   ]
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/helper/print_helper:print_helper",
     "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
     "${print_path}/frameworks/kits/extension:print_extension_framework",
     "${print_path}/frameworks/kits/extension:print_extension_module",
     "${print_path}/frameworks/models/print_models:print_models",
@@ -71,6 +78,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
+    "${print_path}/services/scan_service:scan_service_test",
+    "${print_path}/frameworks/models/scan_models:scan_models",
   ]
 
   external_deps = [

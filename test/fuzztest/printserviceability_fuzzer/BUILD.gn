@@ -18,7 +18,7 @@ import("//build/test.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintServiceAbilityFuzzTest") {
-  module_out_path = fuzz_test_output_path
+  module_out_path = "${fuzz_test_output_path}/concurrent"
 
   fuzz_config_file = "${print_path}/test/fuzztest/printserviceability_fuzzer"
 
@@ -26,6 +26,7 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
     "mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -102,12 +103,12 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
     ]
   }
 
-  if (print_fwk_feature_edm_service) {
-    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
-  }
-
   if (print_fwk_feature_virtual_printer) {
     cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
+
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
   }
 }
 

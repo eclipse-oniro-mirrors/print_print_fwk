@@ -78,23 +78,23 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
     return true;
 }
 
-bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
+bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::function<void()> deathCallback)
 {
     PRINT_HILOGD("enter PrintServiceHelper::StartExtensionAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
-    AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    auto abilityManagerClient = AAFwk::AbilityManagerClient::GetInstance();
+    PRINT_CHECK_NULL_AND_RETURN(abilityManagerClient, false);
+    abilityManagerClient->Connect();
     uint32_t retry = 0;
-    sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection();
-    if (printAbilityConnection == nullptr) {
-        PRINT_HILOGE("fail to create printAbilityConnection");
-        return false;
-    }
+    sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection(deathCallback);
+    PRINT_CHECK_NULL_AND_RETURN(printAbilityConnection, false);
     PRINT_HILOGD("PrintServiceHelper::StartExtensionAbility %{public}s %{public}s",
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
     while (retry++ < MAX_RETRY_TIMES) {
-        if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
+        if (abilityManagerClient->ConnectAbilityWithExtensionType(
+            want, printAbilityConnection, nullptr, -1, AppExecFwk::ExtensionAbilityType::PRINT) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
             break;
         }
@@ -260,7 +260,8 @@ void PrintServiceHelper::PrintSubscribeCommonEvent()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_FORCE_SLEEP);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP);
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SHUTDOWN);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 

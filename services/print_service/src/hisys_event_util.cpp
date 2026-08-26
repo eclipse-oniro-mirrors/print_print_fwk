@@ -27,14 +27,54 @@ namespace OHOS::Print {
             HW_PRINT_SPOOLER,
             BEHAVIOR_DESCRIPTION,
             HiSysEvent::EventType::BEHAVIOR,
-            "PACKAGE_NAME", packageName,
-            "PROCESS_NAME", packageName,
-            "BEHAVIOR_CODE", behaviorCode,
-            "DEVICE_TYPE", DEVICE_TYPE,
-            "ACTION", behaviorCode,
-            "START_TIME", INACTIVE,
-            "END_TIME", INACTIVE,
-            "START_TIME", INACTIVE,
-            "MSG", msg);
+            PACKAGE_NAME, packageName,
+            PROCESS_NAME, packageName,
+            BEHAVIOR_CODE, behaviorCode,
+            DEVICE_TYPE, DEVICE_TYPE_VALUE,
+            ACTION, behaviorCode,
+            START_TIME, INACTIVE,
+            END_TIME, INACTIVE,
+            START_TIME, INACTIVE,
+            MSG, msg);
+    }
+
+    void HisysEventUtil::ReportFailureEvent(const HisysEventParams &params)
+    {
+        switch (params.eventType) {
+            case HisysEventType::PRINT_FAILURE:
+                ReportPrintFailure(params.subState, params.resourceKey);
+                break;
+            case HisysEventType::CONNECT_FAILURE:
+                ReportConnectFailure(params.resourceKey, params.printerModel);
+                break;
+            default:
+                break;
+        }
+    }
+
+    void HisysEventUtil::ReportConnectFailure(const std::string &resourceKey, const std::string &printerModel)
+    {
+        if (!resourceKey.empty()) {
+            HiSysEventWrite(
+                PRINT_DOMAIN,
+                CONNECT_EXCEPTION_FAULT_EVENT,
+                HiSysEvent::EventType::FAULT,
+                MSG, resourceKey,
+                PVERSIONID, printerModel.empty() ? "unknown" : printerModel
+            );
+        }
+    }
+
+    void HisysEventUtil::ReportPrintFailure(uint32_t subState, const std::string &resourceKey)
+    {
+        if (!resourceKey.empty()) {
+            HiSysEventWrite(
+                PRINT_DOMAIN,
+                PRINT_EXCEPTION_FAULT_EVENT,
+                HiSysEvent::EventType::FAULT,
+                MSG, resourceKey,
+                FAULT_CODE, static_cast<int32_t>(subState)
+            );
+        }
     }
 }

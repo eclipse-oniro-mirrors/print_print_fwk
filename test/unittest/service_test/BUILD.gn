@@ -25,6 +25,8 @@ ohos_unittest("print_service_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
+    "${print_path}/services/print_service/enterprise/include",
+    "${print_path}/services/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
 
@@ -36,15 +38,20 @@ ohos_unittest("print_service_test") {
   }
 
   sources = [
+    "event_listener_mgr_test.cpp",
     "print_bms_death_recipient_test.cpp",
     "print_cups_attribute_test.cpp",
     "print_caller_app_monitor_test.cpp",
+    "print_resource_manager_test.cpp",
     "print_security_guard_info_test.cpp",
     "print_security_guard_manager_test.cpp",
     "print_service_converter_test.cpp",
     "print_service_helper_test.cpp",
     "print_system_data_test.cpp",
     "print_user_data_test.cpp",
+    "kia_interceptor_callback_proxy_test.cpp",
+    "kia_interceptor_manager_test.cpp",
+    "print_callback_proxy_test.cpp"
   ]
 
   deps = [
@@ -60,7 +67,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service_test",
   ]
 
-  cflags_cc = []
+  cflags_cc = [ "-DUNIT_TEST" ]
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
@@ -79,15 +86,21 @@ ohos_unittest("print_service_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "distributed_notification_service:ans_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
     "googletest:gmock_main",
     "hilog:libhilog",
+    "i18n:intl_util",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "openssl:libssl_shared",
+    "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
+    "udmf:utd_client",
+    "udmf:libudmf",
     "usb_manager:usbsrv_client",
   ]
 
@@ -98,6 +111,19 @@ ohos_unittest("print_service_test") {
       "cups-filters:cupsfilters",
     ]
   }
+
+  if (print_fwk_feature_watermark_enforcing) {
+    cflags_cc += [ "-DWATERMARK_ENFORCING_ENABLE" ]
+  }
+
+  if (print_fwk_feature_print_failure_ai_notifier) {
+    sources += [
+      "print_failure_ai_notifier_test.cpp",
+      "print_notification_builder_test.cpp",
+    ]
+    cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
+  }
+
 }
 
 ohos_unittest("scan_service_test") {
@@ -149,6 +175,35 @@ ohos_unittest("scan_service_test") {
   ]
 }
 
+ohos_unittest("scan_task_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/frameworks/models/scan_models/include",
+    "${print_path}/services/scan_service/include",
+    "${print_utils_path}/include",
+  ]
+
+  sources = [
+    "scan_task_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/services/scan_service:scan_service_test",
+  ]
+
+  external_deps = [
+    "image_framework:image_ndk",
+    "image_framework:image_native",
+    "googletest:gtest_main",
+    "googletest:gmock_main",
+  ]
+
+  cflags = [
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+}
+
 group("unittest") {
   testonly = true
 
@@ -156,4 +211,5 @@ group("unittest") {
 
   deps += [ ":print_service_test" ]
   deps += [ ":scan_service_test" ]
+  deps += [ ":scan_task_test" ]
 }

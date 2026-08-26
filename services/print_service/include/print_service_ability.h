@@ -16,6 +16,7 @@
 #ifndef PRINT_SERVICE_ABILITY_H
 #define PRINT_SERVICE_ABILITY_H
 
+#include <fcntl.h>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -39,10 +40,12 @@
 #include "singleton.h"
 #include "app_mgr_client.h"
 #include "ppd_info.h"
+#include "event_listener_mgr.h"
 #ifdef HAVE_SMB_PRINTER
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
 #include "print_caller_app_monitor.h"
+
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
@@ -73,7 +76,6 @@ public:
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
-    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extInfo) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
@@ -128,26 +130,35 @@ public:
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences) override;
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
+    int32_t StartSharedHostDiscovery() override;
     int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName, char *userPasswd,
         std::vector<PrinterInfo>& printerInfos) override;
+
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
+    int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override;
 
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
     bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
-    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
-    void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
-    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail) override;
+    void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode) override;
+    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd) override;
     int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList);
     bool OnQueryCallBackEvent(const PrinterInfo &info);
     int32_t QueryPrinterInfoByIp(const std::string &printerIp);
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
-    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
+    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd) override;
     int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName);
-    int32_t ReportBannedEvent(std::string option);
-    bool IsDisablePrint();
+    void StopCupsService();
+    virtual bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
+    int32_t AddPrinter(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options);
+    void HandleWebPrinterUninstall();
 
 protected:
     void OnStart() override;
@@ -161,7 +172,6 @@ private:
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
-    void ReStartAllDiscovery();
     int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
     int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info, const std::string userId = "");
@@ -180,6 +190,11 @@ private:
     void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
+
+private:
+    void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
+    void HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
+        bool jobInQueue);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void RegisterAdapterListener(const std::string &jobId);
@@ -188,6 +203,7 @@ private:
     std::shared_ptr<PrintJob> AddNativePrintJob(const std::string &jobId, PrintJob &printJob);
     int32_t CallStatusBar();
     bool StartExtensionAbility(const AAFwk::Want &want);
+    void ResetExtensionState(int32_t userId, const std::string& bundleName);
     bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     bool IsPrinterJobMapEmpty();
     int32_t GetCurrentUserId();
@@ -214,6 +230,9 @@ private:
     uint32_t GetListeningState(uint32_t state, uint32_t subState);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
+    std::shared_ptr<PrinterInfo> HandleNewPrinterDiscovery(const std::string &globalPrinterId,
+        const PrinterInfo &info);
+    void SyncAddedPrinterUri(const std::shared_ptr<PrinterInfo> printerInfo);
     int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool RemoveSinglePrinterInfo(const std::string &printerId);
@@ -221,7 +240,6 @@ private:
     void HandlePrinterChangeRegister(const std::string &eventType);
 #ifdef HAVE_SMB_PRINTER
     void TryStartSmbPrinterStatusMonitor();
-    void TryStopSmbPrinterStatusMonitor();
     int32_t ConnectSmbPrinter(PrinterInfo& printerInfo, const std::string &ppdNameInput = "");
 #endif // HAVE_SMB_PRINTER
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
@@ -229,16 +247,20 @@ private:
     bool CheckUserIdInEventType(const std::string &type);
     void BuildPrinterPreference(PrinterInfo &printerInfo);
     void ClosePrintJobFd(const std::shared_ptr<PrintJob> &printJob);
-    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::shared_ptr<PrintUserData> userData,
-        const sptr<IPrintExtensionCallback> cbFunc, const std::string &jobId);
+        const std::string& extensionId, const std::string &jobId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
+    std::string GetCallerBundleName();
     int32_t ConnectUsbPrinter(const std::string &printerId);
+    int32_t AddPrinterByPrinterDriver(const std::string &printerName, const std::string &uri,
+        const std::string &ppdName, const std::string &options, const std::string &bundleName);
+    int32_t SetPrinterCapabilityAndRegister(const std::string &printerName, const std::string &ppdName,
+        const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void RefreshPrinterInfoByPpd();
     void RefreshEprinterErrorCapability();
     void UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterStatus printerStatus);
@@ -267,6 +289,12 @@ private:
     void IncrementPrintCounterByPcSettings();
     void DecrementPrintCounterByPcSettings();
     bool CheckStartExtensionPermission();
+    void RefreshIpPrinter();
+    void RefreshThirdDriverPrinter();
+    bool IsPpdNameValid(const std::string &ppdName);
+    int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
+        const std::string &ppdName);
+    int32_t InitServiceHelper();
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -288,9 +316,9 @@ public:
 
 private:
     void GetPrintJobStateInfo(const PrintJob &jobInfo, std::string& stateInfo, uint32_t &state);
-    void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
-        const sptr<IPrintCallback> &listener, const std::string &eventType);
+    void HandleJobStateChanged(const std::string &jobId, CallbackInfo &cbInfo);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
@@ -305,32 +333,34 @@ private:
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
-    void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
-    int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
+    int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
+    void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
+    void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);
+    PpdInfo GetPpdInfoFromPpdName(const std::string &ppdName);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
-    ServiceRunningState state_;
+    std::atomic<ServiceRunningState> state_;
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;
     static std::chrono::time_point<std::chrono::high_resolution_clock> startPrintTime_;
     static std::string ingressPackage;
 
     std::recursive_mutex apiMutex_;
-    std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
-    std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
-    std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
-
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> extensionList_;
     std::map<std::string, PrintExtensionState> extensionStateList_;
     std::map<std::string, std::shared_ptr<PrintJob>> printJobList_;
     std::map<std::string, std::shared_ptr<PrintJob>> queuedJobList_;
     std::map<std::string, std::string, JobIdCmp> jobOrderList_;
-    std::map<std::string, PrintAttributes> printAttributesList_;
+    std::map<std::string, std::shared_ptr<PrintAttributes>> printAttributesList_;
 
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
+    std::string spoolerBundleName_;
+    std::string spoolerAbilityName_;
+
+    std::mutex lock_;
     uint64_t currentJobOrderId_;
     std::shared_ptr<PrintServiceHelper> helper_;
     std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
@@ -351,6 +381,7 @@ private:
     bool discoveryCallerMonitorThread = false;
 
     std::atomic<bool> isMonitoring_{false};
+    std::atomic<bool> isSmbHostDiscovering_{false};
 
 #ifdef ENTERPRISE_ENABLE
 private:

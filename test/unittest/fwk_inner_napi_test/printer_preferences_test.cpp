@@ -25,6 +25,8 @@ class PrinterPreferencesTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrinterPreferencesTest::SetUpTestCase(void)
@@ -33,7 +35,13 @@ void PrinterPreferencesTest::SetUpTestCase(void)
 void PrinterPreferencesTest::TearDownTestCase(void)
 {}
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001_NeedRename, TestSize.Level2)
+void PrinterPreferencesTest::SetUp(void)
+{}
+
+void PrinterPreferencesTest::TearDown(void)
+{}
+
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -41,7 +49,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001_NeedRename, TestSiz
     EXPECT_EQ(0, preferences.GetDefaultDuplexMode());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0002_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0002, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultPrintQuality(4);
@@ -49,7 +57,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0002_NeedRename, TestSiz
     EXPECT_EQ(4, preferences.GetDefaultPrintQuality());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0003_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0003, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultMediaType("stationery");
@@ -57,7 +65,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0003_NeedRename, TestSiz
     EXPECT_EQ("stationery", preferences.GetDefaultMediaType());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0004_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0004, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultPageSizeId("ISO_A4");
@@ -65,7 +73,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0004_NeedRename, TestSiz
     EXPECT_EQ("ISO_A4", preferences.GetDefaultPageSizeId());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0005_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0005, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultOrientation(0);
@@ -73,7 +81,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0005_NeedRename, TestSiz
     EXPECT_EQ(0, preferences.GetDefaultOrientation());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0006_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0006, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetBorderless(true);
@@ -81,7 +89,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0006_NeedRename, TestSiz
     EXPECT_EQ(true, preferences.GetBorderless());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0007_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0007, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetOption("test");
@@ -145,7 +153,7 @@ HWTEST_F(PrinterPreferencesTest, ConvertToJson_NoValueSet_IsMemberReturnFalse, T
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
+    EXPECT_EQ(false, PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
 HWTEST_F(PrinterPreferencesTest, ConvertToJson_SetValue_IsMemberReturnTrue, TestSize.Level2)
@@ -164,7 +172,7 @@ HWTEST_F(PrinterPreferencesTest, ConvertToJson_SetValue_IsMemberReturnTrue, Test
     opsJson["testKey"] = "testValue";
     preferences.SetOption(PrintJsonUtil::WriteString(opsJson));
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId"));
+    EXPECT_EQ(true, PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId"));
 }
 
 HWTEST_F(PrinterPreferencesTest, ConvertToJson_WrongOptionFormat_isNullReturnTrue, TestSize.Level2)
