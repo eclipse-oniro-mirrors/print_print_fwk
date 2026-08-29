@@ -770,9 +770,9 @@ uint32_t PrintShellCommand::MapColorMode(const std::string& input)
 std::string PrintShellCommand::MapColorModeToOption(const std::string& input)
 {
     if (input == "彩色" || input == "彩印" || input == "color") {
-        return COLOR_MODE_COLOR_VALUE;
+        return COLOR_MODE_COLOR;
     }
-    return COLOR_MODE_MONO_VALUE;
+    return COLOR_MODE_MONO;
 }
 
 uint32_t PrintShellCommand::MapDuplex(const std::string& input)
