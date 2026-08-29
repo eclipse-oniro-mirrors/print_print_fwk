@@ -126,7 +126,7 @@ ErrCode PrintShellCommand::RunAsHelpCommand()
 
 ErrCode PrintShellCommand::RunAsListAddedPrinters()
 {
-    optind = 2; // Skip program name and subcommand name
+    optind = OPTIND_SUBCOMMAND_START; // Skip program name and subcommand name
     int opt;
     while ((opt = getopt_long(argc_, argv_, LIST_ADDED_PRINTERS_SHORT_OPTIONS,
                               LIST_ADDED_PRINTERS_LONG_OPTIONS, nullptr)) != -1) {
@@ -327,7 +327,7 @@ void PrintShellCommand::ApplyStartPrintJobOption(int opt, PrintJobParams& params
 
 int32_t PrintShellCommand::ParseStartPrintJobOptions(PrintJobParams& params)
 {
-    optind = 2; // Skip program name and subcommand name
+    optind = OPTIND_SUBCOMMAND_START; // Skip program name and subcommand name
     int opt;
     while ((opt = getopt_long(argc_, argv_, START_PRINT_JOB_SHORT_OPTIONS,
                               START_PRINT_JOB_LONG_OPTIONS, nullptr)) != -1) {
@@ -757,28 +757,28 @@ std::string PrintShellCommand::MapDirectionToOption(const std::string& input)
 uint32_t PrintShellCommand::MapColorMode(const std::string& input)
 {
     if (input == "彩色" || input == "彩印" || input == "color") {
-        return 1;
+        return COLOR_MODE_COLOR_VALUE;
     }
-    return 0;
+    return COLOR_MODE_MONO_VALUE;
 }
 
 std::string PrintShellCommand::MapColorModeToOption(const std::string& input)
 {
     if (input == "彩色" || input == "彩印" || input == "color") {
-        return COLOR_MODE_COLOR;
+        return COLOR_MODE_COLOR_VALUE;
     }
-    return COLOR_MODE_MONO;
+    return COLOR_MODE_MONO_VALUE;
 }
 
 uint32_t PrintShellCommand::MapDuplex(const std::string& input)
 {
     if (input == "双面" || input == "双面长边" || input == "long") {
-        return 1;
+        return DUPLEX_MODE_TWO_SIDED_LONG_EDGE;
     }
     if (input == "双面短边" || input == "short") {
-        return 2;
+        return DUPLEX_MODE_TWO_SIDED_SHORT_EDGE;
     }
-    return 0;
+    return DUPLEX_MODE_ONE_SIDED;
 }
 
 std::string PrintShellCommand::MapDuplexToOption(const std::string& input)

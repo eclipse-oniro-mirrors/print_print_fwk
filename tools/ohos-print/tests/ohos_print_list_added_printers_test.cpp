@@ -37,11 +37,11 @@ protected:
         return argv;
     }
 
-    static json ParseJsonResponse(const std::string& result)
+    static void ParseJsonResponse(const std::string& result, json& out)
     {
-        ASSERT_FALSE(result.empty()) << "ExecCommand returned empty result";
-        ASSERT_TRUE(json::accept(result)) << "ExecCommand result is not valid JSON: " << result;
-        return json::parse(result);
+        ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
+        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
+        out = json::parse(result);
     }
 };
 
@@ -56,7 +56,8 @@ HWTEST_F(OhosPrintListAddedPrintersTest, Ohos_Print_Cli_ListAddedPrinters_Help_0
     auto argv = BuildArgv({"ohos-print", "list-added-printers", "--help"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     EXPECT_NE(response["data"]["helpText"].get<std::string>().find("list-added-printers"), std::string::npos);
@@ -74,7 +75,8 @@ HWTEST_F(OhosPrintListAddedPrintersTest, Ohos_Print_Cli_ListAddedPrinters_Invali
     auto argv = BuildArgv({"ohos-print", "list-added-printers", "--nonexistent"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
 }

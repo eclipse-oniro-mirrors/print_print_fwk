@@ -37,11 +37,11 @@ protected:
         return argv;
     }
 
-    static json ParseJsonResponse(const std::string& result)
+    static void ParseJsonResponse(const std::string& result, json& out)
     {
-        ASSERT_FALSE(result.empty()) << "ExecCommand returned empty result";
-        ASSERT_TRUE(json::accept(result)) << "ExecCommand result is not valid JSON: " << result;
-        return json::parse(result);
+        ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
+        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
+        out = json::parse(result);
     }
 };
 
@@ -59,7 +59,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_MinArgs_0100, Function | Mediu
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain help text (general help)
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
 }
@@ -83,7 +84,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_MaxArgs_0100, Function | Mediu
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain help text since cmd_ = "help"
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
 }
@@ -102,7 +104,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_HelpFlag_0100, Function | Medi
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain general help
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     EXPECT_TRUE(response["data"].contains("subcommands"));
@@ -122,7 +125,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_ShortHelpFlag_0100, Function |
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain general help
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
 }
@@ -142,7 +146,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_NormalCommand_0100, Function |
 
     // Then: command is recognized and processed (not treated as help)
     // start-print-job without --document-format should fail with ERR_ARG_MISSING
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
 }
@@ -161,7 +166,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_ExecCommand_UnknownCmd_0100, Function | 
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain INVALID_COMMAND error
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "INVALID_COMMAND");
 }
@@ -180,7 +186,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_ExecCommand_HelpCmd_0100, Function | Med
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain general help JSON
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     EXPECT_TRUE(response["data"].contains("subcommands"));
@@ -201,7 +208,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_GetCommandErrorMsg_0100, Function | Medi
     std::string result = cmd.ExecCommand();
 
     // Then: output should contain INVALID_COMMAND and the unknown command name
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["errCode"], "INVALID_COMMAND");
     EXPECT_NE(response["errMsg"].get<std::string>().find("bogus-command"), std::string::npos);
 }

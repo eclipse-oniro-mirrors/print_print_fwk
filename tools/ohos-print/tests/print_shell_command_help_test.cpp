@@ -37,11 +37,11 @@ protected:
         return argv;
     }
 
-    static json ParseJsonResponse(const std::string& result)
+    static void ParseJsonResponse(const std::string& result, json& out)
     {
-        ASSERT_FALSE(result.empty()) << "ExecCommand returned empty result";
-        ASSERT_TRUE(json::accept(result)) << "ExecCommand result is not valid JSON: " << result;
-        return json::parse(result);
+        ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
+        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
+        out = json::parse(result);
     }
 };
 
@@ -59,7 +59,8 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_NoArgs_0100, Function | MediumTe
     std::string result = cmd.ExecCommand();
 
     // Then: result contains general help with helpText and subcommands
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     EXPECT_TRUE(response["data"].contains("subcommands"));
@@ -81,7 +82,8 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_ListAddedPrinters_0100, Function
     std::string result = cmd.ExecCommand();
 
     // Then: result contains list-added-printers help text
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     std::string helpText = response["data"]["helpText"].get<std::string>();
@@ -102,7 +104,8 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_StartPrintJob_0100, Function | M
     std::string result = cmd.ExecCommand();
 
     // Then: result contains start-print-job help text
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     std::string helpText = response["data"]["helpText"].get<std::string>();
@@ -123,7 +126,8 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_UnknownCmd_0100, Function | Medi
     std::string result = cmd.ExecCommand();
 
     // Then: result contains INVALID_COMMAND error
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "INVALID_COMMAND");
 }
@@ -142,7 +146,8 @@ HWTEST_F(PrintShellCommandHelpTest, ShowGeneralHelp_VerifyStructure_0100, Functi
     std::string result = cmd.ExecCommand();
 
     // Then: verify the structure of general help JSON
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
 
     json subcommands = response["data"]["subcommands"];

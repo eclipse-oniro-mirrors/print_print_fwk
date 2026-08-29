@@ -37,11 +37,11 @@ protected:
         return argv;
     }
 
-    static json ParseJsonResponse(const std::string& result)
+    static void ParseJsonResponse(const std::string& result, json& out)
     {
-        ASSERT_FALSE(result.empty()) << "ExecCommand returned empty result";
-        ASSERT_TRUE(json::accept(result)) << "ExecCommand result is not valid JSON: " << result;
-        return json::parse(result);
+        ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
+        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
+        out = json::parse(result);
     }
 };
 
@@ -56,7 +56,8 @@ HWTEST_F(OhosPrintStartPrintJobTest, Ohos_Print_Cli_StartPrintJob_Help_0100, Fun
     auto argv = BuildArgv({"ohos-print", "start-print-job", "--help"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "success");
     EXPECT_TRUE(response["data"].contains("helpText"));
     EXPECT_NE(response["data"]["helpText"].get<std::string>().find("start-print-job"), std::string::npos);
@@ -73,7 +74,8 @@ HWTEST_F(OhosPrintStartPrintJobTest, Ohos_Print_Cli_StartPrintJob_InvalidOption_
     auto argv = BuildArgv({"ohos-print", "start-print-job", "--nonexistent"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
 }
@@ -89,7 +91,8 @@ HWTEST_F(OhosPrintStartPrintJobTest, Ohos_Print_Cli_StartPrintJob_MissingFilePat
     auto argv = BuildArgv({"ohos-print", "start-print-job", "--document-format", "application/pdf"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
     EXPECT_NE(response["errMsg"].get<std::string>().find("file-path"), std::string::npos);
@@ -106,7 +109,8 @@ HWTEST_F(OhosPrintStartPrintJobTest, Ohos_Print_Cli_StartPrintJob_MissingDocForm
     auto argv = BuildArgv({"ohos-print", "start-print-job", "--file-path", "/data/test.pdf"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
     EXPECT_NE(response["errMsg"].get<std::string>().find("document-format"), std::string::npos);
@@ -125,7 +129,8 @@ HWTEST_F(OhosPrintStartPrintJobTest, Ohos_Print_Cli_StartPrintJob_FileNotExist_0
         "--document-format", "application/pdf"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-    json response = ParseJsonResponse(result);
+    json response;
+    ParseJsonResponse(result, response);
     EXPECT_EQ(response["status"], "failed");
     EXPECT_EQ(response["errCode"], "ERR_FILE_OPEN_FAILED");
 }

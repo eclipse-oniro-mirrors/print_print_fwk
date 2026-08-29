@@ -64,11 +64,11 @@ protected:
     PrintShellCommand* cmd_ = nullptr;
     std::vector<std::string> argvHolder_;
 
-    static json ParseJsonResponse(const std::string& result)
+    static void ParseJsonResponse(const std::string& result, json& out)
     {
         ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
         ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
-        return json::parse(result);
+        out = json::parse(result);
     }
 };
 
@@ -110,7 +110,8 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingFilePath_01
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_ARG_MISSING
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
     EXPECT_NE(response["errMsg"].get<std::string>().find("file-path"), std::string::npos);
 }
@@ -132,7 +133,8 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingDocFormat_0
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_ARG_MISSING
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
     EXPECT_NE(response["errMsg"].get<std::string>().find("document-format"), std::string::npos);
 }
@@ -473,7 +475,8 @@ HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidRange_0100, Function 
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
 }
 
@@ -492,7 +495,8 @@ HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidPage_0100, Function |
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
 }
 
@@ -556,7 +560,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_NoPermission_0100, Funct
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PERMISSION_DENIED");
 }
 
@@ -575,7 +580,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_RpcFailure_0100, Functio
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_RPC_FAILURE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PRINT_RPC_FAILURE");
 }
 
@@ -594,7 +600,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_Other_0100, Function | M
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_QUERY_FAILED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PRINT_QUERY_FAILED");
 }
 
@@ -632,7 +639,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_NoPermission_0100, Functi
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PERMISSION_DENIED");
 }
 
@@ -651,7 +659,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_RpcFailure_0100, Function
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_RPC_FAILURE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PRINT_RPC_FAILURE");
 }
 
@@ -670,7 +679,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_InvalidPrinter_0100, Func
 
     // Then: should return ERR_INVALID_VALUE and output ERR_INVALID_PRINTER
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_INVALID_PRINTER");
 }
 
@@ -689,7 +699,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_Other_0100, Function | Me
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_JOB_FAILED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PRINT_JOB_FAILED");
 }
 
@@ -710,7 +721,8 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_InvalidInput_0100, Function |
 
     // Then: should return ERR_INVALID_VALUE and output ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
 }
 
@@ -729,7 +741,8 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_ExplicitUnavailable_0100, Fun
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINTER_UNAVAILABLE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response = ParseJsonResponse(cmd_->resultReceiver_);
+    json response;
+    ParseJsonResponse(cmd_->resultReceiver_, response);
     EXPECT_EQ(response["errCode"], "ERR_PRINTER_UNAVAILABLE");
 }
 

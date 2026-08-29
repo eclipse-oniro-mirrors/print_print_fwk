@@ -70,11 +70,19 @@ constexpr char DIRECTION_AUTO[] = "auto";
 // --- Color mode option constants ---
 constexpr char COLOR_MODE_COLOR[] = "color";
 constexpr char COLOR_MODE_MONO[] = "mono";
+constexpr uint32_t COLOR_MODE_MONO_VALUE = 0;
+constexpr uint32_t COLOR_MODE_COLOR_VALUE = 1;
 
 // --- Duplex option constants ---
 constexpr char DUPLEX_LONG[] = "long";
 constexpr char DUPLEX_SHORT[] = "short";
 constexpr char DUPLEX_NONE[] = "none";
+constexpr uint32_t DUPLEX_MODE_ONE_SIDED = 0;
+constexpr uint32_t DUPLEX_MODE_TWO_SIDED_LONG_EDGE = 1;
+constexpr uint32_t DUPLEX_MODE_TWO_SIDED_SHORT_EDGE = 2;
+
+// --- option index offset ---
+constexpr int OPTIND_SUBCOMMAND_START = 2;
 
 // --- Default values ---
 constexpr uint32_t DEFAULT_COPIES = 1;
