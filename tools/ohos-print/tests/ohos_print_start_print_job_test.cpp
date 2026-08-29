@@ -47,7 +47,7 @@ protected:
         Json::CharReaderBuilder rBuilder;
         std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
         JSONCPP_STRING err;
-        if (!reader->parse(result.c_str(), result.c_str()  result.length(), &response, &err)) {
+        if (!reader->parse(result.c_str(), result.c_str() + result.length(), &response, &err)) {
             EXPECT_TRUE(false) << "ExecCommand result is not valid JSON: " << result;
             return Json::Value();
         }
