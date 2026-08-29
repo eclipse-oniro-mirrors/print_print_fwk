@@ -546,7 +546,7 @@ void PrintJob::Dump()
         PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
     }
     if (hasPrintScaling_) {
-        PRINT_HILOGD("printScaling: %{public}d", static_cast<int>(printScaling_));
+        PRINT_HILOGD("printScaling: %{public}u", printScaling_);
     }
 }
 
@@ -566,7 +566,7 @@ std::string PrintJob::ConvertToJsonString() const
         json["vendorOptions"] = vendorOptions_;
     }
     if (hasPrintScaling_) {
-        json["printScaling"] = static_cast<int>(printScaling_);
+        json["printScaling"] = printScaling_;
     }
     Json::StreamWriterBuilder wBuilder;
     std::string jsonString = Json::writeString(wBuilder, json);
@@ -605,7 +605,7 @@ Json::Value PrintJob::ConvertToJsonObject() const
     }
     jsonObject["hasPrintScaling"] = hasPrintScaling_;
     if (hasPrintScaling_) {
-        jsonObject["printScaling"] = static_cast<int>(printScaling_);
+        jsonObject["printScaling"] = printScaling_;
     }
     return jsonObject;
 }

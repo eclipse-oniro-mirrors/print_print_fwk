@@ -2796,7 +2796,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     }
     PRINT_HILOGI("jobParams->serviceJobId: %{public}s", jobParams->serviceJobId.c_str());
     PRINT_HILOGI("jobParams->borderless: %{public}d", jobParams->borderless);
-    PRINT_HILOGI("jobParams->printScaling: %{public}d", static_cast<int>(jobParams->printScaling));
+    PRINT_HILOGI("jobParams->printScaling: %{public}u", static_cast<uint32_t>(jobParams->printScaling));
     PRINT_HILOGI("jobParams->numCopies: %{public}d", jobParams->numCopies);
     PRINT_HILOGI("jobParams->duplex: %{public}s", jobParams->duplex.c_str());
     PRINT_HILOGI("jobParams->printQuality: %{public}s", jobParams->printQuality.c_str());

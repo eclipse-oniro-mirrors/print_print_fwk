@@ -318,7 +318,7 @@ HWTEST_F(PrinterPreferencesTest, ConvertBoolDefault_PrintScalingPresent, TestSiz
     OHOS::Print::PrinterPreferences preferences;
     Json::Value json;
     json["borderless"] = true;
-    json["defaultPrintScaling"] = static_cast<int>(PRINT_SCALING_BORDERLESS);
+    json["defaultPrintScaling"] = static_cast<uint32_t>(PRINT_SCALING_BORDERLESS);
     preferences.ConvertJsonToPrinterPreferences(json);
     EXPECT_EQ(true, preferences.HasDefaultPrintScaling());
     EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_BORDERLESS), preferences.GetDefaultPrintScaling());

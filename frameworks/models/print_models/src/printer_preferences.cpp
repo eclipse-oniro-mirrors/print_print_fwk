@@ -501,7 +501,7 @@ void PrinterPreferences::Dump() const
         PRINT_HILOGD("borderless: %{public}d", borderless_);
     }
     if (hasDefaultPrintScaling_) {
-        PRINT_HILOGD("defaultPrintScaling: %{public}d", static_cast<int>(defaultPrintScaling_));
+        PRINT_HILOGD("defaultPrintScaling: %{public}u", defaultPrintScaling_);
     }
     if (hasDefaultCollate_) {
         PRINT_HILOGD("defaultCollate: %{public}d", defaultCollate_);
@@ -541,7 +541,7 @@ void PrinterPreferences::DumpInfo() const
         PRINT_HILOGI("borderless: %{public}d", borderless_);
     }
     if (hasDefaultPrintScaling_) {
-        PRINT_HILOGI("defaultPrintScaling: %{public}d", static_cast<int>(defaultPrintScaling_));
+        PRINT_HILOGI("defaultPrintScaling: %{public}u", defaultPrintScaling_);
     }
     if (hasDefaultCollate_) {
         PRINT_HILOGI("defaultCollate: %{public}d", defaultCollate_);
@@ -582,7 +582,7 @@ Json::Value PrinterPreferences::ConvertToJson()
         preferencesJson["borderless"] = borderless_;
     }
     if (hasDefaultPrintScaling_) {
-        preferencesJson["defaultPrintScaling"] = static_cast<int>(defaultPrintScaling_);
+        preferencesJson["defaultPrintScaling"] = defaultPrintScaling_;
     }
     if (hasDefaultCollate_) {
         preferencesJson["defaultCollate"] = defaultCollate_;
@@ -610,8 +610,8 @@ void PrinterPreferences::ConvertBoolDefaultJsonToPrinterPreferences(Json::Value 
     }
 
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultPrintScaling") &&
-        preferencesJson["defaultPrintScaling"].isInt()) {
-        SetDefaultPrintScaling(preferencesJson["defaultPrintScaling"].asInt());
+        preferencesJson["defaultPrintScaling"].isUInt()) {
+        SetDefaultPrintScaling(preferencesJson["defaultPrintScaling"].asUInt());
     }
 
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultCollate") && preferencesJson["defaultCollate"].isBool()) {
