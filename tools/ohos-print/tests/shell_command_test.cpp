@@ -47,7 +47,7 @@ protected:
         JSON::CharReaderBuilder rBuilder;
         std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
         JSONCPP_STRING err;
-        if (!reader->parse(result.c_str(), result.c_str()  result.length(), &response, &err)) {
+        if (!reader->parse(result.c_str(), result.c_str() + result.length(), &response, &err)) {
             EXPECT_TRUE(false) << "ExecCommand result is not valid : " << result;
             return ::Value();
         }
@@ -84,8 +84,8 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_MaxArgs_0100, Function | Mediu
     // Given: argc > 256 (create 257 arguments)
     std::vector<std::string> args;
     args.push_back("ohos-print");
-    for (int i = 0; i < 257; i) {
-        args.push_back("arg"  std::to_string(i));
+    for (int i = 0; i < 257; i++) {
+        args.push_back("arg" + std::to_string(i));
     }
     std::vector<std::string> holder;
     auto argv = BuildArgv(args, holder);

@@ -70,7 +70,7 @@ protected:
         ::CharReaderBuilder rBuilder;
         std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
         JSONCPP_STRING err;
-        ASSERT_TRUE(reader->parse(result.c_str(), result.c_str()  result.length(), &out, &err))
+        ASSERT_TRUE(reader->parse(result.c_str(), result.c_str() + result.length(), &out, &err))
             << "resultReceiver_ is not valid : " << result;
     }
 };
