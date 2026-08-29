@@ -64,14 +64,14 @@ protected:
     PrintShellCommand* cmd_ = nullptr;
     std::vector<std::string> argvHolder_;
 
-    static void ParseJsonResponse(const std::string& result, ::Value& out)
+    static void ParseJsonResponse(const std::string& result, Json::Value& out)
     {
         ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
         ::CharReaderBuilder rBuilder;
-+        std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
-+        JSONCPP_STRING err;
-+        ASSERT_TRUE(reader->parse(result.c_str(), result.c_str() + result.length(), &out, &err))
-+            << "resultReceiver_ is not valid : " << result;
+        std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
+        JSONCPP_STRING err;
+        ASSERT_TRUE(reader->parse(result.c_str(), result.c_str()  result.length(), &out, &err))
+            << "resultReceiver_ is not valid : " << result;
     }
 };
 
@@ -113,9 +113,9 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingFilePath_01
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_ARG_MISSING
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
-+    EXPECT_NE(response["errMsg"].asString().find("file-path"), std::string::npos);
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
+    EXPECT_NE(response["errMsg"].asString().find("file-path"), std::string::npos);
 }
 
 /**
@@ -135,9 +135,9 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingDocFormat_0
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_ARG_MISSING
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
-+    EXPECT_NE(response["errMsg"].asString().find("document-format"), std::string::npos);
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
+    EXPECT_NE(response["errMsg"].asString().find("document-format"), std::string::npos);
 }
 
 // ========== B. ApplyStartPrintJobOption ==========
@@ -310,7 +310,7 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_Minimal_0100, Function |
     params.printerUri = "lpd://192.168.1.1:515/auto";
 
     // When: calling BuildOptionsJson
-    ::Value optionsJson;
+    Json::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.pdf", 1, optionsJson);
 
     // Then: required fields should exist, optional fields should not
@@ -348,7 +348,7 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_AllOptions_0100, Functio
     params.collate = true;
 
     // When: calling BuildOptionsJson
-    ::Value optionsJson;
+    Json::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.pdf", 3, optionsJson);
 
     // Then: all optional fields should exist
@@ -381,7 +381,7 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_ImageFormat_0100, Functi
     params.printerUri = "lpd://192.168.1.1:515/auto";
 
     // When: calling BuildOptionsJson
-    ::Value optionsJson;
+    Json::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.png", 1, optionsJson);
 
     // Then: jobDesArr should indicate image format [jobName, "1", "0"]
@@ -404,7 +404,7 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_PdfFormat_0100, Function
     params.printerUri = "lpd://192.168.1.1:515/auto";
 
     // When: calling BuildOptionsJson
-    ::Value optionsJson;
+    Json::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.pdf", 1, optionsJson);
 
     // Then: jobDesArr should indicate PDF format [jobName, "0", "1"]
@@ -476,8 +476,8 @@ HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidRange_0100, Function 
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
 }
 
 /**
@@ -495,8 +495,8 @@ HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidPage_0100, Function |
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
 }
 
 // ========== F. SetPageSizeOnJob ==========
@@ -559,8 +559,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_NoPermission_0100, Funct
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PERMISSION_DENIED");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PERMISSION_DENIED");
 }
 
 /**
@@ -578,8 +578,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_RpcFailure_0100, Functio
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_RPC_FAILURE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_RPC_FAILURE");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_RPC_FAILURE");
 }
 
 /**
@@ -597,8 +597,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_Other_0100, Function | M
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_QUERY_FAILED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_QUERY_FAILED");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_QUERY_FAILED");
 }
 
 // ========== H. HandleStartPrintJobResult ==========
@@ -635,8 +635,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_NoPermission_0100, Functi
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PERMISSION_DENIED");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PERMISSION_DENIED");
 }
 
 /**
@@ -654,8 +654,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_RpcFailure_0100, Function
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_RPC_FAILURE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_RPC_FAILURE");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_RPC_FAILURE");
 }
 
 /**
@@ -673,8 +673,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_InvalidPrinter_0100, Func
 
     // Then: should return ERR_INVALID_VALUE and output ERR_INVALID_PRINTER
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_PRINTER");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_PRINTER");
 }
 
 /**
@@ -692,8 +692,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_Other_0100, Function | Me
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_JOB_FAILED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_JOB_FAILED");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_JOB_FAILED");
 }
 
 // ========== I. CheckPrinterStatus ==========
@@ -713,8 +713,8 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_InvalidInput_0100, Function |
 
     // Then: should return ERR_INVALID_VALUE and output ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
 }
 
 /**
@@ -732,8 +732,8 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_ExplicitUnavailable_0100, Fun
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINTER_UNAVAILABLE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-+    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINTER_UNAVAILABLE");
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINTER_UNAVAILABLE");
 }
 
 /**
@@ -773,7 +773,7 @@ HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_AllFields_0100, Function |
     info.SetAlias("MyPrinter");
 
     // When: calling MarshalPrinterInfo
-    ::Value data;
+    Json::Value data;
     cmd_->MarshalPrinterInfo(info, data);
 
     // Then: all fields should appear in 
@@ -803,7 +803,7 @@ HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_MinimalFields_0100, Functi
     info.SetUri("ipp://10.0.0.1/ipp/print");
 
     // When: calling MarshalPrinterInfo
-    ::Value data;
+    Json::Value data;
     cmd_->MarshalPrinterInfo(info, data);
 
     // Then: required fields should exist, optional fields should not

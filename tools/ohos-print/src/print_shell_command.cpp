@@ -164,12 +164,9 @@ ErrCode PrintShellCommand::RunAsStartPrintJob()
     if (parseRet == PARSE_HELP_DISPLAYED) {
         return ERR_OK;
     }
-    if (parseRet != ERR_OK) {
-        return ERR_INVALID_VALUE;
-    }
 
     int32_t validateRet = ValidateRequiredParams(params);
-    if (validateRet != ERR_OK) {
+    if (parseRet != ERR_OK || validateRet != ERR_OK) {
         return ERR_INVALID_VALUE;
     }
 
