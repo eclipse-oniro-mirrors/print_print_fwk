@@ -26,11 +26,11 @@ using namespace OHOS::Print;
 
 class OhosPrintStartPrintJobTest : public ::testing::Test {
 protected:
-    static std::vector<const char*> BuildArgv(const std::vector<std::string>& args,
+    static std::vector<char*> BuildArgv(const std::vector<std::string>& args,
         std::vector<std::string>& holder)
     {
         holder = args;
-        std::vector<const char*> argv;
+        std::vector<char*> argv;
         for (auto& s : holder) {
             argv.push_back(s.data());
         }
