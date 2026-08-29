@@ -776,7 +776,6 @@ HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_AllFields_0100, Function |
     Json::Value data;
     cmd_->MarshalPrinterInfo(info, data);
 
-    // Then: all fields should appear in 
     EXPECT_EQ(data["printerId"].asString(), "printer001");
     EXPECT_EQ(data["printerName"].asString(), "TestPrinter");
     EXPECT_EQ(data["uri"].asString(), "lpd://192.168.1.1:515/auto");

@@ -110,8 +110,6 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_HelpFlag_0100, Function | Medi
     auto argv = BuildArgv({"ohos-print", "--help"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-
-    // Then: result should contain general help
     Json::Value response = ParseJsonResponse(result);
     EXPECT_EQ(response["status"].asString(), "success");
     EXPECT_TRUE(response["data"].isMember("helpText"));
@@ -130,8 +128,6 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_ShortHelpFlag_0100, Function |
     auto argv = BuildArgv({"ohos-print", "-h"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-
-    // Then: result should contain general help
     Json::Value response = ParseJsonResponse(result);
     EXPECT_EQ(response["status"].asString(), "success");
     EXPECT_TRUE(response["data"].isMember("helpText"));
@@ -188,8 +184,6 @@ HWTEST_F(ShellCommandTest, ShellCommand_ExecCommand_HelpCmd_0100, Function | Med
     auto argv = BuildArgv({"ohos-print", "help"}, holder);
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
-
-    // Then: result should contain general help 
     Json::Value response = ParseJsonResponse(result);
     EXPECT_EQ(response["status"].asString(), "success");
     EXPECT_TRUE(response["data"].isMember("helpText"));
