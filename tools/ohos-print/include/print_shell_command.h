@@ -26,98 +26,101 @@
 #include "command_output.h"
 #include "printer_info.h"
 #include "print_job.h"
-#include "nlohmann/json.hpp"
+#include <json/json.h>
 
 namespace OHOS {
 namespace Print {
 
 // --- Tool identity ---
-constexpr char TOOL_NAME[] = "ohos-print";
-constexpr uint32_t COMMAND_TIME_OUT = 30;
+inline constexpr char TOOL_NAME[] = "ohos-print";
+inline constexpr uint32_t COMMAND_TIME_OUT = 30;
+
+// --- Parse return codes ---
+constexpr int32_t PARSE_HELP_DISPLAYED = 1;
 
 // --- Error code strings ---
-constexpr char ERR_PERMISSION_DENIED[] = "ERR_PERMISSION_DENIED";
-constexpr char ERR_PRINT_RPC_FAILURE[] = "ERR_PRINT_RPC_FAILURE";
-constexpr char ERR_PRINT_QUERY_FAILED[] = "ERR_PRINT_QUERY_FAILED";
-constexpr char ERR_FILE_OPEN_FAILED[] = "ERR_FILE_OPEN_FAILED";
-constexpr char ERR_NO_PRINTER[] = "ERR_NO_PRINTER";
-constexpr char ERR_NO_DEFAULT_PRINTER[] = "ERR_NO_DEFAULT_PRINTER";
-constexpr char ERR_NO_PRINTER_URI[] = "ERR_NO_PRINTER_URI";
-constexpr char ERR_PRINTER_UNAVAILABLE[] = "ERR_PRINTER_UNAVAILABLE";
-constexpr char ERR_INVALID_PRINTER[] = "ERR_INVALID_PRINTER";
-constexpr char ERR_PRINT_JOB_FAILED[] = "ERR_PRINT_JOB_FAILED";
-constexpr char ERR_INVALID_FD[] = "ERR_INVALID_FD";
-constexpr char ERR_INVALID_INPUT[] = "ERR_INVALID_INPUT";
-constexpr char ERR_ARG_MISSING[] = "ERR_ARG_MISSING";
-constexpr char ERR_COMMAND_TIMEOUT[] = "ERR_COMMAND_TIMEOUT";
-constexpr char INVALID_COMMAND[] = "INVALID_COMMAND";
+inline constexpr char ERR_PERMISSION_DENIED[] = "ERR_PERMISSION_DENIED";
+inline constexpr char ERR_PRINT_RPC_FAILURE[] = "ERR_PRINT_RPC_FAILURE";
+inline constexpr char ERR_PRINT_QUERY_FAILED[] = "ERR_PRINT_QUERY_FAILED";
+inline constexpr char ERR_FILE_OPEN_FAILED[] = "ERR_FILE_OPEN_FAILED";
+inline constexpr char ERR_NO_PRINTER[] = "ERR_NO_PRINTER";
+inline constexpr char ERR_NO_DEFAULT_PRINTER[] = "ERR_NO_DEFAULT_PRINTER";
+inline constexpr char ERR_NO_PRINTER_URI[] = "ERR_NO_PRINTER_URI";
+inline constexpr char ERR_PRINTER_UNAVAILABLE[] = "ERR_PRINTER_UNAVAILABLE";
+inline constexpr char ERR_INVALID_PRINTER[] = "ERR_INVALID_PRINTER";
+inline constexpr char ERR_PRINT_JOB_FAILED[] = "ERR_PRINT_JOB_FAILED";
+inline constexpr char ERR_INVALID_FD[] = "ERR_INVALID_FD";
+inline constexpr char ERR_INVALID_INPUT[] = "ERR_INVALID_INPUT";
+inline constexpr char ERR_ARG_MISSING[] = "ERR_ARG_MISSING";
+inline constexpr char ERR_COMMAND_TIMEOUT[] = "ERR_COMMAND_TIMEOUT";
+inline constexpr char INVALID_COMMAND[] = "INVALID_COMMAND";
 
 // --- Page size ID constants ---
-constexpr char PAGE_SIZE_ID_A4[] = "ISO_A4";
-constexpr char PAGE_SIZE_ID_A3[] = "ISO_A3";
-constexpr char PAGE_SIZE_ID_A5[] = "ISO_A5";
-constexpr char PAGE_SIZE_ID_B5[] = "ISO_B5";
-constexpr char PAGE_SIZE_ID_LETTER[] = "NA_LETTER";
-constexpr char PAGE_SIZE_ID_LEGAL[] = "NA_LEGAL";
+inline constexpr char PAGE_SIZE_ID_A4[] = "ISO_A4";
+inline constexpr char PAGE_SIZE_ID_A3[] = "ISO_A3";
+inline constexpr char PAGE_SIZE_ID_A5[] = "ISO_A5";
+inline constexpr char PAGE_SIZE_ID_B5[] = "ISO_B5";
+inline constexpr char PAGE_SIZE_ID_LETTER[] = "NA_LETTER";
+inline constexpr char PAGE_SIZE_ID_LEGAL[] = "NA_LEGAL";
 
 // --- Page size option constants ---
 
 // --- Direction option constants ---
-constexpr char DIRECTION_LANDSCAPE[] = "landscape";
-constexpr char DIRECTION_PORTRAIT[] = "portrait";
-constexpr char DIRECTION_AUTO[] = "auto";
+inline constexpr char DIRECTION_LANDSCAPE[] = "landscape";
+inline constexpr char DIRECTION_PORTRAIT[] = "portrait";
+inline constexpr char DIRECTION_AUTO[] = "auto";
 
 // --- Color mode option constants ---
-constexpr char COLOR_MODE_COLOR[] = "color";
-constexpr char COLOR_MODE_MONO[] = "mono";
-constexpr uint32_t COLOR_MODE_MONO_VALUE = 0;
-constexpr uint32_t COLOR_MODE_COLOR_VALUE = 1;
+inline constexpr char COLOR_MODE_COLOR[] = "color";
+inline constexpr char COLOR_MODE_MONO[] = "mono";
+inline constexpr uint32_t COLOR_MODE_MONO_VALUE = 0;
+inline constexpr uint32_t COLOR_MODE_COLOR_VALUE = 1;
 
 // --- Duplex option constants ---
-constexpr char DUPLEX_LONG[] = "long";
-constexpr char DUPLEX_SHORT[] = "short";
-constexpr char DUPLEX_NONE[] = "none";
-constexpr uint32_t DUPLEX_MODE_ONE_SIDED = 0;
-constexpr uint32_t DUPLEX_MODE_TWO_SIDED_LONG_EDGE = 1;
-constexpr uint32_t DUPLEX_MODE_TWO_SIDED_SHORT_EDGE = 2;
+inline constexpr char DUPLEX_LONG[] = "long";
+inline constexpr char DUPLEX_SHORT[] = "short";
+inline constexpr char DUPLEX_NONE[] = "none";
+inline constexpr uint32_t DUPLEX_MODE_ONE_SIDED = 0;
+inline constexpr uint32_t DUPLEX_MODE_TWO_SIDED_LONG_EDGE = 1;
+inline constexpr uint32_t DUPLEX_MODE_TWO_SIDED_SHORT_EDGE = 2;
 
 // --- option index offset ---
-constexpr int OPTIND_SUBCOMMAND_START = 2;
+inline constexpr int OPTIND_SUBCOMMAND_START = 2;
 
 // --- Default values ---
-constexpr uint32_t DEFAULT_COPIES = 1;
-constexpr char DEFAULT_PAGE_SIZE_ID[] = "ISO_A4";
-constexpr char DEFAULT_DIRECTION[] = "纵向";
-constexpr char DEFAULT_COLOR_MODE[] = "黑白";
-constexpr char DEFAULT_DUPLEX_MODE[] = "单面";
+inline constexpr uint32_t DEFAULT_COPIES = 1;
+inline constexpr char DEFAULT_PAGE_SIZE_ID[] = "ISO_A4";
+inline constexpr char DEFAULT_DIRECTION[] = "纵向";
+inline constexpr char DEFAULT_COLOR_MODE[] = "黑白";
+inline constexpr char DEFAULT_DUPLEX_MODE[] = "单面";
 
 // --- Fallback page size ---
-constexpr char FALLBACK_PAGE_SIZE_NAME[] = "iso_a4_210x297mm";
-constexpr int32_t FALLBACK_PAGE_SIZE_WIDTH = 8268;
-constexpr int32_t FALLBACK_PAGE_SIZE_HEIGHT = 11692;
+inline constexpr char FALLBACK_PAGE_SIZE_NAME[] = "iso_a4_210x297mm";
+inline constexpr int32_t FALLBACK_PAGE_SIZE_WIDTH = 8268;
+inline constexpr int32_t FALLBACK_PAGE_SIZE_HEIGHT = 11692;
 
 // --- Image format prefix ---
-constexpr char IMAGE_FORMAT_PREFIX[] = "image/";
+inline constexpr char IMAGE_FORMAT_PREFIX[] = "image/";
 
 // --- Collate option strings ---
-constexpr char COLLATE_MODE[] = "collate";
-constexpr char SEQUENTIAL_MODE[] = "sequential";
+inline constexpr char COLLATE_MODE[] = "collate";
+inline constexpr char SEQUENTIAL_MODE[] = "sequential";
 
 // --- Job state ---
-constexpr char JOB_STATE_QUEUED[] = "QUEUED";
+inline constexpr char JOB_STATE_QUEUED[] = "QUEUED";
 
 // --- Print permission ---
-constexpr char PRINT_PERMISSION[] = "ohos.permission.PRINT";
+inline constexpr char PRINT_PERMISSION[] = "ohos.permission.PRINT";
 
 // --- Tool help description ---
-constexpr char TOOL_DESCRIPTION[] = "Print management utility for querying and managing printers on the system";
+inline constexpr char TOOL_DESCRIPTION[] = "Print management utility for querying and managing printers on the system";
 
 // --- Subcommand descriptions ---
-constexpr char CMD_DESC_LIST_ADDED_PRINTERS[] = "Query detailed information of all added printers";
-constexpr char CMD_DESC_START_PRINT_JOB[] = "Start a print job";
+inline constexpr char CMD_DESC_LIST_ADDED_PRINTERS[] = "Query detailed information of all added printers";
+inline constexpr char CMD_DESC_START_PRINT_JOB[] = "Start a print job";
 
 // --- list-added-printers help text ---
-constexpr char HELP_LIST_ADDED_PRINTERS[] =
+inline constexpr char HELP_LIST_ADDED_PRINTERS[] =
     "ohos-print list-added-printers - List all added printers with detailed information\n\n"
     "Usage:\n  ohos-print list-added-printers\n\n"
     "Parameters:\n    (No parameters required)\n"
@@ -125,7 +128,7 @@ constexpr char HELP_LIST_ADDED_PRINTERS[] =
     "Examples:\n  ohos-print list-added-printers";
 
 // --- start-print-job help text ---
-constexpr char HELP_START_PRINT_JOB[] =
+inline inline constexpr char HELP_START_PRINT_JOB[] =
     "ohos-print start-print-job - Start a print job\n\n"
     "Usage:\n  ohos-print start-print-job [options]\n\n"
     "Required Parameters:\n"
@@ -163,12 +166,12 @@ enum ListAddedPrintersOptionIndex {
     LIST_OPTION_HELP = 1000,
 };
 
-constexpr struct option LIST_ADDED_PRINTERS_LONG_OPTIONS[] = {
+inline inline constexpr struct option LIST_ADDED_PRINTERS_LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, LIST_OPTION_HELP},
     {nullptr, 0, nullptr, 0},
 };
 
-constexpr char LIST_ADDED_PRINTERS_SHORT_OPTIONS[] = "";
+inline inline constexpr char LIST_ADDED_PRINTERS_SHORT_OPTIONS[] = "";
 
 // --- OptionIndex enums for start-print-job subcommand ---
 enum StartPrintJobOptionIndex {
@@ -187,7 +190,7 @@ enum StartPrintJobOptionIndex {
     START_OPTION_COLLATE,
 };
 
-constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
+inline inline constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
     {"help",            no_argument,       nullptr, START_OPTION_HELP},
     {"printer-id",      required_argument, nullptr, START_OPTION_PRINTER_ID},
     {"printer-uri",     required_argument, nullptr, START_OPTION_PRINTER_URI},
@@ -204,7 +207,7 @@ constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
     {nullptr,           0,                 nullptr, 0},
 };
 
-constexpr char START_PRINT_JOB_SHORT_OPTIONS[] = "";
+inline inline constexpr char START_PRINT_JOB_SHORT_OPTIONS[] = "";
 
 struct PrintJobParams {
     std::string printerUri;
@@ -225,7 +228,7 @@ struct PrintJobParams {
 struct MappedParams {
     uint32_t copyNumber;
     std::string pageSizeId;
-    bool isLandscape;
+    uint32_t direction;
     uint32_t colorMode;
     uint32_t duplexMode;
 };
@@ -240,7 +243,7 @@ public:
     static std::string ExtractJobName(const std::string& filePath);
     static bool ParseCopies(const std::string& input, uint32_t& result);
     static std::string MapPageSizeToId(const std::string& input);
-    static bool MapDirection(const std::string& input);
+    static uint32_t MapDirection(const std::string& input);
     static std::string MapDirectionToOption(const std::string& input);
     static uint32_t MapColorMode(const std::string& input);
     static std::string MapColorModeToOption(const std::string& input);
@@ -259,9 +262,9 @@ private:
     ErrCode RunAsStartPrintJob();
 
     // --- List-added-printers helpers ---
-    void MarshalPrinterInfo(const PrinterInfo &info, nlohmann::json &data);
+    void MarshalPrinterInfo(const PrinterInfo &info, Json::Value &data);
     int32_t HandleQueryAddedPrinterError(int32_t ret);
-    void BuildPrinterList(const std::vector<std::string>& printerNameList, nlohmann::json& printersArr);
+    void BuildPrinterList(const std::vector<std::string>& printerNameList, Json::Value& printersArr);
 
     // --- Start-print-job helpers ---
     void ApplyStartPrintJobOption(int opt, PrintJobParams& params);
@@ -273,7 +276,7 @@ private:
     int32_t ResolvePrinterUri(const std::string& printerId, std::string& printerUri);
     int32_t CheckPrinterStatus(const std::string& printerId, const std::string& printerStatusInput);
     void BuildOptionsJson(const PrintJobParams& params, const std::string& jobName,
-                          uint32_t copyNumber, nlohmann::json& optionsJson);
+                          uint32_t copyNumber, Json::Value& optionsJson);
     int32_t SetPageRangeOnJob(const std::string& pageRangeInput, PrintJob& printJob);
     void SetPageSizeOnJob(const std::string& pageSizeId, PrintJob& printJob);
     int32_t MapInputParams(const PrintJobParams& params, MappedParams& mapped);

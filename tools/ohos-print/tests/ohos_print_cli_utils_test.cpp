@@ -14,14 +14,24 @@
  */
 
 #include <gtest/gtest.h>
+#include <json/json.h>
+#include <memory>
 #include <string>
-#include <nlohmann/json.hpp>
 #include "print_shell_command.h"
 #include "command_output.h"
 
-using json = nlohmann::json;
 using namespace testing::ext;
 using namespace OHOS::Print;
+
+static Json::Value ParseJson(const std::string& str)
+{
+    Json::Value val;
+    Json::CharReaderBuilder rBuilder;
+    std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
+    JSONCPP_STRING err;
+    reader->parse(str.c_str(), str.c_str() + str.length(), &val, &err);
+    return val;
+}
 
 class OhosPrintCliUtilsTest : public ::testing::Test {};
 
@@ -114,13 +124,13 @@ HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_MapPageSizeToId_0200, Function | 
  */
 HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_MapDirection_0100, Function | MediumTest | Level1)
 {
-    EXPECT_TRUE(PrintShellCommand::MapDirection("横向"));
-    EXPECT_TRUE(PrintShellCommand::MapDirection("landscape"));
-    EXPECT_FALSE(PrintShellCommand::MapDirection("纵向"));
-    EXPECT_FALSE(PrintShellCommand::MapDirection("portrait"));
-    EXPECT_FALSE(PrintShellCommand::MapDirection("自动"));
-    EXPECT_FALSE(PrintShellCommand::MapDirection("auto"));
-    EXPECT_FALSE(PrintShellCommand::MapDirection(""));
+    EXPECT_EQ(PrintShellCommand::MapDirection("横向"), DIRECTION_MODE_LANDSCAPE);
+    EXPECT_EQ(PrintShellCommand::MapDirection("landscape"), DIRECTION_MODE_LANDSCAPE);
+    EXPECT_EQ(PrintShellCommand::MapDirection("纵向"), DIRECTION_MODE_PORTRAIT);
+    EXPECT_EQ(PrintShellCommand::MapDirection("portrait"), DIRECTION_MODE_PORTRAIT);
+    EXPECT_EQ(PrintShellCommand::MapDirection("自动"), DIRECTION_MODE_AUTO);
+    EXPECT_EQ(PrintShellCommand::MapDirection("auto"), DIRECTION_MODE_AUTO);
+    EXPECT_EQ(PrintShellCommand::MapDirection(""), DIRECTION_MODE_PORTRAIT);
 }
 
 /**
@@ -212,14 +222,14 @@ HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_MapDuplexToOption_0100, Function 
  */
 HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_OutputSuccess_0100, Function | MediumTest | Level1)
 {
-    json data;
+    Json::Value data;
     data["key"] = "value";
     std::string output;
     OutputSuccess(data, output);
-    json response = json::parse(output);
-    EXPECT_EQ(response["type"], "result");
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_EQ(response["data"]["key"], "value");
+    Json::Value response = ParseJson(output);
+    EXPECT_EQ(response["type"].asString(), "result");
+    EXPECT_EQ(response["status"].asString(), "success");
+    EXPECT_EQ(response["data"]["key"].asString(), "value");
 }
 
 /**
@@ -231,12 +241,12 @@ HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_OutputError_0100, Function | Medi
 {
     std::string output;
     OutputError("ERR_TEST", "test error", "test suggestion", output);
-    json response = json::parse(output);
-    EXPECT_EQ(response["type"], "result");
-    EXPECT_EQ(response["status"], "failed");
-    EXPECT_EQ(response["errCode"], "ERR_TEST");
-    EXPECT_EQ(response["errMsg"], "test error");
-    EXPECT_EQ(response["suggestion"], "test suggestion");
+    Json::Value response = ParseJson(output);
+    EXPECT_EQ(response["type"].asString(), "result");
+    EXPECT_EQ(response["status"].asString(), "failed");
+    EXPECT_EQ(response["errCode"].asString(), "ERR_TEST");
+    EXPECT_EQ(response["errMsg"].asString(), "test error");
+    EXPECT_EQ(response["suggestion"].asString(), "test suggestion");
 }
 
 /**
@@ -248,10 +258,10 @@ HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_OutputError_0200, Function | Medi
 {
     std::string output;
     OutputError("ERR_NO_SUGGESTION", "error without suggestion", "", output);
-    json response = json::parse(output);
-    EXPECT_EQ(response["status"], "failed");
-    EXPECT_EQ(response["errCode"], "ERR_NO_SUGGESTION");
-    EXPECT_EQ(response["suggestion"], "");
+    Json::Value response = ParseJson(output);
+    EXPECT_EQ(response["status"].asString(), "failed");
+    EXPECT_EQ(response["errCode"].asString(), "ERR_NO_SUGGESTION");
+    EXPECT_EQ(response["suggestion"].asString(), "");
 }
 
 /**
@@ -261,12 +271,12 @@ HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_OutputError_0200, Function | Medi
  */
 HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_OutputSuccess_0200, Function | MediumTest | Level1)
 {
-    json data;
+    Json::Value data;
     std::string output;
     OutputSuccess(data, output);
-    json response = json::parse(output);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].is_object());
+    Json::Value response = ParseJson(output);
+    EXPECT_EQ(response["status"].asString(), "success");
+    EXPECT_TRUE(response["data"].isObject());
     EXPECT_TRUE(response["data"].empty());
 }
 

@@ -16,32 +16,42 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
++#include </.h>
++#include <memory>
 
 #include "print_shell_command.h"
 
-using json = nlohmann::json;
 using namespace testing::ext;
 using namespace OHOS::Print;
 
 class ShellCommandTest : public ::testing::Test {
 protected:
-    static std::vector<char*> BuildArgv(const std::vector<std::string>& args,
+    static std::vector<const char*> BuildArgv(const std::vector<std::string>& args,
         std::vector<std::string>& holder)
     {
         holder = args;
-        std::vector<char*> argv;
+        std::vector<const char*> argv;
         for (auto& s : holder) {
             argv.push_back(s.data());
         }
         return argv;
     }
 
-    static void ParseJsonResponse(const std::string& result, json& out)
+    static ::Value ParseJsonResponse(const std::string& result)
     {
-        ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
-        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
-        out = json::parse(result);
++        ::Value response;
++        if (result.empty()) {
++            EXPECT_FALSE(result.empty()) << "ExecCommand returned empty result";
++            return response;
++        }
++        ::CharReaderBuilder rBuilder;
++        std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
++        JSONCPP_STRING err;
++        if (!reader->parse(result.c_str(), result.c_str() + result.length(), &response, &err)) {
++            EXPECT_TRUE(false) << "ExecCommand result is not valid : " << result;
++            return ::Value();
++        }
++        return response;
     }
 };
 
@@ -59,10 +69,9 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_MinArgs_0100, Function | Mediu
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain help text (general help)
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "success");
++    EXPECT_TRUE(response["data"].isMember("helpText"));
 }
 
 /**
@@ -84,10 +93,9 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_MaxArgs_0100, Function | Mediu
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain help text since cmd_ = "help"
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "success");
++    EXPECT_TRUE(response["data"].isMember("helpText"));
 }
 
 /**
@@ -104,11 +112,10 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_HelpFlag_0100, Function | Medi
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain general help
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
-    EXPECT_TRUE(response["data"].contains("subcommands"));
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "success");
++    EXPECT_TRUE(response["data"].isMember("helpText"));
++    EXPECT_TRUE(response["data"].isMember("subcommands"));
 }
 
 /**
@@ -125,10 +132,9 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_ShortHelpFlag_0100, Function |
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain general help
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "success");
++    EXPECT_TRUE(response["data"].isMember("helpText"));
 }
 
 /**
@@ -146,10 +152,9 @@ HWTEST_F(ShellCommandTest, ShellCommand_Construct_NormalCommand_0100, Function |
 
     // Then: command is recognized and processed (not treated as help)
     // start-print-job without --document-format should fail with ERR_ARG_MISSING
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "failed");
-    EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "failed");
++    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
 }
 
 /**
@@ -166,10 +171,9 @@ HWTEST_F(ShellCommandTest, ShellCommand_ExecCommand_UnknownCmd_0100, Function | 
     std::string result = cmd.ExecCommand();
 
     // Then: result should contain INVALID_COMMAND error
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "failed");
-    EXPECT_EQ(response["errCode"], "INVALID_COMMAND");
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "failed");
++    EXPECT_EQ(response["errCode"].asString(), "INVALID_COMMAND");
 }
 
 /**
@@ -185,19 +189,18 @@ HWTEST_F(ShellCommandTest, ShellCommand_ExecCommand_HelpCmd_0100, Function | Med
     PrintShellCommand cmd(argv.size(), argv.data());
     std::string result = cmd.ExecCommand();
 
-    // Then: result should contain general help JSON
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
-    EXPECT_TRUE(response["data"].contains("subcommands"));
-    EXPECT_TRUE(response["data"]["subcommands"].is_array());
+    // Then: result should contain general help 
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["status"].asString(), "success");
++    EXPECT_TRUE(response["data"].isMember("helpText"));
++    EXPECT_TRUE(response["data"].isMember("subcommands"));
++    EXPECT_TRUE(response["data"]["subcommands"].isArray());
 }
 
 /**
  * @tc.number: ShellCommand_GetCommandErrorMsg_0100
  * @tc.name: GetCommandErrorMsg returns INVALID_COMMAND
- * @tc.desc: GetCommandErrorMsg should return JSON string containing INVALID_COMMAND error code.
+ * @tc.desc: GetCommandErrorMsg should return  string containing INVALID_COMMAND error code.
  */
 HWTEST_F(ShellCommandTest, ShellCommand_GetCommandErrorMsg_0100, Function | MediumTest | Level1)
 {
@@ -208,8 +211,7 @@ HWTEST_F(ShellCommandTest, ShellCommand_GetCommandErrorMsg_0100, Function | Medi
     std::string result = cmd.ExecCommand();
 
     // Then: output should contain INVALID_COMMAND and the unknown command name
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["errCode"], "INVALID_COMMAND");
-    EXPECT_NE(response["errMsg"].get<std::string>().find("bogus-command"), std::string::npos);
++    ::Value response = ParseJsonResponse(result);
++    EXPECT_EQ(response["errCode"].asString(), "INVALID_COMMAND");
++    EXPECT_NE(response["errMsg"].asString().find("bogus-command"), std::string::npos);
 }

@@ -21,25 +21,29 @@
 
 namespace OHOS {
 namespace Print {
-void OutputSuccess(const nlohmann::json& data, std::string& output)
+void OutputSuccess(const Json::Value& data, std::string& output)
 {
-    nlohmann::json response;
+    Json::Value response;
     response["type"] = "result";
     response["status"] = "success";
-    response["data"] = data.is_null() ? nlohmann::json::object() : data;
-    output = response.dump();
+    response["data"] = data.isNull() ? Json::Value(Json::objectValue) : data;
+    Json::StreamWriterBuilder wBuilder;
+    wBuilder["indentation"] = "";
+    output = Json::writeString(wBuilder, response);
 }
 
 void OutputError(const std::string& code, const std::string& message,
     const std::string& suggestion, std::string& output)
 {
-    nlohmann::json response;
+    Json::Value response;
     response["type"] = "result";
     response["status"] = "failed";
     response["errCode"] = code;
     response["errMsg"] = message;
     response["suggestion"] = suggestion;
-    output = response.dump();
+    Json::StreamWriterBuilder wBuilder;
+    wBuilder["indentation"] = "";
+    output = Json::writeString(wBuilder, response);
 }
 }  // namespace Print
 }  // namespace OHOS

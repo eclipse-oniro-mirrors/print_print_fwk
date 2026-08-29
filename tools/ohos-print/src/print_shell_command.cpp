@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 
 #include "print_constant.h"
 #include "print_job.h"
@@ -38,8 +38,6 @@
 #include "print_page_size.h"
 #include "print_range.h"
 #include "printer_info.h"
-
-using json = nlohmann::json;
 
 namespace OHOS {
 namespace Print {
@@ -67,25 +65,25 @@ ErrCode PrintShellCommand::Init()
 
 ErrCode PrintShellCommand::ShowGeneralHelp()
 {
-    json subcommands = json::array();
+    Json::Value subcommands(Json::arrayValue);
     for (const auto& pair : commandMap_) {
         if (pair.first == "help") {
             continue;
         }
-        json cmd;
+        Json::Value cmd;
         cmd["name"] = pair.first;
         if (pair.first == "list-added-printers") {
             cmd["description"] = CMD_DESC_LIST_ADDED_PRINTERS;
         } else if (pair.first == "start-print-job") {
             cmd["description"] = CMD_DESC_START_PRINT_JOB;
         }
-        subcommands.push_back(cmd);
+        subcommands.append(cmd);
     }
     std::string helpText = std::string(name_) + " - " + TOOL_DESCRIPTION;
     helpText += "\n\nUsage:\n  " + std::string(name_) + " [command] [options]";
     helpText += "\n\nParameters:\n  --help                   Display this help message";
     helpText += "\n\nExamples:\n  " + std::string(name_) + " --help\n  " + std::string(name_) + " <command> --help";
-    json data;
+    Json::Value data;
     data["helpText"] = helpText;
     data["subcommands"] = subcommands;
     OutputSuccess(data, resultReceiver_);
@@ -95,13 +93,13 @@ ErrCode PrintShellCommand::ShowGeneralHelp()
 ErrCode PrintShellCommand::ShowCommandHelp(const std::string& targetCmd)
 {
     if (targetCmd == "list-added-printers") {
-        json data;
+        Json::Value data;
         data["helpText"] = HELP_LIST_ADDED_PRINTERS;
         OutputSuccess(data, resultReceiver_);
         return ERR_OK;
     }
     if (targetCmd == "start-print-job") {
-        json data;
+        Json::Value data;
         data["helpText"] = HELP_START_PRINT_JOB;
         OutputSuccess(data, resultReceiver_);
         return ERR_OK;
@@ -150,11 +148,11 @@ ErrCode PrintShellCommand::RunAsListAddedPrinters()
         return HandleQueryAddedPrinterError(ret);
     }
 
-    json printersArr;
+    Json::Value printersArr(Json::arrayValue);
     BuildPrinterList(printerNameList, printersArr);
-    json data;
+    Json::Value data;
     data["printers"] = printersArr;
-    data["count"] = static_cast<uint32_t>(printersArr.size());
+    data["count"] = static_cast<Json::UInt>(printersArr.size());
     OutputSuccess(data, resultReceiver_);
     return ERR_OK;
 }
@@ -163,8 +161,11 @@ ErrCode PrintShellCommand::RunAsStartPrintJob()
 {
     PrintJobParams params;
     int32_t parseRet = ParseStartPrintJobOptions(params);
-    if (parseRet != -1) {
-        return parseRet == 0 ? ERR_OK : ERR_INVALID_VALUE;
+    if (parseRet == PARSE_HELP_DISPLAYED) {
+        return ERR_OK;
+    }
+    if (parseRet != ERR_OK) {
+        return ERR_INVALID_VALUE;
     }
 
     int32_t validateRet = ValidateRequiredParams(params);
@@ -208,7 +209,7 @@ ErrCode PrintShellCommand::RunAsStartPrintJob()
         return ERR_INVALID_VALUE;
     }
 
-    json data;
+    Json::Value data;
     data["printerId"] = params.printerId;
     data["jobName"] = jobName;
     data["state"] = JOB_STATE_QUEUED;
@@ -218,7 +219,7 @@ ErrCode PrintShellCommand::RunAsStartPrintJob()
 
 // ========== List-added-printers helpers ==========
 
-void PrintShellCommand::MarshalPrinterInfo(const PrinterInfo &info, json &data)
+void PrintShellCommand::MarshalPrinterInfo(const PrinterInfo &info, Json::Value &data)
 {
     data["printerId"] = info.GetPrinterId();
     data["printerName"] = info.GetPrinterName();
@@ -235,7 +236,9 @@ void PrintShellCommand::MarshalPrinterInfo(const PrinterInfo &info, json &data)
     if (info.HasAlias()) {
         data["alias"] = info.GetAlias();
     }
-    PRINT_HILOGI("MarshalPrinterInfo: %{public}s", (data.dump()).c_str());
+    Json::StreamWriterBuilder wBuilder;
+    wBuilder["indentation"] = "";
+    PRINT_HILOGI("MarshalPrinterInfo success.");
 }
 
 int32_t PrintShellCommand::HandleQueryAddedPrinterError(int32_t ret)
@@ -260,10 +263,9 @@ int32_t PrintShellCommand::HandleQueryAddedPrinterError(int32_t ret)
     return ERR_INVALID_VALUE;
 }
 
-void PrintShellCommand::BuildPrinterList(const std::vector<std::string>& printerNameList, json& printersArr)
+void PrintShellCommand::BuildPrinterList(const std::vector<std::string>& printerNameList, Json::Value& printersArr)
 {
     auto& client = PrintManagerClient::GetInstance();
-    printersArr = json::array();
     for (const auto &printerId : printerNameList) {
         PrinterInfo info;
         int32_t infoRet = client.QueryPrinterInfoByPrinterId(printerId, info);
@@ -272,9 +274,9 @@ void PrintShellCommand::BuildPrinterList(const std::vector<std::string>& printer
                 printerId.c_str(), infoRet);
             continue;
         }
-        json printerJson;
+        Json::Value printerJson;
         MarshalPrinterInfo(info, printerJson);
-        printersArr.push_back(printerJson);
+        printersArr.append(printerJson);
     }
 }
 
@@ -335,7 +337,7 @@ int32_t PrintShellCommand::ParseStartPrintJobOptions(PrintJobParams& params)
             argList_.clear();
             argList_.push_back("start-print-job");
             RunAsHelpCommand();
-            return ERR_OK;
+            return PARSE_HELP_DISPLAYED;
         }
         if (opt == '?') {
             OutputError(ERR_INVALID_INPUT,
@@ -345,7 +347,7 @@ int32_t PrintShellCommand::ParseStartPrintJobOptions(PrintJobParams& params)
         }
         ApplyStartPrintJobOption(opt, params);
     }
-    return -1; // Continue execution
+    return ERR_OK;
 }
 
 int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
@@ -501,19 +503,22 @@ int32_t PrintShellCommand::CheckPrinterStatus(const std::string& printerId, cons
 }
 
 void PrintShellCommand::BuildOptionsJson(const PrintJobParams& params, const std::string& jobName,
-    uint32_t copyNumber, json& optionsJson)
+    uint32_t copyNumber, Json::Value& optionsJson)
 {
     optionsJson["jobName"] = jobName;
-    json jobDesArr = json::array();
-    jobDesArr.push_back(jobName);
+    Json::Value jobDesArr(Json::arrayValue);
+    jobDesArr.append(jobName);
     bool isImageFormat = params.documentFormat.compare(0, strlen(IMAGE_FORMAT_PREFIX), IMAGE_FORMAT_PREFIX) == 0;
-    jobDesArr.push_back(isImageFormat ? "1" : "0");
-    jobDesArr.push_back(isImageFormat ? "0" : "1");
+    jobDesArr.append(isImageFormat ? "1" : "0");
+    jobDesArr.append(isImageFormat ? "0" : "1");
     optionsJson["jobDesArr"] = jobDesArr;
     optionsJson["printerUri"] = params.printerUri;
     optionsJson["documentFormat"] = params.documentFormat;
     if (!params.copiesInput.empty()) {
         optionsJson["copies"] = std::to_string(copyNumber);
+    }
+    if (!params.pageSizeInput.empty()) {
+        optionsJson["pageSize"] = MapPageSizeToId(params.pageSizeInput);
     }
     if (!params.directionInput.empty()) {
         optionsJson["direction"] = MapDirectionToOption(params.directionInput);
@@ -605,7 +610,7 @@ int32_t PrintShellCommand::MapInputParams(const PrintJobParams& params, MappedPa
         mapped.copyNumber = DEFAULT_COPIES;
     }
     mapped.pageSizeId = params.pageSizeInput.empty() ? DEFAULT_PAGE_SIZE_ID : MapPageSizeToId(params.pageSizeInput);
-    mapped.isLandscape = MapDirection(params.directionInput.empty() ? DEFAULT_DIRECTION : params.directionInput);
+    mapped.direction = MapDirection(params.directionInput.empty() ? DEFAULT_DIRECTION : params.directionInput);
     mapped.colorMode = MapColorMode(params.colorModeInput.empty() ? DEFAULT_COLOR_MODE : params.colorModeInput);
     mapped.duplexMode = MapDuplex(params.duplexInput.empty() ? DEFAULT_DUPLEX_MODE : params.duplexInput);
     return ERR_OK;
@@ -623,7 +628,7 @@ int32_t PrintShellCommand::BuildAndSubmitPrintJob(const PrintJobParams& params,
     printJob.SetFdList(fdList);
     printJob.SetPrinterId(params.printerId);
     printJob.SetCopyNumber(mapped.copyNumber);
-    printJob.SetIsLandscape(mapped.isLandscape);
+    printJob.SetIsLandscape(mapped.direction == DIRECTION_MODE_LANDSCAPE);
     printJob.SetColorMode(mapped.colorMode);
     printJob.SetDuplexMode(mapped.duplexMode);
     printJob.SetIsSequential(!params.collate);
@@ -637,11 +642,11 @@ int32_t PrintShellCommand::BuildAndSubmitPrintJob(const PrintJobParams& params,
 
     SetPageSizeOnJob(mapped.pageSizeId, printJob);
 
-    json optionsJson;
+    Json::Value optionsJson;
     BuildOptionsJson(params, jobName, mapped.copyNumber, optionsJson);
-    if (!optionsJson.empty()) {
-        printJob.SetOption(optionsJson.dump());
-    }
+    Json::StreamWriterBuilder wBuilder;
+    wBuilder["indentation"] = "";
+    printJob.SetOption(Json::writeString(wBuilder, optionsJson));
 
     auto& client = PrintManagerClient::GetInstance();
     int32_t ret = client.StartNativePrintJob(printJob);
@@ -735,12 +740,15 @@ std::string PrintShellCommand::MapPageSizeToId(const std::string& input)
     return DEFAULT_PAGE_SIZE_ID;
 }
 
-bool PrintShellCommand::MapDirection(const std::string& input)
+uint32_t PrintShellCommand::MapDirection(const std::string& input)
 {
     if (input == "横向" || input == "landscape") {
-        return true;
+        return DIRECTION_MODE_LANDSCAPE;
     }
-    return false;
+    if (input == "自动" || input == "auto") {
+        return DIRECTION_MODE_AUTO;
+    }
+    return DIRECTION_MODE_PORTRAIT;
 }
 
 std::string PrintShellCommand::MapDirectionToOption(const std::string& input)

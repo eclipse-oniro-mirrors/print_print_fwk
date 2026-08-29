@@ -16,7 +16,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
+#include <json/json.h>
+#include <memory>
 
 #include "print_shell_command.h"
 
@@ -26,22 +27,32 @@ using namespace OHOS::Print;
 
 class PrintShellCommandHelpTest : public ::testing::Test {
 protected:
-    static std::vector<char*> BuildArgv(const std::vector<std::string>& args,
+    static std::vector<const char*> BuildArgv(const std::vector<std::string>& args,
         std::vector<std::string>& holder)
     {
         holder = args;
-        std::vector<char*> argv;
+        std::vector<const char*> argv;
         for (auto& s : holder) {
             argv.push_back(s.data());
         }
         return argv;
     }
 
-    static void ParseJsonResponse(const std::string& result, json& out)
+    static Json::Value ParseJsonResponse(const std::string& result)
     {
-        ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
-        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
-        out = json::parse(result);
+        Json::Value response;
+        if (result.empty()) {
+            EXPECT_FALSE(result.empty()) << "ExecCommand returned empty result";
+            return response;
+        }
+        Json::CharReaderBuilder rBuilder;
+        std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
+        JSONCPP_STRING err;
+        if (!reader->parse(result.c_str(), result.c_str()  result.length(), &response, &err)) {
+            EXPECT_TRUE(false) << "ExecCommand result is not valid JSON: " << result;
+            return Json::Value();
+        }
+        return response;
     }
 };
 
@@ -59,12 +70,11 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_NoArgs_0100, Function | MediumTe
     std::string result = cmd.ExecCommand();
 
     // Then: result contains general help with helpText and subcommands
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
-    EXPECT_TRUE(response["data"].contains("subcommands"));
-    EXPECT_TRUE(response["data"]["subcommands"].is_array());
+    Json::Value response = ParseJsonResponse(result);
+    EXPECT_EQ(response["status"].asString(), "success");
+    EXPECT_TRUE(response["data"].isMember("helpText"));
+    EXPECT_TRUE(response["data"].isMember("subcommands"));
+    EXPECT_TRUE(response["data"]["subcommands"].isArray());
     EXPECT_GE(response["data"]["subcommands"].size(), 2u);
 }
 
@@ -82,11 +92,10 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_ListAddedPrinters_0100, Function
     std::string result = cmd.ExecCommand();
 
     // Then: result contains list-added-printers help text
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
-    std::string helpText = response["data"]["helpText"].get<std::string>();
+    Json::Value response = ParseJsonResponse(result);
+    EXPECT_EQ(response["status"].asString(), "success");
+    EXPECT_TRUE(response["data"].isMember("helpText"));
+    std::string helpText = response["data"]["helpText"].asString();
     EXPECT_NE(helpText.find("list-added-printers"), std::string::npos);
 }
 
@@ -105,10 +114,10 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_StartPrintJob_0100, Function | M
 
     // Then: result contains start-print-job help text
     json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
-    EXPECT_TRUE(response["data"].contains("helpText"));
-    std::string helpText = response["data"]["helpText"].get<std::string>();
+    Json::Value response = ParseJsonResponse(result);
+    EXPECT_EQ(response["status"].asString(), "success");
+    EXPECT_TRUE(response["data"].isMember("helpText"));
+    std::string helpText = response["data"]["helpText"].asString();
     EXPECT_NE(helpText.find("start-print-job"), std::string::npos);
 }
 
@@ -126,10 +135,9 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_UnknownCmd_0100, Function | Medi
     std::string result = cmd.ExecCommand();
 
     // Then: result contains INVALID_COMMAND error
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "failed");
-    EXPECT_EQ(response["errCode"], "INVALID_COMMAND");
+    Json::Value response = ParseJsonResponse(result);
+    EXPECT_EQ(response["status"].asString(), "failed");
+    EXPECT_EQ(response["errCode"].asString(), "INVALID_COMMAND");
 }
 
 /**
@@ -146,26 +154,25 @@ HWTEST_F(PrintShellCommandHelpTest, ShowGeneralHelp_VerifyStructure_0100, Functi
     std::string result = cmd.ExecCommand();
 
     // Then: verify the structure of general help JSON
-    json response;
-    ParseJsonResponse(result, response);
-    EXPECT_EQ(response["status"], "success");
+    Json::Value response = ParseJsonResponse(result);
+    EXPECT_EQ(response["status"].asString(), "success");
 
-    json subcommands = response["data"]["subcommands"];
-    EXPECT_TRUE(subcommands.is_array());
+    Json::Value subcommands = response["data"]["subcommands"];
+    EXPECT_TRUE(subcommands.isArray());
 
     bool hasListAddedPrinters = false;
     bool hasStartPrintJob = false;
     for (const auto& cmd : subcommands) {
-        EXPECT_TRUE(cmd.contains("name"));
-        EXPECT_TRUE(cmd.contains("description"));
-        std::string name = cmd["name"].get<std::string>();
+        EXPECT_TRUE(cmd.isMember("name"));
+        EXPECT_TRUE(cmd.isMember("description"));
+        std::string name = cmd["name"].asString();
         if (name == "list-added-printers") {
             hasListAddedPrinters = true;
-            EXPECT_FALSE(cmd["description"].get<std::string>().empty());
+            EXPECT_FALSE(cmd["description"].asString().empty());
         }
         if (name == "start-print-job") {
             hasStartPrintJob = true;
-            EXPECT_FALSE(cmd["description"].get<std::string>().empty());
+            EXPECT_FALSE(cmd["description"].asString().empty());
         }
     }
     EXPECT_TRUE(hasListAddedPrinters);

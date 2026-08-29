@@ -17,11 +17,12 @@
 #define PRINT_FWK_TOOLS_OHOS_PRINT_COMMAND_OUTPUT_H
 
 #include <string>
-#include <nlohmann/json.hpp>
+
+#include <json/json.h>
 
 namespace OHOS {
 namespace Print {
-void OutputSuccess(const nlohmann::json& data, std::string& output);
+void OutputSuccess(const Json::Value& data, std::string& output);
 void OutputError(const std::string& code, const std::string& message,
     const std::string& suggestion, std::string& output);
 }  // namespace Print

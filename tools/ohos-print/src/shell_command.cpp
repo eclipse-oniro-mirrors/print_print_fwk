@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Print {
-ShellCommand::ShellCommand(int argc, char* argv[], std::string name)
+ShellCommand::ShellCommand(int argc, char* argv[], const std::string& name)
 {
     opterr = 0;
     argc_ = argc;
@@ -46,12 +46,13 @@ ShellCommand::~ShellCommand()
 ErrCode ShellCommand::OnCommand()
 {
     int32_t result = OHOS::ERR_OK;
-    auto respond = commandMap_[cmd_];
-    if (respond == nullptr) {
+    auto it = commandMap_.find(cmd_);
+    if (it == commandMap_.end()) {
         std::string errorMsg = GetCommandErrorMsg();
         resultReceiver_ = errorMsg;
         return OHOS::ERR_INVALID_VALUE;
     }
+    auto respond = it->second;
     if (Init() == OHOS::ERR_OK) {
         PRINT_HILOGD("Init is ERR_OK.");
         respond();

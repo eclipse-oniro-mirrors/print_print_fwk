@@ -16,7 +16,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
+#include </.h>
+#include <memory>
 
 // Must be defined before including the header under test
 #define private public
@@ -31,18 +32,17 @@
 #include "print_range.h"
 #include "print_constant.h"
 
-using json = nlohmann::json;
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::Print;
 
 class PrintShellCommandPrivateTest : public ::testing::Test {
 protected:
-    static std::vector<char*> BuildArgv(const std::vector<std::string>& args,
+    static std::vector<const char*> BuildArgv(const std::vector<std::string>& args,
         std::vector<std::string>& holder)
     {
         holder = args;
-        std::vector<char*> argv;
+        std::vector<const char*> argv;
         for (auto& s : holder) {
             argv.push_back(s.data());
         }
@@ -64,11 +64,14 @@ protected:
     PrintShellCommand* cmd_ = nullptr;
     std::vector<std::string> argvHolder_;
 
-    static void ParseJsonResponse(const std::string& result, json& out)
+    static void ParseJsonResponse(const std::string& result, ::Value& out)
     {
         ASSERT_FALSE(result.empty()) << "resultReceiver_ is empty";
-        ASSERT_TRUE(json::accept(result)) << "resultReceiver_ is not valid JSON: " << result;
-        out = json::parse(result);
+        ::CharReaderBuilder rBuilder;
++        std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
++        JSONCPP_STRING err;
++        ASSERT_TRUE(reader->parse(result.c_str(), result.c_str() + result.length(), &out, &err))
++            << "resultReceiver_ is not valid : " << result;
     }
 };
 
@@ -110,10 +113,9 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingFilePath_01
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_ARG_MISSING
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
-    EXPECT_NE(response["errMsg"].get<std::string>().find("file-path"), std::string::npos);
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
++    EXPECT_NE(response["errMsg"].asString().find("file-path"), std::string::npos);
 }
 
 /**
@@ -133,10 +135,9 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingDocFormat_0
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_ARG_MISSING
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_ARG_MISSING");
-    EXPECT_NE(response["errMsg"].get<std::string>().find("document-format"), std::string::npos);
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_ARG_MISSING");
++    EXPECT_NE(response["errMsg"].asString().find("document-format"), std::string::npos);
 }
 
 // ========== B. ApplyStartPrintJobOption ==========
@@ -260,7 +261,7 @@ HWTEST_F(PrintShellCommandPrivateTest, MapInputParams_AllDefaults_0100, Function
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(mapped.copyNumber, DEFAULT_COPIES);
     EXPECT_EQ(mapped.pageSizeId, DEFAULT_PAGE_SIZE_ID);
-    EXPECT_FALSE(mapped.isLandscape);
+    EXPECT_EQ(mapped.direction, DIRECTION_MODE_PORTRAIT);
     EXPECT_EQ(mapped.colorMode, 0u);
     EXPECT_EQ(mapped.duplexMode, 0u);
 }
@@ -288,7 +289,7 @@ HWTEST_F(PrintShellCommandPrivateTest, MapInputParams_AllProvided_0100, Function
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(mapped.copyNumber, 3u);
     EXPECT_EQ(mapped.pageSizeId, "ISO_A3");
-    EXPECT_TRUE(mapped.isLandscape);
+    EXPECT_EQ(mapped.direction, DIRECTION_MODE_LANDSCAPE);
     EXPECT_EQ(mapped.colorMode, 1u);
     EXPECT_EQ(mapped.duplexMode, 1u);
 }
@@ -309,26 +310,26 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_Minimal_0100, Function |
     params.printerUri = "lpd://192.168.1.1:515/auto";
 
     // When: calling BuildOptionsJson
-    json optionsJson;
+    ::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.pdf", 1, optionsJson);
 
     // Then: required fields should exist, optional fields should not
-    EXPECT_EQ(optionsJson["jobName"], "test.pdf");
-    EXPECT_EQ(optionsJson["printerUri"], "lpd://192.168.1.1:515/auto");
-    EXPECT_EQ(optionsJson["documentFormat"], "application/pdf");
-    EXPECT_FALSE(optionsJson.contains("copies"));
-    EXPECT_FALSE(optionsJson.contains("pageSize"));
-    EXPECT_FALSE(optionsJson.contains("direction"));
-    EXPECT_FALSE(optionsJson.contains("colorMode"));
-    EXPECT_FALSE(optionsJson.contains("duplex"));
-    EXPECT_FALSE(optionsJson.contains("pageRange"));
-    EXPECT_FALSE(optionsJson.contains("collate"));
+    EXPECT_EQ(optionsJson["jobName"].asString(), "test.pdf");
+    EXPECT_EQ(optionsJson["printerUri"].asString(), "lpd://192.168.1.1:515/auto");
+    EXPECT_EQ(optionsJson["documentFormat"].asString(), "application/pdf");
+    EXPECT_FALSE(optionsJson.isMember("copies"));
+    EXPECT_FALSE(optionsJson.isMember("pageSize"));
+    EXPECT_FALSE(optionsJson.isMember("direction"));
+    EXPECT_FALSE(optionsJson.isMember("colorMode"));
+    EXPECT_FALSE(optionsJson.isMember("duplex"));
+    EXPECT_FALSE(optionsJson.isMember("pageRange"));
+    EXPECT_FALSE(optionsJson.isMember("collate"));
 }
 
 /**
  * @tc.number: BuildOptionsJson_AllOptions_0100
  * @tc.name: BuildOptionsJson with all optional params
- * @tc.desc: When all optional params are provided, all fields should exist in output JSON.
+ * @tc.desc: When all optional params are provided, all fields should exist in output .
  */
 HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_AllOptions_0100, Function | MediumTest | Level1)
 {
@@ -347,23 +348,23 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_AllOptions_0100, Functio
     params.collate = true;
 
     // When: calling BuildOptionsJson
-    json optionsJson;
+    ::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.pdf", 3, optionsJson);
 
     // Then: all optional fields should exist
-    EXPECT_TRUE(optionsJson.contains("copies"));
-    EXPECT_TRUE(optionsJson.contains("pageSize"));
-    EXPECT_TRUE(optionsJson.contains("direction"));
-    EXPECT_TRUE(optionsJson.contains("colorMode"));
-    EXPECT_TRUE(optionsJson.contains("duplex"));
-    EXPECT_TRUE(optionsJson.contains("pageRange"));
-    EXPECT_TRUE(optionsJson.contains("collate"));
-    EXPECT_EQ(optionsJson["copies"], "3");
-    EXPECT_EQ(optionsJson["direction"], "landscape");
-    EXPECT_EQ(optionsJson["colorMode"], "color");
-    EXPECT_EQ(optionsJson["duplex"], "long");
-    EXPECT_EQ(optionsJson["pageRange"], "1-5");
-    EXPECT_EQ(optionsJson["collate"], "collate");
+    EXPECT_TRUE(optionsJson.isMember("copies"));
+    EXPECT_TRUE(optionsJson.isMember("pageSize"));
+    EXPECT_TRUE(optionsJson.isMember("direction"));
+    EXPECT_TRUE(optionsJson.isMember("colorMode"));
+    EXPECT_TRUE(optionsJson.isMember("duplex"));
+    EXPECT_TRUE(optionsJson.isMember("pageRange"));
+    EXPECT_TRUE(optionsJson.isMember("collate"));
+    EXPECT_EQ(optionsJson["copies"].asString(), "3");
+    EXPECT_EQ(optionsJson["direction"].asString(), "landscape");
+    EXPECT_EQ(optionsJson["colorMode"].asString(), "color");
+    EXPECT_EQ(optionsJson["duplex"].asString(), "long");
+    EXPECT_EQ(optionsJson["pageRange"].asString(), "1-5");
+    EXPECT_EQ(optionsJson["collate"].asString(), "collate");
 }
 
 /**
@@ -380,13 +381,13 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_ImageFormat_0100, Functi
     params.printerUri = "lpd://192.168.1.1:515/auto";
 
     // When: calling BuildOptionsJson
-    json optionsJson;
+    ::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.png", 1, optionsJson);
 
     // Then: jobDesArr should indicate image format [jobName, "1", "0"]
-    EXPECT_TRUE(optionsJson.contains("jobDesArr"));
-    EXPECT_EQ(optionsJson["jobDesArr"][1], "1");
-    EXPECT_EQ(optionsJson["jobDesArr"][2], "0");
+    EXPECT_TRUE(optionsJson.isMember("jobDesArr"));
+    EXPECT_EQ(optionsJson["jobDesArr"][1].asString(), "1");
+    EXPECT_EQ(optionsJson["jobDesArr"][2].asString(), "0");
 }
 
 /**
@@ -403,13 +404,13 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_PdfFormat_0100, Function
     params.printerUri = "lpd://192.168.1.1:515/auto";
 
     // When: calling BuildOptionsJson
-    json optionsJson;
+    ::Value optionsJson;
     cmd_->BuildOptionsJson(params, "test.pdf", 1, optionsJson);
 
     // Then: jobDesArr should indicate PDF format [jobName, "0", "1"]
-    EXPECT_TRUE(optionsJson.contains("jobDesArr"));
-    EXPECT_EQ(optionsJson["jobDesArr"][1], "0");
-    EXPECT_EQ(optionsJson["jobDesArr"][2], "1");
+    EXPECT_TRUE(optionsJson.isMember("jobDesArr"));
+    EXPECT_EQ(optionsJson["jobDesArr"][1].asString(), "0");
+    EXPECT_EQ(optionsJson["jobDesArr"][2].asString(), "1");
 }
 
 // ========== E. SetPageRangeOnJob ==========
@@ -475,9 +476,8 @@ HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidRange_0100, Function 
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
 }
 
 /**
@@ -495,9 +495,8 @@ HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidPage_0100, Function |
 
     // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
 }
 
 // ========== F. SetPageSizeOnJob ==========
@@ -560,9 +559,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_NoPermission_0100, Funct
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PERMISSION_DENIED");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PERMISSION_DENIED");
 }
 
 /**
@@ -580,9 +578,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_RpcFailure_0100, Functio
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_RPC_FAILURE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PRINT_RPC_FAILURE");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_RPC_FAILURE");
 }
 
 /**
@@ -600,9 +597,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleQueryError_Other_0100, Function | M
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_QUERY_FAILED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PRINT_QUERY_FAILED");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_QUERY_FAILED");
 }
 
 // ========== H. HandleStartPrintJobResult ==========
@@ -639,9 +635,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_NoPermission_0100, Functi
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PERMISSION_DENIED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PERMISSION_DENIED");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PERMISSION_DENIED");
 }
 
 /**
@@ -659,9 +654,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_RpcFailure_0100, Function
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_RPC_FAILURE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PRINT_RPC_FAILURE");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_RPC_FAILURE");
 }
 
 /**
@@ -679,9 +673,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_InvalidPrinter_0100, Func
 
     // Then: should return ERR_INVALID_VALUE and output ERR_INVALID_PRINTER
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_INVALID_PRINTER");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_PRINTER");
 }
 
 /**
@@ -699,9 +692,8 @@ HWTEST_F(PrintShellCommandPrivateTest, HandleJobResult_Other_0100, Function | Me
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINT_JOB_FAILED
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PRINT_JOB_FAILED");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINT_JOB_FAILED");
 }
 
 // ========== I. CheckPrinterStatus ==========
@@ -721,9 +713,8 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_InvalidInput_0100, Function |
 
     // Then: should return ERR_INVALID_VALUE and output ERR_INVALID_INPUT
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_INVALID_INPUT");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
 }
 
 /**
@@ -741,9 +732,8 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_ExplicitUnavailable_0100, Fun
 
     // Then: should return ERR_INVALID_VALUE and output ERR_PRINTER_UNAVAILABLE
     EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    json response;
-    ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"], "ERR_PRINTER_UNAVAILABLE");
++    ::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
++    EXPECT_EQ(response["errCode"].asString(), "ERR_PRINTER_UNAVAILABLE");
 }
 
 /**
@@ -768,7 +758,7 @@ HWTEST_F(PrintShellCommandPrivateTest, CheckStatus_Available_0100, Function | Me
 /**
  * @tc.number: MarshalPrinter_AllFields_0100
  * @tc.name: MarshalPrinterInfo with all optional fields set
- * @tc.desc: PrinterInfo with all optional fields should produce JSON containing all those fields.
+ * @tc.desc: PrinterInfo with all optional fields should produce  containing all those fields.
  */
 HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_AllFields_0100, Function | MediumTest | Level1)
 {
@@ -783,26 +773,26 @@ HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_AllFields_0100, Function |
     info.SetAlias("MyPrinter");
 
     // When: calling MarshalPrinterInfo
-    json data;
+    ::Value data;
     cmd_->MarshalPrinterInfo(info, data);
 
-    // Then: all fields should appear in JSON
-    EXPECT_EQ(data["printerId"], "printer001");
-    EXPECT_EQ(data["printerName"], "TestPrinter");
-    EXPECT_EQ(data["uri"], "lpd://192.168.1.1:515/auto");
-    EXPECT_TRUE(data.contains("isDefaultPrinter"));
-    EXPECT_TRUE(data["isDefaultPrinter"].is_boolean());
-    EXPECT_TRUE(data.contains("printerStatus"));
-    EXPECT_TRUE(data.contains("printerMake"));
-    EXPECT_EQ(data["printerMake"], "HP");
-    EXPECT_TRUE(data.contains("alias"));
-    EXPECT_EQ(data["alias"], "MyPrinter");
+    // Then: all fields should appear in 
+    EXPECT_EQ(data["printerId"].asString(), "printer001");
+    EXPECT_EQ(data["printerName"].asString(), "TestPrinter");
+    EXPECT_EQ(data["uri"].asString(), "lpd://192.168.1.1:515/auto");
+    EXPECT_TRUE(data.isMember("isDefaultPrinter"));
+    EXPECT_TRUE(data["isDefaultPrinter"].isBool());
+    EXPECT_TRUE(data.isMember("printerStatus"));
+    EXPECT_TRUE(data.isMember("printerMake"));
+    EXPECT_EQ(data["printerMake"].asString(), "HP");
+    EXPECT_TRUE(data.isMember("alias"));
+    EXPECT_EQ(data["alias"].asString(), "MyPrinter");
 }
 
 /**
  * @tc.number: MarshalPrinter_MinimalFields_0100
  * @tc.name: MarshalPrinterInfo with only required fields
- * @tc.desc: PrinterInfo with only required fields should produce JSON without optional fields.
+ * @tc.desc: PrinterInfo with only required fields should produce  without optional fields.
  */
 HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_MinimalFields_0100, Function | MediumTest | Level1)
 {
@@ -813,17 +803,17 @@ HWTEST_F(PrintShellCommandPrivateTest, MarshalPrinter_MinimalFields_0100, Functi
     info.SetUri("ipp://10.0.0.1/ipp/print");
 
     // When: calling MarshalPrinterInfo
-    json data;
+    ::Value data;
     cmd_->MarshalPrinterInfo(info, data);
 
     // Then: required fields should exist, optional fields should not
-    EXPECT_EQ(data["printerId"], "printer002");
-    EXPECT_EQ(data["printerName"], "MinimalPrinter");
-    EXPECT_EQ(data["uri"], "ipp://10.0.0.1/ipp/print");
-    EXPECT_FALSE(data.contains("isDefaultPrinter"));
-    EXPECT_FALSE(data.contains("printerStatus"));
-    EXPECT_FALSE(data.contains("printerMake"));
-    EXPECT_FALSE(data.contains("alias"));
+    EXPECT_EQ(data["printerId"].asString(), "printer002");
+    EXPECT_EQ(data["printerName"].asString(), "MinimalPrinter");
+    EXPECT_EQ(data["uri"].asString(), "ipp://10.0.0.1/ipp/print");
+    EXPECT_FALSE(data.isMember("isDefaultPrinter"));
+    EXPECT_FALSE(data.isMember("printerStatus"));
+    EXPECT_FALSE(data.isMember("printerMake"));
+    EXPECT_FALSE(data.isMember("alias"));
 }
 
 // ========== K. CloseFdList ==========
