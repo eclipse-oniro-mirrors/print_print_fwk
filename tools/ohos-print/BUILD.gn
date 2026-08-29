@@ -44,8 +44,6 @@ ohos_static_library("ohos_print_cli_source_set") {
   ]
 
   external_deps = [
-    "ability_base:want",
-    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -75,6 +73,8 @@ ohos_cli_executable("ohos-print") {
   deps = [ ":ohos_print_cli_source_set" ]
 
   external_deps = [
+    "ability_base:want",
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",

@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-#include </.h>
+#include <json/json.h>
 #include <memory>
 
 // Must be defined before including the header under test

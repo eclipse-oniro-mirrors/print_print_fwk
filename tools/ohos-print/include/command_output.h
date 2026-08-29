@@ -17,7 +17,6 @@
 #define PRINT_FWK_TOOLS_OHOS_PRINT_COMMAND_OUTPUT_H
 
 #include <string>
-
 #include <json/json.h>
 
 namespace OHOS {
