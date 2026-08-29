@@ -1142,7 +1142,11 @@ void PrintCupsClient::JobSentCallback()
 int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGD("not borderless job options");
-    num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+    if (jobParams->printScaling == PRINT_SCALING_FILL) {
+        num_options = cupsAddOption("print-scaling", "fill", num_options, options);
+    } else {
+        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+    }
     if (!jobParams->mediaType.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {
@@ -1167,7 +1171,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGE("FillBorderlessOptions Params is nullptr");
         return num_options;
     }
-    if (jobParams->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos && jobParams->borderless) {
+    if (jobParams->printScaling == PRINT_SCALING_BORDERLESS) {
         PRINT_HILOGD("borderless job options");
         num_options = cupsAddOption("print-scaling", "fill", num_options, options);
         std::vector<MediaSize> mediaSizes;
@@ -2766,6 +2770,16 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
     UpdateJobParameterByOption(optionJson, params);
+    if (jobInfo.HasPrintScaling()) {
+        params->printScaling = static_cast<PrintScalingMode>(jobInfo.GetPrintScaling());
+    } else {
+        bool borderless = (params->borderless == TRUE);
+        if (params->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos) {
+            params->printScaling = borderless ? PRINT_SCALING_BORDERLESS : PRINT_SCALING_FIT_TO_PAGE;
+        } else {
+            params->printScaling = borderless ? PRINT_SCALING_FILL : PRINT_SCALING_FIT_TO_PAGE;
+        }
+    }
     if (jobInfo.HasVendorOptions()) {
         params->vendorOptions = jobInfo.GetVendorOptions();
     }
@@ -2781,6 +2795,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     }
     PRINT_HILOGI("jobParams->serviceJobId: %{public}s", jobParams->serviceJobId.c_str());
     PRINT_HILOGI("jobParams->borderless: %{public}d", jobParams->borderless);
+    PRINT_HILOGI("jobParams->printScaling: %{public}d", static_cast<int>(jobParams->printScaling));
     PRINT_HILOGI("jobParams->numCopies: %{public}d", jobParams->numCopies);
     PRINT_HILOGI("jobParams->duplex: %{public}s", jobParams->duplex.c_str());
     PRINT_HILOGI("jobParams->printQuality: %{public}s", jobParams->printQuality.c_str());

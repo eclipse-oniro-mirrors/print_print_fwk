@@ -594,12 +594,94 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024_NeedRename, TestSize.Leve
     jobParams->borderless = 1;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     jobParams->mediaSize = CUPS_MEDIA_4X6;
+    jobParams->printScaling = PRINT_SCALING_BORDERLESS;
     int numOptions = 0;
     cups_option_t *options = nullptr;
     int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
     EXPECT_EQ(ret, 2);
     delete jobParams;
     delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_PrintScaling_Fill
+ * @tc.desc: FillBorderlessOptions with printScaling=FILL
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_Fill, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->mediaType = "stationery";
+    jobParams->printScaling = PRINT_SCALING_FILL;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 3);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_PrintScaling_FitToPage
+ * @tc.desc: FillBorderlessOptions with printScaling=FIT_TO_PAGE
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_FitToPage, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->mediaType = "stationery";
+    jobParams->printScaling = PRINT_SCALING_FIT_TO_PAGE;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 3);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_PrintScaling_BackwardCompat
+ * @tc.desc: BuildJobParameters derives printScaling from borderless when printScaling unset
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_BackwardCompat, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    EXPECT_EQ(jobParams->printScaling, PRINT_SCALING_FILL);
+    delete jobParams;
 }
 
 /**

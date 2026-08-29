@@ -21,7 +21,8 @@ namespace OHOS::Print {
 PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED), subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
       isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
-      hasMargin_(false), hasPreview_(false), hasOption_(false), option_(""), hasVendorOptions_(false)
+      hasMargin_(false), hasPreview_(false), hasOption_(false), option_(""), hasVendorOptions_(false),
+      hasPrintScaling_(false), printScaling_(PRINT_SCALING_FIT_TO_PAGE)
 {
     margin_.Reset();
     preview_.Reset();
@@ -51,6 +52,8 @@ PrintJob::PrintJob(const PrintJob &right)
     option_ = right.option_;
     hasVendorOptions_ = right.hasVendorOptions_;
     vendorOptions_ = right.vendorOptions_;
+    hasPrintScaling_ = right.hasPrintScaling_;
+    printScaling_ = right.printScaling_;
     ownerPid_ = right.ownerPid_;
 }
 
@@ -79,6 +82,8 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         option_ = right.option_;
         hasVendorOptions_ = right.hasVendorOptions_;
         vendorOptions_ = right.vendorOptions_;
+        hasPrintScaling_ = right.hasPrintScaling_;
+        printScaling_ = right.printScaling_;
         ownerPid_ = right.ownerPid_;
     }
     return *this;
@@ -190,6 +195,8 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     option_ = jobInfo.option_;
     hasVendorOptions_ = jobInfo.hasVendorOptions_;
     vendorOptions_ = jobInfo.vendorOptions_;
+    hasPrintScaling_ = jobInfo.hasPrintScaling_;
+    printScaling_ = jobInfo.printScaling_;
     ownerPid_ = jobInfo.ownerPid_;
 }
 
@@ -323,6 +330,22 @@ const std::string &PrintJob::GetVendorOptions() const
     return vendorOptions_;
 }
 
+void PrintJob::SetPrintScaling(uint32_t printScaling)
+{
+    hasPrintScaling_ = true;
+    printScaling_ = printScaling;
+}
+
+bool PrintJob::HasPrintScaling() const
+{
+    return hasPrintScaling_;
+}
+
+uint32_t PrintJob::GetPrintScaling() const
+{
+    return printScaling_;
+}
+
 bool PrintJob::ReadParcelFD(Parcel &parcel)
 {
     uint32_t fdSize = 0;
@@ -395,6 +418,10 @@ bool PrintJob::ReadLayoutFromParcel(Parcel &parcel)
     if (!ReadVendorOptionsFromParcel(parcel)) {
         return false;
     }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(hasPrintScaling_), false);
+    if (hasPrintScaling_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(printScaling_), false);
+    }
     return true;
 }
  	 
@@ -466,6 +493,11 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetVendorOptions()), false);
     }
 
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasPrintScaling_), false);
+    if (hasPrintScaling_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteUint32(printScaling_), false);
+    }
+
    return true;
 }
 
@@ -513,6 +545,9 @@ void PrintJob::Dump()
     if (hasVendorOptions_) {
         PRINT_HILOGD("vendorOptions: %{private}s", vendorOptions_.c_str());
     }
+    if (hasPrintScaling_) {
+        PRINT_HILOGD("printScaling: %{public}d", static_cast<int>(printScaling_));
+    }
 }
 
 std::string PrintJob::ConvertToJsonString() const
@@ -529,6 +564,9 @@ std::string PrintJob::ConvertToJsonString() const
     }
     if (hasVendorOptions_) {
         json["vendorOptions"] = vendorOptions_;
+    }
+    if (hasPrintScaling_) {
+        json["printScaling"] = static_cast<int>(printScaling_);
     }
     Json::StreamWriterBuilder wBuilder;
     std::string jsonString = Json::writeString(wBuilder, json);
@@ -564,6 +602,10 @@ Json::Value PrintJob::ConvertToJsonObject() const
     jsonObject["hasVendorOptions"] = hasVendorOptions_;
     if (hasVendorOptions_) {
         jsonObject["vendorOptions"] = vendorOptions_;
+    }
+    jsonObject["hasPrintScaling"] = hasPrintScaling_;
+    if (hasPrintScaling_) {
+        jsonObject["printScaling"] = static_cast<int>(printScaling_);
     }
     return jsonObject;
 }

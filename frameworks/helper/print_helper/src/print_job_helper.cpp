@@ -40,6 +40,7 @@ static constexpr const char *PARAM_JOB_OPTION = "options";
 static constexpr const char *PARAM_JOB_NAME = "jobName";
 static constexpr const char *PARAM_JOB_MEDIATYPE = "mediaType";
 static constexpr const char *PARAM_JOB_ISBORDERLESS = "isBorderless";
+static constexpr const char *PARAM_JOB_PRINT_SCALING = "printScaling";
 static constexpr const char *PARAM_JOB_DOCUMENTFORMAT = "documentFormat";
 static constexpr const char *PARAM_JOB_PRINTQUALITY = "printQuality";
 static constexpr const char *PARAM_JOB_BINARYDATA = "binaryData";
@@ -106,6 +107,10 @@ napi_value PrintJobHelper::MakeJsObject(napi_env env, const PrintJob &job)
     if (job.HasVendorOptions()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_VENDOR_OPTIONS,
             job.GetVendorOptions().c_str());
+    }
+
+    if (job.HasPrintScaling()) {
+        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_PRINT_SCALING, job.GetPrintScaling());
     }
     return jsObj;
 }
@@ -246,6 +251,12 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, nap
         nativeObj->SetVendorOptions(
             NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_VENDOR_OPTIONS));
     }
+
+    napi_value jsPrintScaling = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PRINT_SCALING);
+    if (jsPrintScaling != nullptr) {
+        uint32_t scaling = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_PRINT_SCALING);
+        nativeObj->SetPrintScaling(scaling);
+    }
     return nativeObj;
 }
 
@@ -325,6 +336,7 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_JOB_VENDOR_OPTIONS, PRINT_PARAM_OPT},
+        {PARAM_JOB_PRINT_SCALING, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

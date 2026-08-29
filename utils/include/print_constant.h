@@ -322,6 +322,12 @@ enum PrintPageType {
     PAGE_B_TABLOID = 11,
 };
 
+enum PrintScalingMode {
+    PRINT_SCALING_FIT_TO_PAGE = 0,
+    PRINT_SCALING_FILL = 1,
+    PRINT_SCALING_BORDERLESS = 2,
+};
+
 enum ApplicationEvent {
     APPLICATION_CREATED = 0,
     APPLICATION_CLOSED_FOR_STARTED = 1,

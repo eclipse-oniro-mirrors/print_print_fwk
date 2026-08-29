@@ -2622,5 +2622,89 @@ HWTEST_F(PrintSystemDataTest, GetJsonObjectFromFile_UserDataPath_PrinterListVers
     EXPECT_EQ(systemData->GetJsonObjectFromFile(jsonObject, userDataPath), false);
 }
 
+/**
+ * @tc.name: PrintSystemData_MigratePrinterPrintScaling_BorderlessTrue
+ * @tc.desc: printer without defaultPrintScaling, borderless=true -> BORDERLESS
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSystemDataTest, MigratePrinterPrintScaling_BorderlessTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    PrinterInfo info;
+    info.SetPrinterId("printer-migrate-borderless-true");
+    info.SetPrinterName("printer-migrate-borderless-true");
+    PrinterPreferences prefs;
+    prefs.SetBorderless(true);
+    info.SetPreferences(prefs);
+    systemData->InsertAddedPrinter("printer-migrate-borderless-true", info);
+
+    systemData->MigratePrinterPrintScaling();
+
+    auto outInfo = systemData->GetAddedPrinterMap().Find("printer-migrate-borderless-true");
+    ASSERT_NE(outInfo, nullptr);
+    PrinterPreferences outPrefs;
+    outInfo->GetPreferences(outPrefs);
+    EXPECT_EQ(true, outPrefs.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_BORDERLESS), outPrefs.GetDefaultPrintScaling());
+}
+
+/**
+ * @tc.name: PrintSystemData_MigratePrinterPrintScaling_BorderlessFalse
+ * @tc.desc: printer without defaultPrintScaling and without borderless -> FIT_TO_PAGE
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSystemDataTest, MigratePrinterPrintScaling_BorderlessFalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    PrinterInfo info;
+    info.SetPrinterId("printer-migrate-borderless-false");
+    info.SetPrinterName("printer-migrate-borderless-false");
+    PrinterPreferences prefs;
+    info.SetPreferences(prefs);
+    systemData->InsertAddedPrinter("printer-migrate-borderless-false", info);
+
+    systemData->MigratePrinterPrintScaling();
+
+    auto outInfo = systemData->GetAddedPrinterMap().Find("printer-migrate-borderless-false");
+    ASSERT_NE(outInfo, nullptr);
+    PrinterPreferences outPrefs;
+    outInfo->GetPreferences(outPrefs);
+    EXPECT_EQ(true, outPrefs.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_FIT_TO_PAGE), outPrefs.GetDefaultPrintScaling());
+}
+
+/**
+ * @tc.name: PrintSystemData_MigratePrinterPrintScaling_AlreadySet
+ * @tc.desc: printer already has defaultPrintScaling -> unchanged (skip branch)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSystemDataTest, MigratePrinterPrintScaling_AlreadySet, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    PrinterInfo info;
+    info.SetPrinterId("printer-migrate-already-set");
+    info.SetPrinterName("printer-migrate-already-set");
+    PrinterPreferences prefs;
+    prefs.SetBorderless(true);
+    prefs.SetDefaultPrintScaling(PRINT_SCALING_FILL);
+    info.SetPreferences(prefs);
+    systemData->InsertAddedPrinter("printer-migrate-already-set", info);
+
+    systemData->MigratePrinterPrintScaling();
+
+    auto outInfo = systemData->GetAddedPrinterMap().Find("printer-migrate-already-set");
+    ASSERT_NE(outInfo, nullptr);
+    PrinterPreferences outPrefs;
+    outInfo->GetPreferences(outPrefs);
+    EXPECT_EQ(true, outPrefs.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_FILL), outPrefs.GetDefaultPrintScaling());
+}
+
 }  // namespace Print
 }  // namespace OHOS

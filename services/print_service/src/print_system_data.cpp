@@ -229,8 +229,29 @@ bool PrintSystemData::Init()
         DeleteFile(preferencesFilePath);
         DeleteFile(printerListFilePath);
     }
+    MigratePrinterPrintScaling();
     CleanIppRawDataFiles();
     return true;
+}
+
+void PrintSystemData::MigratePrinterPrintScaling()
+{
+    auto addedPrinterIds = QueryAddedPrinterIdList();
+    for (auto printerId : addedPrinterIds) {
+        auto info = GetAddedPrinterMap().Find(printerId);
+        if (info == nullptr) {
+            continue;
+        }
+        PrinterPreferences preferences;
+        info->GetPreferences(preferences);
+        if (preferences.HasDefaultPrintScaling()) {
+            continue;
+        }
+        preferences.SetDefaultPrintScaling(preferences.HasBorderless() && preferences.GetBorderless()
+            ? PRINT_SCALING_BORDERLESS : PRINT_SCALING_FIT_TO_PAGE);
+        info->SetPreferences(preferences);
+        SavePrinterFile(printerId);
+    }
 }
 
 bool PrintSystemData::ReadJsonFile(const std::filesystem::path &path)
@@ -377,6 +398,7 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, 
         settingJson["hasMargin"].asBool() == false) {
         updatePreferences = true;
         preferences.SetBorderless(true);
+        preferences.SetDefaultPrintScaling(PRINT_SCALING_BORDERLESS);
     }
     return updatePreferences;
 }
@@ -1587,6 +1609,8 @@ void PrintSystemData::BuildPrinterPreferenceBySupport(
     printPreferences.SetDefaultOrientation(PRINT_ORIENTATION_MODE_NONE);
 
     printPreferences.SetBorderless(false);
+
+    printPreferences.SetDefaultPrintScaling(PRINT_SCALING_FIT_TO_PAGE);
 
     printPreferences.SetDefaultCollate(true);
 

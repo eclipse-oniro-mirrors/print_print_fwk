@@ -46,6 +46,8 @@ public:
 
     void SetBorderless(bool borderless);
 
+    void SetDefaultPrintScaling(uint32_t printScaling);
+
     void SetDefaultCollate(bool defaultCollate);
 
     void SetDefaultReverse(bool defaultReverse);
@@ -79,6 +81,10 @@ public:
     [[nodiscard]] bool HasBorderless() const;
 
     [[nodiscard]] bool GetBorderless() const;
+
+    [[nodiscard]] bool HasDefaultPrintScaling() const;
+
+    [[nodiscard]] uint32_t GetDefaultPrintScaling() const;
 
     [[nodiscard]] bool HasOption() const;
 
@@ -147,6 +153,10 @@ private:
     bool hasBorderless_;
 
     bool borderless_;
+
+    bool hasDefaultPrintScaling_;
+
+    uint32_t defaultPrintScaling_;
 
     bool hasDefaultCollate_;
 

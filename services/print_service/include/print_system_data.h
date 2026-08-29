@@ -131,6 +131,7 @@ private:
     void DeleteFile(const std::filesystem::path &path);
     void BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences);
     void BuildPrinterPreferenceBySupport(const PrinterCapability &cap, PrinterPreferences &printPreferences);
+    void MigratePrinterPrintScaling();
     Json::Value GetCupsOptionsJson(const PrinterCapability &cap);
     void SaveJsonFile(const std::string &fileName, const std::string &jsonString);
     PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();

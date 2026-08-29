@@ -117,6 +117,12 @@ public:
 
     [[nodiscard]] const std::string &GetVendorOptions() const;
 
+    void SetPrintScaling(uint32_t printScaling);
+
+    [[nodiscard]] bool HasPrintScaling() const;
+
+    [[nodiscard]] uint32_t GetPrintScaling() const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     virtual bool MarshallingParam(Parcel &parcel) const;
@@ -159,6 +165,8 @@ private:
     std::string option_;
     bool hasVendorOptions_;
     std::string vendorOptions_;
+    bool hasPrintScaling_;
+    uint32_t printScaling_;
     pid_t ownerPid_ = -1;
 };
 }  // namespace OHOS::Print

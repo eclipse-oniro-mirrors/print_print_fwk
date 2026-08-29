@@ -26,6 +26,7 @@ static constexpr const char *PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID = "defaultPag
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_ORIENTATION = "defaultOrientation";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_COLORMODE = "defaultColorMode";
 static constexpr const char *PARAM_PREFERENCES_BORDERLESS = "borderless";
+static constexpr const char *PARAM_PREFERENCES_DEFAULT_PRINT_SCALING = "defaultPrintScaling";
 static constexpr const char *PARAM_PREFERENCES_COLLATE = "defaultCollate";
 static constexpr const char *PARAM_PREFERENCES_REVERSE = "defaultReverse";
 static constexpr const char *PARAM_PREFERENCES_OPTION = "options";
@@ -67,6 +68,11 @@ napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPre
 
     if (preferences.HasBorderless()) {
         NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_PREFERENCES_BORDERLESS, preferences.GetBorderless());
+    }
+
+    if (preferences.HasDefaultPrintScaling()) {
+        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING,
+            preferences.GetDefaultPrintScaling());
     }
 
     if (preferences.HasDefaultCollate()) {
@@ -153,6 +159,11 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
         nativeObj->SetDefaultColorMode(
             NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE));
     }
+    auto jsDefaultPrintScaling = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING);
+    if (jsDefaultPrintScaling != nullptr) {
+        nativeObj->SetDefaultPrintScaling(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING));
+    }
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_OPTION));
@@ -178,6 +189,7 @@ bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_PREFERENCES_DEFAULT_ORIENTATION, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_DEFAULT_COLORMODE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_BORDERLESS, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_DEFAULT_PRINT_SCALING, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_COLLATE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_REVERSE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_OPTION, PRINT_PARAM_OPT},
