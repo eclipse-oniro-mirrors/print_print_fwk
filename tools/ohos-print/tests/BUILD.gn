@@ -1,0 +1,196 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//base/print/print_fwk/print.gni")
+
+module_output_path = "print/print_fwk/tools"
+
+if (!print_fwk_feature_device_isolation) {
+ohos_unittest("ohos_print_cli_utils_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [ "ohos_print_cli_utils_test.cpp" ]
+
+  deps = [
+    "//base/print/print_fwk/tools/ohos-print:ohos_print_cli_source_set",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_unittest("ohos_print_start_print_job_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [ "ohos_print_start_print_job_test.cpp" ]
+
+  deps = [
+    "//base/print/print_fwk/tools/ohos-print:ohos_print_cli_source_set",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_unittest("ohos_print_list_added_printers_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [ "ohos_print_list_added_printers_test.cpp" ]
+
+  deps = [
+    "//base/print/print_fwk/tools/ohos-print:ohos_print_cli_source_set",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_unittest("shell_command_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [ "shell_command_test.cpp" ]
+
+  deps = [
+    "//base/print/print_fwk/tools/ohos-print:ohos_print_cli_source_set",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_unittest("print_shell_command_help_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [ "print_shell_command_help_test.cpp" ]
+
+  deps = [
+    "//base/print/print_fwk/tools/ohos-print:ohos_print_cli_source_set",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_unittest("print_shell_command_private_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [ "print_shell_command_private_test.cpp" ]
+
+  deps = [
+    "//base/print/print_fwk/tools/ohos-print:ohos_print_cli_source_set",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+group("unittest") {
+  testonly = true
+
+  deps = [
+    ":ohos_print_cli_utils_test",
+    ":ohos_print_list_added_printers_test",
+    ":ohos_print_start_print_job_test",
+    ":shell_command_test",
+    ":print_shell_command_help_test",
+    ":print_shell_command_private_test",
+  ]
+}
+} else {
+group("unittest") { }
+}
