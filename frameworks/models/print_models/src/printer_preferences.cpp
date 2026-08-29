@@ -381,9 +381,7 @@ bool PrinterPreferences::ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterP
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultPrintScaling_), false);
     if (right.hasDefaultPrintScaling_) {
-        uint32_t scaling = 0;
-        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(scaling), false);
-        right.defaultPrintScaling_ = scaling;
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.defaultPrintScaling_), false);
     }
 
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultCollate_), false);

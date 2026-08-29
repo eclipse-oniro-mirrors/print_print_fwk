@@ -123,6 +123,15 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
         return nullptr;
     }
 
+    BuildFromUint32Js(env, jsValue, nativeObj);
+    BuildFromStringJs(env, jsValue, nativeObj);
+    BuildFromBoolOptionJs(env, jsValue, nativeObj);
+    return nativeObj;
+}
+
+void PrinterPreferencesHelper::BuildFromUint32Js(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrinterPreferences> nativeObj)
+{
     auto jsDefaultDuplexMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_DEPLEX_MODE);
     if (jsDefaultDuplexMode != nullptr) {
         nativeObj->SetDefaultDuplexMode(
@@ -136,6 +145,29 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
             NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY));
     }
 
+    auto jsDefaultOrientation = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION);
+    if (jsDefaultOrientation != nullptr) {
+        nativeObj->SetDefaultOrientation(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION));
+    }
+
+    auto jsDefaultColorMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE);
+    if (jsDefaultColorMode != nullptr) {
+        nativeObj->SetDefaultColorMode(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE));
+    }
+
+    auto jsDefaultPrintScaling =
+        NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING);
+    if (jsDefaultPrintScaling != nullptr) {
+        nativeObj->SetDefaultPrintScaling(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING));
+    }
+}
+
+void PrinterPreferencesHelper::BuildFromStringJs(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrinterPreferences> nativeObj)
+{
     auto jsDefaultMediaType = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE);
     if (jsDefaultMediaType != nullptr) {
         nativeObj->SetDefaultMediaType(
@@ -148,22 +180,6 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
             NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID));
     }
 
-    auto jsDefaultOrientation = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION);
-    if (jsDefaultOrientation != nullptr) {
-        nativeObj->SetDefaultOrientation(
-            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION));
-    }
-
-    auto jsDefaultColorMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE);
-    if (jsDefaultColorMode != nullptr) {
-        nativeObj->SetDefaultColorMode(
-            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE));
-    }
-    auto jsDefaultPrintScaling = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING);
-    if (jsDefaultPrintScaling != nullptr) {
-        nativeObj->SetDefaultPrintScaling(
-            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING));
-    }
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_OPTION));
@@ -174,9 +190,6 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
         nativeObj->SetVendorOptions(
             NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_VENDOR_OPTIONS));
     }
-
-    BuildFromBoolOptionJs(env, jsValue, nativeObj);
-    return nativeObj;
 }
 
 bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
