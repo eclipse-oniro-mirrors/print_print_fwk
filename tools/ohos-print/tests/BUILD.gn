@@ -14,9 +14,10 @@
 import("//build/test.gni")
 import("//base/print/print_fwk/print.gni")
 
+if (!print_fwk_feature_device_isolation) {
+
 module_output_path = "print/print_fwk/tools"
 
-if (!print_fwk_feature_device_isolation) {
 ohos_unittest("ohos_print_cli_utils_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
