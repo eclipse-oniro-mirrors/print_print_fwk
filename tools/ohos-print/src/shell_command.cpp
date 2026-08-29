@@ -69,6 +69,9 @@ std::string ShellCommand::ExecCommand()
     int32_t result = CreateCommandMap();
     if (result != OHOS::ERR_OK) {
         PRINT_HILOGE("failed to create command map.");
+        OutputError("ERR_COMMAND_MAP_INIT", "Failed to initialize command map",
+            "Check if the print service is available", resultReceiver_);
+        return resultReceiver_;
     }
     result = OnCommand();
     if (result != OHOS::ERR_OK) {

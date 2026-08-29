@@ -19,6 +19,7 @@
 #include <string>
 #include "print_shell_command.h"
 #include "command_output.h"
+#include "print_constant.h"
 
 using namespace testing::ext;
 using namespace OHOS::Print;

@@ -128,7 +128,7 @@ inline constexpr char HELP_LIST_ADDED_PRINTERS[] =
     "Examples:\n  ohos-print list-added-printers";
 
 // --- start-print-job help text ---
-inline inline constexpr char HELP_START_PRINT_JOB[] =
+inline constexpr char HELP_START_PRINT_JOB[] =
     "ohos-print start-print-job - Start a print job\n\n"
     "Usage:\n  ohos-print start-print-job [options]\n\n"
     "Required Parameters:\n"
@@ -166,12 +166,12 @@ enum ListAddedPrintersOptionIndex {
     LIST_OPTION_HELP = 1000,
 };
 
-inline inline constexpr struct option LIST_ADDED_PRINTERS_LONG_OPTIONS[] = {
+inline constexpr struct option LIST_ADDED_PRINTERS_LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, LIST_OPTION_HELP},
     {nullptr, 0, nullptr, 0},
 };
 
-inline inline constexpr char LIST_ADDED_PRINTERS_SHORT_OPTIONS[] = "";
+inline constexpr char LIST_ADDED_PRINTERS_SHORT_OPTIONS[] = "";
 
 // --- OptionIndex enums for start-print-job subcommand ---
 enum StartPrintJobOptionIndex {
@@ -190,7 +190,7 @@ enum StartPrintJobOptionIndex {
     START_OPTION_COLLATE,
 };
 
-inline inline constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
+inline constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
     {"help",            no_argument,       nullptr, START_OPTION_HELP},
     {"printer-id",      required_argument, nullptr, START_OPTION_PRINTER_ID},
     {"printer-uri",     required_argument, nullptr, START_OPTION_PRINTER_URI},
@@ -207,7 +207,7 @@ inline inline constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
     {nullptr,           0,                 nullptr, 0},
 };
 
-inline inline constexpr char START_PRINT_JOB_SHORT_OPTIONS[] = "";
+inline constexpr char START_PRINT_JOB_SHORT_OPTIONS[] = "";
 
 struct PrintJobParams {
     std::string printerUri;
