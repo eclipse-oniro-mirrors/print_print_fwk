@@ -107,7 +107,8 @@
           "//base/print/print_fwk/frameworks/models/scan_models:scan_models",
           "//base/print/print_fwk/frameworks/ohprint:ohprint",
           "//base/print/print_fwk/frameworks/ohscan:ohscan",
-          "//base/print/print_fwk/frameworks/ability_manager_adapter:print_ability_manager_adapter"
+          "//base/print/print_fwk/frameworks/ability_manager_adapter:print_ability_manager_adapter",
+          "//base/print/print_fwk/tools/ohos-print:ohos-print"
       ],
       "service_group":[
          "//base/print/print_fwk/services:print_service",
@@ -180,7 +181,8 @@
       }
     ],
     "test": [
-      "//base/print/print_fwk/test:test"
+      "//base/print/print_fwk/test:test",
+      "//base/print/print_fwk/tools/ohos-print/tests:unittest"
     ]
     },
     "hisysevent_config": [

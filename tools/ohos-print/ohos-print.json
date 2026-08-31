@@ -1,0 +1,252 @@
+{
+  "name": "ohos-print",
+  "version": "1.0.0",
+  "description": "Print management utility for querying printer information and submitting print jobs. Used for listing added printers with detailed info and starting print jobs with file and format specification. Does not support printer configuration changes or async job state callbacks.",
+  "executablePath": "/system/bin/cli_tool/executable/ohos-print",
+  "requirePermissions": [
+    "ohos.permission.PRINT"
+  ],
+  "inputSchema": {
+    "type": "object",
+    "description": "Top-level options of the ohos-print command.",
+    "properties": {
+      "help": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "description": "Execution result of the ohos-print command.",
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": ["result"]
+      },
+      "status": {
+        "type": "string",
+        "enum": ["success", "failed"]
+      },
+      "data": {
+        "type": "object",
+        "properties": {}
+      },
+      "errCode": {
+        "type": "string"
+      },
+      "errMsg": {
+        "type": "string"
+      },
+      "suggestion": {
+        "type": "string"
+      }
+    }
+  },
+  "hasSubCommand": true,
+  "subcommands": {
+    "list-added-printers": {
+      "description": "List all added printers with detailed information on the system. Used for obtaining printer name, URI, default status and other user-visible attributes for every added printer. Does not support querying printers that have not been added to the system.",
+      "requirePermissions": ["ohos.permission.PRINT"],
+      "inputSchema": {
+        "type": "object",
+        "description": "Sub-options of the ohos-print list-added-printers command.",
+        "properties": {
+          "help": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Execution result of the ohos-print list-added-printers command.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["result"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "printers": {
+                "type": "array",
+                "description": "List of detailed printer information objects for all added printers",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "printerId": {
+                      "type": "string",
+                      "description": "Printer unique identifier"
+                    },
+                    "printerName": {
+                      "type": "string",
+                      "description": "Printer display name"
+                    },
+                    "uri": {
+                      "type": "string",
+                      "description": "Printer URI"
+                    },
+                    "isDefaultPrinter": {
+                      "type": "boolean",
+                      "description": "Whether this is the default printer"
+                    },
+                    "printerStatus": {
+                      "type": "integer",
+                      "description": "Printer status (0=IDLE, 1=BUSY, 2=UNAVAILABLE)"
+                    },
+                    "printerMake": {
+                      "type": "string",
+                      "description": "Printer manufacturer (optional)"
+                    },
+                    "alias": {
+                      "type": "string",
+                      "description": "Printer alias (optional)"
+                    }
+                  },
+                  "required": ["printerId", "printerName", "uri"]
+                }
+              },
+              "count": {
+                "type": "integer",
+                "description": "Number of printers in the list"
+              }
+            },
+            "required": ["printers", "count"]
+          },
+          "errCode": {
+            "type": "string"
+          },
+          "errMsg": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "start-print-job": {
+      "description": "Start a print job with specified file and print options. Used for sending print jobs to a default or specified printer with configured parameters. Does not support print job status monitoring or async callbacks.",
+      "requirePermissions": ["ohos.permission.PRINT"],
+      "inputSchema": {
+        "type": "object",
+        "description": "Sub-options of the ohos-print start-print-job command.",
+        "properties": {
+          "help": {
+            "type": "boolean",
+            "default": false
+          },
+          "printer-id": {
+            "type": "string",
+            "description": "Printer identifier (if not provided, the default printer will be used)"
+          },
+          "printer-uri": {
+            "type": "string",
+            "description": "Printer URI (auto-derived from printer-id if not provided, e.g., lpd://192.168.43.187:515/auto)"
+          },
+          "file-path": {
+            "type": "string",
+            "description": "File path to print (e.g., /data/test.pdf)",
+            "minLength": 1
+          },
+          "document-format": {
+            "type": "string",
+            "description": "Document format (e.g., application/pdf)",
+            "minLength": 1
+          },
+          "printer-status": {
+            "type": "integer",
+            "description": "Printer status (0=IDLE, 1=BUSY, 2=UNAVAILABLE; auto-derived from printer-id if not provided, must not be 2)",
+            "enum": [0, 1, 2]
+          },
+          "copies": {
+            "type": "string",
+            "description": "Number of copies (e.g., 3, 3份, 5份)",
+            "default": "1"
+          },
+          "page-size": {
+            "type": "string",
+            "description": "Page size: A4, A3, A5, B5, Letter, Legal",
+            "enum": ["A4", "A3", "A5", "B5", "Letter", "Legal"],
+            "default": "A4"
+          },
+          "direction": {
+            "type": "string",
+            "description": "Print direction: 纵向/竖向/portrait, 横向/landscape, 自动/auto",
+            "enum": ["纵向", "竖向", "portrait", "横向", "landscape", "自动", "auto"],
+            "default": "纵向"
+          },
+          "color-mode": {
+            "type": "string",
+            "description": "Color mode: 彩色/彩印/color, 黑白/单色/mono",
+            "enum": ["彩色", "彩印", "color", "黑白", "单色", "mono"],
+            "default": "黑白"
+          },
+          "duplex": {
+            "type": "string",
+            "description": "Duplex mode: 单面/none, 双面/双面长边/long, 双面短边/short",
+            "enum": ["单面", "none", "双面", "双面长边", "long", "双面短边", "short"],
+            "default": "单面"
+          },
+          "page-range": {
+            "type": "string",
+            "description": "Page range: start-end (e.g., 1-5) or specific pages (e.g., 1,3,5)"
+          },
+          "collate": {
+            "type": "boolean",
+            "description": "Collate mode: true=逐份, false=逐页",
+            "default": true
+          }
+        },
+        "required": ["file-path", "document-format"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Execution result of the ohos-print start-print-job command.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["result"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "printerId": {
+                "type": "string",
+                "description": "Printer identifier used for the job"
+              },
+              "jobName": {
+                "type": "string",
+                "description": "Print job name extracted from file path"
+              },
+              "state": {
+                "type": "string",
+                "description": "Job state (QUEUED, PRINTING, COMPLETED, FAILED)"
+              }
+            },
+            "required": ["printerId", "jobName", "state"]
+          },
+          "errCode": {
+            "type": "string"
+          },
+          "errMsg": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "eventSchemas": {}
+}

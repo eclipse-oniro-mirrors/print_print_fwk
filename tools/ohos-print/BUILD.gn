@@ -1,0 +1,94 @@
+import("//build/ohos.gni")
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos/cli/ohos_cli_executable.gni")
+
+if (!print_fwk_feature_device_isolation) {
+config("ohos_print_cli_config") {
+  include_dirs = [
+    "include",
+    "//base/print/print_fwk/frameworks/innerkitsimpl/print_impl/include",
+    "//base/print/print_fwk/interfaces/inner_api/native/print_manager/include",
+    "//base/print/print_fwk/frameworks/models/print_models/include",
+    "//base/print/print_fwk/utils/include",
+  ]
+}
+
+ohos_static_library("ohos_print_cli_source_set") {
+  branch_protector_ret = "pac_ret"
+
+  sources = [
+    "src/shell_command.cpp",
+    "src/command_output.cpp",
+    "src/print_shell_command.cpp",
+  ]
+
+  public_configs = [ ":ohos_print_cli_config" ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [
+    "//base/print/print_fwk/frameworks/innerkitsimpl/print_impl:print_client",
+    "//base/print/print_fwk/frameworks/models/print_models:print_models",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "jsoncpp:jsoncpp",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_cli_executable("ohos-print") {
+  sources = [ "src/main.cpp" ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [ ":ohos_print_cli_source_set" ]
+
+  external_deps = [
+    "ability_base:want",
+    "jsoncpp:jsoncpp",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  install_enable = true
+  install_images = [ "system" ]
+  cli_config_file = "ohos-print.json"
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+} else {
+  group("ohos-print") {
+  }
+}
