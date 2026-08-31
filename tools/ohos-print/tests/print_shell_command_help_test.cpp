@@ -21,7 +21,6 @@
 
 #include "print_shell_command.h"
 
-using json = nlohmann::json;
 using namespace testing::ext;
 using namespace OHOS::Print;
 
@@ -113,7 +112,6 @@ HWTEST_F(PrintShellCommandHelpTest, HelpCommand_StartPrintJob_0100, Function | M
     std::string result = cmd.ExecCommand();
 
     // Then: result contains start-print-job help text
-    json response;
     Json::Value response = ParseJsonResponse(result);
     EXPECT_EQ(response["status"].asString(), "success");
     EXPECT_TRUE(response["data"].isMember("helpText"));

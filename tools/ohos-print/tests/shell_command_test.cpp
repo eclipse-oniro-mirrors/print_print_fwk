@@ -44,12 +44,12 @@ protected:
             EXPECT_FALSE(result.empty()) << "ExecCommand returned empty result";
             return response;
         }
-        JSON::CharReaderBuilder rBuilder;
+        Json::CharReaderBuilder rBuilder;
         std::unique_ptr<::CharReader> reader(rBuilder.newCharReader());
         JSONCPP_STRING err;
         if (!reader->parse(result.c_str(), result.c_str() + result.length(), &response, &err)) {
             EXPECT_TRUE(false) << "ExecCommand result is not valid : " << result;
-            return ::Value();
+            return Json::Value();
         }
         return response;
     }
