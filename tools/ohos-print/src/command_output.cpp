@@ -23,6 +23,7 @@ namespace OHOS {
 namespace Print {
 void OutputSuccess(const Json::Value& data, std::string& output)
 {
+    PRINT_HILOGI("OutputSuccessInfo.");
     Json::Value response;
     response["type"] = "result";
     response["status"] = "success";
@@ -35,6 +36,7 @@ void OutputSuccess(const Json::Value& data, std::string& output)
 void OutputError(const std::string& code, const std::string& message,
     const std::string& suggestion, std::string& output)
 {
+    PRINT_HILOGI("OutputErrorInfo.");
     Json::Value response;
     response["type"] = "result";
     response["status"] = "failed";
