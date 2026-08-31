@@ -35,6 +35,7 @@ ohos_unittest("ohos_print_cli_utils_test") {
   ]
 
   external_deps = [
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -62,6 +63,7 @@ ohos_unittest("ohos_print_start_print_job_test") {
   ]
 
   external_deps = [
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -89,6 +91,7 @@ ohos_unittest("ohos_print_list_added_printers_test") {
   ]
 
   external_deps = [
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -116,6 +119,7 @@ ohos_unittest("shell_command_test") {
   ]
 
   external_deps = [
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -143,6 +147,7 @@ ohos_unittest("print_shell_command_help_test") {
   ]
 
   external_deps = [
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -170,6 +175,7 @@ ohos_unittest("print_shell_command_private_test") {
   ]
 
   external_deps = [
+    "jsoncpp:jsoncpp",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
