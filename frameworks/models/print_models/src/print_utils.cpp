@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <random>
 #include <sstream>
+#include <cups/http.h>
 #include "ability.h"
 #include "print_util.h"
 #include "print_constant.h"
@@ -661,6 +662,14 @@ std::string PrintUtils::GetPrintJobId()
     return jobId;
 }
 
+std::string PrintUtils::GetCurrentTimestampMillis()
+{
+    auto nowTime = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        nowTime.time_since_epoch()).count();
+    return std::to_string(timestamp);
+}
+
 bool PrintUtils::IsUsbPrinter(const std::string &printerId)
 {
     auto pos = printerId.find(PRINTER_ID_USB_PREFIX);
@@ -695,6 +704,54 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
         return uri.substr(startPos);
     }
     return uri.substr(startPos, endPos - startPos);
+}
+
+std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
+    if (status != HTTP_URI_STATUS_OK) {
+        PRINT_HILOGW("ExtractIpFromUri invalid uri, status=%{public}u", status);
+        return "";
+    }
+    std::string hostStr(host);
+    if (hostStr.find(':') == std::string::npos) {
+        return hostStr;
+    }
+    size_t zonePos = hostStr.find_first_of("+%");
+    if (zonePos != std::string::npos) {
+        hostStr = hostStr.substr(0, zonePos);
+    }
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) != 1) {
+        return hostStr;
+    }
+    constexpr int BITS_PER_HEX_DIGIT = 4;
+    constexpr int IPV6_HEXTET_COUNT = 8;
+    constexpr int IPV6_EXPANDED_MAX_LEN = IPV6_HEXTET_COUNT * 4 + (IPV6_HEXTET_COUNT - 1);
+    const uint8_t *b = addr6.s6_addr;
+    auto hexNibble = [](uint8_t v) -> char {
+        return v < 10 ? static_cast<char>('0' + v) : static_cast<char>('a' + (v - 10));
+    };
+    std::string expanded;
+    expanded.reserve(IPV6_EXPANDED_MAX_LEN);
+    for (int i = 0; i < IPV6_HEXTET_COUNT; ++i) {
+        uint8_t hi = b[i * 2];
+        uint8_t lo = b[i * 2 + 1];
+        if (i > 0) {
+            expanded.push_back(':');
+        }
+        expanded.push_back(hexNibble((hi >> BITS_PER_HEX_DIGIT) & 0x0F));
+        expanded.push_back(hexNibble(hi & 0x0F));
+        expanded.push_back(hexNibble((lo >> BITS_PER_HEX_DIGIT) & 0x0F));
+        expanded.push_back(hexNibble(lo & 0x0F));
+    }
+    return expanded;
 }
 
 }  // namespace OHOS::Print

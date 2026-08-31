@@ -1,0 +1,14 @@
+{"printer_policies":[{"device_ip":"192.168.1.100"},{"device_ip":"10.0.0.1"},{"device_ip":"2001:db8::1"}]}
+{}
+{"printer_policies":[]}
+{"printer_policies":[{"device_ip":""},{"device_ip":123}]}
+not a json
+192.168.1.100
+2001:db8::1
+-1
+100
+{"user_id":-1}
+{"user_id":100}
+{"user_id":"not_int"}
+{"printer_policies":[{"device_ip":"0.0.0.0"},{"device_ip":"255.255.255.255"},{"device_ip":"::1"}]}
+{"printer_policies":[{"device_ip":"192.168.1.100"},{"device_ip":"192.168.1.100"}]}

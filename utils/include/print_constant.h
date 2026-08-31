@@ -143,6 +143,7 @@ enum PrintErrorCode {
     E_PRINT_WINDOWS_LOGIN_LOCKOUT = 13100012,
     E_PRINT_WINDOWS_CONNECTION_FAILURE = 13100013,
     E_PRINT_KIA_INTERCEPTED = 13100014,
+    E_PRINT_EDM_POLICY_RESTRICTED = 13100015,
 };
 
 const uint32_t PRINT_INVALID_ID = 0xFFFFFFFF;   // -1
@@ -224,6 +225,7 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 40, // print job restricted by security policy.
     PRINT_JOB_RUNNING_SLOW_FILE_CONVERSION = 42, // slow file conversion
     PRINT_JOB_BLOCKED_PORT_ERROR = 43, // port error
+    PRINT_JOB_BLOCKED_EDM_POLICY_RESTRICTED = 44, // print job blocked by edm policy
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -361,6 +363,8 @@ inline const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 inline const std::string PERMISSION_NAME_PRINTER_DRIVER = "ohos.permission.PRINTER_DRIVER";
 inline const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 inline const std::string PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT = "ohos.permission.ENTERPRISE_MANAGE_PRINT";
+inline const std::string EDM_PRINT_POLICY_EVENT = "edm.event.PRINT_POLICY";
+inline const std::string EDM_PERMISSION_MANAGE_POLICY = "ohos.permission.MANAGE_EDM_POLICY";
 inline const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
 inline const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 inline const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =

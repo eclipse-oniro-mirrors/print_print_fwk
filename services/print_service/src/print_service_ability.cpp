@@ -64,9 +64,11 @@
 #include "bundle_info.h"
 #ifdef EDM_SERVICE_ENABLE
 #include "enterprise_device_mgr_proxy.h"
+#endif // EDM_SERVICE_ENABLE
+#if defined(EDM_SERVICE_ENABLE) || defined(EDM_PRINT_POLICY_ENABLE)
 #include "sg_collect_client.h"
 #include "event_info.h"
-#endif // EDM_SERVICE_ENABLE
+#endif
 #ifdef WATERMARK_ENFORCING_ENABLE
 #include "watermark_manager.h"
 #endif // WATERMARK_ENFORCING_ENABLE
@@ -206,6 +208,8 @@ static const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 static const std::string JOB_BANNED_VERSION = "1.0";
 static const int32_t JOB_BANNED_POLICY_CODE = 1021;
 static const std::string EMD_QUERY_VERSION = "version_12";
+static const int32_t EDM_POLICY_BLOCKED_EVENTID = 0x02E000002;
+static const std::string EDM_POLICY_EVENT_VERSION = "1.0";
 static const std::string IPPOVERUSB_PREFIX = ":IPP-";
 static const std::string PRINTER_ID_USB_DELIMITER = "USB";
 
@@ -362,6 +366,12 @@ int32_t PrintServiceAbility::Init()
         return this->UnloadSystemAbility();
     });
     RefreshPrintersAfterInit();
+#ifdef EDM_PRINT_POLICY_ENABLE
+    int32_t userId = GetCurrentUserId();
+    if (userId >= 0) {
+        EdmPrintPolicyManager::GetInstance().InitPrintPolicyFromEdm(userId);
+    }
+#endif
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_.load()));
     return E_PRINT_NONE;
 }
@@ -711,6 +721,19 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         return E_PRINT_NO_PERMISSION;
     }
     ManualStart();
+#ifdef EDM_PRINT_POLICY_ENABLE
+    PrinterInfo edmPrinterInfo;
+    auto edmDiscoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (edmDiscoveredInfo != nullptr) {
+        edmPrinterInfo = *edmDiscoveredInfo;
+    }
+    if (!EdmPrintPolicyManager::GetInstance().IsPrinterAllowedEdm(edmPrinterInfo)) {
+        PRINT_HILOGI("ConnectPrinter blocked by EDM Policy");
+        ReportPrinterBlockedEvent(PrintUtils::ExtractIpFromUri(
+            edmPrinterInfo.HasUri() ? edmPrinterInfo.GetUri() : ""));
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif // EDM_PRINT_POLICY_ENABLE
 #ifdef HAVE_SMB_PRINTER
     if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
         PRINT_HILOGI("connect smb printer");
@@ -966,7 +989,13 @@ int32_t PrintServiceAbility::AddRawPrinter(PrinterInfo &info)
     ManualStart();
     PRINT_HILOGI("AddRawPrinter start.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-
+#ifdef EDM_PRINT_POLICY_ENABLE
+    if (!EdmPrintPolicyManager::GetInstance().IsPrinterAllowedEdm(info)) {
+        PRINT_HILOGI("AddRawPrinter blocked by EDM Policy");
+        ReportPrinterBlockedEvent(PrintUtils::ExtractIpFromUri(info.HasUri() ? info.GetUri() : ""));
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
     if (extensionId.find(RAW_PPD_DRIVER) != std::string::npos) {
@@ -1229,6 +1258,27 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::ParsePrinterUri(const std::string &uri, std::string &printerIp,
+    std::string &protocol, std::string &printQueue)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    http_uri_status_t ret = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
+    printerIp = host;
+    if (ret != HTTP_URI_STATUS_OK ||
+        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid parameter from uri, ret = %{public}u", ret);
+        return false;
+    }
+    protocol = scheme;
+    printQueue = resource;
+    return true;
+}
+
 int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const std::string &uri,
     const std::string &ppdName, const std::string &options)
 {
@@ -1237,33 +1287,33 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
         return E_PRINT_NO_PERMISSION;
     }
     ManualStart();
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+#ifdef EDM_PRINT_POLICY_ENABLE
+    PrinterInfo edmPrinterInfo;
+    edmPrinterInfo.SetUri(uri);
+    if (!EdmPrintPolicyManager::GetInstance().IsPrinterAllowedEdm(edmPrinterInfo)) {
+        PRINT_HILOGI("AddPrinter blocked by EDM Policy");
+        ReportPrinterBlockedEvent(PrintUtils::ExtractIpFromUri(uri));
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
     auto agentResult = PrintFwkAgentManager::GetInstance().TryAddPrinterViaAgent(printerName, uri, options);
     if (agentResult.has_value()) {
         return *agentResult;
     }
 #endif
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     std::string callerBundleName = GetCallerBundleName();
     if (callerBundleName != SPOOLER_BUNDLE_NAME) {
         return AddPrinterByPrinterDriver(printerName, uri, ppdName, options, callerBundleName);
     }
-    char scheme[HTTP_MAX_URI] = {0};
-    char username[HTTP_MAX_URI] = {0};
-    char host[HTTP_MAX_URI] = {0};
-    char resource[HTTP_MAX_URI] = {0};
-    int port = 0;
-    http_uri_status_t ret = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
-        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    std::string printerIp = host;
-    if (ret != HTTP_URI_STATUS_OK ||
-        !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
-        PRINT_HILOGW("invalid parameter from uri, ret = %{public}u", ret);
+    std::string printerIp;
+    std::string protocol;
+    std::string printQueue;
+    if (!ParsePrinterUri(uri, printerIp, protocol, printQueue)) {
         return E_PRINT_INVALID_PRINTER;
     }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
-    std::string protocol = scheme;
-    std::string printQueue = resource;
     PRINT_HILOGI("[Printer: %{public}s] AddPrinter start, printerIp: %{private}s, protocol: %{public}s, \
         ppdName: %{public}s, printQueue: %{public}s.",
         printerName.c_str(), printerIp.c_str(), protocol.c_str(), ppdName.c_str(), printQueue.c_str());
@@ -1723,6 +1773,20 @@ void PrintServiceAbility::ReportEventAndUpdateJobState(std::string option, std::
 }
 #endif // EDM_SERVICE_ENABLE
 
+#if defined(EDM_SERVICE_ENABLE) || defined(EDM_PRINT_POLICY_ENABLE)
+int32_t PrintServiceAbility::ReportAuditEvent(int32_t eventId, const std::string &version,
+    const Json::Value &contentJson)
+{
+    std::string content = PrintJsonUtil::WriteString(contentJson);
+    OHOS::Security::SecurityGuard::EventInfo eventInfo(eventId, version, content);
+    OHOS::Security::SecurityGuard::NativeDataCollectKit nativeDataCollectKit;
+    auto wrappedInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventInfo);
+    int32_t reportResult = nativeDataCollectKit.ReportSecurityInfo(wrappedInfo);
+    PRINT_HILOGI("report security result: %{public}d", reportResult);
+    return reportResult;
+}
+#endif
+
 #ifdef EDM_SERVICE_ENABLE
 int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
 {
@@ -1738,23 +1802,66 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
     } else {
         PRINT_HILOGE("get report file name failed");
     }
-    auto nowTime = std::chrono::system_clock::now();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
-    std::stringstream ss;
-    ss << timestamp;
     Json::Value contentJson;
     contentJson["bundlename"] = SPOOLER_BUNDLE_NAME;
     contentJson["filePath"] = reportFileName;
-    contentJson["happenTime"] = ss.str();
-    std::string content = PrintJsonUtil::WriteString(contentJson);
-    OHOS::Security::SecurityGuard::EventInfo eventInfo(JOB_BANNED_EVENTID, JOB_BANNED_VERSION, content);
-    OHOS::Security::SecurityGuard::NativeDataCollectKit nativeDataCollectKit;
-    auto wrappedInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventInfo);
-    int32_t reportResult = nativeDataCollectKit.ReportSecurityInfo(wrappedInfo);
-    PRINT_HILOGI("report security result: %{public}d", reportResult);
-    return reportResult;
+    contentJson["happenTime"] = PrintUtils::GetCurrentTimestampMillis();
+    return ReportAuditEvent(JOB_BANNED_EVENTID, JOB_BANNED_VERSION, contentJson);
 }
 #endif // EDM_SERVICE_ENABLE
+
+#ifdef EDM_PRINT_POLICY_ENABLE
+void PrintServiceAbility::ReportJobBlockedEvent(const std::shared_ptr<PrintJob> &printJob)
+{
+    PRINT_HILOGW("Reporting print job blocked event");
+
+    std::string printerUri;
+    PrinterInfo info;
+    if (QueryAddedPrinterInfoByPrinterId(printJob->GetPrinterId(), info)) {
+        printerUri = info.HasUri() ? info.GetUri() : "";
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+        std::string sourceUri = PrintFwkAgentManager::ExtractSourceUriFromOption(info.GetOption());
+        if (!sourceUri.empty()) {
+            printerUri = sourceUri;
+        }
+#endif
+    }
+    std::string printerIp = PrintUtils::ExtractIpFromUri(printerUri);
+
+    Json::Value infoJson;
+    std::string jobName = "";
+    if (PrintJsonUtil::Parse(printJob->GetOption(), infoJson)) {
+        if (PrintJsonUtil::IsMember(infoJson, "jobName") && infoJson["jobName"].isString()) {
+            jobName = infoJson["jobName"].asString();
+        }
+    }
+
+    Json::Value contentJson;
+    contentJson["bundlename"] = GetCallerBundleName();
+    contentJson["filePath"] = jobName;
+    contentJson["happenTime"] = PrintUtils::GetCurrentTimestampMillis();
+    contentJson["printerIp"] = printerIp;
+    contentJson["jobId"] = printJob->GetJobId();
+    contentJson["userId"] = GetCurrentUserId();
+    contentJson["blockReason"] = "ip_whitelist_print_job";
+
+    ReportAuditEvent(EDM_POLICY_BLOCKED_EVENTID, EDM_POLICY_EVENT_VERSION, contentJson);
+}
+
+void PrintServiceAbility::ReportPrinterBlockedEvent(const std::string &printerIp)
+{
+    PRINT_HILOGW("Reporting printer blocked event");
+
+    Json::Value contentJson;
+    contentJson["bundlename"] = GetCallerBundleName();
+    contentJson["happenTime"] = PrintUtils::GetCurrentTimestampMillis();
+    contentJson["printerIp"] = printerIp;
+    contentJson["userId"] = GetCurrentUserId();
+    contentJson["blockReason"] = "ip_whitelist_printer_add";
+
+    ReportAuditEvent(EDM_POLICY_BLOCKED_EVENTID, EDM_POLICY_EVENT_VERSION, contentJson);
+}
+#endif // EDM_PRINT_POLICY_ENABLE
 
 int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
 {
@@ -1818,7 +1925,14 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
             return ret;
         }
     }
-
+#ifdef EDM_PRINT_POLICY_ENABLE
+    if (!EdmPrintPolicyManager::GetInstance().IsPrintJobAllowedEdm(*printJob)) {
+        ReportJobBlockedEvent(printJob);
+        UpdatePrintJobState(printJob->GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_EDM_POLICY_RESTRICTED);
+        CallStatusBar();
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif // EDM_PRINT_POLICY_ENABLE
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint()) {
         ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
@@ -2130,6 +2244,9 @@ void PrintServiceAbility::CancelUserPrintJobs(const int32_t userId)
     }
     printUserMap_.erase(userId);
     PRINT_HILOGI("remove user-%{public}d success.", userId);
+#ifdef EDM_PRINT_POLICY_ENABLE
+    EdmPrintPolicyManager::GetInstance().OnCurrentUserRemoved(userId);
+#endif
 }
 
 void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
@@ -2166,6 +2283,11 @@ void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
         currentUserId_ = userId;
     }
     PRINT_HILOGI("currentUserId_ is: %{public}d", currentUserId_);
+#ifdef EDM_PRINT_POLICY_ENABLE
+    if (userId >= 0) {
+        EdmPrintPolicyManager::GetInstance().OnUserSwitched(userId);
+    }
+#endif
     auto userData = GetUserDataByUserId(currentUserId_);
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
@@ -5090,6 +5212,14 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
         PRINT_HILOGW("Flush cache file failed");
     }
     securityGuardManager_.CalculateFileAuditInfo(printJob->GetJobId());
+#ifdef EDM_PRINT_POLICY_ENABLE
+    if (!EdmPrintPolicyManager::GetInstance().IsPrintJobAllowedEdm(*printJob)) {
+        ReportJobBlockedEvent(printJob);
+        UpdatePrintJobState(printJob->GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_EDM_POLICY_RESTRICTED);
+        CallStatusBar();
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif // EDM_PRINT_POLICY_ENABLE
     if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
@@ -6038,6 +6168,15 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         return E_PRINT_NO_PERMISSION;
     }
     ManualStart();
+#ifdef EDM_PRINT_POLICY_ENABLE
+    PrinterInfo edmPrinterInfo;
+    edmPrinterInfo.SetUri(printerIp);
+    if (!EdmPrintPolicyManager::GetInstance().IsPrinterAllowedEdm(edmPrinterInfo)) {
+        PRINT_HILOGI("ConnectPrinterByIpAndPpd blocked by EDM Policy");
+        ReportPrinterBlockedEvent(printerIp);
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_SERVER_FAILURE);
@@ -6271,6 +6410,19 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
     }
     PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+#ifdef EDM_PRINT_POLICY_ENABLE
+    PrinterInfo edmPrinterInfo;
+    auto edmDiscoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (edmDiscoveredInfo != nullptr) {
+        edmPrinterInfo = *edmDiscoveredInfo;
+    }
+    if (!EdmPrintPolicyManager::GetInstance().IsPrinterAllowedEdm(edmPrinterInfo)) {
+        PRINT_HILOGI("ConnectPrinterByIdAndPpd blocked by EDM Policy");
+        ReportPrinterBlockedEvent(PrintUtils::ExtractIpFromUri(
+            edmPrinterInfo.HasUri() ? edmPrinterInfo.GetUri() : ""));
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif
 #ifdef HAVE_SMB_PRINTER
     if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
         PRINT_HILOGI("connect smb printer");
