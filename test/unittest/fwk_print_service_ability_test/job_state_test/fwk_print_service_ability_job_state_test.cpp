@@ -482,5 +482,68 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_Eprint_SkipNotify, TestS
 
 #endif  // HAVE_PRINT_FAILURE_AI_NOTIFIER
 
+HWTEST_F(PrintServiceAbilityTest, SpoolerClosed_WhenAttributesPresent_ShouldEraseAttributes, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    service->serviceHandler_ = nullptr;
+    std::string jobId = "dedup_state_1";
+    service->printAttributesList_[jobId] = std::make_shared<PrintAttributes>();
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
+    EXPECT_EQ(service->printAttributesList_.find(jobId), service->printAttributesList_.end());
+}
+
+HWTEST_F(PrintServiceAbilityTest, Blocked_WhenAttributesPresent_ShouldEraseAttributes, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    service->serviceHandler_ = nullptr;
+    std::string jobId = "dedup_state_2";
+    service->printAttributesList_[jobId] = std::make_shared<PrintAttributes>();
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
+    EXPECT_EQ(service->printAttributesList_.find(jobId), service->printAttributesList_.end());
+}
+
+HWTEST_F(PrintServiceAbilityTest, SpoolerClosed_DuplicateNotify_ShouldInvokeCallbackOnce, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    service->serviceHandler_ = nullptr;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
+    std::string jobId = "dedup_listener_1";
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(
+        PRINT_JOB_CALLBACK_ADAPTER, jobId, listener));
+    service->printAttributesList_[jobId] = std::make_shared<PrintAttributes>();
+    pid_t ownerPid = IPCSkeleton::GetCallingPid();
+    EXPECT_CALL(*listener, OnCallbackAdapterJobStateChanged(_, _, _)).Times(1).WillOnce(Return(true));
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED, ownerPid);
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED, ownerPid);
+    EXPECT_EQ(service->printAttributesList_.find(jobId), service->printAttributesList_.end());
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
+}
+
+HWTEST_F(PrintServiceAbilityTest, Completed_AfterSpoolerClosed_ShouldInvokeCallback, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    service->serviceHandler_ = nullptr;
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
+    std::string jobId = "dedup_listener_2";
+    sptr<MockPrintCallbackProxy> listener = new MockPrintCallbackProxy();
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrintJobListener(
+        PRINT_JOB_CALLBACK_ADAPTER, jobId, listener));
+    service->printAttributesList_[jobId] = std::make_shared<PrintAttributes>();
+    pid_t ownerPid = IPCSkeleton::GetCallingPid();
+    EXPECT_CALL(*listener, OnCallbackAdapterJobStateChanged(_, _, _)).Times(2).WillRepeatedly(Return(true));
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED, ownerPid);
+    service->notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS, ownerPid);
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
+}
+
 }  // namespace Print
 }  // namespace OHOS
