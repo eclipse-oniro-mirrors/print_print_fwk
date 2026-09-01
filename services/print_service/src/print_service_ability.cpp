@@ -3811,6 +3811,10 @@ void PrintServiceAbility::notifyAdapterJobChanged(
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto attrIt = printAttributesList_.find(jobId);
+    if (state == PRINT_JOB_SPOOLER_CLOSED && attrIt == printAttributesList_.end()) {
+        PRINT_HILOGW("[Job Id: %{public}s] duplicate spooler-closed notify, skip", jobId.c_str());
+        return;
+    }
     if (attrIt != printAttributesList_.end()) {
         printAttributesList_.erase(attrIt);
     }
