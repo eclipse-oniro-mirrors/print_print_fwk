@@ -66,13 +66,14 @@ const char *const ATTR_TEST_DUPLICATE_MEDIA_TYPE_ARRAY[ATTR_TEST_DUPLICATE_MEDIA
 
 void TestAttrCount(const std::string &jsonString, int count)
 {
-    Json::Value jsonArrayObject;
-    if (OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonArrayObject)) {
+    if (jsonString.empty()) {
+        EXPECT_EQ(count, 0);
         return;
     }
-    if (jsonArrayObject.isArray()) {
-        EXPECT_EQ(jsonArrayObject.size(), count);
-    }
+    Json::Value jsonArrayObject;
+    ASSERT_TRUE(OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonArrayObject));
+    ASSERT_TRUE(jsonArrayObject.isArray());
+    EXPECT_EQ(jsonArrayObject.size(), count);
 }
 }  // namespace
 
@@ -622,7 +623,7 @@ HWTEST_F(PrintCupsAttributeTest, SetOptionAttribute_DuplicateMediaTypes_KeepFirs
         TestAttrCount(mediaTypeString, ATTR_TEST_UNIQUE_MEDIA_TYPE_COUNT);
 
         Json::Value optionJson;
-        ASSERT_FALSE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
+        ASSERT_TRUE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
         ASSERT_TRUE(optionJson["cupsOptions"]["media-type-supported"].isString());
         EXPECT_EQ(optionJson["cupsOptions"]["media-type-supported"].asString(), mediaTypeString);
     };
