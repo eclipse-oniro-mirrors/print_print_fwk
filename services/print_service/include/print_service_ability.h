@@ -276,6 +276,9 @@ private:
     void HandlePrinterChangeRegister(const std::string &eventType);
 #ifdef HAVE_SMB_PRINTER
     void TryStartSmbPrinterStatusMonitor();
+    int32_t AddSmbPrinterToCups(const PrinterInfo &printerInfo,
+        const std::string &ppdNameInput, std::string &ppdName);
+    int32_t QuerySmbPrinterCapability(PrinterInfo &printerInfo, const std::string &ppdName);
     int32_t ConnectSmbPrinter(PrinterInfo& printerInfo, const std::string &ppdNameInput = "");
 #endif // HAVE_SMB_PRINTER
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);

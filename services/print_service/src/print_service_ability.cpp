@@ -6637,47 +6637,63 @@ int32_t PrintServiceAbility::AuthSmbDevice(const PrintSharedHost& sharedHost, co
 }
 
 #ifdef HAVE_SMB_PRINTER
-int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const std::string &ppdNameInput)
+int32_t PrintServiceAbility::AddSmbPrinterToCups(
+    const PrinterInfo &printerInfo, const std::string &ppdNameInput, std::string &ppdName)
 {
-    std::string ppdName;
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    int32_t ret = E_PRINT_NONE;
     if (ppdNameInput.empty()) {
         std::string make = printerInfo.GetPrinterMake();
-        ret = printCupsClient->AddPrinterToCups(
-            printerInfo.GetUri(), printerInfo.GetPrinterName(), make);
-        if (ret != E_PRINT_NONE) {
+        if (int32_t ret = printCupsClient->AddPrinterToCups(
+            printerInfo.GetUri(), printerInfo.GetPrinterName(), make); ret != E_PRINT_NONE) {
             PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
             return ret;
         }
         QueryPPDInformation(make, ppdName);
     } else {
         ppdName = ppdNameInput;
-        ret = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerInfo.GetUri(),
-            printerInfo.GetPrinterName(), ppdName);
-        if (ret != E_PRINT_NONE) {
+        if (int32_t ret = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerInfo.GetUri(),
+            printerInfo.GetPrinterName(), ppdName); ret != E_PRINT_NONE) {
             PRINT_HILOGE("AddPrinterToCupsWithSpecificPpd error = %{public}d.", ret);
             return ret;
         }
     }
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::QuerySmbPrinterCapability(
+    PrinterInfo &printerInfo, const std::string &ppdName)
+{
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     PrinterCapability printerCaps;
-    ret = printCupsClient->QueryPrinterCapabilityFromPPD(
-        printerInfo.GetPrinterName(), printerCaps, ppdName);
-    if (ret != E_PRINT_NONE) {
+    if (int32_t ret = printCupsClient->QueryPrinterCapabilityFromPPD(
+        printerInfo.GetPrinterName(), printerCaps, ppdName); ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
         return ret;
     }
     printerInfo.SetCapability(printerCaps);
-    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
-    printerInfo.SetPpdHashCode(ppdHashCode);
+    printerInfo.SetPpdHashCode(printCupsClient->GetPpdHashCode(ppdName));
     PpdInfo ppdInfo;
-    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryInfoByPpdName(ppdName, ppdInfo)) {
+    if (!printCupsClient->QueryInfoByPpdName(ppdName, ppdInfo)) {
         PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
         ppdInfo.SetPpdInfo("auto", "auto", ppdName);
     }
     printerInfo.SetSelectedDriver(ppdInfo);
     printerInfo.SetSelectedProtocol("smb");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const std::string &ppdNameInput)
+{
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::string printerName = RenamePrinterWhenAdded(printerInfo);
+    printerInfo.SetPrinterName(printerName);
+    std::string ppdName;
+    if (int32_t ret = AddSmbPrinterToCups(printerInfo, ppdNameInput, ppdName); ret != E_PRINT_NONE) {
+        return ret;
+    }
+    if (int32_t ret = QuerySmbPrinterCapability(printerInfo, ppdName); ret != E_PRINT_NONE) {
+        return ret;
+    }
     UpdatePrinterCapability(printerInfo.GetPrinterId(), printerInfo);
     printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
     SendPrinterEvent(printerInfo);
