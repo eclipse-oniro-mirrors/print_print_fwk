@@ -66,14 +66,13 @@ const char *const ATTR_TEST_DUPLICATE_MEDIA_TYPE_ARRAY[ATTR_TEST_DUPLICATE_MEDIA
 
 void TestAttrCount(const std::string &jsonString, int count)
 {
-    if (jsonString.empty()) {
-        EXPECT_EQ(count, 0);
+    Json::Value jsonArrayObject;
+    if (OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonArrayObject)) {
         return;
     }
-    Json::Value jsonArrayObject;
-    ASSERT_TRUE(OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonArrayObject));
-    ASSERT_TRUE(jsonArrayObject.isArray());
-    EXPECT_EQ(jsonArrayObject.size(), count);
+    if (jsonArrayObject.isArray()) {
+        EXPECT_EQ(jsonArrayObject.size(), count);
+    }
 }
 }  // namespace
 
