@@ -35,6 +35,7 @@ typedef std::function<void()> CallbackFunc;
 struct JobParameters {
     uint32_t cupsJobId;
     uint32_t borderless;
+    PrintScalingMode printScaling = PRINT_SCALING_FIT_TO_PAGE;
     uint32_t numCopies;
     bool isAutoRotate;
     bool isLandscape;

@@ -26,6 +26,7 @@ static constexpr const char *PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID = "defaultPag
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_ORIENTATION = "defaultOrientation";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_COLORMODE = "defaultColorMode";
 static constexpr const char *PARAM_PREFERENCES_BORDERLESS = "borderless";
+static constexpr const char *PARAM_PREFERENCES_DEFAULT_PRINT_SCALING = "defaultPrintScaling";
 static constexpr const char *PARAM_PREFERENCES_COLLATE = "defaultCollate";
 static constexpr const char *PARAM_PREFERENCES_REVERSE = "defaultReverse";
 static constexpr const char *PARAM_PREFERENCES_OPTION = "options";
@@ -67,6 +68,11 @@ napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPre
 
     if (preferences.HasBorderless()) {
         NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_PREFERENCES_BORDERLESS, preferences.GetBorderless());
+    }
+
+    if (preferences.HasDefaultPrintScaling()) {
+        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING,
+            preferences.GetDefaultPrintScaling());
     }
 
     if (preferences.HasDefaultCollate()) {
@@ -117,6 +123,15 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
         return nullptr;
     }
 
+    BuildFromUint32Js(env, jsValue, nativeObj);
+    BuildFromStringJs(env, jsValue, nativeObj);
+    BuildFromBoolOptionJs(env, jsValue, nativeObj);
+    return nativeObj;
+}
+
+void PrinterPreferencesHelper::BuildFromUint32Js(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrinterPreferences> nativeObj)
+{
     auto jsDefaultDuplexMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_DEPLEX_MODE);
     if (jsDefaultDuplexMode != nullptr) {
         nativeObj->SetDefaultDuplexMode(
@@ -130,6 +145,29 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
             NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY));
     }
 
+    auto jsDefaultOrientation = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION);
+    if (jsDefaultOrientation != nullptr) {
+        nativeObj->SetDefaultOrientation(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION));
+    }
+
+    auto jsDefaultColorMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE);
+    if (jsDefaultColorMode != nullptr) {
+        nativeObj->SetDefaultColorMode(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE));
+    }
+
+    auto jsDefaultPrintScaling =
+        NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING);
+    if (jsDefaultPrintScaling != nullptr) {
+        nativeObj->SetDefaultPrintScaling(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_PRINT_SCALING));
+    }
+}
+
+void PrinterPreferencesHelper::BuildFromStringJs(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrinterPreferences> nativeObj)
+{
     auto jsDefaultMediaType = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE);
     if (jsDefaultMediaType != nullptr) {
         nativeObj->SetDefaultMediaType(
@@ -142,17 +180,6 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
             NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID));
     }
 
-    auto jsDefaultOrientation = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION);
-    if (jsDefaultOrientation != nullptr) {
-        nativeObj->SetDefaultOrientation(
-            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION));
-    }
-
-    auto jsDefaultColorMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE);
-    if (jsDefaultColorMode != nullptr) {
-        nativeObj->SetDefaultColorMode(
-            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE));
-    }
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_OPTION));
@@ -163,9 +190,6 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
         nativeObj->SetVendorOptions(
             NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_VENDOR_OPTIONS));
     }
-
-    BuildFromBoolOptionJs(env, jsValue, nativeObj);
-    return nativeObj;
 }
 
 bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
@@ -178,6 +202,7 @@ bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_PREFERENCES_DEFAULT_ORIENTATION, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_DEFAULT_COLORMODE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_BORDERLESS, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_DEFAULT_PRINT_SCALING, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_COLLATE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_REVERSE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_OPTION, PRINT_PARAM_OPT},

@@ -53,6 +53,8 @@ private:
 
     static bool FillFdListFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj);
     static void FillBasicJobProperties(napi_env env, napi_value jsValue, std::shared_ptr<PrintJob> &nativeObj);
+    static bool BuildComplexObjectsFromJs(napi_env env, napi_value jsValue,
+        std::shared_ptr<PrintJob> &nativeObj, bool cvtToPwgSize);
 
     static std::shared_ptr<PrintJob> ConvertParamsToPrintJob(const PrintJobParams &params);
     static std::string GetDocumentFormatToString(uint32_t format);

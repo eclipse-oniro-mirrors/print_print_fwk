@@ -34,6 +34,8 @@ PrinterPreferences::PrinterPreferences()
       defaultColorMode_(PRINT_COLOR_MODE_MONOCHROME),
       hasBorderless_(false),
       borderless_(false),
+      hasDefaultPrintScaling_(false),
+      defaultPrintScaling_(PRINT_SCALING_FIT_TO_PAGE),
       hasDefaultCollate_(false),
       defaultCollate_(true),
       hasDefaultReverse_(false),
@@ -59,6 +61,8 @@ PrinterPreferences::PrinterPreferences(const PrinterPreferences &right)
       defaultColorMode_(right.defaultColorMode_),
       hasBorderless_(right.hasBorderless_),
       borderless_(right.borderless_),
+      hasDefaultPrintScaling_(right.hasDefaultPrintScaling_),
+      defaultPrintScaling_(right.defaultPrintScaling_),
       hasDefaultCollate_(right.hasDefaultCollate_),
       defaultCollate_(right.defaultCollate_),
       hasDefaultReverse_(right.hasDefaultReverse_),
@@ -87,6 +91,8 @@ PrinterPreferences &PrinterPreferences::operator=(const PrinterPreferences &righ
         defaultColorMode_ = right.defaultColorMode_;
         hasBorderless_ = right.hasBorderless_;
         borderless_ = right.borderless_;
+        hasDefaultPrintScaling_ = right.hasDefaultPrintScaling_;
+        defaultPrintScaling_ = right.defaultPrintScaling_;
         hasDefaultCollate_ = right.hasDefaultCollate_;
         defaultCollate_ = right.defaultCollate_;
         hasDefaultReverse_ = right.hasDefaultReverse_;
@@ -117,6 +123,8 @@ void PrinterPreferences::Reset()
     defaultColorMode_ = PRINT_COLOR_MODE_MONOCHROME;
     hasBorderless_ = false;
     borderless_ = false;
+    hasDefaultPrintScaling_ = false;
+    defaultPrintScaling_ = PRINT_SCALING_FIT_TO_PAGE;
     hasDefaultCollate_ = false;
     defaultCollate_ = true;
     hasDefaultReverse_ = false;
@@ -166,6 +174,12 @@ void PrinterPreferences::SetBorderless(bool borderless)
 {
     hasBorderless_ = true;
     borderless_ = borderless;
+}
+
+void PrinterPreferences::SetDefaultPrintScaling(uint32_t printScaling)
+{
+    hasDefaultPrintScaling_ = true;
+    defaultPrintScaling_ = printScaling;
 }
 
 void PrinterPreferences::SetDefaultCollate(bool collate)
@@ -254,6 +268,16 @@ bool PrinterPreferences::HasBorderless() const
 bool PrinterPreferences::GetBorderless() const
 {
     return borderless_;
+}
+
+bool PrinterPreferences::HasDefaultPrintScaling() const
+{
+    return hasDefaultPrintScaling_;
+}
+
+uint32_t PrinterPreferences::GetDefaultPrintScaling() const
+{
+    return defaultPrintScaling_;
 }
 
 bool PrinterPreferences::HasDefaultCollate() const
@@ -355,6 +379,11 @@ bool PrinterPreferences::ReadAdvancedSettingsFromParcel(Parcel &parcel, PrinterP
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.borderless_), false);
     }
 
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultPrintScaling_), false);
+    if (right.hasDefaultPrintScaling_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadUint32(right.defaultPrintScaling_), false);
+    }
+
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasDefaultCollate_), false);
     if (right.hasDefaultCollate_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.defaultCollate_), false);
@@ -385,6 +414,11 @@ bool PrinterPreferences::Marshalling(Parcel &parcel) const
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasBorderless_), false);
     if (hasBorderless_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(GetBorderless()), false);
+    }
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultPrintScaling_), false);
+    if (hasDefaultPrintScaling_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(
+            parcel.WriteUint32(defaultPrintScaling_), false);
     }
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasDefaultCollate_), false);
     if (hasDefaultCollate_) {
@@ -466,6 +500,9 @@ void PrinterPreferences::Dump() const
     if (hasBorderless_) {
         PRINT_HILOGD("borderless: %{public}d", borderless_);
     }
+    if (hasDefaultPrintScaling_) {
+        PRINT_HILOGD("defaultPrintScaling: %{public}u", defaultPrintScaling_);
+    }
     if (hasDefaultCollate_) {
         PRINT_HILOGD("defaultCollate: %{public}d", defaultCollate_);
     }
@@ -502,6 +539,9 @@ void PrinterPreferences::DumpInfo() const
     }
     if (hasBorderless_) {
         PRINT_HILOGI("borderless: %{public}d", borderless_);
+    }
+    if (hasDefaultPrintScaling_) {
+        PRINT_HILOGI("defaultPrintScaling: %{public}u", defaultPrintScaling_);
     }
     if (hasDefaultCollate_) {
         PRINT_HILOGI("defaultCollate: %{public}d", defaultCollate_);
@@ -541,6 +581,9 @@ Json::Value PrinterPreferences::ConvertToJson()
     if (hasBorderless_) {
         preferencesJson["borderless"] = borderless_;
     }
+    if (hasDefaultPrintScaling_) {
+        preferencesJson["defaultPrintScaling"] = defaultPrintScaling_;
+    }
     if (hasDefaultCollate_) {
         preferencesJson["defaultCollate"] = defaultCollate_;
     }
@@ -566,12 +609,22 @@ void PrinterPreferences::ConvertBoolDefaultJsonToPrinterPreferences(Json::Value 
         SetBorderless(preferencesJson["borderless"].asBool());
     }
 
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultPrintScaling") &&
+        preferencesJson["defaultPrintScaling"].isUInt()) {
+        SetDefaultPrintScaling(preferencesJson["defaultPrintScaling"].asUInt());
+    }
+
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultCollate") && preferencesJson["defaultCollate"].isBool()) {
         SetDefaultCollate(preferencesJson["defaultCollate"].asBool());
     }
 
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultReverse") && preferencesJson["defaultReverse"].isBool()) {
         SetDefaultReverse(preferencesJson["defaultReverse"].asBool());
+    }
+
+    if (!hasDefaultPrintScaling_) {
+        SetDefaultPrintScaling(hasBorderless_ && borderless_ ? PRINT_SCALING_BORDERLESS
+            : PRINT_SCALING_FIT_TO_PAGE);
     }
 }
 

@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "printer_preferences.h"
+#include "print_constant.h"
 #include "print_json_util.h"
 
 using namespace testing::ext;
@@ -304,6 +305,70 @@ HWTEST_F(PrinterPreferencesTest, DumpInfo_AllValueSet_CoverTrueBranch, TestSize.
     preferences.DumpInfo();
     EXPECT_EQ(true, preferences.HasVendorOptions());
     EXPECT_EQ("vendorTest", preferences.GetVendorOptions());
+}
+
+/**
+ * @tc.name: PrinterPreferences_ConvertBoolDefault_PrintScalingPresent
+ * @tc.desc: defaultPrintScaling present in json -> use it, derivation skipped
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterPreferencesTest, ConvertBoolDefault_PrintScalingPresent, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value json;
+    json["borderless"] = true;
+    json["defaultPrintScaling"] = static_cast<uint32_t>(PRINT_SCALING_BORDERLESS);
+    preferences.ConvertJsonToPrinterPreferences(json);
+    EXPECT_EQ(true, preferences.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_BORDERLESS), preferences.GetDefaultPrintScaling());
+}
+
+/**
+ * @tc.name: PrinterPreferences_ConvertBoolDefault_DeriveFromBorderlessTrue
+ * @tc.desc: no defaultPrintScaling, borderless=true -> derive BORDERLESS
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterPreferencesTest, ConvertBoolDefault_DeriveFromBorderlessTrue, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value json;
+    json["borderless"] = true;
+    preferences.ConvertJsonToPrinterPreferences(json);
+    EXPECT_EQ(true, preferences.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_BORDERLESS), preferences.GetDefaultPrintScaling());
+}
+
+/**
+ * @tc.name: PrinterPreferences_ConvertBoolDefault_DeriveFromBorderlessFalse
+ * @tc.desc: no defaultPrintScaling, borderless=false -> derive FIT_TO_PAGE
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterPreferencesTest, ConvertBoolDefault_DeriveFromBorderlessFalse, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value json;
+    json["borderless"] = false;
+    preferences.ConvertJsonToPrinterPreferences(json);
+    EXPECT_EQ(true, preferences.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_FIT_TO_PAGE), preferences.GetDefaultPrintScaling());
+}
+
+/**
+ * @tc.name: PrinterPreferences_ConvertBoolDefault_DeriveNoBorderless
+ * @tc.desc: no defaultPrintScaling, no borderless -> derive FIT_TO_PAGE
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterPreferencesTest, ConvertBoolDefault_DeriveNoBorderless, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value json;
+    preferences.ConvertJsonToPrinterPreferences(json);
+    EXPECT_EQ(true, preferences.HasDefaultPrintScaling());
+    EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_FIT_TO_PAGE), preferences.GetDefaultPrintScaling());
 }
 }  // namespace Print
 }  // namespace OHOS

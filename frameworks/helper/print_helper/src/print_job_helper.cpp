@@ -40,6 +40,7 @@ static constexpr const char *PARAM_JOB_OPTION = "options";
 static constexpr const char *PARAM_JOB_NAME = "jobName";
 static constexpr const char *PARAM_JOB_MEDIATYPE = "mediaType";
 static constexpr const char *PARAM_JOB_ISBORDERLESS = "isBorderless";
+static constexpr const char *PARAM_JOB_PRINT_SCALING = "printScaling";
 static constexpr const char *PARAM_JOB_DOCUMENTFORMAT = "documentFormat";
 static constexpr const char *PARAM_JOB_PRINTQUALITY = "printQuality";
 static constexpr const char *PARAM_JOB_BINARYDATA = "binaryData";
@@ -106,6 +107,10 @@ napi_value PrintJobHelper::MakeJsObject(napi_env env, const PrintJob &job)
     if (job.HasVendorOptions()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_VENDOR_OPTIONS,
             job.GetVendorOptions().c_str());
+    }
+
+    if (job.HasPrintScaling()) {
+        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_PRINT_SCALING, job.GetPrintScaling());
     }
     return jsObj;
 }
@@ -200,40 +205,8 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, nap
         return nullptr;
     }
 
-    napi_value jsPageRange = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGERANGE);
-    auto pageRangePtr = PrintRangeHelper::BuildFromJs(env, jsPageRange);
-    if (pageRangePtr == nullptr) {
-        PRINT_HILOGE("Failed to build print job object from js");
+    if (!BuildComplexObjectsFromJs(env, jsValue, nativeObj, cvtToPwgSize)) {
         return nullptr;
-    }
-    nativeObj->SetPageRange(*pageRangePtr);
-
-    napi_value jsPageSize = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGESIZE);
-    auto pageSizePtr = PrintPageSizeHelper::BuildFromJsEx(env, jsPageSize, cvtToPwgSize);
-    if (pageSizePtr == nullptr) {
-        PRINT_HILOGE("Failed to build print job object from js");
-        return nullptr;
-    }
-    nativeObj->SetPageSize(*pageSizePtr);
-
-    napi_value jsMargin = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_MARGIN);
-    if (jsMargin != nullptr) {
-        auto marginPtr = PrintMarginHelper::BuildFromJs(env, jsMargin);
-        if (marginPtr == nullptr) {
-            PRINT_HILOGE("Failed to build print job object from js");
-            return nullptr;
-        }
-        nativeObj->SetMargin(*marginPtr);
-    }
-
-    napi_value jsPreview = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PREVIEW);
-    if (jsPreview != nullptr) {
-        auto previewPtr = PrintPreviewAttributeHelper::BuildFromJs(env, jsPreview);
-        if (previewPtr == nullptr) {
-            PRINT_HILOGE("Failed to build print job object from js");
-            return nullptr;
-        }
-        nativeObj->SetPreview(*previewPtr);
     }
 
     napi_value jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
@@ -246,7 +219,54 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, nap
         nativeObj->SetVendorOptions(
             NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_VENDOR_OPTIONS));
     }
+
+    napi_value jsPrintScaling = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PRINT_SCALING);
+    if (jsPrintScaling != nullptr) {
+        uint32_t scaling = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_PRINT_SCALING);
+        nativeObj->SetPrintScaling(scaling);
+    }
     return nativeObj;
+}
+
+bool PrintJobHelper::BuildComplexObjectsFromJs(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrintJob> &nativeObj, bool cvtToPwgSize)
+{
+    napi_value jsPageRange = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGERANGE);
+    auto pageRangePtr = PrintRangeHelper::BuildFromJs(env, jsPageRange);
+    if (pageRangePtr == nullptr) {
+        PRINT_HILOGE("Failed to build print job object from js");
+        return false;
+    }
+    nativeObj->SetPageRange(*pageRangePtr);
+
+    napi_value jsPageSize = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGESIZE);
+    auto pageSizePtr = PrintPageSizeHelper::BuildFromJsEx(env, jsPageSize, cvtToPwgSize);
+    if (pageSizePtr == nullptr) {
+        PRINT_HILOGE("Failed to build print job object from js");
+        return false;
+    }
+    nativeObj->SetPageSize(*pageSizePtr);
+
+    napi_value jsMargin = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_MARGIN);
+    if (jsMargin != nullptr) {
+        auto marginPtr = PrintMarginHelper::BuildFromJs(env, jsMargin);
+        if (marginPtr == nullptr) {
+            PRINT_HILOGE("Failed to build print job object from js");
+            return false;
+        }
+        nativeObj->SetMargin(*marginPtr);
+    }
+
+    napi_value jsPreview = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PREVIEW);
+    if (jsPreview != nullptr) {
+        auto previewPtr = PrintPreviewAttributeHelper::BuildFromJs(env, jsPreview);
+        if (previewPtr == nullptr) {
+            PRINT_HILOGE("Failed to build print job object from js");
+            return false;
+        }
+        nativeObj->SetPreview(*previewPtr);
+    }
+    return true;
 }
 
 bool PrintJobHelper::CreateFdList(napi_env env, napi_value &jsPrintJob, const PrintJob &job)
@@ -325,6 +345,7 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_JOB_VENDOR_OPTIONS, PRINT_PARAM_OPT},
+        {PARAM_JOB_PRINT_SCALING, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
