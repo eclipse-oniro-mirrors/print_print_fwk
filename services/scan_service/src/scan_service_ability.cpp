@@ -561,12 +561,6 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
                     openedScanner_->scannerId.c_str());
         return E_SCAN_DEVICE_BUSY;
     }
-    ScanSystemData &scanData = ScanSystemData::GetInstance();
-    if (!scannerDiscoverData_.IsDeviceIdDiscovered(scannerId)
-        && !scanData.IsDeviceIdAdded(scannerId)) {
-        SCAN_HILOGE("OpenScanner scannerId is not found in discovered or added devices");
-        return E_SCAN_UNSUPPORTED;
-    }
     SaneStatus status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
