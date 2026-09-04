@@ -19,6 +19,7 @@
 #include "print_utils.h"
 #include "print_json_util.h"
 #include <sstream>
+#include <unordered_set>
 
 namespace OHOS::Print {
 PrinterCapability::PrinterCapability()
@@ -286,7 +287,13 @@ void PrinterCapability::SetSupportedDuplexMode(const std::vector<uint32_t> &supp
 void PrinterCapability::SetSupportedMediaType(const std::vector<std::string> &supportedMediaTypeList)
 {
     hasSupportedMediaType_ = true;
-    supportedMediaTypeList_.assign(supportedMediaTypeList.begin(), supportedMediaTypeList.end());
+    supportedMediaTypeList_.clear();
+    std::unordered_set<std::string> uniqueMediaTypes;
+    for (const auto &mediaType : supportedMediaTypeList) {
+        if (uniqueMediaTypes.insert(mediaType).second) {
+            supportedMediaTypeList_.emplace_back(mediaType);
+        }
+    }
 }
 
 void PrinterCapability::SetSupportedQuality(const std::vector<uint32_t> &supportedQualityList)
