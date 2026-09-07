@@ -454,10 +454,7 @@ int32_t ScanServiceProxy::ExportScanPicture(const std::string scannerId,
 
     int32_t exportedCount = 0;
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.ReadInt32(exportedCount), E_SCAN_RPC_FAILURE);
-    if (exportedCount < 0 || exportedCount > MAX_FD_COUNT) {
-        SCAN_HILOGE("exportedCount %{public}d exceeds range [0, %{public}d]", exportedCount, MAX_FD_COUNT);
-        return E_SCAN_RPC_FAILURE;
-    }
+    CHECK_VALUE_IN_RANGE(exportedCount, 0, MAX_FD_COUNT, E_SCAN_RPC_FAILURE);
     for (int32_t i = 0; i < exportedCount; i++) {
         int fd = reply.ReadFileDescriptor();
         if (fd < 0) {
