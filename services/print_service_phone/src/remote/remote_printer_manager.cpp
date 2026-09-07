@@ -366,12 +366,14 @@ void RemotePrinterManager::ClearAllPrinters()
     std::vector<std::string> removedUris;
     {
         std::lock_guard<std::mutex> lock(printerMapLock_);
-        for (const auto &printer : printerMap_) {
-            PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(printer.first).c_str());
-            if (printer.second) {
-                removedUris.push_back(printer.second->GetUri());
+        auto collectRemovedUri = [&removedUris](const auto &entry) {
+            const auto &[devId, printerInfo] = entry;
+            PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(devId).c_str());
+            if (printerInfo) {
+                removedUris.push_back(printerInfo->GetUri());
             }
-        }
+        };
+        std::for_each(printerMap_.begin(), printerMap_.end(), collectRemovedUri);
         printerMap_.clear();
     }
     for (const auto &uri : removedUris) {
