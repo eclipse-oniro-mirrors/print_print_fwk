@@ -163,13 +163,14 @@ int32_t RemoteServiceAdapter::SendData(uint32_t code, const std::string &msg)
 
 int32_t RemoteServiceAdapter::RequestPrinterStatus(const std::string &devId)
 {
-    PRINT_HILOGI("RemoteServiceAdapter::RequestPrinterStatus devId: %{public}s", devId.c_str());
-    
+    PRINT_HILOGI("RemoteServiceAdapter::RequestPrinterStatus devId: %{public}s",
+        PrintUtils::AnonymizePrinterId(devId).c_str());
+
     Json::Value jsonArray(Json::arrayValue);
     jsonArray.append(devId);
-    
+
     std::string msg = PrintJsonUtil::WriteString(jsonArray);
-    PRINT_HILOGD("RequestPrinterStatus request: %{public}s", msg.c_str());
+    PRINT_HILOGD("RequestPrinterStatus request sent");
     return SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), msg);
 }
 
