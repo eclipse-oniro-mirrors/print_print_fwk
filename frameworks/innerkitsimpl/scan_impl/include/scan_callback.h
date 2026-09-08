@@ -62,7 +62,7 @@ public:
 private:
 #endif
     bool ExecuteNapiEventWork(std::shared_ptr<CallbackParam> param, std::function<void(CallbackParam*)> workFunc);
-    void NapiCallFunction(CallbackParam* cbParam, size_t argcCount, napi_value* callbackValues);
+    static void NapiCallFunction(CallbackParam* cbParam, size_t argcCount, napi_value* callbackValues);
     napi_env env_;
     napi_ref ref_;
     std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction_;
