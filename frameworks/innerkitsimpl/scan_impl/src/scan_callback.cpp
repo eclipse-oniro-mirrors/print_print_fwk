@@ -137,7 +137,7 @@ bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(state, info);
 
-    auto workFunc = [this](CallbackParam* cbParam) {
+    auto workFunc = [](CallbackParam* cbParam) {
         napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
         callbackValues[0] = ScannerInfoHelper::MakeJsObject(cbParam->env, cbParam->deviceInfo);
         NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
@@ -155,7 +155,7 @@ bool ScanCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackSyncParam(state, info);
 
-    auto workFunc = [this](CallbackParam* cbParam) {
+    auto workFunc = [](CallbackParam* cbParam) {
         napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
         callbackValues[0] = ScannerInfoSyncHelper::MakeJsObject(cbParam->env, cbParam->deviceInfoSync);
         NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);

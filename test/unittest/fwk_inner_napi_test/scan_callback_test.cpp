@@ -156,14 +156,14 @@ HWTEST_F(ScanCallbackTest, ScanCallbackTest_NapiCallFunction_001, TestSize.Level
     cbParam.ref = nullptr;
     cbParam.mutexPtr = std::make_shared<std::mutex>();
     napi_value callbackValues[1] = { nullptr };
-    callback->NapiCallFunction(&cbParam, 1, callbackValues);
+    ScanCallback::NapiCallFunction(&cbParam, 1, callbackValues);
 }
 
 HWTEST_F(ScanCallbackTest, ScanCallbackTest_NapiCallFunction_002, TestSize.Level1)
 {
     auto callback = std::make_shared<ScanCallback>(nullptr, nullptr);
     EXPECT_NE(callback, nullptr);
-    callback->NapiCallFunction(nullptr, 1, nullptr);
+    ScanCallback::NapiCallFunction(nullptr, 1, nullptr);
 }
 
 HWTEST_F(ScanCallbackTest, ScanCallbackTest_Destructor_001, TestSize.Level1)
@@ -215,7 +215,7 @@ HWTEST_F(ScanCallbackTest, ScanCallbackTest_NapiCallFunction_003, TestSize.Level
     cbParam.ref = nullptr;
     cbParam.mutexPtr = std::make_shared<std::mutex>();
     napi_value callbackValues[1] = { nullptr };
-    callback->NapiCallFunction(&cbParam, 1, callbackValues);
+    ScanCallback::NapiCallFunction(&cbParam, 1, callbackValues);
     g_mockGetRefReturnNonNull = false;
 }
 
