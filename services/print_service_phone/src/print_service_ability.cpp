@@ -2350,7 +2350,9 @@ void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResul
     want.SetAction(ACTION_QUEUE_JOB_LIST_CHANGED);
     want.SetParam(QUEUE_JOB_LIST_CHANGED, applyResult);
     EventFwk::CommonEventData commonData{want};
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    publishInfo.SetSubscriberPermissions(std::vector<std::string>{PERMISSION_NAME_PRINT});
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
     PRINT_HILOGD("NotifyAppJobQueueChanged end.");
 }
 
