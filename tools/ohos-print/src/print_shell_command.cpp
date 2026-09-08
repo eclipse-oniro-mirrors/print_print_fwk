@@ -532,7 +532,7 @@ void PrintShellCommand::BuildOptionsJson(const PrintJobParams& params, const std
     if (!params.collateInput.empty()) {
         optionsJson["collate"] = params.collate ? COLLATE_MODE : SEQUENTIAL_MODE;
     }
-    // 规定无边距打印默认为false, 否则sa侧默认为true。与打印预览规格对其
+    // 规定无边距打印默认为false, 否则默认为true。此处与打印预览默认效果对齐
     optionsJson["isBorderless"] = false;
 }
 
