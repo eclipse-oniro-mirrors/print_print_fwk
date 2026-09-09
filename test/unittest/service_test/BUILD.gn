@@ -251,6 +251,7 @@ ohos_unittest("scan_task_test") {
   ]
 
   external_deps = [
+    "hilog:libhilog",
     "image_framework:image_ndk",
     "image_framework:image_native",
     "googletest:gtest_main",
