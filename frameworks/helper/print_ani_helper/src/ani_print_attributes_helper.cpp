@@ -63,7 +63,7 @@ PrintAttributes AniPrintAttributesHelper::ParsePrintAttributes(ani_env *env, ani
     uint32_t duplexModeValue = 0;
     if (GetRefProperty(env, attributes, DUPLEX_MODE_STR, duplexModeEnum) &&
         GetEnumValueInt(env, static_cast<ani_enum_item>(duplexModeEnum), duplexModeValue)) {
-        attrs.SetColorMode(duplexModeValue);
+        attrs.SetDuplexMode(duplexModeValue);
     }
     return attrs;
 }

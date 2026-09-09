@@ -29,6 +29,7 @@ constexpr size_t BASE64_ENCODED_BLOCK_SIZE = 4;
 constexpr size_t BASE64_DECODED_BLOCK_SIZE = 3;
 constexpr size_t BASE64_LAST_PADDING_OFFSET = 1;
 constexpr size_t BASE64_SECOND_LAST_PADDING_OFFSET = 2;
+constexpr size_t BASE64_NUL_SIZE = 1;
 
 int32_t HksAdapter::HksKeyExist(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet)
 {
@@ -297,7 +298,8 @@ bool HksAdapter::Base64Encode(const struct HksBlob &cipherBlob, SecureBlob &secu
     }
     
     uint32_t outputLen = BASE64_ENCODED_BLOCK_SIZE * ((cipherBlob.size + 2) / BASE64_DECODED_BLOCK_SIZE);
-    secureValue.Allocate(outputLen);
+    // EVP_EncodeBlock writes outputLen base64 chars plus a '\0' at data[outputLen], reserve one more byte
+    secureValue.Allocate(static_cast<uint32_t>(outputLen + BASE64_NUL_SIZE));
     
     if (secureValue.data == nullptr) {
         PRINT_HILOGE("SecureBlob allocate failed");
@@ -311,6 +313,7 @@ bool HksAdapter::Base64Encode(const struct HksBlob &cipherBlob, SecureBlob &secu
         return false;
     }
     
+    secureValue.size = static_cast<uint32_t>(encodedLen); // logical length excludes the NUL terminator
     return true;
 }
 
