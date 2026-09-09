@@ -463,7 +463,21 @@ void ParseAdvanceOptions(const OHOS::Print::PrinterCapability &cap, Print_Printe
         nativePrinterInfo.capability.advancedCapability = CopyString(PrintJsonUtil::WriteString(advancedCapJson));
     }
     if (PrintJsonUtil::IsMember(cupsOpt, "advanceDefault") && cupsOpt["advanceDefault"].isString()) {
-        nativePrinterInfo.defaultValue.otherDefaultValues = CopyString(cupsOpt["advanceDefault"].asString());
+        Json::Value otherDefaults;
+        const char *existingOtherDefaults = nativePrinterInfo.defaultValue.otherDefaultValues;
+        if (existingOtherDefaults != nullptr &&
+            !PrintJsonUtil::Parse(std::string(existingOtherDefaults), otherDefaults)) {
+            PRINT_HILOGW("Parse otherDefaultValues fail");
+        }
+        Json::Value advanceDefaultJson;
+        if (PrintJsonUtil::Parse(cupsOpt["advanceDefault"].asString(), advanceDefaultJson) &&
+            advanceDefaultJson.isObject() && !advanceDefaultJson.empty()) {
+            for (const auto &key : advanceDefaultJson.getMemberNames()) {
+                otherDefaults[key] = advanceDefaultJson[key];
+            }
+            SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.otherDefaultValues);
+            nativePrinterInfo.defaultValue.otherDefaultValues = CopyString(PrintJsonUtil::WriteString(otherDefaults));
+        }
     }
 }
 
@@ -520,6 +534,22 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
     }
     if (preferences.HasDefaultColorMode()) {
         ConvertColorMode(preferences.GetDefaultColorMode(), nativePrinterInfo.defaultValue.defaultColorMode);
+    }
+    Json::Value otherDefaults;
+    const char *existingOtherDefaults = nativePrinterInfo.defaultValue.otherDefaultValues;
+    if (existingOtherDefaults != nullptr &&
+        !PrintJsonUtil::Parse(std::string(existingOtherDefaults), otherDefaults)) {
+        PRINT_HILOGW("Parse otherDefaultValues fail");
+    }
+    if (preferences.HasDefaultCollate()) {
+        otherDefaults["defaultCollate"] = preferences.GetDefaultCollate();
+    }
+    if (preferences.HasDefaultReverse()) {
+        otherDefaults["defaultReverse"] = preferences.GetDefaultReverse();
+    }
+    if (!otherDefaults.isNull() && !otherDefaults.empty()) {
+        SAFE_DELETE_ARRAY(nativePrinterInfo.defaultValue.otherDefaultValues);
+        nativePrinterInfo.defaultValue.otherDefaultValues = CopyString(PrintJsonUtil::WriteString(otherDefaults));
     }
 }
 
