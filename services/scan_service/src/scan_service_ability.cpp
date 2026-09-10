@@ -1255,8 +1255,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         return adfRet;
     }
 
-    bool needBinarize = false;
-    PrepareBwScan(scannerId, needBinarize);
+    bool needBinarize = PrepareBwScan(scannerId);
 
     if (int32_t status = StartScanOnceInternal(scannerId); status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
@@ -1647,12 +1646,11 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
     return E_SCAN_NONE;
 }
 
-void ScanServiceAbility::PrepareBwScan(const std::string& scannerId, bool& needBinarize)
+bool ScanServiceAbility::PrepareBwScan(const std::string& scannerId)
 {
-    needBinarize = false;
     auto it = colorModeSettings_.find(scannerId);
     if (it == colorModeSettings_.end()) {
-        return;
+        return false;
     }
 
     for (auto& [idx, val] : it->second) {
@@ -1662,9 +1660,10 @@ void ScanServiceAbility::PrepareBwScan(const std::string& scannerId, bool& needB
         if (val.GetStrValue() != SCAN_MODE_LINEART) {
             continue;
         }
-        needBinarize = EsclDriverManager::IsEsclScanner(scannerId);
+        bool needBinarize = EsclDriverManager::IsEsclScanner(scannerId);
         SCAN_HILOGD("PrepareBwScan: needBinarize=%{public}d", needBinarize);
-        break;
+        return needBinarize;
     }
+    return false;
 }
 }  // namespace OHOS::Scan

@@ -124,7 +124,7 @@ private:
     void CleanupDeadCaller(int32_t deadPid);
     void UnloadSystemAbility();
     int32_t InitializeEsclScannerDriver();
-    void PrepareBwScan(const std::string& scannerId, bool& needBinarize);
+    bool PrepareBwScan(const std::string& scannerId);
     void AddNetScanner(const std::string& uniqueId, const std::string &discoverMode);
     void AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode);
     struct OpenedScanner {
