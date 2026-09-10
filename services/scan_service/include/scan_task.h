@@ -16,6 +16,7 @@
 #ifndef SCAN_TASK
 #define SCAN_TASK
 
+#include <functional>
 #include <string>
 #include <map>
 #include <mutex>
@@ -23,6 +24,7 @@
 #include <queue>
 #include <setjmp.h>
 #include "scanner_info.h"
+#include "scan_constant.h"
 #include "scan_parameters.h"
 #include "pixel_map.h"
 #include "image_packer.h"
@@ -48,6 +50,8 @@ public:
     void ImageDestroyCompress();
     void ImageFinishCompress();
     ImageFormat GetImageFormat() const;
+    void SetBinarize(bool binarize);
+    void SetBwThreshold(int32_t threshold);
 
 private:
     void SaveRawData();
@@ -58,7 +62,7 @@ private:
 
     bool GetImageOutputDir(ImageFormat imgFmt, std::string& path, std::string& mimeType);
     int32_t WriteRgbData(const std::vector<uint8_t>& dataBuffer);
-    int32_t WriteGreyData(const std::vector<uint8_t>& dataBuffer);
+    int32_t WriteGrayBasedData(const std::vector<uint8_t>& dataBuffer, std::function<uint8_t(uint8_t)> pixelTransform);
     int32_t WriteMonoData(const std::vector<uint8_t>& dataBuffer);
     void WriteJfifDensityField();
 
@@ -72,6 +76,8 @@ private:
     uint8_t *picBuf_ = nullptr;
     size_t rowWriteIdx_ = 0;
     size_t colWriteIdx_ = 0;
+    bool binarize_ = false;
+    int32_t bwThreshold_ = SCAN_BW_THRESHOLD_DEFAULT;
     ScanParameters scanParams_;
     std::unique_ptr<Media::PixelMap> pixMap_;
     std::unique_ptr<Media::ImagePacker> imagePacker_;

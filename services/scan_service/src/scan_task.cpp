@@ -54,6 +54,16 @@ bool ScanTask::GetBatchMode() const
     return batchMode_;
 }
 
+void ScanTask::SetBinarize(bool binarize)
+{
+    binarize_ = binarize;
+}
+
+void ScanTask::SetBwThreshold(int32_t threshold)
+{
+    bwThreshold_ = threshold;
+}
+
 ImageFormat ScanTask::GetImageFormat() const
 {
     return imageFormat_;
@@ -197,8 +207,14 @@ int32_t ScanTask::WriteImageData(const std::vector<uint8_t>& dataBuffer)
     }
 
     if (pixelFormat == SCAN_FRAME_GRAY) {
+        if (binarize_) {
+            SCAN_HILOGD("WriteImageData: binarize path, threshold=%{public}d", bwThreshold_);
+            int32_t threshold = bwThreshold_;
+            return WriteGrayBasedData(dataBuffer,
+                [threshold](uint8_t g) { return g > threshold ? 0xff : 0x00; });
+        }
         if (scanParams_.GetDepth() != 1) {
-            return WriteGreyData(dataBuffer);
+            return WriteGrayBasedData(dataBuffer, [](uint8_t g) { return g; });
         } else {
             return WriteMonoData(dataBuffer);
         }
@@ -251,7 +267,9 @@ int32_t ScanTask::WriteRgbData(const std::vector<uint8_t>& dataBuffer)
     return E_SCAN_NONE;
 }
 
-int32_t ScanTask::WriteGreyData(const std::vector<uint8_t>& dataBuffer)
+int32_t ScanTask::WriteGrayBasedData(
+    const std::vector<uint8_t>& dataBuffer,
+    std::function<uint8_t(uint8_t)> pixelTransform)
 {
     const size_t srcStride = static_cast<size_t>(scanParams_.GetBytesPerLine());
     const size_t dstStride = static_cast<size_t>(pixMap_->GetRowStride());
@@ -261,16 +279,19 @@ int32_t ScanTask::WriteGreyData(const std::vector<uint8_t>& dataBuffer)
     const size_t height = static_cast<size_t>(pixMap_->GetHeight());
     const uint8_t *srcData = dataBuffer.data();
     size_t dataLeft = dataBuffer.size();
-    uint8_t *dstData = picBuf_ + rowWriteIdx_ * dstStride + std::min(colWriteIdx_, width) * dstPixelBytes;
+    uint8_t *dstData = picBuf_ + rowWriteIdx_ * dstStride +
+        std::min(colWriteIdx_, width) * dstPixelBytes;
+
     while (dataLeft > 0) {
-        // Pixmap unsupport YUV400 Grey image, Convert grey value to RGB888
         for (; colWriteIdx_ < width && dataLeft > 0; ++colWriteIdx_, ++srcData, --dataLeft) {
-            *dstData++ = *srcData;
-            *dstData++ = *srcData;
-            *dstData++ = *srcData;
+            uint8_t val = pixelTransform(*srcData);
+            *dstData++ = val;
+            *dstData++ = val;
+            *dstData++ = val;
         }
         if (srcStride < colWriteIdx_) {
-            SCAN_HILOGE("srcStride: %{public}zu < colWriteIdx_: %{public}zu", srcStride, colWriteIdx_);
+            SCAN_HILOGE("srcStride: %{public}zu < colWriteIdx_: %{public}zu",
+                srcStride, colWriteIdx_);
             return E_SCAN_INVALID_PARAMETER;
         }
         size_t srcRowDataLeft = srcStride - colWriteIdx_;
@@ -278,7 +299,6 @@ int32_t ScanTask::WriteGreyData(const std::vector<uint8_t>& dataBuffer)
             if (++rowWriteIdx_ >= height) {
                 break;
             }
-
             srcData += srcRowDataLeft;
             dataLeft -= srcRowDataLeft;
             dstData += dstRowPaddingBytes;
@@ -288,7 +308,6 @@ int32_t ScanTask::WriteGreyData(const std::vector<uint8_t>& dataBuffer)
             break;
         }
     }
-
     return E_SCAN_NONE;
 }
 

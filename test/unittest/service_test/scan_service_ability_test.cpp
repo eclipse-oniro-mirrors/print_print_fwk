@@ -17,8 +17,10 @@
 #include "mock_bundle_mgr.h"
 #define private public
 #include "scan_service_ability.h"
+#include "escl_driver_manager.h"
 #undef private
 #include "scan_constant.h"
+#include "sane_option_descriptor.h"
 #include "system_ability_definition.h"
 #include "scan_service_utils.h"
 #include "mock_scan_callback_proxy.h"
@@ -419,6 +421,92 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_028_NeedRename, TestSize.Level1)
     int32_t status = E_SCAN_NONE;
     status = scanSa->StartScanOnce(scannerId);
     EXPECT_TRUE(allStatus.count(static_cast<ScanErrorCode>(status)));
+}
+
+class EsclDriverManagerTest : public testing::Test {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+HWTEST_F(EsclDriverManagerTest, InjectLineartOption_StringList_AddLineart, TestSize.Level1)
+{
+    SaneOptionDescriptor saneDesc;
+    saneDesc.optionConstraintType_ = SANE_CONSTRAINT_STRING_LIST;
+    saneDesc.optionName_ = "mode";
+    saneDesc.optionConstraintString_ = {"Color", "Gray"};
+
+    EsclDriverManager::InjectLineartOption(saneDesc);
+
+    EXPECT_EQ(saneDesc.optionConstraintString_.size(), 3u);
+    EXPECT_EQ(saneDesc.optionConstraintString_[2], SCAN_MODE_LINEART);
+}
+
+HWTEST_F(EsclDriverManagerTest, InjectLineartOption_AlreadyHasLineart_NoChange, TestSize.Level1)
+{
+    SaneOptionDescriptor saneDesc;
+    saneDesc.optionConstraintType_ = SANE_CONSTRAINT_STRING_LIST;
+    saneDesc.optionName_ = "mode";
+    saneDesc.optionConstraintString_ = {"Color", "Gray", "Lineart"};
+
+    EsclDriverManager::InjectLineartOption(saneDesc);
+
+    EXPECT_EQ(saneDesc.optionConstraintString_.size(), 3u);
+}
+
+HWTEST_F(EsclDriverManagerTest, InjectLineartOption_NotStringList_NoChange, TestSize.Level1)
+{
+    SaneOptionDescriptor saneDesc;
+    saneDesc.optionConstraintType_ = SANE_CONSTRAINT_RANGE;
+    saneDesc.optionName_ = "mode";
+
+    EsclDriverManager::InjectLineartOption(saneDesc);
+
+    EXPECT_TRUE(saneDesc.optionConstraintString_.empty());
+}
+
+HWTEST_F(EsclDriverManagerTest, InjectLineartOption_NotModeOption_NoChange, TestSize.Level1)
+{
+    SaneOptionDescriptor saneDesc;
+    saneDesc.optionConstraintType_ = SANE_CONSTRAINT_STRING_LIST;
+    saneDesc.optionName_ = "resolution";
+    saneDesc.optionConstraintString_ = {"300", "600"};
+
+    EsclDriverManager::InjectLineartOption(saneDesc);
+
+    EXPECT_EQ(saneDesc.optionConstraintString_.size(), 2u);
+}
+
+HWTEST_F(EsclDriverManagerTest, ShouldDowngradeBwMode_AirscanLineart_ReturnTrue, TestSize.Level1)
+{
+    std::string scannerId = "airscan:eSCL:scanner:http://192.168.1.100";
+    std::string value = SCAN_MODE_LINEART;
+
+    bool result = EsclDriverManager::ShouldDowngradeBwMode(scannerId, value);
+
+    EXPECT_TRUE(result);
+}
+
+HWTEST_F(EsclDriverManagerTest, ShouldDowngradeBwMode_AirscanColor_ReturnFalse, TestSize.Level1)
+{
+    std::string scannerId = "airscan:eSCL:scanner:http://192.168.1.100";
+    std::string value = "Color";
+
+    bool result = EsclDriverManager::ShouldDowngradeBwMode(scannerId, value);
+
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(EsclDriverManagerTest, ShouldDowngradeBwMode_NonAirscanLineart_ReturnFalse, TestSize.Level1)
+{
+    std::string scannerId = "usb:scanner:001";
+    std::string value = SCAN_MODE_LINEART;
+
+    bool result = EsclDriverManager::ShouldDowngradeBwMode(scannerId, value);
+
+    EXPECT_FALSE(result);
 }
 
 }  // namespace Scan

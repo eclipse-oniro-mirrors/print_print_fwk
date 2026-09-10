@@ -308,7 +308,7 @@ HWTEST_F(ScanTaskTest, WriteJfifDensityField_FileOpenFails, TestSize.Level1)
     // No crash = pass
 }
  
-HWTEST_F(ScanTaskTest, WriteGreyData_SrcStrideLessThanColWriteIdx, TestSize.Level1)
+HWTEST_F(ScanTaskTest, WriteGrayBasedData_SrcStrideLessThanColWriteIdx, TestSize.Level1)
 {
     ScanParameters scanParam;
     scanParam.SetFormat(SCAN_FRAME_GRAY);
@@ -373,6 +373,37 @@ HWTEST_F(ScanTaskTest, ImageFinishCompress_InsufficientData, TestSize.Level1)
     EXPECT_EQ(scanTask.imagePacker_, nullptr);
     EXPECT_EQ(scanTask.pixMap_, nullptr);
     EXPECT_EQ(scanTask.picBuf_, nullptr);
+}
+
+HWTEST_F(ScanTaskTest, SetBinarize_SetTrue_GetTrue, TestSize.Level1)
+{
+    ScanTask scanTask("", DEFAULT_USER_ID, false);
+
+    scanTask.SetBinarize(true);
+
+    EXPECT_TRUE(scanTask.binarize_);
+}
+
+HWTEST_F(ScanTaskTest, SetBinarize_SetFalse_GetFalse, TestSize.Level1)
+{
+    ScanTask scanTask("", DEFAULT_USER_ID, false);
+
+    scanTask.SetBinarize(false);
+
+    EXPECT_FALSE(scanTask.binarize_);
+}
+
+HWTEST_F(ScanTaskTest, WriteImageData_GrayBinarizeTrue_NoInit, TestSize.Level1)
+{
+    ScanTask scanTask("", DEFAULT_USER_ID, false);
+    scanTask.SetBinarize(true);
+    scanTask.scanParams_.SetFormat(SCAN_FRAME_GRAY);
+    scanTask.scanParams_.SetDepth(8);
+
+    std::vector<uint8_t> data = {0, 64, 127, 128, 192, 255};
+    int32_t result = scanTask.WriteImageData(data);
+
+    EXPECT_EQ(result, E_SCAN_GENERIC_FAILURE);
 }
 
 }  // namespace Scan

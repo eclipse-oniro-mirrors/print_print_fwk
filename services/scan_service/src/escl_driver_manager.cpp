@@ -31,6 +31,7 @@
 #include "sane_option_descriptor.h"
 #include "sane_control_param.h"
 #include "scan_util.h"
+#include "saneopts.h"
 
 namespace OHOS::Scan {
 static const char* AIRSCAN_TARGET = "/system/lib64/libsane-airscan.z.so";
@@ -212,6 +213,29 @@ bool EsclDriverManager::IsAdfEmpty(const std::string& ipAddress, int32_t portNum
     }
     SCAN_HILOGE("scan:AdfState not found in status map");
     return false;
+}
+
+bool EsclDriverManager::InjectLineartOption(SaneOptionDescriptor &saneDesc)
+{
+    if (saneDesc.optionConstraintType_ != SANE_CONSTRAINT_STRING_LIST) {
+        return false;
+    }
+    if (saneDesc.optionName_ != SANE_NAME_SCAN_MODE) {
+        return false;
+    }
+    for (const auto &str : saneDesc.optionConstraintString_) {
+        if (str == SCAN_MODE_LINEART) {
+            return false;
+        }
+    }
+    saneDesc.optionConstraintString_.push_back(SCAN_MODE_LINEART);
+    SCAN_HILOGD("Lineart option injected");
+    return true;
+}
+
+bool EsclDriverManager::ShouldDowngradeBwMode(const std::string& scannerId, const std::string& value)
+{
+    return IsEsclScanner(scannerId) && value == SCAN_MODE_LINEART;
 }
 
 } // namespace OHOS::Scan

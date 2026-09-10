@@ -263,6 +263,7 @@ void ScanServiceAbility::CleanupScanService()
         SaneManagerClient::GetInstance().SaneClose(openedScanner_->scannerId);
     }
     openedScanner_.reset();
+    scannerSettings_.clear();
     SaneManagerClient::GetInstance().SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
     {
@@ -597,6 +598,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         return ScanServiceUtils::ConvertErro(status);
     }
     openedScanner_.reset();
+    scannerSettings_.erase(scannerId);
     SCAN_HILOGI("ScanServiceAbility CloseScanner end");
     return E_SCAN_NONE;
 }
@@ -620,6 +622,19 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
+    if (EsclDriverManager::IsEsclScanner(scannerId)) {
+        if (!EsclDriverManager::InjectLineartOption(saneDesc)) {
+            nativeLineartScanners_.insert(scannerId);
+        }
+    }
+    FillOptionConstraint(saneDesc, desc);
+    desc.Dump();
+    SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc end");
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::FillOptionConstraint(SaneOptionDescriptor &saneDesc, ScanOptionDescriptor &desc)
+{
     desc.SetOptionName(saneDesc.optionName_);
     desc.SetOptionTitle(saneDesc.optionTitle_);
     desc.SetOptionDesc(saneDesc.optionDesc_);
@@ -648,9 +663,6 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         }
         desc.SetOptionConstraintString(optionConstraintString);
     }
-    desc.Dump();
-    SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc end");
-    return E_SCAN_NONE;
 }
 
 int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex)
@@ -666,6 +678,12 @@ int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const in
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
+    if (auto sit = scannerSettings_.find(scannerId); sit != scannerSettings_.end()) {
+        sit->second.erase(optionIndex);
+        if (sit->second.empty()) {
+            scannerSettings_.erase(sit);
+        }
+    }
     return E_SCAN_NONE;
 }
 
@@ -673,6 +691,12 @@ int32_t ScanServiceAbility::ActionGetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
+    if (auto sit = scannerSettings_.find(scannerId); sit != scannerSettings_.end()) {
+        if (auto oit = sit->second.find(optionIndex); oit != sit->second.end()) {
+            value = oit->second;
+            return E_SCAN_NONE;
+        }
+    }
     SaneStatus status = SANE_STATUS_GOOD;
     ScanOptionValueType valueType = value.GetScanOptionValueType();
     SaneControlParam controlParam;
@@ -700,6 +724,13 @@ int32_t ScanServiceAbility::ActionSetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
+    bool shouldDowngrade = false;
+    if (value.GetScanOptionValueType() == SCAN_VALUE_STR) {
+        if (nativeLineartScanners_.find(scannerId) == nativeLineartScanners_.end()) {
+            shouldDowngrade = EsclDriverManager::ShouldDowngradeBwMode(scannerId, value.GetStrValue());
+        }
+    }
+
     SaneStatus status = SANE_STATUS_GOOD;
     SaneControlParam controlParam;
     controlParam.option_ = optionIndex;
@@ -708,12 +739,23 @@ int32_t ScanServiceAbility::ActionSetValue(
     int32_t numValue = value.GetNumValue();
     controlParam.valueNumber_ = numValue;
     controlParam.valueStr_ = value.GetStrValue();
+
+    if (shouldDowngrade) {
+        controlParam.valueStr_ = SCAN_MODE_GRAY;
+        SCAN_HILOGD("BW downgrade: Lineart -> Gray");
+    }
+
     SaneOutParam outParam;
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, ret = [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
+
+    if (shouldDowngrade) {
+        scannerSettings_[scannerId][optionIndex] = value;
+    }
+
     return status;
 }
 
@@ -1179,6 +1221,24 @@ int32_t ScanServiceAbility::StartScanOnceInternal(const std::string &scannerId)
     return E_SCAN_NONE;
 }
 
+int32_t ScanServiceAbility::CheckAdfEmpty(const std::string &scannerId)
+{
+    if (!EsclDriverManager::IsEsclScanner(scannerId)) {
+        return E_SCAN_NONE;
+    }
+    std::string ipAddress;
+    int32_t portNumber = 0;
+    if (!EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
+        SCAN_HILOGE("Failed to extract IP and port from scannerId");
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(ipAddress, portNumber)) {
+        SCAN_HILOGI("ADF is empty, no paper available");
+        return E_SCAN_NO_DOCS;
+    }
+    return E_SCAN_NONE;
+}
+
 int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &batchMode)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -1195,22 +1255,13 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         return E_SCAN_DEVICE_BUSY;
     }
 
-    // Check if ESCL scanner's ADF is empty before starting scan in external API call.
-    // If the scanner uses ESCL protocol and the scan source is ADF,
-    // return E_SCAN_NO_DOCS when ADF is empty.
-    if (EsclDriverManager::IsEsclScanner(scannerId)) {
-        std::string ipAddress;
-        int32_t portNumber = 0;
-        if (!EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
-            SCAN_HILOGE("Failed to extract IP and port from scannerId");
-            return E_SCAN_INVALID_PARAMETER;
-        }
-        if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(ipAddress, portNumber)) {
-            SCAN_HILOGI("ADF is empty, no paper available");
-            return E_SCAN_NO_DOCS;
-        }
+    if (int32_t adfRet = CheckAdfEmpty(scannerId); adfRet != E_SCAN_NONE) {
+        return adfRet;
     }
-    
+
+    bool needBinarize = false;
+    PrepareBwScan(scannerId, needBinarize);
+
     if (int32_t status = StartScanOnceInternal(scannerId); status != E_SCAN_NONE) {
         SCAN_HILOGE("Start Scan error");
         return status;
@@ -1220,6 +1271,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     int32_t userId = GetCurrentUserId();
     auto exe = [=] () {
         ScanTask task(scannerId, userId, batchMode);
+        task.SetBinarize(needBinarize);
         StartScanTask(task);
     };
     {
@@ -1249,6 +1301,7 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
+    scannerSettings_.erase(scanTask.GetScannerId());
     if (scannerState_.load() == SCANNER_CANCELING) {
         scanPictureData_.CleanScanQueue();
     }
@@ -1596,5 +1649,26 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
     }
 
     return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::PrepareBwScan(const std::string& scannerId, bool& needBinarize)
+{
+    needBinarize = false;
+    auto it = scannerSettings_.find(scannerId);
+    if (it == scannerSettings_.end()) {
+        return;
+    }
+
+    for (auto& [idx, val] : it->second) {
+        if (val.GetScanOptionValueType() != SCAN_VALUE_STR) {
+            continue;
+        }
+        if (val.GetStrValue() != SCAN_MODE_LINEART) {
+            continue;
+        }
+        needBinarize = EsclDriverManager::IsEsclScanner(scannerId);
+        SCAN_HILOGD("PrepareBwScan: needBinarize=%{public}d", needBinarize);
+        break;
+    }
 }
 }  // namespace OHOS::Scan
