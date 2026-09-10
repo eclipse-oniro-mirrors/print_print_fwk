@@ -27,6 +27,7 @@ ohos_unittest("fwk_print_service_ability_printer_connect_test") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/services/print_service/include",
     "${print_path}/services/print_service/include/event_callback",
+    "${print_path}/services/print_service/enterprise/include",
     "${print_utils_path}/include",
   ]
 
@@ -126,6 +127,10 @@ ohos_unittest("fwk_print_service_ability_printer_connect_test") {
 
   if (print_fwk_feature_edm_service) {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+  }
+
+  if (print_fwk_feature_edm_print_policy) {
+    cflags_cc += [ "-DEDM_PRINT_POLICY_ENABLE" ]
   }
 
   if (print_fwk_feature_remote_service) {

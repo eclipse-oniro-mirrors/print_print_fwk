@@ -53,8 +53,9 @@ public:
     bool IsAgentRoutedPrinterByName(const std::string &printerName) const;
     std::optional<int32_t> TryAddPrinterViaAgent(const std::string &printerName, const std::string &uri,
         const std::string &options);
-    static std::string ExtractSourceUriFromOption(const std::string &option);
+    static std::string ResolveEffectiveUri(const PrinterInfo &printerInfo);
     int32_t DeletePrinterFromAgent(const std::string &printerName);
+    std::string ResolvePendingSourceUri(const std::string &printerUri);
     bool ClaimPendingAgentPrinter(PrinterInfo &printerInfo);
     bool AttachPendingAgentPrinter(PrinterInfo &printerInfo);
     void ConfirmAgentPrinterPersisted(const PrinterInfo &printerInfo);

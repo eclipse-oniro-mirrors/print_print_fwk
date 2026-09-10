@@ -55,7 +55,6 @@ private:
     bool QueryPolicyFromEdm(int32_t userId);
     void ClearCache();
     bool ParsePolicyJson(const std::string &json, EdmPrintPolicy &policy);
-    std::string ResolveEffectiveUri(const PrinterInfo &printerInfo);
 
     mutable std::mutex mutex_;
     mutable std::mutex queryMutex_;
