@@ -387,7 +387,7 @@ bool PrintShellCommand::IsSandboxEnvironment() const
     return isDir;
 }
 
-int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, std::string& sandboxPath)
+int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, int& fd)
 {
     fd = open(srcPath.c_str(), O_RDONLY);
     if (fd < 0) {
