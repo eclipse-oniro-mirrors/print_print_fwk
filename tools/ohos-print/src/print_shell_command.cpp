@@ -387,10 +387,10 @@ bool PrintShellCommand::IsSandboxEnvironment() const
     return isDir;
 }
 
-int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath)
+int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, std::string& sandboxPath)
 {
-    int srcFd = open(srcPath.c_str(), O_RDONLY);
-    if (srcFd < 0) {
+    fd = open(srcPath.c_str(), O_RDONLY);
+    if (fd < 0) {
         if (errno == ENOENT) {
             OutputError(ERR_FILE_OPEN_FAILED,
                 "Failed to open source file: " + srcPath + ", error: file not exist",
@@ -406,7 +406,16 @@ int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::st
         }
         return ERR_INVALID_VALUE;
     }
+    return ERR_OK;
+}
 
+int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath)
+{
+    int srcFd = -1;
+    if (OpenSourceFile(srcPath, srcFd) != ERR_OK) {
+        return ERR_INVALID_VALUE;
+    }
+    
     struct stat srcStat;
     if (fstat(srcFd, &srcStat) < 0) {
         close(srcFd);
