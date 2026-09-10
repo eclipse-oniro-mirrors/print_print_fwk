@@ -294,6 +294,7 @@ private:
     bool IsSandboxEnvironment() const;
     int32_t CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath);
     int32_t OpenSourceFile(const std::string& srcPath, int& fd);
+    int32_t SendfileAll(int dstFd, int srcFd, size_t size);
     int32_t OpenFileForPrint(const std::string& filePath, std::vector<uint32_t>& fdList,
         std::string& sandboxTempPath);
     int32_t ResolvePrinterId(std::string& printerId);

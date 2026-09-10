@@ -446,27 +446,34 @@ int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::st
         return ERR_INVALID_VALUE;
     }
 
-    off_t offset = 0;
-    size_t remaining = static_cast<size_t>(srcStat.st_size);
-    while (remaining > 0) {
-        ssize_t copied = sendfile(dstFd, srcFd, &offset, remaining);
-        if (copied < 0) {
-            int savedErrno = errno;
-            close(srcFd);
-            close(dstFd);
-            OutputError(ERR_FILE_OPEN_FAILED,
-                "Failed to copy file to sandbox: " + srcPath + ", error: " + strerror(savedErrno),
-                "Check disk space and sandbox permissions", resultReceiver_);
-            unlink(sandboxPath.c_str());
-            sandboxPath.clear();
-            return ERR_INVALID_VALUE;
-        }
-        remaining -= static_cast<size_t>(copied);
+    if (SendfileAll(dstFd, srcFd, static_cast<size_t>(srcStat.st_size)) != ERR_OK) {
+        close(srcFd);
+        close(dstFd);
+        unlink(sandboxPath.c_str());
+        sandboxPath.clear();
+        return ERR_INVALID_VALUE;
     }
     close(srcFd);
     close(dstFd);
 
     PRINT_HILOGI("Copied file to sandbox: %{public}s -> %{public}s", srcPath.c_str(), sandboxPath.c_str());
+    return ERR_OK;
+}
+
+int32_t PrintShellCommand::SendfileAll(int dstFd, int srcFd, size_t size)
+{
+    off_t offset = 0;
+    size_t remaining = size;
+    while (remaining > 0) {
+        ssize_t copied = sendfile(dstFd, srcFd, &offset, remaining);
+        if (copied < 0) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to copy file to sandbox: " + srcPath + ", error: " + strerror(errno),
+                "Check disk space and sandbox permissions", resultReceiver_);
+            return ERR_INVALID_VALUE;
+        }
+        remaining -= static_cast<size_t>(copied);
+    }
     return ERR_OK;
 }
 
