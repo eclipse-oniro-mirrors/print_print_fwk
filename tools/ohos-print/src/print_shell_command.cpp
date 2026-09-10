@@ -468,7 +468,7 @@ int32_t PrintShellCommand::SendfileAll(int dstFd, int srcFd, size_t size)
         ssize_t copied = sendfile(dstFd, srcFd, &offset, remaining);
         if (copied < 0) {
             OutputError(ERR_FILE_OPEN_FAILED,
-                "Failed to copy file to sandbox: " + srcPath + ", error: " + strerror(errno),
+                "Failed to sendFile, error: " + strerror(errno),
                 "Check disk space and sandbox permissions", resultReceiver_);
             return ERR_INVALID_VALUE;
         }
