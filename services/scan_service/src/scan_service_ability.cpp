@@ -623,9 +623,7 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         return ScanServiceUtils::ConvertErro(status);
     }
     if (EsclDriverManager::IsEsclScanner(scannerId)) {
-        if (!EsclDriverManager::InjectLineartOption(saneDesc)) {
-            nativeLineartScanners_.insert(scannerId);
-        }
+        EsclDriverManager::InjectLineartOption(saneDesc);
     }
     FillOptionConstraint(saneDesc, desc);
     desc.Dump();
@@ -726,9 +724,7 @@ int32_t ScanServiceAbility::ActionSetValue(
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
     bool shouldDowngrade = false;
     if (value.GetScanOptionValueType() == SCAN_VALUE_STR) {
-        if (nativeLineartScanners_.find(scannerId) == nativeLineartScanners_.end()) {
-            shouldDowngrade = EsclDriverManager::ShouldDowngradeBwMode(scannerId, value.GetStrValue());
-        }
+        shouldDowngrade = EsclDriverManager::ShouldDowngradeBwMode(scannerId, value.GetStrValue());
     }
 
     SaneStatus status = SANE_STATUS_GOOD;

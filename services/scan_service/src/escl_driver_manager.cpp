@@ -215,22 +215,21 @@ bool EsclDriverManager::IsAdfEmpty(const std::string& ipAddress, int32_t portNum
     return false;
 }
 
-bool EsclDriverManager::InjectLineartOption(SaneOptionDescriptor &saneDesc)
+void EsclDriverManager::InjectLineartOption(SaneOptionDescriptor &saneDesc)
 {
     if (saneDesc.optionConstraintType_ != SANE_CONSTRAINT_STRING_LIST) {
-        return false;
+        return;
     }
     if (saneDesc.optionName_ != SANE_NAME_SCAN_MODE) {
-        return false;
+        return;
     }
     for (const auto &str : saneDesc.optionConstraintString_) {
         if (str == SCAN_MODE_LINEART) {
-            return false;
+            return;
         }
     }
     saneDesc.optionConstraintString_.push_back(SCAN_MODE_LINEART);
     SCAN_HILOGD("Lineart option injected");
-    return true;
 }
 
 bool EsclDriverManager::ShouldDowngradeBwMode(const std::string& scannerId, const std::string& value)

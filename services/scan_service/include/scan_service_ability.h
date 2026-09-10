@@ -24,7 +24,6 @@
 #include <chrono>
 #include <atomic>
 #include <optional>
-#include <set>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
@@ -149,7 +148,6 @@ private:
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
     std::map<std::string, std::map<int32_t, ScanOptionValue>> scannerSettings_;
-    std::set<std::string> nativeLineartScanners_;
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H

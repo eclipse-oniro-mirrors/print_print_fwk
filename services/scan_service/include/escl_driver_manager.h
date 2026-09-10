@@ -28,7 +28,7 @@ public:
     static bool IsAdfMode(const std::string& scannerId);
     static bool ExtractIpAndPort(const std::string& scannerId, std::string& ipAddress, int32_t& portNumber);
     static bool IsAdfEmpty(const std::string& ipAddress, int32_t portNumber);
-    static bool InjectLineartOption(SaneOptionDescriptor &saneDesc);
+    static void InjectLineartOption(SaneOptionDescriptor &saneDesc);
     static bool ShouldDowngradeBwMode(const std::string& scannerId, const std::string& value);
 private:
     static bool CreateSoftLink();
