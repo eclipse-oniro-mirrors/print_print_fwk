@@ -661,7 +661,6 @@ void PrintShellCommand::BuildOptionsJson(const PrintJobParams& params, const std
     if (!params.collateInput.empty()) {
         optionsJson["collate"] = params.collate ? COLLATE_MODE : SEQUENTIAL_MODE;
     }
-    optionsJson["isBorderless"] = false;
 }
 
 int32_t PrintShellCommand::SetPageRangeOnJob(const std::string& pageRangeInput, PrintJob& printJob)
