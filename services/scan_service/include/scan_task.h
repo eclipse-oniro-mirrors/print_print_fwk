@@ -24,7 +24,6 @@
 #include <queue>
 #include <setjmp.h>
 #include "scanner_info.h"
-#include "scan_constant.h"
 #include "scan_parameters.h"
 #include "pixel_map.h"
 #include "image_packer.h"
@@ -51,7 +50,6 @@ public:
     void ImageFinishCompress();
     ImageFormat GetImageFormat() const;
     void SetBinarize(bool binarize);
-    void SetBwThreshold(int32_t threshold);
 
 private:
     void SaveRawData();
@@ -77,7 +75,6 @@ private:
     size_t rowWriteIdx_ = 0;
     size_t colWriteIdx_ = 0;
     bool binarize_ = false;
-    int32_t bwThreshold_ = SCAN_BW_THRESHOLD_DEFAULT;
     ScanParameters scanParams_;
     std::unique_ptr<Media::PixelMap> pixMap_;
     std::unique_ptr<Media::ImagePacker> imagePacker_;

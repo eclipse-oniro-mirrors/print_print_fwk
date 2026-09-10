@@ -59,11 +59,6 @@ void ScanTask::SetBinarize(bool binarize)
     binarize_ = binarize;
 }
 
-void ScanTask::SetBwThreshold(int32_t threshold)
-{
-    bwThreshold_ = threshold;
-}
-
 ImageFormat ScanTask::GetImageFormat() const
 {
     return imageFormat_;
@@ -208,10 +203,9 @@ int32_t ScanTask::WriteImageData(const std::vector<uint8_t>& dataBuffer)
 
     if (pixelFormat == SCAN_FRAME_GRAY) {
         if (binarize_) {
-            SCAN_HILOGD("WriteImageData: binarize path, threshold=%{public}d", bwThreshold_);
-            int32_t threshold = bwThreshold_;
+            SCAN_HILOGD("WriteImageData: binarize path");
             return WriteGrayBasedData(dataBuffer,
-                [threshold](uint8_t g) { return g > threshold ? 0xff : 0x00; });
+                [](uint8_t g) { return g > SCAN_BW_THRESHOLD ? 0xff : 0x00; });
         }
         if (scanParams_.GetDepth() != 1) {
             return WriteGrayBasedData(dataBuffer, [](uint8_t g) { return g; });
