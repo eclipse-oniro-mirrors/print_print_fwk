@@ -472,6 +472,13 @@ int32_t PrintShellCommand::SendfileAll(int dstFd, int srcFd, size_t size)
                 "Check disk space and sandbox permissions", resultReceiver_);
             return ERR_INVALID_VALUE;
         }
+        if (copied == 0) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to sendfile, error: unexpected EOF",
+                "Source file may have been truncated", resultReceiver_);
+            return ERR_INVALID_VALUE;
+        }
+        
         remaining -= static_cast<size_t>(copied);
     }
     return ERR_OK;
