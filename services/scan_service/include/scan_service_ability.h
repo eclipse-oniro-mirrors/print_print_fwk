@@ -147,7 +147,7 @@ private:
     bool rediscoverPending_{false};
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
-    std::map<std::string, std::map<int32_t, ScanOptionValue>> scannerSettings_;
+    std::map<std::string, std::map<int32_t, ScanOptionValue>> colorModeSettings_;
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H

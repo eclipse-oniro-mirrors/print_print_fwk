@@ -263,7 +263,7 @@ void ScanServiceAbility::CleanupScanService()
         SaneManagerClient::GetInstance().SaneClose(openedScanner_->scannerId);
     }
     openedScanner_.reset();
-    scannerSettings_.clear();
+    colorModeSettings_.clear();
     SaneManagerClient::GetInstance().SaneExit();
     ScanMdnsService::GetInstance().OnStopDiscoverService();
     {
@@ -598,7 +598,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         return ScanServiceUtils::ConvertErro(status);
     }
     openedScanner_.reset();
-    scannerSettings_.erase(scannerId);
+    colorModeSettings_.erase(scannerId);
     SCAN_HILOGI("ScanServiceAbility CloseScanner end");
     return E_SCAN_NONE;
 }
@@ -676,10 +676,10 @@ int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const in
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
-    if (auto sit = scannerSettings_.find(scannerId); sit != scannerSettings_.end()) {
+    if (auto sit = colorModeSettings_.find(scannerId); sit != colorModeSettings_.end()) {
         sit->second.erase(optionIndex);
         if (sit->second.empty()) {
-            scannerSettings_.erase(sit);
+            colorModeSettings_.erase(sit);
         }
     }
     return E_SCAN_NONE;
@@ -689,7 +689,7 @@ int32_t ScanServiceAbility::ActionGetValue(
     const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex)
 {
     SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
-    if (auto sit = scannerSettings_.find(scannerId); sit != scannerSettings_.end()) {
+    if (auto sit = colorModeSettings_.find(scannerId); sit != colorModeSettings_.end()) {
         if (auto oit = sit->second.find(optionIndex); oit != sit->second.end()) {
             value = oit->second;
             return E_SCAN_NONE;
@@ -749,7 +749,7 @@ int32_t ScanServiceAbility::ActionSetValue(
     }
 
     if (shouldDowngrade) {
-        scannerSettings_[scannerId][optionIndex] = value;
+        colorModeSettings_[scannerId][optionIndex] = value;
     }
 
     return status;
@@ -1297,7 +1297,7 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
-    scannerSettings_.erase(scanTask.GetScannerId());
+    colorModeSettings_.erase(scanTask.GetScannerId());
     if (scannerState_.load() == SCANNER_CANCELING) {
         scanPictureData_.CleanScanQueue();
     }
@@ -1650,8 +1650,8 @@ int32_t ScanServiceAbility::ExportScanPicture(const std::string scannerId,
 void ScanServiceAbility::PrepareBwScan(const std::string& scannerId, bool& needBinarize)
 {
     needBinarize = false;
-    auto it = scannerSettings_.find(scannerId);
-    if (it == scannerSettings_.end()) {
+    auto it = colorModeSettings_.find(scannerId);
+    if (it == colorModeSettings_.end()) {
         return;
     }
 
