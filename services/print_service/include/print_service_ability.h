@@ -487,6 +487,8 @@ public:
 public:
     void ReportJobBlockedEvent(const std::shared_ptr<PrintJob> &printJob);
     void ReportPrinterBlockedEvent(const std::string &printerIp);
+private:
+    bool IsPrinterBlockedByEdmPolicy(const std::string &printerId);
 #endif // EDM_PRINT_POLICY_ENABLE
 
 #ifdef REMOTE_SERVICE_ENABLE

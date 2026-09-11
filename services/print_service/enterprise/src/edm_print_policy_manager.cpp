@@ -63,7 +63,10 @@ bool EdmPrintPolicyManager::IsPrintJobAllowedEdm(const PrintJob &printJob)
 
 bool EdmPrintPolicyManager::IsPrinterAllowedEdm(const PrinterInfo &printerInfo)
 {
-    std::string uri = ResolveEffectiveUri(printerInfo);
+    std::string uri = printerInfo.HasUri() ? printerInfo.GetUri() : "";
+#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
+    uri = PrintFwkAgentManager::ResolveEffectiveUri(printerInfo);
+#endif
     if (uri.find(VIRTUAL_PRINTER_SCHEME + "://") == 0) {
         PRINT_HILOGI("Virtual printer, allow by default");
         return true;
@@ -119,18 +122,6 @@ void EdmPrintPolicyManager::UpdatePrintPolicyFromEdm(const std::string &eventDat
         return;
     }
     QueryPolicyFromEdm(currentUserId);
-}
-
-std::string EdmPrintPolicyManager::ResolveEffectiveUri(const PrinterInfo &printerInfo)
-{
-    std::string uri = printerInfo.HasUri() ? printerInfo.GetUri() : "";
-#ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
-    std::string sourceUri = PrintFwkAgentManager::ExtractSourceUriFromOption(printerInfo.GetOption());
-    if (!sourceUri.empty()) {
-        uri = sourceUri;
-    }
-#endif
-    return uri;
 }
 
 bool EdmPrintPolicyManager::IsInIpWhitelist(const std::string &ip)
