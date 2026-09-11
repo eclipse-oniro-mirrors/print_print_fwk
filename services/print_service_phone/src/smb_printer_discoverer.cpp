@@ -178,12 +178,13 @@ void SmbPrinterDiscoverer::ShareEnumCallback(struct smb2_context* smb2, int32_t 
         PRINT_HILOGE("smb2 is null");
         return;
     }
-    if (status) {
-        PRINT_HILOGE("ShareEnumCallback fail, ret = %{public}d", status);
-        return;
-    }
     if (!commandData) {
         PRINT_HILOGE("commandData is null");
+        return;
+    }
+    if (status) {
+        PRINT_HILOGE("ShareEnumCallback fail, ret = %{public}d", status);
+        smbLib_->FreeData(smb2, commandData);
         return;
     }
     auto* rep = static_cast<struct srvsvc_NetrShareEnum_rep*>(commandData);
