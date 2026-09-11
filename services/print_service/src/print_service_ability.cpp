@@ -744,6 +744,12 @@ bool PrintServiceAbility::IsPrinterBlockedByEdmPolicy(const std::string &printer
     auto edmDiscoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (edmDiscoveredInfo != nullptr) {
         edmPrinterInfo = *edmDiscoveredInfo;
+    } else {
+#ifdef HAVE_SMB_PRINTER
+        if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
+            edmPrinterInfo = *smbPrinterInfo;
+        }
+#endif // HAVE_SMB_PRINTER
     }
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
     EnrichEdmPrinterInfoWithAgentSourceUri(edmPrinterInfo);

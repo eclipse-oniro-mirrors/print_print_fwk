@@ -57,6 +57,9 @@ const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MIN = 16;
 const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MAX = 31;
 const int32_t PRIVATE_IPV4_CLASS_C_FIRST = 192;
 const int32_t PRIVATE_IPV4_CLASS_C_SECOND = 168;
+const int32_t BITS_PER_HEX_DIGIT = 4;
+const int32_t IPV6_HEXTET_COUNT = 8;
+const int32_t IPV6_EXPANDED_MAX_LEN = IPV6_HEXTET_COUNT * 4 + (IPV6_HEXTET_COUNT - 1);
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -754,13 +757,18 @@ std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
     char host[HTTP_MAX_URI] = {0};
     char resource[HTTP_MAX_URI] = {0};
     int port = 0;
-    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
-        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    if (status != HTTP_URI_STATUS_OK) {
-        PRINT_HILOGW("ExtractIpFromUri invalid uri, status=%{public}u", status);
-        return "";
+    std::string hostStr = "";
+    if (uri.find("smb://") == 0) {
+        hostStr = ExtractHostFromUri(uri);
+    } else {
+        http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+            username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
+        if (status != HTTP_URI_STATUS_OK) {
+            PRINT_HILOGW("ExtractIpFromUri invalid uri, status=%{public}u", status);
+            return "";
+        }
+        hostStr = host;
     }
-    std::string hostStr(host);
     if (hostStr.find(':') == std::string::npos) {
         return hostStr;
     }
@@ -772,9 +780,6 @@ std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
     if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) != 1) {
         return hostStr;
     }
-    constexpr int BITS_PER_HEX_DIGIT = 4;
-    constexpr int IPV6_HEXTET_COUNT = 8;
-    constexpr int IPV6_EXPANDED_MAX_LEN = IPV6_HEXTET_COUNT * 4 + (IPV6_HEXTET_COUNT - 1);
     const uint8_t *b = addr6.s6_addr;
     auto hexNibble = [](uint8_t v) -> char {
         return v < 10 ? static_cast<char>('0' + v) : static_cast<char>('a' + (v - 10));
