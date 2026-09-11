@@ -308,7 +308,7 @@ HWTEST_F(ScanTaskTest, WriteJfifDensityField_FileOpenFails, TestSize.Level1)
     // No crash = pass
 }
  
-HWTEST_F(ScanTaskTest, WriteGreyData_SrcStrideLessThanColWriteIdx, TestSize.Level1)
+HWTEST_F(ScanTaskTest, WriteGrayBasedData_SrcStrideLessThanColWriteIdx, TestSize.Level1)
 {
     ScanParameters scanParam;
     scanParam.SetFormat(SCAN_FRAME_GRAY);
