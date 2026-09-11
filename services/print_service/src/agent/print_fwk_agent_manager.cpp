@@ -518,6 +518,22 @@ std::string PrintFwkAgentManager::FindPendingPrinterKeyBySourceLocked(const std:
     return {};
 }
 
+std::string PrintFwkAgentManager::ResolvePendingSourceUri(const std::string &printerUri)
+{
+    if (printerUri.empty()) {
+        return "";
+    }
+    const auto now = nowProvider_();
+    std::lock_guard<std::mutex> lock(pendingMutex_);
+    PruneExpiredPendingLocked(now);
+    const std::string uriKey = FindPendingPrinterKeyLocked(printerUri);
+    auto it = pendingPrinters_.find(uriKey);
+    if (it == pendingPrinters_.end()) {
+        return "";
+    }
+    return it->second.metadata.source.uri;
+}
+
 bool PrintFwkAgentManager::ClaimPendingAgentPrinter(PrinterInfo &printerInfo)
 {
     const std::string uri = printerInfo.GetUri();
@@ -616,17 +632,19 @@ int32_t PrintFwkAgentManager::EnsureBackendReadyForPersistedPrinters()
     return code;
 }
 
-std::string PrintFwkAgentManager::ExtractSourceUriFromOption(const std::string &option)
+std::string PrintFwkAgentManager::ResolveEffectiveUri(const PrinterInfo &printerInfo)
 {
-    Json::Value root;
-    if (!PrintJsonUtil::Parse(option, root) || !root.isObject() ||
-        !root.isMember("driver") || !root["driver"].isString() ||
-        root["driver"].asString() != PRINT_DRIVER_AGENT ||
-        !root.isMember("agent") || !root["agent"].isObject() ||
-        !root["agent"].isMember("sourceUri") || !root["agent"]["sourceUri"].isString()) {
-        return "";
+    std::string uri = printerInfo.HasUri() ? printerInfo.GetUri() : "";
+    Json::Value option;
+    if (!PrintJsonUtil::Parse(printerInfo.GetOption(), option) || !option.isObject() ||
+        !option.isMember("driver") || !option["driver"].isString() ||
+        option["driver"].asString() != PRINT_DRIVER_AGENT ||
+        !option.isMember("agent") || !option["agent"].isObject() ||
+        !option["agent"].isMember("sourceUri") || !option["agent"]["sourceUri"].isString()) {
+        return uri;
     }
-    return root["agent"]["sourceUri"].asString();
+    std::string sourceUri = option["agent"]["sourceUri"].asString();
+    return sourceUri.empty() ? uri : sourceUri;
 }
 
 void PrintFwkAgentManager::PreparePrintJob(const std::string &jobId, const std::string &printerId)

@@ -73,6 +73,89 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterClaimsPendingAgentPrinterByDisco
 }
 #endif
 
+#if defined(EDM_PRINT_POLICY_ENABLE) && defined(PRINT_FWK_AGENT_CLIENT_ENABLE)
+HWTEST_F(PrintServiceAbilityTest, ConnectPrinterAllowsPendingAgentPrinterBySourceUriWhitelist, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string printerId = "fwk.driver.bsuni:mdns-printer";
+    const std::string uri = "ipp://10.0.0.2:631/printers/office";
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetUri(uri);
+    service->printSystemData_.AddPrinterToDiscovery(info);
+
+    auto &agentManager = PrintFwkAgentManager::GetInstance();
+    agentManager.Shutdown();
+    agentManager.state_.store(PrintFwkAgentManager::State::RUNNING);
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
+    const std::string uriKey = PrintFwkAgentManager::BuildUriMatchKey(uri);
+    const auto originalExpiry = PrintFwkAgentManager::Clock::now() + std::chrono::seconds(1);
+    agentManager.pendingPrinters_[uriKey] = {
+        {
+            { sourceUri, sourceKey },
+            { uri, "office" },
+            "Agent Original",
+            "TEST_BACKEND",
+        },
+        originalExpiry,
+    };
+
+    auto &edmManager = EdmPrintPolicyManager::GetInstance();
+    edmManager.edmQuerySuccess_ = true;
+    edmManager.policy_.ipWhitelist = { "192.168.1.10" };
+
+    int32_t ret = service->ConnectPrinter(printerId);
+    EXPECT_NE(ret, E_PRINT_EDM_POLICY_RESTRICTED);
+
+    auto pending = agentManager.pendingPrinters_.find(uriKey);
+    ASSERT_NE(pending, agentManager.pendingPrinters_.end());
+    EXPECT_GT(pending->second.expiresAt, originalExpiry);
+
+    edmManager.edmQuerySuccess_ = false;
+    edmManager.policy_.ipWhitelist.clear();
+    agentManager.Shutdown();
+}
+
+HWTEST_F(PrintServiceAbilityTest, ConnectPrinterBlocksPendingAgentPrinterWhenSourceUriNotWhitelisted,
+    TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string printerId = "fwk.driver.bsuni:mdns-printer";
+    const std::string uri = "ipp://10.0.0.2:631/printers/office";
+    auto info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId(printerId);
+    info->SetUri(uri);
+    service->printSystemData_.AddPrinterToDiscovery(info);
+
+    auto &agentManager = PrintFwkAgentManager::GetInstance();
+    agentManager.Shutdown();
+    agentManager.state_.store(PrintFwkAgentManager::State::RUNNING);
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    const std::string sourceKey = PrintFwkAgentManager::BuildUriMatchKey(sourceUri);
+    const std::string uriKey = PrintFwkAgentManager::BuildUriMatchKey(uri);
+    agentManager.pendingPrinters_[uriKey] = {
+        {
+            { sourceUri, sourceKey },
+            { uri, "office" },
+            "Agent Original",
+            "TEST_BACKEND",
+        },
+        PrintFwkAgentManager::Clock::now() + std::chrono::seconds(30),
+    };
+
+    auto &edmManager = EdmPrintPolicyManager::GetInstance();
+    edmManager.edmQuerySuccess_ = true;
+    edmManager.policy_.ipWhitelist = { "192.168.1.50" };
+
+    EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_EDM_POLICY_RESTRICTED);
+
+    edmManager.edmQuerySuccess_ = false;
+    edmManager.policy_.ipWhitelist.clear();
+    agentManager.Shutdown();
+}
+#endif
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009_NeedRename, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();

@@ -275,5 +275,9 @@ constexpr size_t JPG_EXTENSION_LENGTH = 4;
 constexpr const char* JPG_EXTENSION = ".jpg";
 constexpr const char* TIFF_EXTENSION = ".tiff";
 constexpr int32_t TIFF_RESOLUTION_UNIT_INCH = 2;
+
+constexpr const char* SCAN_MODE_LINEART = "Lineart";
+constexpr const char* SCAN_MODE_GRAY = "Gray";
+constexpr int32_t SCAN_BW_THRESHOLD = 127;
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

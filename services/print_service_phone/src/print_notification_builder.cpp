@@ -225,6 +225,7 @@ std::string PrintNotificationBuilder::SubStateToResourceKey(uint32_t subState)
         {PrintJobSubState::PRINT_JOB_BLOCKED_SMB_PRINTER, "print_job_blocked_smb"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING, "paper_box_error"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED, "job_banned"},
+        {PrintJobSubState::PRINT_JOB_BLOCKED_EDM_POLICY_RESTRICTED, "EDM_policy_restricted"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_AUTHENTICATION, "job_verify_prompt"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE, "print_job_error"},
         {PrintJobSubState::PRINT_JOB_BLOCKED_UNKNOWN, "printer_check"}

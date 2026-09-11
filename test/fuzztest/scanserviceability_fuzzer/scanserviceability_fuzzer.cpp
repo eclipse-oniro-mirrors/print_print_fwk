@@ -283,7 +283,8 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         int32_t optionIndex = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
         ScanOptionValue scanOptionValue;
-        ScanServiceAbility::GetInstance()->ActionSetValue(scannerId, scanOptionValue, optionIndex);
+        ScanServiceAbility::GetInstance()->OpScanOptionValue(scannerId, optionIndex,
+            SCAN_ACTION_SET_VALUE, scanOptionValue);
     }
 
     void TestOpScanOptionValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
