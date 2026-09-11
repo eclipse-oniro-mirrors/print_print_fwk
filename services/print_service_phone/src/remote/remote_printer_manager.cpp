@@ -18,6 +18,7 @@
 #include "remote_constants.h"
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "print_json_util.h"
 #include "print_page_size.h"
 #include "print_service_ability.h"
@@ -365,10 +366,10 @@ void RemotePrinterManager::ClearAllPrinters()
     std::vector<std::string> removedUris;
     {
         std::lock_guard<std::mutex> lock(printerMapLock_);
-        for (const auto &printer : printerMap_) {
-            PRINT_HILOGI("[Printer: %{public}s] removed", printer.first.c_str());
-            if (printer.second) {
-                removedUris.push_back(printer.second->GetUri());
+        for (const auto &[devId, printerInfo] : printerMap_) {
+            PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(devId).c_str());
+            if (printerInfo) {
+                removedUris.push_back(printerInfo->GetUri());
             }
         }
         printerMap_.clear();

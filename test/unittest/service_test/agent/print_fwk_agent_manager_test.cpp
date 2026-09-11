@@ -943,6 +943,59 @@ TEST_F(PrintFwkAgentManagerTest, ClaimPendingAgentPrinterExtendsConnectingWindow
     EXPECT_TRUE(manager->AttachPendingAgentPrinter(info));
 }
 
+TEST_F(PrintFwkAgentManagerTest, ResolvePendingSourceUriReturnsSourceForPendingQueue)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const PrintAddPrinterResult result { TIMESTAMPED_IPP_URI.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    EXPECT_EQ(manager->ResolvePendingSourceUri(TIMESTAMPED_IPP_URI), sourceUri);
+    EXPECT_EQ(manager->ResolvePendingSourceUri("ipp://10.0.0.2:631/printers/other"), "");
+    EXPECT_EQ(manager->ResolvePendingSourceUri(""), "");
+}
+
+TEST_F(PrintFwkAgentManagerTest, ResolvePendingSourceUriMatchesDefaultPortEquivalentUri)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const std::string implicitQueueUri = "ipp://10.0.0.2/printers/office";
+    const PrintAddPrinterResult result { implicitQueueUri.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    EXPECT_EQ(manager->ResolvePendingSourceUri("ipp://10.0.0.2:631/printers/office"), sourceUri);
+}
+
+TEST_F(PrintFwkAgentManagerTest, ResolvePendingSourceUriDoesNotClaimPendingPrinter)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    const std::string ippUri = "ipp://10.0.0.2:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const PrintAddPrinterResult result { ippUri.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    EXPECT_EQ(manager->ResolvePendingSourceUri(ippUri), sourceUri);
+    EXPECT_TRUE(ClaimPendingPrinter(*manager, ippUri));
+
+    PrinterInfo info;
+    info.SetUri(ippUri);
+    EXPECT_TRUE(manager->AttachPendingAgentPrinter(info));
+    EXPECT_EQ(GetOption(info)["agent"]["sourceUri"].asString(), sourceUri);
+}
+
+TEST_F(PrintFwkAgentManagerTest, ResolvePendingSourceUriExpiresWithPendingEntry)
+{
+    const std::string sourceUri = "ipp://192.168.1.10:631/printers/office";
+    const std::string ippUri = "ipp://10.0.0.2:631/printers/office";
+    EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
+    const PrintAddPrinterResult result { ippUri.c_str(), nullptr, 0 };
+    CompleteAdd(PRINT_FWK_AGENT_CLIENT_OK, &result);
+
+    EXPECT_EQ(manager->ResolvePendingSourceUri(ippUri), sourceUri);
+    now += PENDING_TIMEOUT;
+    EXPECT_EQ(manager->ResolvePendingSourceUri(ippUri), "");
+}
+
 TEST_F(PrintFwkAgentManagerTest, DefaultIppPortFormsBuildEquivalentKeys)
 {
     const std::vector<std::pair<std::string, std::string>> uriPairs = {

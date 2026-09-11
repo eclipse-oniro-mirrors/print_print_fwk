@@ -45,7 +45,10 @@ const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
 const uint32_t URI_HOST_START_STR_LEN = 3;
-const uint32_t ANONYMIZE_ALIAS_LEN = 3;
+const uint32_t ANONYMIZE_FULL_MASK_LEN = 3;
+const uint32_t ANONYMIZE_LONG_STRING_LEN = 9;
+const uint32_t ANONYMIZE_MIN_KEEP_LEN = 1;
+const uint32_t ANONYMIZE_MAX_KEEP_LEN = 3;
 const uint32_t ANONYMIZE_IPV4_LEN = 3;
 const uint32_t ANONYMIZE_IPV6_LEN = 2;
 const int32_t PRIVATE_IPV4_CLASS_A_FIRST = 10;
@@ -324,19 +327,34 @@ bool PrintUtils::IsPrivateIpv4(const std::string &ip)
     return false;
 }
 
-static std::string MaskStringTail(const std::string &value)
+// Anonymize a string by masking the middle part: full mask if length < 3,
+// keep the first and last character if length is 3~9, keep the first and last
+// three characters if length > 9.
+std::string PrintUtils::AnonymizeString(const std::string &value)
 {
-    if (value.length() > ANONYMIZE_ALIAS_LEN) {
-        return value.substr(0, value.length() - ANONYMIZE_ALIAS_LEN) + "xxx";
+    const char maskChar = '*';
+    std::string result = value;
+    uint32_t length = static_cast<uint32_t>(result.length());
+    if (length < ANONYMIZE_FULL_MASK_LEN) {
+        for (auto &ch : result) {
+            ch = maskChar;
+        }
+        return result;
     }
-    return "xxx";
+    uint32_t keepCount = (length > ANONYMIZE_LONG_STRING_LEN) ?
+        ANONYMIZE_MAX_KEEP_LEN : ANONYMIZE_MIN_KEEP_LEN;
+    for (uint32_t i = keepCount; i < length - keepCount; i++) {
+        result[i] = maskChar;
+    }
+    return result;
 }
 
 void PrintUtils::AnonymizeAlias(Json::Value &optionJson)
 {
-    if (PrintJsonUtil::IsMember(optionJson, "alias") && optionJson["alias"].isString()) {
-        optionJson["alias"] = MaskStringTail(optionJson["alias"].asString());
+    if (!PrintJsonUtil::IsMember(optionJson, "alias") || !optionJson["alias"].isString()) {
+        return;
     }
+    optionJson["alias"] = AnonymizeString(optionJson["alias"].asString());
 }
 
 void PrintUtils::AnonymizeFileArray(Json::Value &optionJson, const std::string &key)
@@ -412,29 +430,52 @@ std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
     return printerId;
 }
 
+// Anonymize the value of a query parameter in the uri: find "key=" and mask its
+// value with "***" up to the first endChar after it (or the end of the uri if
+// endChar is not found). All occurrences of the key are masked.
+std::string PrintUtils::AnonymizeUriQueryValue(const std::string &uri, const std::string &key, const char endChar)
+{
+    const std::string maskValue = "***";
+    std::string result = uri;
+    std::string pattern = key + "=";
+    size_t searchPos = 0;
+    size_t pos = result.find(pattern, searchPos);
+    while (pos != std::string::npos) {
+        size_t valueStart = pos + pattern.length();
+        size_t valueEnd = result.find(endChar, valueStart);
+        if (valueEnd == std::string::npos) {
+            valueEnd = result.length();
+        }
+        result.replace(valueStart, valueEnd - valueStart, maskValue);
+        searchPos = valueStart + maskValue.length();
+        pos = result.find(pattern, searchPos);
+    }
+    return result;
+}
+
 std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
 {
     // The URI for remote printing is an SN (composed entirely of letters and digits), which needs to be anonymized.
     if (std::all_of(printerUri.begin(), printerUri.end(), [](unsigned char c) { return std::isalnum(c); })) {
         return std::string(printerUri.length(), '*');
     }
-    std::string host = ExtractHostFromUri(printerUri);
+    std::string result = printerUri;
+    result = AnonymizeUriQueryValue(result, "serial", '&');
+    std::string host = ExtractHostFromUri(result);
     if (host.empty()) {
-        return printerUri;
+        return result;
     }
-    size_t hostPos = printerUri.find(host);
+    size_t hostPos = result.find(host);
     if (host.find(':') != std::string::npos) {
-        std::string result = printerUri;
         return result.replace(hostPos, host.length(), AnonymizeIpv6(host));
     }
     if (host.find('.') != std::string::npos) {
         if (IsPrivateIpv4(host)) {
-            return printerUri;
+            return result;
         }
-        std::string result = printerUri;
         return result.replace(hostPos, host.length(), AnonymizeIpv4(host));
     }
-    return printerUri;
+    return result;
 }
 
 std::string PrintUtils::AnonymizeIp(const std::string &ip)
@@ -455,7 +496,7 @@ std::string PrintUtils::AnonymizePrinterName(const std::string &printerName)
         inet_pton(AF_INET6, printerName.c_str(), &addr6) == 1) {
         return AnonymizeIp(printerName);
     }
-    return MaskStringTail(printerName);
+    return AnonymizeString(printerName);
 }
 
 std::string PrintUtils::AnonymizeJobOption(const std::string &option)

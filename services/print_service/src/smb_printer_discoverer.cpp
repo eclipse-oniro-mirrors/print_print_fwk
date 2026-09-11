@@ -199,6 +199,13 @@ void SmbPrinterDiscoverer::ShareEnumCallback(struct smb2_context* smb2, int32_t 
             smbLib_->FreeData(smb2, rep);
             return;
         }
+        uint32_t entriesRead = rep->ses.ShareInfo.Level1.EntriesRead;
+        if (entriesRead > rep->ses.ShareInfo.Level1.Buffer->max_count) {
+            PRINT_HILOGE("EntriesRead exceeds max_count, entriesRead = %{public}u, maxCount = %{public}u",
+                entriesRead, rep->ses.ShareInfo.Level1.Buffer->max_count);
+            smbLib_->FreeData(smb2, rep);
+            return;
+        }
         for (uint32_t i = 0; i < rep->ses.ShareInfo.Level1.EntriesRead; i++) {
             const auto& share = rep->ses.ShareInfo.Level1.Buffer->share_info_1[i];
             if ((share.type & PRINTER_TYPE) == SHARE_TYPE_PRINTQ) {

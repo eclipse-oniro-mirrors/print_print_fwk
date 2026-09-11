@@ -39,6 +39,7 @@
 #include "scan_discover_data.h"
 #include "scan_task.h"
 #include "scan_picture_data.h"
+#include "scan_option_value.h"
 #include "pixel_map.h"
 #include "image_source.h"
 namespace OHOS::Scan {
@@ -101,6 +102,7 @@ private:
     void InitServiceHandler();
     void ManualStart();
     bool CheckPermission(const std::string &permissionName);
+    int32_t CheckAdfEmpty(const std::string &scannerId);
     void GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, ScanParameters &parm);
     void GeneratePictureBatch(ScanTask &scanTask);
     void GeneratePictureSingle(ScanTask &scanTask);
@@ -122,6 +124,7 @@ private:
     void CleanupDeadCaller(int32_t deadPid);
     void UnloadSystemAbility();
     int32_t InitializeEsclScannerDriver();
+    bool PrepareBwScan(const std::string& scannerId);
     void AddNetScanner(const std::string& uniqueId, const std::string &discoverMode);
     void AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode);
     struct OpenedScanner {
@@ -144,6 +147,7 @@ private:
     bool rediscoverPending_{false};
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
+    std::map<std::string, std::map<int32_t, ScanOptionValue>> colorModeSettings_;
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H

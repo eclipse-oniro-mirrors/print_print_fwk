@@ -326,7 +326,51 @@ INSTANTIATE_TEST_SUITE_P(AnonymizePrinterUriCases, AnonymizePrinterUriTest, test
         "ipp://[2001:0db8:85xx:xxxx:xxxx:xxxx:xxxx:xxxx]:631/print"},
     AnonymizePrinterUriTestParam{"ipp://[v1.2001:::0000:0000:0000:0000:0000+wlan0]:631/print",
         "ipp://[v1.2001::xx:xxxx:xxxx:xxxx:xxxx:xxxx]:631/print"},
-    AnonymizePrinterUriTestParam{"ipp://localhost:631/ipp/print", "ipp://localhost:631/ipp/print"}
+    AnonymizePrinterUriTestParam{"ipp://localhost:631/ipp/print", "ipp://localhost:631/ipp/print"},
+    AnonymizePrinterUriTestParam{"usb://HP/PixLab%20X1?serial=7NSZD2324434&interface=1",
+        "usb://HP/PixLab%20X1?serial=***&interface=1"},
+    AnonymizePrinterUriTestParam{"usb://HP/PixLab%20X1?serial=7NSZD2324434",
+        "usb://HP/PixLab%20X1?serial=***"},
+    AnonymizePrinterUriTestParam{"usb://HP/PixLab%20X1?interface=1&serial=7NSZD2324434",
+        "usb://HP/PixLab%20X1?interface=1&serial=***"}
+));
+
+// ==================== AnonymizeUriQueryValue Test ====================
+struct AnonymizeUriQueryValueTestParam {
+    std::string key;
+    char endChar;
+    std::string inputUri;
+    std::string expectedResult;
+};
+
+class AnonymizeUriQueryValueTest : public testing::TestWithParam<AnonymizeUriQueryValueTestParam> {};
+
+/**
+ * @tc.name: AnonymizeUriQueryValue
+ * @tc.desc: Verify AnonymizeUriQueryValue with various keys and URIs.
+ * @tc.type: FUNC
+ */
+HWTEST_P(AnonymizeUriQueryValueTest, AnonymizeUriQueryValue, TestSize.Level2)
+{
+    AnonymizeUriQueryValueTestParam param = GetParam();
+    std::string result = PrintUtils::AnonymizeUriQueryValue(param.inputUri, param.key, param.endChar);
+    EXPECT_EQ(result, param.expectedResult);
+}
+
+INSTANTIATE_TEST_SUITE_P(AnonymizeUriQueryValueCases, AnonymizeUriQueryValueTest, testing::Values(
+    AnonymizeUriQueryValueTestParam{"serial", '&', "usb://HP/PixLab?serial=7NSZD2324434&interface=1",
+        "usb://HP/PixLab?serial=***&interface=1"},
+    AnonymizeUriQueryValueTestParam{"serial", '&', "usb://HP/PixLab?serial=7NSZD2324434",
+        "usb://HP/PixLab?serial=***"},
+    AnonymizeUriQueryValueTestParam{"serial", '&', "usb://HP/PixLab?interface=1&serial=7NSZD2324434",
+        "usb://HP/PixLab?interface=1&serial=***"},
+    AnonymizeUriQueryValueTestParam{"serial", '&', "usb://HP/PixLab?serial=7NSZD2324434&serial=7NSZD2324435",
+        "usb://HP/PixLab?serial=***&serial=***"},
+    AnonymizeUriQueryValueTestParam{"serial", '&', "usb://HP/PixLab", "usb://HP/PixLab"},
+    AnonymizeUriQueryValueTestParam{"sn", '&', "ipp://1.2.3.4/print?sn=ABCDEFG&user=a",
+        "ipp://1.2.3.4/print?sn=***&user=a"},
+    AnonymizeUriQueryValueTestParam{"token", '#', "ipp://1.2.3.4/print?token=SECRET#fragment",
+        "ipp://1.2.3.4/print?token=***#fragment"}
 ));
 
 // ==================== AnonymizeIp Test ====================
@@ -474,10 +518,57 @@ HWTEST_P(AnonymizeAliasTest, AnonymizeAlias, TestSize.Level2)
 }
 
 INSTANTIATE_TEST_SUITE_P(AnonymizeAliasCases, AnonymizeAliasTest, testing::Values(
-    AnonymizeAliasTestParam{"test001", "testxxx"},
-    AnonymizeAliasTestParam{"ab", "xxx"},
-    AnonymizeAliasTestParam{"abc", "xxx"}
+    AnonymizeAliasTestParam{"ab", "**"},
+    AnonymizeAliasTestParam{"abc", "a*c"},
+    AnonymizeAliasTestParam{"test001", "t*****1"},
+    AnonymizeAliasTestParam{"abcdefghi", "a*******i"},
+    AnonymizeAliasTestParam{"abcdefghij", "abc****hij"},
+    AnonymizeAliasTestParam{"printer-alias", "pri*******ias"}
 ));
+
+// ==================== AnonymizeString Test ====================
+struct AnonymizeStringTestParam {
+    std::string inputValue;
+    std::string expectedResult;
+};
+
+class AnonymizeStringTest : public testing::TestWithParam<AnonymizeStringTestParam> {};
+
+/**
+ * @tc.name: AnonymizeString
+ * @tc.desc: Verify AnonymizeString with various values.
+ * @tc.type: FUNC
+ */
+HWTEST_P(AnonymizeStringTest, AnonymizeString, TestSize.Level2)
+{
+    AnonymizeStringTestParam param = GetParam();
+    std::string result = PrintUtils::AnonymizeString(param.inputValue);
+    EXPECT_EQ(result, param.expectedResult);
+}
+
+INSTANTIATE_TEST_SUITE_P(AnonymizeStringCases, AnonymizeStringTest, testing::Values(
+    AnonymizeStringTestParam{"ab", "**"},
+    AnonymizeStringTestParam{"abc", "a*c"},
+    AnonymizeStringTestParam{"test001", "t*****1"},
+    AnonymizeStringTestParam{"7NSZD2324434", "7NS******434"},
+    AnonymizeStringTestParam{"abcdefghi", "a*******i"},
+    AnonymizeStringTestParam{"abcdefghij", "abc****hij"},
+    AnonymizeStringTestParam{"", ""}
+));
+
+/**
+ * @tc.name: AnonymizeAliasKeyNotExist
+ * @tc.desc: Verify AnonymizeAlias with a key that does not exist.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, AnonymizeAliasKeyNotExist, TestSize.Level2)
+{
+    Json::Value optionJson;
+    optionJson["otherKey"] = "test001";
+    PrintUtils::AnonymizeAlias(optionJson);
+    EXPECT_EQ(optionJson["alias"].asString(), "");
+    EXPECT_EQ(optionJson["otherKey"].asString(), "test001");
+}
 
 // ==================== AnonymizeFileArray Test ====================
 struct AnonymizeFileArrayTestParam {

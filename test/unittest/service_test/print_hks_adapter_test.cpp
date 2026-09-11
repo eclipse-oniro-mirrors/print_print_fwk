@@ -418,6 +418,54 @@ HWTEST_F(PrintHksAdapterTest, Base64Encode_Success_ReturnsTrue, TestSize.Level1)
     EXPECT_GT(secureValue.size, 0u);
 }
 
+HWTEST_F(PrintHksAdapterTest, Base64Encode_WrapperAppendsNul_NoOverflow, TestSize.Level1)
+{
+    uint8_t data[] = "Hello";
+    struct HksBlob cipherBlob = { .size = 5, .data = data };
+    SecureBlob secureValue;
+
+    EXPECT_CALL(*mockAdapter_, EVP_EncodeBlockWrapper(_, _, _))
+        .WillOnce(Invoke([](unsigned char *t, const unsigned char *f, int n) -> int {
+            (void)f;
+            int encoded = 4 * ((n + 2) / 3);
+            for (int i = 0; i < encoded; i++) {
+                t[i] = 'A';
+            }
+            t[encoded] = '\0'; // same contract as EVP_EncodeBlock: NUL follows the last char
+            return encoded;
+        }));
+
+    bool ret = mockAdapter_->Base64Encode(cipherBlob, secureValue);
+    ASSERT_TRUE(ret);
+    EXPECT_EQ(secureValue.size, 8u);
+    EXPECT_EQ(secureValue.size % 4, 0u);
+    EXPECT_EQ(secureValue.data[0], 'A');
+    EXPECT_EQ(secureValue.data[secureValue.size], '\0');
+}
+
+HWTEST_F(PrintHksAdapterTest, Base64Encode_InputSizeMultipleOf3_NulWithinAlloc, TestSize.Level1)
+{
+    uint8_t data[] = "abc";
+    struct HksBlob cipherBlob = { .size = 3, .data = data };
+    SecureBlob secureValue;
+
+    EXPECT_CALL(*mockAdapter_, EVP_EncodeBlockWrapper(_, _, _))
+        .WillOnce(Invoke([](unsigned char *t, const unsigned char *f, int n) -> int {
+            (void)f;
+            int encoded = 4 * ((n + 2) / 3);
+            for (int i = 0; i < encoded; i++) {
+                t[i] = 'A';
+            }
+            t[encoded] = '\0'; // same contract as EVP_EncodeBlock: NUL follows the last char
+            return encoded;
+        }));
+
+    bool ret = mockAdapter_->Base64Encode(cipherBlob, secureValue);
+    ASSERT_TRUE(ret);
+    EXPECT_EQ(secureValue.size, 4u);
+    EXPECT_EQ(secureValue.data[secureValue.size], '\0');
+}
+
 HWTEST_F(PrintHksAdapterTest, Base64Decode_NullData_ReturnsTrue, TestSize.Level1)
 {
     struct HksBlob base64Blob = { .size = 16, .data = nullptr };

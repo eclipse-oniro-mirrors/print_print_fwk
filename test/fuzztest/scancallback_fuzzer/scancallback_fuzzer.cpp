@@ -80,24 +80,20 @@ void TestOnGetDevicesList(const uint8_t* data, size_t size, FuzzedDataProvider* 
 
 void TestNapiCallFunctionNullParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
-    napi_env env = nullptr;
-    napi_ref ref = nullptr;
-    ScanCallback callBack(env, ref);
     int32_t argc = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    callBack.NapiCallFunction(nullptr, argc, nullptr);
+    ScanCallback::NapiCallFunction(nullptr, argc, nullptr);
 }
 
 void TestNapiCallFunctionWithParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     napi_env env = nullptr;
     napi_ref ref = nullptr;
-    ScanCallback callBack(env, ref);
     CallbackParam cbParam;
     std::shared_ptr<std::mutex> mutex = std::make_shared<std::mutex>();
     cbParam.InitialCallbackParam(env, ref, mutex);
     int32_t argCount = dataProvider->ConsumeIntegralInRange<int32_t>(0, FUZZ_NAPI_CALLBACK_ARG_COUNT);
     napi_value callbackValues[FUZZ_NAPI_CALLBACK_ARG_COUNT] = { nullptr };
-    callBack.NapiCallFunction(&cbParam, argCount, callbackValues);
+    ScanCallback::NapiCallFunction(&cbParam, argCount, callbackValues);
 }
 
 }

@@ -82,6 +82,7 @@ INSTANTIATE_TEST_SUITE_P(SubStateToResourceKeyTestCases, SubStateToResourceKeyTe
         std::make_pair(PrintJobSubState::PRINT_JOB_BLOCKED_SMB_PRINTER, "print_job_blocked_smb"),
         std::make_pair(PrintJobSubState::PRINT_JOB_BLOCKED_INPUT_TRAY_MISSING, "paper_box_error"),
         std::make_pair(PrintJobSubState::PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED, "job_banned"),
+        std::make_pair(PrintJobSubState::PRINT_JOB_BLOCKED_EDM_POLICY_RESTRICTED, "EDM_policy_restricted"),
         std::make_pair(PrintJobSubState::PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE, "print_job_error"),
         std::make_pair(PrintJobSubState::PRINT_JOB_BLOCKED_UNKNOWN, "printer_check"),
         std::make_pair(999, ""),

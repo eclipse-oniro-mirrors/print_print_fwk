@@ -92,11 +92,13 @@ public:
     static std::string AnonymizeIpv6(const std::string &ip);
     static std::string AnonymizeUUid(const std::string &uuid);
     static std::string AnonymizePrinterId(const std::string &printerId);
+    static std::string AnonymizeUriQueryValue(const std::string &uri, const std::string &key, const char endChar);
     static std::string AnonymizePrinterUri(const std::string &printerUri);
     static std::string AnonymizePrinterName(const std::string &printerName);
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
     static void AnonymizeAdvancedOptions(Json::Value &advancedOptions);
+    static std::string AnonymizeString(const std::string &value);
     static void AnonymizeAlias(Json::Value &optionJson);
     static void AnonymizeFileArray(Json::Value &optionJson, const std::string &key);
     static std::string AnonymizeJobName(const std::string &jobName);
