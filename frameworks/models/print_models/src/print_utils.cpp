@@ -754,13 +754,18 @@ std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
     char host[HTTP_MAX_URI] = {0};
     char resource[HTTP_MAX_URI] = {0};
     int port = 0;
-    http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
-        username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
-    if (status != HTTP_URI_STATUS_OK) {
-        PRINT_HILOGW("ExtractIpFromUri invalid uri, status=%{public}u", status);
-        return "";
+    std::string hostStr = "";
+    if (uri.find("smb://") == 0) {
+        hostStr = ExtractHostFromUri(uri);
+    } else {
+        http_uri_status_t status = httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme),
+            username, sizeof(username), host, sizeof(host), &port, resource, sizeof(resource));
+        if (status != HTTP_URI_STATUS_OK) {
+            PRINT_HILOGW("ExtractIpFromUri invalid uri, status=%{public}u", status);
+            return "";
+        }
+        hostStr = host;
     }
-    std::string hostStr(host);
     if (hostStr.find(':') == std::string::npos) {
         return hostStr;
     }
