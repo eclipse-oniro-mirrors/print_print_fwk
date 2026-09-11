@@ -53,6 +53,7 @@ inline constexpr char ERR_INVALID_FD[] = "ERR_INVALID_FD";
 inline constexpr char ERR_INVALID_INPUT[] = "ERR_INVALID_INPUT";
 inline constexpr char ERR_ARG_MISSING[] = "ERR_ARG_MISSING";
 inline constexpr char ERR_COMMAND_TIMEOUT[] = "ERR_COMMAND_TIMEOUT";
+inline constexpr char ERR_SANDBOX_REQUIRED[] = "ERR_SANDBOX_REQUIRED";
 inline constexpr char INVALID_COMMAND[] = "INVALID_COMMAND";
 
 // --- Page size ID constants ---

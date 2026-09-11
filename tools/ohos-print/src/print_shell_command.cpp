@@ -382,8 +382,8 @@ bool PrintShellCommand::IsSandboxEnvironment() const
     struct stat st;
     int statRet = stat(SANDBOX_BASE_DIR, &st);
     bool isDir = (statRet == 0) && S_ISDIR(st.st_mode);
-    PRINT_HILOGI("IsSandboxEnvironment: stat(%{public}s)=%{public}d, S_ISDIR=%{public}d",
-        SANDBOX_BASE_DIR, statRet, isDir ? 1 : 0);
+    PRINT_HILOGI("IsSandboxEnvironment: statRet=%{public}d, S_ISDIR=%{public}d",
+        statRet, isDir ? 1 : 0);
     return isDir;
 }
 
@@ -432,11 +432,10 @@ int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::st
         return ERR_INVALID_VALUE;
     }
 
-    std::string baseName = ExtractJobName(srcPath);
-    sandboxPath = std::string(PRINT_TEMP_FILE_PREFIX) + std::to_string(getpid()) + "_" + baseName;
-    PRINT_HILOGI("CopyFileToSandbox sandboxPath: %{public}s", sandboxPath.c_str());
+    sandboxPath = std::string(PRINT_TEMP_FILE_PREFIX) + std::to_string(getpid()) + "_" +
+        std::to_string(arc4random());
 
-    int dstFd = open(sandboxPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0644);
+    int dstFd = open(sandboxPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0600);
     if (dstFd < 0) {
         close(srcFd);
         OutputError(ERR_FILE_OPEN_FAILED,
@@ -491,16 +490,20 @@ int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::ve
     sandboxTempPath.clear();
     PRINT_HILOGI("OpenFileForPrint");
 
-    if (IsSandboxEnvironment()) {
-        PRINT_HILOGI("IsSandboxEnvironment, then copyFileToSandbox");
-        int32_t copyRet = CopyFileToSandbox(filePath, sandboxTempPath);
-        if (copyRet != ERR_OK) {
-            return ERR_INVALID_VALUE;
-        }
-        openPath = sandboxTempPath;
-    } else {
+    if (!IsSandboxEnvironment()) {
         PRINT_HILOGE("Not in Sandbox environment");
+        OutputError(ERR_SANDBOX_REQUIRED,
+            "Sandbox environment is required for print operation" +
+            "Please run this command in a sandbox environment", resultReceiver_);
+        return ERR_INVALID_VALUE;
     }
+
+    PRINT_HILOGI("IsSandboxEnvironment, then copyFileToSandbox");
+    int32_t copyRet = CopyFileToSandbox(filePath, sandboxTempPath);
+    if (copyRet != ERR_OK) {
+        return ERR_INVALID_VALUE;
+    }
+    openPath = sandboxTempPath;
 
     int fd = open(openPath.c_str(), O_RDONLY);
     if (fd < 0) {
@@ -527,7 +530,7 @@ int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::ve
             "Please check the file is accessible", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
-    PRINT_HILOGI("Opened file: %{public}s, fd: %{public}d", openPath.c_str(), fd);
+    PRINT_HILOGI("Opened file, fd: %{public}d", openPath.c_str(), fd);
     fdList.push_back(static_cast<uint32_t>(fd));
     return ERR_OK;
 }
