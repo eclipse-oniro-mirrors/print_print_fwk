@@ -493,8 +493,8 @@ int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::ve
     if (!IsSandboxEnvironment()) {
         PRINT_HILOGE("Not in Sandbox environment");
         OutputError(ERR_SANDBOX_REQUIRED,
-            "Sandbox environment is required for print operation" +
-            "Please run this command in a sandbox environment", resultReceiver_);
+            "Sandbox environment is required for print operation. Please run this command in a sandbox environment",
+            resultReceiver_);
         return ERR_INVALID_VALUE;
     }
 
@@ -530,7 +530,7 @@ int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::ve
             "Please check the file is accessible", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
-    PRINT_HILOGI("Opened file, fd: %{public}d", openPath.c_str(), fd);
+    PRINT_HILOGI("Opened file, fd: %{public}d", fd);
     fdList.push_back(static_cast<uint32_t>(fd));
     return ERR_OK;
 }
