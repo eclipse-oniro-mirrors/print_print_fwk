@@ -53,6 +53,7 @@ inline constexpr char ERR_INVALID_FD[] = "ERR_INVALID_FD";
 inline constexpr char ERR_INVALID_INPUT[] = "ERR_INVALID_INPUT";
 inline constexpr char ERR_ARG_MISSING[] = "ERR_ARG_MISSING";
 inline constexpr char ERR_COMMAND_TIMEOUT[] = "ERR_COMMAND_TIMEOUT";
+inline constexpr char ERR_SANDBOX_REQUIRED[] = "ERR_SANDBOX_REQUIRED";
 inline constexpr char INVALID_COMMAND[] = "INVALID_COMMAND";
 
 // --- Page size ID constants ---
@@ -105,6 +106,10 @@ inline constexpr char IMAGE_FORMAT_PREFIX[] = "image/";
 // --- Collate option strings ---
 inline constexpr char COLLATE_MODE[] = "collate";
 inline constexpr char SEQUENTIAL_MODE[] = "sequential";
+
+// --- Sandbox temp file path ---
+inline constexpr char SANDBOX_BASE_DIR[] = "/data/storage/el2/base";
+inline constexpr char PRINT_TEMP_FILE_PREFIX[] = "/data/storage/el2/base/temp/print_";
 
 // --- Job state ---
 inline constexpr char JOB_STATE_QUEUED[] = "QUEUED";
@@ -233,6 +238,22 @@ struct MappedParams {
     uint32_t duplexMode;
 };
 
+class ScopedTempFile {
+public:
+    explicit ScopedTempFile(std::string& path) : path_(path) {}
+    ~ScopedTempFile()
+    {
+        if (!path_.empty()) {
+            unlink(path_.c_str());
+            path_.clear();
+        }
+    }
+    ScopedTempFile(const ScopedTempFile&) = delete;
+    ScopedTempFile& operator=(const ScopedTempFile&) = delete;
+private:
+    std::string& path_;
+};
+
 class PrintShellCommand : public ShellCommand {
 public:
     PrintShellCommand(int argc, char* argv[]);
@@ -271,7 +292,12 @@ private:
     int32_t ParseStartPrintJobOptions(PrintJobParams& params);
     int32_t ValidateRequiredParams(const PrintJobParams& params);
     void CloseFdList(std::vector<uint32_t>& fdList);
-    int32_t OpenFileForPrint(const std::string& filePath, std::vector<uint32_t>& fdList);
+    bool IsSandboxEnvironment() const;
+    int32_t CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath);
+    int32_t OpenSourceFile(const std::string& srcPath, int& fd);
+    int32_t SendfileAll(int dstFd, int srcFd, size_t size);
+    int32_t OpenFileForPrint(const std::string& filePath, std::vector<uint32_t>& fdList,
+        std::string& sandboxTempPath);
     int32_t ResolvePrinterId(std::string& printerId);
     int32_t ResolvePrinterUri(const std::string& printerId, std::string& printerUri);
     int32_t CheckPrinterStatus(const std::string& printerId, const std::string& printerStatusInput);

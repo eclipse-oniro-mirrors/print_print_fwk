@@ -18,6 +18,7 @@
 #include <cctype>
 #include <cerrno>
 #include <cstring>
+#include <sys/sendfile.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -172,7 +173,9 @@ ErrCode PrintShellCommand::RunAsStartPrintJob()
 
     std::string jobName = ExtractJobName(params.filePath);
     std::vector<uint32_t> fdList;
-    int32_t fileRet = OpenFileForPrint(params.filePath, fdList);
+    std::string sandboxTempPath;
+    ScopedTempFile tempFileGuard(sandboxTempPath);
+    int32_t fileRet = OpenFileForPrint(params.filePath, fdList, sandboxTempPath);
     if (fileRet != ERR_OK) {
         CloseFdList(fdList);
         return ERR_INVALID_VALUE;
@@ -374,21 +377,147 @@ void PrintShellCommand::CloseFdList(std::vector<uint32_t>& fdList)
     fdList.clear();
 }
 
-int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::vector<uint32_t>& fdList)
+bool PrintShellCommand::IsSandboxEnvironment() const
 {
-    int fd = open(filePath.c_str(), O_RDONLY);
+    struct stat st;
+    int statRet = stat(SANDBOX_BASE_DIR, &st);
+    bool isDir = (statRet == 0) && S_ISDIR(st.st_mode);
+    PRINT_HILOGI("IsSandboxEnvironment: statRet=%{public}d, S_ISDIR=%{public}d",
+        statRet, isDir ? 1 : 0);
+    return isDir;
+}
+
+int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, int& fd)
+{
+    fd = open(srcPath.c_str(), O_RDONLY);
     if (fd < 0) {
         if (errno == ENOENT) {
             OutputError(ERR_FILE_OPEN_FAILED,
-                "Failed to open file: " + filePath + ", error: file not exist",
+                "Failed to open source file: " + srcPath + ", error: file not exist",
                 "Please check the file path exists and is readable", resultReceiver_);
         } else if (errno == EACCES) {
             OutputError(ERR_FILE_OPEN_FAILED,
-                "Failed to open file: " + filePath + ", error: file exists, but no rights",
+                "Failed to open source file: " + srcPath + ", error: no permission",
+                "Please check the file path is readable", resultReceiver_);
+        } else {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to open source file: " + srcPath + ", error: " + strerror(errno),
+                "Please check the file path exists and is readable", resultReceiver_);
+        }
+        return ERR_INVALID_VALUE;
+    }
+    return ERR_OK;
+}
+
+int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath)
+{
+    int srcFd = -1;
+    if (OpenSourceFile(srcPath, srcFd) != ERR_OK) {
+        return ERR_INVALID_VALUE;
+    }
+    
+    struct stat srcStat;
+    if (fstat(srcFd, &srcStat) < 0) {
+        close(srcFd);
+        OutputError(ERR_INVALID_FD,
+            "Failed to stat source file: " + srcPath,
+            "Please check the file is accessible", resultReceiver_);
+        return ERR_INVALID_VALUE;
+    }
+    if (srcStat.st_size <= 0) {
+        close(srcFd);
+        OutputError(ERR_FILE_OPEN_FAILED,
+            "Invalid source file size: " + srcPath,
+            "Please check the file is a valid regular file", resultReceiver_);
+        return ERR_INVALID_VALUE;
+    }
+
+    sandboxPath = std::string(PRINT_TEMP_FILE_PREFIX) + std::to_string(getpid()) + "_" +
+        std::to_string(arc4random());
+
+    int dstFd = open(sandboxPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0600);
+    if (dstFd < 0) {
+        close(srcFd);
+        OutputError(ERR_FILE_OPEN_FAILED,
+            "Failed to create sandbox temp file: " + sandboxPath + ", error: " + strerror(errno),
+            "Check sandbox path is writable", resultReceiver_);
+        sandboxPath.clear();
+        return ERR_INVALID_VALUE;
+    }
+
+    if (SendfileAll(dstFd, srcFd, static_cast<size_t>(srcStat.st_size)) != ERR_OK) {
+        close(srcFd);
+        close(dstFd);
+        unlink(sandboxPath.c_str());
+        sandboxPath.clear();
+        return ERR_INVALID_VALUE;
+    }
+    close(srcFd);
+    close(dstFd);
+
+    PRINT_HILOGI("Copied file to sandbox: %{public}s -> %{public}s", srcPath.c_str(), sandboxPath.c_str());
+    return ERR_OK;
+}
+
+int32_t PrintShellCommand::SendfileAll(int dstFd, int srcFd, size_t size)
+{
+    off_t offset = 0;
+    size_t remaining = size;
+    while (remaining > 0) {
+        ssize_t copied = sendfile(dstFd, srcFd, &offset, remaining);
+        if (copied < 0) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to sendFile, error: " + std::string(strerror(errno)),
+                "Check disk space and sandbox permissions", resultReceiver_);
+            return ERR_INVALID_VALUE;
+        }
+        if (copied == 0) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to sendfile, error: unexpected EOF",
+                "Source file may have been truncated", resultReceiver_);
+            return ERR_INVALID_VALUE;
+        }
+        
+        remaining -= static_cast<size_t>(copied);
+    }
+    return ERR_OK;
+}
+
+int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::vector<uint32_t>& fdList,
+    std::string& sandboxTempPath)
+{
+    std::string openPath = filePath;
+    sandboxTempPath.clear();
+    PRINT_HILOGI("OpenFileForPrint");
+
+    if (!IsSandboxEnvironment()) {
+        PRINT_HILOGE("Not in Sandbox environment");
+        OutputError(ERR_SANDBOX_REQUIRED,
+            "Sandbox environment is required for print operation.",
+            "Please run this command in a sandbox environment", resultReceiver_);
+        return ERR_INVALID_VALUE;
+    }
+
+    PRINT_HILOGI("IsSandboxEnvironment, then copyFileToSandbox");
+    int32_t copyRet = CopyFileToSandbox(filePath, sandboxTempPath);
+    if (copyRet != ERR_OK) {
+        return ERR_INVALID_VALUE;
+    }
+    openPath = sandboxTempPath;
+
+    int fd = open(openPath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        if (errno == ENOENT) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to open file: " + openPath + ", error: file not exist",
+                "Please check the file path exists and is readable", resultReceiver_);
+        } else if (errno == EACCES) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to open file: " + openPath + ", error: file exists, but no rights",
                 "Please check the file path exists and is readable", resultReceiver_);
         } else {
             OutputError(ERR_FILE_OPEN_FAILED,
-                "Failed to open file: " + filePath + ", error: " + strerror(errno),
+                "Failed to open file: " + openPath + ", error: " + strerror(errno),
                 "Please check the file path exists and is readable", resultReceiver_);
         }
         return ERR_INVALID_VALUE;
@@ -397,11 +526,11 @@ int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::ve
     if (fstat(fd, &fdStat) < 0) {
         close(fd);
         OutputError(ERR_INVALID_FD,
-            "File descriptor is invalid after opening file: " + filePath,
+            "File descriptor is invalid after opening file: " + openPath,
             "Please check the file is accessible", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
-    PRINT_HILOGI("Opened file: %{public}s, fd: %{public}d", filePath.c_str(), fd);
+    PRINT_HILOGI("Opened file, fd: %{public}d", fd);
     fdList.push_back(static_cast<uint32_t>(fd));
     return ERR_OK;
 }
@@ -410,32 +539,35 @@ int32_t PrintShellCommand::ResolvePrinterId(std::string& printerId)
 {
     auto& client = PrintManagerClient::GetInstance();
     std::vector<std::string> printerNameList;
-    int32_t queryRet = client.QueryAddedPrinter(printerNameList);
-    if (queryRet != E_PRINT_NONE) {
+    int32_t ret = client.QueryAddedPrinter(printerNameList);
+    if (ret != E_PRINT_NONE) {
         OutputError(ERR_PRINT_QUERY_FAILED,
-            "Failed to query added printers, error code: " + std::to_string(queryRet),
-            "Please provide --printer-id explicitly, or ensure the print service is available",
-            resultReceiver_);
+            "Failed to query added printers for default printer, error code: " + std::to_string(ret),
+            "Please provide --printer-id explicitly", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
     if (printerNameList.empty()) {
         OutputError(ERR_NO_PRINTER,
-            "No printer available in the system",
+            "No added printers found",
             "Please add a printer first, or provide --printer-id explicitly", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
-    for (const auto &pid : printerNameList) {
+    for (const auto& id : printerNameList) {
         PrinterInfo info;
-        int32_t infoRet = client.QueryPrinterInfoByPrinterId(pid, info);
-        if (infoRet == E_PRINT_NONE &&
-            info.HasIsDefaultPrinter() && info.GetIsDefaultPrinter()) {
-            printerId = pid;
+        int32_t infoRet = client.QueryPrinterInfoByPrinterId(id, info);
+        if (infoRet != E_PRINT_NONE) {
+            PRINT_HILOGI("QueryPrinterInfoByPrinterId failed for %{public}s, ret=%{public}d, skipping",
+                id.c_str(), infoRet);
+            continue;
+        }
+        if (info.HasIsDefaultPrinter() && info.GetIsDefaultPrinter()) {
+            printerId = id;
             return ERR_OK;
         }
     }
     OutputError(ERR_NO_DEFAULT_PRINTER,
-        "No default printer found in the system",
-        "Please set a default printer or provide --printer-id explicitly", resultReceiver_);
+        "No default printer found",
+        "Please set a default printer, or provide --printer-id explicitly", resultReceiver_);
     return ERR_INVALID_VALUE;
 }
 
