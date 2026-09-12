@@ -29,6 +29,7 @@
 #include "element_name.h"
 #include "printer_info.h"
 #include <functional>
+#include <initializer_list>
 
 namespace OHOS::Print {
 
@@ -331,13 +332,14 @@ void TestStubOnRemoteRequest(const uint8_t *data, size_t size, FuzzedDataProvide
         dataParcel.WriteInterfaceToken(invalidDescriptor);
     }
 
-    int32_t errorCode = dataProvider->PickValueInArray({
+    std::initializer_list<int32_t> errorCodes = {
         E_PRINT_NONE,
         E_PRINT_NETWORK_ERROR,
         E_PRINT_ACCOUNT_ERROR,
         E_PRINT_INVALID_PARAMETER,
         dataProvider->ConsumeIntegralInRange<int32_t>(-100, 1000)
-    });
+    };
+    int32_t errorCode = dataProvider->PickValueInArray(errorCodes);
     dataParcel.WriteInt32(errorCode);
 
     if (errorCode == E_PRINT_NONE) {
@@ -376,11 +378,12 @@ void TestStubOnRemoteRequest(const uint8_t *data, size_t size, FuzzedDataProvide
         }
     }
 
-    uint32_t code = dataProvider->PickValueInArray({
+    std::initializer_list<uint32_t> codes = {
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
         dataProvider->ConsumeIntegralInRange<uint32_t>(0, 5000)
-    });
+    };
+    uint32_t code = dataProvider->PickValueInArray(codes);
     stub->OnRemoteRequest(code, dataParcel, reply, option);
 }
 
