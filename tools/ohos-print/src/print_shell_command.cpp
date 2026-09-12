@@ -493,8 +493,8 @@ int32_t PrintShellCommand::OpenFileForPrint(const std::string& filePath, std::ve
     if (!IsSandboxEnvironment()) {
         PRINT_HILOGE("Not in Sandbox environment");
         OutputError(ERR_SANDBOX_REQUIRED,
-            "Sandbox environment is required for print operation. Please run this command in a sandbox environment",
-            resultReceiver_);
+            "Sandbox environment is required for print operation.",
+            "Please run this command in a sandbox environment", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
 
