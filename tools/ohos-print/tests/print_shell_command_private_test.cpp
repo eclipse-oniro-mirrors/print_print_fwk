@@ -29,7 +29,6 @@
 #include "printer_info.h"
 #include "print_job.h"
 #include "print_page_size.h"
-#include "print_range.h"
 #include "print_constant.h"
 
 using namespace testing::ext;
@@ -261,7 +260,6 @@ HWTEST_F(PrintShellCommandPrivateTest, MapInputParams_AllDefaults_0100, Function
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(mapped.copyNumber, DEFAULT_COPIES);
     EXPECT_EQ(mapped.pageSizeId, DEFAULT_PAGE_SIZE_ID);
-    EXPECT_EQ(mapped.direction, DIRECTION_MODE_PORTRAIT);
     EXPECT_EQ(mapped.colorMode, 0u);
     EXPECT_EQ(mapped.duplexMode, 0u);
 }
@@ -277,7 +275,6 @@ HWTEST_F(PrintShellCommandPrivateTest, MapInputParams_AllProvided_0100, Function
     PrintJobParams params;
     params.copiesInput = "3";
     params.pageSizeInput = "A3";
-    params.directionInput = "landscape";
     params.colorModeInput = "color";
     params.duplexInput = "long";
 
@@ -289,7 +286,6 @@ HWTEST_F(PrintShellCommandPrivateTest, MapInputParams_AllProvided_0100, Function
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(mapped.copyNumber, 3u);
     EXPECT_EQ(mapped.pageSizeId, "ISO_A3");
-    EXPECT_EQ(mapped.direction, DIRECTION_MODE_LANDSCAPE);
     EXPECT_EQ(mapped.colorMode, 1u);
     EXPECT_EQ(mapped.duplexMode, 1u);
 }
@@ -299,7 +295,7 @@ HWTEST_F(PrintShellCommandPrivateTest, MapInputParams_AllProvided_0100, Function
 /**
  * @tc.number: BuildOptionsJson_Minimal_0100
  * @tc.name: BuildOptionsJson with only required params
- * @tc.desc: When only required params are set, no copies/pageSize/direction/colorMode/duplex/pageRange/collate fields.
+ * @tc.desc: When only required params are set, no copies/pageSize/colorMode/duplex/collate fields.
  */
 HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_Minimal_0100, Function | MediumTest | Level1)
 {
@@ -319,11 +315,9 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_Minimal_0100, Function |
     EXPECT_EQ(optionsJson["documentFormat"].asString(), "application/pdf");
     EXPECT_FALSE(optionsJson.isMember("copies"));
     EXPECT_FALSE(optionsJson.isMember("pageSize"));
-    EXPECT_FALSE(optionsJson.isMember("direction"));
     EXPECT_FALSE(optionsJson.isMember("colorMode"));
     EXPECT_FALSE(optionsJson.isMember("duplex"));
-    EXPECT_FALSE(optionsJson.isMember("pageRange"));
-    EXPECT_FALSE(optionsJson.isMember("collate"));
+    EXPECT_FALSE(optionsJson.isMember("isCollate"));
 }
 
 /**
@@ -340,10 +334,8 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_AllOptions_0100, Functio
     params.printerUri = "lpd://192.168.1.1:515/auto";
     params.copiesInput = "3";
     params.pageSizeInput = "A4";
-    params.directionInput = "landscape";
     params.colorModeInput = "color";
     params.duplexInput = "long";
-    params.pageRangeInput = "1-5";
     params.collateInput = "true";
     params.collate = true;
 
@@ -354,17 +346,13 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_AllOptions_0100, Functio
     // Then: all optional fields should exist
     EXPECT_TRUE(optionsJson.isMember("copies"));
     EXPECT_TRUE(optionsJson.isMember("pageSize"));
-    EXPECT_TRUE(optionsJson.isMember("direction"));
     EXPECT_TRUE(optionsJson.isMember("colorMode"));
     EXPECT_TRUE(optionsJson.isMember("duplex"));
-    EXPECT_TRUE(optionsJson.isMember("pageRange"));
-    EXPECT_TRUE(optionsJson.isMember("collate"));
+    EXPECT_TRUE(optionsJson.isMember("isCollate"));
     EXPECT_EQ(optionsJson["copies"].asString(), "3");
-    EXPECT_EQ(optionsJson["direction"].asString(), "landscape");
     EXPECT_EQ(optionsJson["colorMode"].asString(), "color");
     EXPECT_EQ(optionsJson["duplex"].asString(), "long");
-    EXPECT_EQ(optionsJson["pageRange"].asString(), "1-5");
-    EXPECT_EQ(optionsJson["collate"].asString(), "collate");
+    EXPECT_TRUE(optionsJson["isCollate"].asBool());
 }
 
 /**
@@ -413,93 +401,7 @@ HWTEST_F(PrintShellCommandPrivateTest, BuildOptionsJson_PdfFormat_0100, Function
     EXPECT_EQ(optionsJson["jobDesArr"][2].asString(), "1");
 }
 
-// ========== E. SetPageRangeOnJob ==========
-
-/**
- * @tc.number: SetPageRange_RangeFormat_0100
- * @tc.name: SetPageRangeOnJob with range format "1-5"
- * @tc.desc: Page range "1-5" should set startPage=1 and endPage=5.
- */
-HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_RangeFormat_0100, Function | MediumTest | Level1)
-{
-    // Given: page range input "1-5"
-    PrintJob printJob;
-
-    // When: calling SetPageRangeOnJob
-    int32_t ret = cmd_->SetPageRangeOnJob("1-5", printJob);
-
-    // Then: should return ERR_OK and set startPage and endPage
-    EXPECT_EQ(ret, ERR_OK);
-    PrintRange range;
-    printJob.GetPageRange(range);
-    EXPECT_EQ(range.GetStartPage(), 1u);
-    EXPECT_EQ(range.GetEndPage(), 5u);
-}
-
-/**
- * @tc.number: SetPageRange_PagesFormat_0100
- * @tc.name: SetPageRangeOnJob with pages format "1,3,5"
- * @tc.desc: Page range "1,3,5" should set pages=[1,3,5].
- */
-HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_PagesFormat_0100, Function | MediumTest | Level1)
-{
-    // Given: page range input "1,3,5"
-    PrintJob printJob;
-
-    // When: calling SetPageRangeOnJob
-    int32_t ret = cmd_->SetPageRangeOnJob("1,3,5", printJob);
-
-    // Then: should return ERR_OK and set pages
-    EXPECT_EQ(ret, ERR_OK);
-    PrintRange range;
-    printJob.GetPageRange(range);
-    std::vector<uint32_t> pages;
-    range.GetPages(pages);
-    EXPECT_EQ(pages.size(), 3u);
-    EXPECT_EQ(pages[0], 1u);
-    EXPECT_EQ(pages[1], 3u);
-    EXPECT_EQ(pages[2], 5u);
-}
-
-/**
- * @tc.number: SetPageRange_InvalidRange_0100
- * @tc.name: SetPageRangeOnJob with invalid range "abc-def"
- * @tc.desc: Invalid page range "abc-def" should return ERR_INVALID_VALUE.
- */
-HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidRange_0100, Function | MediumTest | Level1)
-{
-    // Given: invalid page range input "abc-def"
-    PrintJob printJob;
-
-    // When: calling SetPageRangeOnJob
-    int32_t ret = cmd_->SetPageRangeOnJob("abc-def", printJob);
-
-    // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
-    EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
-}
-
-/**
- * @tc.number: SetPageRange_InvalidPage_0100
- * @tc.name: SetPageRangeOnJob with invalid page "1,abc,3"
- * @tc.desc: Invalid page number in range should return ERR_INVALID_VALUE.
- */
-HWTEST_F(PrintShellCommandPrivateTest, SetPageRange_InvalidPage_0100, Function | MediumTest | Level1)
-{
-    // Given: invalid page number in range "1,abc,3"
-    PrintJob printJob;
-
-    // When: calling SetPageRangeOnJob
-    int32_t ret = cmd_->SetPageRangeOnJob("1,abc,3", printJob);
-
-    // Then: should return ERR_INVALID_VALUE and set resultReceiver_ with ERR_INVALID_INPUT
-    EXPECT_EQ(ret, ERR_INVALID_VALUE);
-    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
-    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_INPUT");
-}
-
-// ========== F. SetPageSizeOnJob ==========
+// ========== E. SetPageSizeOnJob ==========
 
 /**
  * @tc.number: SetPageSize_KnownId_0100

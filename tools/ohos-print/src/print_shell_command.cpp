@@ -37,7 +37,6 @@
 #include "print_manager_client.h"
 #include "print_margin.h"
 #include "print_page_size.h"
-#include "print_range.h"
 #include "printer_info.h"
 
 namespace OHOS {
@@ -306,17 +305,11 @@ void PrintShellCommand::ApplyStartPrintJobOption(int opt, PrintJobParams& params
         case START_OPTION_PAGE_SIZE:
             params.pageSizeInput = optarg;
             break;
-        case START_OPTION_DIRECTION:
-            params.directionInput = optarg;
-            break;
         case START_OPTION_COLOR_MODE:
             params.colorModeInput = optarg;
             break;
         case START_OPTION_DUPLEX:
             params.duplexInput = optarg;
-            break;
-        case START_OPTION_PAGE_RANGE:
-            params.pageRangeInput = optarg;
             break;
         case START_OPTION_COLLATE:
             params.collateInput = optarg;
@@ -649,68 +642,17 @@ void PrintShellCommand::BuildOptionsJson(const PrintJobParams& params, const std
     if (!params.pageSizeInput.empty()) {
         optionsJson["pageSize"] = MapPageSizeToId(params.pageSizeInput);
     }
-    if (!params.directionInput.empty()) {
-        optionsJson["direction"] = MapDirectionToOption(params.directionInput);
-    }
     if (!params.colorModeInput.empty()) {
         optionsJson["colorMode"] = MapColorModeToOption(params.colorModeInput);
     }
     if (!params.duplexInput.empty()) {
         optionsJson["duplex"] = MapDuplexToOption(params.duplexInput);
     }
-    if (!params.pageRangeInput.empty()) {
-        optionsJson["pageRange"] = params.pageRangeInput;
-    }
     if (!params.collateInput.empty()) {
-        optionsJson["collate"] = params.collate ? COLLATE_MODE : SEQUENTIAL_MODE;
+        optionsJson["isCollate"] = params.collate;
     }
     // 规定无边距打印默认为false, 否则默认为true。此处与打印预览默认效果对齐
     optionsJson["isBorderless"] = false;
-}
-
-int32_t PrintShellCommand::SetPageRangeOnJob(const std::string& pageRangeInput, PrintJob& printJob)
-{
-    PrintRange pageRange;
-    size_t dashPos = pageRangeInput.find('-');
-    if (dashPos != std::string::npos) {
-        uint32_t startPage = 0;
-        uint32_t endPage = 0;
-        if (!SafeParseUint32(pageRangeInput.substr(0, dashPos), startPage) ||
-            !SafeParseUint32(pageRangeInput.substr(dashPos + 1), endPage)) {
-            OutputError(ERR_INVALID_INPUT,
-                "Invalid page range: " + pageRangeInput,
-                "Page numbers must be non-negative integers within uint32 range",
-                resultReceiver_);
-            return ERR_INVALID_VALUE;
-        }
-        if (startPage > endPage) {
-            OutputError(ERR_INVALID_INPUT,
-                "Invalid page range: " + pageRangeInput,
-                "Start page must not be greater than end page",
-                resultReceiver_);
-            return ERR_INVALID_VALUE;
-        }
-        pageRange.SetStartPage(startPage);
-        pageRange.SetEndPage(endPage);
-    } else {
-        std::vector<uint32_t> pages;
-        std::istringstream ss(pageRangeInput);
-        std::string token;
-        while (std::getline(ss, token, ',')) {
-            uint32_t pageNum = 0;
-            if (!SafeParseUint32(token, pageNum)) {
-                OutputError(ERR_INVALID_INPUT,
-                    "Invalid page number in range: " + token,
-                    "Page numbers must be non-negative integers within uint32 range",
-                    resultReceiver_);
-                return ERR_INVALID_VALUE;
-            }
-            pages.push_back(pageNum);
-        }
-        pageRange.SetPages(pages);
-    }
-    printJob.SetPageRange(pageRange);
-    return ERR_OK;
 }
 
 void PrintShellCommand::SetPageSizeOnJob(const std::string& pageSizeId, PrintJob& printJob)
@@ -741,7 +683,6 @@ int32_t PrintShellCommand::MapInputParams(const PrintJobParams& params, MappedPa
         mapped.copyNumber = DEFAULT_COPIES;
     }
     mapped.pageSizeId = params.pageSizeInput.empty() ? DEFAULT_PAGE_SIZE_ID : MapPageSizeToId(params.pageSizeInput);
-    mapped.direction = MapDirection(params.directionInput.empty() ? DEFAULT_DIRECTION : params.directionInput);
     mapped.colorMode = MapColorMode(params.colorModeInput.empty() ? DEFAULT_COLOR_MODE : params.colorModeInput);
     mapped.duplexMode = MapDuplex(params.duplexInput.empty() ? DEFAULT_DUPLEX_MODE : params.duplexInput);
     return ERR_OK;
@@ -759,17 +700,9 @@ int32_t PrintShellCommand::BuildAndSubmitPrintJob(const PrintJobParams& params,
     printJob.SetFdList(fdList);
     printJob.SetPrinterId(params.printerId);
     printJob.SetCopyNumber(mapped.copyNumber);
-    printJob.SetIsLandscape(mapped.direction == DIRECTION_MODE_LANDSCAPE);
     printJob.SetColorMode(mapped.colorMode);
     printJob.SetDuplexMode(mapped.duplexMode);
     printJob.SetIsSequential(!params.collate);
-
-    if (!params.pageRangeInput.empty()) {
-        int32_t rangeRet = SetPageRangeOnJob(params.pageRangeInput, printJob);
-        if (rangeRet != ERR_OK) {
-            return ERR_INVALID_VALUE;
-        }
-    }
 
     SetPageSizeOnJob(mapped.pageSizeId, printJob);
 
@@ -869,28 +802,6 @@ std::string PrintShellCommand::MapPageSizeToId(const std::string& input)
         return PAGE_SIZE_ID_LEGAL;
     }
     return DEFAULT_PAGE_SIZE_ID;
-}
-
-uint32_t PrintShellCommand::MapDirection(const std::string& input)
-{
-    if (input == "横向" || input == "landscape") {
-        return DIRECTION_MODE_LANDSCAPE;
-    }
-    if (input == "自动" || input == "auto") {
-        return DIRECTION_MODE_AUTO;
-    }
-    return DIRECTION_MODE_PORTRAIT;
-}
-
-std::string PrintShellCommand::MapDirectionToOption(const std::string& input)
-{
-    if (input == "横向" || input == "landscape") {
-        return DIRECTION_LANDSCAPE;
-    }
-    if (input == "自动" || input == "auto") {
-        return DIRECTION_AUTO;
-    }
-    return DIRECTION_PORTRAIT;
 }
 
 uint32_t PrintShellCommand::MapColorMode(const std::string& input)

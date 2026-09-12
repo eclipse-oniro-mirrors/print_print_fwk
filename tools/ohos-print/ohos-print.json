@@ -175,12 +175,6 @@
             "enum": ["A4", "A3", "A5", "B5", "Letter", "Legal"],
             "default": "A4"
           },
-          "direction": {
-            "type": "string",
-            "description": "Print direction: 纵向/竖向/portrait, 横向/landscape, 自动/auto",
-            "enum": ["纵向", "竖向", "portrait", "横向", "landscape", "自动", "auto"],
-            "default": "纵向"
-          },
           "color-mode": {
             "type": "string",
             "description": "Color mode: 彩色/彩印/color, 黑白/单色/mono",
@@ -192,10 +186,6 @@
             "description": "Duplex mode: 单面/none, 双面/双面长边/long, 双面短边/short",
             "enum": ["单面", "none", "双面", "双面长边", "long", "双面短边", "short"],
             "default": "单面"
-          },
-          "page-range": {
-            "type": "string",
-            "description": "Page range: start-end (e.g., 1-5) or specific pages (e.g., 1,3,5)"
           },
           "collate": {
             "type": "boolean",

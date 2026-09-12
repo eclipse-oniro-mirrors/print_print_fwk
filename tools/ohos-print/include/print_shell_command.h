@@ -66,11 +66,6 @@ inline constexpr char PAGE_SIZE_ID_LEGAL[] = "NA_LEGAL";
 
 // --- Page size option constants ---
 
-// --- Direction option constants ---
-inline constexpr char DIRECTION_LANDSCAPE[] = "landscape";
-inline constexpr char DIRECTION_PORTRAIT[] = "portrait";
-inline constexpr char DIRECTION_AUTO[] = "auto";
-
 // --- Color mode option constants ---
 inline constexpr char COLOR_MODE_COLOR[] = "color";
 inline constexpr char COLOR_MODE_MONO[] = "mono";
@@ -91,7 +86,6 @@ inline constexpr int OPTIND_SUBCOMMAND_START = 2;
 // --- Default values ---
 inline constexpr uint32_t DEFAULT_COPIES = 1;
 inline constexpr char DEFAULT_PAGE_SIZE_ID[] = "ISO_A4";
-inline constexpr char DEFAULT_DIRECTION[] = "纵向";
 inline constexpr char DEFAULT_COLOR_MODE[] = "黑白";
 inline constexpr char DEFAULT_DUPLEX_MODE[] = "单面";
 
@@ -102,10 +96,6 @@ inline constexpr int32_t FALLBACK_PAGE_SIZE_HEIGHT = 11692;
 
 // --- Image format prefix ---
 inline constexpr char IMAGE_FORMAT_PREFIX[] = "image/";
-
-// --- Collate option strings ---
-inline constexpr char COLLATE_MODE[] = "collate";
-inline constexpr char SEQUENTIAL_MODE[] = "sequential";
 
 // --- Sandbox temp file path ---
 inline constexpr char SANDBOX_BASE_DIR[] = "/data/storage/el2/base";
@@ -150,12 +140,8 @@ inline constexpr char HELP_START_PRINT_JOB[] =
     "                              auto-derived if not provided)\n"
     "  --copies <string>           Number of copies (e.g., 3, 3份, 5份, default: 1)\n"
     "  --page-size <string>        Page size: A4, A3, A5, B5, Letter, Legal (default: A4)\n"
-    "  --direction <string>        Print direction:\n"
-    "                              纵向/竖向/portrait, 横向/landscape, 自动/auto\n"
-    "                              (default: 纵向)\n"
     "  --color-mode <string>       Color mode: 彩色/彩印/color, 黑白/单色/mono (default: 黑白)\n"
     "  --duplex <string>           Duplex mode: 单面/none, 双面/双面长边/long, 双面短边/short (default: 单面)\n"
-    "  --page-range <string>       Page range: start-end (e.g., 1-5) or specific pages (e.g., 1,3,5)\n"
     "  --collate <bool>            Collate mode: true=逐份, false=逐页 (default: true)\n"
     "    --help                   Display this help message\n\n"
     "Examples:\n"
@@ -164,7 +150,7 @@ inline constexpr char HELP_START_PRINT_JOB[] =
     "  ohos-print start-print-job --file-path /data/test.pdf\n"
     "      --document-format application/pdf\n"
     "      --printer-id printer001 --copies 3 --page-size A4\n"
-    "      --direction 纵向 --color-mode 彩色 --duplex 双面";
+    "      --color-mode 彩色 --duplex 双面";
 
 // --- OptionIndex enums for list-added-printers subcommand ---
 enum ListAddedPrintersOptionIndex {
@@ -188,10 +174,8 @@ enum StartPrintJobOptionIndex {
     START_OPTION_PRINTER_STATUS,
     START_OPTION_COPIES,
     START_OPTION_PAGE_SIZE,
-    START_OPTION_DIRECTION,
     START_OPTION_COLOR_MODE,
     START_OPTION_DUPLEX,
-    START_OPTION_PAGE_RANGE,
     START_OPTION_COLLATE,
 };
 
@@ -204,10 +188,8 @@ inline constexpr struct option START_PRINT_JOB_LONG_OPTIONS[] = {
     {"printer-status",  required_argument, nullptr, START_OPTION_PRINTER_STATUS},
     {"copies",          required_argument, nullptr, START_OPTION_COPIES},
     {"page-size",       required_argument, nullptr, START_OPTION_PAGE_SIZE},
-    {"direction",       required_argument, nullptr, START_OPTION_DIRECTION},
     {"color-mode",      required_argument, nullptr, START_OPTION_COLOR_MODE},
     {"duplex",          required_argument, nullptr, START_OPTION_DUPLEX},
-    {"page-range",      required_argument, nullptr, START_OPTION_PAGE_RANGE},
     {"collate",         required_argument, nullptr, START_OPTION_COLLATE},
     {nullptr,           0,                 nullptr, 0},
 };
@@ -222,10 +204,8 @@ struct PrintJobParams {
     std::string printerStatusInput;
     std::string copiesInput;
     std::string pageSizeInput;
-    std::string directionInput;
     std::string colorModeInput;
     std::string duplexInput;
-    std::string pageRangeInput;
     std::string collateInput;
     bool collate = true;
 };
@@ -233,7 +213,6 @@ struct PrintJobParams {
 struct MappedParams {
     uint32_t copyNumber;
     std::string pageSizeId;
-    uint32_t direction;
     uint32_t colorMode;
     uint32_t duplexMode;
 };
@@ -264,8 +243,6 @@ public:
     static std::string ExtractJobName(const std::string& filePath);
     static bool ParseCopies(const std::string& input, uint32_t& result);
     static std::string MapPageSizeToId(const std::string& input);
-    static uint32_t MapDirection(const std::string& input);
-    static std::string MapDirectionToOption(const std::string& input);
     static uint32_t MapColorMode(const std::string& input);
     static std::string MapColorModeToOption(const std::string& input);
     static uint32_t MapDuplex(const std::string& input);
@@ -303,7 +280,6 @@ private:
     int32_t CheckPrinterStatus(const std::string& printerId, const std::string& printerStatusInput);
     void BuildOptionsJson(const PrintJobParams& params, const std::string& jobName,
                           uint32_t copyNumber, Json::Value& optionsJson);
-    int32_t SetPageRangeOnJob(const std::string& pageRangeInput, PrintJob& printJob);
     void SetPageSizeOnJob(const std::string& pageSizeId, PrintJob& printJob);
     int32_t MapInputParams(const PrintJobParams& params, MappedParams& mapped);
     int32_t BuildAndSubmitPrintJob(const PrintJobParams& params,

@@ -119,38 +119,6 @@ HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_MapPageSizeToId_0200, Function | 
 }
 
 /**
- * @tc.number: Ohos_Print_Cli_MapDirection_0100
- * @tc.name: MapDirection
- * @tc.desc: Verify direction mapping for landscape and portrait.
- */
-HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_MapDirection_0100, Function | MediumTest | Level1)
-{
-    EXPECT_EQ(PrintShellCommand::MapDirection("横向"), DIRECTION_MODE_LANDSCAPE);
-    EXPECT_EQ(PrintShellCommand::MapDirection("landscape"), DIRECTION_MODE_LANDSCAPE);
-    EXPECT_EQ(PrintShellCommand::MapDirection("纵向"), DIRECTION_MODE_PORTRAIT);
-    EXPECT_EQ(PrintShellCommand::MapDirection("portrait"), DIRECTION_MODE_PORTRAIT);
-    EXPECT_EQ(PrintShellCommand::MapDirection("自动"), DIRECTION_MODE_AUTO);
-    EXPECT_EQ(PrintShellCommand::MapDirection("auto"), DIRECTION_MODE_AUTO);
-    EXPECT_EQ(PrintShellCommand::MapDirection(""), DIRECTION_MODE_PORTRAIT);
-}
-
-/**
- * @tc.number: Ohos_Print_Cli_MapDirectionToOption_0100
- * @tc.name: MapDirectionToOption
- * @tc.desc: Verify direction-to-option mapping.
- */
-HWTEST_F(OhosPrintCliUtilsTest, Ohos_Print_Cli_MapDirectionToOption_0100, Function | MediumTest | Level1)
-{
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption("横向"), "landscape");
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption("landscape"), "landscape");
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption("自动"), "auto");
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption("auto"), "auto");
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption("纵向"), "portrait");
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption("portrait"), "portrait");
-    EXPECT_EQ(PrintShellCommand::MapDirectionToOption(""), "portrait");
-}
-
-/**
  * @tc.number: Ohos_Print_Cli_MapColorMode_0100
  * @tc.name: MapColorMode
  * @tc.desc: Verify color mode mapping.
