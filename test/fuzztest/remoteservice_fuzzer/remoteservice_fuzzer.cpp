@@ -29,7 +29,6 @@
 #include "element_name.h"
 #include "printer_info.h"
 #include <functional>
-#include <vector>
 
 namespace OHOS::Print {
 
@@ -332,14 +331,16 @@ void TestStubOnRemoteRequest(const uint8_t *data, size_t size, FuzzedDataProvide
         dataParcel.WriteInterfaceToken(invalidDescriptor);
     }
 
-    std::vector<int32_t> errorCodes = {
+    int32_t errorCodes[] = {
         E_PRINT_NONE,
         E_PRINT_NETWORK_ERROR,
         E_PRINT_ACCOUNT_ERROR,
         E_PRINT_INVALID_PARAMETER,
         dataProvider->ConsumeIntegralInRange<int32_t>(-100, 1000)
     };
-    int32_t errorCode = dataProvider->PickValueInArray(errorCodes);
+    size_t errorCodeIdx = dataProvider->ConsumeIntegralInRange<size_t>(
+        0, sizeof(errorCodes) / sizeof(errorCodes[0]) - 1);
+    int32_t errorCode = errorCodes[errorCodeIdx];
     dataParcel.WriteInt32(errorCode);
 
     if (errorCode == E_PRINT_NONE) {
@@ -378,12 +379,14 @@ void TestStubOnRemoteRequest(const uint8_t *data, size_t size, FuzzedDataProvide
         }
     }
 
-    std::vector<uint32_t> codes = {
+    uint32_t codes[] = {
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
         dataProvider->ConsumeIntegralInRange<uint32_t>(0, 5000)
     };
-    uint32_t code = dataProvider->PickValueInArray(codes);
+    size_t codeIdx = dataProvider->ConsumeIntegralInRange<size_t>(
+        0, sizeof(codes) / sizeof(codes[0]) - 1);
+    uint32_t code = codes[codeIdx];
     stub->OnRemoteRequest(code, dataParcel, reply, option);
 }
 
