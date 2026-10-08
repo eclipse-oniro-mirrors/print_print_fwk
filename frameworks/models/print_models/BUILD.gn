@@ -88,6 +88,7 @@ ohos_shared_library("print_models") {
     "node:node_header_notice",
     "libuv:uv",
     "samgr:samgr_proxy",
+    "openssl:libcrypto_shared",
   ]
 
   if (build_variant == "user") {
