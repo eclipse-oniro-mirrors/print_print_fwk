@@ -16,6 +16,7 @@
 #ifndef PRINT_FWK_TOOLS_OHOS_PRINT_PRINT_SHELL_COMMAND_H
 #define PRINT_FWK_TOOLS_OHOS_PRINT_PRINT_SHELL_COMMAND_H
 
+#include <climits>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -55,6 +56,7 @@ inline constexpr char ERR_ARG_MISSING[] = "ERR_ARG_MISSING";
 inline constexpr char ERR_COMMAND_TIMEOUT[] = "ERR_COMMAND_TIMEOUT";
 inline constexpr char ERR_SANDBOX_REQUIRED[] = "ERR_SANDBOX_REQUIRED";
 inline constexpr char ERR_VIRTUAL_PRINTER_NOT_SUPPORTED[] = "ERR_VIRTUAL_PRINTER_NOT_SUPPORTED";
+inline constexpr char ERR_INVALID_FILE_PATH[] = "ERR_INVALID_FILE_PATH";
 inline constexpr char INVALID_COMMAND[] = "INVALID_COMMAND";
 
 // --- Page size ID constants ---
@@ -269,6 +271,7 @@ private:
     void ApplyStartPrintJobOption(int opt, PrintJobParams& params);
     int32_t ParseStartPrintJobOptions(PrintJobParams& params);
     int32_t ValidateRequiredParams(const PrintJobParams& params);
+    bool ValidateFilePath(const std::string& filePath);
     void CloseFdList(std::vector<uint32_t>& fdList);
     bool IsSandboxEnvironment() const;
     int32_t CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath);
