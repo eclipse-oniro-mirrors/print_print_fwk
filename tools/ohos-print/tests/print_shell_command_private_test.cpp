@@ -139,6 +139,85 @@ HWTEST_F(PrintShellCommandPrivateTest, ValidateRequiredParams_MissingDocFormat_0
     EXPECT_NE(response["errMsg"].asString().find("document-format"), std::string::npos);
 }
 
+// ========== A2. ValidateFilePath ==========
+
+/**
+ * @tc.number: ValidateFilePath_AbsoluteValid_0100
+ * @tc.name: ValidateFilePath with a valid absolute path
+ * @tc.desc: When filePath is an absolute path without ".." or null bytes, ValidateFilePath returns true.
+ */
+HWTEST_F(PrintShellCommandPrivateTest, ValidateFilePath_AbsoluteValid_0100, Function | MediumTest | Level1)
+{
+    EXPECT_TRUE(cmd_->ValidateFilePath("/data/test.pdf"));
+    EXPECT_TRUE(cmd_->ValidateFilePath("/data/storage/el2/base/temp/file.txt"));
+    EXPECT_TRUE(cmd_->ValidateFilePath("/tmp/a/b/c/d.pdf"));
+}
+
+/**
+ * @tc.number: ValidateFilePath_Empty_0100
+ * @tc.name: ValidateFilePath with empty path
+ * @tc.desc: When filePath is empty, ValidateFilePath returns false with ERR_INVALID_FILE_PATH.
+ */
+HWTEST_F(PrintShellCommandPrivateTest, ValidateFilePath_Empty_0100, Function | MediumTest | Level1)
+{
+    EXPECT_FALSE(cmd_->ValidateFilePath(""));
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_FILE_PATH");
+}
+
+/**
+ * @tc.number: ValidateFilePath_Relative_0100
+ * @tc.name: ValidateFilePath with a relative path
+ * @tc.desc: When filePath is not absolute, ValidateFilePath returns false with ERR_INVALID_FILE_PATH.
+ */
+HWTEST_F(PrintShellCommandPrivateTest, ValidateFilePath_Relative_0100, Function | MediumTest | Level1)
+{
+    EXPECT_FALSE(cmd_->ValidateFilePath("data/test.pdf"));
+    EXPECT_FALSE(cmd_->ValidateFilePath("../test.pdf"));
+    EXPECT_FALSE(cmd_->ValidateFilePath("./test.pdf"));
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_FILE_PATH");
+}
+
+/**
+ * @tc.number: ValidateFilePath_Traversal_0100
+ * @tc.name: ValidateFilePath with path traversal ".." components
+ * @tc.desc: When filePath contains ".." components, ValidateFilePath returns false with ERR_INVALID_FILE_PATH.
+ */
+HWTEST_F(PrintShellCommandPrivateTest, ValidateFilePath_Traversal_0100, Function | MediumTest | Level1)
+{
+    EXPECT_FALSE(cmd_->ValidateFilePath("/data/../etc/passwd"));
+    EXPECT_FALSE(cmd_->ValidateFilePath("/data/test/../secret.pdf"));
+    EXPECT_FALSE(cmd_->ValidateFilePath("/data/.."));
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_FILE_PATH");
+    EXPECT_NE(response["errMsg"].asString().find(".."), std::string::npos);
+}
+
+/**
+ * @tc.number: ValidateFilePath_NullByte_0100
+ * @tc.name: ValidateFilePath with embedded null byte
+ * @tc.desc: When filePath contains a null byte, ValidateFilePath returns false with ERR_INVALID_FILE_PATH.
+ */
+HWTEST_F(PrintShellCommandPrivateTest, ValidateFilePath_NullByte_0100, Function | MediumTest | Level1)
+{
+    std::string path = std::string("/data/test.pdf\0.evil", 15);
+    EXPECT_FALSE(cmd_->ValidateFilePath(path));
+    Json::Value response; ParseJsonResponse(cmd_->resultReceiver_, response);
+    EXPECT_EQ(response["errCode"].asString(), "ERR_INVALID_FILE_PATH");
+}
+
+/**
+ * @tc.number: ValidateFilePath_DotSegment_0100
+ * @tc.name: ValidateFilePath with "." (current dir) components
+ * @tc.desc: When filePath contains "." components, ValidateFilePath returns true ("." is harmless).
+ */
+HWTEST_F(PrintShellCommandPrivateTest, ValidateFilePath_DotSegment_0100, Function | MediumTest | Level1)
+{
+    EXPECT_TRUE(cmd_->ValidateFilePath("/data/./test.pdf"));
+    EXPECT_TRUE(cmd_->ValidateFilePath("/data/./a/./b.pdf"));
+}
+
 // ========== B. ApplyStartPrintJobOption ==========
 
 /**

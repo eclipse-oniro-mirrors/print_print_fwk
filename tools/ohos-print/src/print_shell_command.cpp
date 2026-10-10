@@ -17,6 +17,7 @@
 
 #include <cctype>
 #include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <sys/sendfile.h>
 #include <iostream>
@@ -337,14 +338,9 @@ int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
             resultReceiver_);
         return ERR_INVALID_VALUE;
     }
-    if (!PrintUtils::IsPathValid(params.filePath)) {
-        OutputError(ERR_INVALID_FILE_PATH,
-            "Invalid file path: " + params.filePath,
-            "Provide a valid absolute file path. Example: --file-path /data/test.pdf",
-            resultReceiver_);
-        return ERR_INVALID_FILE_PATH;
+    if (!ValidateFilePath(params.filePath)) {
+        return ERR_INVALID_VALUE;
     }
-    
     if (params.documentFormat.empty()) {
         OutputError(ERR_ARG_MISSING,
             "Missing required parameter: --document-format",
@@ -353,6 +349,54 @@ int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
         return ERR_INVALID_VALUE;
     }
     return ERR_OK;
+}
+
+bool PrintShellCommand::ValidateFilePath(const std::string& filePath)
+{
+    if (filePath.empty()) {
+        OutputError(ERR_INVALID_FILE_PATH,
+            "File path is empty",
+            "Provide a non-empty absolute file path. Example: --file-path /data/test.pdf",
+            resultReceiver_);
+        return false;
+    }
+    // Reject paths containing null bytes (injection via truncated C-string)
+    if (filePath.find('\0') != std::string::npos) {
+        OutputError(ERR_INVALID_FILE_PATH,
+            "File path contains null byte",
+            "Provide a valid file path without null characters",
+            resultReceiver_);
+        return false;
+    }
+    // Must be an absolute path
+    if (filePath[0] != '/') {
+        OutputError(ERR_INVALID_FILE_PATH,
+            "File path must be absolute: " + filePath,
+            "Provide an absolute file path. Example: --file-path /data/test.pdf",
+            resultReceiver_);
+        return false;
+    }
+    // Reject path traversal components ("..") to prevent escaping allowed directories
+    size_t pos = 0;
+    while (pos < filePath.size()) {
+        size_t nextSlash = filePath.find('/', pos);
+        std::string component;
+        if (nextSlash == std::string::npos) {
+            component = filePath.substr(pos);
+            pos = filePath.size();
+        } else {
+            component = filePath.substr(pos, nextSlash - pos);
+            pos = nextSlash + 1;
+        }
+        if (component == "..") {
+            OutputError(ERR_INVALID_FILE_PATH,
+                "File path contains forbidden '..' traversal: " + filePath,
+                "Provide a file path without '..' components",
+                resultReceiver_);
+            return false;
+        }
+    }
+    return true;
 }
 
 void PrintShellCommand::CloseFdList(std::vector<uint32_t>& fdList)
@@ -375,7 +419,16 @@ bool PrintShellCommand::IsSandboxEnvironment() const
 
 int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, int& fd)
 {
-    fd = open(srcPath.c_str(), O_RDONLY);
+    // Resolve to canonical absolute path to eliminate remaining symlink/relative risks
+    char resolved[PATH_MAX] = {0};
+    if (realpath(srcPath.c_str(), resolved) == nullptr) {
+        OutputError(ERR_FILE_OPEN_FAILED,
+            "Failed to resolve source file path: " + srcPath + ", error: " + strerror(errno),
+            "Please check the file path exists and is readable", resultReceiver_);
+        return ERR_INVALID_VALUE;
+    }
+    // O_NOFOLLOW: reject if the final component is a symlink (TOCTOU hardening)
+    fd = open(resolved, O_RDONLY | O_NOFOLLOW);
     if (fd < 0) {
         if (errno == ENOENT) {
             OutputError(ERR_FILE_OPEN_FAILED,
@@ -385,11 +438,25 @@ int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, int& fd)
             OutputError(ERR_FILE_OPEN_FAILED,
                 "Failed to open source file: " + srcPath + ", error: no permission",
                 "Please check the file path is readable", resultReceiver_);
+        } else if (errno == ELOOP) {
+            OutputError(ERR_FILE_OPEN_FAILED,
+                "Failed to open source file: " + srcPath + ", error: symlink not allowed",
+                "The file path must not be a symlink", resultReceiver_);
         } else {
             OutputError(ERR_FILE_OPEN_FAILED,
                 "Failed to open source file: " + srcPath + ", error: " + strerror(errno),
                 "Please check the file path exists and is readable", resultReceiver_);
         }
+        return ERR_INVALID_VALUE;
+    }
+    // Ensure the opened fd is a regular file (reject devices, pipes, etc.)
+    struct stat openStat;
+    if (fstat(fd, &openStat) < 0 || !S_ISREG(openStat.st_mode)) {
+        close(fd);
+        fd = -1;
+        OutputError(ERR_FILE_OPEN_FAILED,
+            "Source file is not a regular file: " + srcPath,
+            "The file path must point to a regular file", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
     return ERR_OK;
