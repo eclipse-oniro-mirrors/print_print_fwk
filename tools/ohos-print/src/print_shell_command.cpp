@@ -38,7 +38,7 @@
 #include "print_manager_client.h"
 #include "print_margin.h"
 #include "print_page_size.h"
-#include "print_util.h"
+#include "print_utils.h"
 #include "printer_info.h"
 
 namespace OHOS {
