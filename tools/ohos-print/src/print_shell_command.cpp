@@ -37,6 +37,7 @@
 #include "print_manager_client.h"
 #include "print_margin.h"
 #include "print_page_size.h"
+#include "print_util.h"
 #include "printer_info.h"
 
 namespace OHOS {
@@ -336,6 +337,14 @@ int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
             resultReceiver_);
         return ERR_INVALID_VALUE;
     }
+    if (!PrintUtils::IsPathValid(params.filePath)) {
+        OutputError(ERR_INVALID_FILE_PATH,
+            "Invalid file path: " + params.filePath,
+            "Provide a valid absolute file path. Example: --file-path /data/test.pdf",
+            resultReceiver_);
+        return ERR_INVALID_FILE_PATH;
+    }
+    
     if (params.documentFormat.empty()) {
         OutputError(ERR_ARG_MISSING,
             "Missing required parameter: --document-format",
