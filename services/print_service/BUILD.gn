@@ -182,6 +182,7 @@ if (!print_fwk_feature_device_isolation) {
 
     if (print_fwk_feature_enterprise) {
       cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+      external_deps += [ "space_mgr_service:space_mgr_kits" ]
     }
 
     if (print_fwk_feature_edm_service) {
@@ -288,6 +289,7 @@ if (!print_fwk_feature_device_isolation) {
 
     if (print_fwk_feature_enterprise) {
       cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+      external_deps += [ "space_mgr_service:space_mgr_kits" ]
     }
 
     if (cups_enable) {

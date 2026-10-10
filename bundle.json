@@ -65,6 +65,7 @@
         "samgr",
         "selinux_adapter",
         "security_guard",
+        "space_mgr_service",
         "time_service",
         "udmf",
         "usb_manager",

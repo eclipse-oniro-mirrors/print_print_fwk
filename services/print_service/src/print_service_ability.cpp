@@ -65,6 +65,9 @@
 #ifdef EDM_SERVICE_ENABLE
 #include "enterprise_device_mgr_proxy.h"
 #endif // EDM_SERVICE_ENABLE
+#ifdef ENTERPRISE_ENABLE
+#include "space_mgr_kits.h"
+#endif // ENTERPRISE_ENABLE
 #if defined(EDM_SERVICE_ENABLE) || defined(EDM_PRINT_POLICY_ENABLE)
 #include "sg_collect_client.h"
 #include "event_info.h"
@@ -5979,11 +5982,11 @@ void PrintServiceAbility::UpdateIsEnterprise()
     int32_t localId = -1;
     AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     lastUserId_ = localId;
-    AccountSA::DomainAccountInfo domainInfo;
-    auto ret = AccountSA::OsAccountManager::GetOsAccountDomainInfo(localId, domainInfo);
-    PRINT_HILOGI("GetOsAccountDomainInfo ret = %{public}d", ret);
-    if (ret == 0 && !domainInfo.accountName_.empty()) {
-        isEnterprise_ = true;
+    bool status = false;
+    Errcode ret = SpaceMgr::SpaceMgrKits::GetInstance().IsEnterpriseWorkspace(localId, status);
+    PRINT_HILOGI("IsEnterpriseWorkspace ret = %{public}d", ret);
+    if (ret == ERR_OK) {
+        isEnterprise_ = status;
     } else {
         isEnterprise_ = false;
     }
