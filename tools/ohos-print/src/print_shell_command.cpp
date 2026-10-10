@@ -38,7 +38,6 @@
 #include "print_manager_client.h"
 #include "print_margin.h"
 #include "print_page_size.h"
-#include "print_utils.h"
 #include "printer_info.h"
 
 namespace OHOS {
@@ -338,7 +337,9 @@ int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
             resultReceiver_);
         return ERR_INVALID_VALUE;
     }
-    if (!PrintUtils::IsPathValid(params.filePath)) {
+    char resolvedPath[PATH_MAX] = {0};
+    if (params.filePath.length() >= PATH_MAX || realpath(params.filePath.c_str(), resolvedPath) == nullptr ||
+        strcmp(resolvedPath, params.filePath.c_str()) != 0) {
         OutputError(ERR_INVALID_FILE_PATH,
             "Invalid file path: " + params.filePath,
             "Provide a valid absolute file path. Example: --file-path /data/test.pdf",
