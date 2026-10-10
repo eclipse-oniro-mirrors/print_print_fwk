@@ -17,6 +17,7 @@
 
 #include <cctype>
 #include <cerrno>
+#include <climits>
 #include <cstring>
 #include <sys/sendfile.h>
 #include <iostream>
