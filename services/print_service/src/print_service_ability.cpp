@@ -5983,7 +5983,7 @@ void PrintServiceAbility::UpdateIsEnterprise()
     AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     lastUserId_ = localId;
     bool status = false;
-    Errcode ret = SpaceMgr::SpaceMgrKits::GetInstance().IsEnterpriseWorkspace(localId, status);
+    ErrCode ret = SpaceMgr::SpaceMgrKits::GetInstance().IsEnterpriseWorkspace(localId, status);
     PRINT_HILOGI("IsEnterpriseWorkspace ret = %{public}d", ret);
     if (ret == ERR_OK) {
         isEnterprise_ = status;
