@@ -343,7 +343,7 @@ int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
             "Invalid file path: " + params.filePath,
             "Provide a valid absolute file path. Example: --file-path /data/test.pdf",
             resultReceiver_);
-        return ERR_INVALID_FILE_PATH;
+        return ERR_INVALID_VALUE;
     }
     if (params.documentFormat.empty()) {
         OutputError(ERR_ARG_MISSING,
