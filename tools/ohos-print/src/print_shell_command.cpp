@@ -374,16 +374,7 @@ bool PrintShellCommand::IsSandboxEnvironment() const
 
 int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, int& fd)
 {
-    // Resolve to canonical absolute path to eliminate remaining symlink/relative risks
-    char resolved[PATH_MAX] = {0};
-    if (realpath(srcPath.c_str(), resolved) == nullptr) {
-        OutputError(ERR_FILE_OPEN_FAILED,
-            "Failed to resolve source file path: " + srcPath + ", error: " + strerror(errno),
-            "Please check the file path exists and is readable", resultReceiver_);
-        return ERR_INVALID_VALUE;
-    }
-    // O_NOFOLLOW: reject if the final component is a symlink (TOCTOU hardening)
-    fd = open(resolved, O_RDONLY | O_NOFOLLOW);
+    fd = open(srcPath.c_str(), O_RDONLY);
     if (fd < 0) {
         if (errno == ENOENT) {
             OutputError(ERR_FILE_OPEN_FAILED,
@@ -393,25 +384,11 @@ int32_t PrintShellCommand::OpenSourceFile(const std::string& srcPath, int& fd)
             OutputError(ERR_FILE_OPEN_FAILED,
                 "Failed to open source file: " + srcPath + ", error: no permission",
                 "Please check the file path is readable", resultReceiver_);
-        } else if (errno == ELOOP) {
-            OutputError(ERR_FILE_OPEN_FAILED,
-                "Failed to open source file: " + srcPath + ", error: symlink not allowed",
-                "The file path must not be a symlink", resultReceiver_);
         } else {
             OutputError(ERR_FILE_OPEN_FAILED,
                 "Failed to open source file: " + srcPath + ", error: " + strerror(errno),
                 "Please check the file path exists and is readable", resultReceiver_);
         }
-        return ERR_INVALID_VALUE;
-    }
-    // Ensure the opened fd is a regular file (reject devices, pipes, etc.)
-    struct stat openStat;
-    if (fstat(fd, &openStat) < 0 || !S_ISREG(openStat.st_mode)) {
-        close(fd);
-        fd = -1;
-        OutputError(ERR_FILE_OPEN_FAILED,
-            "Source file is not a regular file: " + srcPath,
-            "The file path must point to a regular file", resultReceiver_);
         return ERR_INVALID_VALUE;
     }
     return ERR_OK;
