@@ -16,7 +16,6 @@
 #ifndef PRINT_FWK_TOOLS_OHOS_PRINT_PRINT_SHELL_COMMAND_H
 #define PRINT_FWK_TOOLS_OHOS_PRINT_PRINT_SHELL_COMMAND_H
 
-#include <climits>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -271,7 +270,6 @@ private:
     void ApplyStartPrintJobOption(int opt, PrintJobParams& params);
     int32_t ParseStartPrintJobOptions(PrintJobParams& params);
     int32_t ValidateRequiredParams(const PrintJobParams& params);
-    bool ValidateFilePath(const std::string& filePath);
     void CloseFdList(std::vector<uint32_t>& fdList);
     bool IsSandboxEnvironment() const;
     int32_t CopyFileToSandbox(const std::string& srcPath, std::string& sandboxPath);
