@@ -23,6 +23,8 @@
 #include <vector>
 
 #include "print_util.h"
+#include "print_utils.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 
@@ -41,6 +43,7 @@ enum PrinterFoundType {
 class PrintSecurityGuardUtil {
 public:
     static int32_t GetPrinterType(const std::string& des);
+    static std::string GetPrinterConnectionType(const PrinterInfo &printerInfo);
     static std::string ExtractFileName(const std::string& filePath);
     static std::vector<std::string> ExtractFileListFromOption(const std::string &option);
     static std::string UrlDecode(const std::string &str);

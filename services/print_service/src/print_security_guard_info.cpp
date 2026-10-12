@@ -42,6 +42,26 @@ const std::vector<std::string> &PrintSecurityGuardInfo::GetFileAuditInfo() const
     return files_;
 }
 
+void PrintSecurityGuardInfo::SetJobId(const std::string &jobId)
+{
+    jobId_ = jobId;
+}
+
+std::string PrintSecurityGuardInfo::GetJobId() const
+{
+    return jobId_;
+}
+
+void PrintSecurityGuardInfo::SetPrinterType(const std::string& printerType)
+{
+    printerType_ = printerType;
+}
+
+std::string PrintSecurityGuardInfo::GetPrinterType() const
+{
+    return printerType_;
+}
+
 void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
 {
     std::string printerId = printerInfo.GetPrinterId();
@@ -49,6 +69,7 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
     printTypeInfo_.ip = PrintUtil::SplitStr(description, '&', SPLIT_INDEX);
     printTypeInfo_.mac = PrintUtil::SplitStr(printerId, '/', SPLIT_INDEX);
     subType_ = PrintSecurityGuardUtil::GetPrinterType(printerId);
+    printerType_ = PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo);
     printTypeInfo_.domain = "";
     if (subType_ == FROM_EPRINT) {
         Json::Value optionJson;
@@ -136,6 +157,7 @@ void PrintSecurityGuardInfo::SetPrintAuditInfo(
     allStates.insert(printJob.GetSubState());
     errorCode_ = GenerateErrorCodes(allStates);
     printerName_ = printerInfo.GetPrinterName();
+    printerType_ = PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo);
 }
 
 Json::Value PrintSecurityGuardInfo::ToJson()
@@ -188,6 +210,8 @@ Json::Value PrintSecurityGuardInfo::ToJson()
     }
     securityGuardInfoJson["errorCode"] = errorCodeArray;
     securityGuardInfoJson["printerName"] = printerName_;
+    securityGuardInfoJson["jobId"] = jobId_;
+    securityGuardInfoJson["printerType"] = printerType_;
 
     return securityGuardInfoJson;
 }

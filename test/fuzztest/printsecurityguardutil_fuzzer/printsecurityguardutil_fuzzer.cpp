@@ -60,6 +60,16 @@ void TestGetPrinterType(const uint8_t *data, size_t size, FuzzedDataProvider *da
     (void)result;
 }
 
+void TestGetPrinterConnectionType(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetUri(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetSelectedProtocol(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    auto result = PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo);
+    (void)result;
+}
+
 void TestUrlDecode(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string input = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -85,6 +95,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestExtractFileName,
         &TestExtractFileListFromOption,
         &TestGetPrinterType,
+        &TestGetPrinterConnectionType,
         &TestUrlDecode,
         &TestGenerateErrorCodesWithCombinedState,
     };

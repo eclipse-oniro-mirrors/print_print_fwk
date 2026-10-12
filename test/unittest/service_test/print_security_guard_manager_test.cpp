@@ -150,6 +150,29 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveAud
     ASSERT_NE(it, manager.securityMap_.end());
     EXPECT_TRUE(it->second->files_.empty());
 }
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_receiveAuditInfo_004
+ * @tc.desc: Verify receiveAuditInfo fallback path (jobId not in map) sets jobId_ on new entry.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveAuditInfo_004, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+
+    // No receiveBaseInfo -> receiveAuditInfo falls into fallback path (jobId not in map)
+    std::vector<std::string> fileInfos = {"fallbackDoc.pdf"};
+    manager.receiveAuditInfo("jobId-audit-fallback", printerInfo, printJob, fileInfos);
+
+    // Fallback path inserts a new entry with SetJobId(jobId)
+    auto it = manager.securityMap_.find("jobId-audit-fallback");
+    ASSERT_NE(it, manager.securityMap_.end());
+    ASSERT_NE(it->second, nullptr);
+    EXPECT_EQ(it->second->jobId_, "jobId-audit-fallback");
+}
  
 // ===== Full flow Tests =====
  
@@ -268,5 +291,81 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_MultipleJo
     EXPECT_EQ(it1->second->files_[0], "doc1.pdf");
     EXPECT_EQ(it2->second->files_[0], "doc2.pdf");
 }
+
+// ===== Audit Field Extension Tests (jobId_ / printerType_) =====
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_receiveBaseInfo_001
+ * @tc.desc: Verify receiveBaseInfo sets jobId_ correctly on the new entry.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveBaseInfo_001, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    std::vector<std::string> fileList = {"/data/doc1.pdf"};
+
+    manager.receiveBaseInfo("jobId-base-1", "callerPkg-1", fileList);
+
+    auto it = manager.securityMap_.find("jobId-base-1");
+    ASSERT_NE(it, manager.securityMap_.end());
+    ASSERT_NE(it->second, nullptr);
+    EXPECT_EQ(it->second->jobId_, "jobId-base-1");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_receiveJobStateUpdate_001
+ * @tc.desc: Verify receiveJobStateUpdate hit path sets printerType_ on existing entry.
+ *           receiveBaseInfo sets jobId_ via SetJobId(jobId).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveJobStateUpdate_001, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    std::vector<std::string> fileList;
+
+    // Step 1: create entry so receiveJobStateUpdate hits the map
+    manager.receiveBaseInfo("jobId-hit", "callerPkg", fileList);
+
+    // Step 2: receiveJobStateUpdate with same jobId -> hit path
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+    printJob.SetJobId("jobId-hit");
+    printJob.SetJobState(PRINT_JOB_BLOCKED);
+    manager.receiveJobStateUpdate("jobId-hit", printerInfo, printJob);
+
+    // Entry should still exist (non-COMPLETED state)
+    auto it = manager.securityMap_.find("jobId-hit");
+    ASSERT_NE(it, manager.securityMap_.end());
+    ASSERT_NE(it->second, nullptr);
+    // jobId_ was set by receiveBaseInfo SetJobId(jobId)
+    EXPECT_EQ(it->second->jobId_, "jobId-hit");
+    // Default PrinterInfo (no printerId/uri/protocol) -> "other"
+    EXPECT_EQ(it->second->printerType_, "other");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardManagerTest_receiveJobStateUpdate_002
+ * @tc.desc: Verify receiveJobStateUpdate fallback path does not insert into securityMap.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_receiveJobStateUpdate_002, TestSize.Level1)
+{
+    PrintSecurityGuardManager manager;
+    std::vector<std::string> fileList;
+
+    // No receiveBaseInfo call -> receiveJobStateUpdate will not find jobId in map (fallback path)
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+    printJob.SetJobId("jobId-fallback");
+    printJob.SetJobState(PRINT_JOB_BLOCKED);
+    manager.receiveJobStateUpdate("jobId-fallback", printerInfo, printJob);
+
+    // Fallback path does not insert into map; verify map is still empty for this jobId
+    EXPECT_EQ(manager.securityMap_.find("jobId-fallback"), manager.securityMap_.end());
+}
+
 }  // namespace Print
 }  // namespace OHOS

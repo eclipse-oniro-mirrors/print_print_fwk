@@ -54,6 +54,10 @@ public:
     const std::vector<std::string> &GetFileList() const;
     void SetFileAuditInfo(const std::vector<std::string> &fileInfos);
     const std::vector<std::string> &GetFileAuditInfo() const;
+    void SetJobId(const std::string &jobId);
+    std::string GetJobId() const;
+    void SetPrinterType(const std::string &printerType);
+    std::string GetPrinterType() const;
 
 private:
     int32_t ResolvePrintPages(const PrintJob &printJob, const Json::Value &jobOptionJson);
@@ -73,6 +77,8 @@ private:
     uint32_t duplexMode_ = 0;
     std::vector<std::string> errorCode_;
     std::string printerName_;
+    std::string jobId_{};
+    std::string printerType_{};
 
     Json::Value ToJson();
 };
