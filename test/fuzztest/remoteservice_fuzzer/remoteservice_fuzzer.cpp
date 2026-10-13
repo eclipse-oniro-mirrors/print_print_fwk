@@ -30,6 +30,7 @@
 #include "printer_info.h"
 #include <functional>
 #include <array>
+#include <memory>
 
 namespace OHOS::Print {
 
@@ -175,9 +176,9 @@ void TestAdapterRequestPrinterList(const uint8_t *data, size_t size, FuzzedDataP
 void TestAdapterSetOnServiceDiedCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     auto& adapter = RemoteServiceAdapter::GetInstance();
-    bool callbackCalled = false;
-    adapter.SetOnServiceDiedCallback([&callbackCalled]() {
-        callbackCalled = true;
+    auto callbackCalled = std::make_shared<bool>(false);
+    adapter.SetOnServiceDiedCallback([callbackCalled]() {
+        *callbackCalled = true;
     });
 }
 
