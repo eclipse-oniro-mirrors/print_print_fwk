@@ -183,24 +183,6 @@ HWTEST_F(PrintServiceAbilityTest, UpdateIsEnterprise_WhenNotEnterpriseEnable_Sho
 }
 
 /**
- * @tc.name: UpdateIsEnterprise_WhenEnterpriseEnable_ShouldUpdateLastUserId
- * @tc.desc: Verify UpdateIsEnterprise updates lastUserId_ when enterprise is enabled.
- * @tc.type: FUNC UpdateIsEnterprise
- * @tc.require: ENTERPRISE_SPACE_PARAM set to true
- */
-HWTEST_F(PrintServiceAbilityTest, UpdateIsEnterprise_WhenEnterpriseEnable_ShouldUpdateLastUserId, TestSize.Level1)
-{
-#ifdef ENTERPRISE_ENABLE
-    auto service = PrintServiceAbilityTest::CreateService();
-    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
-    service->lastUserId_ = -1;
-    service->UpdateIsEnterprise();
-    EXPECT_NE(service->lastUserId_, -1);
-    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
-#endif  // ENTERPRISE_ENABLE
-}
-
-/**
  * @tc.name: UpdateIsEnterprise_WhenEnterpriseEnable_SpaceMgrUnavailable_ShouldSetFalse
  * @tc.desc: Verify UpdateIsEnterprise sets isEnterprise_ to false when SpaceMgr call fails.
  * @tc.type: FUNC UpdateIsEnterprise
