@@ -480,5 +480,101 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028, TestSize.Level1)
     EXPECT_TRUE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
 }
 
+// IsPathValidForCreate parameterized test structure
+struct IsPathValidForCreateTestCase {
+    std::string testName;
+    std::string parentDir;
+    std::string fileName;
+    bool expectedResult;
+    std::string description;
+};
+ 
+class IsPathValidForCreateCommon {
+public:
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
+};
+ 
+class IsPathValidForCreateTest : public IsPathValidForCreateCommon,
+                                  public testing::TestWithParam<IsPathValidForCreateTestCase> {
+public:
+    using IsPathValidForCreateCommon::SetUpTestCase;
+    using IsPathValidForCreateCommon::TearDownTestCase;
+};
+ 
+INSTANTIATE_TEST_SUITE_P(IsPathValidForCreateTest, IsPathValidForCreateTest,
+    testing::Values(
+        // Normal cases
+        IsPathValidForCreateTestCase{
+            "ValidPath", "/data", "file.txt", true,
+            "Normal: valid parent directory and file name"},
+        IsPathValidForCreateTestCase{
+            "ValidSubDir", "/data/local/tmp", "config.json", true,
+            "Normal: valid subdirectory as parent"},
+        IsPathValidForCreateTestCase{
+            "FileNameStartsWithDots", "/data", "..file.txt", true,
+            "Normal: fileName starts with .. but is not path traversal"},
+        IsPathValidForCreateTestCase{
+            "FileNameContainsBackslash", "/data", "sub\\config.json", true,
+            "Error: fileName contains backslash (Windows path separator)"},
+ 
+        // Parameter empty
+        IsPathValidForCreateTestCase{
+            "EmptyParentDir", "", "file.txt", false,
+            "Error: empty parent directory"},
+        IsPathValidForCreateTestCase{
+            "EmptyFileName", "/data", "", false,
+            "Error: empty file name"},
+        IsPathValidForCreateTestCase{
+            "BothEmpty", "", "", false,
+            "Error: empty parent directory and file name"},
+ 
+        // Parent directory not exist (IsPathValid returns false)
+        IsPathValidForCreateTestCase{
+            "ParentNotExist", "/nonexistent", "file.txt", false,
+            "Error: parent directory does not exist"},
+ 
+        // Invalid fileName
+        IsPathValidForCreateTestCase{
+            "FileNameContainsSlash", "/data", "sub/file.txt", false,
+            "Error: fileName contains /"},
+        IsPathValidForCreateTestCase{
+            "FileNameContainsNullByte", "/data", std::string("file\0.txt", 9), false,
+            "Error: fileName contains null byte"},
+        IsPathValidForCreateTestCase{
+            "FileNameIsDot", "/data", ".", false,
+            "Error: fileName is . (current directory marker)"},
+        IsPathValidForCreateTestCase{
+            "PathTraversal", "/data", "..", false,
+            "Security: fileName is .. causes path traversal"},
+ 
+        // Invalid parentDir
+        IsPathValidForCreateTestCase{
+            "ParentDirTraversal", "/data/..", "config.json", false,
+            "Error: parentDir contains path traversal"},
+        IsPathValidForCreateTestCase{
+            "RelativeParentDir", "./", "config.json", false,
+            "Error: relative path not allowed"},
+        IsPathValidForCreateTestCase{
+            "WindowsStylePath", "\\data\\local\\tmp", "config.json", false,
+            "Error: Windows-style path not supported on Linux"}));
+ 
+/**
+ * @tc.name: PrintUtilsTest_IsPathValidForCreate_001
+ * @tc.desc: IsPathValidForCreate parameterized test for path validation
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_P(IsPathValidForCreateTest, IsPathValidForCreate_Parameterized_Test, TestSize.Level1)
+{
+    const IsPathValidForCreateTestCase& testCase = GetParam();
+    bool result = PrintUtils::IsPathValidForCreate(testCase.parentDir, testCase.fileName);
+ 
+    EXPECT_EQ(result, testCase.expectedResult) <<
+        "Test: " << testCase.testName <<
+        ", Description: " << testCase.description <<
+        ", ParentDir: " << testCase.parentDir <<
+        ", FileName: " << testCase.fileName;
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -23,6 +23,7 @@
 #include "print_log.h"
 #include "print_util.h"
 #include "print_constant.h"
+#include "print_utils.h"
 
 namespace OHOS {
 namespace Print {
@@ -326,13 +327,13 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     if (info == nullptr) {
         return;
     }
-    std::string printerListFilePath =
-        PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->name) + ".json";
-    char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+    std::string printersPath = GetPrintersPath();
+    std::string fileName = PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
+    if (!PrintUtils::IsPathValidForCreate(printersPath, fileName)) {
+        PRINT_HILOGE("Invalid printer file path!");
         return;
     }
+    std::string printerListFilePath = printersPath + "/" + fileName;
     FILE *file = fopen(printerListFilePath.c_str(), "w+");
     if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
