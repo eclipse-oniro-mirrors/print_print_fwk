@@ -327,8 +327,8 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     if (info == nullptr) {
         return;
     }
-    std::string printersPath = GetPrintersPath();
-    std::string fileName = PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
+    std::string printersPath = PRINTER_SERVICE_PRINTERS_PATH;
+    std::string fileName = PrintUtil::StandardizePrinterName(info->name) + ".json";
     if (!PrintUtils::IsPathValidForCreate(printersPath, fileName)) {
         PRINT_HILOGE("Invalid printer file path!");
         return;
