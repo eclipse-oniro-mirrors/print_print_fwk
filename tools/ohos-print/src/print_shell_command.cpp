@@ -17,6 +17,7 @@
 
 #include <cctype>
 #include <cerrno>
+#include <climits>
 #include <cstring>
 #include <sys/sendfile.h>
 #include <iostream>
@@ -333,6 +334,15 @@ int32_t PrintShellCommand::ValidateRequiredParams(const PrintJobParams& params)
         OutputError(ERR_ARG_MISSING,
             "Missing required parameter: --file-path",
             "Provide the file path to print. Example: --file-path /data/test.pdf",
+            resultReceiver_);
+        return ERR_INVALID_VALUE;
+    }
+    char resolvedPath[PATH_MAX] = {0};
+    if (params.filePath.length() >= PATH_MAX || realpath(params.filePath.c_str(), resolvedPath) == nullptr ||
+        strcmp(resolvedPath, params.filePath.c_str()) != 0) {
+        OutputError(ERR_INVALID_FILE_PATH,
+            "Invalid file path: " + params.filePath,
+            "Provide a valid absolute file path. Example: --file-path /data/test.pdf",
             resultReceiver_);
         return ERR_INVALID_VALUE;
     }
