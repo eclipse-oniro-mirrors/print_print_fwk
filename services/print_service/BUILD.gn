@@ -182,7 +182,7 @@ if (!print_fwk_feature_device_isolation) {
 
     if (print_fwk_feature_enterprise) {
       cflags_cc += [ "-DENTERPRISE_ENABLE" ]
-      external_deps += [ "space_mgr_service:space_mgr_kits" ]
+      sources += [ "${_service_path}/enterprise/src/space_mgr_wrapper_loader.cpp" ]
     }
 
     if (print_fwk_feature_edm_service) {
@@ -289,7 +289,7 @@ if (!print_fwk_feature_device_isolation) {
 
     if (print_fwk_feature_enterprise) {
       cflags_cc += [ "-DENTERPRISE_ENABLE" ]
-      external_deps += [ "space_mgr_service:space_mgr_kits" ]
+      sources += [ "${_service_path}/enterprise/src/space_mgr_wrapper_loader.cpp" ]
     }
 
     if (cups_enable) {
