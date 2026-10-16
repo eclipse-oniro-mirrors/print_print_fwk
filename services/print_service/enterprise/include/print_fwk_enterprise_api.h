@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SPACE_MGR_WRAPPER_API_H
-#define SPACE_MGR_WRAPPER_API_H
+#ifndef PRINT_FWK_ENTERPRISE_API_H
+#define PRINT_FWK_ENTERPRISE_API_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -23,18 +23,18 @@
 extern "C" {
 #endif
 
-#define SPACE_MGR_WRAPPER_OK 0
-#define SPACE_MGR_WRAPPER_ERR_INTERNAL (-1)
+#define PRINT_FWK_ENTERPRISE_OK 0
+#define PRINT_FWK_ENTERPRISE_ERR_INTERNAL (-1)
 
 typedef struct {
     uint32_t abiVersion;
     int32_t (*isEnterpriseWorkspace)(int32_t workspaceId, bool *isEnterprise);
-} SpaceMgrWrapperApi;
+} PrintFwkEnterpriseApi;
 
-const SpaceMgrWrapperApi *GetSpaceMgrWrapperApi(void);
+const PrintFwkEnterpriseApi *GetPrintFwkEnterpriseApi(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // SPACE_MGR_WRAPPER_API_H
+#endif // PRINT_FWK_ENTERPRISE_API_H

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "space_mgr_wrapper_loader.h"
+#include "print_fwk_enterprise_loader.h"
 
 #include <climits>
 #include <dlfcn.h>
@@ -22,30 +22,30 @@
 
 namespace OHOS::Print {
 namespace {
-constexpr const char *LIBRARY_PATH = "/system/lib64/libspace_mgr_wrapper.z.so";
-constexpr const char *FACTORY_SYMBOL = "GetSpaceMgrWrapperApi";
+constexpr const char *LIBRARY_PATH = "/system/lib64/libprint_fwk_enterprise.z.so";
+constexpr const char *FACTORY_SYMBOL = "GetPrintFwkEnterpriseApi";
 constexpr uint32_t EXPECTED_ABI_VERSION = 1;
 } // namespace
 
-SpaceMgrWrapperLoader::~SpaceMgrWrapperLoader()
+PrintFwkEnterpriseLoader::~PrintFwkEnterpriseLoader()
 {
     Unload();
 }
 
-bool SpaceMgrWrapperLoader::Load()
+bool PrintFwkEnterpriseLoader::Load()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (api_ != nullptr && handle_ != nullptr) {
         return true;
     }
 
-    PRINT_HILOGI("SpaceMgrWrapperLoader Load: start");
+    PRINT_HILOGI("PrintFwkEnterpriseLoader Load: start");
     void *libHandle = OpenLibrary();
     if (libHandle == nullptr) {
         return false;
     }
 
-    const SpaceMgrWrapperApi *api = ResolveApi(libHandle);
+    const PrintFwkEnterpriseApi *api = ResolveApi(libHandle);
     if (api == nullptr) {
         dlclose(libHandle);
         return false;
@@ -53,45 +53,45 @@ bool SpaceMgrWrapperLoader::Load()
 
     handle_ = libHandle;
     api_ = api;
-    PRINT_HILOGI("SpaceMgrWrapper loaded");
+    PRINT_HILOGI("PrintFwkEnterprise loaded");
     return true;
 }
 
-void *SpaceMgrWrapperLoader::OpenLibrary() const
+void *PrintFwkEnterpriseLoader::OpenLibrary() const
 {
     char real[PATH_MAX] = {};
     if (realpath(LIBRARY_PATH, real) == nullptr) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: realpath failed for %{public}s, errno:%{public}d",
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: realpath failed for %{public}s, errno:%{public}d",
             LIBRARY_PATH, errno);
         return nullptr;
     }
 
     void *libHandle = dlopen(real, RTLD_LAZY | RTLD_NODELETE);
     if (libHandle == nullptr) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: dlopen failed for %{public}s: %{public}s", real, dlerror());
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: dlopen failed for %{public}s: %{public}s", real, dlerror());
     }
     return libHandle;
 }
 
-const SpaceMgrWrapperApi *SpaceMgrWrapperLoader::ResolveApi(void *libHandle) const
+const PrintFwkEnterpriseApi *PrintFwkEnterpriseLoader::ResolveApi(void *libHandle) const
 {
-    using FactoryFn = const SpaceMgrWrapperApi *(*)();
+    using FactoryFn = const PrintFwkEnterpriseApi *(*)();
     auto factory = reinterpret_cast<FactoryFn>(dlsym(libHandle, FACTORY_SYMBOL));
     const char *dlsymErr = dlerror();
     if (dlsymErr != nullptr) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: dlsym(%{public}s) failed: %{public}s", FACTORY_SYMBOL, dlsymErr);
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: dlsym(%{public}s) failed: %{public}s", FACTORY_SYMBOL, dlsymErr);
         return nullptr;
     }
 
-    const SpaceMgrWrapperApi *api = factory();
+    const PrintFwkEnterpriseApi *api = factory();
     if (!ValidateApi(api)) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: vtable validation failed");
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: vtable validation failed");
         return nullptr;
     }
     return api;
 }
 
-void SpaceMgrWrapperLoader::Unload()
+void PrintFwkEnterpriseLoader::Unload()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (handle_) {
@@ -101,34 +101,34 @@ void SpaceMgrWrapperLoader::Unload()
     api_ = nullptr;
 }
 
-bool SpaceMgrWrapperLoader::ValidateApi(const SpaceMgrWrapperApi *api) const
+bool PrintFwkEnterpriseLoader::ValidateApi(const PrintFwkEnterpriseApi *api) const
 {
     if (api == nullptr) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader ValidateApi: api is null");
+        PRINT_HILOGE("PrintFwkEnterpriseLoader ValidateApi: api is null");
         return false;
     }
     if (api->abiVersion != EXPECTED_ABI_VERSION) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: abiVersion mismatch, expected %{public}u, got %{public}u",
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: abiVersion mismatch, expected %{public}u, got %{public}u",
             EXPECTED_ABI_VERSION, api->abiVersion);
         return false;
     }
     if (api->isEnterpriseWorkspace == nullptr) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: vtable contains null function pointer");
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: vtable contains null function pointer");
         return false;
     }
     return true;
 }
 
-int32_t SpaceMgrWrapperLoader::IsEnterpriseWorkspace(int32_t workspaceId, bool &isEnterprise)
+int32_t PrintFwkEnterpriseLoader::IsEnterpriseWorkspace(int32_t workspaceId, bool &isEnterprise)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (api_ == nullptr) {
-        PRINT_HILOGE("SpaceMgrWrapperLoader: not loaded");
-        return SPACE_MGR_WRAPPER_ERR_INTERNAL;
+        PRINT_HILOGE("PrintFwkEnterpriseLoader: not loaded");
+        return PRINT_FWK_ENTERPRISE_ERR_INTERNAL;
     }
     bool result = false;
     int32_t ret = api_->isEnterpriseWorkspace(workspaceId, &result);
-    if (ret == SPACE_MGR_WRAPPER_OK) {
+    if (ret == PRINT_FWK_ENTERPRISE_OK) {
         isEnterprise = result;
     }
     return ret;

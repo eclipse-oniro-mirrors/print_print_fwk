@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef SPACE_MGR_WRAPPER_LOADER_H
-#define SPACE_MGR_WRAPPER_LOADER_H
+#ifndef PRINT_FWK_ENTERPRISE_LOADER_H
+#define PRINT_FWK_ENTERPRISE_LOADER_H
 
 #include <mutex>
 
-#include "space_mgr_wrapper_api.h"
+#include "print_fwk_enterprise_api.h"
 
 namespace OHOS::Print {
 
-class SpaceMgrWrapperLoader {
+class PrintFwkEnterpriseLoader {
 public:
-    SpaceMgrWrapperLoader() = default;
-    ~SpaceMgrWrapperLoader();
+    PrintFwkEnterpriseLoader() = default;
+    ~PrintFwkEnterpriseLoader();
 
     bool Load();
     bool IsLoaded() const { return api_ != nullptr && handle_ != nullptr; }
@@ -35,14 +35,14 @@ public:
 
 private:
     void *OpenLibrary() const;
-    const SpaceMgrWrapperApi *ResolveApi(void *libHandle) const;
-    bool ValidateApi(const SpaceMgrWrapperApi *api) const;
+    const PrintFwkEnterpriseApi *ResolveApi(void *libHandle) const;
+    bool ValidateApi(const PrintFwkEnterpriseApi *api) const;
 
     void *handle_ = nullptr;
-    const SpaceMgrWrapperApi *api_ = nullptr;
+    const PrintFwkEnterpriseApi *api_ = nullptr;
     std::mutex mutex_;
 };
 
 } // namespace OHOS::Print
 
-#endif // SPACE_MGR_WRAPPER_LOADER_H
+#endif // PRINT_FWK_ENTERPRISE_LOADER_H

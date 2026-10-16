@@ -5979,15 +5979,15 @@ void PrintServiceAbility::UpdateIsEnterprise()
     int32_t localId = -1;
     AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     lastUserId_ = localId;
-    if (!spaceMgrWrapper_.Load()) {
-        PRINT_HILOGE("SpaceMgrWrapper load failed");
+    if (!enterpriseLoader_.Load()) {
+        PRINT_HILOGE("PrintFwkEnterprise load failed");
         isEnterprise_ = false;
         return;
     }
     bool status = false;
-    int32_t ret = spaceMgrWrapper_.IsEnterpriseWorkspace(localId, status);
+    int32_t ret = enterpriseLoader_.IsEnterpriseWorkspace(localId, status);
     PRINT_HILOGI("IsEnterpriseWorkspace ret = %{public}d", ret);
-    if (ret == SPACE_MGR_WRAPPER_OK) {
+    if (ret == PRINT_FWK_ENTERPRISE_OK) {
         isEnterprise_ = status;
     } else {
         isEnterprise_ = false;
