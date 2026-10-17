@@ -41,6 +41,7 @@ const std::map<int32_t, std::string> ERROR_CODE_CONVERT_MESSAGE_MAP = {
     {E_PRINT_INVALID_TOKEN, "Invalid token."},
     {E_PRINT_INVALID_USERID, "Invalid user id."},
     {E_PRINT_TOO_MANY_FILES, "Number of files exceeding the upper limit."},
+    {E_PRINT_EDM_POLICY_RESTRICTED, "The print operation is restricted by the EDM policy."},
 };
 static const std::string ERROR_MESSAGE_OUT_OF_DEFINITION = "error is out of definition.";
 

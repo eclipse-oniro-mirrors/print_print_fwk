@@ -125,6 +125,7 @@ static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_BLOCK_INTERRUPT", PRINT_JOB_BLOCKED_INTERRUPT},
     {"PRINT_JOB_BLOCK_PRINTER_UNAVAILABLE", PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE},
     {"PRINT_JOB_BLOCK_UNKNOWN", PRINT_JOB_BLOCKED_UNKNOWN},
+    {"PRINT_JOB_BLOCK_EDM_POLICY_RESTRICTED", PRINT_JOB_BLOCKED_EDM_POLICY_RESTRICTED},
 };
 
 static void SetEnumProperty(napi_env env, napi_value object, const std::string &name, uint32_t value)
@@ -372,6 +373,7 @@ static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
     SetEnumProperty(env, object, "E_PRINT_INVALID_PRINT_JOB", static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB));
     SetEnumProperty(env, object, "E_PRINT_FILE_IO", static_cast<int32_t>(E_PRINT_FILE_IO));
     SetEnumProperty(env, object, "E_PRINT_TOO_MANY_FILES", static_cast<int32_t>(E_PRINT_TOO_MANY_FILES));
+    SetEnumProperty(env, object, "E_PRINT_EDM_POLICY_RESTRICTED", static_cast<int32_t>(E_PRINT_EDM_POLICY_RESTRICTED));
     return object;
 }
 
