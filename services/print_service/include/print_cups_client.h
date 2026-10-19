@@ -59,6 +59,7 @@ struct JobParameters {
     std::string vendorOptions;
     bool isReverse = false;
     bool isCollate = true;
+    std::string ppdName;
     std::string bsuniOutputFormat;
     std::string printSharedDir;
 
@@ -161,7 +162,7 @@ public:
         PrinterCapability &printerCaps);
     int32_t QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status);
     int32_t DeleteCupsPrinter(const char *printerName);
-    void AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName);
+    void AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName, const std::string &ppdName = "");
     void CancelCupsJob(std::string serviceJobId);
     void InterruptCupsJob(std::string serviceJobId);
 
@@ -215,7 +216,8 @@ private:
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillPpdBasicOptions(ppd_file_t *ppd, JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillTextSmoothOption(int num_options, cups_option_t **options);
@@ -253,7 +255,8 @@ private:
     void UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params);
     void UpdatePrintScaling(const PrintJob &jobInfo, JobParameters *params);
     void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
-    JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
+    JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName,
+        const std::string &ppdName = "");
     void FillPrintSharedDir(JobParameters *params);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);

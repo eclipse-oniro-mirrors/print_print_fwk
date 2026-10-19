@@ -21,6 +21,10 @@
 #include <unistd.h>
 #include "print_cups_ppd.h"
 #include "printer_capability.h"
+#include "print_json_util.h"
+#define private public
+#include "print_cups_client.h"
+#undef private
 
 using namespace testing;
 using namespace testing::ext;
@@ -131,6 +135,9 @@ bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType, 
 bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val, std::string &choiceName);
 bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::string &optName, std::string &choiceName);
+void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName);
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName);
+void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
 HWTEST_F(PrintCupsPpdTest, QueryPrinterCapabilityFromPPDFile_InvalidPath_ReturnsFileIOError, TestSize.Level1)
@@ -789,6 +796,172 @@ HWTEST_F(PrintCupsPpdTest, ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash, Tes
     ppd->cache->num_types = origNumTypes;
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+
+    PrinterCapability printerCaps;
+    std::string ppdName = "test.ppd";
+    BuildPpdOptionMap(ppd, printerCaps, ppdName);
+
+    const char *driverType = printerCaps.GetPrinterAttrValue("ppdDriverType");
+    EXPECT_STREQ(driverType, "ppd");
+
+    const char *nameVal = printerCaps.GetPrinterAttrValue("ppdName");
+    EXPECT_STREQ(nameVal, "test.ppd");
+
+    const char *optionMapStr = printerCaps.GetPrinterAttrValue("ppdOptionMap");
+    ASSERT_NE(optionMapStr, nullptr);
+    Json::Value optionMap;
+    ASSERT_TRUE(PrintJsonUtil::Parse(optionMapStr, optionMap));
+    EXPECT_TRUE(optionMap.isMember("defaultDuplexMode"));
+    EXPECT_TRUE(optionMap.isMember("defaultColorMode"));
+    EXPECT_TRUE(optionMap.isMember("defaultPageSizeId"));
+    EXPECT_TRUE(optionMap.isMember("defaultMediaType"));
+    EXPECT_TRUE(optionMap.isMember("defaultPrintQuality"));
+
+    const char *textMapStr = printerCaps.GetPrinterAttrValue("ppdOptionTextMap");
+    ASSERT_NE(textMapStr, nullptr);
+    Json::Value textMap;
+    ASSERT_TRUE(PrintJsonUtil::Parse(textMapStr, textMap));
+    EXPECT_TRUE(textMap["defaultDuplexMode"].isMember("default"));
+    EXPECT_TRUE(textMap["defaultDuplexMode"].isMember("zh_CN"));
+
+    const char *defaultMapStr = printerCaps.GetPrinterAttrValue("ppdDefaultMap");
+    ASSERT_NE(defaultMapStr, nullptr);
+    Json::Value defaultMap;
+    ASSERT_TRUE(PrintJsonUtil::Parse(defaultMapStr, defaultMap));
+    EXPECT_STREQ(defaultMap["defaultDuplexMode"].asCString(), "0");
+
+    Json::Value duplexText = textMap["defaultDuplexMode"]["default"];
+    EXPECT_TRUE(duplexText.isMember("0"));
+    EXPECT_TRUE(duplexText.isMember("1"));
+    EXPECT_TRUE(duplexText.isMember("2"));
+    EXPECT_FALSE(duplexText.isMember("one-sided"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_NoDuplexOption_SkipsMissingOptions, TestSize.Level1)
+{
+    std::string content = "*PPD-Adobe: \"4.3\"\n"
+        "*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n"
+        "*Manufacturer: \"Test\"\n"
+        "*ModelName: \"Test Printer\"\n"
+        "*NickName: \"Test Printer\"\n"
+        "*ColorDevice: True\n"
+        "*DefaultColor: Color\n"
+        "*OpenUI PageSize: PickOne\n"
+        "*DefaultPageSize: A4\n"
+        "*PageSize A4/A4: \"<</PageSize>>\"\n"
+        "*CloseUI: PageSize\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+
+    PrinterCapability printerCaps;
+    BuildPpdOptionMap(ppd, printerCaps, "test.ppd");
+
+    const char *optionMapStr = printerCaps.GetPrinterAttrValue("ppdOptionMap");
+    Json::Value optionMap;
+    ASSERT_TRUE(PrintJsonUtil::Parse(optionMapStr, optionMap));
+    EXPECT_FALSE(optionMap.isMember("defaultDuplexMode"));
+    EXPECT_TRUE(optionMap.isMember("defaultPageSizeId"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, SetOptionAttributeFromPPD_PpdFieldsAtTopLevel, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    PrinterCapability printerCaps;
+    GetAdvanceOptionsFromPPD(ppd, printerCaps);
+    ParsePrinterAttributesFromPPD(ppd, printerCaps, "test.ppd");
+
+    EXPECT_TRUE(printerCaps.HasOption());
+
+    Json::Value optionJson;
+    ASSERT_TRUE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
+
+    EXPECT_TRUE(optionJson.isMember("ppdDriverType"));
+    EXPECT_EQ(optionJson["ppdDriverType"].asString(), "ppd");
+    EXPECT_TRUE(optionJson.isMember("ppdName"));
+    EXPECT_EQ(optionJson["ppdName"].asString(), "test.ppd");
+    EXPECT_TRUE(optionJson.isMember("ppdOptionMap"));
+    EXPECT_TRUE(optionJson.isMember("ppdOptionTextMap"));
+    EXPECT_TRUE(optionJson.isMember("ppdDefaultMap"));
+
+    Json::Value cupsOptions = optionJson["cupsOptions"];
+    EXPECT_FALSE(cupsOptions.isMember("ppdDriverType"));
+    EXPECT_FALSE(cupsOptions.isMember("ppdName"));
+    EXPECT_FALSE(cupsOptions.isMember("ppdOptionMap"));
+    EXPECT_FALSE(cupsOptions.isMember("ppdOptionTextMap"));
+    EXPECT_FALSE(cupsOptions.isMember("ppdDefaultMap"));
+
+    EXPECT_TRUE(cupsOptions.isMember("advanceOptions"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    JobParameters jobParams;
+    jobParams.duplex = "two-sided-long-edge";
+    jobParams.color = "monochrome";
+    jobParams.printQuality = "4";
+    jobParams.mediaSize = "iso_a4_210x297mm";
+    jobParams.mediaType = "stationery";
+
+    cups_option_t *options = nullptr;
+    int num_options = 0;
+    num_options = PrintCupsClient::FillPpdBasicOptions(ppd, &jobParams, num_options, &options);
+
+    EXPECT_GE(num_options, 3);
+
+    const char *duplexVal = cupsGetOption("Duplex", num_options, options);
+    if (duplexVal != nullptr) {
+        EXPECT_STREQ(duplexVal, "DuplexNoTumble");
+    }
+
+    const char *colorVal = cupsGetOption("ColorModel", num_options, options);
+    if (colorVal != nullptr) {
+        EXPECT_STREQ(colorVal, "Gray");
+    }
+
+    if (options != nullptr) {
+        cupsFreeOptions(num_options, options);
+    }
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_NullPpd_ReturnsUnchanged, TestSize.Level1)
+{
+    JobParameters jobParams;
+    cups_option_t *options = nullptr;
+    int num_options = 0;
+    int result = PrintCupsClient::FillPpdBasicOptions(nullptr, &jobParams, num_options, &options);
+    EXPECT_EQ(result, num_options);
 }
 
 }  // namespace Print

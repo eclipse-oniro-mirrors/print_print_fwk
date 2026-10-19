@@ -24,9 +24,13 @@
 namespace OHOS::Print {
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName);
 
+void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName);
+
 int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::string &val);
 int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::vector<std::string>& conflictTypes);
+bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
+    std::string &optName, std::string &choiceName);
 
 std::string ExtractBundleNameFromPpdName(const std::string &ppdName);
 std::string ExtractBundleNameFromAbilityName(const std::string &abilityName);

@@ -1134,10 +1134,11 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
     return E_PRINT_NONE;
 }
 
-void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName)
+void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName,
+    const std::string &ppdName)
 {
     PRINT_HILOGI("[Job Id: %{public}s] AddCupsPrintJob start", jobInfo.GetJobId().c_str());
-    JobParameters *jobParams = BuildJobParameters(jobInfo, userName);
+    JobParameters *jobParams = BuildJobParameters(jobInfo, userName, ppdName);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
         HisysEventUtil::ReportPrintProcessFault(
@@ -1310,7 +1311,31 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
         PRINT_HILOGE("FillJobOptions Params is nullptr");
         return num_options;
     }
-    num_options = FillBasicOptions(jobParams, num_options, options);
+    if (jobParams->numCopies >= 1) {
+        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
+    } else {
+        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
+    }
+
+    if (!jobParams->ppdName.empty()) {
+        std::string ppdFilePath = GetCurCupsModelDir() + jobParams->ppdName;
+        ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
+        if (ppd != nullptr) {
+            ppd->cache = _ppdCacheCreateWithPPD(ppd);
+            if (ppd->cache == nullptr) {
+                PRINT_HILOGW("PPD cache creation failed, conversion may be incomplete: %{private}s",
+                    ppdFilePath.c_str());
+            }
+            num_options = FillPpdBasicOptions(ppd, jobParams, num_options, options);
+            ppdClose(ppd);
+        } else {
+            PRINT_HILOGE("Open PPD file failed, fallback to PWG: %{private}s", ppdFilePath.c_str());
+            num_options = FillBasicOptions(jobParams, num_options, options);
+        }
+    } else {
+        num_options = FillBasicOptions(jobParams, num_options, options);
+    }
+
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);
@@ -1351,15 +1376,62 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
+int PrintCupsClient::FillPpdBasicOptions(ppd_file_t *ppd, JobParameters *jobParams,
+    int num_options, cups_option_t **options)
+{
+    if (ppd == nullptr || jobParams == nullptr) {
+        return num_options;
+    }
+
+    std::string optName;
+    std::string choiceName;
+
+    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE,
+        jobParams->duplex, optName, choiceName)) {
+        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    } else {
+        PRINT_HILOGW("PPD convert failed: type=%{public}s val=%{public}s",
+            PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex.c_str());
+    }
+
+    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_COLOR_MODE,
+        jobParams->color, optName, choiceName)) {
+        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    } else {
+        PRINT_HILOGW("PPD convert failed: type=%{public}s val=%{public}s",
+            PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color.c_str());
+    }
+
+    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_QUALITY,
+        jobParams->printQuality, optName, choiceName)) {
+        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    } else {
+        PRINT_HILOGW("PPD convert failed: type=%{public}s val=%{public}s",
+            PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality.c_str());
+    }
+
+    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_PAGE_SIZE,
+        jobParams->mediaSize, optName, choiceName)) {
+        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    }
+
+    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_MEDIA_TYPE,
+        jobParams->mediaType, optName, choiceName)) {
+        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    }
+
+    return num_options;
+}
+
 int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
         return num_options;
-    }
-    if (jobParams->numCopies >= 1) {
-        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
-    } else {
-        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
     }
 
     if (!jobParams->duplex.empty()) {
@@ -2877,7 +2949,8 @@ void PrintCupsClient::UpdatePrintScaling(const PrintJob &jobInfo, JobParameters 
     }
 }
 
-JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, const std::string &userName)
+JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, const std::string &userName,
+    const std::string &ppdName)
 {
     JobParameters *params = nullptr;
     if (!jobInfo.HasOption()) {
@@ -2917,6 +2990,7 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
         params->vendorOptions = jobInfo.GetVendorOptions();
     }
     params->serviceAbility = PrintServiceAbility::GetInstance();
+    params->ppdName = ppdName;
     FillPrintSharedDir(params);
     return params;
 }

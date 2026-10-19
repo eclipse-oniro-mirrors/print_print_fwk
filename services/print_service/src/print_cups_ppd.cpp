@@ -18,6 +18,7 @@
 #include "print_log.h"
 #include "print_utils.h"
 #include "print_cups_client.h"
+#include <set>
 
 namespace OHOS::Print {
 using namespace std;
@@ -298,6 +299,44 @@ static const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_
     {PPD_OPT_NAME_EFDUPLEXING, PRINT_PARAM_TYPE_DUPLEX_MODE},
     {PPT_OPT_NAME_KD03DUPLEX, PRINT_PARAM_TYPE_DUPLEX_MODE},
     {PPT_OPT_NAME_COLLATE, PRINT_PARAM_TYPE_DELIVERY_ORDER},
+};
+
+static const std::map<std::string, int> PWG_STRING_TO_ENUM_DUPLEX = {
+    {CUPS_SIDES_ONE_SIDED, DUPLEX_MODE_NONE},
+    {CUPS_SIDES_TWO_SIDED_PORTRAIT, DUPLEX_MODE_LONG_EDGE},
+    {CUPS_SIDES_TWO_SIDED_LANDSCAPE, DUPLEX_MODE_SHORT_EDGE},
+};
+
+static const std::map<std::string, int> PWG_STRING_TO_ENUM_COLOR = {
+    {CUPS_PRINT_COLOR_MODE_MONOCHROME, PRINT_COLOR_MODE_MONOCHROME},
+    {CUPS_PRINT_COLOR_MODE_COLOR, PRINT_COLOR_MODE_COLOR},
+};
+
+static const std::map<std::string, int> PWG_STRING_TO_ENUM_QUALITY = {
+    {CUPS_PRINT_QUALITY_DRAFT, PRINT_QUALITY_DRAFT},
+    {CUPS_PRINT_QUALITY_NORMAL, PRINT_QUALITY_NORMAL},
+    {CUPS_PRINT_QUALITY_HIGH, PRINT_QUALITY_HIGH},
+};
+
+static const std::map<std::string, int> PWG_STRING_TO_ENUM_PAGE_SIZE = {
+    {PAGE_SIZE_ID_ISO_A3, PAGE_ISO_A3},
+    {PAGE_SIZE_ID_ISO_A4, PAGE_ISO_A4},
+    {PAGE_SIZE_ID_ISO_A5, PAGE_ISO_A5},
+    {PAGE_SIZE_ID_JIS_B5, PAGE_JIS_B5},
+    {PAGE_SIZE_ID_ISO_C5, PAGE_ISO_C5},
+    {PAGE_SIZE_ID_ISO_DL, PAGE_ISO_DL},
+    {PAGE_SIZE_ID_NA_LETTER, PAGE_LETTER},
+    {PAGE_SIZE_ID_NA_LEGAL, PAGE_LEGAL},
+    {PAGE_SIZE_ID_NA_INDEX_4X6, PAGE_PHOTO_4X6},
+    {PAGE_SIZE_ID_NA_INDEX_5X7, PAGE_PHOTO_5X7},
+    {PAGE_SIZE_ID_NA_TABLOID, PAGE_B_TABLOID},
+};
+
+static const std::map<std::string, const std::map<std::string, int> *> PWG_TYPE_TO_ENUM_MAP = {
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, &PWG_STRING_TO_ENUM_DUPLEX},
+    {PRINT_PARAM_TYPE_COLOR_MODE, &PWG_STRING_TO_ENUM_COLOR},
+    {PRINT_PARAM_TYPE_QUALITY, &PWG_STRING_TO_ENUM_QUALITY},
+    {PRINT_PARAM_TYPE_PAGE_SIZE, &PWG_STRING_TO_ENUM_PAGE_SIZE},
 };
 
 const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char* choice, const char* defaultText)
@@ -690,6 +729,111 @@ void ParseQualityAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
 }
 
+void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
+{
+    Json::Value ppdOptionMap;
+    Json::Value ppdOptionTextMap;
+    Json::Value ppdDefaultMap;
+
+    std::set<std::string> pwgTypes;
+    for (const auto &entry : CUPS_PPD_FIELD_MMAP) {
+        pwgTypes.insert(entry.first);
+    }
+
+    for (const auto &pwgType : pwgTypes) {
+        auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
+        ppd_option_t *opt = nullptr;
+        const StdStringMultiMap *choiceMmap = nullptr;
+        for (auto it = range.first; it != range.second; ++it) {
+            opt = ppdFindOption(ppd, it->second.name.c_str());
+            if (opt != nullptr) {
+                choiceMmap = &it->second.choiceMmap;
+                break;
+            }
+        }
+        if (opt == nullptr || choiceMmap == nullptr) {
+            continue;
+        }
+
+        std::map<std::string, std::string> reverseChoiceMap;
+        for (const auto &entry : *choiceMmap) {
+            reverseChoiceMap[entry.second] = entry.first;
+        }
+
+        Json::Value pwgValues;
+        Json::Value textDefault;
+        Json::Value textZhCN;
+
+        const std::map<std::string, int> *enumMap = nullptr;
+        auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
+        if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
+            enumMap = enumMapIt->second;
+        }
+
+        for (int i = 0; i < opt->num_choices; i++) {
+            auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
+            if (revIt == reverseChoiceMap.end()) {
+                continue;
+            }
+            std::string pwgValue = revIt->second;
+
+            std::string jsonKey;
+            if (enumMap != nullptr) {
+                auto enumIt = enumMap->find(pwgValue);
+                if (enumIt == enumMap->end()) {
+                    continue;
+                }
+                jsonKey = std::to_string(enumIt->second);
+            } else {
+                jsonKey = pwgValue;
+            }
+
+            pwgValues.append(jsonKey);
+            textDefault[jsonKey] = opt->choices[i].text;
+            textZhCN[jsonKey] = GetCNFromPpdAttr(ppd,
+                opt->keyword, opt->choices[i].choice, opt->choices[i].text);
+        }
+
+        if (pwgValues.empty()) {
+            continue;
+        }
+
+        ppdOptionMap[pwgType] = pwgValues;
+        Json::Value textMap;
+        textMap["default"] = textDefault;
+        textMap["zh_CN"] = textZhCN;
+        ppdOptionTextMap[pwgType] = textMap;
+
+        if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
+            auto defIt = reverseChoiceMap.find(opt->defchoice);
+            if (defIt != reverseChoiceMap.end()) {
+                std::string defPwgValue = defIt->second;
+                std::string defKey;
+                if (enumMap != nullptr) {
+                    auto defEnumIt = enumMap->find(defPwgValue);
+                    if (defEnumIt != enumMap->end()) {
+                        defKey = std::to_string(defEnumIt->second);
+                    }
+                } else {
+                    defKey = defPwgValue;
+                }
+                if (!defKey.empty()) {
+                    ppdDefaultMap[pwgType] = defKey;
+                }
+            }
+        }
+    }
+
+    printerCaps.SetPrinterAttrNameAndValue("ppdOptionMap",
+        PrintJsonUtil::WriteString(ppdOptionMap).c_str());
+    printerCaps.SetPrinterAttrNameAndValue("ppdOptionTextMap",
+        PrintJsonUtil::WriteString(ppdOptionTextMap).c_str());
+    printerCaps.SetPrinterAttrNameAndValue("ppdDefaultMap",
+        PrintJsonUtil::WriteString(ppdDefaultMap).c_str());
+    printerCaps.SetPrinterAttrNameAndValue("ppdDriverType", "ppd");
+    printerCaps.SetPrinterAttrNameAndValue("ppdName", ppdName.c_str());
+}
+
 void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     Json::Value options;
@@ -709,7 +853,21 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
         options["manufacturer"] = "others";
     }
 
+    const char *ppdDriverType = printerCaps.GetPrinterAttrValue("ppdDriverType");
+    if (ppdDriverType != nullptr && ppdDriverType[0] != '\0') {
+        options["ppdDriverType"] = ppdDriverType;
+        options["ppdName"] = printerCaps.GetPrinterAttrValue("ppdName");
+        options["ppdOptionMap"] = printerCaps.GetPrinterAttrValue("ppdOptionMap");
+        options["ppdOptionTextMap"] = printerCaps.GetPrinterAttrValue("ppdOptionTextMap");
+        options["ppdDefaultMap"] = printerCaps.GetPrinterAttrValue("ppdDefaultMap");
+    }
+
     Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
+    cupsOptionsJson.removeMember("ppdDriverType");
+    cupsOptionsJson.removeMember("ppdName");
+    cupsOptionsJson.removeMember("ppdOptionMap");
+    cupsOptionsJson.removeMember("ppdOptionTextMap");
+    cupsOptionsJson.removeMember("ppdDefaultMap");
     options["cupsOptions"] = cupsOptionsJson;
 
     std::string optionStr = PrintJsonUtil::WriteString(options);
@@ -717,13 +875,14 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     printerCaps.SetOption(optionStr);
 }
 
-void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
 {
     ParseColorModeAttributesFromPPD(ppd, printerCaps);
     ParseDuplexModeAttributesFromPPD(ppd, printerCaps);
     ParsePageSizeAttributesFromPPD(ppd, printerCaps);
     ParseQualityAttributesFromPPD(ppd, printerCaps);
     ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
+    BuildPpdOptionMap(ppd, printerCaps, ppdName);
     SetOptionAttributeFromPPD(ppd, printerCaps);
 }
 
@@ -755,7 +914,7 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
     ParseVendorAbilityFromPPD(ppd, printerCaps);
     ValidateAndClearVendorAbility(printerCaps, ppdName);
     GetAdvanceOptionsFromPPD(ppd, printerCaps);
-    ParsePrinterAttributesFromPPD(ppd, printerCaps);
+    ParsePrinterAttributesFromPPD(ppd, printerCaps, ppdName);
 
     ppdClose(ppd);
     return E_PRINT_NONE;
