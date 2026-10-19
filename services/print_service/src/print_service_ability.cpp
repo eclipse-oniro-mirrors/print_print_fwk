@@ -5979,11 +5979,16 @@ void PrintServiceAbility::UpdateIsEnterprise()
     int32_t localId = -1;
     AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     lastUserId_ = localId;
-    AccountSA::DomainAccountInfo domainInfo;
-    auto ret = AccountSA::OsAccountManager::GetOsAccountDomainInfo(localId, domainInfo);
-    PRINT_HILOGI("GetOsAccountDomainInfo ret = %{public}d", ret);
-    if (ret == 0 && !domainInfo.accountName_.empty()) {
-        isEnterprise_ = true;
+    if (!enterpriseLoader_.Load()) {
+        PRINT_HILOGE("PrintFwkEnterprise load failed");
+        isEnterprise_ = false;
+        return;
+    }
+    bool status = false;
+    int32_t ret = enterpriseLoader_.IsEnterpriseWorkspace(localId, status);
+    PRINT_HILOGI("IsEnterpriseWorkspace ret = %{public}d", ret);
+    if (ret == PRINT_FWK_ENTERPRISE_OK) {
+        isEnterprise_ = status;
     } else {
         isEnterprise_ = false;
     }

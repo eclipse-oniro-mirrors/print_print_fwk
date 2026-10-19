@@ -175,10 +175,7 @@ void TestAdapterRequestPrinterList(const uint8_t *data, size_t size, FuzzedDataP
 void TestAdapterSetOnServiceDiedCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     auto& adapter = RemoteServiceAdapter::GetInstance();
-    bool callbackCalled = false;
-    adapter.SetOnServiceDiedCallback([&callbackCalled]() {
-        callbackCalled = true;
-    });
+    adapter.SetOnServiceDiedCallback([]() {});
 }
 
 void TestAdapterOnRemoteServiceDied(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

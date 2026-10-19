@@ -52,6 +52,9 @@
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
 #include "print_caller_app_monitor.h"
+#ifdef ENTERPRISE_ENABLE
+#include "print_fwk_enterprise_loader.h"
+#endif // ENTERPRISE_ENABLE
 #ifdef EDM_PRINT_POLICY_ENABLE
 #include "edm_print_policy_manager.h"
 #endif // EDM_PRINT_POLICY_ENABLE
@@ -464,6 +467,7 @@ private:
 private:
     std::atomic<bool> isEnterprise_ = false;
     std::atomic<int32_t> lastUserId_ = -1;
+    PrintFwkEnterpriseLoader enterpriseLoader_;
 
 public:
     void UpdateIsEnterprise();

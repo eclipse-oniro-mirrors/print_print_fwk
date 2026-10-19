@@ -165,6 +165,99 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEna
 #endif  // ENTERPRISE_ENABLE
 }
 
+/**
+ * @tc.name: UpdateIsEnterprise_WhenNotEnterpriseEnable_ShouldReturnEarly
+ * @tc.desc: Verify UpdateIsEnterprise returns early when IsEnterpriseEnable is false.
+ * @tc.type: FUNC UpdateIsEnterprise
+ * @tc.require: ENTERPRISE_SPACE_PARAM not set
+ */
+HWTEST_F(PrintServiceAbilityTest, UpdateIsEnterprise_WhenNotEnterpriseEnable_ShouldReturnEarly, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = PrintServiceAbilityTest::CreateService();
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+    service->isEnterprise_ = true;
+    service->UpdateIsEnterprise();
+    EXPECT_TRUE(service->isEnterprise_);
+#endif  // ENTERPRISE_ENABLE
+}
+
+/**
+ * @tc.name: UpdateIsEnterprise_WhenEnterpriseEnable_SpaceMgrUnavailable_ShouldSetFalse
+ * @tc.desc: Verify UpdateIsEnterprise sets isEnterprise_ to false when SpaceMgr call fails.
+ * @tc.type: FUNC UpdateIsEnterprise
+ * @tc.require: SpaceMgr service unavailable in test env, ret != ERR_OK
+ */
+HWTEST_F(PrintServiceAbilityTest, UpdateIsEnterprise_WhenEnterpriseEnable_SpaceMgrUnavailable_ShouldSetFalse,
+    TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = PrintServiceAbilityTest::CreateService();
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
+    service->isEnterprise_ = true;
+    service->UpdateIsEnterprise();
+    EXPECT_FALSE(service->isEnterprise_);
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+#endif  // ENTERPRISE_ENABLE
+}
+
+/**
+ * @tc.name: IsEnterprise_WhenIsEnterpriseTrue_ShouldReturnTrue
+ * @tc.desc: Verify IsEnterprise returns true when isEnterprise_ is true.
+ * @tc.type: FUNC IsEnterprise
+ */
+HWTEST_F(PrintServiceAbilityTest, IsEnterprise_WhenIsEnterpriseTrue_ShouldReturnTrue, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = PrintServiceAbilityTest::CreateService();
+    service->isEnterprise_ = true;
+    EXPECT_TRUE(service->IsEnterprise());
+#endif  // ENTERPRISE_ENABLE
+}
+
+/**
+ * @tc.name: IsEnterprise_WhenIsEnterpriseFalse_ShouldReturnFalse
+ * @tc.desc: Verify IsEnterprise returns false when isEnterprise_ is false.
+ * @tc.type: FUNC IsEnterprise
+ */
+HWTEST_F(PrintServiceAbilityTest, IsEnterprise_WhenIsEnterpriseFalse_ShouldReturnFalse, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = PrintServiceAbilityTest::CreateService();
+    service->isEnterprise_ = false;
+    EXPECT_FALSE(service->IsEnterprise());
+#endif  // ENTERPRISE_ENABLE
+}
+
+/**
+ * @tc.name: IsEnterpriseEnable_WhenParamTrue_ShouldReturnTrue
+ * @tc.desc: Verify IsEnterpriseEnable returns true when parameter is set to true.
+ * @tc.type: FUNC IsEnterpriseEnable
+ */
+HWTEST_F(PrintServiceAbilityTest, IsEnterpriseEnable_WhenParamTrue_ShouldReturnTrue, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = PrintServiceAbilityTest::CreateService();
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
+    EXPECT_TRUE(service->IsEnterpriseEnable());
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+#endif  // ENTERPRISE_ENABLE
+}
+
+/**
+ * @tc.name: IsEnterpriseEnable_WhenParamEmpty_ShouldReturnFalse
+ * @tc.desc: Verify IsEnterpriseEnable returns false when parameter is not set.
+ * @tc.type: FUNC IsEnterpriseEnable
+ */
+HWTEST_F(PrintServiceAbilityTest, IsEnterpriseEnable_WhenParamEmpty_ShouldReturnFalse, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = PrintServiceAbilityTest::CreateService();
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+    EXPECT_FALSE(service->IsEnterpriseEnable());
+#endif  // ENTERPRISE_ENABLE
+}
+
 HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
 {
     PrintServiceMockPermission::MockPermission();
