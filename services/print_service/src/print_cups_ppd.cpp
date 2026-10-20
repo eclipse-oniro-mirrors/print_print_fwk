@@ -742,45 +742,33 @@ static std::string ResolveTextKey(const std::string &pwgValue,
     return std::to_string(it->second);
 }
 
-static void BuildPwgChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
+static void BuildChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
     const std::map<std::string, std::string> &reverseChoiceMap,
     const std::map<std::string, int> *enumMap,
     Json::Value &textDefault, Json::Value &textZhCN, Json::Value &ppdChoices)
 {
+    bool isStandalone = reverseChoiceMap.empty();
     for (int i = 0; i < opt->num_choices; i++) {
-        auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
-        if (revIt == reverseChoiceMap.end()) {
-            continue;
-        }
-        std::string pwgValue = revIt->second;
-        std::string textKey = ResolveTextKey(pwgValue, enumMap);
-        if (textKey.empty()) {
-            continue;
+        std::string textKey;
+        std::string pwgValue;
+        if (isStandalone) {
+            textKey = opt->choices[i].choice;
+        } else {
+            auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
+            if (revIt == reverseChoiceMap.end()) {
+                continue;
+            }
+            pwgValue = revIt->second;
+            textKey = ResolveTextKey(pwgValue, enumMap);
+            if (textKey.empty()) {
+                continue;
+            }
+            ppdChoices[pwgValue] = opt->choices[i].choice;
         }
         textDefault[textKey] = opt->choices[i].text;
         textZhCN[textKey] = GetCNFromPpdAttr(ppd,
             opt->keyword, opt->choices[i].choice, opt->choices[i].text);
-        ppdChoices[pwgValue] = opt->choices[i].choice;
     }
-}
-
-static void BuildStandaloneTextEntry(ppd_file_t *ppd, ppd_option_t *opt,
-    Json::Value &ppdOptionTextMap)
-{
-    Json::Value textDefault;
-    Json::Value textZhCN;
-    for (int i = 0; i < opt->num_choices; i++) {
-        textDefault[opt->choices[i].choice] = opt->choices[i].text;
-        textZhCN[opt->choices[i].choice] = GetCNFromPpdAttr(ppd,
-            opt->keyword, opt->choices[i].choice, opt->choices[i].text);
-    }
-    if (textDefault.empty()) {
-        return;
-    }
-    Json::Value textMap;
-    textMap["default"] = textDefault;
-    textMap["zh_CN"] = textZhCN;
-    ppdOptionTextMap[opt->keyword] = textMap;
 }
 
 static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
@@ -817,7 +805,7 @@ static void ProcessPwgTypeEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value textDefault;
     Json::Value textZhCN;
     Json::Value ppdChoices;
-    BuildPwgChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
+    BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
         textDefault, textZhCN, ppdChoices);
     if (!ppdChoices.empty()) {
         Json::Value optionEntry;
@@ -848,9 +836,21 @@ void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &
     };
     for (const auto &optName : standaloneOptions) {
         ppd_option_t *opt = ppdFindOption(ppd, optName.c_str());
-        if (opt != nullptr) {
-            BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap);
+        if (opt == nullptr) {
+            continue;
         }
+        Json::Value textDefault;
+        Json::Value textZhCN;
+        Json::Value ppdChoices;
+        std::map<std::string, std::string> emptyMap;
+        BuildChoiceEntries(ppd, opt, emptyMap, nullptr, textDefault, textZhCN, ppdChoices);
+        if (!textDefault.empty()) {
+            Json::Value textMap;
+            textMap["default"] = textDefault;
+            textMap["zh_CN"] = textZhCN;
+            ppdOptionTextMap[opt->keyword] = textMap;
+        }
+    }
     }
 }
 
