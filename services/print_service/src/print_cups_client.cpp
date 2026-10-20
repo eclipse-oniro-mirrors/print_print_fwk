@@ -1321,10 +1321,7 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     if (!jobParams->bsuniOutputFormat.empty()) {
         num_options = cupsAddOption("bsuniOutputFormat", jobParams->bsuniOutputFormat.c_str(), num_options, options);
     }
-    if (jobParams->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos &&
-        jobParams->isBorderless) {
-        num_options = FillBorderlessOptions(jobParams, num_options, options);
-    }
+    num_options = FillBorderlessOptions(jobParams, num_options, options);
     num_options = FillAdvancedOptions(jobParams, num_options, options);
     num_options = FillVendorOptions(jobParams, num_options, options);
     num_options = FillTextSmoothOption(num_options, options);
