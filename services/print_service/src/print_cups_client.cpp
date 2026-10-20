@@ -1314,11 +1314,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     num_options = FillBasicOptions(jobParams, num_options, options);
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
-    if (jobParams->isReverse) {
-        num_options = cupsAddOption("OutputOrder", "Reverse", num_options, options);
-    } else {
-        num_options = cupsAddOption("OutputOrder", "Normal", num_options, options);
-    }
     std::string nic;
     if (IsIpConflict(jobParams->printerId, nic)) {
         num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
@@ -1409,6 +1404,10 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
     std::string collatePwg = jobParams->isCollate ? PRINT_PARAM_VAL_TRUE : PRINT_PARAM_VAL_FALSE;
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_DELIVERY_ORDER, collatePwg, num_options, options)) {
         num_options = cupsAddOption("Collate", jobParams->isCollate ? "true" : "false", num_options, options);
+    }
+    std::string orderPwg = jobParams->isReverse ? "Reverse" : "Normal";
+    if (!TryAddPpdOption(optionMap, "OutputOrder", orderPwg, num_options, options)) {
+        num_options = cupsAddOption("OutputOrder", orderPwg.c_str(), num_options, options);
     }
     return num_options;
 }
