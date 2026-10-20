@@ -284,6 +284,8 @@ static const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIE
     {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEXING, MMAP_CUPS_CHOICE_DUPLEX}},
     {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_KD03DUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
     {PRINT_PARAM_TYPE_DELIVERY_ORDER, {PPT_OPT_NAME_COLLATE, MMAP_CUPS_CHOICE_COLLATE}},
+    {"orientation-requested", {"orientation-requested", {}}},
+    {"OutputOrder", {"OutputOrder", {}}},
 };
 
 static const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
@@ -786,28 +788,22 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
 }
 
 static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
-    ppd_option_t *preFoundOpt,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
-    ppd_option_t *opt = preFoundOpt;
     const StdStringMultiMap *choiceMmap = nullptr;
-    std::map<std::string, std::string> reverseChoiceMap;
-    const std::map<std::string, int> *enumMap = nullptr;
-
-    if (preFoundOpt == nullptr) {
-        opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
-        if (opt == nullptr || choiceMmap == nullptr) {
-            return;
-        }
-        auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
-        if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
-            enumMap = enumMapIt->second;
-        }
-        for (const auto &entry : *choiceMmap) {
-            reverseChoiceMap[entry.second] = entry.first;
-        }
+    ppd_option_t *opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
+    if (opt == nullptr || choiceMmap == nullptr) {
+        return;
     }
-
+    const std::map<std::string, int> *enumMap = nullptr;
+    auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
+    if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
+        enumMap = enumMapIt->second;
+    }
+    std::map<std::string, std::string> reverseChoiceMap;
+    for (const auto &entry : *choiceMmap) {
+        reverseChoiceMap[entry.second] = entry.first;
+    }
     Json::Value textDefault;
     Json::Value textZhCN;
     Json::Value ppdChoices;
@@ -834,17 +830,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &
         pwgTypes.insert(entry.first);
     }
     for (const auto &pwgType : pwgTypes) {
-        ProcessOptionEntry(ppd, pwgType, nullptr, ppdOptionMap, ppdOptionTextMap);
-    }
-
-    static const std::vector<std::string> standaloneOptions = {
-        "orientation-requested", "OutputOrder"
-    };
-    for (const auto &optName : standaloneOptions) {
-        ppd_option_t *opt = ppdFindOption(ppd, optName.c_str());
-        if (opt != nullptr) {
-            ProcessOptionEntry(ppd, "", opt, ppdOptionMap, ppdOptionTextMap);
-        }
+        ProcessOptionEntry(ppd, pwgType, ppdOptionMap, ppdOptionTextMap);
     }
 }
 }
