@@ -765,7 +765,7 @@ static void BuildPwgChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
 }
 
 static void BuildStandaloneTextEntry(ppd_file_t *ppd, ppd_option_t *opt,
-    Json::Value &ppdOptionTextMap, Json::Value &ppdDefaultMap)
+    Json::Value &ppdOptionTextMap)
 {
     Json::Value textDefault;
     Json::Value textZhCN;
@@ -781,9 +781,6 @@ static void BuildStandaloneTextEntry(ppd_file_t *ppd, ppd_option_t *opt,
     textMap["default"] = textDefault;
     textMap["zh_CN"] = textZhCN;
     ppdOptionTextMap[opt->keyword] = textMap;
-    if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
-        ppdDefaultMap[opt->keyword] = opt->defchoice;
-    }
 }
 
 static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
@@ -801,7 +798,7 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
 }
 
 static void ProcessPwgTypeEntry(ppd_file_t *ppd, const std::string &pwgType,
-    Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap, Json::Value &ppdDefaultMap)
+    Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
     const StdStringMultiMap *choiceMmap = nullptr;
     ppd_option_t *opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
@@ -834,29 +831,20 @@ static void ProcessPwgTypeEntry(ppd_file_t *ppd, const std::string &pwgType,
         textMap["zh_CN"] = textZhCN;
         ppdOptionTextMap[opt->keyword] = textMap;
     }
-    if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
-        auto defIt = reverseChoiceMap.find(opt->defchoice);
-        if (defIt != reverseChoiceMap.end()) {
-            std::string defKey = ResolveTextKey(defIt->second, enumMap);
-            if (!defKey.empty()) {
-                ppdDefaultMap[opt->keyword] = defKey;
-            }
-        }
-    }
 }
 
 void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
 {
+    (void)ppdName;
     Json::Value ppdOptionMap;
     Json::Value ppdOptionTextMap;
-    Json::Value ppdDefaultMap;
 
     std::set<std::string> pwgTypes;
     for (const auto &entry : CUPS_PPD_FIELD_MMAP) {
         pwgTypes.insert(entry.first);
     }
     for (const auto &pwgType : pwgTypes) {
-        ProcessPwgTypeEntry(ppd, pwgType, ppdOptionMap, ppdOptionTextMap, ppdDefaultMap);
+        ProcessPwgTypeEntry(ppd, pwgType, ppdOptionMap, ppdOptionTextMap);
     }
 
     static const std::vector<std::string> standaloneOptions = {
@@ -865,7 +853,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
     for (const auto &optName : standaloneOptions) {
         ppd_option_t *opt = ppdFindOption(ppd, optName.c_str());
         if (opt != nullptr) {
-            BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap, ppdDefaultMap);
+            BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap);
         }
     }
 
@@ -873,10 +861,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
         PrintJsonUtil::WriteString(ppdOptionMap).c_str());
     printerCaps.SetPrinterAttrNameAndValue("ppdOptionTextMap",
         PrintJsonUtil::WriteString(ppdOptionTextMap).c_str());
-    printerCaps.SetPrinterAttrNameAndValue("ppdDefaultMap",
-        PrintJsonUtil::WriteString(ppdDefaultMap).c_str());
     printerCaps.SetPrinterAttrNameAndValue("ppdDriverType", "ppd");
-    printerCaps.SetPrinterAttrNameAndValue("ppdName", ppdName.c_str());
 }
 
 void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
@@ -901,18 +886,14 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     const char *ppdDriverType = printerCaps.GetPrinterAttrValue("ppdDriverType");
     if (ppdDriverType != nullptr && ppdDriverType[0] != '\0') {
         options["ppdDriverType"] = ppdDriverType;
-        options["ppdName"] = printerCaps.GetPrinterAttrValue("ppdName");
         options["ppdOptionMap"] = printerCaps.GetPrinterAttrValue("ppdOptionMap");
         options["ppdOptionTextMap"] = printerCaps.GetPrinterAttrValue("ppdOptionTextMap");
-        options["ppdDefaultMap"] = printerCaps.GetPrinterAttrValue("ppdDefaultMap");
     }
 
     Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
     cupsOptionsJson.removeMember("ppdDriverType");
-    cupsOptionsJson.removeMember("ppdName");
     cupsOptionsJson.removeMember("ppdOptionMap");
     cupsOptionsJson.removeMember("ppdOptionTextMap");
-    cupsOptionsJson.removeMember("ppdDefaultMap");
     options["cupsOptions"] = cupsOptionsJson;
 
     std::string optionStr = PrintJsonUtil::WriteString(options);
