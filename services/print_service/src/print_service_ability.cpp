@@ -5359,7 +5359,10 @@ int32_t PrintServiceAbility::StartCupsPrintJob(const std::shared_ptr<PrintJob> &
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("GetPpdNameByPrinterId failed! ret=%{public}d", ret);
     }
-    DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(*printJob, GetCallerUserName(), ppdName);
+    std::string ppdOptionMap;
+    GetPpdOptionMapByPrinterId(printJob->GetPrinterId(), ppdOptionMap);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(
+        *printJob, GetCallerUserName(), ppdName, ppdOptionMap);
     CallStatusBar();
     KiaInterceptorManager::GetInstance().RemoveCallerAppId(printJob->GetJobId());
     PRINT_HILOGI("StartNativePrintJob end.");
@@ -6455,6 +6458,26 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     if (!QueryPPDInformation(makeModel, ppdName)) {
         PRINT_HILOGE("Query printer ppd info failed! Id=%{public}s", printerId.c_str());
         return E_PRINT_INVALID_PRINTER;
+    }
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::GetPpdOptionMapByPrinterId(const std::string& printerId,
+    std::string& ppdOptionMap)
+{
+    PrinterInfo printerInfo;
+    int ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryPrinterInfo failed! Id=%{public}s", printerId.c_str());
+        return ret;
+    }
+    std::string optionStr = printerInfo.GetOption();
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(optionStr, optionJson) || !optionJson.isObject()) {
+        return E_PRINT_INVALID_PRINTER;
+    }
+    if (optionJson.isMember("ppdOptionMap") && optionJson["ppdOptionMap"].isString()) {
+        ppdOptionMap = optionJson["ppdOptionMap"].asString();
     }
     return E_PRINT_NONE;
 }
