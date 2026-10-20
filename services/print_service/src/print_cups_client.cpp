@@ -1215,6 +1215,38 @@ void PrintCupsClient::JobSentCallback()
     StartNextJob();
 }
 
+bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
+    int &num_options, cups_option_t **options)
+{
+    if (jobParams->ppdOptionMap.empty()) {
+        return false;
+    }
+    Json::Value optionMap;
+    if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap)) {
+        return false;
+    }
+    if (!optionMap.isMember(PRINT_PARAM_TYPE_PAGE_SIZE) ||
+        !optionMap.isMember(PRINT_PARAM_TYPE_MEDIA_TYPE)) {
+        return false;
+    }
+    const Json::Value &sizeEntry = optionMap[PRINT_PARAM_TYPE_PAGE_SIZE];
+    const Json::Value &typeEntry = optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE];
+    std::string mediaSize = jobParams->mediaSize.empty() ? CUPS_MEDIA_A4 : jobParams->mediaSize;
+    std::string mediaType = jobParams->mediaType.empty() ? CUPS_MEDIA_TYPE_PLAIN : jobParams->mediaType;
+    if (!sizeEntry["choices"].isMember(mediaSize) ||
+        !typeEntry["choices"].isMember(mediaType)) {
+        return false;
+    }
+    num_options = cupsAddOption(sizeEntry["optionName"].asString().c_str(),
+        sizeEntry["choices"][mediaSize].asString().c_str(), num_options, options);
+    num_options = cupsAddOption(typeEntry["optionName"].asString().c_str(),
+        typeEntry["choices"][mediaType].asString().c_str(), num_options, options);
+    PRINT_HILOGI("PPD media: PageSize=%{public}s, MediaType=%{public}s",
+        sizeEntry["choices"][mediaSize].asString().c_str(),
+        typeEntry["choices"][mediaType].asString().c_str());
+    return true;
+}
+
 int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGD("not borderless job options");
@@ -1223,6 +1255,23 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     } else {
         num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     }
+    if (TryAddPpdMediaOptions(jobParams, num_options, options)) {
+        return num_options;
+    }
+    if (!jobParams->mediaType.empty()) {
+        num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
+    }
+    std::string mediaValue = jobParams->mediaSize.empty() ? CUPS_MEDIA_A4 : jobParams->mediaSize;
+    mediaValue += "," + (jobParams->mediaType.empty() ? CUPS_MEDIA_TYPE_PLAIN : jobParams->mediaType);
+    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
+    if (!inputSlot.empty()) {
+        mediaValue += "," + inputSlot;
+    }
+    num_options = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), num_options, options);
+    return num_options;
+}
     if (!jobParams->mediaType.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {
@@ -1391,12 +1440,6 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality, num_options, options)) {
         num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL,
             num_options, options);
-    }
-    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_PAGE_SIZE, jobParams->mediaSize, num_options, options)) {
-        num_options = AddPwgOption(CUPS_MEDIA, jobParams->mediaSize, CUPS_MEDIA_A4, num_options, options);
-    }
-    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_MEDIA_TYPE, jobParams->mediaType, num_options, options)) {
-        num_options = AddPwgOption(CUPS_MEDIA_TYPE, jobParams->mediaType, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
     }
     std::string collatePwg = jobParams->isCollate ? PRINT_PARAM_VAL_TRUE : PRINT_PARAM_VAL_FALSE;
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_DELIVERY_ORDER, collatePwg, num_options, options)) {
