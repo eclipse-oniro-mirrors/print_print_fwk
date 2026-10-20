@@ -1317,21 +1317,8 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
         num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
     }
 
-    if (!jobParams->ppdName.empty()) {
-        std::string ppdFilePath = GetCurCupsModelDir() + jobParams->ppdName;
-        ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
-        if (ppd != nullptr) {
-            ppd->cache = _ppdCacheCreateWithPPD(ppd);
-            if (ppd->cache == nullptr) {
-                PRINT_HILOGW("PPD cache creation failed, conversion may be incomplete: %{private}s",
-                    ppdFilePath.c_str());
-            }
-            num_options = FillPpdBasicOptions(ppd, jobParams, num_options, options);
-            ppdClose(ppd);
-        } else {
-            PRINT_HILOGE("Open PPD file failed, fallback to PWG: %{private}s", ppdFilePath.c_str());
-            num_options = FillBasicOptions(jobParams, num_options, options);
-        }
+    if (!jobParams->ppdOptionMap.empty()) {
+        num_options = FillPpdBasicOptions(jobParams->ppdOptionMap, jobParams, num_options, options);
     } else {
         num_options = FillBasicOptions(jobParams, num_options, options);
     }
@@ -1376,55 +1363,35 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
-int PrintCupsClient::FillPpdBasicOptions(ppd_file_t *ppd, JobParameters *jobParams,
+int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, JobParameters *jobParams,
     int num_options, cups_option_t **options)
 {
-    if (ppd == nullptr || jobParams == nullptr) {
+    if (ppdOptionMapStr.empty() || jobParams == nullptr) {
+        return num_options;
+    }
+    Json::Value optionMap;
+    if (!PrintJsonUtil::Parse(ppdOptionMapStr, optionMap)) {
+        PRINT_HILOGE("Parse ppdOptionMap failed");
         return num_options;
     }
 
-    std::string optName;
-    std::string choiceName;
+    auto addPpdOption = [&](const std::string &pwgType, const std::string &pwgVal) {
+        if (pwgVal.empty() || !optionMap.isMember(pwgType)) {
+            return;
+        }
+        const Json::Value &entry = optionMap[pwgType];
+        const Json::Value &choices = entry["choices"];
+        if (choices.isMember(pwgVal)) {
+            std::string optName = entry["optionName"].asString();
+            std::string choiceName = choices[pwgVal].asString();
+            num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+            PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+        }
+    };
 
-    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_DUPLEX_MODE,
-        jobParams->duplex, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
-    } else {
-        PRINT_HILOGW("PPD convert failed: type=%{public}s val=%{public}s",
-            PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex.c_str());
-    }
-
-    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_COLOR_MODE,
-        jobParams->color, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
-    } else {
-        PRINT_HILOGW("PPD convert failed: type=%{public}s val=%{public}s",
-            PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color.c_str());
-    }
-
-    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_QUALITY,
-        jobParams->printQuality, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
-    } else {
-        PRINT_HILOGW("PPD convert failed: type=%{public}s val=%{public}s",
-            PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality.c_str());
-    }
-
-    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_PAGE_SIZE,
-        jobParams->mediaSize, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
-    }
-
-    if (ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_MEDIA_TYPE,
-        jobParams->mediaType, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-        PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
-    }
-
+    addPpdOption(PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex);
+    addPpdOption(PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color);
+    addPpdOption(PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality);
     return num_options;
 }
 
@@ -2871,6 +2838,10 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value &optionJson, JobPar
 {
     if (optionJson.isMember("cupsOptions") && optionJson["cupsOptions"].isString()) {
         params->printerAttrsOptionCupsOption = optionJson["cupsOptions"].asString();
+    }
+
+    if (optionJson.isMember("ppdOptionMap") && optionJson["ppdOptionMap"].isString()) {
+        params->ppdOptionMap = optionJson["ppdOptionMap"].asString();
     }
 
     if (PrintJsonUtil::IsMember(optionJson, "printQuality")) {

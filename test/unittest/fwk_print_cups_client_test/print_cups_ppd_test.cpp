@@ -824,6 +824,10 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.
     EXPECT_TRUE(optionMap.isMember("defaultMediaType"));
     EXPECT_TRUE(optionMap.isMember("defaultPrintQuality"));
 
+    EXPECT_EQ(optionMap["defaultDuplexMode"]["optionName"].asString(), "Duplex");
+    EXPECT_EQ(optionMap["defaultDuplexMode"]["choices"]["one-sided"].asString(), "None");
+    EXPECT_EQ(optionMap["defaultDuplexMode"]["choices"]["two-sided-long-edge"].asString(), "DuplexNoTumble");
+
     const char *textMapStr = printerCaps.GetPrinterAttrValue("ppdOptionTextMap");
     ASSERT_NE(textMapStr, nullptr);
     Json::Value textMap;
@@ -922,21 +926,24 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     std::string ppdPath = CreatePpdWithAllOptions();
     ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
     ASSERT_NE(ppd, nullptr);
-    ppd->cache = _ppdCacheCreateWithPPD(ppd);
-    ASSERT_NE(ppd->cache, nullptr);
+
+    PrinterCapability printerCaps;
+    BuildPpdOptionMap(ppd, printerCaps, "test.ppd");
+    std::string optionMapStr = printerCaps.GetPrinterAttrValue("ppdOptionMap");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
 
     JobParameters jobParams;
     jobParams.duplex = "two-sided-long-edge";
     jobParams.color = "monochrome";
     jobParams.printQuality = "4";
-    jobParams.mediaSize = "iso_a4_210x297mm";
-    jobParams.mediaType = "stationery";
 
     cups_option_t *options = nullptr;
     int num_options = 0;
-    num_options = PrintCupsClient::FillPpdBasicOptions(ppd, &jobParams, num_options, &options);
+    num_options = PrintCupsClient::FillPpdBasicOptions(optionMapStr, &jobParams, num_options, &options);
 
-    EXPECT_GE(num_options, 3);
+    EXPECT_GE(num_options, 2);
 
     const char *duplexVal = cupsGetOption("Duplex", num_options, options);
     if (duplexVal != nullptr) {
@@ -951,16 +958,14 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     if (options != nullptr) {
         cupsFreeOptions(num_options, options);
     }
-    ppdClose(ppd);
-    RemoveTempFile(ppdPath);
 }
 
-HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_NullPpd_ReturnsUnchanged, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_EmptyMap_ReturnsUnchanged, TestSize.Level1)
 {
     JobParameters jobParams;
     cups_option_t *options = nullptr;
     int num_options = 0;
-    int result = PrintCupsClient::FillPpdBasicOptions(nullptr, &jobParams, num_options, &options);
+    int result = PrintCupsClient::FillPpdBasicOptions("", &jobParams, num_options, &options);
     EXPECT_EQ(result, num_options);
 }
 

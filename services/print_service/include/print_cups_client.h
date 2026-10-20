@@ -60,6 +60,7 @@ struct JobParameters {
     bool isReverse = false;
     bool isCollate = true;
     std::string ppdName;
+    std::string ppdOptionMap;
     std::string bsuniOutputFormat;
     std::string printSharedDir;
 
@@ -217,7 +218,8 @@ private:
     static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillPpdBasicOptions(ppd_file_t *ppd, JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillPpdBasicOptions(const std::string &ppdOptionMap, JobParameters *jobParams,
+        int num_options, cups_option_t **options);
     static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillTextSmoothOption(int num_options, cups_option_t **options);

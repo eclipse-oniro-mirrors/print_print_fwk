@@ -4984,7 +4984,7 @@ HWTEST_F(PrintCupsClientTest, FillBasicOptions_EmptyValues_UsesDefaults, TestSiz
     }
 }
 
-HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdName_UsesPwgFallback, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
     JobParameters jobParams;
@@ -4992,7 +4992,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdName_UsesPwgFallback, TestS
     jobParams.duplex = "one-sided";
     jobParams.printQuality = "normal";
     jobParams.color = "color";
-    jobParams.ppdName = "";
+    jobParams.ppdOptionMap = "";
 
     cups_option_t *options = nullptr;
     int num_options = 0;

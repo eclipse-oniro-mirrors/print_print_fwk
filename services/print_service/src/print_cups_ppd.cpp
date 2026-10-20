@@ -760,7 +760,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
             reverseChoiceMap[entry.second] = entry.first;
         }
 
-        Json::Value pwgValues;
+        Json::Value ppdChoices;
         Json::Value textDefault;
         Json::Value textZhCN;
 
@@ -777,28 +777,32 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
             }
             std::string pwgValue = revIt->second;
 
-            std::string jsonKey;
+            std::string textKey;
             if (enumMap != nullptr) {
                 auto enumIt = enumMap->find(pwgValue);
                 if (enumIt == enumMap->end()) {
                     continue;
                 }
-                jsonKey = std::to_string(enumIt->second);
+                textKey = std::to_string(enumIt->second);
             } else {
-                jsonKey = pwgValue;
+                textKey = pwgValue;
             }
 
-            pwgValues.append(jsonKey);
-            textDefault[jsonKey] = opt->choices[i].text;
-            textZhCN[jsonKey] = GetCNFromPpdAttr(ppd,
+            ppdChoices[pwgValue] = opt->choices[i].choice;
+            textDefault[textKey] = opt->choices[i].text;
+            textZhCN[textKey] = GetCNFromPpdAttr(ppd,
                 opt->keyword, opt->choices[i].choice, opt->choices[i].text);
         }
 
-        if (pwgValues.empty()) {
+        if (ppdChoices.empty()) {
             continue;
         }
 
-        ppdOptionMap[pwgType] = pwgValues;
+        Json::Value optionEntry;
+        optionEntry["optionName"] = opt->keyword;
+        optionEntry["choices"] = ppdChoices;
+        ppdOptionMap[pwgType] = optionEntry;
+
         Json::Value textMap;
         textMap["default"] = textDefault;
         textMap["zh_CN"] = textZhCN;
