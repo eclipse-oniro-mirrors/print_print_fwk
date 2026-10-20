@@ -413,7 +413,7 @@ private:
     bool DeletePrintJobFromHistoryList(const std::string jobId);
     void OnPrinterLastPrint(PrinterInfo& printerInfo);
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
-    int32_t GetPpdOptionMapByPrinterId(const std::string& printerId, std::string& ppdOptionMap);
+    void GetPpdOptionMapByPrinterId(const std::string& printerId, std::string& ppdOptionMap);
     void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
     void SyncAddedPrinterInfo(const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo);
     void UpdateAddedUsbPrinterInfoWithoutOption(std::shared_ptr<PrinterInfo> infoPtr);

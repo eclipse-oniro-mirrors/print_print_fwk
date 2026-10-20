@@ -6457,24 +6457,23 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::GetPpdOptionMapByPrinterId(const std::string& printerId,
+void PrintServiceAbility::GetPpdOptionMapByPrinterId(const std::string& printerId,
     std::string& ppdOptionMap)
 {
     PrinterInfo printerInfo;
     int ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryPrinterInfo failed! Id=%{public}s", printerId.c_str());
-        return ret;
+        return;
     }
     std::string optionStr = printerInfo.GetOption();
     Json::Value optionJson;
     if (!PrintJsonUtil::Parse(optionStr, optionJson) || !optionJson.isObject()) {
-        return E_PRINT_INVALID_PRINTER;
+        return;
     }
     if (optionJson.isMember("ppdOptionMap") && optionJson["ppdOptionMap"].isString()) {
         ppdOptionMap = optionJson["ppdOptionMap"].asString();
     }
-    return E_PRINT_NONE;
 }
 
 void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds)
