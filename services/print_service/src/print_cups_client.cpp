@@ -1316,7 +1316,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     } else {
         num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
     }
-
     if (!jobParams->ppdOptionMap.empty()) {
         num_options = FillPpdBasicOptions(jobParams->ppdOptionMap, jobParams, num_options, options);
     } else {
@@ -1366,9 +1365,6 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
 int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, JobParameters *jobParams,
     int num_options, cups_option_t **options)
 {
-    if (ppdOptionMapStr.empty() || jobParams == nullptr) {
-        return num_options;
-    }
     Json::Value optionMap;
     if (!PrintJsonUtil::Parse(ppdOptionMapStr, optionMap)) {
         PRINT_HILOGE("Parse ppdOptionMap failed");
@@ -1397,10 +1393,6 @@ int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, Job
 
 int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
-    if (jobParams == nullptr) {
-        return num_options;
-    }
-
     if (!jobParams->duplex.empty()) {
         num_options = cupsAddOption(CUPS_SIDES, jobParams->duplex.c_str(), num_options, options);
     } else {
