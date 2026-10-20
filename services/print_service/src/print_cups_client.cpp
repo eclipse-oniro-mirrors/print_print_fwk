@@ -1221,29 +1221,39 @@ bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
     if (jobParams->ppdOptionMap.empty()) {
         return false;
     }
+    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
+    if (jobParams->mediaSize.empty() && jobParams->mediaType.empty() && inputSlot.empty()) {
+        return false;
+    }
+    if (!inputSlot.empty()) {
+        return false;
+    }
     Json::Value optionMap;
     if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap)) {
         return false;
     }
-    if (!optionMap.isMember(PRINT_PARAM_TYPE_PAGE_SIZE) ||
-        !optionMap.isMember(PRINT_PARAM_TYPE_MEDIA_TYPE)) {
+    if (!jobParams->mediaSize.empty() &&
+        (!optionMap.isMember(PRINT_PARAM_TYPE_PAGE_SIZE) ||
+         !optionMap[PRINT_PARAM_TYPE_PAGE_SIZE]["choices"].isMember(jobParams->mediaSize))) {
         return false;
     }
-    const Json::Value &sizeEntry = optionMap[PRINT_PARAM_TYPE_PAGE_SIZE];
-    const Json::Value &typeEntry = optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE];
-    std::string mediaSize = jobParams->mediaSize.empty() ? CUPS_MEDIA_A4 : jobParams->mediaSize;
-    std::string mediaType = jobParams->mediaType.empty() ? CUPS_MEDIA_TYPE_PLAIN : jobParams->mediaType;
-    if (!sizeEntry["choices"].isMember(mediaSize) ||
-        !typeEntry["choices"].isMember(mediaType)) {
+    if (!jobParams->mediaType.empty() &&
+        (!optionMap.isMember(PRINT_PARAM_TYPE_MEDIA_TYPE) ||
+         !optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE]["choices"].isMember(jobParams->mediaType))) {
         return false;
     }
-    num_options = cupsAddOption(sizeEntry["optionName"].asString().c_str(),
-        sizeEntry["choices"][mediaSize].asString().c_str(), num_options, options);
-    num_options = cupsAddOption(typeEntry["optionName"].asString().c_str(),
-        typeEntry["choices"][mediaType].asString().c_str(), num_options, options);
-    PRINT_HILOGI("PPD media: PageSize=%{public}s, MediaType=%{public}s",
-        sizeEntry["choices"][mediaSize].asString().c_str(),
-        typeEntry["choices"][mediaType].asString().c_str());
+    if (!jobParams->mediaSize.empty()) {
+        const Json::Value &entry = optionMap[PRINT_PARAM_TYPE_PAGE_SIZE];
+        num_options = cupsAddOption(entry["optionName"].asString().c_str(),
+            entry["choices"][jobParams->mediaSize].asString().c_str(), num_options, options);
+    }
+    if (!jobParams->mediaType.empty()) {
+        const Json::Value &entry = optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE];
+        num_options = cupsAddOption(entry["optionName"].asString().c_str(),
+            entry["choices"][jobParams->mediaType].asString().c_str(), num_options, options);
+    }
+    PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s",
+        jobParams->mediaSize.c_str(), jobParams->mediaType.c_str());
     return true;
 }
 
