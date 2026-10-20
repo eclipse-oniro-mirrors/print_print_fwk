@@ -833,12 +833,8 @@ static void ProcessPwgTypeEntry(ppd_file_t *ppd, const std::string &pwgType,
     }
 }
 
-void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
+void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
-    (void)ppdName;
-    Json::Value ppdOptionMap;
-    Json::Value ppdOptionTextMap;
-
     std::set<std::string> pwgTypes;
     for (const auto &entry : CUPS_PPD_FIELD_MMAP) {
         pwgTypes.insert(entry.first);
@@ -856,12 +852,6 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
             BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap);
         }
     }
-
-    printerCaps.SetPrinterAttrNameAndValue("ppdOptionMap",
-        PrintJsonUtil::WriteString(ppdOptionMap).c_str());
-    printerCaps.SetPrinterAttrNameAndValue("ppdOptionTextMap",
-        PrintJsonUtil::WriteString(ppdOptionTextMap).c_str());
-    printerCaps.SetPrinterAttrNameAndValue("ppdDriverType", "ppd");
 }
 
 void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
@@ -883,32 +873,29 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
         options["manufacturer"] = "others";
     }
 
-    const char *ppdDriverType = printerCaps.GetPrinterAttrValue("ppdDriverType");
-    if (ppdDriverType != nullptr && ppdDriverType[0] != '\0') {
-        options["ppdDriverType"] = ppdDriverType;
-        options["ppdOptionMap"] = printerCaps.GetPrinterAttrValue("ppdOptionMap");
-        options["ppdOptionTextMap"] = printerCaps.GetPrinterAttrValue("ppdOptionTextMap");
+    Json::Value ppdOptionMap;
+    Json::Value ppdOptionTextMap;
+    BuildPpdOptionMap(ppd, ppdOptionMap, ppdOptionTextMap);
+    if (!ppdOptionMap.empty()) {
+        options["ppdDriverType"] = "ppd";
+        options["ppdOptionMap"] = PrintJsonUtil::WriteString(ppdOptionMap);
+        options["ppdOptionTextMap"] = PrintJsonUtil::WriteString(ppdOptionTextMap);
     }
 
-    Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
-    cupsOptionsJson.removeMember("ppdDriverType");
-    cupsOptionsJson.removeMember("ppdOptionMap");
-    cupsOptionsJson.removeMember("ppdOptionTextMap");
-    options["cupsOptions"] = cupsOptionsJson;
+    options["cupsOptions"] = printerCaps.GetPrinterAttrGroupJson();
 
     std::string optionStr = PrintJsonUtil::WriteString(options);
     PRINT_HILOGD("SetOption: %{public}s", optionStr.c_str());
     printerCaps.SetOption(optionStr);
 }
 
-void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     ParseColorModeAttributesFromPPD(ppd, printerCaps);
     ParseDuplexModeAttributesFromPPD(ppd, printerCaps);
     ParsePageSizeAttributesFromPPD(ppd, printerCaps);
     ParseQualityAttributesFromPPD(ppd, printerCaps);
     ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
-    BuildPpdOptionMap(ppd, printerCaps, ppdName);
     SetOptionAttributeFromPPD(ppd, printerCaps);
 }
 
@@ -940,7 +927,7 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
     ParseVendorAbilityFromPPD(ppd, printerCaps);
     ValidateAndClearVendorAbility(printerCaps, ppdName);
     GetAdvanceOptionsFromPPD(ppd, printerCaps);
-    ParsePrinterAttributesFromPPD(ppd, printerCaps, ppdName);
+    ParsePrinterAttributesFromPPD(ppd, printerCaps);
 
     ppdClose(ppd);
     return E_PRINT_NONE;

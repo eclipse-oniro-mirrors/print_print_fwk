@@ -135,8 +135,8 @@ bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType, 
 bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val, std::string &choiceName);
 bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::string &optName, std::string &choiceName);
-void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName);
-void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName);
+void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap);
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
@@ -804,20 +804,10 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.
     ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
     ASSERT_NE(ppd, nullptr);
 
-    PrinterCapability printerCaps;
-    std::string ppdName = "test.ppd";
-    BuildPpdOptionMap(ppd, printerCaps, ppdName);
-
-    const char *driverType = printerCaps.GetPrinterAttrValue("ppdDriverType");
-    EXPECT_STREQ(driverType, "ppd");
-
-    const char *nameVal = printerCaps.GetPrinterAttrValue("ppdName");
-    EXPECT_STREQ(nameVal, "test.ppd");
-
-    const char *optionMapStr = printerCaps.GetPrinterAttrValue("ppdOptionMap");
-    ASSERT_NE(optionMapStr, nullptr);
     Json::Value optionMap;
-    ASSERT_TRUE(PrintJsonUtil::Parse(optionMapStr, optionMap));
+    Json::Value textMap;
+    BuildPpdOptionMap(ppd, optionMap, textMap);
+
     EXPECT_TRUE(optionMap.isMember("defaultDuplexMode"));
     EXPECT_TRUE(optionMap.isMember("defaultColorMode"));
     EXPECT_TRUE(optionMap.isMember("defaultPageSizeId"));
@@ -828,19 +818,9 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.
     EXPECT_EQ(optionMap["defaultDuplexMode"]["choices"]["one-sided"].asString(), "None");
     EXPECT_EQ(optionMap["defaultDuplexMode"]["choices"]["two-sided-long-edge"].asString(), "DuplexNoTumble");
 
-    const char *textMapStr = printerCaps.GetPrinterAttrValue("ppdOptionTextMap");
-    ASSERT_NE(textMapStr, nullptr);
-    Json::Value textMap;
-    ASSERT_TRUE(PrintJsonUtil::Parse(textMapStr, textMap));
     EXPECT_TRUE(textMap.isMember("Duplex"));
     EXPECT_TRUE(textMap["Duplex"].isMember("default"));
     EXPECT_TRUE(textMap["Duplex"].isMember("zh_CN"));
-
-    const char *defaultMapStr = printerCaps.GetPrinterAttrValue("ppdDefaultMap");
-    ASSERT_NE(defaultMapStr, nullptr);
-    Json::Value defaultMap;
-    ASSERT_TRUE(PrintJsonUtil::Parse(defaultMapStr, defaultMap));
-    EXPECT_STREQ(defaultMap["Duplex"].asCString(), "0");
 
     Json::Value duplexText = textMap["Duplex"]["default"];
     EXPECT_TRUE(duplexText.isMember("0"));
@@ -871,12 +851,9 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_NoDuplexOption_SkipsMissingOptions,
     ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
     ASSERT_NE(ppd, nullptr);
 
-    PrinterCapability printerCaps;
-    BuildPpdOptionMap(ppd, printerCaps, "test.ppd");
-
-    const char *optionMapStr = printerCaps.GetPrinterAttrValue("ppdOptionMap");
     Json::Value optionMap;
-    ASSERT_TRUE(PrintJsonUtil::Parse(optionMapStr, optionMap));
+    Json::Value textMap;
+    BuildPpdOptionMap(ppd, optionMap, textMap);
     EXPECT_FALSE(optionMap.isMember("defaultDuplexMode"));
     EXPECT_TRUE(optionMap.isMember("defaultPageSizeId"));
 
@@ -894,7 +871,7 @@ HWTEST_F(PrintCupsPpdTest, SetOptionAttributeFromPPD_PpdFieldsAtTopLevel, TestSi
 
     PrinterCapability printerCaps;
     GetAdvanceOptionsFromPPD(ppd, printerCaps);
-    ParsePrinterAttributesFromPPD(ppd, printerCaps, "test.ppd");
+    ParsePrinterAttributesFromPPD(ppd, printerCaps);
 
     EXPECT_TRUE(printerCaps.HasOption());
 
@@ -903,19 +880,13 @@ HWTEST_F(PrintCupsPpdTest, SetOptionAttributeFromPPD_PpdFieldsAtTopLevel, TestSi
 
     EXPECT_TRUE(optionJson.isMember("ppdDriverType"));
     EXPECT_EQ(optionJson["ppdDriverType"].asString(), "ppd");
-    EXPECT_TRUE(optionJson.isMember("ppdName"));
-    EXPECT_EQ(optionJson["ppdName"].asString(), "test.ppd");
     EXPECT_TRUE(optionJson.isMember("ppdOptionMap"));
     EXPECT_TRUE(optionJson.isMember("ppdOptionTextMap"));
-    EXPECT_TRUE(optionJson.isMember("ppdDefaultMap"));
 
     Json::Value cupsOptions = optionJson["cupsOptions"];
     EXPECT_FALSE(cupsOptions.isMember("ppdDriverType"));
-    EXPECT_FALSE(cupsOptions.isMember("ppdName"));
     EXPECT_FALSE(cupsOptions.isMember("ppdOptionMap"));
     EXPECT_FALSE(cupsOptions.isMember("ppdOptionTextMap"));
-    EXPECT_FALSE(cupsOptions.isMember("ppdDefaultMap"));
-
     EXPECT_TRUE(cupsOptions.isMember("advanceOptions"));
 
     ppdClose(ppd);
@@ -928,9 +899,10 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
     ASSERT_NE(ppd, nullptr);
 
-    PrinterCapability printerCaps;
-    BuildPpdOptionMap(ppd, printerCaps, "test.ppd");
-    std::string optionMapStr = printerCaps.GetPrinterAttrValue("ppdOptionMap");
+    Json::Value optionMap;
+    Json::Value textMap;
+    BuildPpdOptionMap(ppd, optionMap, textMap);
+    std::string optionMapStr = PrintJsonUtil::WriteString(optionMap);
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
