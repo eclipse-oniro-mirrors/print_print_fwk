@@ -1362,6 +1362,24 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
+int PrintCupsClient::AddPpdOption(const Json::Value &optionMap, const std::string &pwgType,
+    const std::string &pwgVal, int num_options, cups_option_t **options)
+{
+    if (pwgVal.empty() || !optionMap.isMember(pwgType)) {
+        return num_options;
+    }
+    const Json::Value &entry = optionMap[pwgType];
+    const Json::Value &choices = entry["choices"];
+    if (!choices.isMember(pwgVal)) {
+        return num_options;
+    }
+    std::string optName = entry["optionName"].asString();
+    std::string choiceName = choices[pwgVal].asString();
+    num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+    PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    return num_options;
+}
+
 int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, JobParameters *jobParams,
     int num_options, cups_option_t **options)
 {
@@ -1370,24 +1388,12 @@ int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, Job
         PRINT_HILOGE("Parse ppdOptionMap failed");
         return num_options;
     }
-
-    auto addPpdOption = [&](const std::string &pwgType, const std::string &pwgVal) {
-        if (pwgVal.empty() || !optionMap.isMember(pwgType)) {
-            return;
-        }
-        const Json::Value &entry = optionMap[pwgType];
-        const Json::Value &choices = entry["choices"];
-        if (choices.isMember(pwgVal)) {
-            std::string optName = entry["optionName"].asString();
-            std::string choiceName = choices[pwgVal].asString();
-            num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-            PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
-        }
-    };
-
-    addPpdOption(PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex);
-    addPpdOption(PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color);
-    addPpdOption(PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality);
+    num_options = AddPpdOption(optionMap, PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex,
+        num_options, options);
+    num_options = AddPpdOption(optionMap, PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color,
+        num_options, options);
+    num_options = AddPpdOption(optionMap, PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality,
+        num_options, options);
     return num_options;
 }
 
