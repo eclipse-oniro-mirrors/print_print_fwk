@@ -786,6 +786,65 @@ static void BuildStandaloneTextEntry(ppd_file_t *ppd, ppd_option_t *opt,
     }
 }
 
+static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
+    const StdStringMultiMap *&outChoiceMmap)
+{
+    auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
+    for (auto it = range.first; it != range.second; ++it) {
+        ppd_option_t *opt = ppdFindOption(ppd, it->second.name.c_str());
+        if (opt != nullptr) {
+            outChoiceMmap = &it->second.choiceMmap;
+            return opt;
+        }
+    }
+    return nullptr;
+}
+
+static void ProcessPwgTypeEntry(ppd_file_t *ppd, const std::string &pwgType,
+    Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap, Json::Value &ppdDefaultMap)
+{
+    const StdStringMultiMap *choiceMmap = nullptr;
+    ppd_option_t *opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
+    if (opt == nullptr || choiceMmap == nullptr) {
+        return;
+    }
+    const std::map<std::string, int> *enumMap = nullptr;
+    auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
+    if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
+        enumMap = enumMapIt->second;
+    }
+    std::map<std::string, std::string> reverseChoiceMap;
+    for (const auto &entry : *choiceMmap) {
+        reverseChoiceMap[entry.second] = entry.first;
+    }
+    Json::Value textDefault;
+    Json::Value textZhCN;
+    Json::Value ppdChoices;
+    BuildPwgChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
+        textDefault, textZhCN, ppdChoices);
+    if (!ppdChoices.empty()) {
+        Json::Value optionEntry;
+        optionEntry["optionName"] = opt->keyword;
+        optionEntry["choices"] = ppdChoices;
+        ppdOptionMap[pwgType] = optionEntry;
+    }
+    if (!textDefault.empty()) {
+        Json::Value textMap;
+        textMap["default"] = textDefault;
+        textMap["zh_CN"] = textZhCN;
+        ppdOptionTextMap[opt->keyword] = textMap;
+    }
+    if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
+        auto defIt = reverseChoiceMap.find(opt->defchoice);
+        if (defIt != reverseChoiceMap.end()) {
+            std::string defKey = ResolveTextKey(defIt->second, enumMap);
+            if (!defKey.empty()) {
+                ppdDefaultMap[opt->keyword] = defKey;
+            }
+        }
+    }
+}
+
 void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
 {
     Json::Value ppdOptionMap;
@@ -796,60 +855,8 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
     for (const auto &entry : CUPS_PPD_FIELD_MMAP) {
         pwgTypes.insert(entry.first);
     }
-
     for (const auto &pwgType : pwgTypes) {
-        auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
-        ppd_option_t *opt = nullptr;
-        const StdStringMultiMap *choiceMmap = nullptr;
-        for (auto it = range.first; it != range.second; ++it) {
-            opt = ppdFindOption(ppd, it->second.name.c_str());
-            if (opt != nullptr) {
-                choiceMmap = &it->second.choiceMmap;
-                break;
-            }
-        }
-        if (opt == nullptr || choiceMmap == nullptr) {
-            continue;
-        }
-
-        const std::map<std::string, int> *enumMap = nullptr;
-        auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
-        if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
-            enumMap = enumMapIt->second;
-        }
-
-        std::map<std::string, std::string> reverseChoiceMap;
-        for (const auto &entry : *choiceMmap) {
-            reverseChoiceMap[entry.second] = entry.first;
-        }
-
-        Json::Value textDefault;
-        Json::Value textZhCN;
-        Json::Value ppdChoices;
-        BuildPwgChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
-            textDefault, textZhCN, ppdChoices);
-
-        if (!ppdChoices.empty()) {
-            Json::Value optionEntry;
-            optionEntry["optionName"] = opt->keyword;
-            optionEntry["choices"] = ppdChoices;
-            ppdOptionMap[pwgType] = optionEntry;
-        }
-        if (!textDefault.empty()) {
-            Json::Value textMap;
-            textMap["default"] = textDefault;
-            textMap["zh_CN"] = textZhCN;
-            ppdOptionTextMap[opt->keyword] = textMap;
-        }
-        if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
-            auto defIt = reverseChoiceMap.find(opt->defchoice);
-            if (defIt != reverseChoiceMap.end()) {
-                std::string defKey = ResolveTextKey(defIt->second, enumMap);
-                if (!defKey.empty()) {
-                    ppdDefaultMap[opt->keyword] = defKey;
-                }
-            }
-        }
+        ProcessPwgTypeEntry(ppd, pwgType, ppdOptionMap, ppdOptionTextMap, ppdDefaultMap);
     }
 
     static const std::vector<std::string> standaloneOptions = {
@@ -857,10 +864,9 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
     };
     for (const auto &optName : standaloneOptions) {
         ppd_option_t *opt = ppdFindOption(ppd, optName.c_str());
-        if (opt == nullptr) {
-            continue;
+        if (opt != nullptr) {
+            BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap, ppdDefaultMap);
         }
-        BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap, ppdDefaultMap);
     }
 
     printerCaps.SetPrinterAttrNameAndValue("ppdOptionMap",
