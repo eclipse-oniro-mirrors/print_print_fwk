@@ -1362,22 +1362,29 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
-int PrintCupsClient::AddPpdOption(const Json::Value &optionMap, const std::string &pwgType,
-    const std::string &pwgVal, int num_options, cups_option_t **options)
+bool PrintCupsClient::TryAddPpdOption(const Json::Value &optionMap, const std::string &pwgType,
+    const std::string &pwgVal, int &num_options, cups_option_t **options)
 {
     if (pwgVal.empty() || !optionMap.isMember(pwgType)) {
-        return num_options;
+        return false;
     }
     const Json::Value &entry = optionMap[pwgType];
     const Json::Value &choices = entry["choices"];
     if (!choices.isMember(pwgVal)) {
-        return num_options;
+        return false;
     }
     std::string optName = entry["optionName"].asString();
     std::string choiceName = choices[pwgVal].asString();
     num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
     PRINT_HILOGI("PPD option: %{public}s=%{public}s", optName.c_str(), choiceName.c_str());
-    return num_options;
+    return true;
+}
+
+int PrintCupsClient::AddPwgOption(const char *optName, const std::string &pwgVal,
+    const char *defaultVal, int num_options, cups_option_t **options)
+{
+    const char *val = pwgVal.empty() ? defaultVal : pwgVal.c_str();
+    return cupsAddOption(optName, val, num_options, options);
 }
 
 int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, JobParameters *jobParams,
@@ -1388,32 +1395,23 @@ int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, Job
         PRINT_HILOGE("Parse ppdOptionMap failed");
         return num_options;
     }
-    num_options = AddPpdOption(optionMap, PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex,
-        num_options, options);
-    num_options = AddPpdOption(optionMap, PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color,
-        num_options, options);
-    num_options = AddPpdOption(optionMap, PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality,
-        num_options, options);
+    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex, num_options, options)) {
+        num_options = AddPwgOption(CUPS_SIDES, jobParams->duplex, CUPS_SIDES_ONE_SIDED, num_options, options);
+    }
+    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color, num_options, options)) {
+        num_options = AddPwgOption(CUPS_PRINT_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
+    }
+    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality, num_options, options)) {
+        num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
+    }
     return num_options;
 }
 
 int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
-    if (!jobParams->duplex.empty()) {
-        num_options = cupsAddOption(CUPS_SIDES, jobParams->duplex.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_SIDES, CUPS_SIDES_ONE_SIDED, num_options, options);
-    }
-    if (!jobParams->printQuality.empty()) {
-        num_options = cupsAddOption(CUPS_PRINT_QUALITY, jobParams->printQuality.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
-    }
-    if (!jobParams->color.empty()) {
-        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, jobParams->color.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
-    }
+    num_options = AddPwgOption(CUPS_SIDES, jobParams->duplex, CUPS_SIDES_ONE_SIDED, num_options, options);
+    num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
+    num_options = AddPwgOption(CUPS_PRINT_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     return num_options;
 }
 
