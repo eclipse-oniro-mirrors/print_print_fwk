@@ -941,23 +941,23 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     jobParams.printQuality = "4";
 
     cups_option_t *options = nullptr;
-    int numOptions = 0;
-    numOptions = PrintCupsClient::FillPpdBasicOptions(optionMapStr, &jobParams, numOptions, &options);
+    int num_options = 0;
+    num_options = PrintCupsClient::FillPpdBasicOptions(optionMapStr, &jobParams, num_options, &options);
 
-    EXPECT_GE(numOptions, 2);
+    EXPECT_GE(num_options, 2);
 
-    const char *duplexVal = cupsGetOption("Duplex", numOptions, options);
+    const char *duplexVal = cupsGetOption("Duplex", num_options, options);
     if (duplexVal != nullptr) {
         EXPECT_STREQ(duplexVal, "DuplexNoTumble");
     }
 
-    const char *colorVal = cupsGetOption("ColorModel", numOptions, options);
+    const char *colorVal = cupsGetOption("ColorModel", num_options, options);
     if (colorVal != nullptr) {
         EXPECT_STREQ(colorVal, "Gray");
     }
 
     if (options != nullptr) {
-        cupsFreeOptions(numOptions, options);
+        cupsFreeOptions(num_options, options);
     }
 }
 
@@ -965,9 +965,9 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_EmptyMap_ReturnsUnchanged, TestSi
 {
     JobParameters jobParams;
     cups_option_t *options = nullptr;
-    int numOptions = 0;
-    int result = PrintCupsClient::FillPpdBasicOptions("", &jobParams, numOptions, &options);
-    EXPECT_EQ(result, numOptions);
+    int num_options = 0;
+    int result = PrintCupsClient::FillPpdBasicOptions("", &jobParams, num_options, &options);
+    EXPECT_EQ(result, num_options);
 }
 
 }  // namespace Print

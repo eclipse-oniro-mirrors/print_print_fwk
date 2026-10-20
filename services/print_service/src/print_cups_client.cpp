@@ -1215,18 +1215,18 @@ void PrintCupsClient::JobSentCallback()
     StartNextJob();
 }
 
-int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGD("not borderless job options");
     if (jobParams->printScaling == PRINT_SCALING_FILL) {
-        numOptions = cupsAddOption("print-scaling", "fill", numOptions, options);
+        num_options = cupsAddOption("print-scaling", "fill", num_options, options);
     } else {
-        numOptions = cupsAddOption("fit-to-page", "true", numOptions, options);
+        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     }
     if (!jobParams->mediaType.empty()) {
-        numOptions = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), numOptions, options);
+        num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {
-        numOptions = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, numOptions, options);
+        num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
     }
 
     // Extend media value to media=mediaSize,mediaType,inputSlot
@@ -1236,21 +1236,21 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int numOptions, 
     if (!inputSlot.empty()) {
         mediaValue += "," + inputSlot;
     }
-    numOptions = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), numOptions, options);
+    num_options = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), num_options, options);
 
-    return numOptions;
+    return num_options;
 }
 
-int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
         PRINT_HILOGE("FillBorderlessOptions Params is nullptr");
-        return numOptions;
+        return num_options;
     }
     if (jobParams->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos &&
         jobParams->printScaling == PRINT_SCALING_BORDERLESS) {
         PRINT_HILOGD("borderless job options");
-        numOptions = cupsAddOption("print-scaling", "fill", numOptions, options);
+        num_options = cupsAddOption("print-scaling", "fill", num_options, options);
         std::vector<MediaSize> mediaSizes;
         mediaSizes.push_back({CUPS_MEDIA_A4, ISO_A4_WIDTH, ISO_A4_HEIGHT});
         mediaSizes.push_back({CUPS_MEDIA_4X6, PHOTO_4R_WIDTH, PHOTO_4R_HEIGHT});
@@ -1282,97 +1282,97 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int numOpti
         }
         value << "}";
         PRINT_HILOGD("value: %s", value.str().c_str());
-        numOptions = cupsAddOption("media-col", value.str().c_str(), numOptions, options);
+        num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
     } else {
-        numOptions = FillMediaOptions(jobParams, numOptions, options);
+        num_options = FillMediaOptions(jobParams, num_options, options);
     }
-    return numOptions;
+    return num_options;
 }
 
-int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->isAutoRotate) {
         PRINT_HILOGE("AutoRotate is Open, skip FillLandscapeOptions");
-        return numOptions;
+        return num_options;
     }
-    numOptions = cupsAddOption("pdfAutoRotate", "false", numOptions, options);
+    num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
     if (jobParams->isLandscape) {
-        numOptions = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, numOptions, options);
+        num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, num_options, options);
     } else {
-        numOptions = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_PORTRAIT, numOptions, options);
+        num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_PORTRAIT, num_options, options);
     }
-    return numOptions;
+    return num_options;
 }
 
-int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     PRINT_HILOGI("FillJobOptions start.");
     if (jobParams == nullptr) {
         PRINT_HILOGE("FillJobOptions Params is nullptr");
-        return numOptions;
+        return num_options;
     }
     if (jobParams->numCopies >= 1) {
-        numOptions = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, numOptions, options);
+        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
     } else {
-        numOptions = cupsAddIntegerOption(CUPS_COPIES, 1, numOptions, options);
+        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
     }
 
     if (!jobParams->ppdOptionMap.empty()) {
-        numOptions = FillPpdBasicOptions(jobParams->ppdOptionMap, jobParams, numOptions, options);
+        num_options = FillPpdBasicOptions(jobParams->ppdOptionMap, jobParams, num_options, options);
     } else {
-        numOptions = FillBasicOptions(jobParams, numOptions, options);
+        num_options = FillBasicOptions(jobParams, num_options, options);
     }
 
-    numOptions = FillLandscapeOptions(jobParams, numOptions, options);
+    num_options = FillLandscapeOptions(jobParams, num_options, options);
     if (jobParams->isCollate) {
-        numOptions = cupsAddOption("Collate", "true", numOptions, options);
+        num_options = cupsAddOption("Collate", "true", num_options, options);
     } else {
-        numOptions = cupsAddOption("Collate", "false", numOptions, options);
+        num_options = cupsAddOption("Collate", "false", num_options, options);
     }
     if (jobParams->isReverse) {
-        numOptions = cupsAddOption("OutputOrder", "Reverse", numOptions, options);
+        num_options = cupsAddOption("OutputOrder", "Reverse", num_options, options);
     } else {
-        numOptions = cupsAddOption("OutputOrder", "Normal", numOptions, options);
+        num_options = cupsAddOption("OutputOrder", "Normal", num_options, options);
     }
     std::string nic;
     if (IsIpConflict(jobParams->printerId, nic)) {
-        numOptions = cupsAddOption("nic", nic.c_str(), numOptions, options);
+        num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
     }
     if (!jobParams->bsuniOutputFormat.empty()) {
-        numOptions = cupsAddOption("bsuniOutputFormat", jobParams->bsuniOutputFormat.c_str(), numOptions, options);
+        num_options = cupsAddOption("bsuniOutputFormat", jobParams->bsuniOutputFormat.c_str(), num_options, options);
     }
-    numOptions = FillBorderlessOptions(jobParams, numOptions, options);
-    numOptions = FillAdvancedOptions(jobParams, numOptions, options);
-    numOptions = FillVendorOptions(jobParams, numOptions, options);
-    numOptions = FillTextSmoothOption(numOptions, options);
-    numOptions = FillSharedDirOption(jobParams, numOptions, options);
+    num_options = FillBorderlessOptions(jobParams, num_options, options);
+    num_options = FillAdvancedOptions(jobParams, num_options, options);
+    num_options = FillVendorOptions(jobParams, num_options, options);
+    num_options = FillTextSmoothOption(num_options, options);
+    num_options = FillSharedDirOption(jobParams, num_options, options);
     PRINT_HILOGI("FillJobOptions end.");
-    return numOptions;
+    return num_options;
 }
 
-int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
         PRINT_HILOGW("FillSharedDirOption jobParams is nullptr");
-        return numOptions;
+        return num_options;
     }
     if (!jobParams->printSharedDir.empty()) {
-        numOptions = cupsAddOption(
-            PRINT_SHARED_DIR_OPTION_KEY.c_str(), jobParams->printSharedDir.c_str(), numOptions, options);
+        num_options = cupsAddOption(
+            PRINT_SHARED_DIR_OPTION_KEY.c_str(), jobParams->printSharedDir.c_str(), num_options, options);
     }
-    return numOptions;
+    return num_options;
 }
 
 int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, JobParameters *jobParams,
-    int numOptions, cups_option_t **options)
+    int num_options, cups_option_t **options)
 {
     if (ppdOptionMapStr.empty() || jobParams == nullptr) {
-        return numOptions;
+        return num_options;
     }
     Json::Value optionMap;
     if (!PrintJsonUtil::Parse(ppdOptionMapStr, optionMap)) {
         PRINT_HILOGE("Parse ppdOptionMap failed");
-        return numOptions;
+        return num_options;
     }
 
     auto addPpdOption = [&](const std::string &pwgType, const std::string &pwgVal) {
@@ -1384,7 +1384,7 @@ int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, Job
         if (choices.isMember(pwgVal)) {
             std::string optName = entry["optionName"].asString();
             std::string choiceName = choices[pwgVal].asString();
-            numOptions = cupsAddOption(optName.c_str(), choiceName.c_str(), numOptions, options);
+            num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
             PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
         }
     };
@@ -1392,50 +1392,50 @@ int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, Job
     addPpdOption(PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex);
     addPpdOption(PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color);
     addPpdOption(PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality);
-    return numOptions;
+    return num_options;
 }
 
-int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
-        return numOptions;
+        return num_options;
     }
 
     if (!jobParams->duplex.empty()) {
-        numOptions = cupsAddOption(CUPS_SIDES, jobParams->duplex.c_str(), numOptions, options);
+        num_options = cupsAddOption(CUPS_SIDES, jobParams->duplex.c_str(), num_options, options);
     } else {
-        numOptions = cupsAddOption(CUPS_SIDES, CUPS_SIDES_ONE_SIDED, numOptions, options);
+        num_options = cupsAddOption(CUPS_SIDES, CUPS_SIDES_ONE_SIDED, num_options, options);
     }
     if (!jobParams->printQuality.empty()) {
-        numOptions = cupsAddOption(CUPS_PRINT_QUALITY, jobParams->printQuality.c_str(), numOptions, options);
+        num_options = cupsAddOption(CUPS_PRINT_QUALITY, jobParams->printQuality.c_str(), num_options, options);
     } else {
-        numOptions = cupsAddOption(CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL, numOptions, options);
+        num_options = cupsAddOption(CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
     }
     if (!jobParams->color.empty()) {
-        numOptions = cupsAddOption(CUPS_PRINT_COLOR_MODE, jobParams->color.c_str(), numOptions, options);
+        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, jobParams->color.c_str(), num_options, options);
     } else {
-        numOptions = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, numOptions, options);
+        num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     }
-    return numOptions;
+    return num_options;
 }
 
 int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
-                                       int numOptions,
+                                       int num_options,
                                        cups_option_t **options)
 {
     if (jobParams == nullptr || jobParams->vendorOptions.empty()) {
-        return numOptions;
+        return num_options;
     }
 
     Json::Value vendorJson;
     if (!PrintJsonUtil::Parse(jobParams->vendorOptions, vendorJson)) {
         PRINT_HILOGW("vendorOptions is not valid JSON string, discard");
-        return numOptions;
+        return num_options;
     }
 
     if (!vendorJson.isObject()) {
         PRINT_HILOGW("vendorOptions is not JSON object, discard");
-        return numOptions;
+        return num_options;
     }
 
     PRINT_HILOGI("vendorOptions expand first level to cups options");
@@ -1464,19 +1464,19 @@ int PrintCupsClient::FillVendorOptions(JobParameters *jobParams,
             continue;
         }
 
-        numOptions = cupsAddOption(key.c_str(), valueStr.c_str(), numOptions, options);
+        num_options = cupsAddOption(key.c_str(), valueStr.c_str(), num_options, options);
         PRINT_HILOGD("vendor option: %{public}s=%{private}s", key.c_str(), valueStr.c_str());
     }
 
-    return numOptions;
+    return num_options;
 }
 
-int PrintCupsClient::FillTextSmoothOption(int numOptions, cups_option_t **options)
+int PrintCupsClient::FillTextSmoothOption(int num_options, cups_option_t **options)
 {
-    if (cupsGetOption(TEXT_SMOOTH_OPTION.c_str(), numOptions, *options) == nullptr) {
-        numOptions = cupsAddOption(TEXT_SMOOTH_OPTION.c_str(), TEXT_SMOOTH_DEFAULT.c_str(), numOptions, options);
+    if (cupsGetOption(TEXT_SMOOTH_OPTION.c_str(), num_options, *options) == nullptr) {
+        num_options = cupsAddOption(TEXT_SMOOTH_OPTION.c_str(), TEXT_SMOOTH_DEFAULT.c_str(), num_options, options);
     }
-    return numOptions;
+    return num_options;
 }
 
 bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
@@ -1512,11 +1512,11 @@ bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
     return false;
 }
 
-int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int numOptions, cups_option_t **options)
+int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->advancedOpsJson.isNull()) {
         PRINT_HILOGE("advanced options are null.");
-        return numOptions;
+        return num_options;
     }
 
     Json::Value::Members keys = jobParams->advancedOpsJson.getMemberNames();
@@ -1539,22 +1539,22 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int numOption
             };
             struct HksBlob plainBlob = { 0, nullptr };
             if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
-                numOptions = cupsAddOption(keyStr.c_str(),
+                num_options = cupsAddOption(keyStr.c_str(),
                     ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
-                    numOptions, options);
+                    num_options, options);
             }
             PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
             continue;
         } else if (optValue.isString()) {
             std::string valueStr = optValue.asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
-                numOptions = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(), numOptions, options);
+                num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(), num_options, options);
                 continue;
             }
-            numOptions = cupsAddOption(keyStr.c_str(), valueStr.c_str(), numOptions, options);
+            num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
         }
     }
-    return numOptions;
+    return num_options;
 }
 
 std::string PrintCupsClient::GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson)
@@ -1638,7 +1638,7 @@ int32_t PrintCupsClient::QueryPrinterAttrList(
         return E_PRINT_SERVER_FAILURE;
     }
     for (const auto &key : keyList) {
-        const char *ret = cupsGetOption(key.c_str(), dest->numOptions, dest->options);
+        const char *ret = cupsGetOption(key.c_str(), dest->num_options, dest->options);
         if (ret != nullptr) {
             std::string valueStr = ret;
             std::string value = key + "&" + valueStr;
@@ -1719,7 +1719,7 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
                 PRINT_HILOGI("raw printer, skip check printer make and model.");
                 return true;
             }
-            const char *makeModel = cupsGetOption("printer-make-and-model", dest->numOptions, dest->options);
+            const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
             if (makeModel == nullptr || strcmp(makeModel, "Local Raw Printer") == 0) {
                 printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
                 retryCount++;
@@ -1762,7 +1762,7 @@ bool PrintCupsClient::CheckPrinterDriverExist(const std::string &makeModel)
 }
 
 bool PrintCupsClient::VerifyPrintJob(
-    JobParameters *jobParams, int &numOptions, uint32_t &jobId, cups_option_t *options, http_t *http)
+    JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *options, http_t *http)
 {
     if (jobParams == nullptr) {
         PRINT_HILOGE("The jobParams is null");
@@ -1800,10 +1800,10 @@ bool PrintCupsClient::VerifyPrintJob(
             driverMissing ? PRINT_JOB_BLOCKED_DRIVER_MISSING : PRINT_JOB_BLOCKED_DRIVER_EXCEPTION);
         return false;
     }
-    numOptions = FillJobOptions(jobParams, numOptions, &options);
+    num_options = FillJobOptions(jobParams, num_options, &options);
     cupsSetUser(jobParams->jobOriginatingUserName.c_str());
     if ((jobId = static_cast<uint32_t>(cupsCreateJob(
-        http, jobParams->printerName.c_str(), jobParams->jobName.c_str(), numOptions, options))) == 0) {
+        http, jobParams->printerName.c_str(), jobParams->jobName.c_str(), num_options, options))) == 0) {
         PRINT_HILOGE("[Job Id: %{public}s] Unable to cupsCreateJob: %{public}s",
             jobParams->serviceJobId.c_str(), cupsLastErrorString());
         jobParams->serviceAbility->UpdatePrintJobState(
@@ -1919,11 +1919,11 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
 #endif
     PRINT_HILOGI("[Job Id: %{public}s] StartCupsJob start", jobParams->serviceJobId.c_str());
     http_t *http = nullptr;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
     uint32_t jobId = 0;
 
-    if (!VerifyPrintJob(jobParams, numOptions, jobId, options, http)) {
+    if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
         PRINT_HILOGE("[Job Id: %{public}s] verify print job failed", jobParams->serviceJobId.c_str());
         return;
     }
@@ -2681,7 +2681,7 @@ bool PrintCupsClient::ModifyCupsPrinterUri(const std::string &printerName, const
         return false;
     }
     std::string standardUri = printerUri;
-    const char *makeModel = cupsGetOption("printer-make-and-model", dest->numOptions, dest->options);
+    const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
     if (makeModel != nullptr) {
         PRINT_HILOGD("makeModel = %{public}s", makeModel);
         if (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr) {
@@ -3073,21 +3073,21 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *standar
     }
     dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, standardPrinterName, nullptr);
     if (dest != nullptr) {
-        const char *deviceUri = cupsGetOption("device-uri", dest->numOptions, dest->options);
+        const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
         if (deviceUri == nullptr) {
             PRINT_HILOGD("deviceUri is null");
             printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
             return false;
         }
         PRINT_HILOGD("deviceUri = %{private}s", deviceUri);
-        const char *makeModel = cupsGetOption("printer-make-and-model", dest->numOptions, dest->options);
+        const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
         if (makeModel == nullptr) {
             PRINT_HILOGD("makeModel is null");
             printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
             return false;
         }
         PRINT_HILOGD("makeModel = %{private}s", makeModel);
-        int printerState = cupsGetIntegerOption("printer-state", dest->numOptions, dest->options);
+        int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
         PRINT_HILOGD("printerState = %{private}d", printerState);
         if (printerState == IPP_PRINTER_STOPPED || makeModel == nullptr || strcmp(deviceUri, printerUri) != 0) {
             printAbility_->FreeDests(FREE_ONE_PRINTER, dest);

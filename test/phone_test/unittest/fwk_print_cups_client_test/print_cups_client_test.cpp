@@ -516,10 +516,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019_NeedRename, TestSize.Leve
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillBorderlessOptions(nullptr, numOptions, &options), 0);
-    EXPECT_EQ(printCupsClient.FillJobOptions(nullptr, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(nullptr, num_options, &options), 0);
+    EXPECT_EQ(printCupsClient.FillJobOptions(nullptr, num_options, &options), 0);
 }
 /**
  * @tc.name: PrintCupsClientTest_0021
@@ -543,9 +543,9 @@ HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetBorderless, TestSize.Leve
     jobParams->borderless = 1;
     jobParams->mediaSize = "";
     jobParams->mediaType = "";
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 3);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, num_options, &options), 3);
     delete jobParams;
     delete options;
 }
@@ -571,9 +571,9 @@ HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetNotBorderless, TestSize.L
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->mediaSize = "testMediaSize";
     jobParams->mediaType = "testMediaType";
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 3);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, num_options, &options), 3);
     delete jobParams;
     delete options;
 }
@@ -599,9 +599,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023_NeedRename, TestSize.Leve
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->borderless = 0;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, num_options, &options);
     EXPECT_EQ(ret, 3);
     delete jobParams;
     delete options;
@@ -629,9 +629,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024_NeedRename, TestSize.Leve
     jobParams->borderless = 1;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     jobParams->mediaSize = CUPS_MEDIA_4X6;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, num_options, &options);
     EXPECT_EQ(ret, 2);
     delete jobParams;
     delete options;
@@ -643,7 +643,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024_NeedRename, TestSize.Leve
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOptions, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectnum_options, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -674,7 +674,7 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOption
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, FillJobOptions_SetTrueValue_ReturnCorrectNumOptions, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillJobOptions_SetTrueValue_ReturnCorrectnum_options, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -1650,9 +1650,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083_NeedRename, TestSize.Leve
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = true;
     jobParams->isLandscape = true;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, num_options, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -1679,9 +1679,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084_NeedRename, TestSize.Leve
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = true;
     jobParams->isLandscape = false;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, num_options, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -1708,9 +1708,9 @@ HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_SetNotLandscape, TestSize.Leve
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = false;
     jobParams->isLandscape = false;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, num_options, &options), 2);
     delete jobParams;
     delete options;
 }
@@ -1737,9 +1737,9 @@ HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_SetLandscape, TestSize.Level1)
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = false;
     jobParams->isLandscape = true;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, num_options, &options), 2);
     delete jobParams;
     delete options;
 }
@@ -2029,7 +2029,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0093_NeedRename, TestSize.Leve
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetAdvancedOpsJson_NumOptionsReturnOne, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetAdvancedOpsJson_num_optionsReturnOne, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -2055,7 +2055,7 @@ HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetAdvancedOpsJson_NumOptionsR
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetNullAdvancedOpsJson_ReturnCorrectNumOptions, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetNullAdvancedOpsJson_ReturnCorrectnum_options, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -2316,9 +2316,9 @@ HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_VIRTUAL_PRINTER, TestSize.Leve
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = false;
     jobParams->isLandscape = true;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, num_options, &options), 2);
     delete jobParams;
     delete options;
 }
@@ -2849,9 +2849,9 @@ HWTEST_F(PrintCupsClientTest, FillMediaOptions_LetterMediaSize_Test, TestSize.Le
     JobParameters *jobParams = new JobParameters();
     jobParams->mediaSize = "Letter";
     jobParams->mediaType = "Glossy";
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
+    int ret = printCupsClient.FillMediaOptions(jobParams, num_options, &options);
     EXPECT_EQ(ret, 3);
     cupsFreeOptions(ret, options);
     delete jobParams;
@@ -2869,9 +2869,9 @@ HWTEST_F(PrintCupsClientTest, FillMediaOptions_ValidMediaSize_Test, TestSize.Lev
     JobParameters *jobParams = new JobParameters();
     jobParams->mediaSize = "A4";
     jobParams->mediaType = "Plain";
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
+    int ret = printCupsClient.FillMediaOptions(jobParams, num_options, &options);
     EXPECT_EQ(ret, 3);
     cupsFreeOptions(ret, options);
     delete jobParams;
@@ -2889,9 +2889,9 @@ HWTEST_F(PrintCupsClientTest, FillMediaOptions_EmptyMediaSize_Test, TestSize.Lev
     JobParameters *jobParams = new JobParameters();
     jobParams->mediaSize = "";
     jobParams->mediaType = "";
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillMediaOptions(jobParams, numOptions, &options);
+    int ret = printCupsClient.FillMediaOptions(jobParams, num_options, &options);
     EXPECT_EQ(ret, 3);
     cupsFreeOptions(ret, options);
     delete jobParams;
@@ -3058,7 +3058,7 @@ HWTEST_F(PrintCupsClientTest, GetNewSubstate_BasicAndOverflow, TestSize.Level1)
     uint32_t result2 = printCupsClient.GetNewSubstate(result1, PRINT_JOB_BLOCKED_OFFLINE);
     EXPECT_GT(result2, result1);
 
-    // 测试溢出保护 - 组合 5 个 substate
+    // 测试溢出保护 - 组合 5 �?substate
     uint32_t result = 0;
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_OUT_OF_PAPER);
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_OUT_OF_INK);
@@ -3067,10 +3067,10 @@ HWTEST_F(PrintCupsClientTest, GetNewSubstate_BasicAndOverflow, TestSize.Level1)
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_LOW_ON_TONER);
     EXPECT_GT(result, 0);
 
-    // 第 6 个应该触发溢出保护，返回原值
+    // �?6 个应该触发溢出保护，返回原�?
     uint32_t before = result;
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_UNKNOWN);
-    EXPECT_EQ(result, before);  // 溢出保护，值不变
+    EXPECT_EQ(result, before);  // 溢出保护，值不�?
 }
 
 /**
@@ -4080,9 +4080,9 @@ HWTEST_F(PrintCupsClientTest, FillSharedDirOption_PrintSharedDirNotEmpty_AddsCup
     OHOS::Print::PrintCupsClient printCupsClient;
     JobParameters jobParams;
     jobParams.printSharedDir = TEST_SHARED_DIR;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillSharedDirOption(&jobParams, numOptions, &options);
+    int ret = printCupsClient.FillSharedDirOption(&jobParams, num_options, &options);
     EXPECT_EQ(ret, 1);
     const char *value = cupsGetOption(PRINT_SHARED_DIR_OPTION_KEY.c_str(), ret, options);
     EXPECT_NE(value, nullptr);
@@ -4100,9 +4100,9 @@ HWTEST_F(PrintCupsClientTest, FillSharedDirOption_PrintSharedDirEmpty_SkipsCupsO
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     JobParameters jobParams;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillSharedDirOption(&jobParams, numOptions, &options);
+    int ret = printCupsClient.FillSharedDirOption(&jobParams, num_options, &options);
     EXPECT_EQ(ret, 0);
     cupsFreeOptions(ret, options);
 }
@@ -4119,9 +4119,9 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_PrintSharedDirNotEmpty_AddsCupsOpti
     std::unique_ptr<JobParameters> jobParams(
         printCupsClient.BuildJobParameters(CreateSharedDirTestJob(), JOB_USER_NAME));
     jobParams->printSharedDir = TEST_SHARED_DIR;
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillJobOptions(jobParams.get(), numOptions, &options);
+    int ret = printCupsClient.FillJobOptions(jobParams.get(), num_options, &options);
     EXPECT_GT(ret, 0);
     const char *value = cupsGetOption(PRINT_SHARED_DIR_OPTION_KEY.c_str(), ret, options);
     EXPECT_NE(value, nullptr);
@@ -4140,9 +4140,9 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_PrintSharedDirEmpty_SkipsCupsOption
     OHOS::Print::PrintCupsClient printCupsClient;
     std::unique_ptr<JobParameters> jobParams(
         printCupsClient.BuildJobParameters(CreateSharedDirTestJob(), JOB_USER_NAME));
-    int numOptions = 0;
+    int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = printCupsClient.FillJobOptions(jobParams.get(), numOptions, &options);
+    int ret = printCupsClient.FillJobOptions(jobParams.get(), num_options, &options);
     EXPECT_GT(ret, 0);
     const char *value = cupsGetOption(PRINT_SHARED_DIR_OPTION_KEY.c_str(), ret, options);
     EXPECT_EQ(value, nullptr);
