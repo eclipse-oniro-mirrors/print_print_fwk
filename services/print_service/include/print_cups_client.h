@@ -217,7 +217,7 @@ private:
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillPpdBasicOptions(const std::string &ppdOptionMap, JobParameters *jobParams,
         int num_options, cups_option_t **options);
     static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
