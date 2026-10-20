@@ -5354,15 +5354,10 @@ int32_t PrintServiceAbility::StartExtPrintJobInternal(const std::shared_ptr<Prin
 int32_t PrintServiceAbility::StartCupsPrintJob(const std::shared_ptr<PrintJob> &printJob)
 {
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
-    std::string ppdName;
-    int32_t ret = GetPpdNameByPrinterId(printJob->GetPrinterId(), ppdName);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("GetPpdNameByPrinterId failed! ret=%{public}d", ret);
-    }
     std::string ppdOptionMap;
     GetPpdOptionMapByPrinterId(printJob->GetPrinterId(), ppdOptionMap);
     DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(
-        *printJob, GetCallerUserName(), ppdName, ppdOptionMap);
+        *printJob, GetCallerUserName(), ppdOptionMap);
     CallStatusBar();
     KiaInterceptorManager::GetInstance().RemoveCallerAppId(printJob->GetJobId());
     PRINT_HILOGI("StartNativePrintJob end.");

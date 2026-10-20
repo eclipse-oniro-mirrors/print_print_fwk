@@ -59,7 +59,6 @@ struct JobParameters {
     std::string vendorOptions;
     bool isReverse = false;
     bool isCollate = true;
-    std::string ppdName;
     std::string ppdOptionMap;
     std::string bsuniOutputFormat;
     std::string printSharedDir;
@@ -164,7 +163,7 @@ public:
     int32_t QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status);
     int32_t DeleteCupsPrinter(const char *printerName);
     void AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName,
-        const std::string &ppdName = "", const std::string &ppdOptionMap = "");
+        const std::string &ppdOptionMap = "");
     void CancelCupsJob(std::string serviceJobId);
     void InterruptCupsJob(std::string serviceJobId);
 
@@ -259,7 +258,7 @@ private:
     void UpdatePrintScaling(const PrintJob &jobInfo, JobParameters *params);
     void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName,
-        const std::string &ppdName = "", const std::string &ppdOptionMap = "");
+        const std::string &ppdOptionMap = "");
     void FillPrintSharedDir(JobParameters *params);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);

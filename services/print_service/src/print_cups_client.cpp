@@ -1135,10 +1135,10 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
 }
 
 void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName,
-    const std::string &ppdName, const std::string &ppdOptionMap)
+    const std::string &ppdOptionMap)
 {
     PRINT_HILOGI("[Job Id: %{public}s] AddCupsPrintJob start", jobInfo.GetJobId().c_str());
-    JobParameters *jobParams = BuildJobParameters(jobInfo, userName, ppdName, ppdOptionMap);
+    JobParameters *jobParams = BuildJobParameters(jobInfo, userName, ppdOptionMap);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
         HisysEventUtil::ReportPrintProcessFault(
@@ -2917,7 +2917,7 @@ void PrintCupsClient::UpdatePrintScaling(const PrintJob &jobInfo, JobParameters 
 }
 
 JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, const std::string &userName,
-    const std::string &ppdName, const std::string &ppdOptionMap)
+    const std::string &ppdOptionMap)
 {
     JobParameters *params = nullptr;
     if (!jobInfo.HasOption()) {
@@ -2957,7 +2957,6 @@ JobParameters *PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
         params->vendorOptions = jobInfo.GetVendorOptions();
     }
     params->serviceAbility = PrintServiceAbility::GetInstance();
-    params->ppdName = ppdName;
     params->ppdOptionMap = ppdOptionMap;
     FillPrintSharedDir(params);
     return params;
