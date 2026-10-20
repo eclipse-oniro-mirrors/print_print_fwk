@@ -1376,7 +1376,7 @@ int PrintCupsClient::AddPpdOption(const Json::Value &optionMap, const std::strin
     std::string optName = entry["optionName"].asString();
     std::string choiceName = choices[pwgVal].asString();
     num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    PRINT_HILOGI("PPD option: %{public}s=%{private}s", optName.c_str(), choiceName.c_str());
+    PRINT_HILOGI("PPD option: %{public}s=%{public}s", optName.c_str(), choiceName.c_str());
     return num_options;
 }
 
