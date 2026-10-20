@@ -1282,23 +1282,6 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     num_options = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), num_options, options);
     return num_options;
 }
-    if (!jobParams->mediaType.empty()) {
-        num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_MEDIA_TYPE, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
-    }
-
-    // Extend media value to media=mediaSize,mediaType,inputSlot
-    std::string mediaValue = jobParams->mediaSize.empty() ? CUPS_MEDIA_A4 : jobParams->mediaSize;
-    mediaValue += "," + (jobParams->mediaType.empty() ? CUPS_MEDIA_TYPE_PLAIN : jobParams->mediaType);
-    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
-    if (!inputSlot.empty()) {
-        mediaValue += "," + inputSlot;
-    }
-    num_options = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), num_options, options);
-
-    return num_options;
-}
 
 int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
