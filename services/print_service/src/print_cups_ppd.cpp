@@ -809,6 +809,17 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value ppdChoices;
     BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
         textDefault, textZhCN, ppdChoices);
+    if (pwgType == PRINT_PARAM_TYPE_PAGE_SIZE && ppd->cache != nullptr) {
+        for (int i = 0; i < ppd->cache->num_sizes; i++) {
+            pwg_map_t *size = &ppd->cache->sizes[i];
+            for (int j = 0; j < opt->num_choices; j++) {
+                if (strcmp(size->ppd, opt->choices[j].choice) == 0) {
+                    ppdChoices[size->pwg] = size->ppd;
+                    break;
+                }
+            }
+        }
+    }
     if (!pwgType.empty() && !ppdChoices.empty()) {
         Json::Value optionEntry;
         optionEntry["optionName"] = opt->keyword;

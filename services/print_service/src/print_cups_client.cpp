@@ -1314,11 +1314,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     num_options = FillBasicOptions(jobParams, num_options, options);
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
-    if (jobParams->isCollate) {
-        num_options = cupsAddOption("Collate", "true", num_options, options);
-    } else {
-        num_options = cupsAddOption("Collate", "false", num_options, options);
-    }
     if (jobParams->isReverse) {
         num_options = cupsAddOption("OutputOrder", "Reverse", num_options, options);
     } else {
@@ -1331,7 +1326,10 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     if (!jobParams->bsuniOutputFormat.empty()) {
         num_options = cupsAddOption("bsuniOutputFormat", jobParams->bsuniOutputFormat.c_str(), num_options, options);
     }
-    num_options = FillBorderlessOptions(jobParams, num_options, options);
+    if (jobParams->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos &&
+        jobParams->isBorderless) {
+        num_options = FillBorderlessOptions(jobParams, num_options, options);
+    }
     num_options = FillAdvancedOptions(jobParams, num_options, options);
     num_options = FillVendorOptions(jobParams, num_options, options);
     num_options = FillTextSmoothOption(num_options, options);
@@ -1401,6 +1399,16 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality, num_options, options)) {
         num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL,
             num_options, options);
+    }
+    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_PAGE_SIZE, jobParams->mediaSize, num_options, options)) {
+        num_options = AddPwgOption(CUPS_MEDIA, jobParams->mediaSize, CUPS_MEDIA_A4, num_options, options);
+    }
+    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_MEDIA_TYPE, jobParams->mediaType, num_options, options)) {
+        num_options = AddPwgOption(CUPS_MEDIA_TYPE, jobParams->mediaType, CUPS_MEDIA_TYPE_PLAIN, num_options, options);
+    }
+    std::string collatePwg = jobParams->isCollate ? PRINT_PARAM_VAL_TRUE : PRINT_PARAM_VAL_FALSE;
+    if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_DELIVERY_ORDER, collatePwg, num_options, options)) {
+        num_options = cupsAddOption("Collate", jobParams->isCollate ? "true" : "false", num_options, options);
     }
     return num_options;
 }
