@@ -2473,7 +2473,7 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
 
 uint32_t PrintCupsClient::GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate)
 {
-    // 使用 64 位运算检测是否溢�?
+    // 使用 64 位运算检测是否溢出
     uint64_t result = (uint64_t)substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
     if (result > UINT32_MAX) {
         PRINT_HILOGW("substate overflow detected, ignore new substate(%{public}d)", singleSubstate);
