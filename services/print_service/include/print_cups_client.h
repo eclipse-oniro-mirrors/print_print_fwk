@@ -214,16 +214,16 @@ private:
     bool CheckPrinterDriverExist(const std::string &makeModel);
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
-    static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillMediaOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillBorderlessOptions(JobParameters *jobParams, int numOptions, cups_option_t **options);
+    static int FillMediaOptions(JobParameters *jobParams, int numOptions, cups_option_t **options);
+    static int FillLandscapeOptions(JobParameters *jobParams, int numOptions, cups_option_t **options);
+    static int FillJobOptions(JobParameters *jobParams, int numOptions, cups_option_t **options);
     static int FillPpdBasicOptions(const std::string &ppdOptionMap, JobParameters *jobParams,
-        int num_options, cups_option_t **options);
-    static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static int FillTextSmoothOption(int num_options, cups_option_t **options);
-    static int FillSharedDirOption(JobParameters *jobParams, int num_options, cups_option_t **options);
+        int numOptions, cups_option_t **options);
+    static int FillBasicOptions(JobParameters *jobParams, int numOptions, cups_option_t **options);
+    static int FillVendorOptions(JobParameters *jobParams, int numOptions, cups_option_t **options);
+    static int FillTextSmoothOption(int numOptions, cups_option_t **options);
+    static int FillSharedDirOption(JobParameters *jobParams, int numOptions, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);

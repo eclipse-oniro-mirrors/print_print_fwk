@@ -729,6 +729,63 @@ void ParseQualityAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
 }
 
+static std::string ResolveTextKey(const std::string &pwgValue,
+    const std::map<std::string, int> *enumMap)
+{
+    if (enumMap == nullptr) {
+        return pwgValue;
+    }
+    auto it = enumMap->find(pwgValue);
+    if (it == enumMap->end()) {
+        return "";
+    }
+    return std::to_string(it->second);
+}
+
+static void BuildPwgChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
+    const std::map<std::string, std::string> &reverseChoiceMap,
+    const std::map<std::string, int> *enumMap,
+    Json::Value &textDefault, Json::Value &textZhCN, Json::Value &ppdChoices)
+{
+    for (int i = 0; i < opt->num_choices; i++) {
+        auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
+        if (revIt == reverseChoiceMap.end()) {
+            continue;
+        }
+        std::string pwgValue = revIt->second;
+        std::string textKey = ResolveTextKey(pwgValue, enumMap);
+        if (textKey.empty()) {
+            continue;
+        }
+        textDefault[textKey] = opt->choices[i].text;
+        textZhCN[textKey] = GetCNFromPpdAttr(ppd,
+            opt->keyword, opt->choices[i].choice, opt->choices[i].text);
+        ppdChoices[pwgValue] = opt->choices[i].choice;
+    }
+}
+
+static void BuildStandaloneTextEntry(ppd_file_t *ppd, ppd_option_t *opt,
+    Json::Value &ppdOptionTextMap, Json::Value &ppdDefaultMap)
+{
+    Json::Value textDefault;
+    Json::Value textZhCN;
+    for (int i = 0; i < opt->num_choices; i++) {
+        textDefault[opt->choices[i].choice] = opt->choices[i].text;
+        textZhCN[opt->choices[i].choice] = GetCNFromPpdAttr(ppd,
+            opt->keyword, opt->choices[i].choice, opt->choices[i].text);
+    }
+    if (textDefault.empty()) {
+        return;
+    }
+    Json::Value textMap;
+    textMap["default"] = textDefault;
+    textMap["zh_CN"] = textZhCN;
+    ppdOptionTextMap[opt->keyword] = textMap;
+    if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
+        ppdDefaultMap[opt->keyword] = opt->defchoice;
+    }
+}
+
 void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const std::string &ppdName)
 {
     Json::Value ppdOptionMap;
@@ -751,9 +808,10 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
                 break;
             }
         }
-        if (opt == nullptr) {
+        if (opt == nullptr || choiceMmap == nullptr) {
             continue;
         }
+
         const std::map<std::string, int> *enumMap = nullptr;
         auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
         if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
@@ -764,30 +822,13 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
         for (const auto &entry : *choiceMmap) {
             reverseChoiceMap[entry.second] = entry.first;
         }
+
         Json::Value textDefault;
         Json::Value textZhCN;
         Json::Value ppdChoices;
-        for (int i = 0; i < opt->num_choices; i++) {
-            auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
-            if (revIt == reverseChoiceMap.end()) {
-                continue;
-            }
-            std::string pwgValue = revIt->second;
-            std::string textKey;
-            if (enumMap != nullptr) {
-                auto enumIt = enumMap->find(pwgValue);
-                if (enumIt == enumMap->end()) {
-                    continue;
-                }
-                textKey = std::to_string(enumIt->second);
-            } else {
-                textKey = pwgValue;
-            }
-            textDefault[textKey] = opt->choices[i].text;
-            textZhCN[textKey] = GetCNFromPpdAttr(ppd,
-                opt->keyword, opt->choices[i].choice, opt->choices[i].text);
-            ppdChoices[pwgValue] = opt->choices[i].choice;
-        }
+        BuildPwgChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
+            textDefault, textZhCN, ppdChoices);
+
         if (!ppdChoices.empty()) {
             Json::Value optionEntry;
             optionEntry["optionName"] = opt->keyword;
@@ -803,16 +844,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
         if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
             auto defIt = reverseChoiceMap.find(opt->defchoice);
             if (defIt != reverseChoiceMap.end()) {
-                std::string defPwgValue = defIt->second;
-                std::string defKey;
-                if (enumMap != nullptr) {
-                    auto defEnumIt = enumMap->find(defPwgValue);
-                    if (defEnumIt != enumMap->end()) {
-                        defKey = std::to_string(defEnumIt->second);
-                    }
-                } else {
-                    defKey = defPwgValue;
-                }
+                std::string defKey = ResolveTextKey(defIt->second, enumMap);
                 if (!defKey.empty()) {
                     ppdDefaultMap[opt->keyword] = defKey;
                 }
@@ -828,23 +860,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, PrinterCapability &printerCaps, const st
         if (opt == nullptr) {
             continue;
         }
-        Json::Value textDefault;
-        Json::Value textZhCN;
-        for (int i = 0; i < opt->num_choices; i++) {
-            textDefault[opt->choices[i].choice] = opt->choices[i].text;
-            textZhCN[opt->choices[i].choice] = GetCNFromPpdAttr(ppd,
-                opt->keyword, opt->choices[i].choice, opt->choices[i].text);
-        }
-        if (textDefault.empty()) {
-            continue;
-        }
-        Json::Value textMap;
-        textMap["default"] = textDefault;
-        textMap["zh_CN"] = textZhCN;
-        ppdOptionTextMap[opt->keyword] = textMap;
-        if (opt->defchoice != nullptr && opt->defchoice[0] != '\0') {
-            ppdDefaultMap[opt->keyword] = opt->defchoice;
-        }
+        BuildStandaloneTextEntry(ppd, opt, ppdOptionTextMap, ppdDefaultMap);
     }
 
     printerCaps.SetPrinterAttrNameAndValue("ppdOptionMap",

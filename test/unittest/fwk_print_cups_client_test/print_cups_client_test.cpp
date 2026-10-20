@@ -3140,7 +3140,7 @@ HWTEST_F(PrintCupsClientTest, GetNewSubstate_BasicAndOverflow, TestSize.Level1)
     uint32_t result2 = printCupsClient.GetNewSubstate(result1, PRINT_JOB_BLOCKED_OFFLINE);
     EXPECT_GT(result2, result1);
 
-    // 测试溢出保护 - 组合 5 个 substate
+    // 测试溢出保护 - 组合 5 �?substate
     uint32_t result = 0;
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_OUT_OF_PAPER);
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_OUT_OF_INK);
@@ -3149,10 +3149,10 @@ HWTEST_F(PrintCupsClientTest, GetNewSubstate_BasicAndOverflow, TestSize.Level1)
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_LOW_ON_TONER);
     EXPECT_GT(result, 0);
 
-    // 第 6 个应该触发溢出保护，返回原值
+    // �?6 个应该触发溢出保护，返回原�?
     uint32_t before = result;
     result = printCupsClient.GetNewSubstate(result, PRINT_JOB_BLOCKED_UNKNOWN);
-    EXPECT_EQ(result, before);  // 溢出保护，值不变
+    EXPECT_EQ(result, before);  // 溢出保护，值不�?
 }
 
 /**
@@ -4935,25 +4935,25 @@ HWTEST_F(PrintCupsClientTest, FillBasicOptions_SetsPwgOptions, TestSize.Level1)
     jobParams.color = "monochrome";
 
     cups_option_t *options = nullptr;
-    int num_options = 0;
-    num_options = PrintCupsClient::FillBasicOptions(&jobParams, num_options, &options);
+    int numOptions = 0;
+    numOptions = PrintCupsClient::FillBasicOptions(&jobParams, numOptions, &options);
 
-    EXPECT_EQ(num_options, 3);
+    EXPECT_EQ(numOptions, 3);
 
-    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    const char *sidesVal = cupsGetOption("sides", numOptions, options);
     EXPECT_NE(sidesVal, nullptr);
     EXPECT_STREQ(sidesVal, "one-sided");
 
-    const char *qualityVal = cupsGetOption("print-quality", num_options, options);
+    const char *qualityVal = cupsGetOption("print-quality", numOptions, options);
     EXPECT_NE(qualityVal, nullptr);
     EXPECT_STREQ(qualityVal, "4");
 
-    const char *colorVal = cupsGetOption("print-color-mode", num_options, options);
+    const char *colorVal = cupsGetOption("print-color-mode", numOptions, options);
     EXPECT_NE(colorVal, nullptr);
     EXPECT_STREQ(colorVal, "monochrome");
 
     if (options != nullptr) {
-        cupsFreeOptions(num_options, options);
+        cupsFreeOptions(numOptions, options);
     }
 }
 
@@ -4965,22 +4965,22 @@ HWTEST_F(PrintCupsClientTest, FillBasicOptions_EmptyValues_UsesDefaults, TestSiz
     jobParams.color = "";
 
     cups_option_t *options = nullptr;
-    int num_options = 0;
-    num_options = PrintCupsClient::FillBasicOptions(&jobParams, num_options, &options);
+    int numOptions = 0;
+    numOptions = PrintCupsClient::FillBasicOptions(&jobParams, numOptions, &options);
 
-    EXPECT_EQ(num_options, 3);
+    EXPECT_EQ(numOptions, 3);
 
-    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    const char *sidesVal = cupsGetOption("sides", numOptions, options);
     EXPECT_STREQ(sidesVal, "one-sided");
 
-    const char *qualityVal = cupsGetOption("print-quality", num_options, options);
+    const char *qualityVal = cupsGetOption("print-quality", numOptions, options);
     EXPECT_STREQ(qualityVal, "normal");
 
-    const char *colorVal = cupsGetOption("print-color-mode", num_options, options);
+    const char *colorVal = cupsGetOption("print-color-mode", numOptions, options);
     EXPECT_STREQ(colorVal, "auto");
 
     if (options != nullptr) {
-        cupsFreeOptions(num_options, options);
+        cupsFreeOptions(numOptions, options);
     }
 }
 
@@ -4995,17 +4995,17 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, 
     jobParams.ppdOptionMap = "";
 
     cups_option_t *options = nullptr;
-    int num_options = 0;
-    num_options = printCupsClient.FillJobOptions(&jobParams, num_options, &options);
+    int numOptions = 0;
+    numOptions = printCupsClient.FillJobOptions(&jobParams, numOptions, &options);
 
-    EXPECT_GE(num_options, 3);
+    EXPECT_GE(numOptions, 3);
 
-    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    const char *sidesVal = cupsGetOption("sides", numOptions, options);
     EXPECT_NE(sidesVal, nullptr);
     EXPECT_STREQ(sidesVal, "one-sided");
 
     if (options != nullptr) {
-        cupsFreeOptions(num_options, options);
+        cupsFreeOptions(numOptions, options);
     }
 }
 
