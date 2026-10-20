@@ -832,16 +832,17 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.
     ASSERT_NE(textMapStr, nullptr);
     Json::Value textMap;
     ASSERT_TRUE(PrintJsonUtil::Parse(textMapStr, textMap));
-    EXPECT_TRUE(textMap["defaultDuplexMode"].isMember("default"));
-    EXPECT_TRUE(textMap["defaultDuplexMode"].isMember("zh_CN"));
+    EXPECT_TRUE(textMap.isMember("Duplex"));
+    EXPECT_TRUE(textMap["Duplex"].isMember("default"));
+    EXPECT_TRUE(textMap["Duplex"].isMember("zh_CN"));
 
     const char *defaultMapStr = printerCaps.GetPrinterAttrValue("ppdDefaultMap");
     ASSERT_NE(defaultMapStr, nullptr);
     Json::Value defaultMap;
     ASSERT_TRUE(PrintJsonUtil::Parse(defaultMapStr, defaultMap));
-    EXPECT_STREQ(defaultMap["defaultDuplexMode"].asCString(), "0");
+    EXPECT_STREQ(defaultMap["Duplex"].asCString(), "0");
 
-    Json::Value duplexText = textMap["defaultDuplexMode"]["default"];
+    Json::Value duplexText = textMap["Duplex"]["default"];
     EXPECT_TRUE(duplexText.isMember("0"));
     EXPECT_TRUE(duplexText.isMember("1"));
     EXPECT_TRUE(duplexText.isMember("2"));
