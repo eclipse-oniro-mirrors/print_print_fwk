@@ -844,7 +844,6 @@ void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &
         ProcessOptionEntry(ppd, pwgType, ppdOptionMap, ppdOptionTextMap);
     }
 }
-}
 
 void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
