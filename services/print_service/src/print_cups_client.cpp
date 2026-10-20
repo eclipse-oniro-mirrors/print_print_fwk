@@ -1311,11 +1311,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
         PRINT_HILOGE("FillJobOptions Params is nullptr");
         return num_options;
     }
-    if (jobParams->numCopies >= 1) {
-        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
-    } else {
-        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
-    }
     num_options = FillBasicOptions(jobParams, num_options, options);
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
@@ -1385,6 +1380,11 @@ int PrintCupsClient::AddPwgOption(const char *optName, const std::string &pwgVal
 
 int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
+    if (jobParams->numCopies >= 1) {
+        num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
+    } else {
+        num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
+    }
     Json::Value optionMap;
     if (!jobParams->ppdOptionMap.empty()) {
         if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap)) {
