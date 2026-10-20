@@ -893,7 +893,7 @@ HWTEST_F(PrintCupsPpdTest, SetOptionAttributeFromPPD_PpdFieldsAtTopLevel, TestSi
     RemoveTempFile(ppdPath);
 }
 
-HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, FillBasicOptions_PpdMode_ConvertsAllDimensions, TestSize.Level1)
 {
     std::string ppdPath = CreatePpdWithAllOptions();
     ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
@@ -902,7 +902,6 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     Json::Value optionMap;
     Json::Value textMap;
     BuildPpdOptionMap(ppd, optionMap, textMap);
-    std::string optionMapStr = PrintJsonUtil::WriteString(optionMap);
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
@@ -911,10 +910,11 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     jobParams.duplex = "two-sided-long-edge";
     jobParams.color = "monochrome";
     jobParams.printQuality = "4";
+    jobParams.ppdOptionMap = PrintJsonUtil::WriteString(optionMap);
 
     cups_option_t *options = nullptr;
     int num_options = 0;
-    num_options = PrintCupsClient::FillPpdBasicOptions(optionMapStr, &jobParams, num_options, &options);
+    num_options = PrintCupsClient::FillBasicOptions(&jobParams, num_options, &options);
 
     EXPECT_GE(num_options, 2);
 
@@ -933,13 +933,27 @@ HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_ConvertsAllDimensions, TestSize.L
     }
 }
 
-HWTEST_F(PrintCupsPpdTest, FillPpdBasicOptions_EmptyMap_ReturnsUnchanged, TestSize.Level1)
+HWTEST_F(PrintCupsPpdTest, FillBasicOptions_EmptyPpdOptionMap_UsesPwgFallback, TestSize.Level1)
 {
     JobParameters jobParams;
+    jobParams.duplex = "one-sided";
+    jobParams.color = "color";
+    jobParams.printQuality = "normal";
+    jobParams.ppdOptionMap = "";
+
     cups_option_t *options = nullptr;
     int num_options = 0;
-    int result = PrintCupsClient::FillPpdBasicOptions("", &jobParams, num_options, &options);
-    EXPECT_EQ(result, num_options);
+    num_options = PrintCupsClient::FillBasicOptions(&jobParams, num_options, &options);
+
+    EXPECT_GE(num_options, 3);
+
+    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    EXPECT_NE(sidesVal, nullptr);
+    EXPECT_STREQ(sidesVal, "one-sided");
+
+    if (options != nullptr) {
+        cupsFreeOptions(num_options, options);
+    }
 }
 
 }  // namespace Print

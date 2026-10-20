@@ -1316,11 +1316,7 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     } else {
         num_options = cupsAddIntegerOption(CUPS_COPIES, 1, num_options, options);
     }
-    if (!jobParams->ppdOptionMap.empty()) {
-        num_options = FillPpdBasicOptions(jobParams->ppdOptionMap, jobParams, num_options, options);
-    } else {
-        num_options = FillBasicOptions(jobParams, num_options, options);
-    }
+    num_options = FillBasicOptions(jobParams, num_options, options);
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     if (jobParams->isCollate) {
@@ -1387,31 +1383,25 @@ int PrintCupsClient::AddPwgOption(const char *optName, const std::string &pwgVal
     return cupsAddOption(optName, val, num_options, options);
 }
 
-int PrintCupsClient::FillPpdBasicOptions(const std::string &ppdOptionMapStr, JobParameters *jobParams,
-    int num_options, cups_option_t **options)
+int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     Json::Value optionMap;
-    if (!PrintJsonUtil::Parse(ppdOptionMapStr, optionMap)) {
-        PRINT_HILOGE("Parse ppdOptionMap failed");
-        return num_options;
+    if (!jobParams->ppdOptionMap.empty()) {
+        if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap)) {
+            PRINT_HILOGE("Parse ppdOptionMap failed");
+        }
     }
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex, num_options, options)) {
         num_options = AddPwgOption(CUPS_SIDES, jobParams->duplex, CUPS_SIDES_ONE_SIDED, num_options, options);
     }
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color, num_options, options)) {
-        num_options = AddPwgOption(CUPS_PRINT_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
+        num_options = AddPwgOption(CUPS_PRINT_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE_AUTO,
+            num_options, options);
     }
     if (!TryAddPpdOption(optionMap, PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality, num_options, options)) {
-        num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
+        num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL,
+            num_options, options);
     }
-    return num_options;
-}
-
-int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    num_options = AddPwgOption(CUPS_SIDES, jobParams->duplex, CUPS_SIDES_ONE_SIDED, num_options, options);
-    num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL, num_options, options);
-    num_options = AddPwgOption(CUPS_PRINT_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     return num_options;
 }
 
