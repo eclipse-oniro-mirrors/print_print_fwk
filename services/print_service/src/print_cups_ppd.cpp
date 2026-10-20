@@ -785,29 +785,35 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
     return nullptr;
 }
 
-static void ProcessPwgTypeEntry(ppd_file_t *ppd, const std::string &pwgType,
+static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
+    ppd_option_t *preFoundOpt,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
+    ppd_option_t *opt = preFoundOpt;
     const StdStringMultiMap *choiceMmap = nullptr;
-    ppd_option_t *opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
-    if (opt == nullptr || choiceMmap == nullptr) {
-        return;
-    }
-    const std::map<std::string, int> *enumMap = nullptr;
-    auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
-    if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
-        enumMap = enumMapIt->second;
-    }
     std::map<std::string, std::string> reverseChoiceMap;
-    for (const auto &entry : *choiceMmap) {
-        reverseChoiceMap[entry.second] = entry.first;
+    const std::map<std::string, int> *enumMap = nullptr;
+
+    if (preFoundOpt == nullptr) {
+        opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
+        if (opt == nullptr || choiceMmap == nullptr) {
+            return;
+        }
+        auto enumMapIt = PWG_TYPE_TO_ENUM_MAP.find(pwgType);
+        if (enumMapIt != PWG_TYPE_TO_ENUM_MAP.end()) {
+            enumMap = enumMapIt->second;
+        }
+        for (const auto &entry : *choiceMmap) {
+            reverseChoiceMap[entry.second] = entry.first;
+        }
     }
+
     Json::Value textDefault;
     Json::Value textZhCN;
     Json::Value ppdChoices;
     BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
         textDefault, textZhCN, ppdChoices);
-    if (!ppdChoices.empty()) {
+    if (!pwgType.empty() && !ppdChoices.empty()) {
         Json::Value optionEntry;
         optionEntry["optionName"] = opt->keyword;
         optionEntry["choices"] = ppdChoices;
@@ -828,7 +834,7 @@ void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &
         pwgTypes.insert(entry.first);
     }
     for (const auto &pwgType : pwgTypes) {
-        ProcessPwgTypeEntry(ppd, pwgType, ppdOptionMap, ppdOptionTextMap);
+        ProcessOptionEntry(ppd, pwgType, nullptr, ppdOptionMap, ppdOptionTextMap);
     }
 
     static const std::vector<std::string> standaloneOptions = {
@@ -836,22 +842,11 @@ void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &
     };
     for (const auto &optName : standaloneOptions) {
         ppd_option_t *opt = ppdFindOption(ppd, optName.c_str());
-        if (opt == nullptr) {
-            continue;
-        }
-        Json::Value textDefault;
-        Json::Value textZhCN;
-        Json::Value ppdChoices;
-        std::map<std::string, std::string> emptyMap;
-        BuildChoiceEntries(ppd, opt, emptyMap, nullptr, textDefault, textZhCN, ppdChoices);
-        if (!textDefault.empty()) {
-            Json::Value textMap;
-            textMap["default"] = textDefault;
-            textMap["zh_CN"] = textZhCN;
-            ppdOptionTextMap[opt->keyword] = textMap;
+        if (opt != nullptr) {
+            ProcessOptionEntry(ppd, "", opt, ppdOptionMap, ppdOptionTextMap);
         }
     }
-    }
+}
 }
 
 void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
