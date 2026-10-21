@@ -817,10 +817,9 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
         textDefault, textZhCN, ppdChoices);
     if (pwgType == PRINT_PARAM_TYPE_PAGE_SIZE && ppd->cache != nullptr) {
         for (int i = 0; i < ppd->cache->num_sizes; i++) {
-            pwg_map_t *size = &ppd->cache->sizes[i];
             for (int j = 0; j < opt->num_choices; j++) {
-                if (strcmp(size->ppd, opt->choices[j].choice) == 0) {
-                    ppdChoices[size->pwg] = size->ppd;
+                if (strcmp(ppd->cache->sizes[i].ppd, opt->choices[j].choice) == 0) {
+                    ppdChoices[ppd->cache->sizes[i].pwg] = ppd->cache->sizes[i].ppd;
                     break;
                 }
             }
@@ -828,10 +827,9 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     }
     if (pwgType == "InputSlot" && ppd->cache != nullptr) {
         for (int i = 0; i < ppd->cache->num_sources; i++) {
-            pwg_map_t *src = &ppd->cache->sources[i];
             for (int j = 0; j < opt->num_choices; j++) {
-                if (strcmp(src->ppd, opt->choices[j].choice) == 0) {
-                    ppdChoices[src->pwg] = src->ppd;
+                if (strcmp(ppd->cache->sources[i].ppd, opt->choices[j].choice) == 0) {
+                    ppdChoices[ppd->cache->sources[i].pwg] = ppd->cache->sources[i].ppd;
                     break;
                 }
             }
