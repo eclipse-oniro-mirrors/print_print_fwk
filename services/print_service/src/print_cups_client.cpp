@@ -1240,8 +1240,8 @@ bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
         return false;
     }
     if (!inputSlot.empty() &&
-        (!optionMap.isMember("InputSlot") ||
-         !optionMap["InputSlot"]["choices"].isMember(inputSlot))) {
+        (!optionMap.isMember(PPD_INPUT_SLOT) ||
+         !optionMap[PPD_INPUT_SLOT]["choices"].isMember(inputSlot))) {
         return false;
     }
     if (!jobParams->mediaSize.empty()) {
@@ -1255,7 +1255,7 @@ bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
             entry["choices"][jobParams->mediaType].asString().c_str(), num_options, options);
     }
     if (!inputSlot.empty()) {
-        const Json::Value &entry = optionMap["InputSlot"];
+        const Json::Value &entry = optionMap[PPD_INPUT_SLOT];
         num_options = cupsAddOption(entry["optionName"].asString().c_str(),
             entry["choices"][inputSlot].asString().c_str(), num_options, options);
     }
