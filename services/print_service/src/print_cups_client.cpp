@@ -1581,7 +1581,10 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
         } else if (optValue.isString()) {
             std::string valueStr = optValue.asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
-                num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(), num_options, options);
+                if (jobParams->ppdOptionMap.empty()) {
+                    num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(),
+                        num_options, options);
+                }
                 continue;
             }
             num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
