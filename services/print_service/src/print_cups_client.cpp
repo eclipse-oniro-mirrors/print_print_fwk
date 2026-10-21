@@ -1225,9 +1225,6 @@ bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
     if (jobParams->mediaSize.empty() && jobParams->mediaType.empty() && inputSlot.empty()) {
         return false;
     }
-    if (!inputSlot.empty()) {
-        return false;
-    }
     Json::Value optionMap;
     if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap)) {
         return false;
@@ -1242,6 +1239,11 @@ bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
          !optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE]["choices"].isMember(jobParams->mediaType))) {
         return false;
     }
+    if (!inputSlot.empty() &&
+        (!optionMap.isMember("InputSlot") ||
+         !optionMap["InputSlot"]["choices"].isMember(inputSlot))) {
+        return false;
+    }
     if (!jobParams->mediaSize.empty()) {
         const Json::Value &entry = optionMap[PRINT_PARAM_TYPE_PAGE_SIZE];
         num_options = cupsAddOption(entry["optionName"].asString().c_str(),
@@ -1252,8 +1254,13 @@ bool PrintCupsClient::TryAddPpdMediaOptions(JobParameters *jobParams,
         num_options = cupsAddOption(entry["optionName"].asString().c_str(),
             entry["choices"][jobParams->mediaType].asString().c_str(), num_options, options);
     }
-    PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s",
-        jobParams->mediaSize.c_str(), jobParams->mediaType.c_str());
+    if (!inputSlot.empty()) {
+        const Json::Value &entry = optionMap["InputSlot"];
+        num_options = cupsAddOption(entry["optionName"].asString().c_str(),
+            entry["choices"][inputSlot].asString().c_str(), num_options, options);
+    }
+    PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s, slot=%{public}s",
+        jobParams->mediaSize.c_str(), jobParams->mediaType.c_str(), inputSlot.c_str());
     return true;
 }
 

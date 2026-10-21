@@ -286,6 +286,7 @@ static const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIE
     {PRINT_PARAM_TYPE_DELIVERY_ORDER, {PPT_OPT_NAME_COLLATE, MMAP_CUPS_CHOICE_COLLATE}},
     {"orientation-requested", {"orientation-requested", {}}},
     {"OutputOrder", {"OutputOrder", {}}},
+    {"InputSlot", {"InputSlot", {}}},
 };
 
 static const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
@@ -755,6 +756,7 @@ static void BuildChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
         std::string pwgValue;
         if (isStandalone) {
             textKey = opt->choices[i].choice;
+            ppdChoices[textKey] = opt->choices[i].choice;
         } else {
             auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
             if (revIt == reverseChoiceMap.end()) {
@@ -815,6 +817,17 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
             for (int j = 0; j < opt->num_choices; j++) {
                 if (strcmp(size->ppd, opt->choices[j].choice) == 0) {
                     ppdChoices[size->pwg] = size->ppd;
+                    break;
+                }
+            }
+        }
+    }
+    if (pwgType == "InputSlot" && ppd->cache != nullptr) {
+        for (int i = 0; i < ppd->cache->num_sources; i++) {
+            pwg_map_t *src = &ppd->cache->sources[i];
+            for (int j = 0; j < opt->num_choices; j++) {
+                if (strcmp(src->ppd, opt->choices[j].choice) == 0) {
+                    ppdChoices[src->pwg] = src->ppd;
                     break;
                 }
             }
