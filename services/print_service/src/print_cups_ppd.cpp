@@ -264,6 +264,10 @@ static const std::string PPD_OPT_NAME_EFDUPLEX = "EFDuplex";
 static const std::string PPD_OPT_NAME_EFDUPLEXING = "EFDuplexing";
 static const std::string PPT_OPT_NAME_KD03DUPLEX = "KD03Duplex";
 static const std::string PPT_OPT_NAME_COLLATE = "Collate";
+static const std::string PPD_OPT_NAME_ORIENTATION_REQUESTED = "orientation-requested";
+static const std::string PPD_OPT_NAME_OUTPUT_ORDER = "OutputOrder";
+static const std::string PPD_OPT_NAME_INPUT_SLOT = "InputSlot";
+static const StdStringMultiMap MMAP_CUPS_CHOICE_EMPTY = {};
 
 struct CupsOptionInfo {
     // Avoid redundant copy, must point to static variables.
@@ -284,9 +288,9 @@ static const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIE
     {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEXING, MMAP_CUPS_CHOICE_DUPLEX}},
     {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_KD03DUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
     {PRINT_PARAM_TYPE_DELIVERY_ORDER, {PPT_OPT_NAME_COLLATE, MMAP_CUPS_CHOICE_COLLATE}},
-    {"orientation-requested", {"orientation-requested", {}}},
-    {"OutputOrder", {"OutputOrder", {}}},
-    {"InputSlot", {"InputSlot", {}}},
+    {PPD_OPT_NAME_ORIENTATION_REQUESTED, {PPD_OPT_NAME_ORIENTATION_REQUESTED, MMAP_CUPS_CHOICE_EMPTY}},
+    {PPD_OPT_NAME_OUTPUT_ORDER, {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY}},
+    {PPD_OPT_NAME_INPUT_SLOT, {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY}},
 };
 
 static const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {

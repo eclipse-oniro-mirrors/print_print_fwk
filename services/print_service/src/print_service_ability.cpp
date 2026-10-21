@@ -6460,15 +6460,17 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
 void PrintServiceAbility::GetPpdOptionMapByPrinterId(const std::string& printerId,
     std::string& ppdOptionMap)
 {
+    ppdOptionMap.clear();
     PrinterInfo printerInfo;
     int ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryPrinterInfo failed! Id=%{public}s", printerId.c_str());
         return;
     }
-    std::string optionStr = printerInfo.GetOption();
+    PrinterCapability capability;
+    printerInfo.GetCapability(capability);
     Json::Value optionJson;
-    if (!PrintJsonUtil::Parse(optionStr, optionJson) || !optionJson.isObject()) {
+    if (!PrintJsonUtil::Parse(capability.GetOption(), optionJson) || !optionJson.isObject()) {
         return;
     }
     if (optionJson.isMember("ppdOptionMap") && optionJson["ppdOptionMap"].isString()) {
