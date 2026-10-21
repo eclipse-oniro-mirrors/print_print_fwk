@@ -1375,6 +1375,8 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     num_options = FillVendorOptions(jobParams, num_options, options);
     num_options = FillTextSmoothOption(num_options, options);
     num_options = FillSharedDirOption(jobParams, num_options, options);
+    PRINT_HILOGI("FillJobOptions: ppdOptionMap=%{public}s, numOptions=%{public}d",
+        jobParams->ppdOptionMap.empty() ? "empty" : "has", num_options);
     PRINT_HILOGI("FillJobOptions end.");
     return num_options;
 }
