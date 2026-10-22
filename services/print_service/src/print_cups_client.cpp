@@ -1345,10 +1345,13 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         return num_options;
     }
     num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
-    if (jobParams->isLandscape) {
-        num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_PORTRAIT, num_options, options);
+    Json::Value optionMap;
+    if (!jobParams->ppdOptionMap.empty()) {
+        PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap);
+    }
+    std::string orientPwg = jobParams->isLandscape ? CUPS_ORIENTATION_LANDSCAPE : CUPS_ORIENTATION_PORTRAIT;
+    if (!TryAddPpdOption(optionMap, CUPS_ORIENTATION, orientPwg, num_options, options)) {
+        num_options = cupsAddOption(CUPS_ORIENTATION, orientPwg.c_str(), num_options, options);
     }
     return num_options;
 }
