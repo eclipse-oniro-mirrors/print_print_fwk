@@ -28,9 +28,17 @@ namespace OHOS::Print {
 
 using StdStringMultiMap = std::multimap<const std::string, const std::string>;
 
+enum class ResolverType {
+    STANDARD,
+    CACHE_SIZES,
+    CACHE_SOURCES,
+    STANDALONE,
+};
+
 struct CupsOptionInfo {
     const std::string &name;
     const StdStringMultiMap &choiceMmap;
+    ResolverType resolver;
 };
 
 extern const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP;

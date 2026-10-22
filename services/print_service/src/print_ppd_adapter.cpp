@@ -170,21 +170,21 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_EMPTY = {};
 const std::string PPD_OPT_NAME_PAGESIZE = "PageSize";
 
 const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP = {
-    {PRINT_PARAM_TYPE_PAGE_SIZE, {PPD_OPT_NAME_PAGESIZE, MMAP_CUPS_CHOICE_PAGE_SIZE}},
-    {PRINT_PARAM_TYPE_MEDIA_TYPE, {PPT_OPT_NAME_MEDIA_TYPE, MMAP_CUPS_CHOICE_MEDIA_TYPE}},
-    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_PRINTQUALITY, MMAP_CUPS_CHOICE_QUALITY}},
-    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_QUALITY, MMAP_CUPS_CHOICE_QUALITY}},
-    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_QUALITY_OUTPUT_MODE, MMAP_CUPS_CHOICE_QUALITY}},
-    {PRINT_PARAM_TYPE_COLOR_MODE, {PPD_OPT_NAME_COLOR_MODE, MMAP_CUPS_CHOICE_COLOR_MODEL}},
-    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_DUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
-    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_JCLDUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
-    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
-    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEXING, MMAP_CUPS_CHOICE_DUPLEX}},
-    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_KD03DUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
-    {PRINT_PARAM_TYPE_DELIVERY_ORDER, {PPT_OPT_NAME_COLLATE, MMAP_CUPS_CHOICE_COLLATE}},
-    {PPD_OPT_NAME_ORIENTATION_REQUESTED, {PPD_OPT_NAME_ORIENTATION_REQUESTED, MMAP_CUPS_CHOICE_EMPTY}},
-    {PPD_OPT_NAME_OUTPUT_ORDER, {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY}},
-    {PPD_OPT_NAME_INPUT_SLOT, {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY}},
+    {PRINT_PARAM_TYPE_PAGE_SIZE, {PPD_OPT_NAME_PAGESIZE, MMAP_CUPS_CHOICE_PAGE_SIZE, ResolverType::CACHE_SIZES}},
+    {PRINT_PARAM_TYPE_MEDIA_TYPE, {PPT_OPT_NAME_MEDIA_TYPE, MMAP_CUPS_CHOICE_MEDIA_TYPE, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_PRINTQUALITY, MMAP_CUPS_CHOICE_QUALITY, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_QUALITY, MMAP_CUPS_CHOICE_QUALITY, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_QUALITY_OUTPUT_MODE, MMAP_CUPS_CHOICE_QUALITY, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_COLOR_MODE, {PPD_OPT_NAME_COLOR_MODE, MMAP_CUPS_CHOICE_COLOR_MODEL, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_DUPLEX, MMAP_CUPS_CHOICE_DUPLEX, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_JCLDUPLEX, MMAP_CUPS_CHOICE_DUPLEX, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEX, MMAP_CUPS_CHOICE_DUPLEX, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEXING, MMAP_CUPS_CHOICE_DUPLEX, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_KD03DUPLEX, MMAP_CUPS_CHOICE_DUPLEX, ResolverType::STANDARD}},
+    {PRINT_PARAM_TYPE_DELIVERY_ORDER, {PPT_OPT_NAME_COLLATE, MMAP_CUPS_CHOICE_COLLATE, ResolverType::STANDARD}},
+    {PPD_OPT_NAME_ORIENTATION_REQUESTED, {PPD_OPT_NAME_ORIENTATION_REQUESTED, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
+    {PPD_OPT_NAME_OUTPUT_ORDER, {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
+    {PPD_OPT_NAME_INPUT_SLOT, {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::CACHE_SOURCES}},
 };
 
 const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
@@ -284,13 +284,14 @@ static void BuildChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
 }
 
 static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
-    const StdStringMultiMap *&outChoiceMmap)
+    const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver)
 {
     auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
     for (auto it = range.first; it != range.second; ++it) {
         ppd_option_t *opt = ppdFindOption(ppd, it->second.name.c_str());
         if (opt != nullptr) {
             outChoiceMmap = &it->second.choiceMmap;
+            outResolver = it->second.resolver;
             return opt;
         }
     }
@@ -351,7 +352,8 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
     const StdStringMultiMap *choiceMmap = nullptr;
-    ppd_option_t *opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap);
+    ResolverType resolver = ResolverType::STANDARD;
+    ppd_option_t *opt = FindPpdOptionByPwgType(ppd, pwgType, choiceMmap, resolver);
     if (opt == nullptr || choiceMmap == nullptr) {
         return;
     }
@@ -367,14 +369,14 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value textDefault;
     Json::Value textZhCN;
     Json::Value ppdChoices;
-    if (pwgType == PRINT_PARAM_TYPE_PAGE_SIZE && ppd->cache != nullptr) {
+    if (resolver == ResolverType::CACHE_SIZES && ppd->cache != nullptr) {
         BuildPageSizeEntries(ppd, opt, textDefault, textZhCN, ppdChoices);
     } else {
         BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
             textDefault, textZhCN, ppdChoices);
-    }
-    if (pwgType == PPD_OPT_NAME_INPUT_SLOT && ppd->cache != nullptr) {
-        BuildInputSlotEntries(ppd, opt, ppdChoices);
+        if (resolver == ResolverType::CACHE_SOURCES && ppd->cache != nullptr) {
+            BuildInputSlotEntries(ppd, opt, ppdChoices);
+        }
     }
     WriteOptionMaps(opt, pwgType, ppdChoices, textDefault, textZhCN,
         ppdOptionMap, ppdOptionTextMap);
