@@ -813,17 +813,22 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value textDefault;
     Json::Value textZhCN;
     Json::Value ppdChoices;
-    BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
-        textDefault, textZhCN, ppdChoices);
     if (pwgType == PRINT_PARAM_TYPE_PAGE_SIZE && ppd->cache != nullptr) {
         for (int i = 0; i < ppd->cache->num_sizes; i++) {
             for (int j = 0; j < opt->num_choices; j++) {
                 if (strcmp(ppd->cache->sizes[i].map.ppd, opt->choices[j].choice) == 0) {
-                    ppdChoices[ppd->cache->sizes[i].map.pwg] = ppd->cache->sizes[i].map.ppd;
+                    std::string pwgKey = ppd->cache->sizes[i].map.pwg;
+                    ppdChoices[pwgKey] = ppd->cache->sizes[i].map.ppd;
+                    textDefault[pwgKey] = opt->choices[j].text;
+                    textZhCN[pwgKey] = GetCNFromPpdAttr(ppd, opt->keyword,
+                        opt->choices[j].choice, opt->choices[j].text);
                     break;
                 }
             }
         }
+    } else {
+        BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
+            textDefault, textZhCN, ppdChoices);
     }
     if (pwgType == PPD_OPT_NAME_INPUT_SLOT && ppd->cache != nullptr) {
         for (int i = 0; i < ppd->cache->num_sources; i++) {
