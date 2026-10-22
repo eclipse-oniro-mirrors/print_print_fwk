@@ -799,10 +799,12 @@ static void BuildPageSizeEntries(ppd_file_t *ppd, ppd_option_t *opt,
     for (int i = 0; i < ppd->cache->num_sizes; i++) {
         for (int j = 0; j < opt->num_choices; j++) {
             if (strcmp(ppd->cache->sizes[i].map.ppd, opt->choices[j].choice) == 0) {
-                std::string ppdChoice = ppd->cache->sizes[i].map.ppd;
-                ppdChoices[ppd->cache->sizes[i].map.pwg] = ppdChoice;
-                textDefault[ppdChoice] = opt->choices[j].text;
-                textZhCN[ppdChoice] = GetCNFromPpdAttr(ppd, opt->keyword,
+                std::string pwgKey = ppd->cache->sizes[i].map.pwg;
+                std::string pageId = PrintPageSize::MatchPageSize(pwgKey);
+                std::string textKey = pageId.empty() ? pwgKey : pageId;
+                ppdChoices[pwgKey] = ppd->cache->sizes[i].map.ppd;
+                textDefault[textKey] = opt->choices[j].text;
+                textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
                     opt->choices[j].choice, opt->choices[j].text);
                 break;
             }
