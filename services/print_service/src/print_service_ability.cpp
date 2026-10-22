@@ -5355,7 +5355,7 @@ int32_t PrintServiceAbility::StartCupsPrintJob(const std::shared_ptr<PrintJob> &
 {
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
     std::string ppdOptionMap;
-    GetPpdOptionMapByPrinterId(printJob->GetPrinterId(), ppdOptionMap);
+    printSystemData_.GetPpdOptionMapByPrinterId(printJob->GetPrinterId(), ppdOptionMap);
     DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(
         *printJob, GetCallerUserName(), ppdOptionMap);
     CallStatusBar();
@@ -6455,27 +6455,6 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
         return E_PRINT_INVALID_PRINTER;
     }
     return E_PRINT_NONE;
-}
-
-void PrintServiceAbility::GetPpdOptionMapByPrinterId(const std::string& printerId,
-    std::string& ppdOptionMap)
-{
-    ppdOptionMap.clear();
-    PrinterInfo printerInfo;
-    int ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGE("QueryPrinterInfo failed! Id=%{public}s", printerId.c_str());
-        return;
-    }
-    PrinterCapability capability;
-    printerInfo.GetCapability(capability);
-    Json::Value optionJson;
-    if (!PrintJsonUtil::Parse(capability.GetOption(), optionJson) || !optionJson.isObject()) {
-        return;
-    }
-    if (optionJson.isMember("ppdOptionMap") && optionJson["ppdOptionMap"].isString()) {
-        ppdOptionMap = optionJson["ppdOptionMap"].asString();
-    }
 }
 
 void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds)
