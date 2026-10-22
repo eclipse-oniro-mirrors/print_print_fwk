@@ -793,6 +793,54 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
     return nullptr;
 }
 
+static void BuildPageSizeEntries(ppd_file_t *ppd, ppd_option_t *opt,
+    Json::Value &textDefault, Json::Value &textZhCN, Json::Value &ppdChoices)
+{
+    for (int i = 0; i < ppd->cache->num_sizes; i++) {
+        for (int j = 0; j < opt->num_choices; j++) {
+            if (strcmp(ppd->cache->sizes[i].map.ppd, opt->choices[j].choice) == 0) {
+                std::string pwgKey = ppd->cache->sizes[i].map.pwg;
+                ppdChoices[pwgKey] = ppd->cache->sizes[i].map.ppd;
+                textDefault[pwgKey] = opt->choices[j].text;
+                textZhCN[pwgKey] = GetCNFromPpdAttr(ppd, opt->keyword,
+                    opt->choices[j].choice, opt->choices[j].text);
+                break;
+            }
+        }
+    }
+}
+
+static void BuildInputSlotEntries(ppd_file_t *ppd, ppd_option_t *opt,
+    Json::Value &ppdChoices)
+{
+    for (int i = 0; i < ppd->cache->num_sources; i++) {
+        for (int j = 0; j < opt->num_choices; j++) {
+            if (strcmp(ppd->cache->sources[i].ppd, opt->choices[j].choice) == 0) {
+                ppdChoices[ppd->cache->sources[i].pwg] = ppd->cache->sources[i].ppd;
+                break;
+            }
+        }
+    }
+}
+
+static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
+    Json::Value &ppdChoices, Json::Value &textDefault, Json::Value &textZhCN,
+    Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
+{
+    if (!pwgType.empty() && !ppdChoices.empty()) {
+        Json::Value optionEntry;
+        optionEntry["optionName"] = opt->keyword;
+        optionEntry["choices"] = ppdChoices;
+        ppdOptionMap[pwgType] = optionEntry;
+    }
+    if (!textDefault.empty()) {
+        Json::Value textMap;
+        textMap["default"] = textDefault;
+        textMap["zh_CN"] = textZhCN;
+        ppdOptionTextMap[opt->keyword] = textMap;
+    }
+}
+
 static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
@@ -814,44 +862,16 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value textZhCN;
     Json::Value ppdChoices;
     if (pwgType == PRINT_PARAM_TYPE_PAGE_SIZE && ppd->cache != nullptr) {
-        for (int i = 0; i < ppd->cache->num_sizes; i++) {
-            for (int j = 0; j < opt->num_choices; j++) {
-                if (strcmp(ppd->cache->sizes[i].map.ppd, opt->choices[j].choice) == 0) {
-                    std::string pwgKey = ppd->cache->sizes[i].map.pwg;
-                    ppdChoices[pwgKey] = ppd->cache->sizes[i].map.ppd;
-                    textDefault[pwgKey] = opt->choices[j].text;
-                    textZhCN[pwgKey] = GetCNFromPpdAttr(ppd, opt->keyword,
-                        opt->choices[j].choice, opt->choices[j].text);
-                    break;
-                }
-            }
-        }
+        BuildPageSizeEntries(ppd, opt, textDefault, textZhCN, ppdChoices);
     } else {
         BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
             textDefault, textZhCN, ppdChoices);
     }
     if (pwgType == PPD_OPT_NAME_INPUT_SLOT && ppd->cache != nullptr) {
-        for (int i = 0; i < ppd->cache->num_sources; i++) {
-            for (int j = 0; j < opt->num_choices; j++) {
-                if (strcmp(ppd->cache->sources[i].ppd, opt->choices[j].choice) == 0) {
-                    ppdChoices[ppd->cache->sources[i].pwg] = ppd->cache->sources[i].ppd;
-                    break;
-                }
-            }
-        }
+        BuildInputSlotEntries(ppd, opt, ppdChoices);
     }
-    if (!pwgType.empty() && !ppdChoices.empty()) {
-        Json::Value optionEntry;
-        optionEntry["optionName"] = opt->keyword;
-        optionEntry["choices"] = ppdChoices;
-        ppdOptionMap[pwgType] = optionEntry;
-    }
-    if (!textDefault.empty()) {
-        Json::Value textMap;
-        textMap["default"] = textDefault;
-        textMap["zh_CN"] = textZhCN;
-        ppdOptionTextMap[opt->keyword] = textMap;
-    }
+    WriteOptionMaps(opt, pwgType, ppdChoices, textDefault, textZhCN,
+        ppdOptionMap, ppdOptionTextMap);
 }
 
 void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
