@@ -161,6 +161,7 @@ if (!print_fwk_feature_device_isolation) {
       sources += [
         "${_service_path}/src/print_cups_attribute.cpp",
         "${_service_path}/src/print_cups_ppd.cpp",
+        "${_service_path}/src/print_ppd_adapter.cpp",
         "${_service_path}/src/print_cups_client.cpp",
         "${_service_path}/src/print_cups_wrapper.cpp",
       ]
@@ -296,6 +297,7 @@ if (!print_fwk_feature_device_isolation) {
       sources += [
         "${_service_path}/src/print_cups_attribute.cpp",
         "${_service_path}/src/print_cups_ppd.cpp",
+        "${_service_path}/src/print_ppd_adapter.cpp",
         "${_service_path}/src/print_cups_client.cpp",
         "${_service_path}/src/print_cups_wrapper.cpp",
       ]

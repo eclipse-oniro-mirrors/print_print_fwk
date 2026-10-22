@@ -28,6 +28,7 @@
 #include "print_service_ability.h"
 #include "print_job.h"
 #include "print_constant.h"
+#include "print_ppd_adapter.h"
 
 namespace OHOS::Print {
 typedef std::function<void()> CallbackFunc;
@@ -219,11 +220,8 @@ private:
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    static bool TryAddPpdOption(const Json::Value &optionMap, const std::string &pwgType,
-        const std::string &pwgVal, int &num_options, cups_option_t **options);
     static int AddPwgOption(const char *optName, const std::string &pwgVal,
         const char *defaultVal, int num_options, cups_option_t **options);
-    static bool TryAddPpdMediaOptions(JobParameters *jobParams, int &num_options, cups_option_t **options);
     static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillTextSmoothOption(int num_options, cups_option_t **options);
     static int FillSharedDirOption(JobParameters *jobParams, int num_options, cups_option_t **options);
