@@ -2868,11 +2868,10 @@ void PrintCupsClient::UpdatePrintScaling(const PrintJob &jobInfo, JobParameters 
     if (jobInfo.HasPrintScaling()) {
         params->printScaling = static_cast<PrintScalingMode>(jobInfo.GetPrintScaling());
     } else {
-        bool borderless = (params->borderless == TRUE);
-        if (params->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos) {
-            params->printScaling = borderless ? PRINT_SCALING_BORDERLESS : PRINT_SCALING_FIT_TO_PAGE;
+        if (params->borderless == TRUE && params->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos) {
+            params->printScaling = PRINT_SCALING_BORDERLESS;
         } else {
-            params->printScaling = borderless ? PRINT_SCALING_FILL : PRINT_SCALING_FIT_TO_PAGE;
+            params->printScaling = PRINT_SCALING_FIT_TO_PAGE;
         }
     }
 }

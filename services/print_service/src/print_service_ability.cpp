@@ -1702,6 +1702,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     }
     UpdatePrintJobOptionWithPrinterPreferences(infoJson, preferences, userPrefs);
     MergeVendorOptionsForPrintJob(preferences, userPrefs, printJob);
+    UpdatePrintJobWithPrinterPreferences(printJob, preferences);
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
@@ -1731,6 +1732,19 @@ void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterPreferences
     } else {
         PRINT_HILOGD("MergeVendorOptionsForPrintJob: no vendorOptions to merge");
     }
+}
+
+void PrintServiceAbility::UpdatePrintJobWithPrinterPreferences(PrintJob &printJob, const PrinterPreferences &preferences)
+{
+    if (printJob.HasPrintScaling()) {
+        return;
+    }
+    if (!preferences.HasDefaultPrintScaling()) {
+        return;
+    }
+    printJob.SetPrintScaling(preferences.GetDefaultPrintScaling());
+    PRINT_HILOGI("UpdatePrintJobWithPrinterPreferences: set default printScaling=%{public}u from preferences",
+        preferences.GetDefaultPrintScaling());
 }
 
 std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::string &jobId, PrintJob &printJob)

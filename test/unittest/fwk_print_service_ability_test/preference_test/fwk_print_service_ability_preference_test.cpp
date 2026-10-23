@@ -783,5 +783,38 @@ HWTEST_F(PrintServiceAbilityTest, ProcessSingleCustomOption_ValueNotString_SetsE
     EXPECT_EQ(userPrefs.GetCustomOption("CustomPin"), nullptr);
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobWithPrinterPreferences_JobHasPrintScaling_NotOverwritten,
+    TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintJob printJob;
+    printJob.SetPrintScaling(static_cast<uint32_t>(PRINT_SCALING_FILL));
+    PrinterPreferences preferences;
+    preferences.SetDefaultPrintScaling(static_cast<uint32_t>(PRINT_SCALING_BORDERLESS));
+    service->UpdatePrintJobWithPrinterPreferences(printJob, preferences);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_FILL));
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobWithPrinterPreferences_PrefHasNoDefault_NotSet, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintJob printJob;
+    PrinterPreferences preferences;
+    service->UpdatePrintJobWithPrinterPreferences(printJob, preferences);
+    EXPECT_FALSE(printJob.HasPrintScaling());
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobWithPrinterPreferences_PrefHasDefault_SetsFromPref, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintJob printJob;
+    PrinterPreferences preferences;
+    preferences.SetDefaultPrintScaling(static_cast<uint32_t>(PRINT_SCALING_BORDERLESS));
+    service->UpdatePrintJobWithPrinterPreferences(printJob, preferences);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_BORDERLESS));
+}
+
 }  // namespace Print
 }  // namespace OHOS
