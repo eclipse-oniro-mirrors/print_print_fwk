@@ -240,6 +240,8 @@ static const std::map<std::string, const std::map<std::string, int> *> PWG_TYPE_
     {PRINT_PARAM_TYPE_PAGE_SIZE, &PWG_STRING_TO_ENUM_PAGE_SIZE},
 };
 
+// PWG 字符串值转为 textMap 的 int enum 字符串 key（如 "two-sided-long-edge" → "1"）
+// enumMap 为空时直接返回 PWG 原始值，查找失败返回空串
 static std::string ResolveTextKey(const std::string &pwgValue,
     const std::map<std::string, int> *enumMap)
 {
@@ -253,6 +255,9 @@ static std::string ResolveTextKey(const std::string &pwgValue,
     return std::to_string(it->second);
 }
 
+// 在 ppd->cache 中按 PPD choice 名查找对应的 CUPS PWG 名
+// CACHE_SIZES: 查 cache->sizes（如 "A4" → "iso_a4_210x297mm"）
+// CACHE_SOURCES: 查 cache->sources（如 "Main" → "main"）
 static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
     const char *choice, std::string &pwgKey)
 {
@@ -274,6 +279,11 @@ static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
     return false;
 }
 
+// 统一构建函数：遍历 PPD choices，按 ResolverType 解析 key，同时构建 optionMap choices 和 textMap
+// CACHE_SIZES: 从 cache->sizes 取 PWG key，textMap key 用 PrintPageSize::MatchPageSize 转换
+// CACHE_SOURCES: 从 cache->sources 取 PWG key，textMap key 用 PPD choice 名
+// STANDALONE: key 和 value 都用 PPD choice 名（identity 映射）
+// STANDARD: 从 reverseChoiceMap 反查 PWG 值作 key，enumMap 转 int enum 作 textMap key
 static void BuildEntries(ppd_file_t *ppd, ppd_option_t *opt,
     ResolverType resolver,
     const std::map<std::string, std::string> &reverseChoiceMap,
@@ -317,6 +327,8 @@ static void BuildEntries(ppd_file_t *ppd, ppd_option_t *opt,
     }
 }
 
+// 从 CUPS_PPD_FIELD_MMAP 中查找 PWG 类型对应的第一个存在的 PPD option 变体
+// 例如 Duplex 有 5 个变体（Duplex/JCLDuplex/EFDuplex/...），返回 PPD 文件中实际存在的第一个
 static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
     const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver)
 {
@@ -332,6 +344,9 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
     return nullptr;
 }
 
+// 将构建好的 entries 写入 optionMap 和 textMap JSON
+// optionMap: {pwgType: {optionName, choices}}（供下发时 PWG→PPD 查表）
+// textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}}（供应用显示翻译）
 static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
     Json::Value &ppdChoices, Json::Value &textDefault, Json::Value &textZhCN,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
@@ -350,6 +365,7 @@ static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
     }
 }
 
+// 处理单个 PWG 类型的完整流程：查找 PPD option → 构建 reverseChoiceMap → BuildEntries → WriteOptionMaps
 static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
@@ -377,6 +393,8 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
         ppdOptionMap, ppdOptionTextMap);
 }
 
+// 从 PPD 文件构建完整的 optionMap 和 textMap
+// 遍历 CUPS_PPD_FIELD_MMAP 中所有 PWG 类型，逐个调用 ProcessOptionEntry
 void PpdAdapter::BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::Value &textMap)
 {
     std::set<std::string> pwgTypes;
@@ -388,6 +406,8 @@ void PpdAdapter::BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::
     }
 }
 
+// 单维度 PWG→PPD 查表：从 optionMap 中查找 PWG 值对应的 PPD option 名和 choice 名
+// 返回 true 表示命中，false 表示未命中（调用方应回退 PWG 标准值）
 bool PpdAdapter::ConvertPwgToPpd(const Json::Value &optionMap, const std::string &pwgType,
     const std::string &pwgVal, std::string &optName, std::string &choiceName)
 {
@@ -405,6 +425,8 @@ bool PpdAdapter::ConvertPwgToPpd(const Json::Value &optionMap, const std::string
     return true;
 }
 
+// 纸张/介质/纸盒 all-or-nothing 查表：所有非空维度都命中 PPD 才返回 true
+// CUPS 的 media 选项会覆盖 PageSize/MediaType/InputSlot，不能混发，必须全命中或全回退
 bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
     const std::string &mediaSize, const std::string &mediaType,
     const std::string &inputSlot,
