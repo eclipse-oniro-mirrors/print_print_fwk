@@ -1734,7 +1734,8 @@ void PrintServiceAbility::MergeVendorOptionsForPrintJob(const PrinterPreferences
     }
 }
 
-void PrintServiceAbility::UpdatePrintJobWithPrinterPreferences(PrintJob &printJob, const PrinterPreferences &preferences)
+void PrintServiceAbility::UpdatePrintJobWithPrinterPreferences(
+    PrintJob &printJob, const PrinterPreferences &preferences)
 {
     if (printJob.HasPrintScaling()) {
         return;
