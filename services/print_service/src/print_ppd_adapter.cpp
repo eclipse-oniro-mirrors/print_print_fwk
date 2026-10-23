@@ -253,33 +253,67 @@ static std::string ResolveTextKey(const std::string &pwgValue,
     return std::to_string(it->second);
 }
 
-static void BuildChoiceEntries(ppd_file_t *ppd, ppd_option_t *opt,
+static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
+    const char *choice, std::string &pwgKey)
+{
+    if (resolver == ResolverType::CACHE_SIZES && ppd->cache != nullptr) {
+        for (int j = 0; j < ppd->cache->num_sizes; j++) {
+            if (strcmp(ppd->cache->sizes[j].map.ppd, choice) == 0) {
+                pwgKey = ppd->cache->sizes[j].map.pwg;
+                return true;
+            }
+        }
+    } else if (resolver == ResolverType::CACHE_SOURCES && ppd->cache != nullptr) {
+        for (int j = 0; j < ppd->cache->num_sources; j++) {
+            if (strcmp(ppd->cache->sources[j].ppd, choice) == 0) {
+                pwgKey = ppd->cache->sources[j].pwg;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static void BuildEntries(ppd_file_t *ppd, ppd_option_t *opt,
+    ResolverType resolver,
     const std::map<std::string, std::string> &reverseChoiceMap,
     const std::map<std::string, int> *enumMap,
     Json::Value &textDefault, Json::Value &textZhCN, Json::Value &ppdChoices)
 {
     bool isStandalone = reverseChoiceMap.empty();
+    bool useCache = (resolver == ResolverType::CACHE_SIZES ||
+        resolver == ResolverType::CACHE_SOURCES) && ppd->cache != nullptr;
     for (int i = 0; i < opt->num_choices; i++) {
+        std::string ppdKey;
         std::string textKey;
-        std::string pwgValue;
-        if (isStandalone) {
+        if (useCache) {
+            if (!FindCacheEntry(ppd, resolver, opt->choices[i].choice, ppdKey)) {
+                continue;
+            }
+            if (resolver == ResolverType::CACHE_SIZES) {
+                std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
+                textKey = pageId.empty() ? ppdKey : pageId;
+            } else {
+                textKey = opt->choices[i].choice;
+            }
+        } else if (isStandalone) {
+            ppdKey = opt->choices[i].choice;
             textKey = opt->choices[i].choice;
-            ppdChoices[textKey] = opt->choices[i].choice;
         } else {
             auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
             if (revIt == reverseChoiceMap.end()) {
                 continue;
             }
-            pwgValue = revIt->second;
-            textKey = ResolveTextKey(pwgValue, enumMap);
+            ppdKey = revIt->second;
+            textKey = ResolveTextKey(ppdKey, enumMap);
             if (textKey.empty()) {
                 continue;
             }
-            ppdChoices[pwgValue] = opt->choices[i].choice;
         }
+        ppdChoices[ppdKey] = opt->choices[i].choice;
         textDefault[textKey] = opt->choices[i].text;
-        textZhCN[textKey] = GetCNFromPpdAttr(ppd,
-            opt->keyword, opt->choices[i].choice, opt->choices[i].text);
+        textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
+            opt->choices[i].choice, opt->choices[i].text);
     }
 }
 
@@ -296,38 +330,6 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
         }
     }
     return nullptr;
-}
-
-static void BuildPageSizeEntries(ppd_file_t *ppd, ppd_option_t *opt,
-    Json::Value &textDefault, Json::Value &textZhCN, Json::Value &ppdChoices)
-{
-    for (int i = 0; i < ppd->cache->num_sizes; i++) {
-        for (int j = 0; j < opt->num_choices; j++) {
-            if (strcmp(ppd->cache->sizes[i].map.ppd, opt->choices[j].choice) == 0) {
-                std::string pwgKey = ppd->cache->sizes[i].map.pwg;
-                std::string pageId = PrintPageSize::MatchPageSize(pwgKey);
-                std::string textKey = pageId.empty() ? pwgKey : pageId;
-                ppdChoices[pwgKey] = ppd->cache->sizes[i].map.ppd;
-                textDefault[textKey] = opt->choices[j].text;
-                textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
-                    opt->choices[j].choice, opt->choices[j].text);
-                break;
-            }
-        }
-    }
-}
-
-static void BuildInputSlotEntries(ppd_file_t *ppd, ppd_option_t *opt,
-    Json::Value &ppdChoices)
-{
-    for (int i = 0; i < ppd->cache->num_sources; i++) {
-        for (int j = 0; j < opt->num_choices; j++) {
-            if (strcmp(ppd->cache->sources[i].ppd, opt->choices[j].choice) == 0) {
-                ppdChoices[ppd->cache->sources[i].pwg] = ppd->cache->sources[i].ppd;
-                break;
-            }
-        }
-    }
 }
 
 static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
@@ -369,15 +371,8 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value textDefault;
     Json::Value textZhCN;
     Json::Value ppdChoices;
-    if (resolver == ResolverType::CACHE_SIZES && ppd->cache != nullptr) {
-        BuildPageSizeEntries(ppd, opt, textDefault, textZhCN, ppdChoices);
-    } else {
-        BuildChoiceEntries(ppd, opt, reverseChoiceMap, enumMap,
-            textDefault, textZhCN, ppdChoices);
-        if (resolver == ResolverType::CACHE_SOURCES && ppd->cache != nullptr) {
-            BuildInputSlotEntries(ppd, opt, ppdChoices);
-        }
-    }
+    BuildEntries(ppd, opt, resolver, reverseChoiceMap, enumMap,
+        textDefault, textZhCN, ppdChoices);
     WriteOptionMaps(opt, pwgType, ppdChoices, textDefault, textZhCN,
         ppdOptionMap, ppdOptionTextMap);
 }
