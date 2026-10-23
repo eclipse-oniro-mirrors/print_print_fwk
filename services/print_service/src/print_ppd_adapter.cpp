@@ -348,15 +348,12 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
     auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
     for (auto it = range.first; it != range.second; ++it) {
         ppd_option_t *opt = ppdFindOption(ppd, it->second.name.c_str());
-        PRINT_HILOGI("FindPpdOptionByPwgType: pwgType=%{public}s, try=%{public}s, found=%{public}d",
-            pwgType.c_str(), it->second.name.c_str(), opt != nullptr);
         if (opt != nullptr) {
             outChoiceMmap = &it->second.choiceMmap;
             outResolver = it->second.resolver;
             return opt;
         }
     }
-    PRINT_HILOGW("FindPpdOptionByPwgType: no option found for pwgType=%{public}s", pwgType.c_str());
     return nullptr;
 }
 
@@ -402,9 +399,6 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     ResolveContext ctx = {ppd, opt, resolver, &reverseChoiceMap, enumMap};
     EntryResult result;
     BuildEntries(ctx, result);
-    PRINT_HILOGI("ProcessOptionEntry: pwgType=%{public}s, keyword=%{public}s, "
-        "choices=%{public}d, text=%{public}d",
-        pwgType.c_str(), opt->keyword, result.ppdChoices.size(), result.textDefault.size());
     WriteOptionMaps(opt, pwgType, result, ppdOptionMap, ppdOptionTextMap);
 }
 

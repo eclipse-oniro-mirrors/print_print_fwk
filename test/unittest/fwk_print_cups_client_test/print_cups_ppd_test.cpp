@@ -103,13 +103,13 @@ protected:
             "*ColorModel Gray/Grayscale: \"<<cupsColorModel 0>>setpagedevice\"\n"
             "*ColorModel CMYK/CMYK: \"<<cupsColorModel 2>>setpagedevice\"\n"
             "*CloseUI: ColorModel\n"
-            "*OpenUI OutputMode: PickOne\n"
-            "*OrderDependency: 30 AnySetup OutputMode\n"
-            "*DefaultOutputMode: Normal\n"
-            "*OutputMode Draft/Draft: \"<</cupsCompression 0>>setpagedevice\"\n"
-            "*OutputMode Normal/Normal: \"<</cupsCompression 1>>setpagedevice\"\n"
-            "*OutputMode High/High: \"<</cupsCompression 2>>setpagedevice\"\n"
-            "*CloseUI: OutputMode\n"
+            "*OpenUI cupsPrintQuality: PickOne\n"
+            "*OrderDependency: 30 AnySetup cupsPrintQuality\n"
+            "*DefaultcupsPrintQuality: Normal\n"
+            "*cupsPrintQuality Draft/Draft: \"<<cupsPrintQuality 3>>setpagedevice\"\n"
+            "*cupsPrintQuality Normal/Normal: \"<<cupsPrintQuality 4>>setpagedevice\"\n"
+            "*cupsPrintQuality High/High: \"<<cupsPrintQuality 5>>setpagedevice\"\n"
+            "*CloseUI: cupsPrintQuality\n"
             "*OpenUI Duplex: PickOne\n"
             "*OrderDependency: 40 AnySetup Duplex\n"
             "*DefaultDuplex: None\n"
@@ -547,11 +547,11 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_ExpandedQualityMappings_Succeeds, TestS
     ppdMarkDefaults(ppd);
 
     MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_DRAFT);
-        EXPECT_TRUE(ppdIsMarked(ppd, "OutputMode", "Draft"));
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Draft"));
     MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_NORMAL);
-        EXPECT_TRUE(ppdIsMarked(ppd, "OutputMode", "Normal"));
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Normal"));
     MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, CUPS_PRINT_QUALITY_HIGH);
-        EXPECT_TRUE(ppdIsMarked(ppd, "OutputMode", "High"));
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "High"));
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
@@ -600,9 +600,9 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_CaseInsensitiveChoiceFallback_Succeeds,
     ppdMarkDefaults(ppd);
 
     MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, "draft");
-        EXPECT_TRUE(ppdIsMarked(ppd, "OutputMode", "Draft"));
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Draft"));
     MarkPpdOption(ppd, PRINT_PARAM_TYPE_QUALITY, "normal");
-        EXPECT_TRUE(ppdIsMarked(ppd, "OutputMode", "Normal"));
+    EXPECT_TRUE(ppdIsMarked(ppd, "cupsPrintQuality", "Normal"));
     MarkPpdOption(ppd, PRINT_PARAM_TYPE_COLOR_MODE, "color");
     EXPECT_TRUE(ppdIsMarked(ppd, "ColorModel", "RGB"));
 
@@ -720,7 +720,7 @@ HWTEST_F(PrintCupsPpdTest, MarkPpdOption_AllFallbacksFail_ReturnsFalse, TestSize
     bool ret = ConvertOptionAndChoiceNameToPpd(ppd, PRINT_PARAM_TYPE_QUALITY,
         "superhigh", optName, choiceName);
     EXPECT_FALSE(ret);
-    EXPECT_EQ(optName, "OutputMode");
+    EXPECT_EQ(optName, "cupsPrintQuality");
     EXPECT_EQ(choiceName, "superhigh");
 
     ppdClose(ppd);
