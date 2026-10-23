@@ -340,45 +340,23 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
     }
 }
 
-// 检查 PPD option 的 choice 是否能匹配 reverseChoiceMap
-// STANDARD 类型需要匹配，其他类型（CACHE/STANDALONE）始终有效
-static bool HasValidChoice(ppd_option_t *opt, const StdStringMultiMap &choiceMmap,
-    ResolverType resolver)
-{
-    if (choiceMmap.empty() || resolver != ResolverType::STANDARD) {
-        return true;
-    }
-    std::map<std::string, std::string> reverseMap;
-    for (const auto &entry : choiceMmap) {
-        reverseMap[entry.second] = entry.first;
-    }
-    for (int i = 0; i < opt->num_choices; i++) {
-        if (reverseMap.find(opt->choices[i].choice) != reverseMap.end()) {
-            return true;
-        }
-    }
-    return false;
-}
-
 // 从 CUPS_PPD_FIELD_MMAP 中查找 PWG 类型对应的第一个存在的 PPD option 变体
-// 对于 STANDARD 类型，如果 choice 不匹配反查表则跳过，继续尝试下一个变体
+// 例如 Duplex 有 5 个变体（Duplex/JCLDuplex/EFDuplex/...），返回 PPD 文件中实际存在的第一个
 static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
     const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver)
 {
     auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
     for (auto it = range.first; it != range.second; ++it) {
         ppd_option_t *opt = ppdFindOption(ppd, it->second.name.c_str());
-        if (opt == nullptr) {
-            continue;
-        }
-        if (HasValidChoice(opt, it->second.choiceMmap, it->second.resolver)) {
+        PRINT_HILOGI("FindPpdOptionByPwgType: pwgType=%{public}s, try=%{public}s, found=%{public}d",
+            pwgType.c_str(), it->second.name.c_str(), opt != nullptr);
+        if (opt != nullptr) {
             outChoiceMmap = &it->second.choiceMmap;
             outResolver = it->second.resolver;
             return opt;
         }
-        PRINT_HILOGI("FindPpdOptionByPwgType: skip %{public}s (no matching choice), try next variant",
-            it->second.name.c_str());
     }
+    PRINT_HILOGW("FindPpdOptionByPwgType: no option found for pwgType=%{public}s", pwgType.c_str());
     return nullptr;
 }
 
