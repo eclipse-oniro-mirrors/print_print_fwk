@@ -1546,8 +1546,7 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
             }
             PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
             continue;
-        }
-        if (optValue.isString()) {
+        } else if (optValue.isString()) {
             std::string valueStr = optValue.asString();
             if (keyStr == CUPS_MEDIA_SOURCE && !jobParams->ppdOptionMap.empty()) {
                 continue;
