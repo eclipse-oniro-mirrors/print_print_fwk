@@ -1244,6 +1244,9 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     }
     std::string mediaValue = jobParams->mediaSize.empty() ? CUPS_MEDIA_A4 : jobParams->mediaSize;
     mediaValue += "," + (jobParams->mediaType.empty() ? CUPS_MEDIA_TYPE_PLAIN : jobParams->mediaType);
+    if (!inputSlot.empty()) {
+        mediaValue += "," + inputSlot;
+    }
     num_options = cupsAddOption(CUPS_MEDIA, mediaValue.c_str(), num_options, options);
     return num_options;
 }
