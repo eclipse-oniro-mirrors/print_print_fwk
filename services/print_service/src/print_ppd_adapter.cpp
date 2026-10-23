@@ -299,23 +299,21 @@ static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
 // CACHE_SOURCES: 从 cache->sources 取 PWG key，textMap key 用 PPD choice 名
 // STANDALONE: key 和 value 都用 PPD choice 名（identity 映射）
 // STANDARD: 从 reverseChoiceMap 反查 PWG 值作 key，enumMap 转 int enum 作 textMap key
-static void BuildEntries(ppd_file_t *ppd, ppd_option_t *opt,
-    ResolverType resolver,
-    const std::map<std::string, std::string> &reverseChoiceMap,
-    const std::map<std::string, int> *enumMap,
-    Json::Value &textDefault, Json::Value &textZhCN, Json::Value &ppdChoices)
+static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
 {
-    bool isStandalone = reverseChoiceMap.empty();
-    bool useCache = (resolver == ResolverType::CACHE_SIZES ||
-        resolver == ResolverType::CACHE_SOURCES) && ppd->cache != nullptr;
+    ppd_file_t *ppd = ctx.ppd;
+    ppd_option_t *opt = ctx.opt;
+    bool isStandalone = ctx.reverseChoiceMap->empty();
+    bool useCache = (ctx.resolver == ResolverType::CACHE_SIZES ||
+        ctx.resolver == ResolverType::CACHE_SOURCES) && ppd->cache != nullptr;
     for (int i = 0; i < opt->num_choices; i++) {
         std::string ppdKey;
         std::string textKey;
         if (useCache) {
-            if (!FindCacheEntry(ppd, resolver, opt->choices[i].choice, ppdKey)) {
+            if (!FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey)) {
                 continue;
             }
-            if (resolver == ResolverType::CACHE_SIZES) {
+            if (ctx.resolver == ResolverType::CACHE_SIZES) {
                 std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
                 textKey = pageId.empty() ? ppdKey : pageId;
             } else {
@@ -325,19 +323,19 @@ static void BuildEntries(ppd_file_t *ppd, ppd_option_t *opt,
             ppdKey = opt->choices[i].choice;
             textKey = opt->choices[i].choice;
         } else {
-            auto revIt = reverseChoiceMap.find(opt->choices[i].choice);
-            if (revIt == reverseChoiceMap.end()) {
+            auto revIt = ctx.reverseChoiceMap->find(opt->choices[i].choice);
+            if (revIt == ctx.reverseChoiceMap->end()) {
                 continue;
             }
             ppdKey = revIt->second;
-            textKey = ResolveTextKey(ppdKey, enumMap);
+            textKey = ResolveTextKey(ppdKey, ctx.enumMap);
             if (textKey.empty()) {
                 continue;
             }
         }
-        ppdChoices[ppdKey] = opt->choices[i].choice;
-        textDefault[textKey] = opt->choices[i].text;
-        textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
+        result.ppdChoices[ppdKey] = opt->choices[i].choice;
+        result.textDefault[textKey] = opt->choices[i].text;
+        result.textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
             opt->choices[i].choice, opt->choices[i].text);
     }
 }
@@ -363,19 +361,18 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
 // optionMap: {pwgType: {optionName, choices}}（供下发时 PWG→PPD 查表）
 // textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}}（供应用显示翻译）
 static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
-    Json::Value &ppdChoices, Json::Value &textDefault, Json::Value &textZhCN,
-    Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
+    const EntryResult &result, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
-    if (!pwgType.empty() && !ppdChoices.empty()) {
+    if (!pwgType.empty() && !result.ppdChoices.empty()) {
         Json::Value optionEntry;
         optionEntry["optionName"] = opt->keyword;
-        optionEntry["choices"] = ppdChoices;
+        optionEntry["choices"] = result.ppdChoices;
         ppdOptionMap[pwgType] = optionEntry;
     }
-    if (!textDefault.empty()) {
+    if (!result.textDefault.empty()) {
         Json::Value textMap;
-        textMap["default"] = textDefault;
-        textMap["zh_CN"] = textZhCN;
+        textMap["default"] = result.textDefault;
+        textMap["zh_CN"] = result.textZhCN;
         ppdOptionTextMap[opt->keyword] = textMap;
     }
 }
@@ -399,13 +396,10 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     for (const auto &entry : *choiceMmap) {
         reverseChoiceMap[entry.second] = entry.first;
     }
-    Json::Value textDefault;
-    Json::Value textZhCN;
-    Json::Value ppdChoices;
-    BuildEntries(ppd, opt, resolver, reverseChoiceMap, enumMap,
-        textDefault, textZhCN, ppdChoices);
-    WriteOptionMaps(opt, pwgType, ppdChoices, textDefault, textZhCN,
-        ppdOptionMap, ppdOptionTextMap);
+    ResolveContext ctx = {ppd, opt, resolver, &reverseChoiceMap, enumMap};
+    EntryResult result;
+    BuildEntries(ctx, result);
+    WriteOptionMaps(opt, pwgType, result, ppdOptionMap, ppdOptionTextMap);
 }
 
 // 从 PPD 文件构建完整的 optionMap 和 textMap

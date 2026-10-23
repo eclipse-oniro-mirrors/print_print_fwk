@@ -41,6 +41,20 @@ struct CupsOptionInfo {
     ResolverType resolver;
 };
 
+struct EntryResult {
+    Json::Value textDefault;
+    Json::Value textZhCN;
+    Json::Value ppdChoices;
+};
+
+struct ResolveContext {
+    ppd_file_t *ppd;
+    ppd_option_t *opt;
+    ResolverType resolver;
+    const std::map<std::string, std::string> *reverseChoiceMap;
+    const std::map<std::string, int> *enumMap;
+};
+
 extern const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP;
 extern const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE;
 extern const std::string PPD_OPT_NAME_PAGESIZE;
