@@ -1513,34 +1513,6 @@ bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
     return false;
 }
 
-static bool IsCustomOption(const Json::Value &optValue)
-{
-    return optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
-        && optValue["choice"].asString() == CUSTOM_OPTION_CHOICE
-        && optValue.isMember("value") && optValue["value"].isString();
-}
-
-static int AddCustomOption(const std::string &keyStr, const Json::Value &optValue,
-    JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    const char *valueData = optValue["value"].asCString();
-    if (valueData == nullptr) {
-        return num_options;
-    }
-    struct HksBlob base64Blob = {
-        .size = static_cast<uint32_t>(strlen(valueData)),
-        .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
-    };
-    struct HksBlob plainBlob = { 0, nullptr };
-    if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
-        num_options = cupsAddOption(keyStr.c_str(),
-            ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
-            num_options, options);
-    }
-    PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
-    return num_options;
-}
-
 int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->advancedOpsJson.isNull()) {
@@ -1555,17 +1527,34 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
             continue;
         }
         Json::Value optValue = jobParams->advancedOpsJson[keyStr];
-        if (IsCustomOption(optValue)) {
-            num_options = AddCustomOption(keyStr, optValue, jobParams, num_options, options);
+        if (optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
+            && optValue["choice"].asString() == CUSTOM_OPTION_CHOICE && optValue.isMember("value")
+            && optValue["value"].isString()) {
+            const char *valueData = optValue["value"].asCString();
+            if (valueData == nullptr) {
+                continue;
+            }
+            struct HksBlob base64Blob = {
+                .size = static_cast<uint32_t>(strlen(valueData)),
+                .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
+            };
+            struct HksBlob plainBlob = { 0, nullptr };
+            if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
+                num_options = cupsAddOption(keyStr.c_str(),
+                    ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
+                    num_options, options);
+            }
+            PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
             continue;
         }
         if (optValue.isString()) {
             std::string valueStr = optValue.asString();
+            if (keyStr == CUPS_MEDIA_SOURCE && !jobParams->ppdOptionMap.empty()) {
+                continue;
+            }
             if (keyStr == CUPS_MEDIA_SOURCE) {
-                if (jobParams->ppdOptionMap.empty()) {
-                    num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(),
-                        num_options, options);
-                }
+                num_options = cupsAddOption(PPD_INPUT_SLOT.c_str(), valueStr.c_str(),
+                    num_options, options);
                 continue;
             }
             num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
