@@ -1311,7 +1311,8 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap);
     }
     std::string orientPwg = jobParams->isLandscape ? CUPS_ORIENTATION_LANDSCAPE : CUPS_ORIENTATION_PORTRAIT;
-    std::string optName, choiceName;
+    std::string optName;
+    std::string choiceName;
     if (PpdAdapter::ConvertPwgToPpd(optionMap, CUPS_ORIENTATION, orientPwg, optName, choiceName)) {
         num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
     } else {
@@ -1381,7 +1382,8 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
             PRINT_HILOGE("Parse ppdOptionMap failed");
         }
     }
-    std::string optName, choiceName;
+    std::string optName;
+    std::string choiceName;
     if (PpdAdapter::ConvertPwgToPpd(optionMap, PRINT_PARAM_TYPE_DUPLEX_MODE,
         jobParams->duplex, optName, choiceName)) {
         num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
@@ -1511,6 +1513,34 @@ bool PrintCupsClient::DecryptCustomOption(const std::string &keyStr,
     return false;
 }
 
+static bool IsCustomOption(const Json::Value &optValue)
+{
+    return optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
+        && optValue["choice"].asString() == CUSTOM_OPTION_CHOICE
+        && optValue.isMember("value") && optValue["value"].isString();
+}
+
+static int AddCustomOption(const std::string &keyStr, const Json::Value &optValue,
+    JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    const char *valueData = optValue["value"].asCString();
+    if (valueData == nullptr) {
+        return num_options;
+    }
+    struct HksBlob base64Blob = {
+        .size = static_cast<uint32_t>(strlen(valueData)),
+        .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
+    };
+    struct HksBlob plainBlob = { 0, nullptr };
+    if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
+        num_options = cupsAddOption(keyStr.c_str(),
+            ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
+            num_options, options);
+    }
+    PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
+    return num_options;
+}
+
 int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->advancedOpsJson.isNull()) {
@@ -1525,26 +1555,11 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
             continue;
         }
         Json::Value optValue = jobParams->advancedOpsJson[keyStr];
-        if (optValue.isObject() && optValue.isMember("choice") && optValue["choice"].isString()
-            && optValue["choice"].asString() == CUSTOM_OPTION_CHOICE && optValue.isMember("value")
-            && optValue["value"].isString()) {
-            const char *valueData = optValue["value"].asCString();
-            if (valueData == nullptr) {
-                continue;
-            }
-            struct HksBlob base64Blob = {
-                .size = static_cast<uint32_t>(strlen(valueData)),
-                .data = reinterpret_cast<uint8_t *>(const_cast<char *>(valueData))
-            };
-            struct HksBlob plainBlob = { 0, nullptr };
-            if (DecryptCustomOption(keyStr, base64Blob, plainBlob, jobParams->serviceAbility)) {
-                num_options = cupsAddOption(keyStr.c_str(),
-                    ("Custom." + std::string((char *)plainBlob.data, plainBlob.size)).c_str(),
-                    num_options, options);
-            }
-            PrintUtil::SecureDeleteBlob(plainBlob.data, plainBlob.size);
+        if (IsCustomOption(optValue)) {
+            num_options = AddCustomOption(keyStr, optValue, jobParams, num_options, options);
             continue;
-        } else if (optValue.isString()) {
+        }
+        if (optValue.isString()) {
             std::string valueStr = optValue.asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
                 if (jobParams->ppdOptionMap.empty()) {
