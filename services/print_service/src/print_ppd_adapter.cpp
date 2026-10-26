@@ -199,7 +199,7 @@ const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP
     {PPD_OPT_NAME_OUTPUT_ORDER,
         {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
     {PPD_OPT_NAME_INPUT_SLOT,
-        {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::CACHE_SOURCES}},
+        {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
 };
 
 const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
@@ -304,26 +304,16 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
     ppd_file_t *ppd = ctx.ppd;
     ppd_option_t *opt = ctx.opt;
     bool isStandalone = ctx.reverseChoiceMap->empty();
-    bool useCache = (ctx.resolver == ResolverType::CACHE_SIZES ||
-        ctx.resolver == ResolverType::CACHE_SOURCES) && ppd->cache != nullptr;
+    bool useCache = (ctx.resolver == ResolverType::CACHE_SIZES) && ppd->cache != nullptr;
     for (int i = 0; i < opt->num_choices; i++) {
         std::string ppdKey;
         std::string textKey;
         if (useCache) {
-            bool cacheFound = FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey);
-            if (!cacheFound) {
-                if (ctx.resolver == ResolverType::CACHE_SOURCES) {
-                    ppdKey = opt->choices[i].choice;
-                } else {
-                    continue;
-                }
+            if (!FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey)) {
+                continue;
             }
-            if (ctx.resolver == ResolverType::CACHE_SIZES) {
-                std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
-                textKey = pageId.empty() ? ppdKey : pageId;
-            } else {
-                textKey = opt->choices[i].choice;
-            }
+            std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
+            textKey = pageId.empty() ? ppdKey : pageId;
         } else if (isStandalone) {
             ppdKey = opt->choices[i].choice;
             textKey = opt->choices[i].choice;
