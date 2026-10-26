@@ -20,7 +20,6 @@
 #include <fstream>
 #include <unistd.h>
 #include "print_cups_ppd.h"
-#include "print_ppd_adapter.h"
 #include "printer_capability.h"
 #include "print_json_util.h"
 #define private public
@@ -136,6 +135,8 @@ bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType, 
 bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val, std::string &choiceName);
 bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::string &optName, std::string &choiceName);
+void BuildPpdOptionMap(ppd_file_t *ppd, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap);
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
@@ -805,7 +806,7 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.
 
     Json::Value optionMap;
     Json::Value textMap;
-    PpdAdapter::BuildOptionMaps(ppd, optionMap, textMap);
+    BuildPpdOptionMap(ppd, optionMap, textMap);
 
     EXPECT_TRUE(optionMap.isMember("defaultDuplexMode"));
     EXPECT_TRUE(optionMap.isMember("defaultColorMode"));
@@ -852,7 +853,7 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_NoDuplexOption_SkipsMissingOptions,
 
     Json::Value optionMap;
     Json::Value textMap;
-    PpdAdapter::BuildOptionMaps(ppd, optionMap, textMap);
+    BuildPpdOptionMap(ppd, optionMap, textMap);
     EXPECT_FALSE(optionMap.isMember("defaultDuplexMode"));
     EXPECT_TRUE(optionMap.isMember("defaultPageSizeId"));
 
@@ -900,7 +901,7 @@ HWTEST_F(PrintCupsPpdTest, FillBasicOptions_PpdMode_ConvertsAllDimensions, TestS
 
     Json::Value optionMap;
     Json::Value textMap;
-    PpdAdapter::BuildOptionMaps(ppd, optionMap, textMap);
+    BuildPpdOptionMap(ppd, optionMap, textMap);
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
