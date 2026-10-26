@@ -20,6 +20,7 @@
 #include <fstream>
 #include <unistd.h>
 #include "print_cups_ppd.h"
+#include "print_ppd_adapter.h"
 #include "printer_capability.h"
 #include "print_json_util.h"
 #define private public
@@ -135,7 +136,6 @@ bool FindMediaTypeChoiceByPwg(ppd_file_t *ppd, const std::string &pwgMediaType, 
 bool FindChoiceInPpdOption(ppd_option_t *ppdOption, const std::string &val, std::string &choiceName);
 bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::string &optName, std::string &choiceName);
-#include "print_ppd_adapter.h"
 void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
