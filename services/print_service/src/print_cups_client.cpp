@@ -1225,7 +1225,9 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     }
     Json::Value mediaOptionMap;
     if (!jobParams->ppdOptionMap.empty()) {
-        PrintJsonUtil::Parse(jobParams->ppdOptionMap, mediaOptionMap);
+        if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, mediaOptionMap)) {
+            PRINT_HILOGE("Parse ppdOptionMap failed in FillMediaOptions");
+        }
     }
     std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
     std::vector<std::pair<std::string, std::string>> mediaResult;
@@ -1308,7 +1310,9 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
     num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
     Json::Value optionMap;
     if (!jobParams->ppdOptionMap.empty()) {
-        PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap);
+        if (!PrintJsonUtil::Parse(jobParams->ppdOptionMap, optionMap)) {
+            PRINT_HILOGE("Parse ppdOptionMap failed in FillLandscapeOptions");
+        }
     }
     std::string orientPwg = jobParams->isLandscape ? CUPS_ORIENTATION_LANDSCAPE : CUPS_ORIENTATION_PORTRAIT;
     std::string optName;
