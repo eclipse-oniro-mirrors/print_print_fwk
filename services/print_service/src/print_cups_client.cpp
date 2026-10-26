@@ -1227,6 +1227,7 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     if (!jobParams->ppdOptionMap.empty()) {
         PrintJsonUtil::Parse(jobParams->ppdOptionMap, mediaOptionMap);
     }
+    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
     std::vector<std::pair<std::string, std::string>> mediaResult;
     if (PpdAdapter::ConvertMediaOptions(mediaOptionMap, jobParams->mediaSize,
         jobParams->mediaType, mediaResult)) {
@@ -1234,9 +1235,17 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
             num_options = cupsAddOption(pair.first.c_str(), pair.second.c_str(),
                 num_options, options);
         }
+        if (!inputSlot.empty()) {
+            std::string slotOptName;
+            std::string slotChoiceName;
+            if (PpdAdapter::ConvertPwgToPpd(mediaOptionMap, PPD_INPUT_SLOT,
+                inputSlot, slotOptName, slotChoiceName)) {
+                num_options = cupsAddOption(slotOptName.c_str(), slotChoiceName.c_str(),
+                    num_options, options);
+            }
+        }
         return num_options;
     }
-    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
     if (!jobParams->mediaType.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {

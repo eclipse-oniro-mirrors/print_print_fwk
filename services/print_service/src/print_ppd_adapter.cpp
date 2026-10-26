@@ -198,6 +198,8 @@ const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP
         {PPD_OPT_NAME_ORIENTATION_REQUESTED, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
     {PPD_OPT_NAME_OUTPUT_ORDER,
         {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
+    {PPD_OPT_NAME_INPUT_SLOT,
+        {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::CACHE_SOURCES}},
 };
 
 const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
