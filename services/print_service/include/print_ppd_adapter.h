@@ -66,7 +66,6 @@ public:
         const std::string &pwgVal, std::string &optName, std::string &choiceName);
     static bool ConvertMediaOptions(const Json::Value &optionMap,
         const std::string &mediaSize, const std::string &mediaType,
-        const std::string &inputSlot,
         std::vector<std::pair<std::string, std::string>> &result);
 };
 }  // namespace OHOS::Print

@@ -1227,16 +1227,16 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     if (!jobParams->ppdOptionMap.empty()) {
         PrintJsonUtil::Parse(jobParams->ppdOptionMap, mediaOptionMap);
     }
-    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
     std::vector<std::pair<std::string, std::string>> mediaResult;
     if (PpdAdapter::ConvertMediaOptions(mediaOptionMap, jobParams->mediaSize,
-        jobParams->mediaType, inputSlot, mediaResult)) {
+        jobParams->mediaType, mediaResult)) {
         for (const auto &pair : mediaResult) {
             num_options = cupsAddOption(pair.first.c_str(), pair.second.c_str(),
                 num_options, options);
         }
         return num_options;
     }
+    std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
     if (!jobParams->mediaType.empty()) {
         num_options = cupsAddOption(CUPS_MEDIA_TYPE, jobParams->mediaType.c_str(), num_options, options);
     } else {

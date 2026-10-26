@@ -198,8 +198,6 @@ const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP
         {PPD_OPT_NAME_ORIENTATION_REQUESTED, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
     {PPD_OPT_NAME_OUTPUT_ORDER,
         {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
-    {PPD_OPT_NAME_INPUT_SLOT,
-        {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::CACHE_SOURCES}},
 };
 
 const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
@@ -447,7 +445,7 @@ bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
     const std::string &inputSlot,
     std::vector<std::pair<std::string, std::string>> &result)
 {
-    if (mediaSize.empty() && mediaType.empty() && inputSlot.empty()) {
+    if (mediaSize.empty() && mediaType.empty()) {
         return false;
     }
     if (!mediaSize.empty() &&
@@ -460,11 +458,6 @@ bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
          !optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE]["choices"].isMember(mediaType))) {
         return false;
     }
-    if (!inputSlot.empty() &&
-        (!optionMap.isMember(PPD_OPT_NAME_INPUT_SLOT) ||
-         !optionMap[PPD_OPT_NAME_INPUT_SLOT]["choices"].isMember(inputSlot))) {
-        return false;
-    }
     if (!mediaSize.empty()) {
         const Json::Value &entry = optionMap[PRINT_PARAM_TYPE_PAGE_SIZE];
         result.emplace_back(entry["optionName"].asString(),
@@ -475,13 +468,8 @@ bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
         result.emplace_back(entry["optionName"].asString(),
             entry["choices"][mediaType].asString());
     }
-    if (!inputSlot.empty()) {
-        const Json::Value &entry = optionMap[PPD_OPT_NAME_INPUT_SLOT];
-        result.emplace_back(entry["optionName"].asString(),
-            entry["choices"][inputSlot].asString());
-    }
-    PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s, slot=%{public}s",
-        mediaSize.c_str(), mediaType.c_str(), inputSlot.c_str());
+    PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s",
+        mediaSize.c_str(), mediaType.c_str());
     return true;
 }
 
