@@ -323,11 +323,6 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
                 ppdKey = opt->choices[i].choice;
             }
             textKey = opt->choices[i].choice;
-            result.ppdChoices[ppdKey] = opt->choices[i].choice;
-            result.textDefault[textKey] = opt->choices[i].text;
-            result.textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
-                opt->choices[i].choice, opt->choices[i].text);
-            continue;
         } else if (ctx.reverseChoiceMap->empty()) {
             ppdKey = opt->choices[i].choice;
             textKey = opt->choices[i].choice;
