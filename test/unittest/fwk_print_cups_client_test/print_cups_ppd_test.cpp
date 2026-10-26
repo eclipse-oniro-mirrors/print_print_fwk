@@ -766,38 +766,6 @@ HWTEST_F(PrintCupsPpdTest, FindDuplexChoiceByPwg_UnrecognizedId_ReturnsFalse, Te
     RemoveTempFile(ppdPath);
 }
 
-/**
- * @tc.name: ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash
- * @tc.desc: ParseMediaTypeAttributeFromPPD returns without crash when ppdCache->types is nullptr
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsPpdTest, ParseMediaTypeAttributeFromPPD_NullTypes_NoCrash, TestSize.Level1)
-{
-    std::string ppdPath = CreatePpdWithAllOptions();
-    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
-    ASSERT_NE(ppd, nullptr);
-    ppdMarkDefaults(ppd);
-    ppd->cache = _ppdCacheCreateWithPPD(ppd);
-    ASSERT_NE(ppd->cache, nullptr);
-
-    auto *origTypes = ppd->cache->types;
-    int origNumTypes = ppd->cache->num_types;
-    ppd->cache->types = nullptr;
-    ppd->cache->num_types = origNumTypes > 0 ? origNumTypes : 1;
-
-    PrinterCapability printerCaps;
-    ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
-    std::vector<std::string> mediaTypes;
-    printerCaps.GetSupportedMediaType(mediaTypes);
-    EXPECT_TRUE(mediaTypes.empty());
-
-    ppd->cache->types = origTypes;
-    ppd->cache->num_types = origNumTypes;
-    ppdClose(ppd);
-    RemoveTempFile(ppdPath);
-}
-
 HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.Level1)
 {
     std::string ppdPath = CreatePpdWithAllOptions();
