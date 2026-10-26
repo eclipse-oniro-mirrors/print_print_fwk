@@ -310,8 +310,13 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
         std::string ppdKey;
         std::string textKey;
         if (useCache) {
-            if (!FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey)) {
-                continue;
+            bool cacheFound = FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey);
+            if (!cacheFound) {
+                if (ctx.resolver == ResolverType::CACHE_SOURCES) {
+                    ppdKey = opt->choices[i].choice;
+                } else {
+                    continue;
+                }
             }
             if (ctx.resolver == ResolverType::CACHE_SIZES) {
                 std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
