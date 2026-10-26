@@ -32,22 +32,6 @@ enum class ExtensionAbilityType {
     SERVICE_EXTENSION_ABILITY = 1
 };
 class PrintServiceHelper {
-public:
-    virtual ~PrintServiceHelper();
-    virtual bool CheckPermission(const std::string &name);
-    virtual bool StartAbility(const AAFwk::Want &want);
-    virtual sptr<IRemoteObject> GetBundleMgr();
-    virtual bool QueryAccounts(std::vector<int> &accountList);
-    virtual bool QueryExtension(sptr<AppExecFwk::IBundleMgr> mgr, int userId,
-                                    std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
-    virtual bool QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name);
-    virtual bool IsSyncMode();
-    virtual bool StartExtensionAbility(const AAFwk::Want &want, std::function<void()> deathCallback);
-    virtual bool StartPluginPrintExtAbility(const AAFwk::Want &want);
-    virtual void PrintSubscribeCommonEvent();
-    virtual bool DisconnectAbility(ExtensionAbilityType extensionAbilityType);
-    virtual bool CheckPluginPrintConnected();
-
 private:
     class PrintConnectCallbackRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -66,6 +50,7 @@ private:
         std::function<void()> func_ = nullptr;
     };
 
+public:
     class PrintAbilityConnection : public AAFwk::AbilityConnectionStub {
     public:
         PrintAbilityConnection() = default;
@@ -110,6 +95,21 @@ private:
         std::function<void()> func_ = nullptr;
         sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
     };
+
+    virtual ~PrintServiceHelper();
+    virtual bool CheckPermission(const std::string &name);
+    virtual bool StartAbility(const AAFwk::Want &want);
+    virtual sptr<IRemoteObject> GetBundleMgr();
+    virtual bool QueryAccounts(std::vector<int> &accountList);
+    virtual bool QueryExtension(sptr<AppExecFwk::IBundleMgr> mgr, int userId,
+                                    std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
+    virtual bool QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name);
+    virtual bool IsSyncMode();
+    virtual bool StartExtensionAbility(const AAFwk::Want &want, std::function<void()> deathCallback);
+    virtual bool StartPluginPrintExtAbility(const AAFwk::Want &want, sptr<PrintAbilityConnection> *outConn = nullptr);
+    virtual void PrintSubscribeCommonEvent();
+    virtual bool DisconnectAbility(ExtensionAbilityType extensionAbilityType);
+    virtual bool CheckPluginPrintConnected(const sptr<PrintAbilityConnection> &conn);
 
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
