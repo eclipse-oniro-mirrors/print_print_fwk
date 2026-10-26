@@ -323,7 +323,7 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
                 ppdKey = opt->choices[i].choice;
             }
             textKey = opt->choices[i].choice;
-        } else if (ctx.reverseChoiceMap->empty()) {
+        } else if (isStandalone) {
             ppdKey = opt->choices[i].choice;
             textKey = opt->choices[i].choice;
         } else {
