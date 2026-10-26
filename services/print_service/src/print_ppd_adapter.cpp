@@ -199,7 +199,7 @@ const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP
     {PPD_OPT_NAME_OUTPUT_ORDER,
         {PPD_OPT_NAME_OUTPUT_ORDER, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
     {PPD_OPT_NAME_INPUT_SLOT,
-        {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::STANDALONE}},
+        {PPD_OPT_NAME_INPUT_SLOT, MMAP_CUPS_CHOICE_EMPTY, ResolverType::CACHE_SOURCES}},
 };
 
 const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
@@ -304,17 +304,34 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
     ppd_file_t *ppd = ctx.ppd;
     ppd_option_t *opt = ctx.opt;
     bool isStandalone = ctx.reverseChoiceMap->empty();
-    bool useCache = (ctx.resolver == ResolverType::CACHE_SIZES) && ppd->cache != nullptr;
+    bool useCache = (ctx.resolver == ResolverType::CACHE_SIZES ||
+        ctx.resolver == ResolverType::CACHE_SOURCES) && ppd->cache != nullptr;
     for (int i = 0; i < opt->num_choices; i++) {
         std::string ppdKey;
         std::string textKey;
-        if (useCache) {
+        if (useCache && ctx.resolver == ResolverType::CACHE_SIZES) {
             if (!FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey)) {
                 continue;
             }
             std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
             textKey = pageId.empty() ? ppdKey : pageId;
-        } else if (isStandalone) {
+        } else if (useCache && ctx.resolver == ResolverType::CACHE_SOURCES) {
+            std::string cacheKey;
+            if (FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, cacheKey)) {
+                ppdKey = cacheKey;
+            } else {
+                ppdKey = opt->choices[i].choice;
+            }
+            textKey = opt->choices[i].choice;
+            result.ppdChoices[ppdKey] = opt->choices[i].choice;
+            if (!cacheKey.empty() && cacheKey != opt->choices[i].choice) {
+                result.ppdChoices[opt->choices[i].choice] = opt->choices[i].choice;
+            }
+            result.textDefault[textKey] = opt->choices[i].text;
+            result.textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
+                opt->choices[i].choice, opt->choices[i].text);
+            continue;
+        } else if (ctx.reverseChoiceMap->empty()) {
             ppdKey = opt->choices[i].choice;
             textKey = opt->choices[i].choice;
         } else {
