@@ -324,9 +324,6 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
             }
             textKey = opt->choices[i].choice;
             result.ppdChoices[ppdKey] = opt->choices[i].choice;
-            if (!cacheKey.empty() && cacheKey != opt->choices[i].choice) {
-                result.ppdChoices[opt->choices[i].choice] = opt->choices[i].choice;
-            }
             result.textDefault[textKey] = opt->choices[i].text;
             result.textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
                 opt->choices[i].choice, opt->choices[i].text);
@@ -346,6 +343,9 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
             }
         }
         result.ppdChoices[ppdKey] = opt->choices[i].choice;
+        if (ppdKey != opt->choices[i].choice) {
+            result.ppdChoices[opt->choices[i].choice] = opt->choices[i].choice;
+        }
         result.textDefault[textKey] = opt->choices[i].text;
         result.textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
             opt->choices[i].choice, opt->choices[i].text);
@@ -433,7 +433,8 @@ void PpdAdapter::BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::
     }
 }
 
-// 单维度 PWG→PPD 查表：从 optionMap 中查找 PWG 值对应的 PPD option 名和 choice 名
+// 单维度 PWG→PPD 查表：从 optionMap 中查找值对应的 PPD option 名和 choice 名
+// optionMap choices 同时存 PWG 格式和 PPD choice 名两种 key，value 固定为 PPD choice 名
 // 返回 true 表示命中，false 表示未命中（调用方应回退 PWG 标准值）
 bool PpdAdapter::ConvertPwgToPpd(const Json::Value &optionMap, const std::string &pwgType,
     const std::string &pwgVal, std::string &optName, std::string &choiceName)
