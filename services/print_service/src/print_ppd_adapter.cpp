@@ -477,4 +477,18 @@ bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
     return true;
 }
 
+// Resolve a PWG option through PPD when available; otherwise add the PWG fallback option.
+// spec.pwgVal feeds both the PPD conversion and the PWG fallback (defaultVal used when it is empty).
+int PpdAdapter::AddPpdOrPwgOption(const Json::Value &optionMap, const PwgOptionSpec &spec,
+    int num_options, cups_option_t **options)
+{
+    std::string optName;
+    std::string choiceName;
+    if (ConvertPwgToPpd(optionMap, spec.pwgType, spec.pwgVal, optName, choiceName)) {
+        return cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+    }
+    const char *val = spec.pwgVal.empty() ? spec.defaultVal : spec.pwgVal.c_str();
+    return cupsAddOption(spec.pwgOptName, val, num_options, options);
+}
+
 }  // namespace OHOS::Print

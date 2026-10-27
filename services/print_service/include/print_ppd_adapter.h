@@ -23,6 +23,7 @@
 #include <json/json.h>
 #include <cups/ppd.h>
 #include <cups/ppd-private.h>
+#include <cups/cups.h>
 
 namespace OHOS::Print {
 
@@ -55,6 +56,13 @@ struct ResolveContext {
     const std::map<std::string, int> *enumMap;
 };
 
+struct PwgOptionSpec {
+    std::string pwgType;
+    std::string pwgVal;
+    const char *pwgOptName;
+    const char *defaultVal;
+};
+
 extern const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP;
 extern const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE;
 extern const std::string PPD_OPT_NAME_PAGESIZE;
@@ -68,6 +76,8 @@ public:
     static bool ConvertMediaOptions(const Json::Value &optionMap,
         const std::vector<std::pair<std::string, std::string>> &dims,
         std::vector<std::pair<std::string, std::string>> &result);
+    static int AddPpdOrPwgOption(const Json::Value &optionMap, const PwgOptionSpec &spec,
+        int num_options, cups_option_t **options);
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_PPD_ADAPTER_H

@@ -1320,7 +1320,7 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         }
     }
     std::string orientPwg = jobParams->isLandscape ? CUPS_ORIENTATION_LANDSCAPE : CUPS_ORIENTATION_PORTRAIT;
-    num_options = AddPpdOrPwgOption(optionMap,
+    num_options = PpdAdapter::AddPpdOrPwgOption(optionMap,
         {CUPS_ORIENTATION, orientPwg, CUPS_ORIENTATION, ""}, num_options, options);
     return num_options;
 }
@@ -1366,26 +1366,6 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
-// Resolve a PWG option through PPD when available; otherwise add the PWG fallback option.
-// spec.pwgVal feeds both the PPD conversion and the PWG fallback (defaultVal used when it is empty).
-int PrintCupsClient::AddPpdOrPwgOption(const Json::Value &optionMap, const PwgOptionSpec &spec,
-    int num_options, cups_option_t **options)
-{
-    std::string optName;
-    std::string choiceName;
-    if (PpdAdapter::ConvertPwgToPpd(optionMap, spec.pwgType, spec.pwgVal, optName, choiceName)) {
-        return cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    }
-    return AddPwgOption(spec.pwgOptName, spec.pwgVal, spec.defaultVal, num_options, options);
-}
-
-int PrintCupsClient::AddPwgOption(const char *optName, const std::string &pwgVal,
-    const char *defaultVal, int num_options, cups_option_t **options)
-{
-    const char *val = pwgVal.empty() ? defaultVal : pwgVal.c_str();
-    return cupsAddOption(optName, val, num_options, options);
-}
-
 int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams->numCopies >= 1) {
@@ -1401,12 +1381,12 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
     }
     std::string optName;
     std::string choiceName;
-    num_options = AddPpdOrPwgOption(optionMap,
+    num_options = PpdAdapter::AddPpdOrPwgOption(optionMap,
         {PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex, CUPS_SIDES, CUPS_SIDES_ONE_SIDED}, num_options, options);
-    num_options = AddPpdOrPwgOption(optionMap,
+    num_options = PpdAdapter::AddPpdOrPwgOption(optionMap,
         {PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO},
         num_options, options);
-    num_options = AddPpdOrPwgOption(optionMap,
+    num_options = PpdAdapter::AddPpdOrPwgOption(optionMap,
         {PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL},
         num_options, options);
     std::string collatePwg = jobParams->isCollate ? PRINT_PARAM_VAL_TRUE : PRINT_PARAM_VAL_FALSE;
@@ -1417,7 +1397,7 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
         num_options = cupsAddOption("Collate", jobParams->isCollate ? "true" : "false", num_options, options);
     }
     std::string orderPwg = jobParams->isReverse ? "Reverse" : "Normal";
-    num_options = AddPpdOrPwgOption(optionMap,
+    num_options = PpdAdapter::AddPpdOrPwgOption(optionMap,
         {"OutputOrder", orderPwg, "OutputOrder", ""}, num_options, options);
     return num_options;
 }
