@@ -255,8 +255,8 @@ static const std::map<std::string, const std::map<std::string, int> *> PWG_TYPE_
     {PRINT_PARAM_TYPE_PAGE_SIZE, &PWG_STRING_TO_ENUM_PAGE_SIZE},
 };
 
-// PWG 字符串值转为 textMap 的 int enum 字符串 key（如 "two-sided-long-edge" → "1"）
-// enumMap 为空时直接返回 PWG 原始值，查找失败返回空串
+// Convert PWG string value to textMap int-enum string key (e.g. "two-sided-long-edge" -> "1")
+// Return the raw PWG value when enumMap is null; return empty string on lookup miss
 static std::string ResolveTextKey(const std::string &pwgValue,
     const std::map<std::string, int> *enumMap)
 {
@@ -270,9 +270,9 @@ static std::string ResolveTextKey(const std::string &pwgValue,
     return std::to_string(it->second);
 }
 
-// 在 ppd->cache 中按 PPD choice 名查找对应的 CUPS PWG 名
-// CACHE_SIZES: 查 cache->sizes（如 "A4" → "iso_a4_210x297mm"）
-// CACHE_SOURCES: 查 cache->sources（如 "Main" → "main"）
+// Look up the CUPS PWG name by PPD choice name in ppd->cache
+// CACHE_SIZES: search cache->sizes (e.g. "A4" -> "iso_a4_210x297mm")
+// CACHE_SOURCES: search cache->sources (e.g. "Main" -> "main")
 static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
     const char *choice, std::string &pwgKey)
 {
@@ -294,11 +294,11 @@ static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
     return false;
 }
 
-// 统一构建函数：遍历 PPD choices，按 ResolverType 解析 key，同时构建 optionMap choices 和 textMap
-// CACHE_SIZES: 从 cache->sizes 取 PWG key，textMap key 用 PrintPageSize::MatchPageSize 转换
-// CACHE_SOURCES: 从 cache->sources 取 PWG key，textMap key 用 PPD choice 名
-// STANDALONE: key 和 value 都用 PPD choice 名（identity 映射）
-// STANDARD: 从 reverseChoiceMap 反查 PWG 值作 key，enumMap 转 int enum 作 textMap key
+// Unified builder: iterate PPD choices, resolve the key by ResolverType, build optionMap choices and textMap
+// CACHE_SIZES: take PWG key from cache->sizes, convert textMap key via PrintPageSize::MatchPageSize
+// CACHE_SOURCES: take PWG key from cache->sources, use PPD choice name as textMap key
+// STANDALONE: use PPD choice name for both key and value (identity mapping)
+// STANDARD: reverse-lookup PWG value from reverseChoiceMap as key, convert to int enum via enumMap as textMap key
 static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
 {
     ppd_file_t *ppd = ctx.ppd;
@@ -347,8 +347,8 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
     }
 }
 
-// 从 CUPS_PPD_FIELD_MMAP 中查找 PWG 类型对应的第一个存在的 PPD option 变体
-// 例如 Duplex 有 5 个变体（Duplex/JCLDuplex/EFDuplex/...），返回 PPD 文件中实际存在的第一个
+// Find the first existing PPD option variant for a PWG type from CUPS_PPD_FIELD_MMAP
+// e.g. Duplex has 5 variants (Duplex/JCLDuplex/EFDuplex/...); return the first one present in the PPD file
 static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
     const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver)
 {
@@ -367,9 +367,9 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
     return nullptr;
 }
 
-// 将构建好的 entries 写入 optionMap 和 textMap JSON
-// optionMap: {pwgType: {optionName, choices}}（供下发时 PWG→PPD 查表）
-// textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}}（供应用显示翻译）
+// Write built entries into optionMap and textMap JSON
+// optionMap: {pwgType: {optionName, choices}} (for PWG->PPD lookup when sending options)
+// textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}} (for app display translation)
 static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
     const EntryResult &result, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
@@ -387,7 +387,7 @@ static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
     }
 }
 
-// 处理单个 PWG 类型的完整流程：查找 PPD option → 构建 reverseChoiceMap → BuildEntries → WriteOptionMaps
+// Full pipeline for one PWG type: find PPD option -> build reverseChoiceMap -> BuildEntries -> WriteOptionMaps
 static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
@@ -415,8 +415,8 @@ static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     WriteOptionMaps(opt, pwgType, result, ppdOptionMap, ppdOptionTextMap);
 }
 
-// 从 PPD 文件构建完整的 optionMap 和 textMap
-// 遍历 CUPS_PPD_FIELD_MMAP 中所有 PWG 类型，逐个调用 ProcessOptionEntry
+// Build the complete optionMap and textMap from the PPD file
+// Iterate all PWG types in CUPS_PPD_FIELD_MMAP and call ProcessOptionEntry for each
 void PpdAdapter::BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::Value &textMap)
 {
     std::set<std::string> pwgTypes;
@@ -428,9 +428,9 @@ void PpdAdapter::BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::
     }
 }
 
-// 单维度 PWG→PPD 查表：从 optionMap 中查找值对应的 PPD option 名和 choice 名
-// optionMap choices 同时存 PWG 格式和 PPD choice 名两种 key，value 固定为 PPD choice 名
-// 返回 true 表示命中，false 表示未命中（调用方应回退 PWG 标准值）
+// Single-dimension PWG->PPD lookup: find the PPD option name and choice name for a value from optionMap
+// optionMap choices store both PWG-format and PPD choice name as keys; value is always the PPD choice name
+// Return true on hit, false on miss (caller should fall back to the standard PWG value)
 bool PpdAdapter::ConvertPwgToPpd(const Json::Value &optionMap, const std::string &pwgType,
     const std::string &pwgVal, std::string &optName, std::string &choiceName)
 {
@@ -448,45 +448,41 @@ bool PpdAdapter::ConvertPwgToPpd(const Json::Value &optionMap, const std::string
     return true;
 }
 
-// 纸张/介质/纸盒 all-or-nothing 查表：所有非空维度都命中 PPD 才返回 true
-// CUPS 的 media 选项会覆盖 PageSize/MediaType/InputSlot，不能混发，必须全命中或全回退
+// Page size/media type/input slot all-or-nothing lookup: return true only if every non-empty dimension hits PPD
+// The CUPS media option overrides PageSize/MediaType/InputSlot and cannot be mixed; all must hit or all fall back
 bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
     const std::string &mediaSize, const std::string &mediaType,
     const std::string &inputSlot,
     std::vector<std::pair<std::string, std::string>> &result)
 {
-    if (mediaSize.empty() && mediaType.empty() && inputSlot.empty()) {
+    struct MediaDim {
+        const std::string &value;
+        const std::string &pwgType;
+    };
+    const MediaDim dims[] = {
+        {mediaSize, PRINT_PARAM_TYPE_PAGE_SIZE},
+        {mediaType, PRINT_PARAM_TYPE_MEDIA_TYPE},
+        {inputSlot, PPD_OPT_NAME_INPUT_SLOT},
+    };
+    bool hasAny = false;
+    for (const auto &dim : dims) {
+        if (!dim.value.empty()) {
+            hasAny = true;
+            if (!optionMap.isMember(dim.pwgType) ||
+                !optionMap[dim.pwgType]["choices"].isMember(dim.value)) {
+                return false;
+            }
+        }
+    }
+    if (!hasAny) {
         return false;
     }
-    if (!mediaSize.empty() &&
-        (!optionMap.isMember(PRINT_PARAM_TYPE_PAGE_SIZE) ||
-         !optionMap[PRINT_PARAM_TYPE_PAGE_SIZE]["choices"].isMember(mediaSize))) {
-        return false;
-    }
-    if (!mediaType.empty() &&
-        (!optionMap.isMember(PRINT_PARAM_TYPE_MEDIA_TYPE) ||
-         !optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE]["choices"].isMember(mediaType))) {
-        return false;
-    }
-    if (!inputSlot.empty() &&
-        (!optionMap.isMember(PPD_OPT_NAME_INPUT_SLOT) ||
-         !optionMap[PPD_OPT_NAME_INPUT_SLOT]["choices"].isMember(inputSlot))) {
-        return false;
-    }
-    if (!mediaSize.empty()) {
-        const Json::Value &entry = optionMap[PRINT_PARAM_TYPE_PAGE_SIZE];
-        result.emplace_back(entry["optionName"].asString(),
-            entry["choices"][mediaSize].asString());
-    }
-    if (!mediaType.empty()) {
-        const Json::Value &entry = optionMap[PRINT_PARAM_TYPE_MEDIA_TYPE];
-        result.emplace_back(entry["optionName"].asString(),
-            entry["choices"][mediaType].asString());
-    }
-    if (!inputSlot.empty()) {
-        const Json::Value &entry = optionMap[PPD_OPT_NAME_INPUT_SLOT];
-        result.emplace_back(entry["optionName"].asString(),
-            entry["choices"][inputSlot].asString());
+    for (const auto &dim : dims) {
+        if (!dim.value.empty()) {
+            const Json::Value &entry = optionMap[dim.pwgType];
+            result.emplace_back(entry["optionName"].asString(),
+                entry["choices"][dim.value].asString());
+        }
     }
     PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s, slot=%{public}s",
         mediaSize.c_str(), mediaType.c_str(), inputSlot.c_str());
