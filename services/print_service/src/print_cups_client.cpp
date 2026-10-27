@@ -1238,11 +1238,9 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     };
     std::vector<std::pair<std::string, std::string>> mediaResult;
     if (PpdAdapter::ConvertMediaOptions(mediaOptionMap, mediaDims, mediaResult)) {
-        PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s, slot=%{public}s",
-            jobParams->mediaSize.c_str(), jobParams->mediaType.c_str(), inputSlot.c_str());
-        for (const auto &pair : mediaResult) {
-            num_options = cupsAddOption(pair.first.c_str(), pair.second.c_str(),
-                num_options, options);
+        for (const auto &[optName, choice] : mediaResult) {
+            PRINT_HILOGI("PPD media: %{public}s=%{public}s", optName.c_str(), choice.c_str());
+            num_options = cupsAddOption(optName.c_str(), choice.c_str(), num_options, options);
         }
         return num_options;
     }
