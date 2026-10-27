@@ -1011,7 +1011,7 @@ HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_004, TestSize.Level2)
 {
     std::string ip = "FE80::1%ETH0";
     std::string result = PrintUtils::NormalizeIpv6(ip);
-    EXPECT_EQ(result, "fe80::1%eth0");
+    EXPECT_EQ(result, "fe80::1%ETH0");
 }
 
 /**
