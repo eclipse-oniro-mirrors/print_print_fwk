@@ -220,6 +220,14 @@ private:
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillBasicOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    struct PwgOptionSpec {
+        std::string pwgType;
+        std::string pwgVal;
+        const char *pwgOptName;
+        const char *defaultVal;
+    };
+    static int AddPpdOrPwgOption(const Json::Value &optionMap, const PwgOptionSpec &spec,
+        int num_options, cups_option_t **options);
     static int AddPwgOption(const char *optName, const std::string &pwgVal,
         const char *defaultVal, int num_options, cups_option_t **options);
     static int FillVendorOptions(JobParameters *jobParams, int num_options, cups_option_t **options);

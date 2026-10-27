@@ -1320,13 +1320,8 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         }
     }
     std::string orientPwg = jobParams->isLandscape ? CUPS_ORIENTATION_LANDSCAPE : CUPS_ORIENTATION_PORTRAIT;
-    std::string optName;
-    std::string choiceName;
-    if (PpdAdapter::ConvertPwgToPpd(optionMap, CUPS_ORIENTATION, orientPwg, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption(CUPS_ORIENTATION, orientPwg.c_str(), num_options, options);
-    }
+    num_options = AddPpdOrPwgOption(optionMap,
+        {CUPS_ORIENTATION, orientPwg, CUPS_ORIENTATION, ""}, num_options, options);
     return num_options;
 }
 
@@ -1371,6 +1366,19 @@ int PrintCupsClient::FillSharedDirOption(JobParameters *jobParams, int num_optio
     return num_options;
 }
 
+// Resolve a PWG option through PPD when available; otherwise add the PWG fallback option.
+// spec.pwgVal feeds both the PPD conversion and the PWG fallback (defaultVal used when it is empty).
+int PrintCupsClient::AddPpdOrPwgOption(const Json::Value &optionMap, const PwgOptionSpec &spec,
+    int num_options, cups_option_t **options)
+{
+    std::string optName;
+    std::string choiceName;
+    if (PpdAdapter::ConvertPwgToPpd(optionMap, spec.pwgType, spec.pwgVal, optName, choiceName)) {
+        return cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
+    }
+    return AddPwgOption(spec.pwgOptName, spec.pwgVal, spec.defaultVal, num_options, options);
+}
+
 int PrintCupsClient::AddPwgOption(const char *optName, const std::string &pwgVal,
     const char *defaultVal, int num_options, cups_option_t **options)
 {
@@ -1393,26 +1401,14 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
     }
     std::string optName;
     std::string choiceName;
-    if (PpdAdapter::ConvertPwgToPpd(optionMap, PRINT_PARAM_TYPE_DUPLEX_MODE,
-        jobParams->duplex, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    } else {
-        num_options = AddPwgOption(CUPS_SIDES, jobParams->duplex, CUPS_SIDES_ONE_SIDED, num_options, options);
-    }
-    if (PpdAdapter::ConvertPwgToPpd(optionMap, PRINT_PARAM_TYPE_COLOR_MODE,
-        jobParams->color, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    } else {
-        num_options = AddPwgOption(CUPS_PRINT_COLOR_MODE, jobParams->color,
-            CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
-    }
-    if (PpdAdapter::ConvertPwgToPpd(optionMap, PRINT_PARAM_TYPE_QUALITY,
-        jobParams->printQuality, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    } else {
-        num_options = AddPwgOption(CUPS_PRINT_QUALITY, jobParams->printQuality,
-            CUPS_PRINT_QUALITY_NORMAL, num_options, options);
-    }
+    num_options = AddPpdOrPwgOption(optionMap,
+        {PRINT_PARAM_TYPE_DUPLEX_MODE, jobParams->duplex, CUPS_SIDES, CUPS_SIDES_ONE_SIDED}, num_options, options);
+    num_options = AddPpdOrPwgOption(optionMap,
+        {PRINT_PARAM_TYPE_COLOR_MODE, jobParams->color, CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO},
+        num_options, options);
+    num_options = AddPpdOrPwgOption(optionMap,
+        {PRINT_PARAM_TYPE_QUALITY, jobParams->printQuality, CUPS_PRINT_QUALITY, CUPS_PRINT_QUALITY_NORMAL},
+        num_options, options);
     std::string collatePwg = jobParams->isCollate ? PRINT_PARAM_VAL_TRUE : PRINT_PARAM_VAL_FALSE;
     if (PpdAdapter::ConvertPwgToPpd(optionMap, PRINT_PARAM_TYPE_DELIVERY_ORDER,
         collatePwg, optName, choiceName)) {
@@ -1421,11 +1417,8 @@ int PrintCupsClient::FillBasicOptions(JobParameters *jobParams, int num_options,
         num_options = cupsAddOption("Collate", jobParams->isCollate ? "true" : "false", num_options, options);
     }
     std::string orderPwg = jobParams->isReverse ? "Reverse" : "Normal";
-    if (PpdAdapter::ConvertPwgToPpd(optionMap, "OutputOrder", orderPwg, optName, choiceName)) {
-        num_options = cupsAddOption(optName.c_str(), choiceName.c_str(), num_options, options);
-    } else {
-        num_options = cupsAddOption("OutputOrder", orderPwg.c_str(), num_options, options);
-    }
+    num_options = AddPpdOrPwgOption(optionMap,
+        {"OutputOrder", orderPwg, "OutputOrder", ""}, num_options, options);
     return num_options;
 }
 
