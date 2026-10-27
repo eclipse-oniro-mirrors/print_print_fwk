@@ -164,7 +164,7 @@ static const std::string PPD_OPT_NAME_MEDIA_TYPE = "MediaType";
 static const std::string PPD_OPT_NAME_COLLATE = "Collate";
 static const std::string PPD_OPT_NAME_ORIENTATION_REQUESTED = "orientation-requested";
 static const std::string PPD_OPT_NAME_OUTPUT_ORDER = "OutputOrder";
-static const std::string PPD_OPT_NAME_INPUT_SLOT = "InputSlot";
+const std::string PPD_OPT_NAME_INPUT_SLOT = "InputSlot";
 static const StdStringMultiMap MMAP_CUPS_CHOICE_EMPTY = {};
 
 const std::string PPD_OPT_NAME_PAGESIZE = "PageSize";
@@ -448,28 +448,18 @@ bool PpdAdapter::ConvertPwgToPpd(const Json::Value &optionMap, const std::string
     return true;
 }
 
-// Page size/media type/input slot all-or-nothing lookup: return true only if every non-empty dimension hits PPD
+// All-or-nothing media lookup: return true only if every non-empty (value, pwgType) pair hits PPD
 // The CUPS media option overrides PageSize/MediaType/InputSlot and cannot be mixed; all must hit or all fall back
 bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
-    const std::string &mediaSize, const std::string &mediaType,
-    const std::string &inputSlot,
+    const std::vector<std::pair<std::string, std::string>> &dims,
     std::vector<std::pair<std::string, std::string>> &result)
 {
-    struct MediaDim {
-        const std::string &value;
-        const std::string &pwgType;
-    };
-    const MediaDim dims[] = {
-        {mediaSize, PRINT_PARAM_TYPE_PAGE_SIZE},
-        {mediaType, PRINT_PARAM_TYPE_MEDIA_TYPE},
-        {inputSlot, PPD_OPT_NAME_INPUT_SLOT},
-    };
     bool hasAny = false;
-    for (const auto &dim : dims) {
-        if (!dim.value.empty()) {
+    for (const auto &[value, pwgType] : dims) {
+        if (!value.empty()) {
             hasAny = true;
-            if (!optionMap.isMember(dim.pwgType) ||
-                !optionMap[dim.pwgType]["choices"].isMember(dim.value)) {
+            if (!optionMap.isMember(pwgType) ||
+                !optionMap[pwgType]["choices"].isMember(value)) {
                 return false;
             }
         }
@@ -477,15 +467,13 @@ bool PpdAdapter::ConvertMediaOptions(const Json::Value &optionMap,
     if (!hasAny) {
         return false;
     }
-    for (const auto &dim : dims) {
-        if (!dim.value.empty()) {
-            const Json::Value &entry = optionMap[dim.pwgType];
+    for (const auto &[value, pwgType] : dims) {
+        if (!value.empty()) {
+            const Json::Value &entry = optionMap[pwgType];
             result.emplace_back(entry["optionName"].asString(),
-                entry["choices"][dim.value].asString());
+                entry["choices"][value].asString());
         }
     }
-    PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s, slot=%{public}s",
-        mediaSize.c_str(), mediaType.c_str(), inputSlot.c_str());
     return true;
 }
 

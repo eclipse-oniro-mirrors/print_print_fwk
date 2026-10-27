@@ -52,6 +52,7 @@
 #include "hisys_event_util.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
+#include "print_ppd_adapter.h"
 #include "bundle_mgr_client.h"
 #include "print_json_util.h"
 #ifdef HAVE_SMB_PRINTER
@@ -1230,9 +1231,15 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
         }
     }
     std::string inputSlot = GetInputSlotFromAdvancedOps(jobParams->advancedOpsJson);
+    const std::vector<std::pair<std::string, std::string>> mediaDims = {
+        {jobParams->mediaSize, PRINT_PARAM_TYPE_PAGE_SIZE},
+        {jobParams->mediaType, PRINT_PARAM_TYPE_MEDIA_TYPE},
+        {inputSlot, PPD_OPT_NAME_INPUT_SLOT},
+    };
     std::vector<std::pair<std::string, std::string>> mediaResult;
-    if (PpdAdapter::ConvertMediaOptions(mediaOptionMap, jobParams->mediaSize,
-        jobParams->mediaType, inputSlot, mediaResult)) {
+    if (PpdAdapter::ConvertMediaOptions(mediaOptionMap, mediaDims, mediaResult)) {
+        PRINT_HILOGI("PPD media: size=%{public}s, type=%{public}s, slot=%{public}s",
+            jobParams->mediaSize.c_str(), jobParams->mediaType.c_str(), inputSlot.c_str());
         for (const auto &pair : mediaResult) {
             num_options = cupsAddOption(pair.first.c_str(), pair.second.c_str(),
                 num_options, options);

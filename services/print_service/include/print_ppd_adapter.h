@@ -58,6 +58,7 @@ struct ResolveContext {
 extern const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP;
 extern const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE;
 extern const std::string PPD_OPT_NAME_PAGESIZE;
+extern const std::string PPD_OPT_NAME_INPUT_SLOT;
 
 class PpdAdapter {
 public:
@@ -65,8 +66,7 @@ public:
     static bool ConvertPwgToPpd(const Json::Value &optionMap, const std::string &pwgType,
         const std::string &pwgVal, std::string &optName, std::string &choiceName);
     static bool ConvertMediaOptions(const Json::Value &optionMap,
-        const std::string &mediaSize, const std::string &mediaType,
-        const std::string &inputSlot,
+        const std::vector<std::pair<std::string, std::string>> &dims,
         std::vector<std::pair<std::string, std::string>> &result);
 };
 }  // namespace OHOS::Print
