@@ -448,9 +448,10 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
         } else {
+            std::string uriHost = PrintUtils::GetHostFromUri(uri);
             return (globalPrinterIdOrIp.find(connectingPrinter) != std::string::npos) ||
                    (connectingPrinter.find(globalPrinterIdOrIp) != std::string::npos) ||
-                   uri.find(connectingPrinter) != std::string::npos;
+                   uriHost == connectingPrinter;
         }
     }
     return false;
@@ -525,9 +526,10 @@ bool VendorManager::IsQueryingPrinter(const std::string &globalPrinterIdOrIp, co
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
         } else {
+            std::string uriHost = PrintUtils::GetHostFromUri(uri);
             return (globalPrinterIdOrIp.find(connectingPrinter) != std::string::npos) ||
                 (connectingPrinter.find(globalPrinterIdOrIp) != std::string::npos) ||
-                uri.find(connectingPrinter) != std::string::npos;
+                uriHost == connectingPrinter;
         }
     }
     return false;
@@ -562,7 +564,7 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
         PRINT_HILOGE("no driver to connect printer by ip");
         return false;
     }
-    SetConnectingPrinter(IP_AUTO, printerIp);
+    SetConnectingPrinter(IP_AUTO, PrintUtils::StripHostBrackets(printerIp));
     {
         std::lock_guard<std::mutex> lock(simpleObjectMutex);
         connectingProtocol = protocol;

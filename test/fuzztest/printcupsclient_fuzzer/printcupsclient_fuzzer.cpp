@@ -166,6 +166,22 @@ void TestIsIpConflict(const uint8_t *data, size_t size, FuzzedDataProvider *data
     PrintCupsClient::GetInstance()->IsIpConflict(printerId, nic);
 }
 
+void TestIsIpAddress(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string host = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->IsIpAddress(host.c_str());
+}
+
+void TestIsIpAddressWithScope(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    // guide the fuzzer into the IPv6 scope-id validation path
+    std::string host = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string scopedHost = "fe80::1%" + host;
+    PrintCupsClient::GetInstance()->IsIpAddress(scopedHost.c_str());
+    std::string bracketedHost = "[" + host + "]";
+    PrintCupsClient::GetInstance()->IsIpAddress(bracketedHost.c_str());
+}
+
 void TestConvertInchTo100MM(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     int num = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
@@ -359,28 +375,10 @@ void TestGetNewSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintCupsClient::GetInstance()->GetNewSubstate(substate, singleSubstate);
 }
 
-}  // namespace Print
-}  // namespace OHOS
+using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+void RunFuzzTask(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    if (size < OHOS::Print::U32_AT_SIZE || size > OHOS::Print::FOO_MAX_LEN) {
-    }
-
-    FuzzedDataProvider dataProvider(data, size);
-    static bool initialized = false;
-    if (!initialized) {
-        OHOS::Print::PrintServiceAbility::GetInstance()->OnStart();
-        initialized = true;
-    }
-    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
-    using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
         &OHOS::Print::TestQueryPPDInformation,
         &OHOS::Print::TestAddPrinterToCups,
@@ -398,6 +396,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestCheckPrinterOnline,
         &OHOS::Print::TestGetIpAddress,
         &OHOS::Print::TestIsIpConflict,
+        &OHOS::Print::TestIsIpAddress,
+        &OHOS::Print::TestIsIpAddressWithScope,
         &OHOS::Print::TestConvertInchTo100MM,
         &OHOS::Print::TestGetColorString,
         &OHOS::Print::TestGetDulpexString,
@@ -415,7 +415,29 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestGetBlockedAndUpdateSubstate,
         &OHOS::Print::TestGetNewSubstate
     };
-    TestHandler handler = dataProvider.PickValueInArray(tasks);
-    handler(data, size, &dataProvider);
+    TestHandler handler = dataProvider->PickValueInArray(tasks);
+    handler(data, size, dataProvider);
+}
+
+}  // namespace Print
+}  // namespace OHOS
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    /* Run your code on data */
+    if (data == nullptr) {
+        return 0;
+    }
+    if (size < OHOS::Print::U32_AT_SIZE || size > OHOS::Print::FOO_MAX_LEN) {
+    }
+    FuzzedDataProvider dataProvider(data, size);
+    static bool initialized = false;
+    if (!initialized) {
+        OHOS::Print::PrintServiceAbility::GetInstance()->OnStart();
+        initialized = true;
+    }
+    PRINT_HILOGI("Multithreading is running at function LLVMFuzzerTestOneInput.");
+    OHOS::Print::RunFuzzTask(data, size, &dataProvider);
     return 0;
 }

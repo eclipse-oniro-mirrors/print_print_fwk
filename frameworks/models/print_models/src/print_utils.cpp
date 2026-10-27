@@ -60,6 +60,7 @@ const int32_t PRIVATE_IPV4_CLASS_C_SECOND = 168;
 const int32_t BITS_PER_HEX_DIGIT = 4;
 const int32_t IPV6_HEXTET_COUNT = 8;
 const int32_t IPV6_EXPANDED_MAX_LEN = IPV6_HEXTET_COUNT * 4 + (IPV6_HEXTET_COUNT - 1);
+const uint32_t HOST_BRACKET_PAIR_LEN = 2;
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -301,6 +302,26 @@ bool PrintUtils::ExtractIpv6(const std::string &str, std::string &ip, size_t &st
         return true;
     }
     return false;
+}
+
+std::string PrintUtils::NormalizeIpv6(const std::string &ip)
+{
+    std::string addrPart = ip;
+    std::string scopeId;
+    size_t zonePos = ip.find_first_of("%");
+    if (zonePos != std::string::npos) {
+        addrPart = ip.substr(0, zonePos);
+        scopeId = ip.substr(zonePos);
+    }
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET6, addrPart.c_str(), &addr6) != 1) {
+        return ip;
+    }
+    char buf[INET6_ADDRSTRLEN] = {0};
+    if (inet_ntop(AF_INET6, &addr6, buf, sizeof(buf)) == nullptr) {
+        return ip;
+    }
+    return std::string(buf) + scopeId;
 }
 
 bool PrintUtils::IsPrivateIpv4(const std::string &ip)
@@ -750,6 +771,20 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     return uri.substr(startPos, endPos - startPos);
 }
 
+std::string PrintUtils::GetHostFromUri(const std::string &uri)
+{
+    char scheme[HTTP_MAX_URI] = {0};
+    char username[HTTP_MAX_URI] = {0};
+    char host[HTTP_MAX_URI] = {0};
+    char resource[HTTP_MAX_URI] = {0};
+    int port = 0;
+    if (httpSeparateURI(HTTP_URI_CODING_ALL, uri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource)) == HTTP_URI_STATUS_OK) {
+        return host;
+    }
+    return "";
+}
+
 std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
 {
     char scheme[HTTP_MAX_URI] = {0};
@@ -798,6 +833,22 @@ std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
         expanded.push_back(hexNibble(lo & 0x0F));
     }
     return expanded;
+}
+
+std::string PrintUtils::FormatHostForUri(const std::string &host)
+{
+    if (!host.empty() && host.find(':') != std::string::npos && host[0] != '[') {
+        return "[" + host + "]";
+    }
+    return host;
+}
+
+std::string PrintUtils::StripHostBrackets(const std::string &host)
+{
+    if (host.size() >= HOST_BRACKET_PAIR_LEN && host.front() == '[' && host.back() == ']') {
+        return host.substr(1, host.size() - HOST_BRACKET_PAIR_LEN);
+    }
+    return host;
 }
 
 }  // namespace OHOS::Print

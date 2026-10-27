@@ -19,6 +19,8 @@
 #include "print_log.h"
 #include "vendor_helper.h"
 #include "hisys_event_util.h"
+#include "print_utils.h"
+#include "print_cups_client.h"
 
 using namespace OHOS::Print;
 namespace {
@@ -417,11 +419,16 @@ bool VendorBsuniDriver::OnQueryCapabilityByIp(const std::string &printerIp, cons
         PRINT_HILOGW("OnQueryCapabilityByIp is null");
         return false;
     }
+    std::string bareIp = PrintUtils::StripHostBrackets(printerIp);
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(bareIp.c_str())) {
+        PRINT_HILOGE("IP validation failed after StripHostBrackets: %{private}s", bareIp.c_str());
+        return false;
+    }
     int32_t result = -1;
     if (printQueue.empty()) {
-        result = vendorExtension->onQueryCapabilityByIp(printerIp.c_str(), protocol.c_str());
+        result = vendorExtension->onQueryCapabilityByIp(bareIp.c_str(), protocol.c_str());
     } else if (vendorExtension->onQueryCapabilityByIpAndQueue) {
-        result = vendorExtension->onQueryCapabilityByIpAndQueue(printerIp.c_str(), protocol.c_str(),
+        result = vendorExtension->onQueryCapabilityByIpAndQueue(bareIp.c_str(), protocol.c_str(),
             printQueue.c_str());
     }
     PRINT_HILOGI("OnQueryCapabilityByIp quit: %{public}d", result);
@@ -571,14 +578,15 @@ void VendorBsuniDriver::OnIppRawDataQueried(std::shared_ptr<std::string> printer
 
 std::string VendorBsuniDriver::CreateUriByIpAndProtocol(const std::string &ip, const std::string &protocol)
 {
+    std::string formattedHost = PrintUtils::FormatHostForUri(ip);
     if (protocol == "ipp") {
-        return "ipp://" + ip + ":631/ipp/print";
+        return "ipp://" + formattedHost + ":631/ipp/print";
     }
     if (protocol == "lpd") {
-        return "lpd://" +ip + ":515";
+        return "lpd://" + formattedHost + ":515";
     }
     if (protocol == "socket") {
-        return "socket://" + ip + ":9100";
+        return "socket://" + formattedHost + ":9100";
     }
     return "";
 }

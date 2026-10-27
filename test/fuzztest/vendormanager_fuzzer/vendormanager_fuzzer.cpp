@@ -200,6 +200,21 @@ void TestPpdDriverWithoutVendorManager(const uint8_t *data, size_t size, FuzzedD
     vendorPpdDriver->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
     vendorPpdDriver->QueryProperty(printerId, key, value);
 }
+
+void TestVendorManagerIpv6UriActions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    VendorManager &vendorManager = PrintServiceAbility::GetInstance()->vendorManager;
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string fuzzHost = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    // guide the fuzzer into the bracketed IPv6 uri host comparison path
+    std::string ipv6Uri = "ipp://[" + fuzzHost + "]:631/ipp/print";
+
+    vendorManager.SetConnectingPrinter(IP_AUTO, fuzzHost);
+    vendorManager.IsConnectingPrinter(printerId, ipv6Uri);
+    vendorManager.SetQueryPrinter(IP_AUTO, fuzzHost);
+    vendorManager.IsQueryingPrinter(printerId, ipv6Uri);
+    vendorManager.ClearConnectingPrinter();
+}
 }  // namespace Print
 }  // namespace OHOS
 
@@ -229,7 +244,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         &OHOS::Print::TestWlanGroupWithoutVendorManager,
         &OHOS::Print::TestPpdDriverConnectPrinterActions,
         &OHOS::Print::TestPpdDriverOtherFunction,
-        &OHOS::Print::TestPpdDriverWithoutVendorManager
+        &OHOS::Print::TestPpdDriverWithoutVendorManager,
+        &OHOS::Print::TestVendorManagerIpv6UriActions
     };
     
     TestHandler handler = dataProvider.PickValueInArray(tasks);
