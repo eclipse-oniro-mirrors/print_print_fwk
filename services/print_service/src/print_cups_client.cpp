@@ -21,7 +21,7 @@
 #include <cups/adminutil.h>
 #include <thread>
 #include <algorithm>
-#include <semaphore.h>
+#include <cctype>
 #include <csignal>
 #include <cstdlib>
 #include <dirent.h>
@@ -31,6 +31,7 @@
 #include <wifi_p2p.h>
 #include <wifi_p2p_msg.h>
 #include <arpa/inet.h>
+#include <net/if.h>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -3228,9 +3229,24 @@ bool PrintCupsClient::IsIpAddress(const char *host)
         PRINT_HILOGW("host is null");
         return false;
     }
+    std::string hostStr(host);
+    size_t scopePos = hostStr.find_last_of('%');
+    if (scopePos != std::string::npos) {
+        std::string scopeId = hostStr.substr(scopePos + 1);
+        hostStr = hostStr.substr(0, scopePos);
+        if (scopeId.empty()) {
+            PRINT_HILOGW("empty scope id");
+            return false;
+        }
+        if (if_nametoindex(scopeId.c_str()) == 0) {
+            PRINT_HILOGW("scope id interface not found: %{public}s", scopeId.c_str());
+            return false;
+        }
+    }
     struct in_addr addr4;
     struct in6_addr addr6;
-    if ((inet_pton(AF_INET, host, &addr4) == 1) || (inet_pton(AF_INET6, host, &addr6) == 1)) {
+    if ((inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) ||
+        (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1)) {
         return true;
     } else {
         PRINT_HILOGW("not ipv4 or ipv6");

@@ -662,25 +662,27 @@ bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::st
     const std::string &printQueue)
 {
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-    SetGroupPrinterFromVendorGroupList(printerIp, VENDOR_BSUNI_DRIVER);
+    std::string bareIp = PrintUtils::StripHostBrackets(printerIp);
+    SetGroupPrinterFromVendorGroupList(bareIp, VENDOR_BSUNI_DRIVER);
     if (bsuniDriver != nullptr && bsuniDriver->OnQueryCapabilityByIp(printerIp, protocol, printQueue)) {
-        PRINT_HILOGI("on query capability by ip on bsuni vendor seccess.");
+        PRINT_HILOGI("on query capability by ip on bsuni vendor success.");
         return true;
     }
-    RemoveGroupPrinterFromVendorGroupList(printerIp);
+    RemoveGroupPrinterFromVendorGroupList(bareIp);
     return false;
 }
- 
+
 bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol,
     const std::string &printQueue)
 {
-    SetGroupPrinterFromVendorGroupList(printerIp, VENDOR_IPP_EVERYWHERE);
+    std::string bareIp = PrintUtils::StripHostBrackets(printerIp);
+    SetGroupPrinterFromVendorGroupList(bareIp, VENDOR_IPP_EVERYWHERE);
     auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
     if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapabilityByIp(printerIp, protocol, printQueue)) {
-        PRINT_HILOGI("on query capability by ip on ipp everywhere seccess.");
+        PRINT_HILOGI("on query capability by ip on ipp everywhere success.");
         return true;
     }
-    RemoveGroupPrinterFromVendorGroupList(printerIp);
+    RemoveGroupPrinterFromVendorGroupList(bareIp);
     return false;
 }
 

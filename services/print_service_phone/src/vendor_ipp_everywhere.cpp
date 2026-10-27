@@ -21,7 +21,6 @@
 using namespace OHOS::Print;
 namespace {
 const std::string VENDOR_IPP_START = "ipp://";
-const std::string VENDOR_IPP_END = ":631/ipp/print";
 }
 
 VendorIppEveryWhere::VendorIppEveryWhere() {}
@@ -257,20 +256,4 @@ void VendorIppEveryWhere::QueryPrinterStatusByUri(const std::string &uri)
         return;
     }
     OnPrinterStateQueried(uri, static_cast<Print_PrinterState>(status));
-}
-
-bool VendorIppEveryWhere::ConvertPrinterIdByUri(std::string &uri)
-{
-    if (uri.empty()) {
-        return false;
-    }
-    auto pos_start = uri.find(VENDOR_IPP_START);
-    auto pos_end = uri.find(VENDOR_IPP_END);
-    if (pos_start == std::string::npos || uri.length() <= pos_start + VENDOR_IPP_START.length() ||
-        pos_end == std::string::npos || pos_end <= (pos_start + VENDOR_IPP_START.length())) {
-        return false;
-    }
-    uri = uri.substr(pos_start + VENDOR_IPP_START.length(), pos_end - pos_start - VENDOR_IPP_START.length());
-    PRINT_HILOGD("ConvertPrinterIdByUri seccess");
-    return true;
 }

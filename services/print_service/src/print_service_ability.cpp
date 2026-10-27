@@ -1354,12 +1354,14 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     if (!ParsePrinterUri(uri, printerIp, protocol, printQueue)) {
         return E_PRINT_INVALID_PRINTER;
     }
+    printerIp = PrintUtils::NormalizeIpv6(printerIp);
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    std::string formattedIp = PrintUtils::FormatHostForUri(printerIp);
     PRINT_HILOGI("[Printer: %{public}s] AddPrinter start, printerIp: %{private}s, protocol: %{public}s, \
         ppdName: %{public}s, printQueue: %{public}s.",
         printerName.c_str(), printerIp.c_str(), protocol.c_str(), ppdName.c_str(), printQueue.c_str());
     vendorManager.SetConnectingPrinterName(printerName);
-    if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, printQueue)) {
+    if (!vendorManager.ConnectPrinterByIpAndPpd(formattedIp, protocol, ppdName, printQueue)) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
         return E_PRINT_SERVER_FAILURE;
     }
@@ -5413,6 +5415,7 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }
+    ip = PrintUtils::NormalizeIpv6(ip);
     PRINT_HILOGI("ip: %{public}s", PrintUtils::AnonymizeIp(ip).c_str());
     std::string protocol = "auto";
     if (PrintJsonUtil::IsMember(connectParamJson, "protocol") && connectParamJson["protocol"].isString()) {
@@ -5420,7 +5423,8 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
     }
     printSystemData_.ClearPrintEvents(ip, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
-    if (!vendorManager.ConnectPrinterByIp(ip, protocol)) {
+    std::string formattedIp = PrintUtils::FormatHostForUri(ip);
+    if (!vendorManager.ConnectPrinterByIp(formattedIp, protocol)) {
         PRINT_HILOGW("ConnectPrinterByIp fail");
         return E_PRINT_SERVER_FAILURE;
     }
@@ -6232,15 +6236,17 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }
-    if (!vendorManager.GetConnectingPrinter().empty() && vendorManager.GetConnectingPrinter() == printerIp) {
+    std::string normalizedIp = PrintUtils::NormalizeIpv6(printerIp);
+    if (!vendorManager.GetConnectingPrinter().empty() && vendorManager.GetConnectingPrinter() == normalizedIp) {
         PRINT_HILOGW("IP is Querying, Do not send again");
         return E_PRINT_NONE;
     }
-    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    printSystemData_.ClearPrintEvents(normalizedIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.SetQueryPrinter(IP_AUTO, printerIp);
+    vendorManager.SetQueryPrinter(IP_AUTO, normalizedIp);
     std::string protocol = "auto";
-    if (!vendorManager.ConnectPrinterByIp(printerIp, protocol)) {
+    std::string formattedIp = PrintUtils::FormatHostForUri(normalizedIp);
+    if (!vendorManager.ConnectPrinterByIp(formattedIp, protocol)) {
         PRINT_HILOGW("ConnectPrinterByIp failed");
         return E_PRINT_SERVER_FAILURE;
     }
@@ -6272,8 +6278,10 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }
-    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
-    if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, "")) {
+    std::string normalizedIp = PrintUtils::NormalizeIpv6(printerIp);
+    std::string formattedIp = PrintUtils::FormatHostForUri(normalizedIp);
+    printSystemData_.ClearPrintEvents(normalizedIp, CONNECT_PRINT_EVENT_TYPE);
+    if (!vendorManager.ConnectPrinterByIpAndPpd(formattedIp, protocol, ppdName, "")) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
             return E_PRINT_SERVER_FAILURE;
     }

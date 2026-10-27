@@ -766,5 +766,67 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_WithUri_EmptyQueue_Sh
     DoMockTest(testFunc);
 }
 
+HWTEST_F(VendorBsuniDriverTest, CreateUriByIpAndProtocol_Ipv6_ShouldAddBrackets, TestSize.Level2)
+{
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("2001:db8::1", "ipp"),
+        "ipp://[2001:db8::1]:631/ipp/print");
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("2001:db8::1", "lpd"),
+        "lpd://[2001:db8::1]:515");
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("2001:db8::1", "socket"),
+        "socket://[2001:db8::1]:9100");
+}
+
+HWTEST_F(VendorBsuniDriverTest, CreateUriByIpAndProtocol_Ipv4_ShouldKeepUnchanged, TestSize.Level2)
+{
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("192.168.2.222", "ipp"),
+        "ipp://192.168.2.222:631/ipp/print");
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("192.168.2.222", "lpd"),
+        "lpd://192.168.2.222:515");
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("192.168.2.222", "socket"),
+        "socket://192.168.2.222:9100");
+}
+
+HWTEST_F(VendorBsuniDriverTest, CreateUriByIpAndProtocol_AlreadyBracketed_ShouldNotDoubleBrackets, TestSize.Level2)
+{
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("[2001:db8::1]", "ipp"),
+        "ipp://[2001:db8::1]:631/ipp/print");
+    EXPECT_EQ(VendorBsuniDriver::CreateUriByIpAndProtocol("unknown.host", "unknown"), "");
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnQueryCapabilityByIp_Ipv6_ShouldStripBrackets, TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            EXPECT_CALL(mockDriver,
+                OnQueryCapabilityByIp(StrEq("2001:db8::1"), _)).Times(2).WillOnce(Return(1)).WillOnce(Return(0));
+            EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp("[2001:db8::1]", "ipp", ""), false);
+            EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp("[2001:db8::1]", "ipp", ""), true);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnQueryCapabilityByIp_Ipv6WithQueue_ShouldStripBrackets, TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            EXPECT_CALL(mockDriver,
+                OnQueryCapabilityByIpAndQueue(StrEq("2001:db8::1"), _, _)).Times(1).WillOnce(Return(0));
+            EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp("[2001:db8::1]", "ipp", "/queue"), true);
+        };
+    DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, OnQueryCapabilityByIp_InvalidIpv6_ShouldNotCallExtension, TestSize.Level2)
+{
+    MockTestFunc testFunc =
+        [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver, MockVendorManager &mockManager) {
+            EXPECT_CALL(mockDriver, OnQueryCapabilityByIp(_, _)).Times(0);
+            EXPECT_CALL(mockDriver, OnQueryCapabilityByIpAndQueue(_, _, _)).Times(0);
+            EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp("[invalid::ipv6::]", "ipp", ""), false);
+            EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp("not_an_ip", "ipp", ""), false);
+        };
+    DoMockTest(testFunc);
+}
+
 }  // namespace Print
 }  // namespace OHOS

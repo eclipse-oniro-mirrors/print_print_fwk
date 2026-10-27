@@ -87,6 +87,7 @@ public:
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
     static bool ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos);
+    static std::string NormalizeIpv6(const std::string &ip);
     static bool IsPrivateIpv4(const std::string &ip);
     static std::string AnonymizeIpv4(const std::string &ip);
     static std::string AnonymizeIpv6(const std::string &ip);
@@ -117,6 +118,9 @@ public:
     static bool IsUsbPrinter(const std::string &printerId);
     static std::string ExtractHostFromUri(const std::string &uri);
     static std::string ExtractIpFromUri(const std::string &uri);
+    static std::string GetHostFromUri(const std::string &uri);
+    static std::string FormatHostForUri(const std::string &host);
+    static std::string StripHostBrackets(const std::string &host);
 
     static std::string MakeExtensionStateKey(int32_t userId, const std::string &bundleName);
     static int32_t GetUserIdFromKey(const std::string &key);

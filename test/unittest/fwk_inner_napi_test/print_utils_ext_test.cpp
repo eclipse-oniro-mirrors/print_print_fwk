@@ -966,5 +966,235 @@ HWTEST_F(PrintUtilsExtTest, ToLower_004, TestSize.Level2)
     EXPECT_EQ(result, "already lowercase");
 }
 
+// ==================== NormalizeIpv6 Test ====================
+/**
+ * @tc.name: NormalizeIpv6_001
+ * @tc.desc: Verify NormalizeIpv6 with full uncompressed IPv6 address.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_001, TestSize.Level2)
+{
+    std::string ip = "2001:0db8:85a3:0000:0000:8a2e:0370:7334";
+    std::string result = PrintUtils::NormalizeIpv6(ip);
+    EXPECT_EQ(result, "2001:db8:85a3::8a2e:370:7334");
+}
+
+/**
+ * @tc.name: NormalizeIpv6_002
+ * @tc.desc: Verify NormalizeIpv6 with compressed IPv6 address.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_002, TestSize.Level2)
+{
+    std::string ip = "2001:DB8::1";
+    std::string result = PrintUtils::NormalizeIpv6(ip);
+    EXPECT_EQ(result, "2001:db8::1");
+}
+
+/**
+ * @tc.name: NormalizeIpv6_003
+ * @tc.desc: Verify NormalizeIpv6 with loopback and unspecified addresses.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_003, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::NormalizeIpv6("::1"), "::1");
+    EXPECT_EQ(PrintUtils::NormalizeIpv6("::"), "::");
+}
+
+/**
+ * @tc.name: NormalizeIpv6_004
+ * @tc.desc: Verify NormalizeIpv6 with scope id, address and scope are lowercased.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_004, TestSize.Level2)
+{
+    std::string ip = "FE80::1%ETH0";
+    std::string result = PrintUtils::NormalizeIpv6(ip);
+    EXPECT_EQ(result, "fe80::1%eth0");
+}
+
+/**
+ * @tc.name: NormalizeIpv6_005
+ * @tc.desc: Verify NormalizeIpv6 with invalid IPv6 address returns input unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_005, TestSize.Level2)
+{
+    std::string ip = "not:an:ipv6:address";
+    std::string result = PrintUtils::NormalizeIpv6(ip);
+    EXPECT_EQ(result, ip);
+    EXPECT_EQ(PrintUtils::NormalizeIpv6("192.168.1.1"), "192.168.1.1");
+}
+
+/**
+ * @tc.name: NormalizeIpv6_006
+ * @tc.desc: Verify NormalizeIpv6 with empty string.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_006, TestSize.Level2)
+{
+    std::string ip = "";
+    std::string result = PrintUtils::NormalizeIpv6(ip);
+    EXPECT_EQ(result, "");
+}
+
+// ==================== FormatHostForUri Test ====================
+/**
+ * @tc.name: FormatHostForUri_001
+ * @tc.desc: Verify FormatHostForUri wraps IPv6 address with brackets.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, FormatHostForUri_001, TestSize.Level2)
+{
+    std::string host = "2001:db8::1";
+    std::string result = PrintUtils::FormatHostForUri(host);
+    EXPECT_EQ(result, "[2001:db8::1]");
+}
+
+/**
+ * @tc.name: FormatHostForUri_002
+ * @tc.desc: Verify FormatHostForUri keeps already bracketed host unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, FormatHostForUri_002, TestSize.Level2)
+{
+    std::string host = "[2001:db8::1]";
+    std::string result = PrintUtils::FormatHostForUri(host);
+    EXPECT_EQ(result, "[2001:db8::1]");
+}
+
+/**
+ * @tc.name: FormatHostForUri_003
+ * @tc.desc: Verify FormatHostForUri keeps IPv4 address unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, FormatHostForUri_003, TestSize.Level2)
+{
+    std::string host = "192.168.1.1";
+    std::string result = PrintUtils::FormatHostForUri(host);
+    EXPECT_EQ(result, "192.168.1.1");
+}
+
+/**
+ * @tc.name: FormatHostForUri_004
+ * @tc.desc: Verify FormatHostForUri keeps hostname and empty string unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, FormatHostForUri_004, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::FormatHostForUri("printer.example.com"), "printer.example.com");
+    EXPECT_EQ(PrintUtils::FormatHostForUri(""), "");
+}
+
+/**
+ * @tc.name: FormatHostForUri_005
+ * @tc.desc: Verify FormatHostForUri wraps IPv6 address with scope id.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, FormatHostForUri_005, TestSize.Level2)
+{
+    std::string host = "fe80::1%eth0";
+    std::string result = PrintUtils::FormatHostForUri(host);
+    EXPECT_EQ(result, "[fe80::1%eth0]");
+}
+
+// ==================== StripHostBrackets Test ====================
+/**
+ * @tc.name: StripHostBrackets_001
+ * @tc.desc: Verify StripHostBrackets removes brackets from IPv6 host.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, StripHostBrackets_001, TestSize.Level2)
+{
+    std::string host = "[2001:db8::1]";
+    std::string result = PrintUtils::StripHostBrackets(host);
+    EXPECT_EQ(result, "2001:db8::1");
+}
+
+/**
+ * @tc.name: StripHostBrackets_002
+ * @tc.desc: Verify StripHostBrackets keeps host without brackets unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, StripHostBrackets_002, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::StripHostBrackets("2001:db8::1"), "2001:db8::1");
+    EXPECT_EQ(PrintUtils::StripHostBrackets("192.168.1.1"), "192.168.1.1");
+}
+
+/**
+ * @tc.name: StripHostBrackets_003
+ * @tc.desc: Verify StripHostBrackets with empty brackets.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, StripHostBrackets_003, TestSize.Level2)
+{
+    std::string host = "[]";
+    std::string result = PrintUtils::StripHostBrackets(host);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: StripHostBrackets_004
+ * @tc.desc: Verify StripHostBrackets with unbalanced brackets and empty string.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, StripHostBrackets_004, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::StripHostBrackets("[2001:db8::1"), "[2001:db8::1");
+    EXPECT_EQ(PrintUtils::StripHostBrackets("2001:db8::1]"), "2001:db8::1]");
+    EXPECT_EQ(PrintUtils::StripHostBrackets(""), "");
+}
+
+/**
+ * @tc.name: StripHostBrackets_005
+ * @tc.desc: Verify StripHostBrackets is inverse of FormatHostForUri for IPv6.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, StripHostBrackets_005, TestSize.Level2)
+{
+    std::string host = "fe80::1%eth0";
+    std::string formatted = PrintUtils::FormatHostForUri(host);
+    EXPECT_EQ(PrintUtils::StripHostBrackets(formatted), host);
+}
+
+// ==================== ExtractIpFromUri Test ====================
+/**
+ * @tc.name: ExtractIpFromUri_001
+ * @tc.desc: Verify ExtractIpFromUri with bracketed compressed IPv6 uri.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExtractIpFromUri_001, TestSize.Level2)
+{
+    std::string uri = "ipp://[2001:db8::1]:631/ipp/print";
+    std::string result = PrintUtils::ExtractIpFromUri(uri);
+    EXPECT_EQ(result, "2001:0db8:0000:0000:0000:0000:0000:0001");
+}
+
+/**
+ * @tc.name: ExtractIpFromUri_002
+ * @tc.desc: Verify ExtractIpFromUri with IPv4 uri.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExtractIpFromUri_002, TestSize.Level2)
+{
+    std::string uri = "ipp://192.168.1.100:631/ipp/print";
+    std::string result = PrintUtils::ExtractIpFromUri(uri);
+    EXPECT_EQ(result, "192.168.1.100");
+}
+
+/**
+ * @tc.name: ExtractIpFromUri_003
+ * @tc.desc: Verify ExtractIpFromUri with invalid uri.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExtractIpFromUri_003, TestSize.Level2)
+{
+    std::string uri = "not a uri";
+    std::string result = PrintUtils::ExtractIpFromUri(uri);
+    EXPECT_EQ(result, "");
+}
+
 }  // namespace Print
 }  // namespace OHOS

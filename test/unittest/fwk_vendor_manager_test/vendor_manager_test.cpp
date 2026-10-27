@@ -499,5 +499,40 @@ HWTEST_F(VendorManagerTest, GetConnectingMethod_NormalBsuniPrefix_RoutesWlan, Te
     EXPECT_EQ(fakeWlan->routedArg, printId);
 }
 
+HWTEST_F(VendorManagerTest, IsConnectingPrinter_Ipv6UriHost_ShouldMatch, TestSize.Level2)
+{
+    VendorManager vendorManager;
+    std::string ipv6 = "2001:db8::1";
+    vendorManager.SetConnectingPrinter(ConnectMethod::IP_AUTO, ipv6);
+    // uri host (brackets stripped by httpSeparateURI) equals connecting printer
+    EXPECT_TRUE(vendorManager.IsConnectingPrinter("unrelated-printer-id", "ipp://[2001:db8::1]:631/ipp/print"));
+    // different uri host should not match
+    EXPECT_FALSE(vendorManager.IsConnectingPrinter("unrelated-printer-id", "ipp://[2001:db8::2]:631/ipp/print"));
+    EXPECT_FALSE(vendorManager.IsConnectingPrinter("unrelated-printer-id", "ipp://192.168.1.1:631/ipp/print"));
+    vendorManager.ClearConnectingPrinter();
+}
+
+HWTEST_F(VendorManagerTest, IsQueryingPrinter_Ipv6UriHost_ShouldMatch, TestSize.Level2)
+{
+    VendorManager vendorManager;
+    std::string ipv6 = "fe80::1";
+    vendorManager.SetQueryPrinter(ConnectMethod::IP_AUTO, ipv6);
+    EXPECT_TRUE(vendorManager.IsQueryingPrinter("unrelated-printer-id", "ipp://[fe80::1]:631/ipp/print"));
+    EXPECT_FALSE(vendorManager.IsQueryingPrinter("unrelated-printer-id", "ipp://[fe80::2]:631/ipp/print"));
+    EXPECT_FALSE(vendorManager.IsQueryingPrinter("unrelated-printer-id", "invalid uri"));
+    vendorManager.ClearConnectingPrinter();
+}
+
+HWTEST_F(VendorManagerTest, ConnectPrinterByIpAndPpd_Ipv6_ShouldStripBracketsWhenTracking, TestSize.Level2)
+{
+    VendorManager vendorManager;
+    auto fakeWlan = std::make_shared<FakeRoutingWlanGroup>(&vendorManager);
+    vendorManager.wlanGroupDriver = fakeWlan;
+    // no driver can really connect, but connecting printer should be tracked without brackets
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIpAndPpd("[2001:db8::1]", "ipp", "auto", ""));
+    EXPECT_EQ(vendorManager.GetConnectingPrinter(), "2001:db8::1");
+    vendorManager.ClearConnectingPrinter();
+}
+
 }  // namespace Print
 }  // namespace OHOS
