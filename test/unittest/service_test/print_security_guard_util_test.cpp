@@ -376,6 +376,197 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterType_0
     EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterType(""), FROM_LOCAL_NET);
 }
 
+// ===== GetPrinterConnectionType Tests =====
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_001
+ * @tc.desc: Verify GetPrinterConnectionType returns USB when printerId contains :IPP- (IPP-over-USB).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_001, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("ip://192.168.1.1:IPP-USB");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "USB");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_002
+ * @tc.desc: Verify GetPrinterConnectionType returns USB when printerId is a USB printer.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_002, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("USB-1234");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "USB");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_003
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN for ePrint printer.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_003, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("EPRINT_abc");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_004
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN for P2P printer.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_004, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("P2P_xyz");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_005
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN for SMB shared printer.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_005, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("smb-192.168.1.1-MyPrinter");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_006
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN for remote (ailife) printer.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_006, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("xxx.xxx.xxx.ailife:device001");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_007
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by IPPS uri.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_007, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetUri("ipps://192.168.1.2");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_008
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by LPD uri.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_008, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetUri("LPD://192.168.1.3");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_009
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by SOCKET uri.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_009, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetUri("socket://192.168.1.4");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_010
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by selectedProtocol IPP.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_010, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetSelectedProtocol("IPP");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_011
+ * @tc.desc: Verify GetPrinterConnectionType returns other when nothing matches.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_011, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "other");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_012
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by ipp:// uri (lowercase).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_012, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetUri("ipp://192.168.1.5");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_013
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by selectedProtocol LPD.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_013, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetSelectedProtocol("LPD");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_014
+ * @tc.desc: Verify GetPrinterConnectionType returns WLAN by selectedProtocol SOCKET.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_014, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("net-printer");
+    printerInfo.SetSelectedProtocol("SOCKET");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
 // ===== Data Table: All errorCode mappings =====
 
 /**

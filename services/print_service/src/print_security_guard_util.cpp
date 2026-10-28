@@ -125,6 +125,42 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
     return fileList;
 }
 
+std::string PrintSecurityGuardUtil::GetPrinterConnectionType(const PrinterInfo &printerInfo)
+{
+    std::string printerId = printerInfo.GetPrinterId();
+    std::string upperPrinterId = PrintUtil::ToUpper(printerId);
+    if (PrintUtil::CheckContains(upperPrinterId, ":IPP-")) {
+        return "USB";
+    }
+    if (PrintUtils::IsUsbPrinter(upperPrinterId)) {
+        return "USB";
+    }
+    int32_t subType = GetPrinterType(upperPrinterId);
+    if (subType == FROM_EPRINT || subType == FROM_P2P) {
+        return "WLAN";
+    }
+    if (PrintUtil::CheckContains(upperPrinterId, "SMB")) {
+        return "WLAN";
+    }
+    if (PrintUtil::CheckContains(upperPrinterId, "AILIFE")) {
+        return "WLAN";
+    }
+    if (printerInfo.HasUri()) {
+        std::string uri = PrintUtil::ToUpper(printerInfo.GetUri());
+        if (uri.find("IPPS://") == 0 || uri.find("IPP://") == 0 ||
+            uri.find("LPD://") == 0 || uri.find("SOCKET://") == 0) {
+            return "WLAN";
+        }
+    }
+    if (printerInfo.HasSelectedProtocol()) {
+        std::string proto = PrintUtil::ToUpper(printerInfo.GetSelectedProtocol());
+        if (proto == "IPP" || proto == "LPD" || proto == "SOCKET") {
+            return "WLAN";
+        }
+    }
+    return "other";
+}
+
 namespace {
 constexpr size_t URL_HEX_DIGITS = 2;
 constexpr int HEX_RADIX = 16;
