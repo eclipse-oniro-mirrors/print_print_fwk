@@ -50,6 +50,7 @@ public:
     bool IsPrinterAdded(const std::string &printerId);
     bool GetPrinterCapabilityFromSystemData(
         PrinterInfo &printer, std::string printerId, PrinterCapability &printerCapability);
+    void GetPpdOptionMapByPrinterId(const std::string &printerId, std::string &ppdOptionMap);
     void DeleteAddedPrinter(const std::string &printerId, const std::string &printerName);
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void GetRawAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);

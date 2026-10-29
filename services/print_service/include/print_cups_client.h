@@ -28,6 +28,7 @@
 #include "print_service_ability.h"
 #include "print_job.h"
 #include "print_constant.h"
+#include "print_ppd_adapter.h"
 
 namespace OHOS::Print {
 typedef std::function<void()> CallbackFunc;
@@ -59,6 +60,7 @@ struct JobParameters {
     std::string vendorOptions;
     bool isReverse = false;
     bool isCollate = true;
+    std::string ppdOptionMap;
     std::string bsuniOutputFormat;
     std::string printSharedDir;
 
@@ -161,7 +163,8 @@ public:
         PrinterCapability &printerCaps);
     int32_t QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status);
     int32_t DeleteCupsPrinter(const char *printerName);
-    void AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName);
+    void AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName,
+        const std::string &ppdOptionMap = "");
     void CancelCupsJob(std::string serviceJobId);
     void InterruptCupsJob(std::string serviceJobId);
 
@@ -253,7 +256,8 @@ private:
     void UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params);
     void UpdatePrintScaling(const PrintJob &jobInfo, JobParameters *params);
     void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
-    JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
+    JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName,
+        const std::string &ppdOptionMap = "");
     void FillPrintSharedDir(JobParameters *params);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);

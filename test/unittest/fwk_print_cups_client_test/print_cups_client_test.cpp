@@ -5014,5 +5014,87 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_PrintSharedDirEmpty_SkipsCupsOption
     cupsFreeOptions(ret, options);
 }
 
+HWTEST_F(PrintCupsClientTest, FillBasicOptions_SetsPwgOptions, TestSize.Level1)
+{
+    JobParameters jobParams;
+    jobParams.duplex = "one-sided";
+    jobParams.printQuality = "4";
+    jobParams.color = "monochrome";
+
+    cups_option_t *options = nullptr;
+    int num_options = 0;
+    num_options = PrintCupsClient::FillBasicOptions(&jobParams, num_options, &options);
+
+    EXPECT_EQ(num_options, 3);
+
+    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    EXPECT_NE(sidesVal, nullptr);
+    EXPECT_STREQ(sidesVal, "one-sided");
+
+    const char *qualityVal = cupsGetOption("print-quality", num_options, options);
+    EXPECT_NE(qualityVal, nullptr);
+    EXPECT_STREQ(qualityVal, "4");
+
+    const char *colorVal = cupsGetOption("print-color-mode", num_options, options);
+    EXPECT_NE(colorVal, nullptr);
+    EXPECT_STREQ(colorVal, "monochrome");
+
+    if (options != nullptr) {
+        cupsFreeOptions(num_options, options);
+    }
+}
+
+HWTEST_F(PrintCupsClientTest, FillBasicOptions_EmptyValues_UsesDefaults, TestSize.Level1)
+{
+    JobParameters jobParams;
+    jobParams.duplex = "";
+    jobParams.printQuality = "";
+    jobParams.color = "";
+
+    cups_option_t *options = nullptr;
+    int num_options = 0;
+    num_options = PrintCupsClient::FillBasicOptions(&jobParams, num_options, &options);
+
+    EXPECT_EQ(num_options, 3);
+
+    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    EXPECT_STREQ(sidesVal, "one-sided");
+
+    const char *qualityVal = cupsGetOption("print-quality", num_options, options);
+    EXPECT_STREQ(qualityVal, "normal");
+
+    const char *colorVal = cupsGetOption("print-color-mode", num_options, options);
+    EXPECT_STREQ(colorVal, "auto");
+
+    if (options != nullptr) {
+        cupsFreeOptions(num_options, options);
+    }
+}
+
+HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    JobParameters jobParams;
+    jobParams.numCopies = 1;
+    jobParams.duplex = "one-sided";
+    jobParams.printQuality = "normal";
+    jobParams.color = "color";
+    jobParams.ppdOptionMap = "";
+
+    cups_option_t *options = nullptr;
+    int num_options = 0;
+    num_options = printCupsClient.FillJobOptions(&jobParams, num_options, &options);
+
+    EXPECT_GE(num_options, 3);
+
+    const char *sidesVal = cupsGetOption("sides", num_options, options);
+    EXPECT_NE(sidesVal, nullptr);
+    EXPECT_STREQ(sidesVal, "one-sided");
+
+    if (options != nullptr) {
+        cupsFreeOptions(num_options, options);
+    }
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -1239,6 +1239,26 @@ bool PrintSystemData::GetPrinterCapabilityFromSystemData(PrinterInfo &printer,
     return false;
 }
 
+void PrintSystemData::GetPpdOptionMapByPrinterId(const std::string &printerId,
+    std::string &ppdOptionMap)
+{
+    ppdOptionMap.clear();
+    PrinterInfo printerInfo;
+    if (!QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("QueryAddedPrinterInfo failed! Id=%{public}s", printerId.c_str());
+        return;
+    }
+    PrinterCapability capability;
+    printerInfo.GetCapability(capability);
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(capability.GetOption(), optionJson) || !optionJson.isObject()) {
+        return;
+    }
+    if (optionJson.isMember("ppdOptionMap") && optionJson["ppdOptionMap"].isString()) {
+        ppdOptionMap = optionJson["ppdOptionMap"].asString();
+    }
+}
+
 bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability)
 {
     PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{private}s", printerId.c_str());

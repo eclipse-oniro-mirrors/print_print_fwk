@@ -24,6 +24,9 @@
 namespace OHOS::Print {
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName);
 
+const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char *choice,
+    const char *defaultText);
+
 int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::string &val);
 int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::vector<std::string>& conflictTypes);
