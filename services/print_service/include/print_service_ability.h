@@ -476,6 +476,9 @@ public:
     bool RefreshPrinterStatusOnSwitchUser();
 #endif  // ENTERPRISE_ENABLE
 
+public:
+    int32_t ReportBlockedAuditEvent(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
+
 #if defined(EDM_SERVICE_ENABLE) || defined(EDM_PRINT_POLICY_ENABLE)
 public:
     int32_t ReportAuditEvent(int32_t eventId, const std::string &version, const Json::Value &contentJson);

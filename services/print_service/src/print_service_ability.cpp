@@ -1835,6 +1835,27 @@ int32_t PrintServiceAbility::ReportAuditEvent(int32_t eventId, const std::string
 }
 #endif
 
+int32_t PrintServiceAbility::ReportBlockedAuditEvent(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
+{
+    if (printJob == nullptr) {
+        PRINT_HILOGE("printJob is null");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    if (subState == PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED) {
+        PRINT_HILOGW("Print job blocked by security policy, jobId=%{public}s",
+            printJob->GetJobId().c_str());
+#if defined(EDM_PRINT_POLICY_ENABLE)
+        ReportJobBlockedEvent(printJob);
+        return E_PRINT_NONE;
+#elif defined(EDM_SERVICE_ENABLE)
+        return ReportBannedEvent(printJob->GetOption());
+#else
+        return E_PRINT_NONE;
+#endif
+    }
+    return E_PRINT_NONE;
+}
+
 #ifdef EDM_SERVICE_ENABLE
 int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
 {
@@ -2637,6 +2658,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
     AddPrintJobToHistoryList(printJob);
+    ReportBlockedAuditEvent(printJob, subState);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
     if (isEprint(printJob->GetPrinterId())) {
         PRINT_HILOGI("Skip AI notifier for eprint printer");
