@@ -42,7 +42,11 @@ void PrintSyncLoadCallbackTest::TearDownTestCase(void)
 {}
 
 void PrintSyncLoadCallbackTest::SetUp(void)
-{}
+{
+    PrintManagerClient::GetInstance().printServiceProxy_ = nullptr;
+    PrintManagerClient::GetInstance().deathRecipient_ = nullptr;
+    PrintManagerClient::GetInstance().ready_ = false;
+}
 
 void PrintSyncLoadCallbackTest::TearDown(void)
 {}

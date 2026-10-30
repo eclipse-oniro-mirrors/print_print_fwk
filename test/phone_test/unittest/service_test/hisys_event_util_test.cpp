@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include <string>
+#define private public
 #include "hisys_event_util.h"
+#undef private
 #include "print_constant.h"
 
 using namespace testing::ext;
@@ -44,64 +46,63 @@ void HisysEventUtilTest::TearDown(void)
 
 /**
  * @tc.name: HisysEventUtilTest_0001
- * @tc.desc: ReportFailureEvent PRINT_FAILURE (non-empty key -> write; empty key -> skip)
+ * @tc.desc: ReportPrintFailure empty-key guard: non-empty key reaches HiSysEventWrite, empty key early-returns
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001, TestSize.Level1)
 {
-    HisysEventParams nonEmpty{
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportPrintFailure(10, "test_print_failure"));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportPrintFailure(10, ""));
+    HisysEventParams params{
         .eventType = HisysEventType::PRINT_FAILURE,
-        .resourceKey = "test",
+        .resourceKey = "dispatch_test",
         .subState = 10
     };
-    HisysEventUtil::ReportFailureEvent(nonEmpty);
-    HisysEventParams empty{
-        .eventType = HisysEventType::PRINT_FAILURE,
-        .resourceKey = "",
-        .subState = 10
-    };
-    HisysEventUtil::ReportFailureEvent(empty);
-    SUCCEED();
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportFailureEvent(params));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportPrintFailure(0, "guard_non_empty"));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportPrintFailure(0, ""));
 }
 
 /**
  * @tc.name: HisysEventUtilTest_0002
- * @tc.desc: ReportFailureEvent CONNECT_FAILURE (non-empty key -> write; empty key -> skip)
+ * @tc.desc: ReportConnectFailure empty-key guard and printerModel default ("unknown") logic
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0002, TestSize.Level1)
 {
-    HisysEventParams nonEmpty{
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportConnectFailure("test_connect", "PrinterX"));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportConnectFailure("test_connect_empty_model", ""));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportConnectFailure("", "PrinterX"));
+    HisysEventParams params{
         .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = "test",
+        .resourceKey = "dispatch_test",
         .printerModel = "printerModel"
     };
-    HisysEventUtil::ReportFailureEvent(nonEmpty);
-    HisysEventParams empty{
-        .eventType = HisysEventType::CONNECT_FAILURE,
-        .resourceKey = "",
-        .printerModel = "printerModel"
-    };
-    HisysEventUtil::ReportFailureEvent(empty);
-    SUCCEED();
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportFailureEvent(params));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportConnectFailure("ternary_with_model", "ModelA"));
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportConnectFailure("ternary_without_model", ""));
 }
 
 /**
  * @tc.name: HisysEventUtilTest_0003
- * @tc.desc: ReportFailureEvent with invalid eventType (switch default branch)
+ * @tc.desc: ReportFailureEvent with invalid eventType hits switch default (no dispatch)
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0003, TestSize.Level1)
 {
-    HisysEventParams params{
+    HisysEventParams invalidParams{
         .eventType = static_cast<HisysEventType>(999),
         .resourceKey = "test"
     };
-    HisysEventUtil::ReportFailureEvent(params);
-    SUCCEED();
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportFailureEvent(invalidParams));
+    HisysEventParams invalidEmptyParams{
+        .eventType = static_cast<HisysEventType>(999),
+        .resourceKey = ""
+    };
+    EXPECT_NO_FATAL_FAILURE(HisysEventUtil::ReportFailureEvent(invalidEmptyParams));
 }
 }  // namespace Print
 }  // namespace OHOS

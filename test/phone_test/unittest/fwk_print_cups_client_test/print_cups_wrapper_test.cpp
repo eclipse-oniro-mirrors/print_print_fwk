@@ -271,7 +271,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0014, TestSize.Level1)
         option["printerName"] = "name";
         option["printerUri"] = "uri";
         info.SetOption(PrintJsonUtil::WriteString(option));
-        printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
+        int32_t ret = printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
+        EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE)
+            << "QueryPrinterInfoByPrinterId should return E_PRINT_SERVER_FAILURE when capability query fails";
     };
     DoMockTest(testFunc);
 }
@@ -293,7 +295,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0015, TestSize.Level1)
         Json::Value option;
         option["printerName"] = "name";
         info.SetOption(PrintJsonUtil::WriteString(option));
-        printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
+        int32_t ret = printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
+        EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER)
+            << "QueryPrinterInfoByPrinterId should return E_PRINT_INVALID_PARAMETER when printerUri is missing";
     };
     DoMockTest(testFunc);
 }
@@ -465,6 +469,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0082, TestSize.Level1)
     ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, "testppd");
     printCupsClient.ParsePPDInfo(response, ppds);
     ippDelete(response);
+    EXPECT_EQ(ppds.size(), 1);
+    EXPECT_EQ(ppds[0], "testppd");
 }
 
 /**
@@ -481,8 +487,10 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0083, TestSize.Level1)
     std::string uri = "testuri";
     std::string name = "testname";
     std::string makeModel = "testmodel";
-    printCupsClient.AddPrinterToCups(uri, name, makeModel);
-    printCupsClient.DeleteCupsPrinter(name.c_str());
+    int32_t addRet = printCupsClient.AddPrinterToCups(uri, name, makeModel);
+    EXPECT_EQ(addRet, E_PRINT_SERVER_FAILURE);
+    int32_t delRet = printCupsClient.DeleteCupsPrinter(name.c_str());
+    EXPECT_EQ(delRet, E_PRINT_NONE);
     printCupsClient.StopCupsdService();
 }
 

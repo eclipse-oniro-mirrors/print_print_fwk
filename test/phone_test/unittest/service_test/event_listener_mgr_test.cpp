@@ -848,9 +848,12 @@ HWTEST_F(EventListenerMgrTest, Execute_ShouldReturnFalse_WhenPrinterDiscover_Wit
 
     CallbackInfo cbInfo;
     cbInfo.cbEventType = PRINTER_DISCOVER;
-    cbInfo.printerInfo = nullptr;
+    cbInfo.printerInfo = std::make_shared<PrinterInfo>();
+    cbInfo.printerInfo->SetPrinterId("test_printer_invalid_event");
     cbInfo.printerEvent = PRINTER_EVENT_STATE_CHANGED;
 
+    EXPECT_CALL(*listener, OnCallback(_, An<const PrinterInfo &>()))
+        .WillOnce(Return(false));
     EXPECT_FALSE(eventListenerMgr.Execute(cbInfo));
 }
 

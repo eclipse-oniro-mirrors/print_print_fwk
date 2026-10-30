@@ -300,9 +300,9 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level2)
     vendorDriver.OnDestroy();
     vendorDriver.OnStartDiscovery();
     EXPECT_EQ(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0), false);
-    vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", "");
+    EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""), false);
     std::vector<std::string> propertyKeys;
-    vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
+    EXPECT_EQ(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys), false);
 }
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
@@ -324,9 +324,9 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
     vendorDriver.OnDestroy();
     vendorDriver.OnStartDiscovery();
     EXPECT_EQ(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0), true);
-    vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", "");
+    EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""), true);
     std::vector<std::string> propertyKeys;
-    vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
+    EXPECT_EQ(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys), false);
 }
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0006, TestSize.Level2)
@@ -360,8 +360,10 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_QueryCapabilityByIpAndQueu
             EXPECT_CALL(mockDriver,
                 OnQueryCapabilityByIpAndQueue(_, _, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
             std::string printerIp = PRINTER_TEST_IP;
-            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "/print");
-            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "/print");
+            bool retFirst = vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "/print");
+            EXPECT_FALSE(retFirst);
+            bool retSecond = vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "/print");
+            EXPECT_TRUE(retSecond);
         };
     DoMockTest(testFunc);
 }
@@ -373,8 +375,10 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_QueryCapabilityByIp, TestS
             EXPECT_CALL(mockDriver,
                 OnQueryCapabilityByIp(_, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
             std::string printerIp = PRINTER_TEST_IP;
-            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "");
-            vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "");
+            bool retFirst = vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "");
+            EXPECT_FALSE(retFirst);
+            bool retSecond = vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp", "");
+            EXPECT_TRUE(retSecond);
         };
     DoMockTest(testFunc);
 }
@@ -567,7 +571,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NonEmptyQueue_IppProt
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -584,7 +588,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_Empt
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -601,7 +605,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_Auto
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -619,7 +623,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_IppP
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -637,7 +641,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_IppP
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -655,7 +659,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_IppP
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(1).WillOnce(Return(true));
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -673,7 +677,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NoUri_EmptyQueue_Unkn
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -685,7 +689,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NullPrinterInfo_Shoul
             // nullptr check fires first, no manager methods called
             EXPECT_CALL(mockManager, GetConnectingQueue()).Times(0);
             EXPECT_CALL(mockManager, GetConnectingProtocol()).Times(0);
-            vendorDriver.OnPrinterCapabilityQueried(nullptr);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(nullptr));
         };
     DoMockTest(testFunc);
 }
@@ -703,7 +707,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NonEmptyQueue_IppsPro
             EXPECT_CALL(mockManager, OnPrinterCapabilityQueried(_, _)).Times(0);
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -722,7 +726,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NonEmptyQueue_IppProt
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
             printerInfo->SetUri("ipp://" + PRINTER_TEST_IP + ":631/ipp/print");
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -741,7 +745,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_NonEmptyQueue_NonIppP
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
             printerInfo->SetUri("lpd://" + PRINTER_TEST_IP + ":515");
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }
@@ -760,7 +764,7 @@ HWTEST_F(VendorBsuniDriverTest, OnPrinterCapabilityQueried_WithUri_EmptyQueue_Sh
             auto printerInfo = std::make_shared<PrinterInfo>();
             printerInfo->SetPrinterId(PRINTER_TEST_IP);
             printerInfo->SetUri("ipp://" + PRINTER_TEST_IP + ":631/ipp/print");
-            vendorDriver.OnPrinterCapabilityQueried(printerInfo);
+            EXPECT_NO_FATAL_FAILURE(vendorDriver.OnPrinterCapabilityQueried(printerInfo));
         };
     DoMockTest(testFunc);
 }

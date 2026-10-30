@@ -245,7 +245,9 @@ HWTEST_F(RemoteServiceAdapterTest, UnbindService_003, TestSize.Level1)
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
     client.connection_->remoteObject_ = mockRemote;
     EXPECT_TRUE(client.IsConnected());
-    EXPECT_NO_FATAL_FAILURE(client.UnbindService());
+    bool ret = client.UnbindService();
+    EXPECT_FALSE(client.IsConnected())
+        << "IsConnected should return false after UnbindService clears the connection";
 }
 
 } // namespace OHOS::Print

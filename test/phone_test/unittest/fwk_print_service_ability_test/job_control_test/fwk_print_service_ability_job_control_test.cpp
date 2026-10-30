@@ -30,7 +30,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014_NeedRename, TestS
     service->printJobList_["1"] = job;
     EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_INVALID_PRINTJOB);
     service->printJobList_["0"] = job;
-    service->StartPrintJob(testJob);
+    int32_t ret = service->StartPrintJob(testJob);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(service->queuedJobList_.count(jobId), 0u);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020_NeedRename, TestSize.Level1)
@@ -66,7 +68,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0037_NeedRename, TestS
     nativePrintJob->UpdateParams(printJob);
     nativePrintJob->Dump();
     service->AddToPrintJobList(jobId, nativePrintJob);
-    EXPECT_NE(service->AddNativePrintJob(jobId, printJob), nativePrintJob);
+    auto result = service->AddNativePrintJob(jobId, printJob);
+    EXPECT_NE(result, nullptr);
+    EXPECT_NE(result, nativePrintJob);
+    EXPECT_EQ(result->GetJobId(), jobId);
+    EXPECT_EQ(result->GetJobState(), PRINT_JOB_PREPARED);
+    EXPECT_EQ(service->printJobList_.count(jobId), 1);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038_NeedRename, TestSize.Level1)
@@ -162,19 +169,19 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042_NeedRename, TestS
     service->SetPrintJobCanceled(printJob);
     auto testPrintJob = std::make_shared<PrintJob>(printJob);
     std::string testJobId = testPrintJob->GetJobId();
-    auto attrIt = service->printAttributesList_.find(testJobId);
-    EXPECT_EQ(attrIt, service->printAttributesList_.end());
+    EXPECT_EQ(service->printJobList_.count(testJobId), 0);
     std::string jobId = "123";
     printJob.SetJobId(jobId);
     int32_t userId = 100;
     service->userJobMap_[jobId] = userId;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
+    PrintAttributes attr;
+    service->printAttributesList_[jobId] = std::make_shared<PrintAttributes>(attr);
+    EXPECT_EQ(service->printAttributesList_.count(jobId), 1);
     service->SetPrintJobCanceled(printJob);
-    testPrintJob = std::make_shared<PrintJob>(printJob);
-    testJobId = testPrintJob->GetJobId();
-    attrIt = service->printAttributesList_.find(testJobId);
-    EXPECT_EQ(attrIt, service->printAttributesList_.end());
+    EXPECT_EQ(service->printAttributesList_.count(jobId), 1);
+    EXPECT_EQ(service->printJobList_.count(jobId), 1);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0043_NeedRename, TestSize.Level1)
@@ -642,8 +649,11 @@ HWTEST_F(PrintServiceAbilityTest, notifyAdapterJobChanged_WhenServiceHandlerNull
     auto service = PrintServiceAbilityTest::CreateService();
     service->serviceHandler_ = nullptr;
     std::string jobId = "job_005";
-    service->notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, 0);
-    EXPECT_EQ(service->serviceHandler_, nullptr);
+    PrintAttributes attr;
+    service->printAttributesList_[jobId] = std::make_shared<PrintAttributes>(attr);
+    EXPECT_EQ(service->printAttributesList_.count(jobId), 1);
+    EXPECT_NO_FATAL_FAILURE(service->notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, 0));
+    EXPECT_EQ(service->printAttributesList_.count(jobId), 0);
 }
 
 }  // namespace Print

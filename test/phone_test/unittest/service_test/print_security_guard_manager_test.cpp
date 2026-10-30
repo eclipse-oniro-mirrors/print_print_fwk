@@ -60,6 +60,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001_NeedR
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-2", printerInfo, printJob);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.count("jobId-1"), 1);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.count("jobId-2"), 0);
 }
 
 /**
@@ -78,6 +80,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002_NeedR
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.count("jobId-1"), 0);
 }
 }  // namespace Print
 }  // namespace OHOS

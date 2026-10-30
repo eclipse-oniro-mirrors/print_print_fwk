@@ -49,12 +49,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012_NeedRename, TestS
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_INVALID_PARAMETER);
     taskId = "1";
     type = "printCallback_adapter";
-    service->On(taskId, type, listener);
+    EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NONE);
     listener = new MockPrintCallbackProxy();
     if (listener != nullptr) {
-        service->On(taskId, type, listener);
+        EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NONE);
     }
     taskId = "";
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NONE);
@@ -74,9 +74,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestS
     service->SetHelper(mockHelper);
     EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
-    service->AdapterGetFileCallBack(jobId, state, subState);
+    EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_FAILED;
-    service->AdapterGetFileCallBack(jobId, state, subState);
+    EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0056_NeedRename, TestSize.Level1)
@@ -89,8 +89,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0056_NeedRename, TestS
     EXPECT_EQ(service->RegisterPrinterCallback(type, listener), E_PRINT_INVALID_PARAMETER);
     EXPECT_EQ(service->UnregisterPrinterCallback(type), E_PRINT_INVALID_TOKEN);
     sptr<IPrintCallback> listener2 = new MockPrintCallbackProxy();
-    service->RegisterPrinterCallback(type, listener2);
-    service->UnregisterPrinterCallback(type);
+    EXPECT_EQ(service->RegisterPrinterCallback(type, listener2), E_PRINT_NONE);
+    EXPECT_EQ(service->UnregisterPrinterCallback(type), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057_NeedRename, TestSize.Level1)
@@ -173,9 +173,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0091_NeedRename, TestS
     std::string type = PRINT_CALLBACK_ADAPTER;
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     EXPECT_NE(listener, nullptr);
-    service->On(jobId, type, listener);
+    EXPECT_EQ(service->On(jobId, type, listener), E_PRINT_NONE);
     type = PRINTER_CHANGE_EVENT_TYPE;
-    service->On(jobId, type, listener);
+    EXPECT_EQ(service->On(jobId, type, listener), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0093_NeedRename, TestSize.Level1)
@@ -186,7 +186,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0093_NeedRename, TestS
     service->printUserDataMap_[101] = userData;
     int event = 0;
     PrinterInfo info;
-    EXPECT_NE(service->SendPrinterDiscoverEvent(event, info), 0);
+    EXPECT_EQ(service->SendPrinterDiscoverEvent(event, info), 1);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094_NeedRename, TestSize.Level1)
@@ -197,7 +197,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094_NeedRename, TestS
     service->printUserDataMap_[101] = userData;
     int event = 0;
     PrinterInfo info;
-    EXPECT_NE(service->SendPrinterChangeEvent(event, info), 0);
+    EXPECT_EQ(service->SendPrinterChangeEvent(event, info), 1);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestSize.Level1)
@@ -205,8 +205,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrinterInfo info;
-    service->SendPrinterEvent(info);
-    EXPECT_EQ(info.GetPrinterState(), PRINTER_UNKNOWN);
+    info.SetPrinterState(PRINTER_UNKNOWN);
+    auto *mockListener = new MockPrintCallbackProxy();
+    EXPECT_CALL(*mockListener, OnCallback(PRINTER_UNKNOWN, An<const PrinterInfo &>()))
+        .WillOnce(Return(true));
+    sptr<IPrintCallback> listener = mockListener;
+    EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(
+        PRINTER_STATE_CHANGE, listener));
+    EXPECT_NO_FATAL_FAILURE(service->SendPrinterEvent(info));
+    DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096_NeedRename, TestSize.Level1)
@@ -227,24 +234,25 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestS
     DelayedSingleton<EventListenerMgr>::GetInstance()->ClearAllListeners();
     PrintJob jobInfo;
     jobInfo.SetJobId("1");
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     EXPECT_TRUE(DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterPrinterListener(PRINTER_JOB_STATE_CHANGE,
         listener));
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     jobInfo.SetJobState(PRINT_JOB_COMPLETED);
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     jobInfo.SetJobState(PRINT_JOB_BLOCKED);
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     jobInfo.SetJobState(PRINT_JOB_COMPLETED);
     jobInfo.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     jobInfo.SetSubState(PRINT_JOB_COMPLETED_FAILED);
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     jobInfo.SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
     jobInfo.SetJobState(PRINT_JOB_BLOCKED);
-    service->SendPrintJobEvent(jobInfo);
+    EXPECT_NO_FATAL_FAILURE(service->SendPrintJobEvent(jobInfo));
+    EXPECT_EQ(jobInfo.GetJobId(), "1");
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098_NeedRename, TestSize.Level1)

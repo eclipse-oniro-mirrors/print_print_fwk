@@ -98,8 +98,9 @@ HWTEST_F(PrintFailureAiNotifierTest, SplitSubState_LargeValue_ReturnCorrectSet, 
 {
     uint32_t subState = 999999;
     std::set<uint32_t> result = printFailureAiNotifier.SplitSubState(subState);
-    
-    EXPECT_GT(result.size(), 0);
+
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_NE(result.find(99), result.end());
 }
 
 HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_FirstBlocked_JobStateMapUpdated, TestSize.Level1)
