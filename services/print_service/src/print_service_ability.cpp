@@ -4015,13 +4015,14 @@ bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
         return false;
     }
     PRINT_HILOGI("enter PrintServiceAbility::StartPluginPrintExtAbility");
-    bool ret = helper_->StartPluginPrintExtAbility(want);
-    auto timeoutCheck = [this]() {
+    sptr<PrintServiceHelper::PrintAbilityConnection> conn = nullptr;
+    bool ret = helper_->StartPluginPrintExtAbility(want, &conn);
+    auto timeoutCheck = [this, conn]() {
         if (helper_ == nullptr) {
             PRINT_HILOGE("timeoutCheck, Invalid print service helper.");
             return;
         }
-        if (!helper_->CheckPluginPrintConnected()) {
+        if (!helper_->CheckPluginPrintConnected(conn)) {
             PRINT_HILOGE("can't connect extension ability, cancel all printJob.");
             std::vector<std::string> jobIdlListToCancel;
             {

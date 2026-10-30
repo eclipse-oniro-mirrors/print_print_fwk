@@ -106,7 +106,7 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want, std::fun
     return true;
 }
 
-bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
+bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want, sptr<PrintAbilityConnection> *outConn)
 {
     PRINT_HILOGD("enter PrintServiceHelper::StartPluginPrintExtAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
@@ -130,6 +130,9 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
     }
     std::lock_guard<std::mutex> autoLock(connectionListLock_);
     extConnectionMap_[ExtensionAbilityType::SERVICE_EXTENSION_ABILITY].push_back(printAbilityConnection);
+    if (outConn != nullptr) {
+        *outConn = printAbilityConnection;
+    }
     return true;
 }
 
@@ -163,25 +166,10 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
     return true;
 }
 
-bool PrintServiceHelper::CheckPluginPrintConnected()
+bool PrintServiceHelper::CheckPluginPrintConnected(const sptr<PrintAbilityConnection> &conn)
 {
-    bool pluginConnected = true;
-    std::lock_guard<std::mutex> connectionLock(connectionListLock_);
-    auto connectionListIt = extConnectionMap_.find(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
-    if (connectionListIt == extConnectionMap_.end() || connectionListIt->second.size() == 0) {
-        PRINT_HILOGW("cannot find connect list of this type");
-        return false;
-    }
-
-    for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
-        if ((*connIt) != nullptr && !(*connIt)->IsConnected()) {
-            pluginConnected = false;
-            connIt = connectionListIt->second.erase(connIt);
-        } else {
-            ++connIt;
-        }
-    }
-    return pluginConnected;
+    PRINT_CHECK_NULL_AND_RETURN_WITH_FUNC(conn, false);
+    return conn->IsConnected();
 }
 
 sptr<IRemoteObject> PrintServiceHelper::GetBundleMgr()
