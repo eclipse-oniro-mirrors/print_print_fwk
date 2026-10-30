@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <fcntl.h>
 #include <random>
 #include <sstream>
@@ -173,6 +174,41 @@ bool PrintUtils::IsPathValid(const std::string &path)
     if (path.length() >= PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
         strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         PRINT_HILOGE("invalid file path!");
+        return false;
+    }
+    return true;
+}
+
+bool PrintUtils::IsPathValidForCreate(const std::string &parentDir, const std::string &fileName)
+{
+    if (parentDir.empty() || fileName.empty()) {
+        PRINT_HILOGE("invalid input parameters!");
+        return false;
+    }
+ 
+    if (!IsPathValid(parentDir)) {
+        PRINT_HILOGE("parent directory is not valid!");
+        return false;
+    }
+ 
+    if (fileName.find('/') != std::string::npos ||
+        fileName.find('\0') != std::string::npos ||
+        fileName == "." || fileName == "..") {
+        PRINT_HILOGE("invalid file name!");
+        return false;
+    }
+ 
+    std::string originalPath = parentDir + "/" + fileName;
+    if (originalPath.length() >= PATH_MAX) {
+        PRINT_HILOGE("combined path is too long!");
+        return false;
+    }
+ 
+    std::filesystem::path fullPath(originalPath);
+    fullPath = fullPath.lexically_normal();
+    std::string completePath = fullPath.generic_string();
+    if (completePath.length() != originalPath.length()) {
+        PRINT_HILOGE("path traversal detected!");
         return false;
     }
     return true;
