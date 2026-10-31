@@ -367,6 +367,17 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
     return nullptr;
 }
 
+// Canonical (first-variant) PPD option name for a PWG type, so multi-variant families
+// like Duplex/JCLDuplex/EFDuplex share one stable textMap key regardless of which variant the PPD holds.
+static std::string GetCanonicalPpdName(const std::string &pwgType)
+{
+    auto it = CUPS_PPD_FIELD_MMAP.find(pwgType);
+    if (it != CUPS_PPD_FIELD_MMAP.end()) {
+        return it->second.name;
+    }
+    return pwgType;
+}
+
 // Write built entries into optionMap and textMap JSON
 // optionMap: {pwgType: {optionName, choices}} (for PWG->PPD lookup when sending options)
 // textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}} (for app display translation)
@@ -383,7 +394,7 @@ static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
         Json::Value textMap;
         textMap["default"] = result.textDefault;
         textMap["zh_CN"] = result.textZhCN;
-        ppdOptionTextMap[opt->keyword] = textMap;
+        ppdOptionTextMap[GetCanonicalPpdName(pwgType)] = textMap;
     }
 }
 
