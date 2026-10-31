@@ -188,5 +188,56 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplet
 #endif
 }
 
+/**
+ * @tc.name: ReportBlockedAuditEvent_ValidJob_ReportAuditEvent
+ * @tc.desc: Test ReportBlockedAuditEvent with valid PrintJob triggers audit reporting
+ * @tc.type: FUNC
+ * @tc.require: watermark security policy violation should report JOB_BANNED audit event
+ */
+HWTEST_F(PrintServiceAbilityTest, ReportBlockedAuditEvent_ValidJob_ReportAuditEvent,
+    TestSize.Level1)
+{
+#if defined(EDM_PRINT_POLICY_ENABLE) || defined(EDM_SERVICE_ENABLE)
+    PrintServiceMockPermission::MockPermission();
+    auto service = PrintServiceAbilityTest::CreateService();
+
+    std::string printerId = "printer_security_001";
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName("SecurityTestPrinter");
+    printerInfo.SetUri("ipp://192.168.1.100/ipp/print");
+    service->printSystemData_.addedPrinterMap_.Insert(printerId,
+        std::make_shared<PrinterInfo>(printerInfo));
+
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId("job_security_001");
+    printJob->SetPrinterId(printerId);
+    Json::Value optionJson;
+    optionJson["jobName"] = "secret_document.pdf";
+    printJob->SetOption(PrintJsonUtil::WriteString(optionJson));
+
+    int32_t ret = service->ReportBlockedAuditEvent(printJob, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: ReportBlockedAuditEvent_NullJob_ReturnInvalidParameter
+ * @tc.desc: Test ReportBlockedAuditEvent with null PrintJob returns error
+ * @tc.type: FUNC
+ * @tc.require: null printJob should not crash and return E_PRINT_INVALID_PARAMETER
+ */
+HWTEST_F(PrintServiceAbilityTest, ReportBlockedAuditEvent_NullJob_ReturnInvalidParameter,
+    TestSize.Level1)
+{
+#if defined(EDM_PRINT_POLICY_ENABLE) || defined(EDM_SERVICE_ENABLE)
+    PrintServiceMockPermission::MockPermission();
+    auto service = PrintServiceAbilityTest::CreateService();
+
+    int32_t ret = service->ReportBlockedAuditEvent(nullptr, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+#endif
+}
+
 }  // namespace Print
 }  // namespace OHOS
