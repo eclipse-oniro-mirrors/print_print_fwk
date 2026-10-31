@@ -341,9 +341,15 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
         if (ppdKey != opt->choices[i].choice) {
             result.ppdChoices[opt->choices[i].choice] = opt->choices[i].choice;
         }
-        result.textDefault[textKey] = opt->choices[i].text;
-        result.textZhCN[textKey] = GetCNFromPpdAttr(ppd, opt->keyword,
-            opt->choices[i].choice, opt->choices[i].text);
+        // Only insert textMap fields the PPD declares: default text when the choice has
+        // text, zh_CN when a CN localization exists; do not fill undeclared fields.
+        if (opt->choices[i].text != nullptr && opt->choices[i].text[0] != '\0') {
+            result.textDefault[textKey] = opt->choices[i].text;
+        }
+        const char *cnText = GetCNFromPpdAttr(ppd, opt->keyword, opt->choices[i].choice, nullptr);
+        if (cnText != nullptr && cnText[0] != '\0') {
+            result.textZhCN[textKey] = cnText;
+        }
     }
 }
 
