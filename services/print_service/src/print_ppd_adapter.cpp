@@ -257,7 +257,7 @@ static const std::map<std::string, const std::map<std::string, int> *> PWG_TYPE_
 
 // Convert PWG string value to textMap int-enum string key (e.g. "two-sided-long-edge" -> "1")
 // Return the raw PWG value when enumMap is null; return empty string on lookup miss
-static std::string ResolveTextKey(const std::string &pwgValue,
+std::string PpdAdapter::ResolveTextKey(const std::string &pwgValue,
     const std::map<std::string, int> *enumMap)
 {
     if (enumMap == nullptr) {
@@ -273,7 +273,7 @@ static std::string ResolveTextKey(const std::string &pwgValue,
 // Look up the CUPS PWG name by PPD choice name in ppd->cache
 // CACHE_SIZES: search cache->sizes (e.g. "A4" -> "iso_a4_210x297mm")
 // CACHE_SOURCES: search cache->sources (e.g. "Main" -> "main")
-static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
+bool PpdAdapter::FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
     const char *choice, std::string &pwgKey)
 {
     if (resolver == ResolverType::CACHE_SIZES && ppd->cache != nullptr) {
@@ -299,7 +299,7 @@ static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
 // CACHE_SOURCES: take PWG key from cache->sources, use PPD choice name as textMap key
 // STANDALONE: use PPD choice name for both key and value (identity mapping)
 // STANDARD: reverse-lookup PWG value from reverseChoiceMap as key, convert to int enum via enumMap as textMap key
-static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
+void PpdAdapter::BuildEntries(const ResolveContext &ctx, EntryResult &result)
 {
     ppd_file_t *ppd = ctx.ppd;
     ppd_option_t *opt = ctx.opt;
@@ -355,7 +355,7 @@ static void BuildEntries(const ResolveContext &ctx, EntryResult &result)
 
 // Find the first existing PPD option variant for a PWG type from CUPS_PPD_FIELD_MMAP
 // e.g. Duplex has 5 variants (Duplex/JCLDuplex/EFDuplex/...); return the first one present in the PPD file
-static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
+ppd_option_t *PpdAdapter::FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
     const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver)
 {
     auto range = CUPS_PPD_FIELD_MMAP.equal_range(pwgType);
@@ -375,7 +375,7 @@ static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &
 
 // Canonical (first-variant) PPD option name for a PWG type, so multi-variant families
 // like Duplex/JCLDuplex/EFDuplex share one stable textMap key regardless of which variant the PPD holds.
-static std::string GetCanonicalPpdName(const std::string &pwgType)
+std::string PpdAdapter::GetCanonicalPpdName(const std::string &pwgType)
 {
     auto it = CUPS_PPD_FIELD_MMAP.find(pwgType);
     if (it != CUPS_PPD_FIELD_MMAP.end()) {
@@ -387,7 +387,7 @@ static std::string GetCanonicalPpdName(const std::string &pwgType)
 // Write built entries into optionMap and textMap JSON
 // optionMap: {pwgType: {optionName, choices}} (for PWG->PPD lookup when sending options)
 // textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}} (for app display translation)
-static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
+void PpdAdapter::WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
     const EntryResult &result, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
     if (!pwgType.empty() && !result.ppdChoices.empty()) {
@@ -405,7 +405,7 @@ static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
 }
 
 // Full pipeline for one PWG type: find PPD option -> build reverseChoiceMap -> BuildEntries -> WriteOptionMaps
-static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
+void PpdAdapter::ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
     const StdStringMultiMap *choiceMmap = nullptr;

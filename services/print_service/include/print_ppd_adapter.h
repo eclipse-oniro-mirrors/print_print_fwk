@@ -78,6 +78,19 @@ public:
         std::vector<std::pair<std::string, std::string>> &result);
     static int AddPpdOrPwgOption(const Json::Value &optionMap, const PwgOptionSpec &spec,
         int num_options, cups_option_t **options);
+private:
+    static std::string ResolveTextKey(const std::string &pwgValue,
+        const std::map<std::string, int> *enumMap);
+    static bool FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
+        const char *choice, std::string &pwgKey);
+    static void BuildEntries(const ResolveContext &ctx, EntryResult &result);
+    static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
+        const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver);
+    static std::string GetCanonicalPpdName(const std::string &pwgType);
+    static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
+        const EntryResult &result, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap);
+    static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
+        Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap);
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_PPD_ADAPTER_H
