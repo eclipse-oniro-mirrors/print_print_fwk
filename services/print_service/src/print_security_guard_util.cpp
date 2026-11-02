@@ -127,6 +127,10 @@ std::vector<std::string> PrintSecurityGuardUtil::ExtractFileListFromOption(const
 
 std::string PrintSecurityGuardUtil::GetPrinterConnectionType(const PrinterInfo &printerInfo)
 {
+    static const std::map<std::string, std::string> PORT_TYPE_MAP = {
+        {"USB", "USB"}, {"NET", "WLAN"}, {"WLAN", "WLAN"}, {"WIFI", "WLAN"}};
+    static const std::set<std::string> NET_URI_SCHEMES = {"IPPS://", "IPP://", "LPD://", "SOCKET://"};
+
     std::string printerId = printerInfo.GetPrinterId();
     std::string upperPrinterId = PrintUtil::ToUpper(printerId);
     if (PrintUtil::CheckContains(upperPrinterId, ":IPP-")) {
@@ -145,11 +149,21 @@ std::string PrintSecurityGuardUtil::GetPrinterConnectionType(const PrinterInfo &
     if (PrintUtil::CheckContains(upperPrinterId, "AILIFE")) {
         return "WLAN";
     }
+    Json::Value optionJson;
+    std::string portType;
+    if (printerInfo.HasOption() && PrintJsonUtil::Parse(printerInfo.GetOption(), optionJson) &&
+        PrintJsonUtil::FindJsonStringMember(optionJson, "portType", portType)) {
+        auto it = PORT_TYPE_MAP.find(PrintUtil::ToUpper(portType));
+        if (it != PORT_TYPE_MAP.end()) {
+            return it->second;
+        }
+    }
     if (printerInfo.HasUri()) {
         std::string uri = PrintUtil::ToUpper(printerInfo.GetUri());
-        if (uri.find("IPPS://") == 0 || uri.find("IPP://") == 0 ||
-            uri.find("LPD://") == 0 || uri.find("SOCKET://") == 0) {
-            return "WLAN";
+        for (const auto &scheme : NET_URI_SCHEMES) {
+            if (uri.find(scheme) == 0) {
+                return "WLAN";
+            }
         }
     }
     if (printerInfo.HasSelectedProtocol()) {

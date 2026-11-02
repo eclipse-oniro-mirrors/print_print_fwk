@@ -567,6 +567,41 @@ HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnec
     EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
 }
 
+// ===== GetPrinterConnectionType portType option Tests =====
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_015
+ * @tc.desc: Verify portType=="USB" takes priority over URI scheme check. Local IPP proxy scenario:
+ *           uri is ipp:// but the physical connection is USB, should return USB
+ *           (fixes the issue of webprinter being misjudged as WLAN).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_015, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("com.strato.webprinter:cdf__8C");
+    printerInfo.SetUri("ipp://49.4.22.46:16631/ipp/print");
+    printerInfo.SetOption(R"({"portType":"USB","portId":"USB:CN44T75K0Y","portAddr":"3f0:4454"})");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "USB");
+}
+
+/**
+ * @tc.name: PrintSecurityGuardUtilTest_GetPrinterConnectionType_016
+ * @tc.desc: Verify portType=="NET" returns WLAN. Local IPP proxy scenario:
+ *           uri is ipp:// but the physical connection is network printing, should return WLAN.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSecurityGuardUtilTest, PrintSecurityGuardUtilTest_GetPrinterConnectionType_016, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("com.strato.webprinter:cdf__8C");
+    printerInfo.SetUri("ipp://49.4.22.46:16631/ipp/print");
+    printerInfo.SetOption(R"({"portType":"NET","portAddr":"192.168.8.119"})");
+    EXPECT_EQ(PrintSecurityGuardUtil::GetPrinterConnectionType(printerInfo), "WLAN");
+}
+
 // ===== Data Table: All errorCode mappings =====
 
 /**
