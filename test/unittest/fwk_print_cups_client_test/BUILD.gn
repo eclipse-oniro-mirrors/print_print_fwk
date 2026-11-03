@@ -99,6 +99,7 @@ ohos_unittest("fwk_print_cups_client_test") {
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    include_dirs += [ "${print_path}/services/print_service/enterprise/include" ]
   }
 
   if (print_fwk_feature_watermark_enforcing) {

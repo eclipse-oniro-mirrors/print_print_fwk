@@ -57,7 +57,6 @@ const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MIN = 16;
 const int32_t PRIVATE_IPV4_CLASS_B_SECOND_MAX = 31;
 const int32_t PRIVATE_IPV4_CLASS_C_FIRST = 192;
 const int32_t PRIVATE_IPV4_CLASS_C_SECOND = 168;
-const int32_t BITS_PER_HEX_DIGIT = 4;
 const int32_t IPV6_HEXTET_COUNT = 8;
 const int32_t IPV6_EXPANDED_MAX_LEN = IPV6_HEXTET_COUNT * 4 + (IPV6_HEXTET_COUNT - 1);
 const uint32_t HOST_BRACKET_PAIR_LEN = 2;
@@ -320,6 +319,35 @@ std::string PrintUtils::NormalizeIpv6(const std::string &ip)
     char buf[INET6_ADDRSTRLEN] = {0};
     if (inet_ntop(AF_INET6, &addr6, buf, sizeof(buf)) == nullptr) {
         return ip;
+    }
+    return std::string(buf) + scopeId;
+}
+
+std::string PrintUtils::ExpandIpv6(const std::string &ip)
+{
+    std::string addrPart = ip;
+    std::string scopeId;
+    size_t zonePos = ip.find('%');
+    if (zonePos != std::string::npos) {
+        addrPart = ip.substr(0, zonePos);
+        scopeId = ip.substr(zonePos);
+    }
+    struct in6_addr addr6;
+    if (inet_pton(AF_INET6, addrPart.c_str(), &addr6) != 1) {
+        return ip;
+    }
+    char buf[IPV6_EXPANDED_MAX_LEN + 1] = {0};
+    size_t offset = 0;
+    for (int i = 0; i < IPV6_HEXTET_COUNT; ++i) {
+        uint16_t word = (static_cast<uint16_t>(addr6.s6_addr[i * 2]) << 8) |
+                        addr6.s6_addr[i * 2 + 1];
+        size_t remaining = sizeof(buf) - offset;
+        int written = snprintf_s(buf + offset, remaining, remaining - 1, "%s%04x",
+                                 (i == 0) ? "" : ":", word);
+        if (written < 0 || static_cast<size_t>(written) >= remaining) {
+            return ip;
+        }
+        offset += static_cast<size_t>(written);
     }
     return std::string(buf) + scopeId;
 }
@@ -811,28 +839,7 @@ std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
     if (zonePos != std::string::npos) {
         hostStr = hostStr.substr(0, zonePos);
     }
-    struct in6_addr addr6;
-    if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) != 1) {
-        return hostStr;
-    }
-    const uint8_t *b = addr6.s6_addr;
-    auto hexNibble = [](uint8_t v) -> char {
-        return v < 10 ? static_cast<char>('0' + v) : static_cast<char>('a' + (v - 10));
-    };
-    std::string expanded;
-    expanded.reserve(IPV6_EXPANDED_MAX_LEN);
-    for (int i = 0; i < IPV6_HEXTET_COUNT; ++i) {
-        uint8_t hi = b[i * 2];
-        uint8_t lo = b[i * 2 + 1];
-        if (i > 0) {
-            expanded.push_back(':');
-        }
-        expanded.push_back(hexNibble((hi >> BITS_PER_HEX_DIGIT) & 0x0F));
-        expanded.push_back(hexNibble(hi & 0x0F));
-        expanded.push_back(hexNibble((lo >> BITS_PER_HEX_DIGIT) & 0x0F));
-        expanded.push_back(hexNibble(lo & 0x0F));
-    }
-    return expanded;
+    return ExpandIpv6(hostStr);
 }
 
 std::string PrintUtils::FormatHostForUri(const std::string &host)
