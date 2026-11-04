@@ -41,7 +41,7 @@ private:
 
 class PrintNotificationBuilder {
 public:
-    static int32_t CreateNotification(uint32_t subState, const std::string& printerName);
+    static int32_t CreateNotification(uint32_t subState, const std::string& printerName, int32_t userId);
     static std::string GetFaultKey(uint32_t subState);
 private:
     PrintNotificationBuilder() = delete;
@@ -50,9 +50,10 @@ private:
     PrintNotificationBuilder& operator=(const PrintNotificationBuilder&) = delete;
 
     static std::shared_ptr<Notification::NotificationActionButton> CreateAiButton(
-        int32_t notiId, const std::string& askAiKey);
+        int32_t notiId, const std::string& askAiKey, int32_t userId);
     static Notification::NotificationRequest BuildRequest(int32_t notiId,
-        std::shared_ptr<Notification::NotificationContent>& content);
+        std::shared_ptr<Notification::NotificationContent>& content, int32_t userId);
+    static bool IsForegroundUser(int32_t userId);
     static std::string SubStateToResourceKey(uint32_t subState);
 };
 

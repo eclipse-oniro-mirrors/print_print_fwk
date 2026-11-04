@@ -49,11 +49,35 @@ void PrintFailureAiNotifierTest::TearDownTestCase(void)
 void PrintFailureAiNotifierTest::SetUp(void)
 {
     printFailureAiNotifier.jobStateMap_.clear();
+    printFailureAiNotifier.notifiedStateMap_.clear();
 }
 
 void PrintFailureAiNotifierTest::TearDown(void)
 {
     printFailureAiNotifier.jobStateMap_.clear();
+    printFailureAiNotifier.notifiedStateMap_.clear();
+}
+
+HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_InvalidUser_KeepFaultStateWithoutNotification, TestSize.Level1)
+{
+    const std::string jobId = "background_job";
+    printFailureAiNotifier.HandleJobBlocked(jobId, PRINT_JOB_BLOCKED_OUT_OF_PAPER, "Printer", INVALID_USER_ID);
+
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].count(PRINT_JOB_BLOCKED_OUT_OF_PAPER), 1u);
+    EXPECT_TRUE(printFailureAiNotifier.notifiedStateMap_[jobId].empty());
+}
+
+HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_FaultCleared_PruneNotifiedStates, TestSize.Level1)
+{
+    const std::string jobId = "background_job";
+    printFailureAiNotifier.notifiedStateMap_[jobId] = {PRINT_JOB_BLOCKED_OUT_OF_PAPER, PRINT_JOB_BLOCKED_JAMMED};
+    printFailureAiNotifier.HandleJobBlocked(jobId, PRINT_JOB_BLOCKED_OUT_OF_PAPER, "Printer", INVALID_USER_ID);
+
+    EXPECT_EQ(printFailureAiNotifier.notifiedStateMap_[jobId].count(PRINT_JOB_BLOCKED_OUT_OF_PAPER), 1u);
+    EXPECT_EQ(printFailureAiNotifier.notifiedStateMap_[jobId].count(PRINT_JOB_BLOCKED_JAMMED), 0u);
+    printFailureAiNotifier.ClearJobState(jobId);
+    EXPECT_EQ(printFailureAiNotifier.jobStateMap_.count(jobId), 0u);
+    EXPECT_EQ(printFailureAiNotifier.notifiedStateMap_.count(jobId), 0u);
 }
 
 HWTEST_F(PrintFailureAiNotifierTest, SplitSubState_SingleState_ReturnCorrectSet, TestSize.Level1)
@@ -108,7 +132,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_FirstBlocked_JobStateMapUp
     uint32_t subState = 1;
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName, INVALID_USER_ID);
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
     auto it = printFailureAiNotifier.jobStateMap_.find(jobId);
@@ -123,10 +147,10 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_SameStateTwice_NoDuplicate
     uint32_t subState = 1;
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName, INVALID_USER_ID);
     uint32_t initialSize = printFailureAiNotifier.jobStateMap_[jobId].size();
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName, INVALID_USER_ID);
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), initialSize);
 }
@@ -136,10 +160,10 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_NewStateAdded_StateSetUpda
     std::string jobId = "test_job_003";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 1);
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, 201, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, 201, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 2);
     EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(1),
         printFailureAiNotifier.jobStateMap_[jobId].end());
@@ -153,8 +177,8 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_MultipleJobs_EachJobTracke
     std::string jobId2 = "test_job_005";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId1, 1, printerName);
-    printFailureAiNotifier.HandleJobBlocked(jobId2, 2, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId1, 1, printerName, INVALID_USER_ID);
+    printFailureAiNotifier.HandleJobBlocked(jobId2, 2, printerName, INVALID_USER_ID);
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 2);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId1].size(), 1);
@@ -171,7 +195,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_EmptyJobId_NoCrash, TestSi
     uint32_t subState = 1;
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName, INVALID_USER_ID);
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
 }
@@ -182,7 +206,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_EmptyPrinterName_NoCrash, 
     uint32_t subState = 1;
     std::string printerName = "";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName, INVALID_USER_ID);
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
 }
@@ -193,7 +217,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_AllSubStates_AllStatesTrac
     std::string printerName = "TestPrinter";
     
     for (uint32_t i = 1; i <= 26; i++) {
-        printFailureAiNotifier.HandleJobBlocked(jobId, i, printerName);
+        printFailureAiNotifier.HandleJobBlocked(jobId, i, printerName, INVALID_USER_ID);
     }
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 1);
@@ -205,7 +229,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_ComplexSubState_AllStatesP
     std::string printerName = "TestPrinter";
     
     uint32_t complexState = 1 + 2 * 100 + 5 * 10000 + 10 * 1000000;
-    printFailureAiNotifier.HandleJobBlocked(jobId, complexState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, complexState, printerName, INVALID_USER_ID);
     
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 4);
     EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(1),
@@ -230,7 +254,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_ThreadSafety_NoDataRace, T
         threads.emplace_back([this, &jobId, &printerName, i, iterationsPerThread]() {
             for (int j = 0; j < iterationsPerThread; j++) {
                 uint32_t state = (i * iterationsPerThread + j) % 26 + 1;
-                printFailureAiNotifier.HandleJobBlocked(jobId, state, printerName);
+                printFailureAiNotifier.HandleJobBlocked(jobId, state, printerName, INVALID_USER_ID);
             }
         });
     }
@@ -255,11 +279,11 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_OverwriteState_StateSetUpd
     std::string jobId = "test_job_010";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 1);
     EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(1),
         printFailureAiNotifier.jobStateMap_[jobId].end());
-    printFailureAiNotifier.HandleJobBlocked(jobId, 3, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, 3, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 1);
     EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(3),
         printFailureAiNotifier.jobStateMap_[jobId].end());
@@ -270,7 +294,7 @@ HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_ExistingJob_JobRemovedFromMap
     std::string jobId = "test_job_011";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, 1, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
     
     printFailureAiNotifier.ClearJobState(jobId);
@@ -285,7 +309,7 @@ HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_NonExistingJob_NoEffect, Test
     std::string existingJobId = "test_job_013";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(existingJobId, 1, printerName);
+    printFailureAiNotifier.HandleJobBlocked(existingJobId, 1, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
     
     printFailureAiNotifier.ClearJobState(jobId);
@@ -300,7 +324,7 @@ HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_EmptyJobId_NoCrash, TestSize.
     std::string existingJobId = "test_job_014";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(existingJobId, 1, printerName);
+    printFailureAiNotifier.HandleJobBlocked(existingJobId, 1, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
     
     printFailureAiNotifier.ClearJobState(jobId);
@@ -314,8 +338,8 @@ HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_MultipleJobs_ClearOne_OthersR
     std::string jobId2 = "test_job_016";
     std::string printerName = "TestPrinter";
     
-    printFailureAiNotifier.HandleJobBlocked(jobId1, 1, printerName);
-    printFailureAiNotifier.HandleJobBlocked(jobId2, 2, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId1, 1, printerName, INVALID_USER_ID);
+    printFailureAiNotifier.HandleJobBlocked(jobId2, 2, printerName, INVALID_USER_ID);
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 2);
     
     printFailureAiNotifier.ClearJobState(jobId1);
@@ -331,7 +355,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_AuthState_StateTracked, Te
     uint32_t subState = PRINT_JOB_BLOCKED_AUTHENTICATION;
     std::string printerName = "TestPrinter";
 
-    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, subState, printerName, INVALID_USER_ID);
 
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_.size(), 1);
     auto it = printFailureAiNotifier.jobStateMap_.find(jobId);
@@ -346,7 +370,7 @@ HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_CompoundStateWithAuth_Stat
     std::string printerName = "TestPrinter";
     uint32_t compoundState = 1 + PRINT_JOB_BLOCKED_AUTHENTICATION * 100;
 
-    printFailureAiNotifier.HandleJobBlocked(jobId, compoundState, printerName);
+    printFailureAiNotifier.HandleJobBlocked(jobId, compoundState, printerName, INVALID_USER_ID);
 
     EXPECT_EQ(printFailureAiNotifier.jobStateMap_[jobId].size(), 2);
     EXPECT_NE(printFailureAiNotifier.jobStateMap_[jobId].find(1),
