@@ -95,10 +95,9 @@ HWTEST_F(PrintNotificationBuilderTest, BuildRequest_ValidInput_ReturnRequest, Te
     auto normalContent = std::make_shared<Notification::NotificationNormalContent>();
     auto content = std::make_shared<Notification::NotificationContent>(normalContent);
     
-    Notification::NotificationRequest request = PrintNotificationBuilder::BuildRequest(notiId, content, 100);
+    Notification::NotificationRequest request = PrintNotificationBuilder::BuildRequest(notiId, content);
     
     EXPECT_EQ(request.GetNotificationId(), notiId);
-    EXPECT_EQ(request.GetReceiverUserId(), 100);
     EXPECT_EQ(request.GetSlotType(), Notification::NotificationConstant::SlotType::SOCIAL_COMMUNICATION);
 }
 

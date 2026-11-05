@@ -41,12 +41,8 @@ private:
     PrintFailureAiNotifier& operator=(const PrintFailureAiNotifier&) = delete;
 
     std::set<uint32_t> SplitSubState(uint32_t subState);
-    void NotifyJobBlocked(const std::string& jobId, const std::set<uint32_t>& states,
-        const std::string& printerName, int32_t userId);
 
-    // Track fault reports separately from notifications that were successfully published.
     std::map<std::string, std::set<uint32_t>> jobStateMap_;
-    std::map<std::string, std::set<uint32_t>> notifiedStateMap_;
     std::mutex jobStateMutex_;
 };
 

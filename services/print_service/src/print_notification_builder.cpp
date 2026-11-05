@@ -113,7 +113,7 @@ std::string UdmfDataGuard::Serialize()
 }
 
 Notification::NotificationRequest PrintNotificationBuilder::BuildRequest(int32_t notiId,
-    std::shared_ptr<Notification::NotificationContent>& content, int32_t userId)
+    std::shared_ptr<Notification::NotificationContent>& content)
 {
     Notification::NotificationRequest request;
     uint32_t controlFlags = 0;
@@ -132,7 +132,6 @@ Notification::NotificationRequest PrintNotificationBuilder::BuildRequest(int32_t
     request.SetRemoveAllowed(false);
     request.SetTapDismissed(false);
     request.SetCreatorUid(getuid());
-    request.SetReceiverUserId(userId);
     return request;
 }
 
@@ -289,7 +288,8 @@ int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const st
     }
 
     int32_t notiId = g_nextNotificationId.fetch_add(1);
-    Notification::NotificationRequest request = BuildRequest(notiId, content, userId);
+    Notification::NotificationRequest request = BuildRequest(notiId, content);
+    request.SetReceiverUserId(userId);
 
     std::ostringstream oss;
     oss << "来自打印机" << printerName << ":" << PrintResourceManager::GetInstance().GetStringByName(resourceKey);

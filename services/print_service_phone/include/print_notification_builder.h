@@ -52,7 +52,7 @@ private:
     static std::shared_ptr<Notification::NotificationActionButton> CreateAiButton(
         int32_t notiId, const std::string& askAiKey, int32_t userId);
     static Notification::NotificationRequest BuildRequest(int32_t notiId,
-        std::shared_ptr<Notification::NotificationContent>& content, int32_t userId);
+        std::shared_ptr<Notification::NotificationContent>& content);
     static bool IsForegroundUser(int32_t userId);
     static std::string SubStateToResourceKey(uint32_t subState);
 };

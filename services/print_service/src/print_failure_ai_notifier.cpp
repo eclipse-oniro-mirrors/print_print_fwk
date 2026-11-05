@@ -41,6 +41,9 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
     if (iter == jobStateMap_.end()) {
         jobStateMap_[jobId] = newStates;
         for (uint32_t state : newStates) {
+            if (state != PRINT_JOB_BLOCKED_AUTHENTICATION) {
+                PrintNotificationBuilder::CreateNotification(state, printerName, userId);
+            }
             const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
             HisysEventUtil::ReportPrintFailure(resourceKey, state);
         }
@@ -51,28 +54,14 @@ void PrintFailureAiNotifier::HandleJobBlocked(const std::string& jobId, uint32_t
             oldStates.begin(), oldStates.end(),
             std::inserter(newStatesToNotify, newStatesToNotify.begin()));
         for (uint32_t state : newStatesToNotify) {
+            if (state != PRINT_JOB_BLOCKED_AUTHENTICATION) {
+                PrintNotificationBuilder::CreateNotification(state, printerName, userId);
+            }
             const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
             HisysEventUtil::ReportPrintFailure(resourceKey, state);
         }
         jobStateMap_[jobId] = newStates;
     }
-    NotifyJobBlocked(jobId, newStates, printerName, userId);
-}
-
-void PrintFailureAiNotifier::NotifyJobBlocked(const std::string& jobId, const std::set<uint32_t>& states,
-    const std::string& printerName, int32_t userId)
-{
-    auto& notifiedStates = notifiedStateMap_[jobId];
-    std::set<uint32_t> currentNotifiedStates;
-    std::set_intersection(states.begin(), states.end(), notifiedStates.begin(), notifiedStates.end(),
-        std::inserter(currentNotifiedStates, currentNotifiedStates.begin()));
-    for (uint32_t state : states) {
-        if (state != PRINT_JOB_BLOCKED_AUTHENTICATION && currentNotifiedStates.count(state) == 0 &&
-            PrintNotificationBuilder::CreateNotification(state, printerName, userId) == E_PRINT_NONE) {
-            currentNotifiedStates.insert(state);
-        }
-    }
-    notifiedStates = std::move(currentNotifiedStates);
 }
 
 std::set<uint32_t> PrintFailureAiNotifier::SplitSubState(uint32_t subState)
@@ -94,7 +83,6 @@ void PrintFailureAiNotifier::ClearJobState(const std::string& jobId)
 {
     std::lock_guard<std::mutex> lock(jobStateMutex_);
     jobStateMap_.erase(jobId);
-    notifiedStateMap_.erase(jobId);
 }
 
 } // namespace OHOS::Print
