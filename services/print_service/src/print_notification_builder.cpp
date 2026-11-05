@@ -252,7 +252,7 @@ bool PrintNotificationBuilder::IsForegroundUser(int32_t userId)
     }
     int32_t foregroundUserId = INVALID_USER_ID;
     auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(foregroundUserId);
-    if (ret != ERR_OK || foregroundUserId != userId) {
+    if (ret != OHOS::ERR_OK || foregroundUserId != userId) {
         PRINT_HILOGI("Skip AI notifier: job user is not the foreground user or account query failed");
         return false;
     }
