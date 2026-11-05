@@ -329,6 +329,8 @@ enum PrintScalingMode {
     PRINT_SCALING_FIT_TO_PAGE = 0,
     PRINT_SCALING_FILL = 1,
     PRINT_SCALING_BORDERLESS = 2,
+    // Print without scaling; job fallback when printScaling is not set by the caller
+    PRINT_SCALING_NONE = 3,
 };
 
 enum ApplicationEvent {
