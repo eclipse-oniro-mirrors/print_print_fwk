@@ -88,6 +88,7 @@ public:
     static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
     static bool ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos);
     static std::string NormalizeIpv6(const std::string &ip);
+    static std::string ExpandIpv6(const std::string &ip);
     static bool IsPrivateIpv4(const std::string &ip);
     static std::string AnonymizeIpv4(const std::string &ip);
     static std::string AnonymizeIpv6(const std::string &ip);

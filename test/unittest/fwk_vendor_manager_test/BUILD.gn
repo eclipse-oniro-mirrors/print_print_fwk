@@ -48,6 +48,7 @@ ohos_unittest("fwk_vendor_manager_test") {
   cflags_cc = []
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    include_dirs += [ "${print_path}/services/print_service/enterprise/include" ]
   }
 
   deps = [

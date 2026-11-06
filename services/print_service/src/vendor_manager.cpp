@@ -20,6 +20,7 @@
 #include "vendor_ipp_everywhere.h"
 #include "vendor_ppd_driver.h"
 #include "vendor_wlan_group.h"
+#include "print_cups_client.h"
 #include "print_log.h"
 #include "print_utils.h"
 #include "print_service_ability.h"
@@ -69,6 +70,9 @@ std::string VendorManager::ExtractGlobalVendorName(const std::string &globalPrin
 
 std::string VendorManager::ExtractPrinterId(const std::string &globalPrinterId)
 {
+    if (DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(globalPrinterId.c_str())) {
+        return globalPrinterId;
+    }
     auto pos = globalPrinterId.find(GLOBAL_ID_DELIMITER);
     if (pos == std::string::npos) {
         return globalPrinterId;

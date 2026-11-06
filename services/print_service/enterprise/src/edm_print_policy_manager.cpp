@@ -71,7 +71,16 @@ bool EdmPrintPolicyManager::IsPrinterAllowedEdm(const PrinterInfo &printerInfo)
         PRINT_HILOGI("Virtual printer, allow by default");
         return true;
     }
-    std::string printerIp = uri.find("://") == std::string::npos ? uri : PrintUtils::ExtractIpFromUri(uri);
+    std::string printerIp;
+    if (uri.find("://") == std::string::npos) {
+        printerIp = PrintUtils::ExpandIpv6(uri);
+        size_t zonePos = printerIp.find('%');
+        if (zonePos != std::string::npos) {
+            printerIp = printerIp.substr(0, zonePos);
+        }
+    } else {
+        printerIp = PrintUtils::ExtractIpFromUri(uri);
+    }
     return IsInIpWhitelist(printerIp);
 }
 
