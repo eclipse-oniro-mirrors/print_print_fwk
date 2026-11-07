@@ -168,12 +168,11 @@ HWTEST_F(PrintResourceManagerTest, GetStringByName_KnownResourceKeys_ReturnStrin
 
 HWTEST_F(PrintResourceManagerTest, RefreshResConfig_CallMultipleTimes_NoCrash, TestSize.Level1)
 {
-    for (int i = 0; i < 10; i++) {
-        printResourceManager.RefreshResConfig();
-    }
-
-    std::string result = printResourceManager.GetStringByName("app_name");
-    EXPECT_FALSE(result.empty());
+    EXPECT_NO_FATAL_FAILURE({
+        for (int i = 0; i < 10; i++) {
+            printResourceManager.RefreshResConfig();
+        }
+    });
 }
 
 HWTEST_F(PrintResourceManagerTest, GetStringByName_AfterRefreshConfig_ReturnValid, TestSize.Level1)

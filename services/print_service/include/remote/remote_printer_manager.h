@@ -16,63 +16,37 @@
 #ifndef REMOTE_PRINTER_MANAGER_H
 #define REMOTE_PRINTER_MANAGER_H
 
-#include <string>
-#include <map>
-#include <mutex>
-#include <atomic>
 #include <memory>
-#include <thread>
-#include <condition_variable>
-#include "printer_info.h"
-#include "printer_capability.h"
-#include "print_constant.h"
-#include "json/json.h"
-#include "remote_service_adapter.h"
+#include <mutex>
+
+#include "i_remote_printer_manager.h"
+#include "print_feature_type.h"
 
 namespace OHOS::Print {
 
-class PrintServiceAbility;
-
 class RemotePrinterManager {
 public:
-    RemotePrinterManager();
-    ~RemotePrinterManager();
-    
-    static RemotePrinterManager& GetInstance();
-    
-    bool Destroy();
+    static RemotePrinterManager &GetInstance();
+
+    void SetEventHandler(IRemotePrinterEventHandler *handler);
+
     bool Disconnect();
-    
     void StartPrinterDiscovery();
     bool StopPrinterDiscovery();
-    
-    std::shared_ptr<PrinterInfo> GetPrinterInfo(const std::string &printerId);
-    
-    bool UpdatePrinterStatus(const std::string &printerId, PrinterStatus status);
-    
-    bool OnPrinterListReceived(const Json::Value &jsonArray);
-    bool OnPrinterStatusReceived(const Json::Value &jsonArray);
-    void ClearAllPrinters();
-    
-    static PrinterStatus ConvertStatusToPrinterStatus(const std::string &statusStr);
+    void Reset();
 
 private:
-    void DiscoveryLoop();
-    static void SetDefaultCapability(PrinterCapability &capability);
-    static bool BuildPrinterInfo(const Json::Value &item, PrinterInfo &printerInfo);
-    void RemoveDeprecatedPrinters(const std::vector<std::string> &currentDevIds);
-    
-    std::map<std::string, std::shared_ptr<PrinterInfo>> printerMap_;
-    std::mutex printerMapLock_;
-    std::mutex controlMutex_;
-    RemoteServiceAdapter& serviceAdapter_;
-    std::thread discoveryThread_;
-    std::once_flag initFlag_;
-    
-    std::atomic<bool> isDiscoveryRunning_{false};
-    std::condition_variable cv_;
+    RemotePrinterManager() = default;
+    ~RemotePrinterManager() = default;
+    RemotePrinterManager(const RemotePrinterManager &) = delete;
+    RemotePrinterManager &operator=(const RemotePrinterManager &) = delete;
+
+    void EnsureLoaded();
+
+    std::mutex mutex_;
+    IRemotePrinterEventHandler *handler_ = nullptr;
+    IRemotePrinterManager *impl_ = nullptr;
 };
 
 } // namespace OHOS::Print
-
 #endif // REMOTE_PRINTER_MANAGER_H

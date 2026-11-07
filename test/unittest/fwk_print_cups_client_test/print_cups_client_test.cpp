@@ -109,12 +109,12 @@ static void AddTestPrinterWithPpd(const std::string &printerId, const std::strin
     PpdInfo ppdInfo;
     ppdInfo.SetPpdName(ppdName);
     printerInfo.SetSelectedDriver(ppdInfo);
-    PrintServiceAbility::GetInstance()->printSystemData_.GetAddedPrinterMap().Upsert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
 }
 
 static void RemoveTestPrinter(const std::string &printerId)
 {
-    PrintServiceAbility::GetInstance()->printSystemData_.GetAddedPrinterMap().Remove(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
 }
 
 void AddUsbPrinter(PrinterInfo &info);

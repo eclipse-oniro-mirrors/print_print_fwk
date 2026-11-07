@@ -57,6 +57,7 @@ void RemoteCallbackStubTest::TearDown(void)
 HWTEST_F(RemoteCallbackStubTest, Constructor_001, TestSize.Level1)
 {
     RemoteCallbackStub stub;
+<<<<<<< HEAD
     EXPECT_EQ(stub.cmdMap_.size(), 2u) << "cmdMap_ should contain 2 handlers after construction";
     EXPECT_NE(stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS)),
         stub.cmdMap_.end())
@@ -64,6 +65,14 @@ HWTEST_F(RemoteCallbackStubTest, Constructor_001, TestSize.Level1)
     EXPECT_NE(stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST)),
         stub.cmdMap_.end())
         << "cmdMap_ should contain COMMAND_REQUEST_PRINTER_LIST handler";
+=======
+    auto statusIt = stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS));
+    auto listIt = stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST));
+    EXPECT_NE(statusIt, stub.cmdMap_.end());
+    EXPECT_NE(listIt, stub.cmdMap_.end());
+    EXPECT_NE(statusIt->second, nullptr);
+    EXPECT_NE(listIt->second, nullptr);
+>>>>>>> fa2453ea (打印内存优化)
 }
 
 /**
@@ -78,7 +87,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_001, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     std::u16string invalidDescriptor = u"OHOS.Drive.iunvalidCallbackAbility";
     data.WriteInterfaceToken(invalidDescriptor);
     int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
@@ -98,7 +107,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_002, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_SERVER_FAILURE);
     int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
@@ -118,7 +127,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_003, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(-1);
@@ -139,7 +148,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_004, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(10);
@@ -160,7 +169,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_005, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(0);
@@ -181,7 +190,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_006, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(0);
@@ -202,7 +211,7 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_007, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     data.WriteInt64(0);
@@ -211,26 +220,93 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_007, TestSize.Level1)
 }
 
 /**
- * @tc.name: HandleGetPrinterStatus_001
- * @tc.desc: Branch: empty message -> OnPrinterStatusReceived called
+ * @tc.name: OnRemoteRequest_RawDataSizeTooLarge_ReturnsServerFailure
+ * @tc.desc: Branch: rawDataSize > REMOTE_MAX_RAW_DATA_SIZE
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterStatus_001, TestSize.Level1)
+HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_RawDataSizeTooLarge_ReturnsServerFailure, TestSize.Level1)
 {
     RemoteCallbackStub stub;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
-    std::string msg = "[]";
+    data.WriteInt64(static_cast<int64_t>(REMOTE_MAX_RAW_DATA_SIZE) + 1);
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
+        data, reply, option);
+    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
+}
+
+/**
+ * @tc.name: HandleGetPrinterStatus_InvalidJson_ReturnsServerFailure
+ * @tc.desc: Branch: parse printer status response fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterStatus_InvalidJson_ReturnsServerFailure, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_NONE);
+    std::string msg = "not a json array";
     data.WriteInt64(static_cast<int64_t>(msg.size()));
     data.WriteRawData(msg.c_str(), msg.size());
     int32_t result = stub.OnRemoteRequest(
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
-    EXPECT_EQ(E_PRINT_NONE, result);
+    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
+}
+
+/**
+ * @tc.name: HandleGetPrinterStatus_NotArray_ReturnsServerFailure
+ * @tc.desc: Branch: printer status response is not an array
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterStatus_NotArray_ReturnsServerFailure, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_NONE);
+    std::string msg = "{}";
+    data.WriteInt64(static_cast<int64_t>(msg.size()));
+    data.WriteRawData(msg.c_str(), msg.size());
+    int32_t result = stub.OnRemoteRequest(
+        static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
+    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
+}
+
+/**
+ * @tc.name: HandleGetPrinterList_NotArray_ReturnsServerFailure
+ * @tc.desc: Branch: printer list response is not an array
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterList_NotArray_ReturnsServerFailure, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_NONE);
+    std::string msg = "{}";
+    data.WriteInt64(static_cast<int64_t>(msg.size()));
+    data.WriteRawData(msg.c_str(), msg.size());
+    int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
+        data, reply, option);
+    EXPECT_EQ(E_PRINT_SERVER_FAILURE, result);
 }
 
 /**
@@ -245,7 +321,7 @@ HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterList_001, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NONE);
     std::string msg = "[]";
@@ -253,6 +329,29 @@ HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterList_001, TestSize.Level1)
     data.WriteRawData(msg.c_str(), msg.size());
     int32_t result = stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
         data, reply, option);
+    EXPECT_EQ(E_PRINT_NONE, result);
+}
+
+/**
+ * @tc.name: HandleGetPrinterStatus_ValidArray_ReturnsNone
+ * @tc.desc: Branch: empty array message -> OnPrinterStatusReceived called
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RemoteCallbackStubTest, HandleGetPrinterStatus_ValidArray_ReturnsNone, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(stub.GetDescriptor());
+    data.WriteInt32(E_PRINT_NONE);
+    std::string msg = "[]";
+    data.WriteInt64(static_cast<int64_t>(msg.size()));
+    data.WriteRawData(msg.c_str(), msg.size());
+    int32_t result = stub.OnRemoteRequest(
+        static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
     EXPECT_EQ(E_PRINT_NONE, result);
 }
 
@@ -268,10 +367,10 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_401, TestSize.Level1)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_INVALID_PARAMETER);
-    
+
     int32_t result = stub.OnRemoteRequest(
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
     EXPECT_EQ(E_PRINT_INVALID_PARAMETER, result);
@@ -289,10 +388,10 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_NetworkError, TestSiz
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_NETWORK_ERROR);
-    
+
     int32_t result = stub.OnRemoteRequest(
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
     EXPECT_EQ(E_PRINT_NETWORK_ERROR, result);
@@ -310,10 +409,10 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_AccountError, TestSiz
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_ACCOUNT_ERROR);
-    
+
     int32_t result = stub.OnRemoteRequest(
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
     EXPECT_EQ(E_PRINT_ACCOUNT_ERROR, result);

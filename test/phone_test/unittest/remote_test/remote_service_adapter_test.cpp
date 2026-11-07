@@ -250,4 +250,43 @@ HWTEST_F(RemoteServiceAdapterTest, UnbindService_003, TestSize.Level1)
         << "IsConnected should return false after UnbindService clears the connection";
 }
 
+HWTEST_F(RemoteServiceAdapterTest, SendData_RemoteObjectNullReconnectFails_ReturnsRpcFailure, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    client.connection_->remoteObject_ = nullptr;
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
+        "test_msg");
+    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+}
+
+HWTEST_F(RemoteServiceAdapterTest, SendData_NullCallbackStub_ReturnsRpcFailure, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    client.connection_->remoteObject_ = mockRemote;
+    client.callbackStub_ = nullptr;
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
+        "test_msg");
+    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+}
+
+HWTEST_F(RemoteServiceAdapterTest, OnRemoteServiceDied_NullCallback_NoCrash, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    client.SetOnServiceDiedCallback(nullptr);
+    EXPECT_EQ(nullptr, client.onServiceDiedCb_);
+    EXPECT_NO_FATAL_FAILURE(client.OnRemoteServiceDied());
+}
+
+HWTEST_F(RemoteServiceAdapterTest, NullConnection_OperationsReturnDefaults, TestSize.Level1)
+{
+    RemoteServiceAdapter client;
+    client.connection_ = nullptr;
+    EXPECT_FALSE(client.IsConnected());
+    EXPECT_FALSE(client.BindService());
+    int32_t result = client.SendData(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS),
+        "test_msg");
+    EXPECT_EQ(E_PRINT_RPC_FAILURE, result);
+}
+
 } // namespace OHOS::Print

@@ -19,6 +19,7 @@
 #include "print_constant.h"
 #include "printer_capability.h"
 #include "print_log.h"
+#include "print_data_repository.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
 #include "print_callback.h"
@@ -41,7 +42,7 @@ void TestStartPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataPr
     PrintServiceAbility::GetInstance()->OnStart();
     PrintServiceAbility::GetInstance()->ManualStart();
     auto printer = std::make_shared<PrinterInfo>();
-    PrintServiceAbility::GetInstance()->printSystemData_.addedPrinterMap_.Insert(DEFAULT_PRINTERID, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(DEFAULT_PRINTERID, *printer);
     PrintServiceAbility::GetInstance()->StartService();
     std::string fileUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::vector<std::string> fileList;
@@ -76,7 +77,7 @@ void TestDisconnectPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(printerId);
     // anyway add printer to discovery list.
-    PrintServiceAbility::GetInstance()->printSystemData_.AddPrinterToDiscovery(printerInfo);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
     PrintServiceAbility::GetInstance()->DisconnectPrinter(printerId);
 }
 

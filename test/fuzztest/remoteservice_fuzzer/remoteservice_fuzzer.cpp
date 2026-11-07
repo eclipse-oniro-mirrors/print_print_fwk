@@ -21,7 +21,6 @@
 #include "print_log.h"
 #include "print_json_util.h"
 #include "remote_constants.h"
-#include "singleton.h"
 #include "ipc_object_stub.h"
 #include "json/json.h"
 #include "message_parcel.h"
@@ -186,75 +185,20 @@ void TestAdapterOnRemoteServiceDied(const uint8_t *data, size_t size, FuzzedData
 
 void TestManagerStartDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    manager->StartPrinterDiscovery();
+    auto &manager = RemotePrinterManager::GetInstance();
+    manager.StartPrinterDiscovery();
 }
 
 void TestManagerStopDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    manager->StopPrinterDiscovery();
-}
-
-void TestManagerGetPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    manager->GetPrinterInfo(printerId);
-}
-
-void TestManagerUpdateStatus(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrinterStatus status =
-        static_cast<PrinterStatus>(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    manager->UpdatePrinterStatus(printerId, status);
-}
-
-void TestManagerClearAllPrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    manager->ClearAllPrinters();
-}
-
-void TestManagerConvertStatus(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string statusStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    RemotePrinterManager::ConvertStatusToPrinterStatus(statusStr);
-}
-
-void TestManagerDestroy(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    manager->Destroy();
+    auto &manager = RemotePrinterManager::GetInstance();
+    manager.StopPrinterDiscovery();
 }
 
 void TestManagerDisconnect(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    manager->Disconnect();
-}
-
-void TestManagerOnPrinterListReceived(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    Json::Value jsonArray = BuildRandomPrinterArray(dataProvider);
-    manager->OnPrinterListReceived(jsonArray);
-}
-
-void TestManagerOnPrinterStatusReceived(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto manager = DelayedSingleton<RemotePrinterManager>::GetInstance();
-    Json::Value jsonArray = BuildRandomStatusArray(dataProvider);
-    manager->OnPrinterStatusReceived(jsonArray);
-}
-
-void TestManagerBuildPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    Json::Value item = BuildRandomPrinterJson(dataProvider);
-    PrinterInfo printerInfo;
-    RemotePrinterManager::BuildPrinterInfo(item, printerInfo);
+    auto &manager = RemotePrinterManager::GetInstance();
+    manager.Disconnect();
 }
 
 void TestConnectionIsConnected(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -437,15 +381,7 @@ void RemoteServiceFuzzer::TestRemotePrinterManager(const uint8_t *data, size_t s
     TestHandler tasks[] = {
         &TestManagerStartDiscovery,
         &TestManagerStopDiscovery,
-        &TestManagerGetPrinterInfo,
-        &TestManagerUpdateStatus,
-        &TestManagerClearAllPrinters,
-        &TestManagerConvertStatus,
-        &TestManagerDestroy,
         &TestManagerDisconnect,
-        &TestManagerOnPrinterListReceived,
-        &TestManagerOnPrinterStatusReceived,
-        &TestManagerBuildPrinterInfo,
     };
     auto handler = dataProvider.PickValueInArray(tasks);
     handler(data, size, &dataProvider);

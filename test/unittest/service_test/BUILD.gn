@@ -32,6 +32,10 @@ ohos_unittest("print_service_test") {
     "${_service_path}/include",
     "${_service_path}/enterprise/include",
     "${_service_path}/include/event_callback",
+    "${_service_path}/include/remote",
+    "${_service_path}/src/internal",
+    "${print_path}/features/remote_service/include",
+    "${print_path}/features/print_failure_ai_notifier/include",
     "${print_utils_path}/include",
   ]
 
@@ -47,6 +51,7 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/print_bms_death_recipient_test.cpp",
     "${_test_path}/unittest/service_test/print_cups_attribute_test.cpp",
     "${_test_path}/unittest/service_test/print_caller_app_monitor_test.cpp",
+    "${_test_path}/unittest/service_test/print_data_repository_test.cpp",
     "${_test_path}/unittest/service_test/print_resource_manager_test.cpp",
     "${_test_path}/unittest/service_test/print_security_guard_info_test.cpp",
     "${_test_path}/unittest/service_test/print_security_guard_manager_test.cpp",
@@ -60,6 +65,17 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/hisys_event_util_test.cpp",
     "${_test_path}/unittest/service_test/print_event_container_test.cpp",
     "${_test_path}/unittest/service_test/agent/print_fwk_agent_client_loader_test.cpp",
+    "${_test_path}/unittest/service_test/print_feature_plugin_loader_test.cpp",
+    "${_test_path}/unittest/service_test/print_feature_plugin_manager_test.cpp",
+    "${_test_path}/unittest/service_test/remote_printer_manager_impl_test.cpp",
+    "${_test_path}/unittest/service_test/print_failure_ai_notifier_impl_test.cpp",
+    "${print_path}/features/remote_service/src/remote_printer_manager_impl.cpp",
+    "${print_path}/features/remote_service/src/remote_service_adapter.cpp",
+    "${print_path}/features/remote_service/src/print_ipc_connection.cpp",
+    "${print_path}/features/remote_service/src/remote_callback_stub.cpp",
+    "${print_path}/features/print_failure_ai_notifier/src/print_failure_ai_notifier_impl.cpp",
+    "${print_path}/features/print_failure_ai_notifier/src/print_notification_builder.cpp",
+    "${print_path}/services/print_service/src/print_resource_manager.cpp",
     "${_service_path}/src/agent/print_fwk_agent_client_loader.cpp",
   ]
 
@@ -74,6 +90,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
+    ":print_feature_test_plugin",
   ]
 
   cflags_cc = [
@@ -93,6 +110,7 @@ ohos_unittest("print_service_test") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:extension_manager",
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
@@ -104,6 +122,7 @@ ohos_unittest("print_service_test") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "googletest:gmock_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "huks:libhukssdk",
     "i18n:intl_util",
     "ipc:ipc_core",
@@ -171,6 +190,27 @@ ohos_unittest("print_service_test") {
     ]
   }
 
+}
+
+ohos_shared_library("print_feature_test_plugin") {
+  testonly = true
+  sources = [
+    "${_test_path}/unittest/service_test/plugin/print_feature_test_plugin.cpp",
+  ]
+
+  include_dirs = [
+    "${print_path}/services/print_service/include",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+  output_name = "print_feature_test"
+  output_extension = "z.so"
+  install_enable = true
 }
 
 ohos_unittest("scan_service_test") {
