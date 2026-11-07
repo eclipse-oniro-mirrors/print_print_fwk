@@ -1176,14 +1176,14 @@ HWTEST_F(PrintUtilsExtTest, FormatHostForUri_004, TestSize.Level2)
 
 /**
  * @tc.name: FormatHostForUri_005
- * @tc.desc: Verify FormatHostForUri wraps IPv6 address with scope id.
+ * @tc.desc: Verify FormatHostForUri wraps IPv6 with scope id, converting % to + for URI.
  * @tc.type: FUNC
  */
 HWTEST_F(PrintUtilsExtTest, FormatHostForUri_005, TestSize.Level2)
 {
     std::string host = "fe80::1%eth0";
     std::string result = PrintUtils::FormatHostForUri(host);
-    EXPECT_EQ(result, "[fe80::1%eth0]");
+    EXPECT_EQ(result, "[fe80::1+eth0]");
 }
 
 // ==================== StripHostBrackets Test ====================
@@ -1236,7 +1236,7 @@ HWTEST_F(PrintUtilsExtTest, StripHostBrackets_004, TestSize.Level2)
 
 /**
  * @tc.name: StripHostBrackets_005
- * @tc.desc: Verify StripHostBrackets is inverse of FormatHostForUri for IPv6.
+ * @tc.desc: Verify StripHostBrackets is inverse of FormatHostForUri for IPv6 with scope id.
  * @tc.type: FUNC
  */
 HWTEST_F(PrintUtilsExtTest, StripHostBrackets_005, TestSize.Level2)
@@ -1244,6 +1244,8 @@ HWTEST_F(PrintUtilsExtTest, StripHostBrackets_005, TestSize.Level2)
     std::string host = "fe80::1%eth0";
     std::string formatted = PrintUtils::FormatHostForUri(host);
     EXPECT_EQ(PrintUtils::StripHostBrackets(formatted), host);
+    // Direct: +zone (URI form) → %zone (internal form)
+    EXPECT_EQ(PrintUtils::StripHostBrackets("[fe80::1+wlan0]"), "fe80::1%wlan0");
 }
 
 // ==================== ExtractIpFromUri Test ====================

@@ -420,10 +420,6 @@ bool VendorBsuniDriver::OnQueryCapabilityByIp(const std::string &printerIp, cons
         return false;
     }
     std::string bareIp = PrintUtils::StripHostBrackets(printerIp);
-    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(bareIp.c_str())) {
-        PRINT_HILOGE("IP validation failed after StripHostBrackets: %{private}s", bareIp.c_str());
-        return false;
-    }
     int32_t result = -1;
     if (printQueue.empty()) {
         result = vendorExtension->onQueryCapabilityByIp(bareIp.c_str(), protocol.c_str());

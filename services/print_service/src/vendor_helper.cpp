@@ -813,7 +813,6 @@ bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryIte
     PrinterCapability printerCap;
     if (!UpdatePrinterCapability(printerCap, capability, defaultValue)) {
         PRINT_HILOGW("update capability fail");
-        return false;
     }
     Json::Value options;
     if (discoveryItem != nullptr) {
