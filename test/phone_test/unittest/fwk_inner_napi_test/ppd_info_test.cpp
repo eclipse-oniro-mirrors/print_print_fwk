@@ -126,7 +126,22 @@ void TestDumpInfoTemplate(const std::string manufacturer, const std::string nick
     if (!ppdName.empty()) {
         info.SetPpdName(ppdName);
     }
-    info.Dump();
+    EXPECT_NO_FATAL_FAILURE(info.Dump());
+    if (!manufacturer.empty()) {
+        EXPECT_EQ(info.GetManufacturer(), manufacturer);
+    } else {
+        EXPECT_EQ(info.GetManufacturer(), "");
+    }
+    if (!nickName.empty()) {
+        EXPECT_EQ(info.GetNickName(), nickName);
+    } else {
+        EXPECT_EQ(info.GetNickName(), "");
+    }
+    if (!ppdName.empty()) {
+        EXPECT_EQ(info.GetPpdName(), ppdName);
+    } else {
+        EXPECT_EQ(info.GetPpdName(), "");
+    }
 }
  
 void TestConverJsonInfoTemplate(const std::string manufacturer, const std::string nickName,

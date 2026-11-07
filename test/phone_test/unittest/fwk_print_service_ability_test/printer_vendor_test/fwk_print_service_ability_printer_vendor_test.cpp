@@ -73,10 +73,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134_NeedRename, TestS
     EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData));
     info.SetPrinterMake("maker");
     EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
-    service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData);
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData));
     ppdData = "ppd";
-    service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData);
-    service->RemoveVendorPrinterFromCups(vendorName, printerId);
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData));
+    EXPECT_FALSE(service->RemoveVendorPrinterFromCups(vendorName, printerId));
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }
 
@@ -131,7 +131,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139_NeedRename, TestS
     info.SetPrinterMake("maker");
     EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
     ppdName = "ppd";
-    service->RemoveVendorPrinterFromCups(vendorName, printerId);
+    EXPECT_FALSE(service->RemoveVendorPrinterFromCups(vendorName, printerId));
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }
 

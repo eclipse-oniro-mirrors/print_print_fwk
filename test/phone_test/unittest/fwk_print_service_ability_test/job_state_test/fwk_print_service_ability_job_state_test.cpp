@@ -98,7 +98,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081_NeedRename, TestS
     auto service = PrintServiceAbilityTest::CreateService();
     uint32_t state = PRINT_JOB_UNKNOWN + 1;
     uint32_t subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
-    service->checkJobState(state, subState);
+    EXPECT_FALSE(service->checkJobState(state, subState));
     std::string jobId = "123";
     auto ret = service->UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NONE);

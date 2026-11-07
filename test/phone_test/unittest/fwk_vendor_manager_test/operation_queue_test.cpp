@@ -83,8 +83,8 @@ HWTEST_F(OperatonQueueTest, OperatonQueueTest_0002, TestSize.Level2)
     operationQueue.Run();
     EXPECT_TRUE(operationQueue.isRunning);
     EXPECT_EQ(operationQueue.Push(op), true);
-    operationQueue.Push(op);
-    operationQueue.Push(op);
+    EXPECT_EQ(operationQueue.Push(op), true);
+    EXPECT_EQ(operationQueue.Push(op), true);
     ThreadSyncWait syncWait;
     syncWait.Wait(WAIT_TIME_MS);
     PRINT_HILOGI("stop queue");
@@ -103,11 +103,13 @@ HWTEST_F(OperatonQueueTest, OperatonQueueTest_0003, TestSize.Level2)
     operationQueue.Stop();
     EXPECT_FALSE(operationQueue.isRunning);
     operationQueue.Stop();
+    EXPECT_FALSE(operationQueue.isRunning);
     syncWait.Wait(WAIT_TIME_MS);
     operationQueue.Run();
     syncWait.Wait(WAIT_TIME_MS);
     EXPECT_TRUE(operationQueue.isRunning);
     operationQueue.Run();
+    EXPECT_TRUE(operationQueue.isRunning);
     operationQueue.Stop();
     syncWait.Wait(WAIT_TIME_MS);
     EXPECT_FALSE(operationQueue.isRunning);

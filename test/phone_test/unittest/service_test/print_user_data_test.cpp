@@ -165,12 +165,18 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0009_NeedRename, TestSize.Level1)
     std::string jobOrderId = "0";
     std::string jobId = "1";
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
     userData->AddToPrintJobList(jobId, printJob);
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
     std::vector<PrintJob> printJobs;
     EXPECT_EQ(userData->QueryAllActivePrintJob(printJobs), E_PRINT_NONE);
+    EXPECT_EQ(printJobs.size(), static_cast<size_t>(1));
+    EXPECT_EQ(printJobs[0].GetJobId(), jobId);
     printJob = nullptr;
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
+    std::vector<PrintJob> emptyPrintJobs;
+    EXPECT_EQ(userData->QueryAllActivePrintJob(emptyPrintJobs), E_PRINT_NONE);
+    EXPECT_EQ(emptyPrintJobs.size(), static_cast<size_t>(0));
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0010_NeedRename, TestSize.Level1)
@@ -509,11 +515,10 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0034_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
-    bool complete = true;
     int32_t userId = 100;
     userData->SetUserId(userId);
     userData->FlushPrintHistoryJobFile(printerId);
-    EXPECT_EQ(complete, true);
+    EXPECT_EQ(userData->printHistoryJobList_.find(printerId), userData->printHistoryJobList_.end());
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0036_NeedRename, TestSize.Level1)
@@ -576,9 +581,8 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0041_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
-    bool complete = true;
     userData->InitPrintHistoryJobList(printerId);
-    EXPECT_EQ(complete, true);
+    EXPECT_NE(userData->printHistoryJobList_.find(printerId), userData->printHistoryJobList_.end());
 }
 
 HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_NoPrinterInJson_ReturnFalse, TestSize.Level1)

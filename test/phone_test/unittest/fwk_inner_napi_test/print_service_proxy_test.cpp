@@ -280,7 +280,8 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0008, TestSize.Level0)
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    proxy->StopDiscoverPrinter();
+    int32_t ret = proxy->StopDiscoverPrinter();
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 /**
@@ -1090,7 +1091,8 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AuthPrintJob_with_nullptr,
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
     EXPECT_NE(proxy, nullptr);
-    proxy->AuthPrintJob(testJobId, testUserName, testUserPasswd);
+    int32_t ret = proxy->AuthPrintJob(testJobId, testUserName, testUserPasswd);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 /**
@@ -1144,7 +1146,8 @@ HWTEST_F(PrintServiceProxyTest, QueryAllPrinterPpdsTest, TestSize.Level1)
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    proxy->QueryAllPrinterPpds(testPpds);
+    int32_t ret = proxy->QueryAllPrinterPpds(testPpds);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 /**
@@ -1348,6 +1351,7 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterDefaultPreferencesTest, TestSize.Level
 
     ret = proxy->GetPrinterDefaultPreferences(testPrinterId, testDefaultPreferences);
     EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_FALSE(testDefaultPreferences.HasOption());
 }
 
 HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
@@ -1386,6 +1390,7 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
 
     ret = proxy->GetPrinterPreference(testPrinterId, testPreferences);
     EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_FALSE(testPreferences.HasOption());
 }
 
 /**
@@ -1667,7 +1672,27 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddPriner, TestSize.Level1
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
     EXPECT_NE(proxy, nullptr);
-    proxy->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, AddPrinter(_, _, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterName, &testUri, &testPpdName, &testOptions](
+            const std::string &printerName, const std::string &uri,
+            const std::string &ppdName, const std::string &options) {
+            EXPECT_EQ(testPrinterName, printerName);
+            EXPECT_EQ(testUri, uri);
+            EXPECT_EQ(testPpdName, ppdName);
+            EXPECT_EQ(testOptions, options);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    int32_t ret = proxy->AddPrinter(testPrinterName, testUri, testPpdName, testOptions);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 #ifdef KIA_INTERCEPTOR_ENABLE

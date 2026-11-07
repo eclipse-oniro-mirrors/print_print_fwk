@@ -128,6 +128,8 @@ public:
     MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &accountList));
     MOCK_METHOD1(CheckPermission, bool(const std::string &name));
     MOCK_METHOD0(IsSyncMode, bool());
+    MOCK_METHOD3(QueryNameForUid, bool(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string &name));
+    MOCK_METHOD0(GetBundleMgr, sptr<IRemoteObject>());
 };
 
 class MockKiaInterceptorCallback final : public IRemoteStub<IKiaInterceptorCallback> {

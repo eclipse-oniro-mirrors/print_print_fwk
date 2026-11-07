@@ -16,6 +16,11 @@
 #ifndef MOCK_NAPI_SCAN_UTILS_H
 #define MOCK_NAPI_SCAN_UTILS_H
 
+#include <cstdint>
+
 extern bool g_mockGetRefReturnNonNull;
+
+extern int32_t g_napiGetReferenceCallCount;
+extern int32_t g_napiDeleteReferenceCallCount;
 
 #endif

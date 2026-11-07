@@ -31,7 +31,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008_NeedRename, TestS
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
-    service->ConnectPrinter(printerId);
+    EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_NONE);
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_NONE);
 }
 
@@ -42,7 +42,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009_NeedRename, TestS
     EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
-    service->DisconnectPrinter(printerId);
+    EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_NONE);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
     EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_NONE);
@@ -305,6 +305,7 @@ HWTEST_F(PrintServiceAbilityTest, SyncAddedPrinterUri_PrinterInAddedMap_ShouldCh
 
     auto printerAfterSync = service->printSystemData_.GetAddedPrinterMap().Find(globalPrinterId);
     ASSERT_NE(printerAfterSync, nullptr);
+    EXPECT_EQ(printerAfterSync->GetUri(), originalUri);
 }
 
 /**
