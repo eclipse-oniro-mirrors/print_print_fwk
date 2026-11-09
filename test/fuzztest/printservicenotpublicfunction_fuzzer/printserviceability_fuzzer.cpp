@@ -86,7 +86,8 @@ void TestCheckPrinterUriDifferent(const uint8_t *data, size_t size, FuzzedDataPr
     printerInfo->SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printerInfo->SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printerInfo->SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    PrintServiceAbility::GetInstance()->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    PrintServiceAbility::GetInstance()->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
 }
 
 void TestUpdatePrinterCapability(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

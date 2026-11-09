@@ -295,7 +295,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshThirdDriverPrinter_CustomDriverPrinter_
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("TestPrinter");
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     service->RefreshThirdDriverPrinter();
 }
 
@@ -312,7 +312,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshThirdDriverPrinter_RegularPrinter_NoCha
     PrinterInfo regularInfo;
     regularInfo.SetPrinterId(regularId);
     regularInfo.SetPrinterName("SomePrinter");
-    service->printSystemData_.InsertAddedPrinter(regularId, regularInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(regularId, regularInfo);
     service->RefreshThirdDriverPrinter();
 }
 
@@ -395,9 +395,9 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterOption_PrinterNotFound_NoOp, Test
 {
     auto service = PrintServiceAbilityTest::CreateService();
 
-    service->printSystemData_.UpdatePrinterOption("non_existent_printer_id", "some_option");
+    PrintDataRepository::GetInstance().UpdatePrinterOption("non_existent_printer_id", "some_option");
 
-    EXPECT_EQ(service->printSystemData_.addedPrinterMap_.Find("non_existent_printer_id"), nullptr);
+    EXPECT_FALSE(PrintDataRepository::GetInstance().IsPrinterAdded("non_existent_printer_id"));
 }
 
 HWTEST_F(PrintServiceAbilityTest, DecryptAndFillCustomOptionsToJson_NullHksAdapter_SkipsAll, TestSize.Level1)

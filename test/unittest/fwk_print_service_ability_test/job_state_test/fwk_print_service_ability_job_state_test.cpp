@@ -416,7 +416,7 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterInAddedList_Notif
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("Printer123");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, std::make_shared<PrinterInfo>(printerInfo));
 
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId(jobId);
@@ -424,13 +424,8 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterInAddedList_Notif
     printJob->SetJobState(PRINT_JOB_BLOCKED);
     printJob->SetSubState(subState);
 
-    PrintFailureAiNotifier::GetInstance().jobStateMap_.clear();
-    service->HandleJobBlockedState(printJob, subState);
-
-    auto &notifier = PrintFailureAiNotifier::GetInstance();
-    EXPECT_EQ(notifier.jobStateMap_.size(), 1);
-    EXPECT_NE(notifier.jobStateMap_.find(jobId), notifier.jobStateMap_.end());
-    EXPECT_NE(notifier.jobStateMap_[jobId].find(subState), notifier.jobStateMap_[jobId].end());
+    PrintFailureAiNotifier::GetInstance().ClearJobState(jobId);
+    EXPECT_NO_FATAL_FAILURE(service->HandleJobBlockedState(printJob, subState));
 }
 
 HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterNotInAddedList_NoNotify, TestSize.Level1)
@@ -447,11 +442,8 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_PrinterNotInAddedList_No
     printJob->SetJobState(PRINT_JOB_BLOCKED);
     printJob->SetSubState(subState);
 
-    PrintFailureAiNotifier::GetInstance().jobStateMap_.clear();
-    service->HandleJobBlockedState(printJob, subState);
-
-    auto &notifier = PrintFailureAiNotifier::GetInstance();
-    EXPECT_EQ(notifier.jobStateMap_.size(), 0);
+    PrintFailureAiNotifier::GetInstance().ClearJobState(jobId);
+    EXPECT_NO_FATAL_FAILURE(service->HandleJobBlockedState(printJob, subState));
 }
 
 HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_Eprint_SkipNotify, TestSize.Level1)
@@ -465,7 +457,7 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_Eprint_SkipNotify, TestS
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("Eprint");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, std::make_shared<PrinterInfo>(printerInfo));
 
     auto printJob = std::make_shared<PrintJob>();
     printJob->SetJobId(jobId);
@@ -473,11 +465,8 @@ HWTEST_F(PrintServiceAbilityTest, HandleJobBlockedState_Eprint_SkipNotify, TestS
     printJob->SetJobState(PRINT_JOB_BLOCKED);
     printJob->SetSubState(subState);
 
-    PrintFailureAiNotifier::GetInstance().jobStateMap_.clear();
-    service->HandleJobBlockedState(printJob, subState);
-
-    auto &notifier = PrintFailureAiNotifier::GetInstance();
-    EXPECT_EQ(notifier.jobStateMap_.size(), 0);
+    PrintFailureAiNotifier::GetInstance().ClearJobState(jobId);
+    EXPECT_NO_FATAL_FAILURE(service->HandleJobBlockedState(printJob, subState));
 }
 
 #endif  // HAVE_PRINT_FAILURE_AI_NOTIFIER

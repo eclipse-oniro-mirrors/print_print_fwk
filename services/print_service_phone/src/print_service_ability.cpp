@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <ctime>
 #include <string>
 #include <sys/time.h>
@@ -34,6 +35,8 @@
 #include "parameters.h"
 #include "print_bms_helper.h"
 #include "print_constant.h"
+#include "print_data_repository.h"
+#include "print_feature_plugin_manager.h"
 #include "print_log.h"
 #include "printer_info.h"
 #include "print_service_converter.h"
@@ -240,7 +243,7 @@ sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
 void PrintServiceAbility::RefreshEprinterErrorCapability()
 {
     std::string eprinterId = "";
-    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         if (printerId.find(EPRINTID) != std::string::npos) {
             eprinterId = printerId;
@@ -250,7 +253,7 @@ void PrintServiceAbility::RefreshEprinterErrorCapability()
         return;
     }
     PrinterInfo printerInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(eprinterId, printerInfo)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(eprinterId, printerInfo)) {
         PRINT_HILOGE("QueryEprinterInfo fail.");
         return;
     }
@@ -265,14 +268,14 @@ void PrintServiceAbility::RefreshEprinterErrorCapability()
     colorList = { PRINT_COLOR_MODE_MONOCHROME, PRINT_COLOR_MODE_COLOR };
     caps.SetSupportedColorMode(colorList);
     printerInfo.SetCapability(caps);
-    printSystemData_.InsertAddedPrinter(eprinterId, printerInfo);
-    printSystemData_.SavePrinterFile(eprinterId);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(eprinterId, printerInfo);
+    PrintDataRepository::GetInstance().SavePrinterFile(eprinterId);
 }
 
 void PrintServiceAbility::UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterStatus printerStatus)
 {
     printerInfo.SetPrinterStatus(printerStatus);
-    printSystemData_.UpdatePrinterStatus(printerInfo.GetPrinterId(), printerStatus);
+    PrintDataRepository::GetInstance().UpdatePrinterStatus(printerInfo.GetPrinterId(), printerStatus);
     SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
     SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
 }
@@ -297,7 +300,7 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PrinterInfo printerInfo;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
         printerInfo.GetPpdHashCode() == ppdHashCode &&
         printCupsClient->IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
         PRINT_HILOGI("virtual printer has added.");
@@ -323,8 +326,8 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo.SetPpdHashCode(ppdHashCode);
     BuildPrinterPreference(printerInfo);
-    printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    printSystemData_.SavePrinterFile(printerId);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
+    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
     UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
     return true;
 }
@@ -338,7 +341,14 @@ int32_t PrintServiceAbility::Init()
 #ifdef ENTERPRISE_ENABLE
     UpdateIsEnterprise();
 #endif
-    printSystemData_.Init();
+    auto &repository = PrintDataRepository::GetInstance();
+#ifdef ENTERPRISE_ENABLE
+    // Refresh the cached enterprise state at service init. This is one of the expected
+    // refresh points (the other is RefreshPrinterStatusOnSwitchUser). See SetEnterpriseState
+    // for the cache-staleness contract.
+    repository.SetEnterpriseState(IsEnterpriseEnable(), IsEnterprise());
+#endif
+    repository.Init();
     RefreshEprinterErrorCapability();
     vendorManager.Init(GetInstance(), true);
 #ifdef CUPS_ENABLE
@@ -363,7 +373,7 @@ int32_t PrintServiceAbility::Init()
         return this->UnloadSystemAbility();
     });
     UpdatePpdForPreinstalledDriverPrinter();
-    if (!printSystemData_.CheckPrinterVersionFile()) {
+    if (!PrintDataRepository::GetInstance().CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
     }
 #ifdef VIRTUAL_PRINTER_ENABLE
@@ -405,10 +415,10 @@ void PrintServiceAbility::StartDiscoverPrinter()
 void PrintServiceAbility::UpdatePpdForPreinstalledDriverPrinter()
 {
 #ifdef CUPS_ENABLE
-    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         PrinterInfo printerInfo;
-        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
             continue;
         }
         std::string printerMake = printerInfo.GetPrinterMake();
@@ -438,8 +448,8 @@ void PrintServiceAbility::UpdatePpdForPreinstalledDriverPrinter()
             PRINT_HILOGE("update cups printer ppd failed");
             continue;
         }
-        printSystemData_.UpdatePpdHashCode(printerId, ppdHashCode);
-        printSystemData_.SavePrinterFile(printerId);
+        PrintDataRepository::GetInstance().UpdatePpdHashCode(printerId, ppdHashCode);
+        PrintDataRepository::GetInstance().SavePrinterFile(printerId);
     }
 #endif
 }
@@ -499,12 +509,24 @@ void PrintServiceAbility::OnStart()
     InitServiceHandler();
     int32_t ret = Init();
     if (ret != E_PRINT_NONE) {
-        auto callback = [=]() { Init(); };
+        auto callback = [this]() {
+            if (Init() == E_PRINT_NONE) {
+                RegisterRemoteEventHandler();
+            }
+        };
         serviceHandler_->PostTask(callback, INIT_INTERVAL);
         PRINT_HILOGE("PrintServiceAbility Init failed. Try again 5s later");
         return;
     }
+    RegisterRemoteEventHandler();
     return;
+}
+
+void PrintServiceAbility::RegisterRemoteEventHandler()
+{
+#ifdef REMOTE_SERVICE_ENABLE
+    RemotePrinterManager::GetInstance().SetEventHandler(this);
+#endif // REMOTE_SERVICE_ENABLE
 }
 
 void PrintServiceAbility::InitServiceHandler()
@@ -549,6 +571,11 @@ void PrintServiceAbility::OnStop()
         return;
     }
     vendorManager.UnInit();
+#ifdef REMOTE_SERVICE_ENABLE
+    RemotePrinterManager::GetInstance().Disconnect();
+    RemotePrinterManager::GetInstance().Reset();
+#endif  // REMOTE_SERVICE_ENABLE
+    PrintFeaturePluginManager::GetInstance().UnloadAll();
     {
         std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         serviceHandler_ = nullptr;
@@ -645,7 +672,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     }
     ManualStart();
 #ifdef HAVE_SMB_PRINTER
-    if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
+    if (auto smbPrinterInfo = PrintDataRepository::GetInstance().FindInfoInSmbPrinterDiscoverList(printerId)) {
         PRINT_HILOGI("connect smb printer");
         return ConnectSmbPrinter(*smbPrinterInfo);
     }
@@ -654,15 +681,16 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
     std::string oldPrinterId = SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER + MDNS_PRINTER;
-    if (printerId.find(oldPrinterId) != std::string::npos && printSystemData_.IsPrinterAdded(printerId)) {
+    if (printerId.find(oldPrinterId) != std::string::npos &&
+        PrintDataRepository::GetInstance().IsPrinterAdded(printerId)) {
         PRINT_HILOGI("old version printerId, check connected successfully");
         return E_PRINT_NONE;
     }
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
+    if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
     }
-    printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
     
     int32_t result = ConnectPrinterByType(printerId);
@@ -705,7 +733,7 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
     PRINT_HILOGI("[Printer: %{public}s] DisconnectPrinter start", PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
+    if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGE("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -998,7 +1026,7 @@ int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
         PRINT_HILOGE("Get user data failed.");
         return E_PRINT_INVALID_USERID;
     }
-    int32_t ret = userData->QueryAllPrintJob(printSystemData_.QueryAddedPrinterIdList(), printJobs);
+    int32_t ret = userData->QueryAllPrintJob(PrintDataRepository::GetInstance().QueryAddedPrinterIdList(), printJobs);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryAllPrintJob failed.");
         return ret;
@@ -1016,14 +1044,14 @@ int32_t PrintServiceAbility::QueryAddedPrinter(std::vector<std::string> &printer
     ManualStart();
     PRINT_HILOGI("QueryAddedPrinter start.");
     std::vector<std::string> printerNameList;
-    printSystemData_.GetAddedPrinterListFromSystemData(printerNameList);
+    PrintDataRepository::GetInstance().GetAddedPrinterListFromSystemData(printerNameList);
     if (printerNameList.size() <= 0) {
         PRINT_HILOGW("no added printerId");
         return E_PRINT_NONE;
     }
     for (uint32_t i = 0; i < printerNameList.size(); i++) {
         PRINT_HILOGD("QueryAddedPrinter in printerName %{public}s", printerNameList[i].c_str());
-        std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerNameList[i]);
+        std::string printerId = PrintDataRepository::GetInstance().QueryPrinterIdByStandardizeName(printerNameList[i]);
         PRINT_HILOGD("QueryAddedPrinter in printerId %{public}s", printerId.c_str());
         if (printerId.empty()) {
             continue;
@@ -1044,14 +1072,14 @@ int32_t PrintServiceAbility::QueryRawAddedPrinter(std::vector<std::string> &prin
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("QueryRawAddedPrinter started.");
     std::vector<std::string> printerNameList;
-    printSystemData_.GetRawAddedPrinterListFromSystemData(printerNameList);
+    PrintDataRepository::GetInstance().GetRawAddedPrinterListFromSystemData(printerNameList);
     if (printerNameList.size() <= 0) {
         PRINT_HILOGW("no added raw printerId");
         return E_PRINT_NONE;
     }
     for (uint32_t i = 0; i < printerNameList.size(); i++) {
         PRINT_HILOGD("QueryRawAddedPrinter in printerName %{public}s", printerNameList[i].c_str());
-        std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerNameList[i]);
+        std::string printerId = PrintDataRepository::GetInstance().QueryPrinterIdByStandardizeName(printerNameList[i]);
         PRINT_HILOGD("QueryRawAddedPrinter in printerId %{public}s", printerId.c_str());
         if (printerId.empty()) {
             continue;
@@ -1070,7 +1098,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     ManualStart();
     info.SetPrinterId(printerId);
     OHOS::Print::PrinterInfo printer;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
         info = printer;
     } else {
         std::string extensionId = PrintUtils::GetExtensionId(printerId);
@@ -1181,7 +1209,7 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
         return E_PRINT_INVALID_PRINTER;
     }
 
-    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
 
     std::string protocol = scheme;
     std::string printQueue = resource;
@@ -1230,16 +1258,16 @@ int32_t PrintServiceAbility::ValidatePrinterForUpdateDiscovery(
     const std::string &extensionId, const PrinterInfo &printerInfo)
 {
     std::string globalId = PrintUtils::GetGlobalId(extensionId, printerInfo.GetPrinterId());
-    auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId);
     PRINT_CHECK_NULL_AND_RETURN(discoveredInfo, E_PRINT_INVALID_PARAMETER);
     std::string newName = printerInfo.GetPrinterName();
     PrinterInfo addedInfo;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalId, addedInfo) &&
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalId, addedInfo) &&
         addedInfo.GetPrinterName() == newName) {
         return E_PRINT_NONE;
     }
     std::vector<std::string> addedPrinterNames;
-    printSystemData_.GetAddedPrinterListFromSystemData(addedPrinterNames);
+    PrintDataRepository::GetInstance().GetAddedPrinterListFromSystemData(addedPrinterNames);
     for (const auto &name : addedPrinterNames) {
         if (name == newName) {
             PRINT_HILOGE("printerName conflict with added printer");
@@ -1254,7 +1282,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUriInternal(
 {
 #ifdef CUPS_ENABLE
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
-        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(standardizeId);
+        auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(standardizeId);
         if (printerInfo == nullptr) {
             PRINT_HILOGE("can not find the printer");
             return E_PRINT_INVALID_PRINTER;
@@ -1323,10 +1351,10 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("SetPrinterPreference start.");
     preferences.Dump();
-    printSystemData_.UpdatePrinterPreferences(printerId, preferences);
-    printSystemData_.SavePrinterFile(printerId);
+    PrintDataRepository::GetInstance().UpdatePrinterPreferences(printerId, preferences);
+    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
     PrinterInfo printerInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PRINT_HILOGW("cannot find printer info by printerId");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -1339,12 +1367,12 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
 
 bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
 {
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
         return true;
     }
 
     if (printerId.find(P2P_PRINTER) != std::string::npos) {
-        auto printerInfoPtr = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        auto printerInfoPtr = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
         if (printerInfoPtr != nullptr) {
             printer = *printerInfoPtr;
             return true;
@@ -1660,14 +1688,15 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
     iter->second->UpdateQueuedJobList(jobId, printJob, jobOrderId);
 
     std::string printerId = printJob->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo != nullptr) {
-        printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
-        OnPrinterLastPrint(*printerInfo);
+        PrintDataRepository::GetInstance().UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
+        PrinterInfo localInfo = *printerInfo;
+        OnPrinterLastPrint(localInfo);
     } else {
         PrinterInfo addedPrinterInfo;
-        if (printSystemData_.QueryPrinterInfoById(printerId, addedPrinterInfo)) {
-            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
+        if (PrintDataRepository::GetInstance().QueryPrinterInfoById(printerId, addedPrinterInfo)) {
+            PrintDataRepository::GetInstance().UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
             OnPrinterLastPrint(addedPrinterInfo);
         }
     }
@@ -1677,7 +1706,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
 void PrintServiceAbility::SetLastUsedPrinter(const std::string &printerId)
 {
     PRINT_HILOGI("[Printer: %{public}s] SetLastUsedPrinter start", PrintUtils::AnonymizePrinterId(printerId).c_str());
-    if (!printSystemData_.IsPrinterAdded(printerId)) {
+    if (!PrintDataRepository::GetInstance().IsPrinterAdded(printerId)) {
         PRINT_HILOGE("Printer is not added to cups.");
         return;
     }
@@ -1958,17 +1987,17 @@ bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     return true;
 }
 
-bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info)
+bool PrintServiceAbility::CheckPrinterUriDifferent(const PrinterInfo &info, std::string &effectiveUri)
 {
     PRINT_HILOGD("CheckPrinterUriDifferent start.");
     PrinterInfo addedPrinter;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(info->GetPrinterId(), addedPrinter)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(info.GetPrinterId(), addedPrinter)) {
         PRINT_HILOGE("Cannot find addedPrinter");
         return false;
     }
     std::string oldUri = addedPrinter.GetUri();
 #ifdef PHONE_ISOLATION_ENABLE
-    std::string newUri = info->GetUri();
+    effectiveUri = info.GetUri();
 #else
     std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(oldUri);
     if (protocol.empty()) {
@@ -1976,15 +2005,14 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
         return false;
     }
 
-    std::string newUri = GetConnectUri(*info, protocol);
-    info->SetUri(newUri);
+    effectiveUri = GetConnectUri(info, protocol);
 #endif
 
     PRINT_HILOGD("CheckPrinterUriDifferent, old = %{private}s, new = %{private}s",
-        oldUri.c_str(), newUri.c_str());
-    if (oldUri != newUri) {
+        oldUri.c_str(), effectiveUri.c_str());
+    if (oldUri != effectiveUri) {
         PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success",
-            PrintUtils::AnonymizePrinterName(info->GetPrinterName()).c_str());
+            PrintUtils::AnonymizePrinterName(info.GetPrinterName()).c_str());
         return true;
     }
 
@@ -2000,14 +2028,16 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
     }
     ManualStart();
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PRINT_HILOGI("AddPrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
+    PRINT_HILOGI("AddPrinters started. Total size is %{public}zd",
+        PrintDataRepository::GetInstance().GetDiscoveredPrinterCount());
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGI("Add printer extensionId = %{public}s", extensionId.c_str());
     for (auto &info : printerInfos) {
         AddSinglePrinterInfo(info, extensionId);
     }
-    PRINT_HILOGI("AddPrinters end. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
+    auto discoveredCount = PrintDataRepository::GetInstance().GetDiscoveredPrinterCount();
+    PRINT_HILOGI("AddPrinters end. Total size is %{public}zd", discoveredCount);
     return E_PRINT_NONE;
 }
 
@@ -2019,7 +2049,8 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
     }
     ManualStart();
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PRINT_HILOGI("RemovePrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
+    auto removeStartCount = PrintDataRepository::GetInstance().GetDiscoveredPrinterCount();
+    PRINT_HILOGI("RemovePrinters started. Total size is %{public}zd", removeStartCount);
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
@@ -2036,7 +2067,8 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
         PRINT_HILOGE("Invalid printer ids");
         return E_PRINT_INVALID_PARAMETER;
     }
-    PRINT_HILOGI("RemovePrinters end. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
+    auto removeEndCount = PrintDataRepository::GetInstance().GetDiscoveredPrinterCount();
+    PRINT_HILOGI("RemovePrinters end. Total size is %{public}zd", removeEndCount);
     return E_PRINT_NONE;
 }
 
@@ -2049,7 +2081,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     ManualStart();
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PRINT_HILOGI("UpdatePrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
+    PRINT_HILOGI("UpdatePrinters started. Total size is %{public}zd",
+        PrintDataRepository::GetInstance().GetDiscoveredPrinterCount());
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
@@ -2057,7 +2090,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     for (const auto &info : printerInfos) {
         UpdateSinglePrinterInfo(info, extensionId);
     }
-    PRINT_HILOGI("UpdatePrinters end. Total size is %{private}zd", printSystemData_.GetDiscoveredPrinterCount());
+    PRINT_HILOGI("UpdatePrinters end. Total size is %{private}zd",
+        PrintDataRepository::GetInstance().GetDiscoveredPrinterCount());
     return E_PRINT_NONE;
 }
 
@@ -2071,10 +2105,10 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     PrinterInfo printerInfo(info);
     printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo.SetPrinterId(printerId);
-    if (!printSystemData_.IsPrinterAdded(printerId) || PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX +
-        VENDOR_CUSTOM_DRIVER)) {
+    if (!PrintDataRepository::GetInstance().IsPrinterAdded(printerId) ||
+        PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX + VENDOR_CUSTOM_DRIVER)) {
         BuildPrinterPreference(printerInfo);
-        printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+        PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, printerInfo);
     } else {
@@ -2104,13 +2138,13 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
         PrintUtils::AnonymizePrinterId(printerExtId).c_str(), state);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerExtId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerExtId);
     if (printerInfo == nullptr) {
         PRINT_HILOGD("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
 
-    printerInfo->SetPrinterState(state);
+    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerExtId, static_cast<PrinterState>(state));
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     SendPrinterEvent(*printerInfo);
     PRINT_HILOGD("UpdatePrinterState end.");
@@ -2195,7 +2229,7 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
         return;
     }
     auto printerId = printJob->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo) {
         PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
             printerInfo->GetPrinterName());
@@ -2300,8 +2334,11 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
 {
     auto iter = printerJobMap_.find(printerId);
     if (iter == printerJobMap_.end() || iter->second.empty()) {
-        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-        if (printerInfo == nullptr) {
+        std::shared_ptr<PrinterInfo> printerInfo;
+        auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+        if (discoveredInfo != nullptr) {
+            printerInfo = std::make_shared<PrinterInfo>(*discoveredInfo);
+        } else {
             auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
             if (printCupsClient != nullptr) {
                 printerInfo = printCupsClient->QueryUsbPrinterInfoByPrinterId(printerId);
@@ -2313,7 +2350,7 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
             UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
         } else {
             PrinterInfo addedPrinterInfo;
-            if (!printSystemData_.QueryPrinterInfoById(printerId, addedPrinterInfo)) {
+            if (!PrintDataRepository::GetInstance().QueryPrinterInfoById(printerId, addedPrinterInfo)) {
                 return;
             }
             if (addedPrinterInfo.GetPrinterStatus() == PRINTER_STATUS_BUSY) {
@@ -2424,7 +2461,7 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
         PRINT_HILOGD("invalid job state [%{public}d]", userData->printJobList_[jobId]->GetJobState());
         return E_PRINT_INVALID_PRINTJOB;
     }
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGD("invalid printer of the print job");
         return E_PRINT_INVALID_PRINTJOB;
@@ -2451,7 +2488,7 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
     PRINT_HILOGI("[Printer: %{public}s] QueryPrinterCapability started",
         PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
@@ -2601,7 +2638,7 @@ void PrintServiceAbility::StopDiscoveryInternal()
 #ifdef REMOTE_SERVICE_ENABLE
     StopRemotePrinterDiscovery();
 #endif
-    printSystemData_.ClearDiscoveredPrinterList();
+    PrintDataRepository::GetInstance().ClearDiscoveredPrinterList();
     CallbackInfo cbInfo;
     cbInfo.cbEventType = CallbackEventType::EXTCB_STOP_DISCOVERY;
     cbInfo.userId = GetCurrentUserId();
@@ -3057,7 +3094,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 
     // notify securityGuard
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
-        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
+        auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
             securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
         } else {
@@ -3492,11 +3529,12 @@ std::shared_ptr<PrintUserData> PrintServiceAbility::GetUserDataByJobId(const std
             PRINT_HILOGE("Get user data failed.");
             return nullptr;
         }
-        if (userData->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
+        if (userData->ContainsHistoryPrintJob(PrintDataRepository::GetInstance().QueryAddedPrinterIdList(), jobId)) {
             return userData;
         }
         for (auto it = printUserMap_.begin(); it != printUserMap_.end(); it++) {
-            if ((it->second)->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
+            if ((it->second)->ContainsHistoryPrintJob(PrintDataRepository::GetInstance().QueryAddedPrinterIdList(),
+                jobId)) {
                 return it->second;
             }
         }
@@ -3633,10 +3671,10 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
 #endif  // CUPS_ENABLE
-    std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
+    std::string printerId = PrintDataRepository::GetInstance().QueryPrinterIdByStandardizeName(printerName);
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
-    printSystemData_.DeleteAddedPrinter(printerId, printerName);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
     RemoveSinglePrinterInfo(printerId);
     auto it = printerJobMap_.find(printerId);
     if (it != printerJobMap_.end() && !it->second.empty()) {
@@ -3670,15 +3708,15 @@ int32_t PrintServiceAbility::AddPrinterToDiscovery(const PrinterInfo &printerInf
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("[Printer: %{public}s] AddPrinterToDiscovery started. Current total size is %{public}zd",
-        printerInfo.GetPrinterName().c_str(), printSystemData_.GetDiscoveredPrinterCount());
+        printerInfo.GetPrinterName().c_str(), PrintDataRepository::GetInstance().GetDiscoveredPrinterCount());
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGI("[Printer: %{public}s] extensionId = %{public}s",
         printerInfo.GetPrinterName().c_str(), extensionId.c_str());
 
     int32_t result = AddSinglePrinterInfo(printerInfo, extensionId);
 
-    PRINT_HILOGD(
-        "AddPrinterToDiscovery end. New total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
+    PRINT_HILOGD("AddPrinterToDiscovery end. New total size is %{public}zd",
+        PrintDataRepository::GetInstance().GetDiscoveredPrinterCount());
     return result;
 }
 
@@ -3721,13 +3759,13 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
     std::string printerUri;
     std::string extensionId;
     std::string printerExtId;
-    std::shared_ptr<PrinterInfo> printerInfo;
+    std::shared_ptr<const PrinterInfo> printerInfo;
     {
         std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
         PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
         printerExtId = PrintUtils::GetGlobalId(extensionId, printerId);
-        printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerExtId);
+        printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerExtId);
         if (printerInfo == nullptr) {
             PRINT_HILOGE("invalid printer id");
             return E_PRINT_INVALID_PRINTER;
@@ -3776,18 +3814,15 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     } while (false);
 
     PrinterInfo printer;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
         PRINT_HILOGE("can not find printer in system");
         return E_PRINT_INVALID_PRINTER;
     }
     if (printerInfo.HasAlias()) {
         printer.SetAlias(printerInfo.GetAlias());
-        printSystemData_.UpdatePrinterAlias(printerId, printerInfo.GetAlias());
-        auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-        if (discoveredInfo != nullptr) {
-            discoveredInfo->SetAlias(printerInfo.GetAlias());
-        }
-        printSystemData_.SavePrinterFile(printerId);
+        PrintDataRepository::GetInstance().UpdatePrinterAlias(printerId, printerInfo.GetAlias());
+        PrintDataRepository::GetInstance().SetDiscoveredPrinterAlias(printerId, printerInfo.GetAlias());
+        PrintDataRepository::GetInstance().SavePrinterFile(printerId);
     }
 
     if (printerInfo.HasOption()) {
@@ -3810,7 +3845,7 @@ bool PrintServiceAbility::QueryPPDInformation(const std::string &makeModel, std:
 void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId)
 {
     std::vector<int32_t> allPrintUserList;
-    printSystemData_.GetAllPrintUser(allPrintUserList);
+    PrintDataRepository::GetInstance().GetAllPrintUser(allPrintUserList);
     for (auto userId : allPrintUserList) {
         PRINT_HILOGI("DeletePrinterFromUserData userId %{public}d.", userId);
         auto iter = printUserMap_.find(userId);
@@ -3893,7 +3928,7 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     }
     std::string dafaultPrinterId = userData->GetDefaultPrinter();
     PrinterInfo printerInfo;
-    printSystemData_.QueryPrinterInfoById(printerId, printerInfo);
+    PrintDataRepository::GetInstance().QueryPrinterInfoById(printerId, printerInfo);
     std::string ops = printerInfo.GetOption();
     Json::Value opsJson;
     if (!PrintJsonUtil::Parse(ops, opsJson)) {
@@ -3908,7 +3943,7 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     std::string lastUsedPrinterId = userData->GetLastUsedPrinter();
     if (!lastUsedPrinterId.empty()) {
         PrinterInfo lastUsedPrinterInfo;
-        if (printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo)) {
+        if (PrintDataRepository::GetInstance().QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo)) {
             PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{private}s", lastUsedPrinterId.c_str());
             SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
         }
@@ -3954,21 +3989,21 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     infoPtr->SetPrinterId(PrintUtils::GetGlobalId(extensionId, infoPtr->GetPrinterId()));
     PRINT_HILOGI("[Printer: %{public}s] AddSinglePrinterInfo start",
         PrintUtils::AnonymizePrinterId(infoPtr->GetPrinterId()).c_str());
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
+    if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
         PRINT_HILOGI("new printer, add it");
         infoPtr->DumpInfo();
-        printSystemData_.AddPrinterToDiscovery(infoPtr);
+        PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
     }
     infoPtr->SetPrinterState(PRINTER_ADDED);
 
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
     SendPrinterEvent(*infoPtr, std::to_string(GetCurrentUserId()));
 
-    if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId())) {
+    if (PrintDataRepository::GetInstance().IsPrinterAdded(infoPtr->GetPrinterId())) {
         if (HasPrinterActiveJob(infoPtr->GetPrinterId())) {
             UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_BUSY);
         } else {
-            SyncAddedPrinterUri(infoPtr);
+            SyncAddedPrinterUri(*infoPtr);
             UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
         }
     }
@@ -3983,21 +4018,21 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     std::string printExtId = info.GetPrinterId();
     printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
 
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printExtId);
-    if (printerInfo == nullptr) {
+    auto existingInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printExtId);
+    if (existingInfo == nullptr) {
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
-    *printerInfo = info;
-    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
-    printerInfo->SetPrinterId(printExtId);
+    PrinterInfo printerInfo = info;
+    printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
+    printerInfo.SetPrinterId(printExtId);
 
     // Query complete printer capability from PPD file to fix incomplete capability issue.
     // External applications may provide incomplete printer capability information,
     // so we need to query complete capability from PPD file to ensure all advanced options are included.
     // Note: Eprint printers do not have a PPD file.
-    if (printerInfo->HasPrinterMake() && !isEprint(printExtId)) {
-        std::string make = printerInfo->GetPrinterMake();
+    if (printerInfo.HasPrinterMake() && !isEprint(printExtId)) {
+        std::string make = printerInfo.GetPrinterMake();
         std::string ppdName;
         QueryPPDInformation(make, ppdName);
 
@@ -4005,26 +4040,34 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
             PrinterCapability printerCaps;
             auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
             int32_t ret = printCupsClient->QueryPrinterCapabilityFromPPD(
-                printerInfo->GetPrinterName(), printerCaps, ppdName);
+                printerInfo.GetPrinterName(), printerCaps, ppdName);
             if (ret == E_PRINT_NONE) {
-                printerInfo->SetCapability(printerCaps);
+                printerInfo.SetCapability(printerCaps);
             } else {
                 PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
             }
         }
     }
 
-    printerInfo->Dump();
+    printerInfo.Dump();
+
+    // Always commit the basic info (name/uri/alias/state/id) back to the discovery map,
+    // preserving the baseline semantics where *printerInfo = info was executed unconditionally.
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printExtId, printerInfo);
 
     bool isCapabilityUpdated = false;
-    if (printerInfo->HasCapability()) {
-        isCapabilityUpdated = UpdatePrinterCapability(printExtId, *printerInfo);
+    if (printerInfo.HasCapability()) {
+        isCapabilityUpdated = UpdatePrinterCapability(printExtId, printerInfo);
+        if (isCapabilityUpdated) {
+            // Capability-specific fields were refreshed; write the updated record back again.
+            PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printExtId, printerInfo);
+        }
     }
 
     if (isCapabilityUpdated) {
-        SendPrinterEvent(*printerInfo);
-        SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
-        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
+        SendPrinterEvent(printerInfo);
+        SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, printerInfo);
+        PrintDataRepository::GetInstance().SavePrinterFile(printerInfo.GetPrinterId());
     }
 
     return isCapabilityUpdated;
@@ -4034,30 +4077,30 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
 {
     PRINT_HILOGI("[Printer: %{public}s] RemoveSinglePrinterInfo start",
         PrintUtils::AnonymizePrinterId(printerId).c_str());
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
-    printerInfo->SetPrinterState(PRINTER_REMOVED);
+    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerId, PRINTER_REMOVED);
     SendPrinterDiscoverEvent(PRINTER_REMOVED, *printerInfo);
     SendPrinterEvent(*printerInfo);
-    printSystemData_.RemovePrinterFromDiscovery(printerId);
+    PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
 
-    if (printSystemData_.IsPrinterAdded(printerId)) {
-        UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_UNAVAILABLE);
+    if (PrintDataRepository::GetInstance().IsPrinterAdded(printerId)) {
+        PrinterInfo removedInfo = *printerInfo;
+        UpdatePrinterStatus(removedInfo, PRINTER_STATUS_UNAVAILABLE);
     }
     return true;
 }
 
-void PrintServiceAbility::SyncAddedPrinterInfo(
-    const std::string &printerId, std::shared_ptr<PrinterInfo> printerInfo)
+void PrintServiceAbility::SyncAddedPrinterInfo(const std::string &printerId, PrinterInfo &printerInfo)
 {
     OHOS::Print::PrinterInfo printer;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
-        printerInfo->SetPrinterName(printer.GetPrinterName());
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+        printerInfo.SetPrinterName(printer.GetPrinterName());
         if (printer.HasAlias()) {
-            printerInfo->SetAlias(printer.GetAlias());
+            printerInfo.SetAlias(printer.GetAlias());
         }
     }
 }
@@ -4069,36 +4112,41 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
+    PrinterInfo printerInfo;
+    if (discoveredInfo == nullptr) {
         PRINT_HILOGI("New printer discovered, adding to discovery list");
-        printerInfo = HandleNewPrinterDiscovery(globalPrinterId, info);
-        PRINT_CHECK_NULL_AND_RETURN(printerInfo, false);
+        auto newInfo = HandleNewPrinterDiscovery(globalPrinterId, info);
+        PRINT_CHECK_NULL_AND_RETURN(newInfo, false);
+        printerInfo = *newInfo;
+    } else {
+        printerInfo = *discoveredInfo;
     }
 
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     IpAddressType infoIpType = printCupsClient->GetIpAddressTypeFromUri(info.GetUri());
-    IpAddressType printerInfoIpType = printCupsClient->GetIpAddressTypeFromUri(printerInfo->GetUri());
+    IpAddressType printerInfoIpType = printCupsClient->GetIpAddressTypeFromUri(printerInfo.GetUri());
     if (infoIpType == IP_ADDRESS_TYPE_INVALID ||
         (infoIpType == IP_ADDRESS_TYPE_IPV6 && printerInfoIpType == IP_ADDRESS_TYPE_IPV4)) {
         PRINT_HILOGD("[Printer: %{public}s] Skip SetUri and SetOption due to IP type mismatch or invalid IP",
             globalPrinterId.c_str());
     } else {
-        printerInfo->SetUri(info.GetUri());
-        printerInfo->SetOption(info.GetOption());
+        printerInfo.SetUri(info.GetUri());
+        printerInfo.SetOption(info.GetOption());
     }
 
-    printerInfo->SetPrinterState(PRINTER_ADDED);
-    SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    printerInfo.SetPrinterState(PRINTER_ADDED);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(globalPrinterId, printerInfo);
+    SendPrinterDiscoverEvent(PRINTER_ADDED, printerInfo);
+    SendPrinterEvent(printerInfo);
 
-    if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId())) {
-        bool hasActiveJob = HasPrinterActiveJob(printerInfo->GetPrinterId());
+    if (PrintDataRepository::GetInstance().IsPrinterAdded(printerInfo.GetPrinterId())) {
+        bool hasActiveJob = HasPrinterActiveJob(printerInfo.GetPrinterId());
         if (!hasActiveJob) {
             SyncAddedPrinterUri(printerInfo);
         }
-        PrinterInfo printer = *printerInfo;
-        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
+        PrinterInfo printer = printerInfo;
+        if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
             PRINT_HILOGW("cannot update printer info by added printer info");
         }
         UpdatePrinterStatus(printer, hasActiveJob ? PRINTER_STATUS_BUSY : PRINTER_STATUS_IDLE);
@@ -4116,7 +4164,7 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
     PRINT_CHECK_NULL_AND_RETURN(printerInfo, nullptr);
 
     PrinterInfo printer;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer) &&
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printer.GetPrinterName().c_str())) {
         PRINT_HILOGI("[Printer: %{public}s] Sync PrinterName and Alias From AddedPrinter", globalPrinterId.c_str());
         printerInfo->SetPrinterName(printer.GetPrinterName());
@@ -4126,7 +4174,7 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
     }
 
     printerInfo->SetPrinterId(globalPrinterId);
-    printSystemData_.AddPrinterToDiscovery(printerInfo);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
 
     PRINT_HILOGD("HandleNewPrinterDiscovery completed");
     return printerInfo;
@@ -4143,15 +4191,18 @@ bool PrintServiceAbility::HasPrinterActiveJob(const std::string &printerId)
     return false;
 }
 
-void PrintServiceAbility::SyncAddedPrinterUri(const std::shared_ptr<PrinterInfo> printerInfo)
+void PrintServiceAbility::SyncAddedPrinterUri(const PrinterInfo &printerInfo)
 {
     PRINT_HILOGD("SyncAddedPrinterUri Start.");
-    if (CheckPrinterUriDifferent(printerInfo) &&
-        UpdateAddedPrinterInCups(printerInfo->GetPrinterId(), printerInfo->GetUri())) {
+    std::string effectiveUri;
+    if (CheckPrinterUriDifferent(printerInfo, effectiveUri) &&
+        UpdateAddedPrinterInCups(printerInfo.GetPrinterId(), effectiveUri)) {
         PRINT_HILOGI("[Printer: %{public}s] Uri modify, update into addedPrinter.",
-            printerInfo->GetPrinterName().c_str());
-        printSystemData_.UpdatePrinterUri(printerInfo);
-        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
+            printerInfo.GetPrinterName().c_str());
+        PrinterInfo updatedInfo = printerInfo;
+        updatedInfo.SetUri(effectiveUri);
+        PrintDataRepository::GetInstance().UpdatePrinterUri(updatedInfo);
+        PrintDataRepository::GetInstance().SavePrinterFile(printerInfo.GetPrinterId());
     }
     PRINT_HILOGD("SyncAddedPrinterUri End.");
 }
@@ -4160,22 +4211,24 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
 {
     PRINT_HILOGI("UpdatePrinterToDiscovery");
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
-        printerInfo = std::make_shared<PrinterInfo>(info);
-        if (printerInfo == nullptr) {
-            PRINT_HILOGW("invalid printer id, ingore it");
-            return false;
-        }
-        printerInfo->SetPrinterId(globalPrinterId);
-        printSystemData_.AddPrinterToDiscovery(printerInfo);
-    } else {
-        if (info.HasCapability()) {
-            *printerInfo = info;
-            printerInfo->SetPrinterId(globalPrinterId);
-        }
+    auto existingInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
+    PrinterInfo printerInfo;
+    if (existingInfo == nullptr) {
+        printerInfo = info;
+        printerInfo.SetPrinterId(globalPrinterId);
+        SyncAddedPrinterInfo(globalPrinterId, printerInfo);
+        PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(printerInfo));
+        return true;
     }
+
+    printerInfo = *existingInfo;
     SyncAddedPrinterInfo(globalPrinterId, printerInfo);
+    if (info.HasCapability()) {
+        printerInfo = info;
+        printerInfo.SetPrinterId(globalPrinterId);
+        SyncAddedPrinterInfo(globalPrinterId, printerInfo);
+        PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(globalPrinterId, printerInfo);
+    }
     return true;
 }
 
@@ -4193,16 +4246,23 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = QueryConnectingPrinterInfoById(globalPrinterId);
+    auto connectingMethod = vendorManager.GetConnectingMethod(globalPrinterId);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
     }
     OnPrinterAddedToCups(printerInfo, ppdName);
+    // Commit the final record back to the discovery map for non-IP sources.
+    // IP_AUTO printers come from the temporary IP list and are already removed/migrated
+    // to the added map by the success path; they must not be re-inserted into discovery.
+    if (connectingMethod != IP_AUTO) {
+        PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(globalPrinterId, *printerInfo);
+    }
     return true;
 }
 
-std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol)
+std::string PrintServiceAbility::GetConnectUri(const PrinterInfo &printerInfo, std::string &connectProtocol)
 {
     std::string printerUri = printerInfo.GetUri();
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
@@ -4358,13 +4418,13 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPpdHashCode(ppdHashCode);
-    if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
+    if (PrintDataRepository::GetInstance().IsPrinterAdded(globalPrinterId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
         BuildPrinterPreference(*printerInfo);
-        printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
-        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
+        PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, *printerInfo);
+        PrintDataRepository::GetInstance().SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
@@ -4383,7 +4443,7 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PrinterInfo printer;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
         PRINT_HILOGW("cannot find printer");
         return false;
     }
@@ -4397,7 +4457,7 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
 #endif  // CUPS_ENABLE
     DeletePrinterFromUserData(globalPrinterId);
     NotifyAppDeletePrinter(globalPrinterId);
-    printSystemData_.DeleteAddedPrinter(globalPrinterId, printer.GetPrinterName());
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(globalPrinterId, printer.GetPrinterName());
     return true;
 }
 
@@ -4405,18 +4465,14 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
 {
     PRINT_HILOGI("AddIpPrinterToSystemData");
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
-    auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr || (!info.GetUri().empty() && printerInfo->GetUri() != info.GetUri())) {
+    auto existingInfo = PrintDataRepository::GetInstance().QueryIpPrinterInfoById(globalPrinterId);
+    if (existingInfo == nullptr || (!info.GetUri().empty() && existingInfo->GetUri() != info.GetUri())) {
         PRINT_HILOGI("new printer, add it");
         info.DumpInfo();
-        printerInfo = std::make_shared<PrinterInfo>(info);
-        if (printerInfo == nullptr) {
-            PRINT_HILOGW("allocate printer info fail");
-            return false;
-        }
+        PrinterInfo printerInfo = info;
         SyncAddedPrinterInfo(globalPrinterId, printerInfo);
-        printerInfo->SetPrinterId(globalPrinterId);
-        printSystemData_.AddIpPrinterToList(printerInfo);
+        printerInfo.SetPrinterId(globalPrinterId);
+        PrintDataRepository::GetInstance().AddIpPrinterToList(std::make_shared<PrinterInfo>(printerInfo));
     }
     return true;
 }
@@ -4425,11 +4481,12 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     const std::string &ppdName, const std::string &ppdData)
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
-    auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
+    auto existingInfo = PrintDataRepository::GetInstance().QueryIpPrinterInfoById(globalPrinterId);
+    if (existingInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
         return false;
     }
+    auto printerInfo = std::make_shared<PrinterInfo>(*existingInfo);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCups fail.");
@@ -4443,28 +4500,28 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     std::string ppdHashCode = printCupsClient->GetPpdHashCode(ppdName);
     printerInfo->SetPpdHashCode(ppdHashCode);
     BuildPrinterPreference(*printerInfo);
-    printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
-    printSystemData_.SavePrinterFile(globalPrinterId);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, *printerInfo);
+    PrintDataRepository::GetInstance().SavePrinterFile(globalPrinterId);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
-    printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
+    PrintDataRepository::GetInstance().RemoveIpPrinterFromList(globalPrinterId);
     return true;
 }
 
 std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByOriginId(const std::string &originId)
 {
-    return printSystemData_.QueryAddedPrintersByOriginId(originId);
+    return PrintDataRepository::GetInstance().QueryAddedPrintersByOriginId(originId);
 }
 
 bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("OnVendorStatusUpdate state: %{public}d", static_cast<int32_t>(status.state));
-    printSystemData_.UpdatePrinterStatus(globalPrinterId, static_cast<PrinterStatus>(status.state));
+    PrintDataRepository::GetInstance().UpdatePrinterStatus(globalPrinterId, static_cast<PrinterStatus>(status.state));
     PrinterInfo printerInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerInfo)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerInfo)) {
         PRINT_HILOGD("cannot find added printer info");
         return false;
     }
@@ -4641,7 +4698,7 @@ bool PrintServiceAbility::CheckDeviceAndAccountPermission(const std::shared_ptr<
 
 int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info)
 {
-    auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (discoveredInfo != nullptr && discoveredInfo->HasCapability()) {
         info = *discoveredInfo;
         return E_PRINT_NONE;
@@ -4650,7 +4707,7 @@ int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPri
     if (!vendorManager.QueryPrinterInfo(globalPrinterId, waitTimeout)) {
         return E_PRINT_INVALID_PRINTER;
     }
-    discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (discoveredInfo != nullptr && discoveredInfo->HasCapability()) {
         info = *discoveredInfo;
         return E_PRINT_NONE;
@@ -4681,7 +4738,7 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
     if (PrintJsonUtil::IsMember(connectParamJson, "protocol") && connectParamJson["protocol"].isString()) {
         protocol = connectParamJson["protocol"].asString();
     }
-    printSystemData_.ClearPrintEvents(ip, CONNECT_PRINT_EVENT_TYPE);
+    PrintDataRepository::GetInstance().ClearPrintEvents(ip, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
     if (!vendorManager.ConnectPrinterByIp(ip, protocol)) {
         PRINT_HILOGW("ConnectPrinterByIp fail");
@@ -4695,12 +4752,9 @@ void PrintServiceAbility::HandlePrinterStateChangeRegister(const std::string &ev
 {
     if (eventType == PRINTER_EVENT_TYPE) {
         PRINT_HILOGI("begin HandlePrinterStateChangeRegister");
-        std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_ =
-            printSystemData_.GetDiscoveredPrinterInfo();
-        for (const auto &pair : discoveredPrinterInfoList_) {
-            std::string key = pair.first;
-            std::shared_ptr<PrinterInfo> printerInfoPtr = pair.second;
-            SendPrinterEvent(*printerInfoPtr, std::to_string(GetCurrentUserId()));
+        auto discoveredPrinterInfoList = PrintDataRepository::GetInstance().GetDiscoveredPrinterInfo();
+        for (const auto &pair : discoveredPrinterInfoList) {
+            SendPrinterEvent(pair.second, std::to_string(GetCurrentUserId()));
         }
         PRINT_HILOGI("end HandlePrinterStateChangeRegister");
     }
@@ -4752,7 +4806,7 @@ void PrintServiceAbility::DecrementPrintCounterByPcSettings()
 bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri)
 {
     PrinterInfo printer;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
         std::string standardName = PrintUtil::StandardizePrinterName(printer.GetPrinterName());
         return DelayedSingleton<PrintCupsClient>::GetInstance()->ModifyCupsPrinterUri(standardName, printerUri);
     }
@@ -4765,12 +4819,12 @@ std::string PrintServiceAbility::RenamePrinterWhenAdded(const PrinterInfo &info)
     static uint32_t repeatNameLimit = 10;
     // 相同ID已添加，沿用之前的名字，更新信息
     PrinterInfo existingInfo;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(info.GetPrinterId(), existingInfo)) {
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(info.GetPrinterId(), existingInfo)) {
         PRINT_HILOGW("printerId exist, update printer.");
         return existingInfo.GetPrinterName();
     }
     std::vector<std::string> printerNameList;
-    printSystemData_.GetAddedPrinterListFromSystemData(printerNameList);
+    PrintDataRepository::GetInstance().GetAddedPrinterListFromSystemData(printerNameList);
     std::set<std::string> usedStandardizedNames;
     for (const auto &name : printerNameList) {
         usedStandardizedNames.insert(PrintUtil::StandardizePrinterName(name));
@@ -4791,16 +4845,25 @@ std::string PrintServiceAbility::RenamePrinterWhenAdded(const PrinterInfo &info)
 
 std::shared_ptr<PrinterInfo> PrintServiceAbility::QueryDiscoveredPrinterInfoById(const std::string &printerId)
 {
-    return printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    auto info = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    if (info == nullptr) {
+        return nullptr;
+    }
+    return std::make_shared<PrinterInfo>(*info);
 }
 
 std::shared_ptr<PrinterInfo> PrintServiceAbility::QueryConnectingPrinterInfoById(const std::string &printerId)
 {
+    std::shared_ptr<const PrinterInfo> info;
     if (vendorManager.GetConnectingMethod(printerId) == IP_AUTO) {
-        return printSystemData_.QueryIpPrinterInfoById(printerId);
+        info = PrintDataRepository::GetInstance().QueryIpPrinterInfoById(printerId);
     } else {
-        return printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        info = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
     }
+    if (info == nullptr) {
+        return nullptr;
+    }
+    return std::make_shared<PrinterInfo>(*info);
 }
 
 bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
@@ -4848,7 +4911,7 @@ void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
     PrinterCapability cap;
     printerInfo.GetCapability(cap);
     PrinterPreferences preferences;
-    printSystemData_.BuildPrinterPreference(cap, preferences);
+    PrintDataRepository::GetInstance().BuildPrinterPreference(cap, preferences);
     if (printerInfo.GetPrinterId().find(EPRINTID) != std::string::npos) {
         preferences.SetDefaultColorMode(PRINT_COLOR_MODE_MONOCHROME);
     }
@@ -4986,10 +5049,10 @@ Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPrefere
 void PrintServiceAbility::RefreshPrinterInfoByPpd()
 {
 #ifdef CUPS_ENABLE
-    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         PrinterInfo printerInfo;
-        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
             continue;
         }
         PrinterCapability printerCaps;
@@ -5010,8 +5073,8 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
         }
         std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
         printerInfo.SetPpdHashCode(ppdHashCode);
-        printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-        printSystemData_.SavePrinterFile(printerId);
+        PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
+        PrintDataRepository::GetInstance().SavePrinterFile(printerId);
     }
 #endif  // CUPS_ENABLE
 }
@@ -5019,30 +5082,34 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
 int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
 {
     PRINT_HILOGI("[Printer: %{public}s] ConnectUsbPrinter start", PrintUtils::AnonymizePrinterId(printerId).c_str());
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo == nullptr) {
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    if (discoveredInfo == nullptr) {
         PRINT_HILOGE("can not find the printer");
         return E_PRINT_INVALID_PRINTER;
     }
-    if (!printerInfo->HasPrinterMake()) {
+    if (!discoveredInfo->HasPrinterMake()) {
         PRINT_HILOGE("can not find printer make");
         return E_PRINT_INVALID_PRINTER;
     }
 #ifdef CUPS_ENABLE
-    std::string make = printerInfo->GetPrinterMake();
+    std::string make = discoveredInfo->GetPrinterMake();
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(
-        printerInfo->GetUri(), printerInfo->GetPrinterName(), make);
+        discoveredInfo->GetUri(), discoveredInfo->GetPrinterName(), make);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
         return ret;
     }
     std::string ppdName;
     QueryPPDInformation(make, ppdName);
+    auto printerInfo = std::make_shared<PrinterInfo>(*discoveredInfo);
     ret = SetPrinterCapabilityAndRegister(printerInfo->GetPrinterName(), ppdName, printerId, printerInfo);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("SetPrinterCapabilityAndRegister error = %{public}d.", ret);
         return ret;
     }
+    // Commit the final capability/driver/state back to the discovery map so that
+    // subsequent queries and event replays see the connected record.
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerId, *printerInfo);
     SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
 #endif  // CUPS_ENABLE
     PRINT_HILOGI("ConnectUsbPrinter end");
@@ -5150,7 +5217,7 @@ int32_t PrintServiceAbility::SetPrinterCapabilityAndRegister(const std::string &
 
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
     SendPrinterEvent(*printerInfo);
-    printSystemData_.SavePrinterFile(printerId);
+    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
     PRINT_HILOGI("SetPrinterCapabilityAndRegister end.");
     return E_PRINT_NONE;
 }
@@ -5209,13 +5276,17 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser Enter");
     BlockUserPrintJobs(lastUserId_);
     UpdateIsEnterprise();
+    // Refresh the cached enterprise state on user switch. This is one of the expected
+    // refresh points (the other is service init). See SetEnterpriseState for the
+    // cache-staleness contract.
+    PrintDataRepository::GetInstance().SetEnterpriseState(IsEnterpriseEnable(), IsEnterprise());
     vendorManager.UpdateIsEnterprise(isEnterprise_);
     if (IsEnterpriseEnable() && IsEnterprise()) {
         PrintCupsClient::GetInstance()->StopCupsdService();
     } else {
         PrintCupsClient::GetInstance()->StopCupsdEnterpriseService();
     }
-    printSystemData_.Init();
+    PrintDataRepository::GetInstance().Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
     vendorManager.SwitchSpace();
     CheckCupsServerAlive();
@@ -5255,21 +5326,6 @@ bool PrintServiceAbility::IsAppAlive(const PrintCallerAppInfo &appInfo)
     return PrintCallerAppMonitor::GetInstance().IsAppAlive(std::make_shared<PrintCallerAppInfo>(appInfo));
 }
 
-bool PrintServiceAbility::IsPrinterPpdUpdateRequired(
-    const std::string &standardPrinterName, const std::string &ppdHashCode)
-{
-    std::string lastPrinterPpdHashCode;
-    if (!printSystemData_.QueryPpdHashCodeByPrinterName(standardPrinterName, lastPrinterPpdHashCode)) {
-        PRINT_HILOGD("PrintSystemData does not save printerPpdHashCode");
-        return true;
-    }
-    if (lastPrinterPpdHashCode == ppdHashCode) {
-        PRINT_HILOGD("The content of ppdhashCode is the same as the previous ppdhashCode");
-        return false;
-    }
-    return true;
-}
-
 int32_t PrintServiceAbility::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
     std::string &detail)
 {
@@ -5279,13 +5335,13 @@ int32_t PrintServiceAbility::AnalyzePrintEvents(const std::string &printerId, co
     }
     ManualStart();
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    detail = printSystemData_.AnalyzePrintEvents(printerId, type);
+    detail = PrintDataRepository::GetInstance().AnalyzePrintEvents(printerId, type);
     return E_PRINT_NONE;
 }
 
 void PrintServiceAbility::AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode)
 {
-    printSystemData_.AddPrintEvent(printerId, eventType, eventCode);
+    PrintDataRepository::GetInstance().AddPrintEvent(printerId, eventType, eventCode);
 }
 
 void PrintServiceAbility::RegisterSettingDataObserver()
@@ -5381,7 +5437,7 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
         printJob = jobIt->second;
     }
     PrinterInfo printerInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printJob->GetPrinterId(), printerInfo)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printJob->GetPrinterId(), printerInfo)) {
         PRINT_HILOGE("can not find the printer");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -5437,7 +5493,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
         PRINT_HILOGW("IP is Querying, Do not send again");
         return E_PRINT_NONE;
     }
-    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
     vendorManager.SetQueryPrinter(IP_AUTO, printerIp);
     std::string protocol = "auto";
@@ -5464,7 +5520,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
     }
-    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName, "")) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
             return E_PRINT_SERVER_FAILURE;
@@ -5568,7 +5624,7 @@ int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
         return ret;
     }
 
-    return printSystemData_.BuildPrinterPreference(printerCaps, defaultPreferences);
+    return PrintDataRepository::GetInstance().BuildPrinterPreference(printerCaps, defaultPreferences);
 #else
     return E_PRINT_NONE;
 #endif
@@ -5583,7 +5639,7 @@ int32_t PrintServiceAbility::GetPrinterPreference(const std::string &printerId, 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("GetPrinterPreference start.");
     PrinterInfo printerInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PRINT_HILOGE("cannot find printer info by printerId");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -5656,12 +5712,12 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
     PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef HAVE_SMB_PRINTER
-    if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
+    if (auto smbPrinterInfo = PrintDataRepository::GetInstance().FindInfoInSmbPrinterDiscoverList(printerId)) {
         PRINT_HILOGI("connect smb printer");
         return ConnectSmbPrinter(*smbPrinterInfo, ppdName);
     }
 #endif // HAVE_SMB_PRINTER
-    printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     if (!vendorManager.ConnectPrinterByIdAndPpd(printerId, protocol, ppdName)) {
         PRINT_HILOGW("ConnectPrinterByIdAndPpd failed");
         return E_PRINT_SERVER_FAILURE;
@@ -5814,7 +5870,7 @@ int32_t PrintServiceAbility::AuthSmbDevice(const PrintSharedHost& sharedHost, co
     }
     if (!printerInfos.empty()) {
         PRINT_HILOGI("find smb printers");
-        printSystemData_.SetSmbPrinterInDiscoverList(sharedHost.GetIp(), printerInfos);
+        PrintDataRepository::GetInstance().SetSmbPrinterInDiscoverList(sharedHost.GetIp(), printerInfos);
     }
 #endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;
@@ -5882,7 +5938,7 @@ int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const s
     printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
     SendPrinterEvent(printerInfo);
     SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, printerInfo);
-    printSystemData_.SavePrinterFile(printerInfo.GetPrinterId());
+    PrintDataRepository::GetInstance().SavePrinterFile(printerInfo.GetPrinterId());
     SmbPrinterStateMonitor::GetInstance().SetSmbPrinterInMonitorList(printerInfo);
     TryStartSmbPrinterStatusMonitor();
     PRINT_HILOGI("ConnectSmbPrinter end");
@@ -5893,7 +5949,7 @@ void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
 {
     PRINT_HILOGI("begin TryStartSmbPrinterStatusMonitor");
     std::vector<PrinterInfo> printerInfoList;
-    printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
+    PrintDataRepository::GetInstance().GetSmbAddedPrinterListFromSystemData(printerInfoList);
     if (printerInfoList.empty()) {
         PRINT_HILOGI("No need to enable monitoring for SMB printers");
         return;
@@ -5903,7 +5959,7 @@ void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
     }
     auto notifyPrinterStateChanged = [this] (const PrinterInfo& printerInfo) {
         PRINT_HILOGI("begin smbNotify printerStateChange");
-        printSystemData_.UpdatePrinterStatus(printerInfo.GetPrinterId(),
+        PrintDataRepository::GetInstance().UpdatePrinterStatus(printerInfo.GetPrinterId(),
             static_cast<PrinterStatus>(printerInfo.GetPrinterStatus()));
         this->SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
         this->SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
@@ -6000,10 +6056,10 @@ int32_t PrintServiceAbility::RegisterKiaInterceptorCallback(const sptr<IKiaInter
 
 void PrintServiceAbility::RefreshIpPrinter()
 {
-    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     for (auto& printerId : printerIdList) {
         PrinterInfo printerInfo;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+        if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
             DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerInfo.GetPrinterName().c_str())) {
             PRINT_HILOGI("IP printer added, Set status to IDLE.");
             UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
@@ -6013,10 +6069,10 @@ void PrintServiceAbility::RefreshIpPrinter()
 
 void PrintServiceAbility::RefreshThirdDriverPrinter()
 {
-    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     for (auto& printerId : printerIdList) {
         PrinterInfo printerInfo;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+        if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
             PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX + VENDOR_CUSTOM_DRIVER)) {
             PRINT_HILOGI("third driver printer added, Set status to IDLE.");
             UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
@@ -6041,7 +6097,7 @@ void PrintServiceAbility::HandleWebPrinterUninstall()
     PRINT_HILOGI("Start handling webprinter uninstallation.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     std::vector<std::string> printerIdList;
-    printSystemData_.GetWebPrinterListFromSystemData(printerIdList);
+    PrintDataRepository::GetInstance().GetWebPrinterListFromSystemData(printerIdList);
     for (auto &printerId : printerIdList) {
         RemoveSinglePrinterInfo(printerId);
     }
@@ -6101,39 +6157,41 @@ int32_t PrintServiceAbility::ConnectRemotePrinter(const std::string &printerId)
         PrintUtils::AnonymizePrinterId(printerId).c_str());
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo == nullptr) {
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    if (discoveredInfo == nullptr) {
         PRINT_HILOGE("[Printer: %{public}s] not found in discovery list",
             PrintUtils::AnonymizePrinterId(printerId).c_str());
         return E_PRINT_INVALID_PRINTER;
     }
 
-    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    printerInfo->SetPrinterState(PRINTER_CONNECTED);
-    printerInfo->SetSelectedProtocol("auto");
-    BuildPrinterPreference(*printerInfo);
+    PrinterInfo printerInfo = *discoveredInfo;
+    printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo.SetPrinterState(PRINTER_CONNECTED);
+    printerInfo.SetSelectedProtocol("auto");
+    BuildPrinterPreference(printerInfo);
 
-    if (printSystemData_.IsPrinterAdded(printerId)) {
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+    if (PrintDataRepository::GetInstance().IsPrinterAdded(printerId)) {
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
     } else {
-        std::string printerName = RenamePrinterWhenAdded(*printerInfo);
-        printerInfo->SetPrinterName(printerName);
-        printSystemData_.InsertAddedPrinter(printerId, *printerInfo);
-        printSystemData_.SavePrinterFile(printerId);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
-        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
+        std::string printerName = RenamePrinterWhenAdded(printerInfo);
+        printerInfo.SetPrinterName(printerName);
+        PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
+        PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, printerInfo, true);
+        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, printerInfo);
     }
-    
-    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
-    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+
+    printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerId, printerInfo);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, printerInfo);
+    SendPrinterEvent(printerInfo);
     SetLastUsedPrinter(printerId);
-    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
-    
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, printerInfo);
+
     return E_PRINT_NONE;
 }
- 
+
 int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
     PRINT_HILOGI("[Printer: %{public}s] AddRemotePrinterInfo start",
@@ -6152,18 +6210,18 @@ int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const
     }
 
     bool needSave = false;
-    if (printSystemData_.UpdatePrinterAlias(matchedPrinterId, info.GetAlias())) {
+    if (PrintDataRepository::GetInstance().UpdatePrinterAlias(matchedPrinterId, info.GetAlias())) {
         PRINT_HILOGI("PrinterAlias Modify %{private}s -> %{private}s",
             matchedPrinter.GetAlias().c_str(), info.GetAlias().c_str());
         matchedPrinter.SetAlias(info.GetAlias());
         SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, matchedPrinter);
         needSave = true;
     }
-    if (printSystemData_.UpdatePrinterDeviceId(matchedPrinterId, info.GetDeviceId())) {
+    if (PrintDataRepository::GetInstance().UpdatePrinterDeviceId(matchedPrinterId, info.GetDeviceId())) {
         needSave = true;
     }
     if (needSave) {
-        printSystemData_.SavePrinterFile(matchedPrinterId);
+        PrintDataRepository::GetInstance().SavePrinterFile(matchedPrinterId);
     }
     std::string localPrinterId = PrintUtils::GetLocalId(matchedPrinterId, extensionId);
     PrinterInfo updatedInfo = info;
@@ -6174,10 +6232,10 @@ int32_t PrintServiceAbility::AddRemotePrinterInfo(const PrinterInfo &info, const
 bool PrintServiceAbility::MatchPrinterByUri(const std::string &uri,
     std::string &matchedPrinterId, PrinterInfo &matchedPrinter)
 {
-    std::vector<std::string> addedPrinterIdList = printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> addedPrinterIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     for (const auto &printerId : addedPrinterIdList) {
         PrinterInfo addedPrinter;
-        if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter)
+        if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter)
             && addedPrinter.HasUri() && addedPrinter.GetUri() == uri) {
             matchedPrinter = addedPrinter;
             matchedPrinterId = printerId;
@@ -6193,9 +6251,9 @@ bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &uri)
 {
     PRINT_HILOGI("RemoveRemotePrinterInfo start, uri: %{private}s", uri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto discoveredPrinters = printSystemData_.GetDiscoveredPrinterInfo();
+    auto discoveredPrinters = PrintDataRepository::GetInstance().GetDiscoveredPrinterInfo();
     for (const auto &entry : discoveredPrinters) {
-        if (entry.second->HasUri() && entry.second->GetUri() == uri) {
+        if (entry.second.HasUri() && entry.second.GetUri() == uri) {
             PRINT_HILOGI("URI matched, remove printer: %{public}s",
                 PrintUtils::AnonymizePrinterId(entry.first).c_str());
             return RemoveSinglePrinterInfo(entry.first);
@@ -6204,8 +6262,26 @@ bool PrintServiceAbility::RemoveRemotePrinterInfo(const std::string &uri)
     PRINT_HILOGE("printer not found by uri, ignore it");
     return false;
 }
- 
+
 #endif
+
+int32_t PrintServiceAbility::OnAddRemotePrinter(const PrinterInfo &info, const std::string &extensionId)
+{
+#ifdef REMOTE_SERVICE_ENABLE
+    return AddRemotePrinterInfo(info, extensionId);
+#else
+    return E_PRINT_NONE;
+#endif
+}
+
+bool PrintServiceAbility::OnRemoveRemotePrinter(const std::string &uri)
+{
+#ifdef REMOTE_SERVICE_ENABLE
+    return RemoveRemotePrinterInfo(uri);
+#else
+    return false;
+#endif
+}
 
 bool PrintServiceAbility::GetBundleInfo(AppExecFwk::BundleInfo &bundleInfo)
 {

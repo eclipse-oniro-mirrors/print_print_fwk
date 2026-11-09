@@ -1,0 +1,80 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos.gni")
+
+if (print_fwk_feature_print_failure_ai_notifier) {
+  ohos_shared_library("print_feature_ai_notifier") {
+    sources = [
+      "${print_path}/features/print_failure_ai_notifier/src/print_failure_ai_notifier_impl.cpp",
+      "${print_path}/features/print_failure_ai_notifier/src/print_notification_builder.cpp",
+      "${print_path}/services/print_service/src/print_resource_manager.cpp",
+    ]
+
+    include_dirs = [
+      "${print_path}/features/print_failure_ai_notifier/include",
+      "${print_path}/services/print_service/include",
+      "${print_path}/frameworks/models/print_models/include",
+      "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+      "${print_utils_path}/include",
+    ]
+
+    deps = [
+      "${print_path}/frameworks/models/print_models:print_models",
+    ]
+
+    external_deps = [
+      "ability_base:base",
+      "ability_base:want",
+      "bundle_framework:appexecfwk_base",
+      "c_utils:utils",
+      "distributed_notification_service:ans_innerkits",
+      "eventhandler:libeventhandler",
+      "hilog:libhilog",
+      "hisysevent:libhisysevent",
+      "i18n:intl_util",
+      "init:libbegetutil",
+      "ipc:ipc_core",
+      "napi:ace_napi",
+      "resource_management:global_resmgr",
+      "samgr:samgr_proxy",
+      "udmf:udmf_client",
+      "udmf:utd_client",
+      "udmf:libudmf",
+    ]
+
+    cflags_cc = [
+      "-fno-exceptions",
+      "-fdata-sections",
+      "-ffunction-sections",
+      "-fno-asynchronous-unwind-tables",
+      "-fno-unwind-tables",
+      "-flto",
+      "-Os",
+      "-fvisibility=hidden",
+    ]
+
+    output_name = "print_feature_ai_notifier"
+    subsystem_name = "print"
+    part_name = "print_fwk"
+    install_enable = true
+  }
+}
+
+group("print_feature_ai_notifier_service") {
+  deps = []
+  if (print_fwk_feature_print_failure_ai_notifier) {
+    deps += [ ":print_feature_ai_notifier" ]
+  }
+}

@@ -16,34 +16,35 @@
 #ifndef PRINT_FAILURE_AI_NOTIFIER_H
 #define PRINT_FAILURE_AI_NOTIFIER_H
 
-#include <map>
 #include <mutex>
 #include <string>
-#include <set>
+
+#include "i_print_failure_ai_notifier.h"
 
 namespace OHOS::Print {
 
 class PrintFailureAiNotifier {
 public:
-    static PrintFailureAiNotifier& GetInstance();
+    static PrintFailureAiNotifier &GetInstance();
 
-    void HandleJobBlocked(const std::string& jobId, uint32_t subState,
-        const std::string& printerName);
+    void HandleJobBlocked(const std::string &jobId, uint32_t subState,
+        const std::string &printerName);
 
-    void ClearJobState(const std::string& jobId);
+    void ClearJobState(const std::string &jobId);
+
+    void Reset();
 
 private:
-    PrintFailureAiNotifier();
+    PrintFailureAiNotifier() = default;
     ~PrintFailureAiNotifier() = default;
-    PrintFailureAiNotifier(const PrintFailureAiNotifier&) = delete;
-    PrintFailureAiNotifier& operator=(const PrintFailureAiNotifier&) = delete;
+    PrintFailureAiNotifier(const PrintFailureAiNotifier &) = delete;
+    PrintFailureAiNotifier &operator=(const PrintFailureAiNotifier &) = delete;
 
-    std::set<uint32_t> SplitSubState(uint32_t subState);
+    void EnsureLoaded();
 
-    std::map<std::string, std::set<uint32_t>> jobStateMap_;
-    std::mutex jobStateMutex_;
+    std::mutex mutex_;
+    IPrintFailureAiNotifier *impl_ = nullptr;
 };
 
 } // namespace OHOS::Print
-
 #endif // PRINT_FAILURE_AI_NOTIFIER_H
