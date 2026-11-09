@@ -1039,6 +1039,93 @@ HWTEST_F(PrintUtilsExtTest, NormalizeIpv6_006, TestSize.Level2)
     EXPECT_EQ(result, "");
 }
 
+// ==================== ExpandIpv6 Test ====================
+/**
+ * @tc.name: ExpandIpv6_001
+ * @tc.desc: Verify ExpandIpv6 with full uncompressed IPv6 address keeps all hextets 4-digit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_001, TestSize.Level2)
+{
+    std::string ip = "2001:0db8:85a3:0000:0000:8a2e:0370:7334";
+    std::string result = PrintUtils::ExpandIpv6(ip);
+    EXPECT_EQ(result, "2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+}
+
+/**
+ * @tc.name: ExpandIpv6_002
+ * @tc.desc: Verify ExpandIpv6 with compressed IPv6 address fills zero hextets.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_002, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::ExpandIpv6("2001:DB8::1"),
+              "2001:0db8:0000:0000:0000:0000:0000:0001");
+    EXPECT_EQ(PrintUtils::ExpandIpv6("2001:db8::1"),
+              "2001:0db8:0000:0000:0000:0000:0000:0001");
+}
+
+/**
+ * @tc.name: ExpandIpv6_003
+ * @tc.desc: Verify ExpandIpv6 with loopback and unspecified addresses.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_003, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::ExpandIpv6("::1"),
+              "0000:0000:0000:0000:0000:0000:0000:0001");
+    EXPECT_EQ(PrintUtils::ExpandIpv6("::"),
+              "0000:0000:0000:0000:0000:0000:0000:0000");
+}
+
+/**
+ * @tc.name: ExpandIpv6_004
+ * @tc.desc: Verify ExpandIpv6 with scope id preserves the scope part unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_004, TestSize.Level2)
+{
+    std::string ip = "FE80::1%ETH0";
+    std::string result = PrintUtils::ExpandIpv6(ip);
+    EXPECT_EQ(result, "fe80:0000:0000:0000:0000:0000:0000:0001%ETH0");
+}
+
+/**
+ * @tc.name: ExpandIpv6_005
+ * @tc.desc: Verify ExpandIpv6 with invalid IPv6 address returns input unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_005, TestSize.Level2)
+{
+    std::string ip = "not:an:ipv6:address";
+    std::string result = PrintUtils::ExpandIpv6(ip);
+    EXPECT_EQ(result, ip);
+    EXPECT_EQ(PrintUtils::ExpandIpv6("192.168.1.1"), "192.168.1.1");
+}
+
+/**
+ * @tc.name: ExpandIpv6_006
+ * @tc.desc: Verify ExpandIpv6 with empty string.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_006, TestSize.Level2)
+{
+    std::string ip = "";
+    std::string result = PrintUtils::ExpandIpv6(ip);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name: ExpandIpv6_007
+ * @tc.desc: Verify ExpandIpv6 with IPv4-mapped IPv6 address.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintUtilsExtTest, ExpandIpv6_007, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::ExpandIpv6("::ffff:192.168.1.1"),
+              "0000:0000:0000:0000:0000:ffff:c0a8:0101");
+}
+
 // ==================== FormatHostForUri Test ====================
 /**
  * @tc.name: FormatHostForUri_001

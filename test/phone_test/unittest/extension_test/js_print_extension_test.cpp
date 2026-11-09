@@ -354,7 +354,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_V
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_START_DISCOVERY);
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
-    it->second->OnCallback();
+    EXPECT_FALSE(it->second->OnCallback());
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -377,7 +377,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterDiscoveryCb_Lambda_V
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_STOP_DISCOVERY);
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
-    it->second->OnCallback();
+    EXPECT_FALSE(it->second->OnCallback());
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -400,7 +400,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_CONNECT_PRINTER);
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
-    it->second->OnCallback("testPrinterId");
+    EXPECT_FALSE(it->second->OnCallback("testPrinterId"));
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -423,7 +423,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterConnectionCb_Lambda_
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER);
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
-    it->second->OnCallback("testPrinterId");
+    EXPECT_FALSE(it->second->OnCallback("testPrinterId"));
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -447,7 +447,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Va
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
-    it->second->OnCallback(job);
+    EXPECT_FALSE(it->second->OnCallback(job));
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -471,7 +471,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPrintJobCb_Lambda_Va
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
-    it->second->OnCallback(job);
+    EXPECT_FALSE(it->second->OnCallback(job));
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -495,7 +495,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterPreviewCb_Lambda_Val
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
     PrintJob job;
-    it->second->OnCallback(job);
+    EXPECT_FALSE(it->second->OnCallback(job));
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -518,7 +518,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterQueryCapCb_Lambda_Va
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_REQUEST_CAP);
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
-    it->second->OnCallback("testPrinterId");
+    EXPECT_FALSE(it->second->OnCallback("testPrinterId"));
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();
@@ -541,7 +541,7 @@ HWTEST_F(JsPrintExtensionTest, JsPrintExtensionTest_RegisterExtensionCb_Lambda_V
     std::string cid = PrintUtils::EncodeExtensionCid(extPtr->extensionId_, PRINT_EXTCB_DESTROY_EXTENSION);
     auto it = PrintManagerClient::GetInstance().extCallbackMap_.find(cid);
     ASSERT_NE(it, PrintManagerClient::GetInstance().extCallbackMap_.end());
-    it->second->OnCallback();
+    EXPECT_TRUE(it->second->OnCallback());
 
     JsPrintExtension::jsExtension_.reset();
     TearDownProxy();

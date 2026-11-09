@@ -15,8 +15,10 @@
 
 #include <gtest/gtest.h>
 #define private public
+#define protected public
 #include "vendor_ipp_everywhere.h"
 #undef private
+#undef protected
 #include "print_constant.h"
 #include "print_log.h"
 #include "mock/mock_vendor_manager.h"
@@ -65,6 +67,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0001, TestSize.Level1)
     VendorIppEveryWhere vendorDriver;
     EXPECT_EQ(vendorDriver.Init(nullptr), false);
     vendorDriver.OnCreate();
+    EXPECT_TRUE(vendorDriver.opQueue.isRunning);
     ThreadSyncWait syncWait;
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnStartDiscovery();
@@ -72,8 +75,10 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0001, TestSize.Level1)
     vendorDriver.OnStopDiscovery();
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
+    EXPECT_FALSE(vendorDriver.opQueue.isRunning);
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.UnInit();
+    EXPECT_EQ(vendorDriver.vendorManager, nullptr);
 }
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
@@ -96,7 +101,9 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
     EXPECT_FALSE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
+    EXPECT_FALSE(vendorDriver.opQueue.isRunning);
     vendorDriver.UnInit();
+    EXPECT_EQ(vendorDriver.vendorManager, nullptr);
 }
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0003, TestSize.Level2)
@@ -119,7 +126,9 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0003, TestSize.Level2)
     EXPECT_FALSE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
+    EXPECT_FALSE(vendorDriver.opQueue.isRunning);
     vendorDriver.UnInit();
+    EXPECT_EQ(vendorDriver.vendorManager, nullptr);
 }
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0004, TestSize.Level2)
@@ -140,7 +149,9 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0004, TestSize.Level2)
     EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp", ""));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
+    EXPECT_FALSE(vendorDriver.opQueue.isRunning);
     vendorDriver.UnInit();
+    EXPECT_EQ(vendorDriver.vendorManager, nullptr);
 }
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0005, TestSize.Level2)
@@ -176,6 +187,8 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0006, TestSize.Level2)
     EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
     EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
     EXPECT_TRUE(vendorDriver.ConnectPrinter(printerInfo));
+    vendorDriver.UnInit();
+    EXPECT_EQ(vendorDriver.vendorManager, nullptr);
 }
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0007, TestSize.Level2)
@@ -189,6 +202,8 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0007, TestSize.Level2)
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
     EXPECT_FALSE(vendorDriver.UpdateCapability(printerInfo));
     EXPECT_TRUE(vendorDriver.UpdateCapability(printerInfo));
+    vendorDriver.UnInit();
+    EXPECT_EQ(vendorDriver.vendorManager, nullptr);
 }
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
@@ -197,6 +212,8 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
     std::string printerId = "test";
     Print_PrinterState state = Print_PrinterState::PRINTER_UNAVAILABLE;
     vendorDriver.OnPrinterStateQueried(printerId, state);
+    EXPECT_EQ(vendorDriver.vendorStatusMap.find(printerId), vendorDriver.vendorStatusMap.end())
+        << "vendorStatusMap should not contain unmonitored printer";
     EXPECT_FALSE(vendorDriver.OnQueryCapability(printerId, 0));
     EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(printerId, "", ""));
     std::vector<std::string> propertyKeys;

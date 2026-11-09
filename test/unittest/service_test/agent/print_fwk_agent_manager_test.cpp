@@ -28,8 +28,8 @@
 #include "agent/print_fwk_agent_client_api.h"
 #include "agent/print_fwk_agent_host.h"
 #include "agent/print_fwk_agent_manager.h"
+#include "print_data_repository.h"
 #include "print_json_util.h"
-#include "print_system_data.h"
 #include "vendor_manager.h"
 
 using namespace OHOS::Print;
@@ -299,13 +299,15 @@ public:
 
     void SetUp() override
     {
+        repository_ = &PrintDataRepository::GetInstance();
+        repository_->Init();
         manager = &PrintFwkAgentManager::GetInstance();
         manager->Shutdown();
         ResetFakeLoaderState();
         api = CreateFakeLoaderApi();
         auto loader = std::make_unique<PrintFwkAgentClientLoader>();
         loader->SetApiForTest(&api, &g_fakeClient);
-        ASSERT_TRUE(manager->Init(systemData, host, BuildDelayedTaskPoster(), std::move(loader),
+        ASSERT_TRUE(manager->Init(*repository_, host, BuildDelayedTaskPoster(), std::move(loader),
             [this]() { return now; }));
     }
 
@@ -321,7 +323,7 @@ public:
     }
 
 protected:
-    PrintSystemData systemData;
+    PrintDataRepository *repository_ = nullptr;
     VendorManager vendorManager;
     FakeAgentHost host;
     PrintFwkAgentClientApi api {};
@@ -340,7 +342,7 @@ public:
     }
 };
 
-void InsertAddedPrinter(PrintSystemData &systemData, const std::string &printerId,
+void InsertAddedPrinter(PrintDataRepository &repository, const std::string &printerId,
     const std::string &printerName, const std::string &uri, const std::string &option)
 {
     PrinterInfo info;
@@ -348,7 +350,7 @@ void InsertAddedPrinter(PrintSystemData &systemData, const std::string &printerI
     info.SetPrinterName(printerName);
     info.SetUri(uri);
     info.SetOption(option);
-    systemData.InsertAddedPrinter(printerId, info);
+    repository.InsertAddedPrinter(printerId, info);
 }
 
 bool ClaimPendingPrinter(
@@ -404,7 +406,7 @@ TEST_F(PrintFwkAgentManagerTest, PersistedAgentPrinterDrivesBestEffortBackendAnd
     EXPECT_EQ(manager->EnsureBackendReadyForPersistedPrinters(), E_PRINT_NONE);
     EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 0u);
 
-    InsertAddedPrinter(systemData, "agent-id", "Agent Printer", "ipp://10.0.0.1/printers/agent",
+    InsertAddedPrinter(*repository_, "agent-id", "Agent Printer", "ipp://10.0.0.1/printers/agent",
         R"({"driver":"AGENT"})");
     EXPECT_EQ(manager->EnsureBackendReadyForPersistedPrinters(), E_PRINT_NONE);
     EXPECT_EQ(g_fakeLoaderState.ensureBackendReadyCallCount, 1u);
@@ -456,7 +458,7 @@ TEST_F(PrintFwkAgentManagerTest, ShutdownInvalidatesOldKeepaliveTaskAcrossReinit
     manager->Shutdown();
     auto loader = std::make_unique<PrintFwkAgentClientLoader>();
     loader->SetApiForTest(&api, &g_fakeClient);
-    ASSERT_TRUE(manager->Init(systemData, host, BuildDelayedTaskPoster(), std::move(loader),
+    ASSERT_TRUE(manager->Init(*repository_, host, BuildDelayedTaskPoster(), std::move(loader),
         [this]() { return now; }));
     manager->StartAgentBackendKeepalive("new-job");
     ASSERT_EQ(delayedTasks.size(), 1u);
@@ -472,12 +474,13 @@ TEST_F(PrintFwkAgentManagerTest, ShutdownInvalidatesOldKeepaliveTaskAcrossReinit
 TEST(PrintFwkAgentManagerLifecycleTest, InitFailureKeepsManagerStopped)
 {
     auto loader = std::make_unique<FailingPrintFwkAgentClientLoader>();
-    PrintSystemData systemData;
+    PrintDataRepository &repository = PrintDataRepository::GetInstance();
+    repository.Init();
     FakeAgentHost host;
     auto &manager = PrintFwkAgentManager::GetInstance();
     manager.Shutdown();
 
-    EXPECT_FALSE(manager.Init(systemData, host,
+    EXPECT_FALSE(manager.Init(repository, host,
         [](PrintFwkAgentManager::DelayedTask, const std::string &, int64_t) { return true; },
         std::move(loader)));
     EXPECT_FALSE(manager.IsRunning());
@@ -515,11 +518,11 @@ TEST_F(PrintFwkAgentManagerTest, TryAddPrinterRoutesOnlyValidSystemAgentRequest)
 
 TEST_F(PrintFwkAgentManagerTest, IsAgentRoutedPrinterByNameRequiresSystemAgentPrinter)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Agent Printer", "ipp://10.0.0.1/printers/agent",
+    InsertAddedPrinter(*repository_, "agent-id", "Agent Printer", "ipp://10.0.0.1/printers/agent",
         R"({"driver":"AGENT"})");
-    InsertAddedPrinter(systemData, "raw-id", "Raw Printer", "ipp://10.0.0.2/printers/raw",
+    InsertAddedPrinter(*repository_, "raw-id", "Raw Printer", "ipp://10.0.0.2/printers/raw",
         R"({"driver":"RAW"})");
-    InsertAddedPrinter(systemData, "bad-id", "Bad Printer", "ipp://10.0.0.3/printers/bad", "not json");
+    InsertAddedPrinter(*repository_, "bad-id", "Bad Printer", "ipp://10.0.0.3/printers/bad", "not json");
 
     host.isSystemApp = true;
     EXPECT_TRUE(manager->IsAgentRoutedPrinterByName("Agent Printer"));
@@ -576,7 +579,7 @@ TEST_F(PrintFwkAgentManagerTest, AddSynchronousDoneKeepsParametersAliveAndComple
 
 TEST_F(PrintFwkAgentManagerTest, DeleteBuildsParametersAndSuccessCommits)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Renamed Printer", TIMESTAMPED_IPP_URI,
+    InsertAddedPrinter(*repository_, "agent-id", "Renamed Printer", TIMESTAMPED_IPP_URI,
         R"({"driver":"AGENT","agent":{"queueName":"Office_Printer_1786320000",)"
         R"("uri":"ipp://10.0.0.1","backendType":"TEST_BACKEND"}})");
 
@@ -608,11 +611,11 @@ TEST_F(PrintFwkAgentManagerTest, DeleteSuccessReleasesSourceForLaterReadd)
     added.SetPrinterName("Office Printer");
     added.SetUri(TIMESTAMPED_IPP_URI);
     ASSERT_TRUE(manager->AttachPendingAgentPrinter(added));
-    systemData.InsertAddedPrinter(added.GetPrinterId(), added);
+    repository_->InsertAddedPrinter(added.GetPrinterId(), added);
 
     EXPECT_EQ(manager->DeletePrinterFromAgent(added.GetPrinterName()), E_PRINT_NONE);
     CompleteRemove(PRINT_FWK_AGENT_CLIENT_OK);
-    systemData.DeleteAddedPrinter(added.GetPrinterId(), added.GetPrinterName());
+    repository_->DeleteAddedPrinter(added.GetPrinterId(), added.GetPrinterName());
 
     EXPECT_EQ(manager->AddPrinterViaAgent("Office Printer", sourceUri, VALID_AGENT_OPTIONS), E_PRINT_NONE);
     EXPECT_EQ(g_fakeLoaderState.addCallCount, 2u);
@@ -620,7 +623,7 @@ TEST_F(PrintFwkAgentManagerTest, DeleteSuccessReleasesSourceForLaterReadd)
 
 TEST_F(PrintFwkAgentManagerTest, DeleteDoneFailureIsIdempotent)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
+    InsertAddedPrinter(*repository_, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
         R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
 
@@ -632,7 +635,7 @@ TEST_F(PrintFwkAgentManagerTest, DeleteDoneFailureIsIdempotent)
 
 TEST_F(PrintFwkAgentManagerTest, DeleteNotFoundContinuesLocalDeletion)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
+    InsertAddedPrinter(*repository_, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
         R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
 
@@ -646,20 +649,20 @@ TEST_F(PrintFwkAgentManagerTest, DeleteNotFoundContinuesLocalDeletion)
 
 TEST_F(PrintFwkAgentManagerTest, DeleteRejectsInvalidPersistedMetadata)
 {
-    InsertAddedPrinter(systemData, "missing-id", "Missing Queue", "ipp://10.0.0.1/printers/missing",
+    InsertAddedPrinter(*repository_, "missing-id", "Missing Queue", "ipp://10.0.0.1/printers/missing",
         R"({"driver":"AGENT","agent":{"backendType":"TEST_BACKEND"}})");
-    InsertAddedPrinter(systemData, "type-id", "Type Queue", "ipp://10.0.0.1/printers/type",
+    InsertAddedPrinter(*repository_, "type-id", "Type Queue", "ipp://10.0.0.1/printers/type",
         R"({"driver":"AGENT","agent":{"queueName":123,"backendType":"TEST_BACKEND"}})");
-    InsertAddedPrinter(systemData, "empty-id", "Empty Queue", "ipp://10.0.0.1/printers/empty",
+    InsertAddedPrinter(*repository_, "empty-id", "Empty Queue", "ipp://10.0.0.1/printers/empty",
         R"({"driver":"AGENT","agent":{"queueName":"","backendType":"TEST_BACKEND"}})");
 
-    InsertAddedPrinter(systemData, "missing-backend-id", "Missing Backend",
+    InsertAddedPrinter(*repository_, "missing-backend-id", "Missing Backend",
         "ipp://10.0.0.1/printers/missing",
         R"({"driver":"AGENT","agent":{"queueName":"Missing_1786320000"}})");
-    InsertAddedPrinter(systemData, "type-backend-id", "Type Backend",
+    InsertAddedPrinter(*repository_, "type-backend-id", "Type Backend",
         "ipp://10.0.0.1/printers/type",
         R"({"driver":"AGENT","agent":{"queueName":"Type_1786320000","backendType":123}})");
-    InsertAddedPrinter(systemData, "empty-backend-id", "Empty Backend",
+    InsertAddedPrinter(*repository_, "empty-backend-id", "Empty Backend",
         "ipp://10.0.0.1/printers/empty",
         R"({"driver":"AGENT","agent":{"queueName":"Empty_1786320000","backendType":""}})");
 
@@ -674,7 +677,7 @@ TEST_F(PrintFwkAgentManagerTest, DeleteRejectsInvalidPersistedMetadata)
 
 TEST_F(PrintFwkAgentManagerTest, DeleteImmediateFailureDoesNotRetainCallback)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
+    InsertAddedPrinter(*repository_, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
         R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
     g_fakeLoaderState.removeReturn = PRINT_FWK_AGENT_CLIENT_ERR_RPC;
@@ -687,7 +690,7 @@ TEST_F(PrintFwkAgentManagerTest, DeleteImmediateFailureDoesNotRetainCallback)
 
 TEST_F(PrintFwkAgentManagerTest, DeleteSynchronousDoneKeepsParametersAliveAndCompletesOnce)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
+    InsertAddedPrinter(*repository_, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
         R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
     g_fakeLoaderState.completeRemoveSynchronously = true;
@@ -813,7 +816,7 @@ TEST_F(PrintFwkAgentManagerTest, AddDoneSuccessCopiesCallbackResultAndNotifiesPe
     Json::Value progress = GetAgentAddProgress(host.lastInfo);
     EXPECT_EQ(progress["stage"].asString(), "DONE");
     EXPECT_EQ(progress["status"].asString(), "PENDING_DISCOVERY");
-    EXPECT_TRUE(systemData.QueryAddedPrinterIdList().empty());
+    EXPECT_TRUE(repository_->QueryAddedPrinterIdList().empty());
     PrinterInfo claimedPrinter;
     EXPECT_TRUE(ClaimPendingPrinter(*manager, ippUri, &claimedPrinter));
     EXPECT_EQ(claimedPrinter.GetPrinterName(), "Office Printer");
@@ -914,7 +917,7 @@ TEST_F(PrintFwkAgentManagerTest, DuplicatePendingSourceReplaysDiscoveryUsingEqui
 
 TEST_F(PrintFwkAgentManagerTest, DuplicatePersistedSourceNotifiesPrinterExists)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", TIMESTAMPED_IPP_URI,
+    InsertAddedPrinter(*repository_, "agent-id", "Office Printer", TIMESTAMPED_IPP_URI,
         R"({"driver":"AGENT","agent":)"
         R"({"queueName":"Office_Printer_1786320000",)"
         R"("sourceUri":"ipp://192.168.1.10:631/printers/office",)"
@@ -1243,7 +1246,7 @@ TEST_F(PrintFwkAgentManagerTest, ShutdownStopsPendingAddBusinessSubmission)
 
 TEST_F(PrintFwkAgentManagerTest, ShutdownStopsPendingRemoveBusinessSubmission)
 {
-    InsertAddedPrinter(systemData, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
+    InsertAddedPrinter(*repository_, "agent-id", "Office Printer", "ipp://10.0.0.1/printers/office",
         R"({"driver":"AGENT","agent":)"
         R"({"queueName":"Agent_Original_1786320000","backendType":"TEST_BACKEND"}})");
     EXPECT_EQ(manager->DeletePrinterFromAgent("Office Printer"), E_PRINT_NONE);
@@ -1269,9 +1272,10 @@ TEST(PrintFwkAgentManagerLifecycleTest, RepeatedShutdownUnloadsInjectedLoaderOnl
     auto loader = std::make_unique<PrintFwkAgentClientLoader>();
     loader->SetApiForTest(&api, &g_fakeClient);
 
-    PrintSystemData systemData;
+    PrintDataRepository &repository = PrintDataRepository::GetInstance();
+    repository.Init();
     FakeAgentHost host;
-    EXPECT_TRUE(manager.Init(systemData, host,
+    EXPECT_TRUE(manager.Init(repository, host,
         [](PrintFwkAgentManager::DelayedTask, const std::string &, int64_t) { return true; },
         std::move(loader)));
     EXPECT_TRUE(manager.IsRunning());

@@ -20,10 +20,13 @@
 #include "scan_constant.h"
 
 bool g_mockGetRefReturnNonNull = false;
+int32_t g_napiGetReferenceCallCount = 0;
+int32_t g_napiDeleteReferenceCallCount = 0;
 
 namespace OHOS::Scan {
 napi_value NapiScanUtils::GetReference(napi_env env, napi_ref callbackRef)
 {
+    g_napiGetReferenceCallCount++;
     if (g_mockGetRefReturnNonNull) {
         return reinterpret_cast<napi_value>(1);
     }
@@ -33,5 +36,10 @@ napi_value NapiScanUtils::GetReference(napi_env env, napi_ref callbackRef)
     napi_value callback = nullptr;
     SCAN_CALL(env, napi_get_reference_value(env, callbackRef, &callback));
     return callback;
+}
+
+void NapiScanUtils::DeleteReference(napi_env env, napi_ref callbackRef)
+{
+    g_napiDeleteReferenceCallCount++;
 }
 }

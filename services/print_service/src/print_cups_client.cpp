@@ -43,6 +43,7 @@
 #include "parameter.h"
 #include <json/json.h>
 #include "print_service_ability.h"
+#include "print_data_repository.h"
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
 #include "agent/print_fwk_agent_manager.h"
 #endif
@@ -1984,7 +1985,7 @@ void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monito
         return;
     }
     PrinterInfo addedPrinterInfo;
-    if (!PrintServiceAbility::GetInstance()->QueryAddedPrinterInfoByPrinterId(
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(
         monitorParams->printerId, addedPrinterInfo)) {
         PRINT_HILOGW("[Job Id: %{public}s] cannot find printer by printerId", monitorParams->serviceJobId.c_str());
     }
@@ -2626,7 +2627,7 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter || isIPPOverUsbPrinter)
         && monitorParams->serviceAbility != nullptr) {
         if ((isUsbPrinter && CheckUsbPrinterOnline(printerUri)) ||
-            monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
+            PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
             PRINT_HILOGI("printer online");
             return true;
         } else {
@@ -2875,7 +2876,7 @@ void PrintCupsClient::FillPrintSharedDir(JobParameters *params)
     }
     std::string bundleName;
     PrinterInfo printerInfo;
-    if (PrintServiceAbility::GetInstance()->QueryAddedPrinterInfoByPrinterId(params->printerId, printerInfo)) {
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(params->printerId, printerInfo)) {
         PpdInfo selectedDriverInfo;
         printerInfo.GetSelectedDriver(selectedDriverInfo);
         std::string ppdName = selectedDriverInfo.GetPpdName();
@@ -3090,7 +3091,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *standar
             printerExist = (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr);
         } else {
             // vendor ppd need to be checked
-            if (!PrintServiceAbility::GetInstance()->IsPrinterPpdUpdateRequired(
+            if (!PrintDataRepository::GetInstance().IsPrinterPpdUpdateRequired(
                 standardPrinterName, GetPpdHashCode(ppdName))) {
                 printerExist = true;
                 PRINT_HILOGD("no need to update ppd");

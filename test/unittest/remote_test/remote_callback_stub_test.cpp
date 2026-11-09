@@ -57,7 +57,12 @@ void RemoteCallbackStubTest::TearDown(void)
 HWTEST_F(RemoteCallbackStubTest, Constructor_001, TestSize.Level1)
 {
     RemoteCallbackStub stub;
-    EXPECT_TRUE(true);
+    auto statusIt = stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS));
+    auto listIt = stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST));
+    EXPECT_NE(statusIt, stub.cmdMap_.end());
+    EXPECT_NE(listIt, stub.cmdMap_.end());
+    EXPECT_NE(statusIt->second, nullptr);
+    EXPECT_NE(listIt->second, nullptr);
 }
 
 /**

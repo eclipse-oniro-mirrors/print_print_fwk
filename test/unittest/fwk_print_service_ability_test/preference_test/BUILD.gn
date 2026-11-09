@@ -27,6 +27,7 @@ ohos_unittest("fwk_print_service_ability_preference_test") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/services/print_service/include",
     "${print_path}/services/print_service/include/event_callback",
+    "${print_path}/services/print_service/enterprise/include",
     "${print_utils_path}/include",
   ]
 
@@ -90,6 +91,7 @@ ohos_unittest("fwk_print_service_ability_preference_test") {
   cflags_cc = []
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    include_dirs += [ "${print_path}/services/print_service/enterprise/include" ]
   }
 
   if (print_fwk_feature_virtual_printer) {

@@ -30,7 +30,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008_NeedRename, TestS
     std::string printerId = "1234";
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
+    info->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
     service->ConnectPrinter(printerId);
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_NONE);
 }
@@ -41,7 +42,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009_NeedRename, TestS
     std::string printerId = "1234";
     EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
+    info->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
     service->DisconnectPrinter(printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
@@ -105,7 +107,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
     info->SetPrinterId("com.ohos.spooler:mdns://testId");
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_INVALID_PRINTER);
     PrinterInfo printer;
-    service->printSystemData_.InsertAddedPrinter(info->GetPrinterId(), printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(info->GetPrinterId(), printer);
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_NONE);
 }
 
@@ -116,7 +118,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinter_UsbPrinterId_InvalidPrinter, Te
     PrinterInfo info;
     info.SetPrinterId(printerId);
     auto infoPtr = std::make_shared<PrinterInfo>(info);
-    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
     EXPECT_EQ(service->ConnectPrinter(info.GetPrinterId()), E_PRINT_INVALID_PRINTER);
 }
 
@@ -127,7 +129,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_NoMake_InvalidPrinter, TestS
     PrinterInfo info;
     info.SetPrinterId(printerId);
     auto infoPtr = std::make_shared<PrinterInfo>(info);
-    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
     EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_INVALID_PRINTER);
 }
 
@@ -139,7 +141,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_HasMake_ServerFailure, TestS
     info.SetPrinterId(printerId);
     info.SetPrinterMake("testMake");
     auto infoPtr = std::make_shared<PrinterInfo>(info);
-    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
     EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_SERVER_FAILURE);
 }
 
@@ -184,13 +186,13 @@ HWTEST_F(PrintServiceAbilityTest, RefreshIpPrinterToIdle, TestSize.Level1)
     ipInfo.SetPrinterName(ip);
     ipInfo.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
  
-    service->printSystemData_.InsertAddedPrinter(id, info);
-    service->printSystemData_.InsertAddedPrinter(ip, ipInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(ip, ipInfo);
  
     service->RefreshIpPrinter();
  
-    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, info);
-    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(ip, ipInfo);
+    PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(id, info);
+    PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(ip, ipInfo);
  
     EXPECT_EQ(info.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
     EXPECT_EQ(ipInfo.GetPrinterStatus(), PRINTER_STATUS_IDLE);
@@ -213,7 +215,8 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_PrinterExistAndUriEmp
     auto existingPrinterInfo = std::make_shared<PrinterInfo>();
     existingPrinterInfo->SetPrinterId("printer_001");
     existingPrinterInfo->SetUri("");
-    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = existingPrinterInfo;
+existingPrinterInfo->SetPrinterId(globalPrinterId);
+    PrintDataRepository::GetInstance().AddIpPrinterToList(existingPrinterInfo);
     PrinterInfo info;
     info.SetPrinterId("printer_001");
     info.SetUri("");
@@ -229,7 +232,8 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_PrinterExistAndUriSam
     auto existingPrinterInfo = std::make_shared<PrinterInfo>();
     existingPrinterInfo->SetPrinterId("printer_001");
     existingPrinterInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
-    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = existingPrinterInfo;
+existingPrinterInfo->SetPrinterId(globalPrinterId);
+    PrintDataRepository::GetInstance().AddIpPrinterToList(existingPrinterInfo);
     PrinterInfo info;
     info.SetPrinterId("printer_001");
     info.SetUri("ipp://192.168.1.1:631/printers/printer1");
@@ -245,7 +249,8 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToSystemData_UriDifferent_ShouldRe
     auto existingPrinterInfo = std::make_shared<PrinterInfo>();
     existingPrinterInfo->SetPrinterId("printer_001");
     existingPrinterInfo->SetUri("ipp://192.168.1.1:631/printers/printer1");
-    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = existingPrinterInfo;
+existingPrinterInfo->SetPrinterId(globalPrinterId);
+    PrintDataRepository::GetInstance().AddIpPrinterToList(existingPrinterInfo);
     PrinterInfo info;
     info.SetPrinterId("printer_001");
     info.SetUri("ipp://192.168.1.2:631/printers/printer2");
@@ -270,10 +275,9 @@ HWTEST_F(PrintServiceAbilityTest, SyncAddedPrinterUri_PrinterNotInAddedMap_Shoul
     info.SetPrinterName("TestPrinter_001");
     info.SetUri("ipp://test.local:631/printers/TestPrinter_001");
 
-    service->SyncAddedPrinterUri(std::make_shared<PrinterInfo>(info));
+    service->SyncAddedPrinterUri(info);
 
-    auto addedPrinter = service->printSystemData_.GetAddedPrinterMap().Find(globalPrinterId);
-    EXPECT_EQ(addedPrinter, nullptr);
+    EXPECT_FALSE(PrintDataRepository::GetInstance().IsPrinterAdded(globalPrinterId));
 }
 
 /**
@@ -294,17 +298,17 @@ HWTEST_F(PrintServiceAbilityTest, SyncAddedPrinterUri_PrinterInAddedMap_ShouldCh
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(originalUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     PrinterInfo newInfo;
     newInfo.SetPrinterId("TestPrinter_001");
     newInfo.SetPrinterName("TestPrinter_001");
     newInfo.SetUri("ipp://test2.local:631/printers/TestPrinter_001");
 
-    service->SyncAddedPrinterUri(std::make_shared<PrinterInfo>(newInfo));
+    service->SyncAddedPrinterUri(newInfo);
 
-    auto printerAfterSync = service->printSystemData_.GetAddedPrinterMap().Find(globalPrinterId);
-    ASSERT_NE(printerAfterSync, nullptr);
+    PrinterInfo printerAfterSync;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerAfterSync));
 }
 
 /**
@@ -325,18 +329,18 @@ HWTEST_F(PrintServiceAbilityTest, SyncAddedPrinterUri_PrinterInAddedMapWithSameU
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(originalUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     PrinterInfo newInfo;
     newInfo.SetPrinterId("TestPrinter_001");
     newInfo.SetPrinterName("TestPrinter_001");
     newInfo.SetUri(originalUri);
 
-    service->SyncAddedPrinterUri(std::make_shared<PrinterInfo>(newInfo));
+    service->SyncAddedPrinterUri(newInfo);
 
-    auto printerAfterSync = service->printSystemData_.GetAddedPrinterMap().Find(globalPrinterId);
-    ASSERT_NE(printerAfterSync, nullptr);
-    EXPECT_EQ(printerAfterSync->GetUri(), originalUri);
+    PrinterInfo printerAfterSync;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerAfterSync));
+    EXPECT_EQ(printerAfterSync.GetUri(), originalUri);
 }
 
 /**
@@ -355,7 +359,8 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_PrinterNotInAddedMap_
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri("ipp://test.local:631/printers/TestPrinter_001");
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
     EXPECT_FALSE(result);
 }
 
@@ -376,14 +381,15 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_EmptyProtocol_ShouldR
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri("invalid_uri_without_protocol");
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri("ipp://test.local:631/printers/TestPrinter_001");
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
 #ifdef PHONE_ISOLATION_ENABLE
     EXPECT_TRUE(result);
 #else
@@ -409,14 +415,15 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_UriChanged_ShouldRetu
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(oldUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri("ipp://test2.local:631/printers/TestPrinter_001");
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
     EXPECT_TRUE(result);
 }
 
@@ -438,14 +445,15 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_UriSame_ShouldReturnF
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(sameUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri(sameUri);
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
     EXPECT_FALSE(result);
 }
 #ifdef PHONE_ISOLATION_ENABLE
@@ -468,14 +476,15 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_MacroEnabled_UriChang
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(oldUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri("ipp://test2.local:631/printers/TestPrinter_001");
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
     EXPECT_TRUE(result);
 }
 
@@ -497,14 +506,15 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_MacroEnabled_UriSame_
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(sameUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri(sameUri);
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
     EXPECT_FALSE(result);
 }
 
@@ -527,14 +537,15 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrinterUriDifferent_MacroEnabled_ShouldNo
     addedPrinterInfo->SetPrinterId(globalPrinterId);
     addedPrinterInfo->SetPrinterName("TestPrinter_001");
     addedPrinterInfo->SetUri(oldUri);
-    service->printSystemData_.GetAddedPrinterMap().Insert(globalPrinterId, addedPrinterInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinterInfo);
 
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(globalPrinterId);
     printerInfo->SetPrinterName("TestPrinter_001");
     printerInfo->SetUri(originalUri);
 
-    bool result = service->CheckPrinterUriDifferent(printerInfo);
+    std::string effectiveUri;
+    bool result = service->CheckPrinterUriDifferent(*printerInfo, effectiveUri);
     EXPECT_TRUE(result);
     EXPECT_EQ(printerInfo->GetUri(), originalUri);
 }
@@ -582,7 +593,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectRemotePrinter_printer_added, TestSize.L
     info.SetUri("ipp://192.168.1.1:631/printers/test");
 
     EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_NONE);
-    service->printSystemData_.addedPrinterMap_.Insert(globalId, std::make_shared<PrinterInfo>(info));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, std::make_shared<PrinterInfo>(info));
     EXPECT_EQ(service->ConnectRemotePrinter(globalId), E_PRINT_NONE);
 }
 
@@ -628,7 +639,7 @@ HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_added, TestSize.Level1)
     info.SetAlias(printerId);
     info.SetUri("ipp://192.168.1.1:631/printers/test");
 
-    service->printSystemData_.addedPrinterMap_.Insert(globalId, std::make_shared<PrinterInfo>(info));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, std::make_shared<PrinterInfo>(info));
     EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_NONE);
 }
 
@@ -646,7 +657,7 @@ HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_changeAlias, TestSize.Lev
     info.SetAlias(printerId);
     info.SetUri("ipp://192.168.1.1:631/printers/test");
 
-    service->printSystemData_.addedPrinterMap_.Insert(globalId, std::make_shared<PrinterInfo>(info));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, std::make_shared<PrinterInfo>(info));
     info.SetAlias(globalId);
     EXPECT_EQ(service->AddRemotePrinterInfo(info, extensionId), E_PRINT_NONE);
 }

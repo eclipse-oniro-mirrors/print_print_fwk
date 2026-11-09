@@ -32,7 +32,7 @@ HWTEST_F(PrintServiceAbilityTest, DeletePrinterFromUserData_DeletesUserPreferenc
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName(standardizedPrinterName);
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
 
     std::shared_ptr<PrintUserData> userData1 = std::make_shared<PrintUserData>();
     userData1->SetUserId(userId1);
@@ -84,7 +84,7 @@ HWTEST_F(PrintServiceAbilityTest, SetPrinterPreference_AddedPrinterId_NoError, T
     info.SetPrinterId(printerId);
     PrinterPreferences preferences;
     preferences.SetBorderless(true);
-    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_NONE);
 }
 
@@ -248,13 +248,13 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_NoUserData,
     PrinterPreferences prefs;
     prefs.SetDefaultDuplexMode(DUPLEX_MODE_LONG_EDGE);
     info.SetPreferences(prefs);
-    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     service->currentUserId_ = 100;
     PrinterPreferences result;
     int32_t ret = service->GetPrinterPreference(printerId, result);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(result.GetDefaultDuplexMode(), DUPLEX_MODE_LONG_EDGE);
-    service->printSystemData_.DeleteAddedPrinter(printerId, "Test Printer");
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, "Test Printer");
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_UserDataExists_NoUserPrefs, TestSize.Level1)
@@ -274,7 +274,7 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_UserDataExi
     PrinterPreferences prefs;
     prefs.SetDefaultColorMode(PRINT_COLOR_MODE_COLOR);
     info.SetPreferences(prefs);
-    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     service->currentUserId_ = userId;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
@@ -282,7 +282,7 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists_UserDataExi
     int32_t ret = service->GetPrinterPreference(printerId, result);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(result.GetDefaultColorMode(), PRINT_COLOR_MODE_COLOR);
-    service->printSystemData_.DeleteAddedPrinter(printerId, "Test Printer 2");
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, "Test Printer 2");
 }
 
 HWTEST_F(PrintServiceAbilityTest, ExtractCustomOptionsFromPreferences_EmptyKeys_ReturnsWithoutModify, TestSize.Level1)
@@ -578,7 +578,7 @@ HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_ValidVendorO
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId("test_printer");
     printerInfo.SetPrinterName("test_printer");
-    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter("test_printer", printerInfo);
 
     PrinterPreferences preferences;
     preferences.SetVendorOptions(R"({"printer_field":"printer_value","user_field":"user_value"})");
@@ -624,7 +624,7 @@ HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_EmptyVendorO
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId("test_printer");
     printerInfo.SetPrinterName("test_printer");
-    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter("test_printer", printerInfo);
 
     PrinterPreferences preferences;
     preferences.SetVendorOptions("");
@@ -653,7 +653,7 @@ HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_OnlyPrinterO
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId("test_printer");
     printerInfo.SetPrinterName("test_printer");
-    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter("test_printer", printerInfo);
 
     PrinterPreferences preferences;
     preferences.SetVendorOptions(R"({"printer_field":"value"})");
@@ -682,7 +682,7 @@ HWTEST_F(PrintServiceAbilityTest, ProcessVendorOptionsForPreference_OnlyUserOpti
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId("test_printer");
     printerInfo.SetPrinterName("test_printer");
-    service->printSystemData_.InsertAddedPrinter("test_printer", printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter("test_printer", printerInfo);
 
     PrinterPreferences preferences;
     preferences.SetVendorOptions(R"({"user_field":"user_value"})");

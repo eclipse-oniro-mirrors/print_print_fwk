@@ -29,6 +29,7 @@ ohos_unittest("remote_test") {
     "${_service_path}/include",
     "${_service_path}/include/event_callback",
     "${_service_path}/include/remote",
+    "${print_path}/features/remote_service/include",
     "${print_utils_path}/include",
   ]
 
@@ -40,10 +41,13 @@ ohos_unittest("remote_test") {
   }
 
   sources = [
-    "${_test_path}/unittest/remote_test/remote_printer_manager_test.cpp",
     "${_test_path}/unittest/remote_test/remote_service_adapter_test.cpp",
     "${_test_path}/unittest/remote_test/remote_callback_stub_test.cpp",
     "${_test_path}/unittest/remote_test/print_ipc_connection_test.cpp",
+    "${print_path}/features/remote_service/src/remote_service_adapter.cpp",
+    "${print_path}/features/remote_service/src/remote_callback_stub.cpp",
+    "${print_path}/features/remote_service/src/print_ipc_connection.cpp",
+    "${print_path}/features/remote_service/src/remote_printer_manager_impl.cpp",
   ]
 
   cflags_cc = [
@@ -51,6 +55,7 @@ ohos_unittest("remote_test") {
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    include_dirs += [ "${print_path}/services/print_service/enterprise/include" ]
   }
 
   if (print_fwk_feature_virtual_printer) {
@@ -95,6 +100,7 @@ ohos_unittest("remote_test") {
     "ability_base:want",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:extension_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",

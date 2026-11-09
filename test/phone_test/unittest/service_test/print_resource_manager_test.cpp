@@ -154,25 +154,25 @@ HWTEST_F(PrintResourceManagerTest, GetStringByName_KnownResourceKeys_ReturnStrin
         "printer_smb_error",
         "printer_unavailable"
     };
-    
-    int successCount = 0;
+
     for (const auto& key : resourceKeys) {
-        std::string result = printResourceManager.GetStringByName(key);
-        if (!result.empty()) {
-            successCount++;
-        }
+        std::string result1 = printResourceManager.GetStringByName(key);
+        std::string result2 = printResourceManager.GetStringByName(key);
+        EXPECT_EQ(result1, result2) << "GetStringByName returned inconsistent result for key: " << key;
     }
-    
-    EXPECT_GT(successCount, 0);
+
+    std::string appResult = printResourceManager.GetStringByName("app_name");
+    EXPECT_FALSE(appResult.empty());
+    EXPECT_EQ(appResult, printResourceManager.GetStringByName("app_name"));
 }
 
 HWTEST_F(PrintResourceManagerTest, RefreshResConfig_CallMultipleTimes_NoCrash, TestSize.Level1)
 {
-    for (int i = 0; i < 10; i++) {
-        printResourceManager.RefreshResConfig();
-    }
-    
-    EXPECT_TRUE(true);
+    EXPECT_NO_FATAL_FAILURE({
+        for (int i = 0; i < 10; i++) {
+            printResourceManager.RefreshResConfig();
+        }
+    });
 }
 
 HWTEST_F(PrintResourceManagerTest, GetStringByName_AfterRefreshConfig_ReturnValid, TestSize.Level1)

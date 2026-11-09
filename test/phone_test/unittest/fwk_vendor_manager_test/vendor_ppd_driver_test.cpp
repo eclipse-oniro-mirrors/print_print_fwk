@@ -192,8 +192,11 @@ HWTEST_F(VendorPpdDriverTest, StartAndStopDiscovery_ShouldWorkNormolly, TestSize
     EXPECT_CALL(mock, DiscoverBackendPrinters(_, _))
         .Times(1)
         .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).WillRepeatedly(Return(0));
     vendorDriver.OnStartDiscovery();
     std::this_thread::sleep_for(std::chrono::seconds(10));
+    EXPECT_EQ(vendorDriver.discoveredPrinters_.count("test1"), 1u)
+        << "discoveredPrinters_ should contain the discovered printer id";
     vendorDriver.OnStopDiscovery();
 }
 

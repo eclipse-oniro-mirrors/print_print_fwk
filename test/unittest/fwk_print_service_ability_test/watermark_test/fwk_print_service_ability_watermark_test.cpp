@@ -206,7 +206,7 @@ HWTEST_F(PrintServiceAbilityTest, ReportBlockedAuditEvent_ValidJob_ReportAuditEv
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("SecurityTestPrinter");
     printerInfo.SetUri("ipp://192.168.1.100/ipp/print");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId,
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId,
         std::make_shared<PrinterInfo>(printerInfo));
 
     auto printJob = std::make_shared<PrintJob>();

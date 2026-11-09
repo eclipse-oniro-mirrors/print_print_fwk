@@ -25,6 +25,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/ohprint/include",
     "${_service_path}/print_service/include",
+    "${_service_path}/print_service/enterprise/include",
     "${_service_path}/print_service/include/event_callback",
     "${print_utils_path}/include",
   ]
@@ -48,6 +49,7 @@ ohos_unittest("fwk_vendor_manager_test") {
   cflags_cc = []
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+    include_dirs += [ "${print_path}/services/print_service/enterprise/include" ]
   }
 
   deps = [

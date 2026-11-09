@@ -58,7 +58,12 @@ HWTEST_F(RemotePrinterManagerTest, StartPrinterDiscovery_001, TestSize.Level1)
 {
     RemotePrinterManager manager;
     manager.StartPrinterDiscovery();
+    EXPECT_TRUE(manager.isDiscoveryRunning_.load())
+        << "isDiscoveryRunning_ should be true after first StartPrinterDiscovery";
     manager.StartPrinterDiscovery();
+    EXPECT_TRUE(manager.isDiscoveryRunning_.load())
+        << "isDiscoveryRunning_ should remain true after duplicate StartPrinterDiscovery";
+    manager.StopPrinterDiscovery();
 }
 
 /**
@@ -71,6 +76,11 @@ HWTEST_F(RemotePrinterManagerTest, StartPrinterDiscovery_002, TestSize.Level1)
 {
     RemotePrinterManager manager;
     manager.StartPrinterDiscovery();
+    EXPECT_TRUE(manager.isDiscoveryRunning_.load())
+        << "isDiscoveryRunning_ should be true after StartPrinterDiscovery";
+    EXPECT_TRUE(manager.discoveryThread_.joinable())
+        << "discoveryThread_ should be running after StartPrinterDiscovery";
+    manager.StopPrinterDiscovery();
 }
 
 /**
@@ -270,7 +280,8 @@ HWTEST_F(RemotePrinterManagerTest, GetPrinterInfo_001, TestSize.Level1)
     manager.printerMap_["111"] = std::make_shared<PrinterInfo>(info);
 
     auto retrieved = manager.GetPrinterInfo("111");
-    EXPECT_NE(nullptr, retrieved);
+    ASSERT_NE(nullptr, retrieved);
+    EXPECT_EQ(retrieved->GetPrinterId(), "111") << "retrieved printer id should match the queried id";
 }
 
 /**

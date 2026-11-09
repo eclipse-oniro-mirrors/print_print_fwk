@@ -63,10 +63,17 @@ void WatermarkCallbackProxyTest::TearDown(void)
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_001, TestSize.Level1)
 {
     auto proxy = std::make_shared<WatermarkCallbackProxy>(nullptr);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
-    // Should not crash with null remote
-    proxy->OnCallback("test_job", testFd_);
+    EXPECT_NO_FATAL_FAILURE(proxy->OnCallback("test_job", testFd_));
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(mockRemote, nullptr);
+    EXPECT_CALL(*mockRemote, SendRequest(WATERMARK_CALLBACK_ADD, _, _, _))
+        .Times(1)
+        .WillOnce(Return(ERR_NONE));
+    auto validProxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
+    ASSERT_NE(validProxy, nullptr);
+    validProxy->OnCallback("test_job_after_null", testFd_);
 }
 
 /**
@@ -78,15 +85,22 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_001, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_002, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    uint32_t capturedCode = 0;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Return(ERR_NONE));
+        .Times(1)
+        .WillOnce(Invoke([&capturedCode](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            capturedCode = code;
+            return ERR_NONE;
+        }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     proxy->OnCallback("test_job_001", testFd_);
+    EXPECT_EQ(capturedCode, static_cast<uint32_t>(WATERMARK_CALLBACK_ADD));
 }
 
 /**
@@ -98,16 +112,22 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_002, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_003, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    int32_t capturedRet = ERR_NONE;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Return(ERR_DEAD_OBJECT));
+        .Times(1)
+        .WillOnce(Invoke([&capturedRet](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            capturedRet = ERR_DEAD_OBJECT;
+            return ERR_DEAD_OBJECT;
+        }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
-    // Should not crash when SendRequest fails
     proxy->OnCallback("test_job_003", testFd_);
+    EXPECT_EQ(capturedRet, ERR_DEAD_OBJECT);
 }
 
 /**
@@ -119,21 +139,23 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_003, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_004, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    std::string capturedJobId = "UNSET";
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Invoke([](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            // Verify empty jobId is passed correctly
+        .Times(1)
+        .WillOnce(Invoke([&capturedJobId](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
             data.ReadInterfaceToken();  // Skip interface token
-            std::string jobId = data.ReadString();
-            EXPECT_EQ(jobId, "");
+            capturedJobId = data.ReadString();
             return ERR_NONE;
         }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     proxy->OnCallback("", testFd_);
+    EXPECT_EQ(capturedJobId, "");
 }
 
 /**
@@ -145,17 +167,25 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_004, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_005, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
     std::string longJobId(1000, 'x');
-
+    std::string capturedJobId;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Return(ERR_NONE));
+        .Times(1)
+        .WillOnce(Invoke([&capturedJobId](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            data.ReadInterfaceToken();
+            capturedJobId = data.ReadString();
+            return ERR_NONE;
+        }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     proxy->OnCallback(longJobId, testFd_);
+    EXPECT_EQ(capturedJobId, longJobId);
+    EXPECT_EQ(capturedJobId.size(), 1000);
 }
 
 /**
@@ -167,18 +197,22 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_005, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_006, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    uint32_t capturedCode = 0;
     EXPECT_CALL(*mockRemote, SendRequest(WATERMARK_CALLBACK_ADD, _, _, _))
-        .WillOnce(Invoke([](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            EXPECT_EQ(code, static_cast<uint32_t>(WATERMARK_CALLBACK_ADD));
+        .Times(1)
+        .WillOnce(Invoke([&capturedCode](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            capturedCode = code;
             return ERR_NONE;
         }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     proxy->OnCallback("test_job_code", testFd_);
+    EXPECT_EQ(capturedCode, static_cast<uint32_t>(WATERMARK_CALLBACK_ADD));
 }
 
 /**
@@ -190,18 +224,24 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_006, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_007, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    int callCount = 0;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
         .Times(3)
-        .WillRepeatedly(Return(ERR_NONE));
+        .WillRepeatedly(Invoke([&callCount](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            callCount++;
+            return ERR_NONE;
+        }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     proxy->OnCallback("job_1", testFd_);
     proxy->OnCallback("job_2", testFd_);
     proxy->OnCallback("job_3", testFd_);
+    EXPECT_EQ(callCount, 3);
 }
 
 /**
@@ -213,16 +253,22 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_007, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_008, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    bool sendRequestCalled = false;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Return(ERR_DEAD_OBJECT));
+        .Times(1)
+        .WillOnce(Invoke([&sendRequestCalled](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            sendRequestCalled = true;
+            return ERR_DEAD_OBJECT;
+        }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
-    // Should not crash when remote dies
     proxy->OnCallback("test_job_dead", testFd_);
+    EXPECT_TRUE(sendRequestCalled);
 }
 
 /**
@@ -234,16 +280,22 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_008, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_009, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    int32_t capturedRet = ERR_NONE;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Return(ERR_TIMED_OUT));
+        .Times(1)
+        .WillOnce(Invoke([&capturedRet](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            capturedRet = ERR_TIMED_OUT;
+            return ERR_TIMED_OUT;
+        }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
-    // Should not crash on timeout
     proxy->OnCallback("test_job_timeout", testFd_);
+    EXPECT_EQ(capturedRet, ERR_TIMED_OUT);
 }
 
 /**
@@ -255,19 +307,22 @@ HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_009, 
 HWTEST_F(WatermarkCallbackProxyTest, WatermarkCallbackProxyTest_OnCallback_010, TestSize.Level1)
 {
     auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
-    EXPECT_NE(mockRemote, nullptr);
+    ASSERT_NE(mockRemote, nullptr);
 
+    int capturedFlags = -1;
     EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _))
-        .WillOnce(Invoke([](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            // Verify async option is used
-            EXPECT_EQ(option.GetFlags(), MessageOption::TF_ASYNC);
+        .Times(1)
+        .WillOnce(Invoke([&capturedFlags](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            capturedFlags = option.GetFlags();
             return ERR_NONE;
         }));
 
     auto proxy = std::make_shared<WatermarkCallbackProxy>(mockRemote);
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     proxy->OnCallback("test_job_async", testFd_);
+    EXPECT_EQ(capturedFlags, MessageOption::TF_ASYNC);
 }
 
 }  // namespace Print

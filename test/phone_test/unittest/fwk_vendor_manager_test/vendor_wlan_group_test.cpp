@@ -167,9 +167,17 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0008_NeedRename, TestSize.Leve
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_EQ(vendorWlanGroup->IsConnectingPrinter(printerId, PRINTER_TEST_URI), false);
+    vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
+    EXPECT_EQ(vendorWlanGroup->parentVendorManager->connectingState, STATE_CONNECTING)
+        << "connectingState should be STATE_CONNECTING after SetConnectingPrinter";
+    EXPECT_FALSE(vendorWlanGroup->parentVendorManager->connectingPrinter.empty())
+        << "connectingPrinter should not be empty after SetConnectingPrinter";
+    vendorWlanGroup->parentVendorManager->ClearConnectingPrinter();
+    EXPECT_EQ(vendorWlanGroup->parentVendorManager->connectingState, STATE_NONE)
+        << "connectingState should be STATE_NONE after ClearConnectingPrinter";
     vendorWlanGroup->parentVendorManager = nullptr;
-    EXPECT_EQ(vendorWlanGroup->IsConnectingPrinter(printerId, PRINTER_TEST_URI), false);
+    vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
+    EXPECT_EQ(vendorWlanGroup->parentVendorManager, nullptr);
 }
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009_NeedRename, TestSize.Level2)
@@ -183,6 +191,8 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009_NeedRename, TestSize.Leve
     EXPECT_EQ(vendorWlanGroup->parentVendorManager->connectingState, STATE_CONNECTING);
     vendorWlanGroup->parentVendorManager = nullptr;
     vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
+    EXPECT_EQ(vendorWlanGroup->parentVendorManager, nullptr)
+        << "parentVendorManager should remain null after no-op SetConnectingPrinter";
 }
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010_NeedRename, TestSize.Level2)

@@ -157,10 +157,6 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t Release() override
-    {
-        return E_PRINT_NONE;
-    }
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override
     {
         return E_PRINT_NONE;
@@ -313,6 +309,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t Release() override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -384,6 +384,7 @@ public:
     MOCK_METHOD2(QueryRecommendDriversById, int32_t(const std::string &, std::vector<PpdInfo> &));
     MOCK_METHOD2(NotifyPrintService, int32_t(const std::string &, const std::string &));
     MOCK_METHOD0(StartService, int32_t());
+    MOCK_METHOD0(Release, int32_t());
     MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t(const std::string &, PrinterInfo &));
     MOCK_METHOD1(QueryAddedPrinter, int32_t(std::vector<std::string> &));
     MOCK_METHOD3(QueryPrinterProperties, int32_t(const std::string &, const std::vector<std::string> &,
