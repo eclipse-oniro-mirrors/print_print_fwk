@@ -125,6 +125,7 @@ public:
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
+    void UpdatePrinterStatusByPrinterId(const std::string &printerId, PrinterStatus printerStatus);
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
     int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override;

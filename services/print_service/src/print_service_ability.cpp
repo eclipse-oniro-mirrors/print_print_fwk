@@ -293,6 +293,26 @@ void PrintServiceAbility::UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterS
     SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
 }
 
+void PrintServiceAbility::UpdatePrinterStatusByPrinterId(const std::string &printerId, PrinterStatus printerStatus)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGW("[Printer: %{public}s] not added, skip status update",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return;
+    }
+    if (DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerInfo.GetPrinterName().c_str())) {
+        PRINT_HILOGD("[Printer: %{public}s] ip-added printer, skip status update",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return;
+    }
+    if (static_cast<PrinterStatus>(printerInfo.GetPrinterStatus()) == printerStatus) {
+        return;
+    }
+    UpdatePrinterStatus(printerInfo, printerStatus);
+}
+
 #ifdef VIRTUAL_PRINTER_ENABLE
 bool PrintServiceAbility::RefreshVirtualPrinter()
 {
@@ -4431,6 +4451,11 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
         printerUri = printerInfo->GetUri();
     }
     bool mdnsPrinter = printerId.find("mdns") != string::npos;
+    if (mdnsPrinter && printSystemData_.IsPrinterAdded(printerExtId)) {
+        PRINT_HILOGI("[Printer: %{public}s] added mdns printer, skip remove from discovery",
+            PrintUtils::AnonymizePrinterId(printerExtId).c_str());
+        return E_PRINT_INVALID_PRINTER;
+    }
     const uint32_t waitTime = 1000;
     auto monitorParam = std::make_shared<JobMonitorParam>(nullptr, "", 0, printerUri, "", printerId, nullptr);
     PRINT_HILOGD("[Printer: %{public}s] printer type is %{public}d", printerId.c_str(), mdnsPrinter);

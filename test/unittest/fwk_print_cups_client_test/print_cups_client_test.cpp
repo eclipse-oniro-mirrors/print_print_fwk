@@ -5140,5 +5140,81 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, 
     }
 }
 
+HWTEST_F(PrintCupsClientTest, HasStateReason_ExactTokenMatch, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    EXPECT_TRUE(printCupsClient.HasStateReason("offline-report", "offline-report"));
+    EXPECT_TRUE(printCupsClient.HasStateReason("paused, offline-report", "offline-report"));
+    EXPECT_TRUE(printCupsClient.HasStateReason("\"paused\",\"offline-report\"", "offline-report"));
+    EXPECT_FALSE(printCupsClient.HasStateReason("not-offline-report", "offline-report"));
+    EXPECT_FALSE(printCupsClient.HasStateReason("none", "offline-report"));
+}
+
+HWTEST_F(PrintCupsClientTest, IsDefaultAddedLanPrinter_Classification, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(nullptr));
+    auto param = std::make_shared<JobMonitorParam>(nullptr, TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        "ipp://printer.local/ipp/print", "HP LaserJet", "fwk.driver.bsuni:mdns_test", nullptr);
+    EXPECT_TRUE(printCupsClient.IsDefaultAddedLanPrinter(param));
+    param->printerUri = "lpd://printer.local/queue";
+    EXPECT_TRUE(printCupsClient.IsDefaultAddedLanPrinter(param));
+    param->printerUri = "socket://printer.local:9100";
+    EXPECT_TRUE(printCupsClient.IsDefaultAddedLanPrinter(param));
+    param->printerId = "fwk.driver.ppd:mdns_test";
+    EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(param));
+    param->printerId = "fwk.driver.bsuni:mdns_test";
+    param->printerName = "192.168.0.1";
+    EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(param));
+}
+
+HWTEST_F(PrintCupsClientTest, ParseOfflineEvidence_ThreeStates, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    EXPECT_EQ(printCupsClient.ParseOfflineEvidence(nullptr), OfflineEvidence::UNKNOWN);
+    EXPECT_EQ(printCupsClient.QueryIppOfflineEvidence(nullptr), OfflineEvidence::UNKNOWN);
+    ipp_t *response = ippNew();
+    ASSERT_NE(response, nullptr);
+    EXPECT_EQ(printCupsClient.ParseOfflineEvidence(response), OfflineEvidence::NONE);
+    static const char *const reasons[] = {"paused", "offline-report"};
+    ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", 2, nullptr, reasons);
+    EXPECT_EQ(printCupsClient.ParseOfflineEvidence(response), OfflineEvidence::CONFIRMED);
+    ippDelete(response);
+}
+
+HWTEST_F(PrintCupsClientTest, EvaluatePrinterOffline_UnknownEvidenceSkipsUpdate, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.bsuni:mdns_test", nullptr);
+    std::string resource;
+    EXPECT_EQ(printCupsClient.ConnectToIppPrinter(param, resource), nullptr);
+    printCupsClient.EvaluatePrinterOffline(param, IPP_JOB_PROCESSING, "offline-report");
+    EXPECT_EQ(param->offlineCandidateCount, 1);
+    printCupsClient.EvaluatePrinterOffline(param, IPP_JOB_PROCESSING, "offline-report");
+    EXPECT_EQ(param->offlineCandidateCount, 0);
+    EXPECT_FALSE(param->offlineStatusReported);
+}
+
+HWTEST_F(PrintCupsClientTest, UpdateJobState_UnchangedStateStillEvaluatesOffline, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.bsuni:mdns_test", nullptr);
+    param->job_state = IPP_JOB_PROCESSING;
+    strlcpy(param->job_printer_state_reasons, "offline-report", sizeof(param->job_printer_state_reasons));
+    param->timesOfSameState = 0;
+    param->offlineCandidateCount = 1;
+    ipp_t *response = ippNew();
+    ASSERT_NE(response, nullptr);
+    ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "job-state", IPP_JOB_PROCESSING);
+    ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "job-printer-state-reasons", nullptr,
+        "offline-report");
+    EXPECT_FALSE(printCupsClient.UpdateJobState(param, response));
+    EXPECT_EQ(param->offlineCandidateCount, 0);
+    EXPECT_FALSE(param->offlineStatusReported);
+    ippDelete(response);
+}
+
 }  // namespace Print
 }  // namespace OHOS

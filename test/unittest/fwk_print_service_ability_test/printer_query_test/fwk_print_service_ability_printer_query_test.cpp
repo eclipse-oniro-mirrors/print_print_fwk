@@ -1071,5 +1071,41 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_withDeviceId, 
 }
 #endif
 
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_NonIpPrinterUpdated, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId = "fwk.driver.bsuni:mdns_status_test";
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterId(printerId);
+    printer->SetPrinterName("HP LaserJet");
+    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+
+    service->UpdatePrinterStatusByPrinterId(printerId, PRINTER_STATUS_UNAVAILABLE);
+
+    PrinterInfo result;
+    ASSERT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    service->printSystemData_.addedPrinterMap_.Remove(printerId);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_IpPrinterSkipped, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId = "fwk.driver.bsuni:mdns_ip_status_test";
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterId(printerId);
+    printer->SetPrinterName("192.168.0.1");
+    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+
+    service->UpdatePrinterStatusByPrinterId(printerId, PRINTER_STATUS_UNAVAILABLE);
+
+    PrinterInfo result;
+    ASSERT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+    service->printSystemData_.addedPrinterMap_.Remove(printerId);
+}
+
 }  // namespace Print
 }  // namespace OHOS

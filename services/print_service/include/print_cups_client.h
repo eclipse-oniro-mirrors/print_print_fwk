@@ -79,6 +79,13 @@ enum StatePolicy {
     STATE_POLICY_HINT = 2,
     STATE_POLICY_DELAY = 3,
 };
+
+enum class OfflineEvidence {
+    NONE,
+    CONFIRMED,
+    UNKNOWN,
+};
+
 struct JobStatus {
     char printer_state_reasons[1024];
     ipp_jstate_t job_state;
@@ -100,6 +107,8 @@ struct JobMonitorParam {
     char job_printer_state_message[1024] = {};
     bool isFirstQueryState = true;
     int32_t timesOfSameState = -1;
+    uint32_t offlineCandidateCount = 0;
+    bool offlineStatusReported = false;
     bool isBlock = false;
     uint32_t substate = 0;
     std::string jobOriginatingUserName;
@@ -237,6 +246,15 @@ private:
     bool UpdateJobState(std::shared_ptr<JobMonitorParam> monitorParams, ipp_t *response);
     bool IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleMonitorOffline(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorParam> &monitorParams);
+    static bool HasStateReason(const std::string &reasons, const std::string &expected);
+    OfflineEvidence ParseOfflineEvidence(ipp_t *response);
+    OfflineEvidence QueryIppOfflineEvidence(const std::shared_ptr<JobMonitorParam> &monitorParams);
+    http_t *ConnectToIppPrinter(const std::shared_ptr<JobMonitorParam> &monitorParams, std::string &resource);
+    void EvaluatePrinterOffline(
+        const std::shared_ptr<JobMonitorParam> &monitorParams, ipp_jstate_t jobState,
+        const std::string &printerStateReasons);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams);
