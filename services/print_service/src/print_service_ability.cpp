@@ -4451,11 +4451,6 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
         printerUri = printerInfo->GetUri();
     }
     bool mdnsPrinter = printerId.find("mdns") != string::npos;
-    if (mdnsPrinter && printSystemData_.IsPrinterAdded(printerExtId)) {
-        PRINT_HILOGI("[Printer: %{public}s] added mdns printer, skip remove from discovery",
-            PrintUtils::AnonymizePrinterId(printerExtId).c_str());
-        return E_PRINT_INVALID_PRINTER;
-    }
     const uint32_t waitTime = 1000;
     auto monitorParam = std::make_shared<JobMonitorParam>(nullptr, "", 0, printerUri, "", printerId, nullptr);
     PRINT_HILOGD("[Printer: %{public}s] printer type is %{public}d", printerId.c_str(), mdnsPrinter);

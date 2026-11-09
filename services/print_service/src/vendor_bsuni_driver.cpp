@@ -114,6 +114,21 @@ int32_t VendorBsuniDriver::AddPrinterToDiscovery(const Print_DiscoveryItem *disc
     return EXTENSION_ERROR_NONE;
 }
 
+bool VendorBsuniDriver::ShouldSkipPrinterRemoval(const std::string &printerId)
+{
+    if (g_driverWrapper == nullptr) {
+        return false;
+    }
+    std::string globalPrinterId = g_driverWrapper->GetGlobalPrinterId(printerId);
+    PrinterInfo addedPrinter;
+    auto service = PrintServiceAbility::GetInstance();
+    if (service == nullptr || !service->QueryAddedPrinterInfoByPrinterId(globalPrinterId, addedPrinter)) {
+        return false;
+    }
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    return cupsClient != nullptr && !cupsClient->IsIpAddress(addedPrinter.GetPrinterName().c_str());
+}
+
 int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
 {
     PRINT_HILOGI("BsUni callback RemovePrinterFromDiscovery");
@@ -126,6 +141,11 @@ int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
     if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
+    }
+    if (ShouldSkipPrinterRemoval(*vendorPrinterId)) {
+        PRINT_HILOGI("[Printer: %{public}s] added bsuni printer, skip remove from discovery",
+            PrintUtils::AnonymizePrinterId(*vendorPrinterId).c_str());
+        return EXTENSION_ERROR_NONE;
     }
     auto op = std::bind(&VendorBsuniDriver::OnDiscoveredPrinterRemove, g_driverWrapper, vendorPrinterId);
     if (!g_driverWrapper->opQueue.Push(op)) {

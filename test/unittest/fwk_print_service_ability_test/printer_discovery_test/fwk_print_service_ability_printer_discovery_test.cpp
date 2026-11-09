@@ -866,45 +866,5 @@ HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_NoActiveJob_ShouldSetIdle
     EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, RemovePrinterFromDiscovery_AddedMdnsPrinterSkipped, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string localPrinterId = "mdns_printer_test";
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::string globalPrinterId = PrintUtils::GetGlobalId(extensionId, localPrinterId);
-    auto discoveredPrinter = std::make_shared<PrinterInfo>();
-    discoveredPrinter->SetPrinterId(globalPrinterId);
-    discoveredPrinter->SetUri("ipp://printer.local/ipp/print");
-    service->printSystemData_.discoveredPrinterInfoList_[globalPrinterId] = discoveredPrinter;
-    auto addedPrinter = std::make_shared<PrinterInfo>();
-    addedPrinter->SetPrinterId(globalPrinterId);
-    addedPrinter->SetPrinterName("HP LaserJet");
-    service->printSystemData_.addedPrinterMap_.Insert(globalPrinterId, addedPrinter);
-
-    EXPECT_EQ(service->RemovePrinterFromDiscovery(localPrinterId), E_PRINT_INVALID_PRINTER);
-    EXPECT_NE(service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId), nullptr);
-    PrinterInfo addedResult;
-    ASSERT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, addedResult));
-    EXPECT_EQ(addedResult.GetPrinterStatus(), PRINTER_STATUS_IDLE);
-
-    service->printSystemData_.discoveredPrinterInfoList_.erase(globalPrinterId);
-    service->printSystemData_.addedPrinterMap_.Remove(globalPrinterId);
-}
-
-HWTEST_F(PrintServiceAbilityTest, RemovePrinterFromDiscovery_UnaddedMdnsPrinterRemoved, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string localPrinterId = "mdns_unadded_printer_test";
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    std::string globalPrinterId = PrintUtils::GetGlobalId(extensionId, localPrinterId);
-    auto discoveredPrinter = std::make_shared<PrinterInfo>();
-    discoveredPrinter->SetPrinterId(globalPrinterId);
-    discoveredPrinter->SetUri("");
-    service->printSystemData_.discoveredPrinterInfoList_[globalPrinterId] = discoveredPrinter;
-
-    EXPECT_EQ(service->RemovePrinterFromDiscovery(localPrinterId), E_PRINT_NONE);
-    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId), nullptr);
-}
-
 }  // namespace Print
 }  // namespace OHOS
