@@ -3646,6 +3646,21 @@ HWTEST_F(PrintCupsClientTest, IsIpAddress_InvalidIpv6_Test, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PrintCupsClientTest_IsIpAddress_009
+ * @tc.desc: IsIpAddress with non-link-local IPv6 carrying a scope id must be rejected
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsIpAddress_NonLinkLocalWithScope_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    EXPECT_FALSE(printCupsClient.IsIpAddress("2001:db8::1%lo"));
+    EXPECT_FALSE(printCupsClient.IsIpAddress("::1%lo"));
+    EXPECT_FALSE(printCupsClient.IsIpAddress("fd00::1%lo"));
+    EXPECT_TRUE(printCupsClient.IsIpAddress("fe80::1%lo"));
+}
+
+/**
  * @tc.name: PrintCupsClientTest_QueryInfoByPpdName_001
  * @tc.desc: QueryInfoByPpdName with invalid file name
  * @tc.type: FUNC
