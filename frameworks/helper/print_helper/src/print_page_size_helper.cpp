@@ -61,6 +61,11 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJsEx(napi_env env, 
     }
     PrintPageSize pageSize(id, name, width, height);
     PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
+    // Unified pageId rule: use the standard id when the name hits the local table,
+    // so the job pageId stays consistent with the PPD/IPP capability paths.
+    if (!ret.empty()) {
+        pageSize.SetId(ret);
+    }
     if (ret.empty() && cvtToPwgSize && !pageSize.ConvertToPwgStyle()) {
         PRINT_HILOGE("pwgMedia build fail from JS: %{public}s.", id.c_str());
         return nullptr;

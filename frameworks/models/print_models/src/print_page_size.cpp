@@ -489,9 +489,10 @@ bool PrintPageSize::ConvertToPwgStyle()
         PRINT_HILOGE("pwgMedia Convert fail!");
         return false;
     }
-    std::string ppdName(pwgMedia->ppd);
     std::string pwgName(pwgMedia->pwg);
-    SetId(ppdName);
+    // Unified pageId rule: standard id (e.g. "ISO_A4") when the PWG name hits the local table,
+    // otherwise the PWG name itself, same as ParsePageSizeAttributesFromPPD/PpdAdapter::BuildEntries.
+    SetId(pwgName);
     SetName(pwgName);
 
     PAGE_SIZE_ID matchId = MatchPageSize(pwgName);

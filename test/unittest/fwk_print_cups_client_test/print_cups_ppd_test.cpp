@@ -861,6 +861,54 @@ HWTEST_F(PrintCupsPpdTest, SetOptionAttributeFromPPD_PpdFieldsAtTopLevel, TestSi
     RemoveTempFile(ppdPath);
 }
 
+HWTEST_F(PrintCupsPpdTest, ParsePageSizeAttributesFromPPD_NonStandardSize_UsesPwgNameAsId, TestSize.Level1)
+{
+    std::string content = "*PPD-Adobe: \"4.3\"\n"
+        "*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n"
+        "*Manufacturer: \"Test\"\n"
+        "*ModelName: \"Test Printer\"\n"
+        "*NickName: \"Test Printer\"\n"
+        "*ColorDevice: True\n"
+        "*DefaultColor: Color\n"
+        "*OpenUI PageSize: PickOne\n"
+        "*OrderDependency: 10 AnySetup PageSize\n"
+        "*DefaultPageSize: A4\n"
+        "*PageSize A4/A4: \"<</PageSize[595 842]/ImagingBBox null>>setpagedevice\"\n"
+        "*PageSize Env10/#10 Envelope: \"<</PageSize[297 684]/ImagingBBox null>>setpagedevice\"\n"
+        "*CloseUI: PageSize\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    PrinterCapability printerCaps;
+    ParsePageSizeAttributesFromPPD(ppd, printerCaps);
+
+    std::vector<PrintPageSize> supportedPageSizes;
+    printerCaps.GetSupportedPageSize(supportedPageSizes);
+    ASSERT_EQ(supportedPageSizes.size(), 2);
+
+    bool hasStandardA4 = false;
+    bool hasNonStandardEnv10 = false;
+    for (const auto &pageSize : supportedPageSizes) {
+        if (pageSize.GetName() == "iso_a4_210x297mm") {
+            hasStandardA4 = true;
+            EXPECT_EQ(pageSize.GetId(), "ISO_A4");
+        } else if (pageSize.GetName() == "na_number-10_4.125x9.5in") {
+            hasNonStandardEnv10 = true;
+            EXPECT_EQ(pageSize.GetId(), "na_number-10_4.125x9.5in");
+        }
+    }
+    EXPECT_TRUE(hasStandardA4);
+    EXPECT_TRUE(hasNonStandardEnv10);
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
 HWTEST_F(PrintCupsPpdTest, FillBasicOptions_PpdMode_ConvertsAllDimensions, TestSize.Level1)
 {
     std::string ppdPath = CreatePpdWithAllOptions();

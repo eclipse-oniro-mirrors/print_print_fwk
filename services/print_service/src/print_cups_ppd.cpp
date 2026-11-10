@@ -321,7 +321,9 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
         if (!id.empty()) {
             PrintPageSize::FindPageSizeById(id, dst);
         } else {
-            dst = PrintPageSize(sizeChoice->text, pwgSize.map.pwg,
+            // Unified pageId rule: keep the PWG name as the id for non-standard sizes,
+            // same as PpdAdapter::BuildEntries; never use the localized PPD display text.
+            dst = PrintPageSize(pwgSize.map.pwg, pwgSize.map.pwg,
                 round(pwgSize.width * HUNDRED_OF_MILLIMETRE_TO_INCH / ONE_HUNDRED),
                 round(pwgSize.length * HUNDRED_OF_MILLIMETRE_TO_INCH / ONE_HUNDRED));
         }
