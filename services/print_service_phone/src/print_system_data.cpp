@@ -1567,5 +1567,34 @@ void PrintSystemData::GetWebPrinterListFromSystemData(std::vector<std::string> &
     }
     return;
 }
+
+#ifdef UNIT_TEST
+void PrintSystemData::ResetForTest()
+{
+    addedPrinterMap_.Clear();
+#ifdef ENTERPRISE_ENABLE
+    addedPrinterEnterpriseMap_.Clear();
+    isEnterpriseEnable_.store(false);
+    isEnterprise_.store(false);
+#endif // ENTERPRISE_ENABLE
+
+    {
+        std::lock_guard<std::mutex> lock(discoveredListMutex);
+        discoveredPrinterInfoList_.clear();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+        connectingIpPrinterInfoList_.clear();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(smbPrinterListMutex);
+        discoveredSmbPrinterInfoList_.clear();
+    }
+
+    printEventMap_.Clear();
+}
+#endif // UNIT_TEST
 }  // namespace Print
 }  // namespace OHOS

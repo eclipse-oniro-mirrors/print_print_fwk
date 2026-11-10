@@ -76,7 +76,7 @@ if (print_fwk_feature_device_isolation) {
     "${_service_path}/src/watermark_callback_proxy.cpp",
     "${_service_path}/src/print_feature_plugin_loader.cpp",
     "${_service_path}/src/print_feature_plugin_manager.cpp",
-    "${_service_path}/src/print_failure_ai_notifier_proxy.cpp",
+    "${print_path}/services/print_service/src/print_failure_ai_notifier_proxy.cpp",
     "${_service_path}/src/remote/remote_printer_manager_proxy.cpp",
   ]
 

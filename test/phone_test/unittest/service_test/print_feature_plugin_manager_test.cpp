@@ -14,14 +14,19 @@
  */
 
 #include <gtest/gtest.h>
+#include <chrono>
 #include <climits>
 #include <cstring>
+#include <future>
+#include <thread>
 #include <unistd.h>
 
 #include "i_print_feature.h"
 #include "print_feature_plugin_loader.h"
 #include "print_feature_plugin_manager.h"
 #include "print_feature_type.h"
+#include "remote_printer_manager_impl.h"
+#include "print_failure_ai_notifier_impl.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -54,14 +59,56 @@ std::string GetExeDir()
     return path.substr(0, pos + 1);
 }
 
-std::string GetTestPluginPath()
+std::string JoinPath(const std::string &dir, const std::string &name)
 {
-    std::string dir = GetExeDir();
-    if (dir.empty() || dir.back() == '/') {
-        return dir + "libprint_feature_test.z.so";
+    if (dir.empty()) {
+        return name;
     }
-    return dir + "/libprint_feature_test.z.so";
+    if (dir.back() == '/') {
+        return dir + name;
+    }
+    return dir + "/" + name;
 }
+
+bool FileExists(const std::string &path)
+{
+    return access(path.c_str(), F_OK) == 0;
+}
+
+std::string GetAiPluginPath()
+{
+    return PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::AI_NOTIFIER].libPath;
+}
+
+std::string GetRemotePluginPath()
+{
+    return PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].libPath;
+}
+
+bool IsRemotePluginAvailable()
+{
+    return FileExists(GetRemotePluginPath());
+}
+
+bool IsAiPluginAvailable()
+{
+    return FileExists(GetAiPluginPath());
+}
+
+class UnloadingStateGuard {
+public:
+    explicit UnloadingStateGuard(PrintFeaturePluginManager &manager)
+        : manager_(manager)
+    {
+        manager_.unloading_ = true;
+    }
+    ~UnloadingStateGuard()
+    {
+        manager_.unloading_ = false;
+    }
+private:
+    PrintFeaturePluginManager &manager_;
+};
 
 } // namespace
 
@@ -100,43 +147,57 @@ public:
 
 HWTEST_F(PrintFeaturePluginManagerTest, Singleton_UnloadAll_AndUnknownFeature, TestSize.Level1)
 {
-    auto &instance1 = PrintFeaturePluginManager::GetInstance();
-    auto &instance2 = PrintFeaturePluginManager::GetInstance();
-    EXPECT_EQ(&instance1, &instance2);
-
-    EXPECT_NO_FATAL_FAILURE(instance1.UnloadAll());
-    auto feature = instance1.GetFeature(static_cast<PrintFeatureType>(99));
-    EXPECT_EQ(feature, nullptr);
+    auto &instance = PrintFeaturePluginManager::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(instance.UnloadAll());
+    auto guard = instance.AcquireFeature(static_cast<PrintFeatureType>(99));
+    EXPECT_EQ(guard.Get(), nullptr);
+    EXPECT_EQ(instance.AcquireFeature(static_cast<PrintFeatureType>(99)).Get(), nullptr);
 }
 
 #ifdef REMOTE_SERVICE_ENABLE
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_RemotePrinterManager_LoadSuccess, TestSize.Level1)
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_RemotePrinterManager_LoadSuccess, TestSize.Level1)
 {
-    auto feature = PrintFeaturePluginManager::GetInstance().GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    EXPECT_NE(feature, nullptr);
+    if (!IsRemotePluginAvailable()) {
+        GTEST_SKIP() << "remote plugin not deployed: " << GetRemotePluginPath();
+    }
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    ASSERT_NE(guard.Get(), nullptr);
+    auto remote = guard.Get()->QueryInterface(PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER);
+    EXPECT_NE(remote, nullptr);
+    EXPECT_EQ(static_cast<void *>(remote), static_cast<void *>(guard.Get()));
 }
 #endif // REMOTE_SERVICE_ENABLE
 
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_AiNotifier_LoadSuccess, TestSize.Level1)
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_AiNotifier_LoadSuccess, TestSize.Level1)
 {
-    auto feature = PrintFeaturePluginManager::GetInstance().GetFeature(PrintFeatureType::AI_NOTIFIER);
-    EXPECT_NE(feature, nullptr);
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+    auto guard = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
+    ASSERT_NE(guard.Get(), nullptr);
+    auto ai = guard.Get()->QueryInterface(PrintFeatureIid::IID_PRINT_FAILURE_AI_NOTIFIER);
+    EXPECT_NE(ai, nullptr);
+    EXPECT_EQ(static_cast<void *>(ai), static_cast<void *>(guard.Get()));
 }
 #endif // HAVE_PRINT_FAILURE_AI_NOTIFIER
 
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_RemotePrinterManager_WhenPluginUnavailable_ReturnsNull,
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_RemotePrinterManager_WhenPluginUnavailable_ReturnsEmptyGuard,
     TestSize.Level1)
 {
     auto &manager = PrintFeaturePluginManager::GetInstance();
     manager.UnloadAll();
     FeatureEntryGuard guard(PrintFeatureType::REMOTE_PRINTER_MANAGER);
     manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].libPath = "/system/lib/nonexistent_plugin.z.so";
-    auto feature = manager.GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    EXPECT_EQ(feature, nullptr);
+    auto acquired = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    EXPECT_EQ(acquired.Get(), nullptr);
 }
 
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_WithExistingImpl_ReturnsSameInstance, TestSize.Level1)
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_WithExistingImpl_ReturnsSameInstance, TestSize.Level1)
 {
     auto &manager = PrintFeaturePluginManager::GetInstance();
     manager.UnloadAll();
@@ -145,83 +206,142 @@ HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_WithExistingImpl_ReturnsSameI
     manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl =
         std::unique_ptr<IPrintFeature, PrintFeatureDeleter>(fakeFeature, PrintFeatureDeleter(nullptr));
 
-    auto feature = manager.GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    EXPECT_EQ(feature, fakeFeature);
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    EXPECT_EQ(guard.Get(), fakeFeature);
 }
 
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_CreateSymbolMissing_ReturnsNull, TestSize.Level1)
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_CreateSymbolMissing_ReturnsEmptyGuard, TestSize.Level1)
 {
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-    FeatureEntryGuard guard(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-
-    auto &entry = manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
-    entry.libPath = GetTestPluginPath();
-    entry.createSymbol = "CreateRemotePrintFeature";
-    entry.destroySymbol = "DestroyRemotePrintFeature";
-    entry.loader = std::make_unique<PrintFeaturePluginLoader>(
-        "remote", entry.libPath, entry.createSymbol, entry.destroySymbol);
-
-    auto feature = manager.GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    EXPECT_EQ(feature, nullptr);
-}
-
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_CreateReturnsNull_UnloadsAndReturnsNull, TestSize.Level1)
-{
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-    FeatureEntryGuard guard(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-
-    auto &entry = manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
-    entry.libPath = GetTestPluginPath();
-    entry.createSymbol = "CreateNullPrintFeature";
-    entry.destroySymbol = "DestroyPrintFeature";
-    entry.loader = std::make_unique<PrintFeaturePluginLoader>(
-        "remote", entry.libPath, entry.createSymbol, entry.destroySymbol);
-
-    auto feature = manager.GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    EXPECT_EQ(feature, nullptr);
-}
-
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_RemotePrinterManager_LoadTestPlugin_Success, TestSize.Level1)
-{
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-    FeatureEntryGuard guard(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-
-    auto &entry = manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
-    entry.libPath = GetTestPluginPath();
-    entry.createSymbol = "CreatePrintFeature";
-    entry.destroySymbol = "DestroyPrintFeature";
-    entry.loader.reset();
-    entry.impl.reset();
-
-    auto feature = manager.GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    EXPECT_NE(feature, nullptr);
-    EXPECT_EQ(feature, manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl.get());
-
-    manager.UnloadAll();
-    EXPECT_EQ(manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl, nullptr);
-}
-
-HWTEST_F(PrintFeaturePluginManagerTest, GetFeature_AiNotifier_LoadTestPlugin_Success, TestSize.Level1)
-{
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
     auto &manager = PrintFeaturePluginManager::GetInstance();
     manager.UnloadAll();
     FeatureEntryGuard guard(PrintFeatureType::AI_NOTIFIER);
 
     auto &entry = manager.features_[PrintFeatureType::AI_NOTIFIER];
-    entry.libPath = GetTestPluginPath();
-    entry.createSymbol = "CreatePrintFeature";
-    entry.destroySymbol = "DestroyPrintFeature";
+    entry.libPath = GetAiPluginPath();
+    entry.createSymbol = "CreateNonExistentFeature";
+    entry.destroySymbol = "DestroyNonExistentFeature";
     entry.loader.reset();
     entry.impl.reset();
 
-    auto feature = manager.GetFeature(PrintFeatureType::AI_NOTIFIER);
-    EXPECT_NE(feature, nullptr);
+    auto acquired = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
+    EXPECT_EQ(acquired.Get(), nullptr);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, UnloadAll_ClearsLoadedImpl, TestSize.Level1)
+{
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+
+    {
+        auto guard = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
+        ASSERT_NE(guard.Get(), nullptr);
+    }
 
     manager.UnloadAll();
     EXPECT_EQ(manager.features_[PrintFeatureType::AI_NOTIFIER].impl, nullptr);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_WhileUnloading_ReturnsEmptyGuard, TestSize.Level1)
+{
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+    UnloadingStateGuard unloadingGuard(manager);
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    EXPECT_EQ(guard.Get(), nullptr);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_WithExistingLoader_ReturnsEmptyGuard, TestSize.Level1)
+{
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+    auto &entry = manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
+    entry.loader = std::make_unique<PrintFeaturePluginLoader>("remote",
+        "/system/lib/nonexistent_remote.z.so",
+        "CreateRemotePrintFeature", "DestroyRemotePrintFeature");
+    entry.impl.reset();
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    EXPECT_EQ(guard.Get(), nullptr);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, FeatureUseGuard_MoveAndSelfAssign, TestSize.Level1)
+{
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+    auto *fake = new FakePrintFeature();
+    manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl =
+        std::unique_ptr<IPrintFeature, PrintFeatureDeleter>(fake, PrintFeatureDeleter(nullptr));
+
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    EXPECT_EQ(guard.Get(), fake);
+
+    auto moved = std::move(guard);
+    EXPECT_EQ(guard.Get(), nullptr);
+    EXPECT_EQ(moved.Get(), fake);
+
+    moved = std::move(moved);
+    EXPECT_EQ(moved.Get(), fake);
+
+    moved = PrintFeaturePluginManager::FeatureUseGuard();
+    EXPECT_EQ(moved.Get(), nullptr);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, FeatureUseGuard_Release_UnknownType_ResetsGuardAndLeavesCounts,
+    TestSize.Level1)
+{
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+
+    auto activeCountsBefore = manager.activeCounts_;
+
+    {
+        FakePrintFeature fake;
+        PrintFeaturePluginManager::FeatureUseGuard guard(
+            &manager, static_cast<PrintFeatureType>(99), &fake);
+        EXPECT_EQ(guard.Get(), &fake);
+    }
+
+    EXPECT_EQ(manager.activeCounts_, activeCountsBefore);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, FeatureUseGuard_Release_ActiveCountZero_NoCrash, TestSize.Level1)
+{
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.activeCounts_[PrintFeatureType::REMOTE_PRINTER_MANAGER] = 0;
+    auto *fake = new FakePrintFeature();
+    {
+        PrintFeaturePluginManager::FeatureUseGuard guard(
+            &manager, PrintFeatureType::REMOTE_PRINTER_MANAGER, fake);
+        EXPECT_EQ(guard.Get(), fake);
+    }
+    EXPECT_EQ(manager.activeCounts_[PrintFeatureType::REMOTE_PRINTER_MANAGER], 0);
+}
+
+HWTEST_F(PrintFeaturePluginManagerTest, UnloadAll_WaitsForActiveGuardAndClearsImpl, TestSize.Level1)
+{
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    manager.UnloadAll();
+    auto *fake = new FakePrintFeature();
+    manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl =
+        std::unique_ptr<IPrintFeature, PrintFeatureDeleter>(fake, PrintFeatureDeleter(nullptr));
+
+    std::promise<void> guardAcquired;
+    std::thread holder([&manager, &guardAcquired] {
+        auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+        guardAcquired.set_value();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    });
+    guardAcquired.get_future().wait();
+    manager.UnloadAll();
+    holder.join();
+    EXPECT_EQ(manager.features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl, nullptr);
+    EXPECT_EQ(manager.activeCounts_[PrintFeatureType::REMOTE_PRINTER_MANAGER], 0);
+    EXPECT_FALSE(manager.unloading_);
 }
 
 } // namespace OHOS::Print

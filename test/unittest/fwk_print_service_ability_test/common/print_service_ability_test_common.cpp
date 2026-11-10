@@ -84,6 +84,9 @@ void PrintServiceAbilityTest::TearDown(void)
     monitor.isMonitoring_.store(false);
     std::shared_ptr<PrintServiceHelper> nullHelper;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(nullHelper);
+
+    // 清理 PrintDataRepository 单例，避免用例间数据污染
+    PrintDataRepository::GetInstance().ResetForTest();
 }
 
 std::string PrintServiceAbilityTest::GetExtensionId(EXTENSION_ID_TYPE type)

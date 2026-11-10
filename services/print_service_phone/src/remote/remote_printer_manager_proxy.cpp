@@ -27,67 +27,84 @@ RemotePrinterManager &RemotePrinterManager::GetInstance()
     return instance;
 }
 
-void RemotePrinterManager::SetEventHandler(IRemotePrinterEventHandler *handler)
+IRemotePrinterManager *RemotePrinterManager::GetRemoteInterface(IPrintFeature *feature)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    handler_ = handler;
-    if (impl_ != nullptr) {
-        impl_->SetEventHandler(handler);
+    if (feature == nullptr) {
+        return nullptr;
     }
+    return static_cast<IRemotePrinterManager *>(
+        feature->QueryInterface(PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER));
 }
 
-void RemotePrinterManager::EnsureLoaded()
+void RemotePrinterManager::SetEventHandler(IRemotePrinterEventHandler *handler)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (impl_ != nullptr) {
-        return;
+    IRemotePrinterEventHandler *localHandler = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        handler_ = handler;
+        localHandler = handler_;
     }
 
-    auto base = PrintFeaturePluginManager::GetInstance().GetFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    if (base == nullptr) {
-        PRINT_HILOGE("RemotePrinter plugin not loaded");
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    if (!manager.IsFeatureLoaded(PrintFeatureType::REMOTE_PRINTER_MANAGER)) {
         return;
     }
-
-    auto remote = static_cast<IRemotePrinterManager *>(
-        base->QueryInterface(PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER));
-    if (remote == nullptr) {
-        PRINT_HILOGE("RemotePrinter plugin does not implement IRemotePrinterManager");
-        return;
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    auto remote = GetRemoteInterface(guard.Get());
+    if (remote != nullptr) {
+        remote->SetEventHandler(localHandler);
     }
-
-    remote->SetEventHandler(handler_);
-    impl_ = remote;
 }
 
 void RemotePrinterManager::StartPrinterDiscovery()
 {
-    EnsureLoaded();
-    if (impl_ != nullptr) {
-        impl_->StartPrinterDiscovery();
+    IRemotePrinterEventHandler *localHandler = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        localHandler = handler_;
     }
+
+    auto guard = PrintFeaturePluginManager::GetInstance().AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    auto remote = GetRemoteInterface(guard.Get());
+    if (remote == nullptr) {
+        PRINT_HILOGE("RemotePrinter plugin not available");
+        return;
+    }
+    remote->SetEventHandler(localHandler);
+    remote->StartPrinterDiscovery();
 }
 
 bool RemotePrinterManager::StopPrinterDiscovery()
 {
-    if (impl_ == nullptr) {
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    if (!manager.IsFeatureLoaded(PrintFeatureType::REMOTE_PRINTER_MANAGER)) {
         return true;
     }
-    return impl_->StopPrinterDiscovery();
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    auto remote = GetRemoteInterface(guard.Get());
+    if (remote == nullptr) {
+        return true;
+    }
+    return remote->StopPrinterDiscovery();
 }
 
 bool RemotePrinterManager::Disconnect()
 {
-    if (impl_ == nullptr) {
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    if (!manager.IsFeatureLoaded(PrintFeatureType::REMOTE_PRINTER_MANAGER)) {
         return true;
     }
-    return impl_->Disconnect();
+    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
+    auto remote = GetRemoteInterface(guard.Get());
+    if (remote == nullptr) {
+        return true;
+    }
+    return remote->Disconnect();
 }
 
 void RemotePrinterManager::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    impl_ = nullptr;
     handler_ = nullptr;
 }
 

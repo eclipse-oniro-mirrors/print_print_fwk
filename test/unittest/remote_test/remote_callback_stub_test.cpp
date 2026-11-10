@@ -15,11 +15,16 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <atomic>
+#include <chrono>
+#include <future>
+#include <thread>
 #define private public
 #include "remote_callback_stub.h"
 #undef private
 #include "remote_constants.h"
 #include "print_constant.h"
+#include "print_utils.h"
 #include "message_parcel.h"
 #include "message_option.h"
 
@@ -27,6 +32,13 @@ using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS::Print {
+
+// Stub bundle-name lookup so the whitelist check in RemoteCallbackStub passes in UT.
+std::string PrintUtils::GetBundleNameForUid(const int uid)
+{
+    (void)uid;
+    return REMOTE_SERVICE_BUNDLE_NAME;
+}
 
 class RemoteCallbackStubTest : public testing::Test {
 public:
@@ -309,13 +321,60 @@ HWTEST_F(RemoteCallbackStubTest, OnRemoteRequest_ErrorCode_AccountError, TestSiz
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    
+
     data.WriteInterfaceToken(stub.GetDescriptor());
     data.WriteInt32(E_PRINT_ACCOUNT_ERROR);
-    
+
     int32_t result = stub.OnRemoteRequest(
         static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS), data, reply, option);
     EXPECT_EQ(E_PRINT_ACCOUNT_ERROR, result);
+}
+
+HWTEST_F(RemoteCallbackStubTest, WaitForIdle_BusyThenIdle, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    stub.pendingRequests_.fetch_add(1, std::memory_order_relaxed);
+    EXPECT_FALSE(stub.WaitForIdle(50));
+    stub.pendingRequests_.fetch_sub(1, std::memory_order_acq_rel);
+    EXPECT_TRUE(stub.WaitForIdle(1000));
+}
+
+HWTEST_F(RemoteCallbackStubTest, WaitForIdle_ConcurrentRequests_BusyThenIdle, TestSize.Level1)
+{
+    RemoteCallbackStub stub;
+    std::promise<void> started1;
+    std::promise<void> started2;
+    auto request = [&stub, &started1, &started2](size_t index) {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        data.WriteInterfaceToken(stub.GetDescriptor());
+        data.WriteInt32(E_PRINT_NONE);
+        std::string msg = "[]";
+        data.WriteInt64(static_cast<int64_t>(msg.size()));
+        data.WriteRawData(msg.c_str(), msg.size());
+        // Hold a pending request across the WaitForIdle(50) window so the
+        // check deterministically sees a busy state.
+        stub.pendingRequests_.fetch_add(1, std::memory_order_relaxed);
+        if (index == 0) {
+            started1.set_value();
+        } else {
+            started2.set_value();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        stub.OnRemoteRequest(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST),
+            data, reply, option);
+        stub.pendingRequests_.fetch_sub(1, std::memory_order_acq_rel);
+    };
+
+    std::thread t1([&request] { request(0); });
+    std::thread t2([&request] { request(1); });
+    started1.get_future().wait();
+    started2.get_future().wait();
+    EXPECT_FALSE(stub.WaitForIdle(50));
+    t1.join();
+    t2.join();
+    EXPECT_TRUE(stub.WaitForIdle(200));
 }
 
 } // namespace OHOS::Print

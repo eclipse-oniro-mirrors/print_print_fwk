@@ -2222,6 +2222,15 @@ HWTEST_F(PrintSystemDataTest, PrintSystemData_SetEnterpriseState_CachesState, Te
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     ASSERT_NE(systemData, nullptr);
     systemData->SetEnterpriseState(true, true);
+#ifdef ENTERPRISE_ENABLE
+    EXPECT_TRUE(systemData->isEnterpriseEnable_.load());
+    EXPECT_TRUE(systemData->isEnterprise_.load());
+#endif // ENTERPRISE_ENABLE
+    systemData->SetEnterpriseState(false, false);
+#ifdef ENTERPRISE_ENABLE
+    EXPECT_FALSE(systemData->isEnterpriseEnable_.load());
+    EXPECT_FALSE(systemData->isEnterprise_.load());
+#endif // ENTERPRISE_ENABLE
     EXPECT_NO_FATAL_FAILURE(systemData->Init());
 }
 

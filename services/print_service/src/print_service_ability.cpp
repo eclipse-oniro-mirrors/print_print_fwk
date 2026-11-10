@@ -2618,9 +2618,11 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
         return E_PRINT_INVALID_PRINTER;
     }
 
-    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerExtId, static_cast<PrinterState>(state));
-    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    PrinterInfo updatedInfo = *printerInfo;
+    updatedInfo.SetPrinterState(state);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerExtId, updatedInfo);
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, updatedInfo);
+    SendPrinterEvent(updatedInfo);
     PRINT_HILOGD("UpdatePrinterState end.");
     return E_PRINT_NONE;
 }
@@ -4737,7 +4739,10 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
         PRINT_HILOGI("new printer, add it");
         infoPtr->DumpInfo();
+        infoPtr->SetPrinterState(PRINTER_ADDED);
         PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
+    } else {
+        PrintDataRepository::GetInstance().SetDiscoveredPrinterState(infoPtr->GetPrinterId(), PRINTER_ADDED);
     }
     infoPtr->SetPrinterState(PRINTER_ADDED);
 
@@ -4798,8 +4803,6 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
 
     printerInfo.Dump();
 
-    printerInfo.Dump();
-
     // Always commit the basic info (name/uri/alias/state/id) back to the discovery map,
     // preserving the baseline semantics where *printerInfo = info was executed unconditionally.
     PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printExtId, printerInfo);
@@ -4831,15 +4834,16 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
-    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerId, PRINTER_REMOVED);
-    SendPrinterDiscoverEvent(PRINTER_REMOVED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    PrinterInfo removedInfo = *printerInfo;
+    removedInfo.SetPrinterState(PRINTER_REMOVED);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerId, removedInfo);
+    SendPrinterDiscoverEvent(PRINTER_REMOVED, removedInfo);
+    SendPrinterEvent(removedInfo);
     PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
 
     PrinterInfo addedPrinter;
     if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
-        PrinterInfo removedInfo = *printerInfo;
         UpdatePrinterStatus(removedInfo, PRINTER_STATUS_UNAVAILABLE);
     }
     return true;

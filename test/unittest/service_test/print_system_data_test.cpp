@@ -2707,13 +2707,20 @@ HWTEST_F(PrintSystemDataTest, MigratePrinterPrintScaling_AlreadySet, TestSize.Le
     EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_FILL), outPrefs.GetDefaultPrintScaling());
 }
 
+#ifdef ENTERPRISE_ENABLE
 HWTEST_F(PrintSystemDataTest, PrintSystemData_SetEnterpriseState_CachesState, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     ASSERT_NE(systemData, nullptr);
     systemData->SetEnterpriseState(true, true);
-    EXPECT_NO_FATAL_FAILURE(systemData->Init());
+    EXPECT_TRUE(systemData->isEnterpriseEnable_.load());
+    EXPECT_TRUE(systemData->isEnterprise_.load());
+
+    systemData->SetEnterpriseState(false, false);
+    EXPECT_FALSE(systemData->isEnterpriseEnable_.load());
+    EXPECT_FALSE(systemData->isEnterprise_.load());
 }
+#endif // ENTERPRISE_ENABLE
 
 HWTEST_F(PrintSystemDataTest, PrintSystemData_EnterpriseState_CachedAndUsed, TestSize.Level1)
 {

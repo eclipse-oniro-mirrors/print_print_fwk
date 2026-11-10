@@ -159,32 +159,30 @@ protected:
 
 void RemotePrinterManagerProxyTest::SetUp()
 {
-    RemotePrinterManager::GetInstance().impl_ = nullptr;
     RemotePrinterManager::GetInstance().handler_ = nullptr;
 }
 
 void RemotePrinterManagerProxyTest::TearDown()
 {
-    RemotePrinterManager::GetInstance().impl_ = nullptr;
     RemotePrinterManager::GetInstance().handler_ = nullptr;
     PrintFeaturePluginManager::GetInstance().UnloadAll();
 }
 
 HWTEST_F(RemotePrinterManagerProxyTest, Singleton_AndHandlerStorage, TestSize.Level1)
 {
-    auto &instance1 = RemotePrinterManager::GetInstance();
-    auto &instance2 = RemotePrinterManager::GetInstance();
-    EXPECT_EQ(&instance1, &instance2);
+    auto &instance = RemotePrinterManager::GetInstance();
+    instance.SetEventHandler(&handler_);
+    EXPECT_EQ(instance.handler_, &handler_);
 
-    instance1.SetEventHandler(&handler_);
-    EXPECT_EQ(instance1.handler_, &handler_);
+    MockRemotePrinterEventHandler handler2;
+    instance.SetEventHandler(&handler2);
+    EXPECT_EQ(instance.handler_, &handler2);
 }
 
 HWTEST_F(RemotePrinterManagerProxyTest, ImplNull_OperationsReturnDefaults, TestSize.Level1)
 {
     auto &manager = RemotePrinterManager::GetInstance();
     EXPECT_NO_FATAL_FAILURE(manager.StartPrinterDiscovery());
-    EXPECT_FALSE(mockImpl_.startDiscoveryCalled_);
     EXPECT_TRUE(manager.StopPrinterDiscovery());
     EXPECT_TRUE(manager.Disconnect());
 }
@@ -192,73 +190,62 @@ HWTEST_F(RemotePrinterManagerProxyTest, ImplNull_OperationsReturnDefaults, TestS
 HWTEST_F(RemotePrinterManagerProxyTest, ImplNotNull_OperationsForward, TestSize.Level1)
 {
     auto &manager = RemotePrinterManager::GetInstance();
-    manager.impl_ = &mockImpl_;
-
-    manager.SetEventHandler(&handler_);
-    EXPECT_EQ(mockImpl_.handler_, &handler_);
-
-    manager.StartPrinterDiscovery();
-    EXPECT_TRUE(mockImpl_.startDiscoveryCalled_);
-
-    EXPECT_TRUE(manager.StopPrinterDiscovery());
-    EXPECT_TRUE(mockImpl_.stopDiscoveryCalled_);
-
-    EXPECT_TRUE(manager.Disconnect());
-    EXPECT_TRUE(mockImpl_.disconnectCalled_);
-}
-
-HWTEST_F(RemotePrinterManagerProxyTest, EnsureLoaded_PluginFeatureWithoutRemoteInterface_KeepsImplNull, TestSize.Level1)
-{
-    auto &manager = RemotePrinterManager::GetInstance();
-    manager.impl_ = nullptr;
-
-    auto *fakeFeature = new FakeFeatureNoRemote();
-    PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl =
-        std::unique_ptr<IPrintFeature, PrintFeatureDeleter>(fakeFeature, PrintFeatureDeleter(nullptr));
-
-    manager.SetEventHandler(&handler_);
-    manager.StartPrinterDiscovery();
-    EXPECT_EQ(manager.impl_, nullptr);
-}
-
-HWTEST_F(RemotePrinterManagerProxyTest, EnsureLoaded_PluginFeatureWithRemoteInterface_SetsImplAndForwards,
-    TestSize.Level1)
-{
-    auto &manager = RemotePrinterManager::GetInstance();
-    manager.impl_ = nullptr;
 
     auto *fakeRemote = new FakeRemotePrinterManager();
     PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl =
         std::unique_ptr<IPrintFeature, PrintFeatureDeleter>(fakeRemote, PrintFeatureDeleter(nullptr));
 
     manager.SetEventHandler(&handler_);
-    manager.StartPrinterDiscovery();
-    EXPECT_EQ(manager.impl_, fakeRemote);
     EXPECT_EQ(fakeRemote->handler_, &handler_);
+
+    manager.StartPrinterDiscovery();
     EXPECT_TRUE(fakeRemote->startDiscoveryCalled_);
+
+    EXPECT_TRUE(manager.StopPrinterDiscovery());
+    EXPECT_TRUE(manager.Disconnect());
 }
+
+HWTEST_F(RemotePrinterManagerProxyTest, EnsureLoaded_PluginFeatureWithoutRemoteInterface_NoCrash, TestSize.Level1)
+{
+    auto &manager = RemotePrinterManager::GetInstance();
+
+    auto *fakeFeature = new FakeFeatureNoRemote();
+    PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].impl =
+        std::unique_ptr<IPrintFeature, PrintFeatureDeleter>(fakeFeature, PrintFeatureDeleter(nullptr));
+
+    EXPECT_NO_FATAL_FAILURE(manager.SetEventHandler(&handler_));
+    EXPECT_NO_FATAL_FAILURE(manager.StartPrinterDiscovery());
+    EXPECT_TRUE(manager.StopPrinterDiscovery());
+}
+
+namespace {
+class RemotePluginPathGuard {
+public:
+    explicit RemotePluginPathGuard(std::string &path) : path_(path), original_(path)
+    {
+        path_ = "/data/test/libnonexistent_remote_test.z.so";
+    }
+    ~RemotePluginPathGuard()
+    {
+        path_ = original_;
+    }
+private:
+    std::string &path_;
+    std::string original_;
+};
+} // namespace
 
 HWTEST_F(RemotePrinterManagerProxyTest, EnsureLoaded_BaseNull_KeepsImplNull, TestSize.Level1)
 {
     auto &manager = RemotePrinterManager::GetInstance();
-    manager.impl_ = nullptr;
+
+    auto &entry = PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
+    RemotePluginPathGuard guard(entry.libPath);
     PrintFeaturePluginManager::GetInstance().UnloadAll();
 
     manager.SetEventHandler(&handler_);
     manager.StartPrinterDiscovery();
-    EXPECT_EQ(manager.impl_, nullptr);
-}
-
-HWTEST_F(RemotePrinterManagerProxyTest, Operations_WhenImplAlreadyLoaded_SkipEnsureLoaded, TestSize.Level1)
-{
-    auto &manager = RemotePrinterManager::GetInstance();
-    FakeRemotePrinterManager fakeRemote;
-    manager.impl_ = &fakeRemote;
-
-    manager.SetEventHandler(&handler_);
-    manager.StartPrinterDiscovery();
-    EXPECT_EQ(fakeRemote.handler_, &handler_);
-    EXPECT_TRUE(fakeRemote.startDiscoveryCalled_);
+    EXPECT_EQ(manager.handler_, &handler_);
 }
 
 } // namespace OHOS::Print

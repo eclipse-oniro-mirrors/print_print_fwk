@@ -422,7 +422,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestS
     auto printer = std::make_shared<PrinterInfo>();
     PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     service->SetLastUsedPrinter(printerId);
-    EXPECT_TRUE(PrintDataRepository::GetInstance().IsPrinterAdded(printerId));
+    EXPECT_EQ(service->GetCurrentUserData()->GetLastUsedPrinter(), printerId);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086_NeedRename, TestSize.Level1)
@@ -972,7 +972,7 @@ HWTEST_F(PrintServiceAbilityTest, RemoveRemotePrinterInfo_Found_ReturnsTrue, Tes
     info.SetUri(uri);
     EXPECT_EQ(service->AddRemotePrinterInfo(info, REMOTE_EXT_BUNDLE_NAME), E_PRINT_NONE);
     std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, "printer1");
-    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+    EXPECT_NE(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
     EXPECT_TRUE(service->RemoveRemotePrinterInfo(uri));
     EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
 }
@@ -987,7 +987,7 @@ HWTEST_F(PrintServiceAbilityTest, OnRemoveRemotePrinter_Found_ReturnsTrue, TestS
     info.SetUri(uri);
     EXPECT_EQ(service->OnAddRemotePrinter(info, REMOTE_EXT_BUNDLE_NAME), E_PRINT_NONE);
     std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, "printer1");
-    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+    EXPECT_NE(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
     EXPECT_TRUE(service->OnRemoveRemotePrinter(uri));
     EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
 }

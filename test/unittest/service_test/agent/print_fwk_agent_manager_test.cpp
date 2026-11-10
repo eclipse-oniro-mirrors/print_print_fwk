@@ -301,6 +301,7 @@ public:
     {
         repository_ = &PrintDataRepository::GetInstance();
         repository_->Init();
+        repository_->ResetForTest();
         manager = &PrintFwkAgentManager::GetInstance();
         manager->Shutdown();
         ResetFakeLoaderState();

@@ -39,6 +39,9 @@ constexpr uint32_t MAX_CAPABILITY_ARRAY_SIZE = 1000;
 class PrintSystemData {
 public:
     bool Init();
+#ifdef UNIT_TEST
+    void ResetForTest();
+#endif // UNIT_TEST
     void InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo);
     void SavePrinterFile(const std::string &printerId);
     void SaveIppRawDataFile(const std::string &printerId, const std::string &rawData);

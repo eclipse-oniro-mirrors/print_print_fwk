@@ -21,6 +21,8 @@
 
 #include "i_print_feature.h"
 #include "print_feature_plugin_loader.h"
+#include "print_feature_plugin_manager.h"
+#include "print_feature_type.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -28,10 +30,11 @@ using namespace testing::ext;
 namespace OHOS::Print {
 
 namespace {
-constexpr const char *TEST_PLUGIN_NAME = "libprint_feature_test.z.so";
+
 constexpr const char *MISSING_PLUGIN_NAME = "libprint_feature_missing.z.so";
-constexpr const char *CREATE_SYMBOL = "CreatePrintFeature";
-constexpr const char *DESTROY_SYMBOL = "DestroyPrintFeature";
+constexpr const char *AI_PLUGIN_CREATE_SYMBOL = "CreatePrintFailureAiNotifier";
+constexpr const char *AI_PLUGIN_DESTROY_SYMBOL = "DestroyPrintFailureAiNotifier";
+constexpr const char *MISSING_SYMBOL = "NotExistedSymbol";
 
 std::string GetExeDir()
 {
@@ -60,10 +63,51 @@ std::string JoinPath(const std::string &dir, const std::string &name)
     return dir + "/" + name;
 }
 
-std::string GetPluginPath(const std::string &pluginName)
+bool FileExists(const std::string &path)
 {
-    return JoinPath(GetExeDir(), pluginName);
+    return access(path.c_str(), F_OK) == 0;
 }
+
+std::string GetAiPluginPath()
+{
+    return PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::AI_NOTIFIER].libPath;
+}
+
+bool IsAiPluginAvailable()
+{
+    return FileExists(GetAiPluginPath());
+}
+
+class TempFileGuard {
+public:
+    explicit TempFileGuard(const std::string &path)
+        : path_(path)
+    {
+        (void)remove(path_.c_str());
+        FILE *fp = fopen(path_.c_str(), "w");
+        if (fp != nullptr) {
+            fprintf(fp, "not a shared library");
+            fclose(fp);
+            created_ = true;
+        }
+    }
+    ~TempFileGuard()
+    {
+        (void)remove(path_.c_str());
+    }
+    bool IsCreated() const
+    {
+        return created_;
+    }
+    const std::string &GetPath() const
+    {
+        return path_;
+    }
+private:
+    std::string path_;
+    bool created_ = false;
+};
+
 } // namespace
 
 class PrintFeaturePluginLoaderTest : public testing::Test {
@@ -76,46 +120,54 @@ public:
 
 HWTEST_F(PrintFeaturePluginLoaderTest, NotLoaded_StateAndOperations, TestSize.Level1)
 {
-    PrintFeaturePluginLoader loader("missing", GetPluginPath(MISSING_PLUGIN_NAME));
+    PrintFeaturePluginLoader loader("missing", JoinPath(GetExeDir(), MISSING_PLUGIN_NAME));
     EXPECT_FALSE(loader.IsLoaded());
     EXPECT_FALSE(loader.Load());
     EXPECT_FALSE(loader.IsLoaded());
     EXPECT_NO_FATAL_FAILURE(loader.Unload());
-    EXPECT_EQ(loader.GetSymbol(CREATE_SYMBOL), nullptr);
+    EXPECT_EQ(loader.GetSymbol(AI_PLUGIN_CREATE_SYMBOL), nullptr);
 }
 
 HWTEST_F(PrintFeaturePluginLoaderTest, Load_ValidPlugin_CreatesAndDestroysFeature, TestSize.Level1)
 {
-    std::string pluginPath = GetPluginPath(TEST_PLUGIN_NAME);
-    PrintFeaturePluginLoader loader("test", pluginPath);
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    std::string pluginPath = GetAiPluginPath();
+    PrintFeaturePluginLoader loader("ai_notifier", pluginPath,
+        AI_PLUGIN_CREATE_SYMBOL, AI_PLUGIN_DESTROY_SYMBOL);
     ASSERT_TRUE(loader.Load()) << "failed to load plugin at: " << pluginPath;
     EXPECT_TRUE(loader.IsLoaded());
 
-    EXPECT_EQ(loader.GetCreateSymbol(), CREATE_SYMBOL);
-    EXPECT_EQ(loader.GetDestroySymbol(), DESTROY_SYMBOL);
+    EXPECT_EQ(loader.GetCreateSymbol(), AI_PLUGIN_CREATE_SYMBOL);
+    EXPECT_EQ(loader.GetDestroySymbol(), AI_PLUGIN_DESTROY_SYMBOL);
 
-    auto createFn = loader.GetSymbol(CREATE_SYMBOL);
-    auto destroyFn = loader.GetSymbol(DESTROY_SYMBOL);
+    auto createFn = loader.GetSymbol(AI_PLUGIN_CREATE_SYMBOL);
+    auto destroyFn = loader.GetSymbol(AI_PLUGIN_DESTROY_SYMBOL);
     ASSERT_NE(createFn, nullptr);
     ASSERT_NE(destroyFn, nullptr);
 
     auto creator = reinterpret_cast<IPrintFeature *(*)()>(createFn);
     IPrintFeature *feature = creator();
     ASSERT_NE(feature, nullptr);
-    EXPECT_NE(feature->QueryInterface(PrintFeatureIid::IID_UNKNOWN), nullptr);
+    EXPECT_NE(feature->QueryInterface(PrintFeatureIid::IID_PRINT_FAILURE_AI_NOTIFIER), nullptr);
 
     auto destroyer = reinterpret_cast<void (*)(IPrintFeature *)>(destroyFn);
     destroyer(feature);
 
     loader.Unload();
     EXPECT_FALSE(loader.IsLoaded());
-    EXPECT_EQ(loader.GetSymbol(CREATE_SYMBOL), nullptr);
+    EXPECT_EQ(loader.GetSymbol(AI_PLUGIN_CREATE_SYMBOL), nullptr);
 }
 
 HWTEST_F(PrintFeaturePluginLoaderTest, Load_DoubleLoad_Idempotent, TestSize.Level1)
 {
-    std::string pluginPath = GetPluginPath(TEST_PLUGIN_NAME);
-    PrintFeaturePluginLoader loader("test", pluginPath);
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    std::string pluginPath = GetAiPluginPath();
+    PrintFeaturePluginLoader loader("ai_notifier", pluginPath,
+        AI_PLUGIN_CREATE_SYMBOL, AI_PLUGIN_DESTROY_SYMBOL);
     EXPECT_TRUE(loader.Load()) << "failed to load plugin at: " << pluginPath;
     EXPECT_TRUE(loader.Load()) << "second load should be idempotent at: " << pluginPath;
     EXPECT_TRUE(loader.IsLoaded());
@@ -124,33 +176,35 @@ HWTEST_F(PrintFeaturePluginLoaderTest, Load_DoubleLoad_Idempotent, TestSize.Leve
 
 HWTEST_F(PrintFeaturePluginLoaderTest, GetSymbol_MissingSymbol_ReturnNull, TestSize.Level1)
 {
-    std::string pluginPath = GetPluginPath(TEST_PLUGIN_NAME);
-    PrintFeaturePluginLoader loader("test", pluginPath);
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    std::string pluginPath = GetAiPluginPath();
+    PrintFeaturePluginLoader loader("ai_notifier", pluginPath,
+        AI_PLUGIN_CREATE_SYMBOL, AI_PLUGIN_DESTROY_SYMBOL);
     EXPECT_TRUE(loader.Load()) << "failed to load plugin at: " << pluginPath;
-    EXPECT_EQ(loader.GetSymbol("NotExistedSymbol"), nullptr);
+    EXPECT_EQ(loader.GetSymbol(MISSING_SYMBOL), nullptr);
     loader.Unload();
 }
 
 HWTEST_F(PrintFeaturePluginLoaderTest, Load_ValidPathButInvalidLibrary_ReturnsFalse, TestSize.Level1)
 {
-    std::string badPath = JoinPath(GetExeDir(), "libprint_feature_bad.z.so");
-    remove(badPath.c_str());
-    FILE *fp = fopen(badPath.c_str(), "w");
-    ASSERT_NE(fp, nullptr);
-    fprintf(fp, "not a shared library");
-    fclose(fp);
+    TempFileGuard guard(JoinPath(GetExeDir(), "libprint_feature_bad.z.so"));
+    ASSERT_TRUE(guard.IsCreated());
 
-    PrintFeaturePluginLoader loader("bad", badPath);
+    PrintFeaturePluginLoader loader("bad", guard.GetPath());
     EXPECT_FALSE(loader.Load());
     EXPECT_FALSE(loader.IsLoaded());
-
-    remove(badPath.c_str());
 }
 
 HWTEST_F(PrintFeaturePluginLoaderTest, Unload_DoubleUnload_Idempotent, TestSize.Level1)
 {
-    std::string pluginPath = GetPluginPath(TEST_PLUGIN_NAME);
-    PrintFeaturePluginLoader loader("test", pluginPath);
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    std::string pluginPath = GetAiPluginPath();
+    PrintFeaturePluginLoader loader("ai_notifier", pluginPath,
+        AI_PLUGIN_CREATE_SYMBOL, AI_PLUGIN_DESTROY_SYMBOL);
     EXPECT_TRUE(loader.Load()) << "failed to load plugin at: " << pluginPath;
     loader.Unload();
     EXPECT_FALSE(loader.IsLoaded());
@@ -167,11 +221,15 @@ HWTEST_F(PrintFeaturePluginLoaderTest, Constructor_WithCustomSymbols_StoresSymbo
 
 HWTEST_F(PrintFeaturePluginLoaderTest, GetSymbol_AfterUnload_ReturnsNull, TestSize.Level1)
 {
-    std::string pluginPath = GetPluginPath(TEST_PLUGIN_NAME);
-    PrintFeaturePluginLoader loader("test", pluginPath);
+    if (!IsAiPluginAvailable()) {
+        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
+    }
+    std::string pluginPath = GetAiPluginPath();
+    PrintFeaturePluginLoader loader("ai_notifier", pluginPath,
+        AI_PLUGIN_CREATE_SYMBOL, AI_PLUGIN_DESTROY_SYMBOL);
     EXPECT_TRUE(loader.Load()) << "failed to load plugin at: " << pluginPath;
     loader.Unload();
-    EXPECT_EQ(loader.GetSymbol(CREATE_SYMBOL), nullptr);
+    EXPECT_EQ(loader.GetSymbol(AI_PLUGIN_CREATE_SYMBOL), nullptr);
 }
 
 } // namespace OHOS::Print

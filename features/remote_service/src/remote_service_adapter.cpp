@@ -122,15 +122,21 @@ bool RemoteServiceAdapter::IsConnected()
 void RemoteServiceAdapter::OnRemoteServiceDied()
 {
     PRINT_HILOGI("RemoteServiceAdapter::OnRemoteServiceDied");
-    
-    PRINT_CHECK_NULL_RETURN_VOID(onServiceDiedCb_);
-    PRINT_HILOGI("Calling onServiceDiedCallback to clear printers");
-    onServiceDiedCb_();
+
+    std::function<void()> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = onServiceDiedCb_;
+    }
+    if (cb) {
+        PRINT_HILOGI("Calling onServiceDiedCallback to clear printers");
+        cb();
+    }
 }
 
 int32_t RemoteServiceAdapter::SendData(uint32_t code, const std::string &msg)
 {
-    PRINT_HILOGI("RemoteServiceAdapter::SendData code = %{public}d, msg = %{public}s", code, msg.c_str());
+    PRINT_HILOGI("RemoteServiceAdapter::SendData code = %{public}d, size = %{public}zu", code, msg.size());
     
     PRINT_CHECK_NULL_AND_RETURN(connection_, E_PRINT_RPC_FAILURE);
     auto remoteObject = connection_->GetRemoteObject();
@@ -194,7 +200,16 @@ int32_t RemoteServiceAdapter::RequestPrinterList()
 void RemoteServiceAdapter::SetOnServiceDiedCallback(std::function<void()> cb)
 {
     PRINT_HILOGI("RemoteServiceAdapter::SetOnServiceDiedCallback");
-    onServiceDiedCb_ = cb;
+    std::lock_guard<std::mutex> lock(callbackMutex_);
+    onServiceDiedCb_ = std::move(cb);
+}
+
+bool RemoteServiceAdapter::WaitForCallbacksIdle(int32_t timeoutMs)
+{
+    if (callbackStub_ == nullptr) {
+        return true;
+    }
+    return callbackStub_->WaitForIdle(timeoutMs);
 }
 
 } // namespace OHOS::Print

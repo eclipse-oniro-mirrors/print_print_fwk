@@ -16,9 +16,9 @@
 #ifndef PRINT_FAILURE_AI_NOTIFIER_H
 #define PRINT_FAILURE_AI_NOTIFIER_H
 
-#include <mutex>
 #include <string>
 
+#include "i_print_feature.h"
 #include "i_print_failure_ai_notifier.h"
 
 namespace OHOS::Print {
@@ -40,10 +40,7 @@ private:
     PrintFailureAiNotifier(const PrintFailureAiNotifier &) = delete;
     PrintFailureAiNotifier &operator=(const PrintFailureAiNotifier &) = delete;
 
-    void EnsureLoaded();
-
-    std::mutex mutex_;
-    IPrintFailureAiNotifier *impl_ = nullptr;
+    static IPrintFailureAiNotifier *GetAiInterface(IPrintFeature *feature);
 };
 
 } // namespace OHOS::Print

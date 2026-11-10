@@ -475,7 +475,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestS
     auto printer = std::make_shared<PrinterInfo>();
     PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     service->SetLastUsedPrinter(printerId);
-    EXPECT_TRUE(PrintDataRepository::GetInstance().IsPrinterAdded(printerId));
+    EXPECT_EQ(service->GetCurrentUserData()->GetLastUsedPrinter(), printerId);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086_NeedRename, TestSize.Level1)
