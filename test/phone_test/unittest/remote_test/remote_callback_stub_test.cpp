@@ -57,22 +57,13 @@ void RemoteCallbackStubTest::TearDown(void)
 HWTEST_F(RemoteCallbackStubTest, Constructor_001, TestSize.Level1)
 {
     RemoteCallbackStub stub;
-<<<<<<< HEAD
     EXPECT_EQ(stub.cmdMap_.size(), 2u) << "cmdMap_ should contain 2 handlers after construction";
-    EXPECT_NE(stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS)),
-        stub.cmdMap_.end())
-        << "cmdMap_ should contain COMMAND_REQUEST_PRINTER_STATUS handler";
-    EXPECT_NE(stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST)),
-        stub.cmdMap_.end())
-        << "cmdMap_ should contain COMMAND_REQUEST_PRINTER_LIST handler";
-=======
     auto statusIt = stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_STATUS));
     auto listIt = stub.cmdMap_.find(static_cast<uint32_t>(RemoteRequestCode::COMMAND_REQUEST_PRINTER_LIST));
     EXPECT_NE(statusIt, stub.cmdMap_.end());
     EXPECT_NE(listIt, stub.cmdMap_.end());
     EXPECT_NE(statusIt->second, nullptr);
     EXPECT_NE(listIt->second, nullptr);
->>>>>>> fa2453ea (打印内存优化)
 }
 
 /**

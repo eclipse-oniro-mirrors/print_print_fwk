@@ -29,7 +29,7 @@ public:
     ~IPrintFailureAiNotifier() override = default;
 
     virtual void HandleJobBlocked(const std::string &jobId, uint32_t subState,
-        const std::string &printerName) = 0;
+        const std::string &printerName, int32_t userId) = 0;
     virtual void ClearJobState(const std::string &jobId) = 0;
 };
 

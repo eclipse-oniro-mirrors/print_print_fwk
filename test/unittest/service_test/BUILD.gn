@@ -130,6 +130,7 @@ ohos_unittest("print_service_test") {
     "napi:ace_napi",
     "node:node_header_notice",
     "libuv:uv",
+    "os_account:os_account_innerkits",
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -149,7 +150,6 @@ ohos_unittest("print_service_test") {
     external_deps += [
       "cups:cups",
       "cups-filters:cupsfilters",
-      "os_account:os_account_innerkits",
       "openssl:libcrypto_shared",
       "openssl:libssl_shared",
     ]

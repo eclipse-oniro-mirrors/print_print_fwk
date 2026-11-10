@@ -2718,11 +2718,13 @@ void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> 
         PRINT_HILOGI("Skip AI notifier for eprint printer");
         return;
     }
+    auto jobUser = userJobMap_.find(printJob->GetJobId());
+    int32_t userId = jobUser == userJobMap_.end() ? INVALID_USER_ID : jobUser->second;
     auto printerId = printJob->GetPrinterId();
     PrinterInfo printerInfo;
     if (QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         PrintFailureAiNotifier::GetInstance().HandleJobBlocked(printJob->GetJobId(), subState,
-            printerInfo.GetPrinterName());
+            printerInfo.GetPrinterName(), userId);
     } else {
         PRINT_HILOGE("Printer info not found for printerId: %{public}s", printerId.c_str());
     }

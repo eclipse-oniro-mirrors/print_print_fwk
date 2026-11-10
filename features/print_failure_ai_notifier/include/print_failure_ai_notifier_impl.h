@@ -33,7 +33,7 @@ public:
     void *QueryInterface(PrintFeatureIid iid) override;
 
     void HandleJobBlocked(const std::string &jobId, uint32_t subState,
-        const std::string &printerName) override;
+        const std::string &printerName, int32_t userId) override;
     void ClearJobState(const std::string &jobId) override;
 
 private:
@@ -41,7 +41,7 @@ private:
     PrintFailureAiNotifierImpl &operator=(const PrintFailureAiNotifierImpl &) = delete;
 
     std::set<uint32_t> SplitSubState(uint32_t subState);
-    void ReportFailure(uint32_t state, const std::string &printerName);
+    void ReportFailure(uint32_t state, const std::string &printerName, int32_t userId);
 
     std::map<std::string, std::set<uint32_t>> jobStateMap_;
     std::mutex jobStateMutex_;

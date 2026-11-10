@@ -27,6 +27,7 @@
 #include "image_source.h"
 #include "want_agent_helper.h"
 #include "want.h"
+#include "os_account_manager.h"
 #include "syspara/parameter.h"
 
 namespace {
@@ -148,7 +149,7 @@ Notification::NotificationRequest PrintNotificationBuilder::BuildRequest(int32_t
 }
 
 std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder::CreateAiButton(int32_t notiId,
-    const std::string& askAiKey)
+    const std::string& askAiKey, int32_t userId)
 {
     UdmfDataGuard udmfGuard;
     if (!udmfGuard.CreatePlainText(askAiKey)) {
@@ -183,7 +184,7 @@ std::shared_ptr<Notification::NotificationActionButton> PrintNotificationBuilder
     AbilityRuntime::WantAgent::WantAgentInfo wantAgentInfo(WANT_AGENT_REQUEST_CODE,
         AbilityRuntime::WantAgent::WantAgentConstant::OperationType::START_ABILITY, flags, wants, nullptr);
 
-    auto wantAgent = AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(wantAgentInfo);
+    auto wantAgent = AbilityRuntime::WantAgent::WantAgentHelper::GetWantAgent(wantAgentInfo, userId);
     if (!wantAgent) {
         PRINT_HILOGE("GetWantAgent failed");
         return nullptr;
@@ -261,8 +262,25 @@ std::string PrintNotificationBuilder::SubStateToResourceKey(uint32_t subState)
     return "";
 }
 
-int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const std::string &printerName)
+bool PrintNotificationBuilder::IsForegroundUser(int32_t userId)
 {
+    if (userId < 0) {
+        return false;
+    }
+    int32_t foregroundUserId = INVALID_USER_ID;
+    auto ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(foregroundUserId);
+    if (ret != OHOS::ERR_OK || foregroundUserId != userId) {
+        PRINT_HILOGI("Skip AI notifier: job user is not the foreground user or account query failed");
+        return false;
+    }
+    return true;
+}
+
+int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const std::string &printerName, int32_t userId)
+{
+    if (!IsForegroundUser(userId)) {
+        return E_PRINT_INVALID_USERID;
+    }
     std::shared_ptr<Notification::NotificationNormalContent> normalContent =
         std::make_shared<Notification::NotificationNormalContent>();
     if (!normalContent) {
@@ -288,10 +306,11 @@ int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const st
 
     int32_t notiId = g_nextNotificationId.fetch_add(NOTIFICATION_ID_INCREMENT);
     Notification::NotificationRequest request = BuildRequest(notiId, content);
+    request.SetReceiverUserId(userId);
 
     std::ostringstream oss;
     oss << "来自打印机" << printerName << ":" << PrintResourceManager::GetInstance().GetStringByName(resourceKey);
-    std::shared_ptr<Notification::NotificationActionButton> actionButton = CreateAiButton(notiId, oss.str());
+    std::shared_ptr<Notification::NotificationActionButton> actionButton = CreateAiButton(notiId, oss.str(), userId);
 
     if (!actionButton) {
         PRINT_HILOGE("CreateAiButton failed");
@@ -300,6 +319,9 @@ int32_t PrintNotificationBuilder::CreateNotification(uint32_t subState, const st
 
     request.AddActionButton(actionButton);
 
+    if (!IsForegroundUser(userId)) {
+        return E_PRINT_INVALID_USERID;
+    }
     int32_t result = Notification::NotificationHelper::PublishNotification(request);
     if (result != OHOS::ERR_OK) {
         PRINT_HILOGE("PublishNotification failed, result: %{public}d", result);

@@ -58,7 +58,7 @@ void *PrintFailureAiNotifierImpl::QueryInterface(PrintFeatureIid iid)
 }
 
 void PrintFailureAiNotifierImpl::HandleJobBlocked(const std::string &jobId, uint32_t subState,
-    const std::string &printerName)
+    const std::string &printerName, int32_t userId)
 {
     std::lock_guard<std::mutex> lock(jobStateMutex_);
     std::set<uint32_t> newStates = SplitSubState(subState);
@@ -66,7 +66,7 @@ void PrintFailureAiNotifierImpl::HandleJobBlocked(const std::string &jobId, uint
     if (iter == jobStateMap_.end()) {
         jobStateMap_[jobId] = newStates;
         for (uint32_t state : newStates) {
-            ReportFailure(state, printerName);
+            ReportFailure(state, printerName, userId);
         }
         return;
     }
@@ -77,15 +77,15 @@ void PrintFailureAiNotifierImpl::HandleJobBlocked(const std::string &jobId, uint
         oldStates.begin(), oldStates.end(),
         std::inserter(newStatesToNotify, newStatesToNotify.begin()));
     for (uint32_t state : newStatesToNotify) {
-        ReportFailure(state, printerName);
+        ReportFailure(state, printerName, userId);
     }
     jobStateMap_[jobId] = newStates;
 }
 
-void PrintFailureAiNotifierImpl::ReportFailure(uint32_t state, const std::string &printerName)
+void PrintFailureAiNotifierImpl::ReportFailure(uint32_t state, const std::string &printerName, int32_t userId)
 {
     if (state != PRINT_JOB_BLOCKED_AUTHENTICATION) {
-        PrintNotificationBuilder::CreateNotification(state, printerName);
+        PrintNotificationBuilder::CreateNotification(state, printerName, userId);
     }
     const std::string resourceKey = PrintNotificationBuilder::GetFaultKey(state);
     ReportPrintFailureEvent(resourceKey, state);

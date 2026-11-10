@@ -48,11 +48,11 @@ void PrintFailureAiNotifier::EnsureLoaded()
 }
 
 void PrintFailureAiNotifier::HandleJobBlocked(const std::string &jobId, uint32_t subState,
-    const std::string &printerName)
+    const std::string &printerName, int32_t userId)
 {
     EnsureLoaded();
     if (impl_ != nullptr) {
-        impl_->HandleJobBlocked(jobId, subState, printerName);
+        impl_->HandleJobBlocked(jobId, subState, printerName, userId);
     }
 }
 

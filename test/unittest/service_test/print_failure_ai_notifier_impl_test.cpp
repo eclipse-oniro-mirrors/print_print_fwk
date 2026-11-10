@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
+#include "print_constant.h"
 #include "print_failure_ai_notifier_impl.h"
 
 using namespace testing;
@@ -61,10 +62,19 @@ HWTEST_F(PrintFailureAiNotifierImplTest, QueryInterface_WrongIid_ReturnNull, Tes
     EXPECT_EQ(ptr, nullptr);
 }
 
+HWTEST_F(PrintFailureAiNotifierImplTest, HandleJobBlocked_InvalidUser_KeepFaultState, TestSize.Level1)
+{
+    PrintFailureAiNotifierImpl notifier;
+    const std::string jobId = "background_job";
+    notifier.HandleJobBlocked(jobId, PRINT_JOB_BLOCKED_OUT_OF_PAPER, "Printer", INVALID_USER_ID);
+
+    EXPECT_EQ(notifier.jobStateMap_[jobId].count(PRINT_JOB_BLOCKED_OUT_OF_PAPER), 1u);
+}
+
 HWTEST_F(PrintFailureAiNotifierImplTest, HandleJobBlocked_FirstTime_StateTracked, TestSize.Level1)
 {
     PrintFailureAiNotifierImpl notifier;
-    notifier.HandleJobBlocked("job_001", 1, "Printer");
+    notifier.HandleJobBlocked("job_001", 1, "Printer", INVALID_USER_ID);
     EXPECT_EQ(notifier.jobStateMap_.size(), 1);
     auto it = notifier.jobStateMap_.find("job_001");
     EXPECT_NE(it, notifier.jobStateMap_.end());
@@ -75,16 +85,16 @@ HWTEST_F(PrintFailureAiNotifierImplTest, HandleJobBlocked_FirstTime_StateTracked
 HWTEST_F(PrintFailureAiNotifierImplTest, HandleJobBlocked_SameStateTwice_NoDuplicate, TestSize.Level1)
 {
     PrintFailureAiNotifierImpl notifier;
-    notifier.HandleJobBlocked("job_002", 1, "Printer");
-    notifier.HandleJobBlocked("job_002", 1, "Printer");
+    notifier.HandleJobBlocked("job_002", 1, "Printer", INVALID_USER_ID);
+    notifier.HandleJobBlocked("job_002", 1, "Printer", INVALID_USER_ID);
     EXPECT_EQ(notifier.jobStateMap_["job_002"].size(), 1);
 }
 
 HWTEST_F(PrintFailureAiNotifierImplTest, HandleJobBlocked_NewStateAdded_StateUpdated, TestSize.Level1)
 {
     PrintFailureAiNotifierImpl notifier;
-    notifier.HandleJobBlocked("job_003", 1, "Printer");
-    notifier.HandleJobBlocked("job_003", 201, "Printer");
+    notifier.HandleJobBlocked("job_003", 1, "Printer", INVALID_USER_ID);
+    notifier.HandleJobBlocked("job_003", 201, "Printer", INVALID_USER_ID);
     EXPECT_EQ(notifier.jobStateMap_["job_003"].size(), 2);
     EXPECT_NE(notifier.jobStateMap_["job_003"].find(1), notifier.jobStateMap_["job_003"].end());
     EXPECT_NE(notifier.jobStateMap_["job_003"].find(2), notifier.jobStateMap_["job_003"].end());
@@ -93,7 +103,7 @@ HWTEST_F(PrintFailureAiNotifierImplTest, HandleJobBlocked_NewStateAdded_StateUpd
 HWTEST_F(PrintFailureAiNotifierImplTest, ClearJobState_ExistingJob_Removed, TestSize.Level1)
 {
     PrintFailureAiNotifierImpl notifier;
-    notifier.HandleJobBlocked("job_004", 1, "Printer");
+    notifier.HandleJobBlocked("job_004", 1, "Printer", INVALID_USER_ID);
     EXPECT_EQ(notifier.jobStateMap_.size(), 1);
     notifier.ClearJobState("job_004");
     EXPECT_EQ(notifier.jobStateMap_.size(), 0);
@@ -102,7 +112,7 @@ HWTEST_F(PrintFailureAiNotifierImplTest, ClearJobState_ExistingJob_Removed, Test
 HWTEST_F(PrintFailureAiNotifierImplTest, ClearJobState_NonExistingJob_NoEffect, TestSize.Level1)
 {
     PrintFailureAiNotifierImpl notifier;
-    notifier.HandleJobBlocked("job_005", 1, "Printer");
+    notifier.HandleJobBlocked("job_005", 1, "Printer", INVALID_USER_ID);
     notifier.ClearJobState("job_006");
     EXPECT_EQ(notifier.jobStateMap_.size(), 1);
 }

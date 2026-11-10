@@ -107,19 +107,19 @@ HWTEST_F(PrintNotificationBuilderTest, CreateAiButton_ValidInput_ReturnButton, T
     std::string askAiKey = "test_key";
     
     std::shared_ptr<Notification::NotificationActionButton> button =
-        PrintNotificationBuilder::CreateAiButton(notiId, askAiKey);
+        PrintNotificationBuilder::CreateAiButton(notiId, askAiKey, 100);
     
     EXPECT_EQ(button, nullptr);
 }
 
-HWTEST_F(PrintNotificationBuilderTest, CreateNotification_ValidInput_ReturnSuccess, TestSize.Level1)
+HWTEST_F(PrintNotificationBuilderTest, CreateNotification_InvalidUser_SkipNotification, TestSize.Level1)
 {
     uint32_t subState = PrintJobSubState::PRINT_JOB_BLOCKED_OUT_OF_PAPER;
     std::string printerName = "TestPrinter";
     
-    int32_t result = PrintNotificationBuilder::CreateNotification(subState, printerName);
+    int32_t result = PrintNotificationBuilder::CreateNotification(subState, printerName, INVALID_USER_ID);
     
-    EXPECT_EQ(result, E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(result, E_PRINT_INVALID_USERID);
 }
 
 }  // namespace Print
