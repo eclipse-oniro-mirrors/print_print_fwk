@@ -836,22 +836,24 @@ HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_AddedLanPrinterSkippe
     VendorBsuniDriver vendorDriver;
     VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
     std::string localPrinterId = "mdns_added_lan_printer";
-    std::string globalPrinterId = vendorDriver.GetGlobalPrinterId(localPrinterId);
+    std::string originId = vendorDriver.GetGlobalPrinterId(localPrinterId);
+    std::string addedPrinterId = VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER + "uuid-added";
     auto service = PrintServiceAbility::GetInstance();
     ASSERT_NE(service, nullptr);
     auto printer = std::make_shared<PrinterInfo>();
-    printer->SetPrinterId(globalPrinterId);
+    printer->SetPrinterId(addedPrinterId);
+    printer->SetOriginId(originId);
     printer->SetPrinterName("HP LaserJet");
-    service->printSystemData_.addedPrinterMap_.Insert(globalPrinterId, printer);
+    service->printSystemData_.addedPrinterMap_.Insert(addedPrinterId, printer);
 
     EXPECT_TRUE(vendorDriver.ShouldSkipPrinterRemoval(localPrinterId));
     EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(localPrinterId.c_str()), EXTENSION_ERROR_NONE);
 
-    service->printSystemData_.addedPrinterMap_.Remove(globalPrinterId);
+    service->printSystemData_.addedPrinterMap_.Remove(addedPrinterId);
     VendorBsuniDriver::SetDriverWrapper(nullptr);
 }
 
-HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_UnaddedAndIpPrinterNotSkipped, TestSize.Level1)
+HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_UnaddedNotSkippedAndIpAddedSkipped, TestSize.Level1)
 {
     VendorBsuniDriver vendorDriver;
     VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
@@ -862,15 +864,17 @@ HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_UnaddedAndIpPrinterNo
     EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(unaddedId.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
 
     std::string ipPrinterId = "192.168.55.66";
-    std::string globalPrinterId = vendorDriver.GetGlobalPrinterId(ipPrinterId);
+    std::string originId = vendorDriver.GetGlobalPrinterId(ipPrinterId);
+    std::string addedPrinterId = VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER + "uuid-ip";
     auto printer = std::make_shared<PrinterInfo>();
-    printer->SetPrinterId(globalPrinterId);
+    printer->SetPrinterId(addedPrinterId);
+    printer->SetOriginId(originId);
     printer->SetPrinterName(ipPrinterId);
-    service->printSystemData_.addedPrinterMap_.Insert(globalPrinterId, printer);
-    EXPECT_FALSE(vendorDriver.ShouldSkipPrinterRemoval(ipPrinterId));
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(ipPrinterId.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
+    service->printSystemData_.addedPrinterMap_.Insert(addedPrinterId, printer);
+    EXPECT_TRUE(vendorDriver.ShouldSkipPrinterRemoval(ipPrinterId));
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(ipPrinterId.c_str()), EXTENSION_ERROR_NONE);
 
-    service->printSystemData_.addedPrinterMap_.Remove(globalPrinterId);
+    service->printSystemData_.addedPrinterMap_.Remove(addedPrinterId);
     VendorBsuniDriver::SetDriverWrapper(nullptr);
 }
 

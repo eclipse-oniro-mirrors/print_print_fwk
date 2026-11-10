@@ -1074,7 +1074,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_withDeviceId, 
 HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_NonIpPrinterUpdated, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "fwk.driver.bsuni:mdns_status_test";
+    std::string printerId = "fwk.driver.wlan.group:mdns_status_test";
     auto printer = std::make_shared<PrinterInfo>();
     printer->SetPrinterId(printerId);
     printer->SetPrinterName("HP LaserJet");
@@ -1092,7 +1092,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_NonIpPrinterUpd
 HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_IpPrinterSkipped, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "fwk.driver.bsuni:mdns_ip_status_test";
+    std::string printerId = "fwk.driver.wlan.group:mdns_ip_status_test";
     auto printer = std::make_shared<PrinterInfo>();
     printer->SetPrinterId(printerId);
     printer->SetPrinterName("192.168.0.1");

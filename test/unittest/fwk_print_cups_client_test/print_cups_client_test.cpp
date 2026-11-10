@@ -5155,7 +5155,7 @@ HWTEST_F(PrintCupsClientTest, IsDefaultAddedLanPrinter_Classification, TestSize.
     PrintCupsClient printCupsClient;
     EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(nullptr));
     auto param = std::make_shared<JobMonitorParam>(nullptr, TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
-        "ipp://printer.local/ipp/print", "HP LaserJet", "fwk.driver.bsuni:mdns_test", nullptr);
+        "ipp://printer.local/ipp/print", "HP LaserJet", "fwk.driver.wlan.group:mdns_test", nullptr);
     EXPECT_TRUE(printCupsClient.IsDefaultAddedLanPrinter(param));
     param->printerUri = "lpd://printer.local/queue";
     EXPECT_TRUE(printCupsClient.IsDefaultAddedLanPrinter(param));
@@ -5164,6 +5164,8 @@ HWTEST_F(PrintCupsClientTest, IsDefaultAddedLanPrinter_Classification, TestSize.
     param->printerId = "fwk.driver.ppd:mdns_test";
     EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(param));
     param->printerId = "fwk.driver.bsuni:mdns_test";
+    EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(param));
+    param->printerId = "fwk.driver.wlan.group:mdns_test";
     param->printerName = "192.168.0.1";
     EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(param));
 }
@@ -5186,7 +5188,7 @@ HWTEST_F(PrintCupsClientTest, EvaluatePrinterOffline_UnknownEvidenceSkipsUpdate,
 {
     PrintCupsClient printCupsClient;
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.bsuni:mdns_test", nullptr);
+        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.wlan.group:mdns_test", nullptr);
     std::string resource;
     EXPECT_EQ(printCupsClient.ConnectToIppPrinter(param, resource), nullptr);
     printCupsClient.EvaluatePrinterOffline(param, IPP_JOB_PROCESSING, "offline-report");
@@ -5200,7 +5202,7 @@ HWTEST_F(PrintCupsClientTest, UpdateJobState_UnchangedStateStillEvaluatesOffline
 {
     PrintCupsClient printCupsClient;
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.bsuni:mdns_test", nullptr);
+        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.wlan.group:mdns_test", nullptr);
     param->job_state = IPP_JOB_PROCESSING;
     strlcpy(param->job_printer_state_reasons, "offline-report", sizeof(param->job_printer_state_reasons));
     param->timesOfSameState = 0;
@@ -5214,6 +5216,28 @@ HWTEST_F(PrintCupsClientTest, UpdateJobState_UnchangedStateStillEvaluatesOffline
     EXPECT_EQ(param->offlineCandidateCount, 0);
     EXPECT_FALSE(param->offlineStatusReported);
     ippDelete(response);
+}
+
+HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_StrongOfflineEvidence, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    auto service = PrintServiceAbility::GetInstance();
+    ASSERT_NE(service, nullptr);
+    std::string printerId = "fwk.driver.wlan.group:preflight_status_test";
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterId(printerId);
+    printer->SetPrinterName("HP LaserJet");
+    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    auto param = std::make_shared<JobMonitorParam>(service, TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        "ipp://printer.local/ipp/print", "HP LaserJet", printerId, nullptr);
+
+    printCupsClient.UpdatePrinterStatusOnPreflightOffline(param);
+
+    PrinterInfo result;
+    ASSERT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    service->printSystemData_.addedPrinterMap_.Remove(printerId);
 }
 
 }  // namespace Print

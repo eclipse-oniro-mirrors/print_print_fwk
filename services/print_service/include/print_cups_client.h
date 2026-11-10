@@ -255,6 +255,7 @@ private:
     void EvaluatePrinterOffline(
         const std::shared_ptr<JobMonitorParam> &monitorParams, ipp_jstate_t jobState,
         const std::string &printerStateReasons);
+    void UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams);

@@ -1779,6 +1779,7 @@ bool PrintCupsClient::VerifyPrintJob(
         PRINT_HILOGE("[Job Id: %{public}s] VerifyPrintJob printer is offline", jobParams->serviceJobId.c_str());
         jobParams->serviceAbility->UpdatePrintJobState(
             jobParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
+        UpdatePrinterStatusOnPreflightOffline(monitorParams);
         return false;
     }
     bool driverMissing = false;
@@ -2590,24 +2591,10 @@ bool PrintCupsClient::IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorP
     if (monitorParams == nullptr || IsIpAddress(monitorParams->printerName.c_str())) {
         return false;
     }
-    const std::string &printerId = monitorParams->printerId;
-    bool isUsbPrinter = monitorParams->printerUri.length() > USB_PRINTER.length() &&
-        monitorParams->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
-    bool isVendorPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
-    bool isCustomDriver = strstr(printerId.c_str(), VENDOR_CUSTOM_DRIVER.c_str()) != nullptr;
-    bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
-        PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
-    bool isRawPrinter = PrintUtil::startsWith(printerId, RAW_PPD_DRIVER);
-    bool isIPPOverUsbPrinter = printerId.find(IPPOVERUSB_PREFIX) != std::string::npos;
-    if (isUsbPrinter || isVendorPrinter || isCustomDriver || isCustomizedExtension || isRawPrinter ||
-        isIPPOverUsbPrinter || printerId == VIRTUAL_PRINTER_ID) {
+    if (!PrintUtil::startsWith(monitorParams->printerId,
+        VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER)) {
         return false;
     }
-#ifdef HAVE_SMB_PRINTER
-    if (PrintUtil::startsWith(printerId, "smb")) {
-        return false;
-    }
-#endif
     std::string scheme = getScheme(monitorParams->printerUri);
     return strcasecmp(scheme.c_str(), "ipp") == 0 || strcasecmp(scheme.c_str(), "ipps") == 0 ||
         strcasecmp(scheme.c_str(), "lpd") == 0 || strcasecmp(scheme.c_str(), "socket") == 0;
@@ -2732,6 +2719,15 @@ void PrintCupsClient::EvaluatePrinterOffline(
     monitorParams->serviceAbility->UpdatePrinterStatusByPrinterId(
         monitorParams->printerId, PRINTER_STATUS_UNAVAILABLE);
     monitorParams->offlineStatusReported = true;
+}
+
+void PrintCupsClient::UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
+{
+    if (!IsDefaultAddedLanPrinter(monitorParams) || monitorParams->serviceAbility == nullptr) {
+        return;
+    }
+    monitorParams->serviceAbility->UpdatePrinterStatusByPrinterId(
+        monitorParams->printerId, PRINTER_STATUS_UNAVAILABLE);
 }
 
 bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerUri)

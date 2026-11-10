@@ -119,14 +119,12 @@ bool VendorBsuniDriver::ShouldSkipPrinterRemoval(const std::string &printerId)
     if (g_driverWrapper == nullptr) {
         return false;
     }
-    std::string globalPrinterId = g_driverWrapper->GetGlobalPrinterId(printerId);
-    PrinterInfo addedPrinter;
+    std::string originId = g_driverWrapper->GetGlobalPrinterId(printerId);
     auto service = PrintServiceAbility::GetInstance();
-    if (service == nullptr || !service->QueryAddedPrinterInfoByPrinterId(globalPrinterId, addedPrinter)) {
+    if (service == nullptr) {
         return false;
     }
-    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    return cupsClient != nullptr && !cupsClient->IsIpAddress(addedPrinter.GetPrinterName().c_str());
+    return !service->QueryAddedPrintersByOriginId(originId).empty();
 }
 
 int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
