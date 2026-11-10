@@ -25,6 +25,7 @@
 #include "mock_application_context.h"
 #include "print_helper.h"
 #include "print_json_util.h"
+#include "print_constant.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -356,6 +357,163 @@ HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintPage
     ASSERT_TRUE(PrintJsonUtil::Parse(printJob.GetOption(), optionJson));
     ASSERT_TRUE(optionJson.isMember("printPages"));
     EXPECT_EQ(optionJson["printPages"].asInt(), 5);
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_Fit
+ * @tc.desc: Verify printScaling "fit" in advancedOptions is converted to PRINT_SCALING_FIT_TO_PAGE
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_Fit, TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.default.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"printScaling":"fit"})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_FIT_TO_PAGE));
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_Fill
+ * @tc.desc: Verify printScaling "fill" in advancedOptions is converted to PRINT_SCALING_FILL
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_Fill, TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.default.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"printScaling":"fill"})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_FILL));
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_None
+ * @tc.desc: Verify printScaling "none" in advancedOptions is converted to PRINT_SCALING_NONE
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_None, TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.default.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"printScaling":"none"})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_NONE));
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_InvalidString
+ * @tc.desc: Verify invalid printScaling string is ignored and the job still succeeds
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_InvalidString,
+    TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.default.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"printScaling":"abc"})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_FALSE(printJob.HasPrintScaling());
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_InvalidType
+ * @tc.desc: Verify non-string printScaling value is ignored and the job still succeeds
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_InvalidType, TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.default.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"printScaling":123})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_FALSE(printJob.HasPrintScaling());
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_Coexist
+ * @tc.desc: Verify printScaling coexists with other advancedOptions keys
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_Coexist, TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.default.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"isCollate":true,"printScaling":"none"})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_NONE));
+    Json::Value optionJson;
+    ASSERT_TRUE(PrintJsonUtil::Parse(printJob.GetOption(), optionJson));
+    ASSERT_TRUE(optionJson.isMember("isCollate"));
+    EXPECT_TRUE(optionJson["isCollate"].asBool());
+}
+
+/**
+ * @tc.name: ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_RawPrinter
+ * @tc.desc: Verify printScaling in advancedOptions is also converted for raw printers
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobHelperTest, ConvertNativeJobToPrintJob_AdvancedOptionsPrintScaling_RawPrinter, TestSize.Level1)
+{
+    Print_PrintJob nativeJob = {};
+    nativeJob.jobName = const_cast<char *>("test");
+    uint32_t fd = 1;
+    nativeJob.fdList = &fd;
+    nativeJob.fdListCount = 1;
+    nativeJob.copyNumber = 1;
+    nativeJob.printerId = const_cast<char *>("driver.raw.test");
+    nativeJob.advancedOptions = const_cast<char *>(R"({"printScaling":"none"})");
+    PrintJob printJob;
+    EXPECT_EQ(ConvertNativeJobToPrintJob(nativeJob, printJob), E_PRINT_NONE);
+    EXPECT_TRUE(printJob.HasPrintScaling());
+    EXPECT_EQ(printJob.GetPrintScaling(), static_cast<uint32_t>(PRINT_SCALING_NONE));
 }
 }  // namespace Print
 }  // namespace OHOS

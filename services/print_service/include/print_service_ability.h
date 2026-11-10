@@ -307,7 +307,6 @@ private:
                                               PrinterPreferences &printerPrefs);
     void MergeVendorOptionsForPrintJob(const PrinterPreferences &preferences,
                                        const PrinterUserPreferences &userPrefs, PrintJob &printJob);
-    void UpdatePrintJobWithPrinterPreferences(PrintJob &printJob, const PrinterPreferences &preferences);
     Json::Value ConvertModifiedPreferencesToJson(const PrinterPreferences &preferences,
                                                     const PrinterUserPreferences &userPrefs);
     void FillCustomOptionsToJson(const PrinterUserPreferences &userPrefs, Json::Value &opsJson);

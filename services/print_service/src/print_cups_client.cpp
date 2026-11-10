@@ -1223,6 +1223,8 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     PRINT_HILOGD("not borderless job options");
     if (jobParams->printScaling == PRINT_SCALING_FILL) {
         num_options = cupsAddOption("print-scaling", "fill", num_options, options);
+    } else if (jobParams->printScaling == PRINT_SCALING_NONE) {
+        num_options = cupsAddOption("print-scaling", "none", num_options, options);
     } else {
         num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     }
@@ -2900,7 +2902,7 @@ void PrintCupsClient::UpdatePrintScaling(const PrintJob &jobInfo, JobParameters 
         if (params->borderless == TRUE && params->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos) {
             params->printScaling = PRINT_SCALING_BORDERLESS;
         } else {
-            params->printScaling = PRINT_SCALING_FIT_TO_PAGE;
+            params->printScaling = PRINT_SCALING_NONE;
         }
     }
 }
