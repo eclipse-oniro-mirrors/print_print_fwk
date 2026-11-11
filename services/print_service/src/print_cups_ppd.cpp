@@ -287,7 +287,9 @@ void FindDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, Print
         PRINT_HILOGI("Default page size: %{public}s, defchoice : %{public}s", pwgSize->map.ppd, sizeOption->defchoice);
         std::string defaultPageSizeId;
         if (!ConvertPageSizeId(pwgSize->map.pwg, defaultPageSizeId)) {
-            defaultPageSizeId = std::string(pwgSize->map.ppd);
+            // Unified pageId rule: fall back to the PWG name so the default page id matches
+            // the supported page size ids, never use the PPD keyword.
+            defaultPageSizeId = std::string(pwgSize->map.pwg);
         }
         printerCaps.SetPrinterAttrNameAndValue("defaultPageSizeId", defaultPageSizeId.c_str());
     } else {

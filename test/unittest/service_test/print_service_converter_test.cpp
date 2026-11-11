@@ -193,6 +193,10 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0018_NeedRename, T
     const char *src = "custom_390.03x540.03mm_390.03x540.03mm";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
+    EXPECT_EQ(dst.GetId(), std::string("custom_390.03x540.03mm_390.03x540.03mm"));
+    EXPECT_EQ(dst.GetName(), std::string("custom_390.03x540.03mm_390.03x540.03mm"));
+    EXPECT_EQ(dst.GetWidth(), 15358u);
+    EXPECT_EQ(dst.GetHeight(), 21261u);
 }
 
 HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0019_NeedRename, TestSize.Level1)

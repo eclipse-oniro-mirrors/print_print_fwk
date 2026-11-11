@@ -49,6 +49,14 @@ PrintPageSize AniPrintPageSizeHelper::ParsePrintPageSize(ani_env *env, ani_objec
     if (GetIntProperty(env, pageSizeAni, HEIGHT_STR, height)) {
         pageSize.SetHeight(static_cast<uint32_t>(height));
     }
+    // Unified pageId rule, same as PrintPageSizeHelper::BuildFromJsEx: use the standard id when
+    // the name hits the local table, otherwise derive the id/name from width and height.
+    PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(pageSize.GetName());
+    if (!ret.empty()) {
+        pageSize.SetId(ret);
+    } else if (!pageSize.ConvertToPwgStyle()) {
+        PRINT_HILOGW("parse page size keep raw values, pwg convert fail.");
+    }
     return pageSize;
 }
 

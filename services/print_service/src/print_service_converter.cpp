@@ -170,7 +170,14 @@ bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
         return false;
     }
 
-    return ConvertCustomPageSizeFromWidthAndLength(widthValue, lengthValue, unit, dst);
+    PrintPageSize converted;
+    if (!ConvertCustomPageSizeFromWidthAndLength(widthValue, lengthValue, unit, converted)) {
+        return false;
+    }
+    // Unified pageId rule: keep the printer's original PWG self-describing name (e.g.
+    // "custom_390.03x540.03mm_390.03x540.03mm") as id/name, aligned with ConvertToPwgStyle/PPD paths.
+    dst = PrintPageSize(pwgNameStr, pwgNameStr, converted.GetWidth(), converted.GetHeight());
+    return true;
 }
 
 bool ConvertPrintPageSize(const char *src, PrintPageSize &dst)

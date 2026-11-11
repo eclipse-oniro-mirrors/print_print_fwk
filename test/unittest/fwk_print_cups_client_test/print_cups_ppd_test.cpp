@@ -874,7 +874,7 @@ HWTEST_F(PrintCupsPpdTest, ParsePageSizeAttributesFromPPD_NonStandardSize_UsesPw
         "*DefaultColor: Color\n"
         "*OpenUI PageSize: PickOne\n"
         "*OrderDependency: 10 AnySetup PageSize\n"
-        "*DefaultPageSize: A4\n"
+        "*DefaultPageSize: Env10\n"
         "*PageSize A4/A4: \"<</PageSize[595 842]/ImagingBBox null>>setpagedevice\"\n"
         "*PageSize Env10/#10 Envelope: \"<</PageSize[297 684]/ImagingBBox null>>setpagedevice\"\n"
         "*CloseUI: PageSize\n";
@@ -904,6 +904,10 @@ HWTEST_F(PrintCupsPpdTest, ParsePageSizeAttributesFromPPD_NonStandardSize_UsesPw
     }
     EXPECT_TRUE(hasStandardA4);
     EXPECT_TRUE(hasNonStandardEnv10);
+
+    const char *defaultId = printerCaps.GetPrinterAttrValue("defaultPageSizeId");
+    ASSERT_NE(defaultId, nullptr);
+    EXPECT_STREQ(defaultId, "na_number-10_4.125x9.5in");
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
