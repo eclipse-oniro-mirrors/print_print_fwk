@@ -14,6 +14,7 @@
  */
 
 #include "print_service_ability_test_common.h"
+#include "print_map_safe.h"
 
 namespace OHOS {
 namespace Print {
@@ -253,12 +254,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013_NeedRename, TestS
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerIds[0]);
     std::string printerId = printerIds[0];
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
+info->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
     EXPECT_EQ(service->RemovePrinters(printerIds), E_PRINT_NONE);
     std::vector<std::string> newPrinterIds;
     newPrinterIds.push_back("1234");
     auto printer = std::make_shared<PrinterInfo>();
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     service->RemovePrinters(newPrinterIds);
     printerInfos.clear();
     EXPECT_EQ(service->UpdatePrinters(printerInfos), E_PRINT_NONE);
@@ -332,7 +334,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036_NeedRename, TestS
     printerInfo->SetPrinterName("testName");
     printerInfo->SetUri("testUri");
     printerInfo->SetPrinterMake("testMaker");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     EXPECT_EQ(service->UpdatePrintJobOptionByPrinterId(printJob2), false);
 
     Json::Value infoJson;
@@ -351,7 +353,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048_NeedRename, TestS
     state = PrinterState::PRINTER_ADDED;
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
+info->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_NONE);
 }
 
@@ -417,9 +420,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestS
     std::string printerId = "123";
     service->SetLastUsedPrinter(printerId);
     auto printer = std::make_shared<PrinterInfo>();
-    auto ret = service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     service->SetLastUsedPrinter(printerId);
-    EXPECT_EQ(ret, 1);
+    EXPECT_TRUE(PrintDataRepository::GetInstance().IsPrinterAdded(printerId));
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086_NeedRename, TestSize.Level1)
@@ -600,9 +603,9 @@ HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnRep
     std::vector<uint32_t> colorList = { 0 };
     caps.SetSupportedColorMode(colorList);
     info.SetCapability(caps);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     service->RefreshEprinterErrorCapability();
-    info = *service->printSystemData_.addedPrinterMap_.Find(printerId);
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, info));
     info.GetCapability(caps);
     caps.GetSupportedColorMode(colorList);
     EXPECT_EQ(colorList.size(), 2);
@@ -618,9 +621,9 @@ HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNon
     std::vector<uint32_t> colorList = { 0 };
     caps.SetSupportedColorMode(colorList);
     info.SetCapability(caps);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     service->RefreshEprinterErrorCapability();
-    info = *service->printSystemData_.addedPrinterMap_.Find(printerId);
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, info));
     info.GetCapability(caps);
     caps.GetSupportedColorMode(colorList);
     EXPECT_EQ(colorList.size(), 1);
@@ -636,9 +639,9 @@ HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNon
     std::vector<uint32_t> colorList = { 0, 1, 2 };
     caps.SetSupportedColorMode(colorList);
     info.SetCapability(caps);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     service->RefreshEprinterErrorCapability();
-    info = *service->printSystemData_.addedPrinterMap_.Find(printerId);
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, info));
     info.GetCapability(caps);
     caps.GetSupportedColorMode(colorList);
     EXPECT_EQ(colorList.size(), 3);
@@ -721,11 +724,11 @@ HWTEST_F(PrintServiceAbilityTest,
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("TestPrinter");
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    EXPECT_TRUE(service->printSystemData_.IsPrinterAdded(printerId));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
+    EXPECT_TRUE(PrintDataRepository::GetInstance().IsPrinterAdded(printerId));
     bool result = service->UpdatePrinterCapability(printerId, printerInfo);
     EXPECT_TRUE(result);
-    EXPECT_TRUE(service->printSystemData_.IsPrinterAdded(printerId));
+    EXPECT_TRUE(PrintDataRepository::GetInstance().IsPrinterAdded(printerId));
 }
 
 /**
@@ -742,8 +745,8 @@ HWTEST_F(PrintServiceAbilityTest,
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("SomePrinter");
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    EXPECT_TRUE(service->printSystemData_.IsPrinterAdded(printerId));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
+    EXPECT_TRUE(PrintDataRepository::GetInstance().IsPrinterAdded(printerId));
     bool result = service->UpdatePrinterCapability(printerId, printerInfo);
     EXPECT_TRUE(result);
 }
@@ -756,10 +759,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_HandleWebPrinterUninst
     info.SetPrinterId(printerId);
     service->AddSinglePrinterInfo(info, WEBPRINTER_BUNDLE_NAME);
     printerId = PrintUtils::GetGlobalId(WEBPRINTER_BUNDLE_NAME, printerId);
-    EXPECT_NE(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
+    EXPECT_NE(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), nullptr);
     info.SetPrinterId(printerId);
     service->HandleWebPrinterUninstall();
-    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), nullptr);
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), nullptr);
 }
 
 #ifdef REMOTE_SERVICE_ENABLE
@@ -846,7 +849,7 @@ HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_NoConflict_ReturnsNone, TestSiz
     auto discInfo = std::make_shared<PrinterInfo>();
     discInfo->SetPrinterId(globalId);
     discInfo->SetPrinterName("TestPrinter");
-    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discInfo);
     PrinterInfo info;
     info.SetPrinterId("printer1");
     info.SetPrinterName("TestPrinter");
@@ -861,11 +864,11 @@ HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_NameConflict_ReturnsInvalid, Te
     auto discInfo = std::make_shared<PrinterInfo>();
     discInfo->SetPrinterId(globalId);
     discInfo->SetPrinterName("NewPrinter");
-    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discInfo);
     auto added = std::make_shared<PrinterInfo>();
     added->SetPrinterId("com.other:p2");
     added->SetPrinterName("NewPrinter");
-    service->printSystemData_.addedPrinterMap_.Insert("com.other:p2", added);
+    PrintDataRepository::GetInstance().InsertAddedPrinter("com.other:p2", added);
     PrinterInfo info;
     info.SetPrinterId("printer1");
     info.SetPrinterName("NewPrinter");
@@ -880,11 +883,11 @@ HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_SelfNameUnchanged_ReturnsNone, 
     auto discInfo = std::make_shared<PrinterInfo>();
     discInfo->SetPrinterId(globalId);
     discInfo->SetPrinterName("MyPrinter");
-    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discInfo);
     auto self = std::make_shared<PrinterInfo>();
     self->SetPrinterId(globalId);
     self->SetPrinterName("MyPrinter");
-    service->printSystemData_.addedPrinterMap_.Insert(globalId, self);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, self);
     PrinterInfo info;
     info.SetPrinterId("printer1");
     info.SetPrinterName("MyPrinter");
@@ -899,19 +902,152 @@ HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_SelfNameChangedConflict_Returns
     auto discInfo = std::make_shared<PrinterInfo>();
     discInfo->SetPrinterId(globalId);
     discInfo->SetPrinterName("MyPrinter");
-    service->printSystemData_.AddPrinterToDiscovery(discInfo);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discInfo);
     auto self = std::make_shared<PrinterInfo>();
     self->SetPrinterId(globalId);
     self->SetPrinterName("MyPrinter");
-    service->printSystemData_.addedPrinterMap_.Insert(globalId, self);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, self);
     auto other = std::make_shared<PrinterInfo>();
     other->SetPrinterId("com.other:p2");
     other->SetPrinterName("ConflictPrinter");
-    service->printSystemData_.addedPrinterMap_.Insert("com.other:p2", other);
+    PrintDataRepository::GetInstance().InsertAddedPrinter("com.other:p2", other);
     PrinterInfo info;
     info.SetPrinterId("printer1");
     info.SetPrinterName("ConflictPrinter");
     EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery(extId, info), E_PRINT_INVALID_PARAMETER);
+}
+
+#ifdef REMOTE_SERVICE_ENABLE
+HWTEST_F(PrintServiceAbilityTest, IsRemotePrinter_RemoteAndNonRemoteIds, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string remotePrinterId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, "printer1");
+    std::string nonRemotePrinterId = PrintUtils::GetGlobalId(DEFAULT_EXTENSION_ID, "printer1");
+    std::string emptyPrinterId = "";
+    EXPECT_TRUE(service->IsRemotePrinter(remotePrinterId));
+    EXPECT_FALSE(service->IsRemotePrinter(nonRemotePrinterId));
+    EXPECT_FALSE(service->IsRemotePrinter(emptyPrinterId));
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnAddRemotePrinter_NoUri_ReturnsInvalidPrinter, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("printer1");
+    info.SetAlias("printer1");
+    EXPECT_EQ(service->OnAddRemotePrinter(info, REMOTE_EXT_BUNDLE_NAME), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnAddRemotePrinter_WithUri_ReturnsNone, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("printer1");
+    info.SetUri("ipp://192.168.1.1/printers/test");
+    EXPECT_EQ(service->OnAddRemotePrinter(info, REMOTE_EXT_BUNDLE_NAME), E_PRINT_NONE);
+    std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, "printer1");
+    EXPECT_NE(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RemoveRemotePrinterInfo_NotFound_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string nonExistentUri = "ipp://nonexistent/printer";
+    std::string anotherUri = "socket://192.168.1.2/printers/another";
+    std::string emptyUri = "";
+    EXPECT_FALSE(service->RemoveRemotePrinterInfo(nonExistentUri));
+    EXPECT_FALSE(service->RemoveRemotePrinterInfo(anotherUri));
+    EXPECT_FALSE(service->RemoveRemotePrinterInfo(emptyUri));
+}
+
+HWTEST_F(PrintServiceAbilityTest, RemoveRemotePrinterInfo_Found_ReturnsTrue, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string uri = "ipp://192.168.1.1/printers/test";
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("printer1");
+    info.SetUri(uri);
+    EXPECT_EQ(service->AddRemotePrinterInfo(info, REMOTE_EXT_BUNDLE_NAME), E_PRINT_NONE);
+    std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, "printer1");
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+    EXPECT_TRUE(service->RemoveRemotePrinterInfo(uri));
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnRemoveRemotePrinter_Found_ReturnsTrue, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string uri = "ipp://192.168.1.1/printers/test";
+    PrinterInfo info;
+    info.SetPrinterId("printer1");
+    info.SetPrinterName("printer1");
+    info.SetUri(uri);
+    EXPECT_EQ(service->OnAddRemotePrinter(info, REMOTE_EXT_BUNDLE_NAME), E_PRINT_NONE);
+    std::string globalId = PrintUtils::GetGlobalId(REMOTE_EXT_BUNDLE_NAME, "printer1");
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+    EXPECT_TRUE(service->OnRemoveRemotePrinter(uri));
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId), nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, AddRemotePrinterInfo_DeviceIdChanged_UpdatesDeviceId, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId1 = "device1";
+    std::string printerId2 = "device2";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId1 = PrintUtils::GetGlobalId(extensionId, printerId1);
+    std::string uri = "ipp://192.168.1.1/printers/test";
+
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId1);
+    existingPrinter.SetPrinterName(printerId1);
+    existingPrinter.SetAlias("same_alias");
+    existingPrinter.SetUri(uri);
+    existingPrinter.SetDeviceId("device_id_old");
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId1, std::make_shared<PrinterInfo>(existingPrinter));
+
+    PrinterInfo newPrinter;
+    newPrinter.SetPrinterId(printerId2);
+    newPrinter.SetPrinterName(printerId2);
+    newPrinter.SetAlias("same_alias");
+    newPrinter.SetUri(uri);
+    newPrinter.SetDeviceId("device_id_new");
+
+    EXPECT_EQ(service->AddRemotePrinterInfo(newPrinter, extensionId), E_PRINT_NONE);
+    PrinterInfo updatedPrinter;
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalId1, updatedPrinter));
+    EXPECT_EQ(updatedPrinter.GetDeviceId(), "device_id_new");
+    EXPECT_EQ(updatedPrinter.GetAlias(), "same_alias");
+}
+
+HWTEST_F(PrintServiceAbilityTest, MatchPrinterByUri_AddedPrinterNoUri_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId = "device1";
+    std::string extensionId = REMOTE_EXT_BUNDLE_NAME;
+    std::string globalId = PrintUtils::GetGlobalId(extensionId, printerId);
+    PrinterInfo existingPrinter;
+    existingPrinter.SetPrinterId(printerId);
+    existingPrinter.SetPrinterName(printerId);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, std::make_shared<PrinterInfo>(existingPrinter));
+
+    std::string matchedPrinterId;
+    PrinterInfo matchedPrinter;
+    EXPECT_FALSE(service->MatchPrinterByUri("ipp://192.168.1.1/printers/test", matchedPrinterId, matchedPrinter));
+}
+#endif  // REMOTE_SERVICE_ENABLE
+
+HWTEST_F(PrintServiceAbilityTest, AnalyzePrintEvents_WithEvent_ReturnsNonEmptyDetail, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId = "com.ohos.spooler:printer1";
+    service->AddPrintEvent(printerId, CONNECT_PRINT_EVENT_TYPE, 1);
+    std::string detail;
+    EXPECT_EQ(service->AnalyzePrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE, detail), E_PRINT_NONE);
+    EXPECT_FALSE(detail.empty());
 }
 
 }  // namespace Print

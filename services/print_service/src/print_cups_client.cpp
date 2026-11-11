@@ -33,6 +33,7 @@
 #include <wifi_p2p_msg.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+#include <netdb.h>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -44,6 +45,7 @@
 #include "parameter.h"
 #include <json/json.h>
 #include "print_service_ability.h"
+#include "print_data_repository.h"
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
 #include "agent/print_fwk_agent_manager.h"
 #endif
@@ -1223,6 +1225,8 @@ int PrintCupsClient::FillMediaOptions(JobParameters *jobParams, int num_options,
     PRINT_HILOGD("not borderless job options");
     if (jobParams->printScaling == PRINT_SCALING_FILL) {
         num_options = cupsAddOption("print-scaling", "fill", num_options, options);
+    } else if (jobParams->printScaling == PRINT_SCALING_NONE) {
+        num_options = cupsAddOption("print-scaling", "none", num_options, options);
     } else {
         num_options = cupsAddOption("fit-to-page", "true", num_options, options);
     }
@@ -1986,7 +1990,7 @@ void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monito
         return;
     }
     PrinterInfo addedPrinterInfo;
-    if (!PrintServiceAbility::GetInstance()->QueryAddedPrinterInfoByPrinterId(
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(
         monitorParams->printerId, addedPrinterInfo)) {
         PRINT_HILOGW("[Job Id: %{public}s] cannot find printer by printerId", monitorParams->serviceJobId.c_str());
     }
@@ -2562,7 +2566,6 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
         ippAttributeString(attr, job_printer_state_message, sizeof(job_printer_state_message));
         PRINT_HILOGI("job_printer_state_message: %{public}s", job_printer_state_message);
     }
-    EvaluatePrinterOffline(monitorParams, job_state, job_printer_state_reasons);
     if (monitorParams->job_state == job_state &&
         strcmp(monitorParams->job_printer_state_reasons, job_printer_state_reasons) == 0 &&
         strcmp(monitorParams->job_printer_state_message, job_printer_state_message) == 0) {
@@ -2598,127 +2601,6 @@ bool PrintCupsClient::IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorP
     std::string scheme = getScheme(monitorParams->printerUri);
     return strcasecmp(scheme.c_str(), "ipp") == 0 || strcasecmp(scheme.c_str(), "ipps") == 0 ||
         strcasecmp(scheme.c_str(), "lpd") == 0 || strcasecmp(scheme.c_str(), "socket") == 0;
-}
-
-bool PrintCupsClient::HasStateReason(const std::string &reasons, const std::string &expected)
-{
-    std::istringstream stream(reasons);
-    std::string token;
-    while (std::getline(stream, token, ',')) {
-        size_t first = token.find_first_not_of(" \t\"");
-        if (first == std::string::npos) {
-            continue;
-        }
-        size_t last = token.find_last_not_of(" \t\"");
-        if (token.substr(first, last - first + 1) == expected) {
-            return true;
-        }
-    }
-    return false;
-}
-
-OfflineEvidence PrintCupsClient::ParseOfflineEvidence(ipp_t *response)
-{
-    if (response == nullptr) {
-        return OfflineEvidence::UNKNOWN;
-    }
-    ipp_attribute_t *attr = ippFindAttribute(response, "printer-state-reasons", IPP_TAG_KEYWORD);
-    if (attr == nullptr) {
-        return OfflineEvidence::NONE;
-    }
-    char reasons[1024] = {0};
-    ippAttributeString(attr, reasons, sizeof(reasons));
-    return HasStateReason(reasons, "offline-report") ? OfflineEvidence::CONFIRMED : OfflineEvidence::NONE;
-}
-
-http_t *PrintCupsClient::ConnectToIppPrinter(
-    const std::shared_ptr<JobMonitorParam> &monitorParams, std::string &resource)
-{
-    resource.clear();
-    if (monitorParams == nullptr) {
-        return nullptr;
-    }
-    char scheme[BUFFER_LEN] = {0};
-    char userpass[BUFFER_LEN] = {0};
-    char host[BUFFER_LEN] = {0};
-    char uriResource[BUFFER_LEN] = {0};
-    int port = 0;
-    httpSeparateURI(HTTP_URI_CODING_ALL, monitorParams->printerUri.c_str(), scheme, sizeof(scheme),
-        userpass, sizeof(userpass), host, sizeof(host), &port, uriResource, sizeof(uriResource));
-    if (host[0] == '\0' || (strcasecmp(scheme, "ipp") != 0 && strcasecmp(scheme, "ipps") != 0)) {
-        return nullptr;
-    }
-    resource = uriResource;
-    std::string nic;
-    if (IsIpConflict(monitorParams->printerId, nic)) {
-        return httpConnect3(host, port, nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, nullptr,
-            nic.c_str());
-    }
-    return httpConnect2(host, port, nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, nullptr);
-}
-
-OfflineEvidence PrintCupsClient::QueryIppOfflineEvidence(const std::shared_ptr<JobMonitorParam> &monitorParams)
-{
-    if (printAbility_ == nullptr || monitorParams == nullptr) {
-        return OfflineEvidence::UNKNOWN;
-    }
-    std::string resource;
-    http_t *http = ConnectToIppPrinter(monitorParams, resource);
-    if (http == nullptr) {
-        return OfflineEvidence::UNKNOWN;
-    }
-    ipp_t *request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
-    if (request == nullptr) {
-        httpClose(http);
-        return OfflineEvidence::UNKNOWN;
-    }
-    static const char *const attrs[] = {"printer-state", "printer-state-reasons"};
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr,
-        monitorParams->printerUri.c_str());
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
-    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", 2, nullptr, attrs);
-    ipp_t *response = printAbility_->DoRequest(http, request, resource.c_str());
-    httpClose(http);
-    if (response == nullptr) {
-        return OfflineEvidence::UNKNOWN;
-    }
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        ippDelete(response);
-        return OfflineEvidence::UNKNOWN;
-    }
-    OfflineEvidence evidence = ParseOfflineEvidence(response);
-    ippDelete(response);
-    return evidence;
-}
-
-void PrintCupsClient::EvaluatePrinterOffline(
-    const std::shared_ptr<JobMonitorParam> &monitorParams, ipp_jstate_t jobState,
-    const std::string &printerStateReasons)
-{
-    if (!IsDefaultAddedLanPrinter(monitorParams) || monitorParams->offlineStatusReported ||
-        monitorParams->serviceAbility == nullptr) {
-        return;
-    }
-    if (jobState >= IPP_JOB_CANCELED || !HasStateReason(printerStateReasons, "offline-report")) {
-        monitorParams->offlineCandidateCount = 0;
-        return;
-    }
-    monitorParams->offlineCandidateCount++;
-    if (monitorParams->offlineCandidateCount < 2) {
-        return;
-    }
-    monitorParams->offlineCandidateCount = 0;
-    OfflineEvidence evidence = QueryIppOfflineEvidence(monitorParams);
-    if (evidence != OfflineEvidence::CONFIRMED) {
-        PRINT_HILOGI("[Job Id: %{public}s] offline evidence inconclusive, skip status update",
-            monitorParams->serviceJobId.c_str());
-        return;
-    }
-    PRINT_HILOGI("[Job Id: %{public}s] offline evidence confirmed, refresh status UNAVAILABLE",
-        monitorParams->serviceJobId.c_str());
-    monitorParams->serviceAbility->UpdatePrinterStatusByPrinterId(
-        monitorParams->printerId, PRINTER_STATUS_UNAVAILABLE);
-    monitorParams->offlineStatusReported = true;
 }
 
 void PrintCupsClient::UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
@@ -2784,7 +2666,7 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter || isIPPOverUsbPrinter)
         && monitorParams->serviceAbility != nullptr) {
         if ((isUsbPrinter && CheckUsbPrinterOnline(printerUri)) ||
-            monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
+            PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
             PRINT_HILOGI("printer online");
             return true;
         } else {
@@ -3033,7 +2915,7 @@ void PrintCupsClient::FillPrintSharedDir(JobParameters *params)
     }
     std::string bundleName;
     PrinterInfo printerInfo;
-    if (PrintServiceAbility::GetInstance()->QueryAddedPrinterInfoByPrinterId(params->printerId, printerInfo)) {
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(params->printerId, printerInfo)) {
         PpdInfo selectedDriverInfo;
         printerInfo.GetSelectedDriver(selectedDriverInfo);
         std::string ppdName = selectedDriverInfo.GetPpdName();
@@ -3057,7 +2939,7 @@ void PrintCupsClient::UpdatePrintScaling(const PrintJob &jobInfo, JobParameters 
         if (params->borderless == TRUE && params->mediaType.find(CUPS_MEDIA_TYPE_PHOTO) != std::string::npos) {
             params->printScaling = PRINT_SCALING_BORDERLESS;
         } else {
-            params->printScaling = PRINT_SCALING_FIT_TO_PAGE;
+            params->printScaling = PRINT_SCALING_NONE;
         }
     }
 }
@@ -3248,7 +3130,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *standar
             printerExist = (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr);
         } else {
             // vendor ppd need to be checked
-            if (!PrintServiceAbility::GetInstance()->IsPrinterPpdUpdateRequired(
+            if (!PrintDataRepository::GetInstance().IsPrinterPpdUpdateRequired(
                 standardPrinterName, GetPpdHashCode(ppdName))) {
                 printerExist = true;
                 PRINT_HILOGD("no need to update ppd");
@@ -3411,33 +3293,26 @@ bool PrintCupsClient::CancelPrinterJob(int cupsJobId, const std::string &name, c
 
 bool PrintCupsClient::IsIpAddress(const char *host)
 {
-    if (host == NULL) {
+    if (host == nullptr || host[0] == '\0') {
         PRINT_HILOGW("host is null");
         return false;
     }
-    std::string hostStr(host);
-    size_t scopePos = hostStr.find_last_of('%');
-    if (scopePos != std::string::npos) {
-        std::string scopeId = hostStr.substr(scopePos + 1);
-        hostStr = hostStr.substr(0, scopePos);
-        if (scopeId.empty()) {
-            PRINT_HILOGW("empty scope id");
-            return false;
-        }
-        if (if_nametoindex(scopeId.c_str()) == 0) {
-            PRINT_HILOGW("scope id interface not found: %{public}s", scopeId.c_str());
-            return false;
-        }
+
+    struct addrinfo hints = {0};
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_flags    = AI_NUMERICHOST;
+    hints.ai_socktype = SOCK_STREAM;
+
+    struct addrinfo *res = nullptr;
+    int rc = getaddrinfo(host, nullptr, &hints, &res);
+    if (res != nullptr) {
+        freeaddrinfo(res);
     }
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    if ((inet_pton(AF_INET, hostStr.c_str(), &addr4) == 1) ||
-        (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1)) {
-        return true;
-    } else {
-        PRINT_HILOGW("not ipv4 or ipv6");
+    if (rc != 0) {
+        PRINT_HILOGW("%{public}s, not ipv4 or ipv6", host);
         return false;
     }
+    return true;
 }
 
 IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printerUri)

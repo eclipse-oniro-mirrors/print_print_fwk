@@ -28,6 +28,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${_service_path}/include",
     "${_service_path}/include/event_callback",
+    "${_service_path}/enterprise/include",
     "${print_utils_path}/include",
   ]
 

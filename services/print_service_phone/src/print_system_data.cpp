@@ -24,7 +24,6 @@
 #include "print_util.h"
 #include "print_constant.h"
 #include "print_utils.h"
-#include "print_service_ability.h"
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
 #endif  // CUPS_ENABLE
@@ -365,7 +364,7 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
     printerJson["maker"] = info->GetPrinterMake();
     printerJson["alias"] = info->GetAlias();
     printerJson["ppdHashCode"] = info->GetPpdHashCode();
-    if (QueryIpPrinterInfoById(info->GetPrinterId()) != nullptr) {
+    if (QueryIpPrinterInfoById(info->GetPrinterId()).has_value()) {
         printerJson["printerStatus"] = info->GetPrinterStatus();
     }
     Json::Value capsJson;
@@ -520,11 +519,11 @@ bool PrintSystemData::UpdatePrinterDeviceId(const std::string &printerId, const 
     return false;
 }
 
-void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo)
+void PrintSystemData::UpdatePrinterUri(const PrinterInfo &printerInfo)
 {
-    auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
+    auto info = GetAddedPrinterMap().Find(printerInfo.GetPrinterId());
     if (info != nullptr) {
-        std::string uri = printerInfo->GetUri();
+        std::string uri = printerInfo.GetUri();
         info->SetUri(uri);
         info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
         PRINT_HILOGI("UpdatePrinterUri success");
@@ -1106,16 +1105,16 @@ std::vector<std::string> PrintSystemData::QueryAddedPrintersByOriginId(const std
     });
 }
 
-std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoById(const std::string &printerId)
+std::optional<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoById(const std::string &printerId)
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);
     auto printerIt = discoveredPrinterInfoList_.find(printerId);
-    if (printerIt != discoveredPrinterInfoList_.end()) {
-        return printerIt ->second;
+    if (printerIt != discoveredPrinterInfoList_.end() && printerIt->second != nullptr) {
+        return *(printerIt->second);
     }
-    return nullptr;
+    return std::nullopt;
 }
-std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoByName(const std::string &printerName)
+std::optional<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoByName(const std::string &printerName)
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);
     std::string name = PrintUtil::StandardizePrinterName(printerName);
@@ -1127,17 +1126,15 @@ std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoByName(c
         if (PrintUtil::StandardizePrinterName(printerInfoPtr->GetPrinterName()) != name) {
             continue;
         }
-        return printerInfoPtr;
+        return *printerInfoPtr;
     }
-    return nullptr;
+    return std::nullopt;
 }
 
-void PrintSystemData::AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printerInfo)
+void PrintSystemData::AddPrinterToDiscovery(const PrinterInfo &printerInfo)
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);
-    if (printerInfo != nullptr) {
-        discoveredPrinterInfoList_[printerInfo->GetPrinterId()] = printerInfo;
-    }
+    discoveredPrinterInfoList_[printerInfo.GetPrinterId()] = std::make_shared<PrinterInfo>(printerInfo);
 }
 
 void PrintSystemData::RemovePrinterFromDiscovery(const std::string &printerId)
@@ -1158,18 +1155,22 @@ void PrintSystemData::ClearDiscoveredPrinterList()
     discoveredPrinterInfoList_.clear();
 }
 
-std::map<std::string, std::shared_ptr<PrinterInfo>> PrintSystemData::GetDiscoveredPrinterInfo()
+std::map<std::string, PrinterInfo> PrintSystemData::GetDiscoveredPrinterInfo()
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);
-    return discoveredPrinterInfoList_;
+    std::map<std::string, PrinterInfo> snapshot;
+    for (const auto &pair : discoveredPrinterInfoList_) {
+        if (pair.second != nullptr) {
+            snapshot[pair.first] = *(pair.second);
+        }
+    }
+    return snapshot;
 }
 
-void PrintSystemData::AddIpPrinterToList(std::shared_ptr<PrinterInfo> printerInfo)
+void PrintSystemData::AddIpPrinterToList(const PrinterInfo &printerInfo)
 {
     std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
-    if (printerInfo != nullptr) {
-        connectingIpPrinterInfoList_[printerInfo->GetPrinterId()] = printerInfo;
-    }
+    connectingIpPrinterInfoList_[printerInfo.GetPrinterId()] = std::make_shared<PrinterInfo>(printerInfo);
 }
 
 void PrintSystemData::RemoveIpPrinterFromList(const std::string &printerId)
@@ -1178,14 +1179,69 @@ void PrintSystemData::RemoveIpPrinterFromList(const std::string &printerId)
     connectingIpPrinterInfoList_.erase(printerId);
 }
 
-std::shared_ptr<PrinterInfo> PrintSystemData::QueryIpPrinterInfoById(const std::string &printerId)
+std::optional<PrinterInfo> PrintSystemData::QueryIpPrinterInfoById(const std::string &printerId)
 {
     std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
     auto printerIt = connectingIpPrinterInfoList_.find(printerId);
-    if (printerIt != connectingIpPrinterInfoList_.end()) {
-        return printerIt ->second;
+    if (printerIt != connectingIpPrinterInfoList_.end() && printerIt->second != nullptr) {
+        return *(printerIt->second);
     }
-    return nullptr;
+    return std::nullopt;
+}
+
+bool PrintSystemData::SetDiscoveredPrinterState(const std::string &printerId, PrinterState state)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    auto it = discoveredPrinterInfoList_.find(printerId);
+    if (it == discoveredPrinterInfoList_.end() || it->second == nullptr) {
+        return false;
+    }
+    it->second->SetPrinterState(static_cast<uint32_t>(state));
+    return true;
+}
+
+bool PrintSystemData::SetDiscoveredPrinterAlias(const std::string &printerId, const std::string &alias)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    auto it = discoveredPrinterInfoList_.find(printerId);
+    if (it == discoveredPrinterInfoList_.end() || it->second == nullptr) {
+        return false;
+    }
+    it->second->SetAlias(alias);
+    return true;
+}
+
+bool PrintSystemData::SetIpPrinterState(const std::string &printerId, PrinterState state)
+{
+    std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+    auto it = connectingIpPrinterInfoList_.find(printerId);
+    if (it == connectingIpPrinterInfoList_.end() || it->second == nullptr) {
+        return false;
+    }
+    it->second->SetPrinterState(static_cast<uint32_t>(state));
+    return true;
+}
+
+bool PrintSystemData::UpdateDiscoveredPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    auto it = discoveredPrinterInfoList_.find(printerId);
+    if (it == discoveredPrinterInfoList_.end() || it->second == nullptr) {
+        return false;
+    }
+    *(it->second) = printerInfo;
+    return true;
+}
+
+bool PrintSystemData::UpdateIpPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+    auto it = connectingIpPrinterInfoList_.find(printerId);
+    if (it == connectingIpPrinterInfoList_.end() || it->second == nullptr) {
+        return false;
+    }
+    *(it->second) = printerInfo;
+    return true;
 }
 
 Json::Value PrintSystemData::GetCupsOptionsJson(const PrinterCapability &cap)
@@ -1392,8 +1448,9 @@ void PrintSystemData::SaveJsonFile(const std::string &fileName, const std::strin
 PrintMapSafe<PrinterInfo>& PrintSystemData::GetAddedPrinterMap()
 {
 #ifdef ENTERPRISE_ENABLE
-    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
-        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+    // Uses the cached enterprise state set by SetEnterpriseState. The cache is refreshed on
+    // service init and user switch; see SetEnterpriseState for the refresh contract.
+    if (isEnterpriseEnable_.load() && isEnterprise_.load()) {
         return addedPrinterEnterpriseMap_;
     }
 #endif // ENTERPRISE_ENABLE
@@ -1403,12 +1460,25 @@ PrintMapSafe<PrinterInfo>& PrintSystemData::GetAddedPrinterMap()
 const std::string& PrintSystemData::GetPrintersPath()
 {
 #ifdef ENTERPRISE_ENABLE
-    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
-        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+    // Uses the cached enterprise state set by SetEnterpriseState. The cache is refreshed on
+    // service init and user switch; see SetEnterpriseState for the refresh contract.
+    if (isEnterpriseEnable_.load() && isEnterprise_.load()) {
         return PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH;
     }
 #endif // ENTERPRISE_ENABLE
     return PRINTER_SERVICE_PRINTERS_PATH;
+}
+
+// The enterprise state is cached here and consumed by GetAddedPrinterMap/GetPrintersPath.
+// It is updated only at service init and on user switch. If the controlling system parameter
+// can change independently of those events, an explicit refresh mechanism must be added.
+void PrintSystemData::SetEnterpriseState(bool enable, bool isEnterprise)
+{
+    PRINT_HILOGI("SetEnterpriseState enable=%{public}d isEnterprise=%{public}d", enable, isEnterprise);
+#ifdef ENTERPRISE_ENABLE
+    isEnterpriseEnable_.store(enable);
+    isEnterprise_.store(isEnterprise);
+#endif // ENTERPRISE_ENABLE
 }
 
 void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::string &type, int32_t code)

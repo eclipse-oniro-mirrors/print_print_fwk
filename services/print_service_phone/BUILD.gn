@@ -25,6 +25,7 @@ if (print_fwk_feature_device_isolation) {
     include_dirs = [
       "${_service_path}/include",
       "${_service_path}/include/remote",
+      "${_service_path}/src/internal",
       "${print_path}/frameworks/models/print_models/include",
     ]
     cflags_cc += [
@@ -50,10 +51,10 @@ if (print_fwk_feature_device_isolation) {
     "${_service_path}/src/print_callback_proxy.cpp",
     "${_service_path}/src/print_caller_app_monitor.cpp",
     "${_service_path}/src/print_common_death_recipient.cpp",
+    "${_service_path}/src/print_data_repository.cpp",
     "${_service_path}/src/print_event_container.cpp",
     "${_service_path}/src/print_event_subscriber.cpp",
     "${_service_path}/src/print_extension_callback_proxy.cpp",
-    "${_service_path}/src/print_resource_manager.cpp",
     "${_service_path}/src/print_security_guard_info.cpp",
     "${_service_path}/src/print_security_guard_manager.cpp",
     "${_service_path}/src/print_service_ability.cpp",
@@ -73,6 +74,10 @@ if (print_fwk_feature_device_isolation) {
     "${_service_path}/src/vendor_ppd_driver.cpp",
     "${_service_path}/src/vendor_wlan_group.cpp",
     "${_service_path}/src/watermark_callback_proxy.cpp",
+    "${_service_path}/src/print_feature_plugin_loader.cpp",
+    "${_service_path}/src/print_feature_plugin_manager.cpp",
+    "${_service_path}/src/print_failure_ai_notifier_proxy.cpp",
+    "${_service_path}/src/remote/remote_printer_manager_proxy.cpp",
   ]
 
   _deps = [
@@ -95,7 +100,6 @@ if (print_fwk_feature_device_isolation) {
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "distributed_notification_service:ans_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -113,15 +117,13 @@ if (print_fwk_feature_device_isolation) {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
-    "udmf:udmf_client",
-    "udmf:utd_client",
-    "udmf:libudmf",
     "wifi:wifi_sdk",
   ]
 
   _public_configs = [ ":print_service_config" ]
 
   _include_dirs = [
+    "${_service_path}/include",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/ohprint/include",
     "${_service_path}/include/event_callback",
@@ -220,10 +222,6 @@ if (print_fwk_feature_device_isolation) {
     }
 
     if (print_fwk_feature_print_failure_ai_notifier) {
-      sources += [
-        "${_service_path}/src/print_failure_ai_notifier.cpp",
-        "${_service_path}/src/print_notification_builder.cpp",
-      ]
       cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
     }
 
@@ -232,12 +230,6 @@ if (print_fwk_feature_device_isolation) {
     }
 
     if (print_fwk_feature_remote_service) {
-      sources += [
-        "${_service_path}/src/remote/remote_service_adapter.cpp",
-        "${_service_path}/src/remote/print_ipc_connection.cpp",
-        "${_service_path}/src/remote/remote_printer_manager.cpp",
-        "${_service_path}/src/remote/remote_callback_stub.cpp",
-      ]
       cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
     }
 
@@ -329,20 +321,10 @@ if (print_fwk_feature_device_isolation) {
     }
 
     if (print_fwk_feature_print_failure_ai_notifier) {
-      sources += [
-        "${_service_path}/src/print_failure_ai_notifier.cpp",
-        "${_service_path}/src/print_notification_builder.cpp",
-      ]
       cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
     }
 
     if (print_fwk_feature_remote_service) {
-      sources += [
-        "${_service_path}/src/remote/remote_printer_manager.cpp",
-        "${_service_path}/src/remote/remote_service_adapter.cpp",
-        "${_service_path}/src/remote/remote_callback_stub.cpp",
-        "${_service_path}/src/remote/print_ipc_connection.cpp",
-      ]
       cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
     }
 

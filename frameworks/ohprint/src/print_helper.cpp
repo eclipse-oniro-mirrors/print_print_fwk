@@ -722,6 +722,39 @@ bool SetPrintPageSizeInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &
     return true;
 }
 
+void SetAdvancedJsonOptions(const Print_PrintJob &nativePrintJob, Json::Value &jsonOptions, PrintJob &printJob)
+{
+    Json::Value jsonAdvanceOptions;
+    if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
+        jsonAdvanceOptions)) {
+        if (jsonAdvanceOptions.isMember("isReverse") && jsonAdvanceOptions["isReverse"].isBool()) {
+            jsonOptions["isReverse"] = jsonAdvanceOptions["isReverse"];
+        }
+        if (jsonAdvanceOptions.isMember("isCollate") && jsonAdvanceOptions["isCollate"].isBool()) {
+            jsonOptions["isCollate"] = jsonAdvanceOptions["isCollate"];
+        }
+        if (jsonAdvanceOptions.isMember("printPages") && jsonAdvanceOptions["printPages"].isInt()) {
+            jsonOptions["printPages"] = jsonAdvanceOptions["printPages"];
+        }
+        if (jsonAdvanceOptions.isMember("printScaling")) {
+            std::string scaling;
+            if (jsonAdvanceOptions["printScaling"].isString()) {
+                scaling = jsonAdvanceOptions["printScaling"].asString();
+            }
+            if (scaling == "fit") {
+                printJob.SetPrintScaling(static_cast<uint32_t>(PRINT_SCALING_FIT_TO_PAGE));
+            } else if (scaling == "fill") {
+                printJob.SetPrintScaling(static_cast<uint32_t>(PRINT_SCALING_FILL));
+            } else if (scaling == "none") {
+                printJob.SetPrintScaling(static_cast<uint32_t>(PRINT_SCALING_NONE));
+            } else {
+                PRINT_HILOGW("SetAdvancedJsonOptions invalid printScaling value, ignore it");
+            }
+        }
+        jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
+    }
+}
+
 void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob)
 {
     PRINT_HILOGI("SetOptionInPrintJob in.");
@@ -748,21 +781,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
-
-    Json::Value jsonAdvanceOptions;
-    if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
-        jsonAdvanceOptions)) {
-        if (jsonAdvanceOptions.isMember("isReverse") && jsonAdvanceOptions["isReverse"].isBool()) {
-            jsonOptions["isReverse"] = jsonAdvanceOptions["isReverse"];
-        }
-        if (jsonAdvanceOptions.isMember("isCollate") && jsonAdvanceOptions["isCollate"].isBool()) {
-            jsonOptions["isCollate"] = jsonAdvanceOptions["isCollate"];
-        }
-        if (jsonAdvanceOptions.isMember("printPages") && jsonAdvanceOptions["printPages"].isInt()) {
-            jsonOptions["printPages"] = jsonAdvanceOptions["printPages"];
-        }
-        jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
-    }
+    SetAdvancedJsonOptions(nativePrintJob, jsonOptions, printJob);
 
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
     PRINT_HILOGD("SetOptionInPrintJob %{public}s", PrintUtils::AnonymizeJobOption(option).c_str());

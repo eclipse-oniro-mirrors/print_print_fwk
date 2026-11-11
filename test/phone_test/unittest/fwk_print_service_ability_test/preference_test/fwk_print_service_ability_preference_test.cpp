@@ -39,7 +39,7 @@ HWTEST_F(PrintServiceAbilityTest, SetPrinterPreference_AddedPrinterId_NoError, T
     info.SetPrinterId(printerId);
     PrinterPreferences preferences;
     preferences.SetBorderless(true);
-    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_NONE);
 }
 
@@ -202,12 +202,12 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterPreference_PrinterExists, TestSize.L
     PrinterPreferences prefs;
     prefs.SetDefaultDuplexMode(DUPLEX_MODE_LONG_EDGE);
     info.SetPreferences(prefs);
-    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
     PrinterPreferences result;
     int32_t ret = service->GetPrinterPreference(printerId, result);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_EQ(result.GetDefaultDuplexMode(), DUPLEX_MODE_LONG_EDGE);
-    service->printSystemData_.DeleteAddedPrinter(printerId, "Test Printer");
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, "Test Printer");
 }
 
 }  // namespace Print

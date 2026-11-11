@@ -223,7 +223,7 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
     EXPECT_NE(nullptr, connection->deathRecipient_);
     EXPECT_NE(nullptr, connection->remoteObject_);
 }
- 
+
 /**
 * @tc.name: OnAbilityDisconnectDone_004
 * @tc.desc: Branch: disconnect success -> deathRecipient removed
@@ -280,6 +280,118 @@ HWTEST_F(PrintIpcConnectionTest, ClearConnection_002, TestSize.Level1)
     EXPECT_FALSE(connection->IsConnected());
     EXPECT_EQ(nullptr, connection->deathRecipient_);
     EXPECT_EQ(nullptr, connection->remoteObject_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, SendData_RemoteObjectValid_SendRequestFails_ClearsObject, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _)).WillRepeatedly(Return(-1));
+    connection.remoteObject_ = mockRemote;
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int32_t result = connection.SendData(1, data, reply, option);
+
+    EXPECT_EQ(-1, result);
+    EXPECT_EQ(nullptr, connection.remoteObject_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, IsConnectedAndGetRemoteObject_WithRemoteObject_ReturnTrueAndObject, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    connection.remoteObject_ = mockRemote;
+
+    EXPECT_TRUE(connection.IsConnected());
+    EXPECT_NE(nullptr, connection.GetRemoteObject());
+}
+
+HWTEST_F(PrintIpcConnectionTest, WaitForConnection_AlreadyConnected_ReturnsTrue, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    connection.remoteObject_ = mockRemote;
+
+    EXPECT_TRUE(connection.WaitForConnection(0));
+}
+
+HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_AddDeathRecipientFail_LogsWarning, TestSize.Level1)
+{
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(false));
+    AppExecFwk::ElementName element;
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    EXPECT_NE(nullptr, connection->remoteObject_);
+    EXPECT_NE(nullptr, connection->deathRecipient_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, OnAbilityDisconnectDone_RemoveDeathRecipientFail_LogsWarning, TestSize.Level1)
+{
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    AppExecFwk::ElementName element;
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(false));
+    connection->OnAbilityDisconnectDone(element, ERR_OK);
+    EXPECT_EQ(nullptr, connection->remoteObject_);
+    EXPECT_EQ(nullptr, connection->deathRecipient_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, ClearConnection_NoRemoteObject_DoesNothing, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    EXPECT_FALSE(connection.IsConnected());
+    EXPECT_NO_FATAL_FAILURE(connection.ClearConnection());
+    EXPECT_EQ(nullptr, connection.remoteObject_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, SendData_RemoteObjectValid_SendRequestSucceeds, TestSize.Level1)
+{
+    PrintIpcConnection connection;
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, SendRequest(_, _, _, _)).WillRepeatedly(Return(ERR_OK));
+    connection.remoteObject_ = mockRemote;
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int32_t result = connection.SendData(1, data, reply, option);
+
+    EXPECT_EQ(ERR_OK, result);
+    EXPECT_NE(nullptr, connection.remoteObject_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_RemoteObjectWithoutDeathRecipient_SetsRecipient, TestSize.Level1)
+{
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    connection->remoteObject_ = mockRemote;
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    AppExecFwk::ElementName element;
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+    EXPECT_EQ(connection->remoteObject_.GetRefPtr(), mockRemote.GetRefPtr());
+    EXPECT_NE(nullptr, connection->deathRecipient_);
+}
+
+HWTEST_F(PrintIpcConnectionTest, ClearConnection_RemoveDeathRecipientFail_LogsWarning, TestSize.Level1)
+{
+    auto connection = sptr<PrintIpcConnection>::MakeSptr();
+    auto mockRemote = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(true));
+    AppExecFwk::ElementName element;
+    connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
+
+    EXPECT_CALL(*mockRemote, RemoveDeathRecipient(_)).WillRepeatedly(Return(false));
+    connection->ClearConnection();
+    EXPECT_EQ(nullptr, connection->remoteObject_);
+    EXPECT_EQ(nullptr, connection->deathRecipient_);
 }
 
 } // namespace OHOS::Print

@@ -112,6 +112,8 @@
       ],
       "service_group":[
          "//base/print/print_fwk/services:print_service",
+         "//base/print/print_fwk/features/remote_service:print_feature_remote_service",
+         "//base/print/print_fwk/features/print_failure_ai_notifier:print_feature_ai_notifier_service",
          "//base/print/print_fwk/services:scan_service",
          "//base/print/print_fwk/services:sane_service",
          "//base/print/print_fwk/etc/init:printservice.rc",

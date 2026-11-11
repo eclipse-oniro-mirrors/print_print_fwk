@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include <thread>
-#include "print_system_data.h"
+#include "print_constant.h"
 #include "smb_host_search_helper.h"
 #include "smb_printer_discoverer.h"
 #include "smb_printer_state_monitor.h"
@@ -109,7 +109,7 @@ std::vector<std::pair<PrinterInfo, SmbPrinterStateMonitor::HostStatus>> SmbPrint
             continue;
         }
         uint32_t newPrinterStatus = testHostStatusResult->second == HostStatus::ALIVE ?
-            PrinterStatus::PRINTER_STATUS_IDLE : PrinterStatus::PRINTER_STATUS_UNAVAILABLE;
+            PRINTER_STATUS_IDLE : PRINTER_STATUS_UNAVAILABLE;
         PrinterInfo newInfo = localSmbPrinterPair.first;
         newInfo.SetPrinterStatus(newPrinterStatus);
         notifyPrinters.push_back({newInfo, testHostStatusResult->second});

@@ -193,7 +193,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshThirdDriverPrinter_CustomDriverPrinter_
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(printerId);
     printerInfo.SetPrinterName("TestPrinter");
-    service->printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     service->RefreshThirdDriverPrinter();
 }
 
@@ -210,7 +210,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshThirdDriverPrinter_RegularPrinter_NoCha
     PrinterInfo regularInfo;
     regularInfo.SetPrinterId(regularId);
     regularInfo.SetPrinterName("SomePrinter");
-    service->printSystemData_.InsertAddedPrinter(regularId, regularInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(regularId, regularInfo);
     service->RefreshThirdDriverPrinter();
 }
 

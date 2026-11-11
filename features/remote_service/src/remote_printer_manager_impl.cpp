@@ -1,0 +1,459 @@
+/*
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "remote_printer_manager_impl.h"
+
+#include <algorithm>
+#include <chrono>
+#include <thread>
+
+#include "print_constant.h"
+#include "print_json_util.h"
+#include "print_log.h"
+#include "print_page_size.h"
+#include "print_utils.h"
+#include "remote_constants.h"
+
+namespace OHOS::Print {
+
+namespace {
+const std::vector<uint32_t> DEFAULT_QUALITY_LIST = {
+    PRINT_QUALITY_DRAFT, PRINT_QUALITY_NORMAL, PRINT_QUALITY_HIGH
+};
+
+const std::vector<std::string> DEFAULT_MEDIA_TYPE_LIST = {
+    "stationery", "stationery-recycled", "thick"
+};
+
+const std::vector<uint32_t> DEFAULT_DUPLEX_MODE_LIST = {
+    DUPLEX_MODE_NONE, DUPLEX_MODE_LONG_EDGE, DUPLEX_MODE_SHORT_EDGE
+};
+
+std::vector<PrintPageSize> BuildDefaultPageSizeList()
+{
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    const PAGE_SIZE_ID pageSizeIds[] = {
+        PAGE_SIZE_ID_ISO_A4, PAGE_SIZE_ID_ISO_A5, PAGE_SIZE_ID_ISO_A6,
+        PAGE_SIZE_ID_JIS_B5, PAGE_SIZE_ID_JIS_B6,
+        PAGE_SIZE_ID_NA_LETTER, PAGE_SIZE_ID_PRC_16K
+    };
+    for (const auto &id : pageSizeIds) {
+        if (PrintPageSize::FindPageSizeById(id, pageSize)) {
+            pageSizeList.push_back(pageSize);
+        }
+    }
+    return pageSizeList;
+}
+
+const std::vector<PrintPageSize> DEFAULT_PAGE_SIZE_LIST = BuildDefaultPageSizeList();
+
+constexpr int32_t DISCOVERY_INTERVAL_MS = 3000;
+}
+
+RemotePrinterManagerImpl::RemotePrinterManagerImpl()
+    : serviceAdapter_(RemoteServiceAdapter::GetInstance())
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl constructor");
+
+    serviceAdapter_.SetOnServiceDiedCallback([this]() {
+        PRINT_HILOGI("Remote service died, clearing all printers");
+        this->ClearAllPrinters();
+    });
+
+    std::call_once(initFlag_, [this]() {
+        if (serviceAdapter_.BindService()) {
+            PRINT_HILOGI("RemotePrinterManagerImpl initialized successfully");
+        } else {
+            PRINT_HILOGE("BindService failed in constructor");
+        }
+    });
+}
+
+RemotePrinterManagerImpl::~RemotePrinterManagerImpl()
+{
+    Destroy();
+}
+
+RemotePrinterManagerImpl &RemotePrinterManagerImpl::GetInstance()
+{
+    static RemotePrinterManagerImpl instance;
+    return instance;
+}
+
+void *RemotePrinterManagerImpl::QueryInterface(PrintFeatureIid iid)
+{
+    if (iid == PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER) {
+        return static_cast<IRemotePrinterManager *>(this);
+    }
+    return nullptr;
+}
+
+void RemotePrinterManagerImpl::SetEventHandler(IRemotePrinterEventHandler *handler)
+{
+    std::lock_guard<std::mutex> lock(handlerMutex_);
+    eventHandler_ = handler;
+}
+
+bool RemotePrinterManagerImpl::Destroy()
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl Destroy");
+    StopPrinterDiscovery();
+    serviceAdapter_.SetOnServiceDiedCallback(nullptr);
+    serviceAdapter_.UnbindService();
+
+    {
+        std::lock_guard<std::mutex> lock(printerMapLock_);
+        printerMap_.clear();
+    }
+    {
+        std::lock_guard<std::mutex> lock(handlerMutex_);
+        eventHandler_ = nullptr;
+    }
+    return true;
+}
+
+bool RemotePrinterManagerImpl::Disconnect()
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl Disconnect");
+    StopPrinterDiscovery();
+    ClearAllPrinters();
+    serviceAdapter_.UnbindService();
+    return true;
+}
+
+PrinterStatus RemotePrinterManagerImpl::ConvertStatusToPrinterStatus(const std::string &statusStr)
+{
+    if (statusStr == REMOTE_STATUS_ONLINE) {
+        return PRINTER_STATUS_IDLE;
+    }
+    if (statusStr == REMOTE_STATUS_OFFLINE) {
+        return PRINTER_STATUS_UNAVAILABLE;
+    }
+    PRINT_HILOGW("Unknown status: %{public}s, use UNAVAILABLE", statusStr.c_str());
+    return PRINTER_STATUS_UNAVAILABLE;
+}
+
+void RemotePrinterManagerImpl::SetDefaultCapability(PrinterCapability &capability)
+{
+    capability.SetSupportedQuality(DEFAULT_QUALITY_LIST);
+    capability.SetSupportedPageSize(DEFAULT_PAGE_SIZE_LIST);
+    capability.SetSupportedMediaType(DEFAULT_MEDIA_TYPE_LIST);
+    capability.SetSupportedDuplexMode(DEFAULT_DUPLEX_MODE_LIST);
+    capability.SetDuplexMode(DUPLEX_MODE_SHORT_EDGE);
+}
+
+static bool ExtractBasePrinterFields(const Json::Value &item, std::string &devId,
+    std::string &devName, std::string &statusStr)
+{
+    if (!PrintJsonUtil::FindJsonStringMember(item, "devId", devId)) {
+        return false;
+    }
+    if (!PrintJsonUtil::FindJsonStringMember(item, "devName", devName)) {
+        return false;
+    }
+    return PrintJsonUtil::FindJsonStringMember(item, "status", statusStr);
+}
+
+static bool ExtractDeviceInfo(const Json::Value &devInfo, std::string &sn, std::string &prodId)
+{
+    if (!PrintJsonUtil::FindJsonStringMember(devInfo, "sn", sn)) {
+        return false;
+    }
+    return PrintJsonUtil::FindJsonStringMember(devInfo, "prodId", prodId);
+}
+
+bool RemotePrinterManagerImpl::BuildPrinterInfo(const Json::Value &item, PrinterInfo &printerInfo)
+{
+    if (!item.isObject()) {
+        return false;
+    }
+
+    std::string devId;
+    std::string devName;
+    std::string statusStr;
+    if (!ExtractBasePrinterFields(item, devId, devName, statusStr)) {
+        return false;
+    }
+    if (!PrintJsonUtil::IsMember(item, "devInfo") || !item["devInfo"].isObject()) {
+        return false;
+    }
+
+    Json::Value devInfo = item["devInfo"];
+    std::string sn;
+    std::string prodId;
+    if (!ExtractDeviceInfo(devInfo, sn, prodId)) {
+        return false;
+    }
+
+    printerInfo.SetPrinterId(devId);
+    printerInfo.SetPrinterName(devName);
+    printerInfo.SetAlias(devName);
+    printerInfo.SetPrinterStatus(static_cast<uint32_t>(ConvertStatusToPrinterStatus(statusStr)));
+    printerInfo.SetUri(sn);
+    printerInfo.SetPrinterUuid(sn);
+    printerInfo.SetPrinterMake(prodId);
+    printerInfo.SetDeviceId(devId);
+
+    PrinterCapability capability;
+    SetDefaultCapability(capability);
+    printerInfo.SetCapability(capability);
+
+    if (PrintJsonUtil::IsMember(item, "services")) {
+        std::string servicesStr = PrintJsonUtil::WriteString(item["services"]);
+        printerInfo.SetOptionField("services", servicesStr);
+    }
+    return true;
+}
+
+void RemotePrinterManagerImpl::StartPrinterDiscovery()
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl StartPrinterDiscovery");
+    std::lock_guard<std::mutex> startLock(startMutex_);
+    if (isDiscoveryRunning_.load()) {
+        PRINT_HILOGW("Discovery already running, trigger immediate query");
+        int32_t result = serviceAdapter_.RequestPrinterList();
+        PRINT_HILOGI("Immediate RequestPrinterList result: %{public}d", result);
+        return;
+    }
+
+    std::thread threadToJoin;
+    {
+        std::lock_guard<std::mutex> lock(controlMutex_);
+        threadToJoin = std::move(discoveryThread_);
+    }
+    if (threadToJoin.joinable()) {
+        threadToJoin.join();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(controlMutex_);
+        isDiscoveryRunning_.store(true);
+        discoveryThread_ = std::thread([this]() {
+            DiscoveryLoop();
+        });
+    }
+}
+
+bool RemotePrinterManagerImpl::StopPrinterDiscovery()
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl StopPrinterDiscovery");
+    isDiscoveryRunning_.store(false);
+    cv_.notify_all();
+    std::thread threadToJoin;
+    {
+        std::lock_guard<std::mutex> lock(controlMutex_);
+        threadToJoin = std::move(discoveryThread_);
+    }
+    if (threadToJoin.joinable()) {
+        threadToJoin.join();
+    }
+    return true;
+}
+
+void RemotePrinterManagerImpl::DiscoveryLoop()
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl DiscoveryLoop started");
+    while (isDiscoveryRunning_.load()) {
+        int32_t result = serviceAdapter_.RequestPrinterList();
+        PRINT_HILOGI("RequestPrinterList result: %{public}d", result);
+        std::unique_lock<std::mutex> lk(controlMutex_);
+        cv_.wait_for(lk, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS),
+            [this] { return !isDiscoveryRunning_.load(); });
+    }
+    PRINT_HILOGI("RemotePrinterManagerImpl DiscoveryLoop stopped");
+}
+
+std::shared_ptr<PrinterInfo> RemotePrinterManagerImpl::GetPrinterInfo(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(printerMapLock_);
+    auto it = printerMap_.find(printerId);
+    if (it != printerMap_.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+bool RemotePrinterManagerImpl::UpdatePrinterStatus(const std::string &printerId, PrinterStatus status)
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl UpdatePrinterStatus: %{public}s, status=%{public}d",
+        PrintUtils::AnonymizePrinterId(printerId).c_str(), status);
+
+    std::lock_guard<std::mutex> lock(printerMapLock_);
+    auto it = printerMap_.find(printerId);
+    if (it == printerMap_.end()) {
+        PRINT_HILOGW("Printer not found: %{public}s", PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return false;
+    }
+
+    it->second->SetPrinterStatus(static_cast<uint32_t>(status));
+    return true;
+}
+
+bool RemotePrinterManagerImpl::OnPrinterListReceived(const Json::Value &jsonArray)
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl OnPrinterListReceived");
+
+    std::vector<std::string> currentDevIds;
+
+    for (const auto &item : jsonArray) {
+        PrinterInfo printerInfo;
+        if (!BuildPrinterInfo(item, printerInfo)) {
+            continue;
+        }
+
+        std::string devId = printerInfo.GetPrinterId();
+        PRINT_HILOGI("[Printer: %{public}s] discovered", PrintUtils::AnonymizePrinterId(devId).c_str());
+        currentDevIds.push_back(devId);
+
+        std::lock_guard<std::mutex> lock(printerMapLock_);
+        printerMap_[devId] = std::make_shared<PrinterInfo>(printerInfo);
+    }
+
+    for (const auto &devId : currentDevIds) {
+        int32_t result = serviceAdapter_.RequestPrinterStatus(devId);
+        PRINT_HILOGI("RequestPrinterStatus for %{public}s result: %{public}d",
+            PrintUtils::AnonymizePrinterId(devId).c_str(), result);
+    }
+
+    RemoveDeprecatedPrinters(currentDevIds);
+    return true;
+}
+
+void RemotePrinterManagerImpl::NotifyPrinterRemoved(const std::string &uri)
+{
+    IRemotePrinterEventHandler *handler = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(handlerMutex_);
+        handler = eventHandler_;
+    }
+    if (handler != nullptr) {
+        handler->OnRemoveRemotePrinter(uri);
+    }
+}
+
+void RemotePrinterManagerImpl::RemoveDeprecatedPrinters(const std::vector<std::string> &currentDevIds)
+{
+    std::vector<std::string> removedUris;
+    {
+        std::lock_guard<std::mutex> lock(printerMapLock_);
+        for (auto it = printerMap_.begin(); it != printerMap_.end();) {
+            if (std::find(currentDevIds.begin(), currentDevIds.end(), it->first) == currentDevIds.end()) {
+                PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(it->first).c_str());
+                if (it->second) {
+                    removedUris.push_back(it->second->GetUri());
+                }
+                it = printerMap_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+    for (const auto &uri : removedUris) {
+        NotifyPrinterRemoved(uri);
+    }
+}
+
+void RemotePrinterManagerImpl::NotifyPrinterAdded(const PrinterInfo &info)
+{
+    IRemotePrinterEventHandler *handler = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(handlerMutex_);
+        handler = eventHandler_;
+    }
+    if (handler != nullptr) {
+        handler->OnAddRemotePrinter(info, REMOTE_EXT_BUNDLE_NAME);
+    }
+}
+
+bool RemotePrinterManagerImpl::OnPrinterStatusReceived(const Json::Value &jsonArray)
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl OnPrinterStatusReceived");
+
+    for (const auto &item : jsonArray) {
+        if (!item.isObject()) {
+            continue;
+        }
+
+        std::string devId;
+        std::string statusStr;
+        if (!PrintJsonUtil::FindJsonStringMember(item, "devId", devId)) {
+            continue;
+        }
+        PRINT_HILOGI("Printer devId: %{public}s", PrintUtils::AnonymizePrinterId(devId).c_str());
+        if (!PrintJsonUtil::FindJsonStringMember(item, "status", statusStr)) {
+            continue;
+        }
+
+        PrinterStatus printerStatus = ConvertStatusToPrinterStatus(statusStr);
+        UpdatePrinterStatus(devId, printerStatus);
+
+        auto printerInfo = GetPrinterInfo(devId);
+        if (printerInfo == nullptr) {
+            PRINT_HILOGW("Printer not found in cache: %{public}s", PrintUtils::AnonymizePrinterId(devId).c_str());
+            continue;
+        }
+        if (printerStatus == PRINTER_STATUS_IDLE) {
+            NotifyPrinterAdded(*printerInfo);
+        } else if (printerStatus == PRINTER_STATUS_UNAVAILABLE) {
+            NotifyPrinterRemoved(printerInfo->GetUri());
+        }
+    }
+    return true;
+}
+
+void RemotePrinterManagerImpl::ClearAllPrinters()
+{
+    PRINT_HILOGI("RemotePrinterManagerImpl ClearAllPrinters");
+
+    std::vector<std::string> removedUris;
+    {
+        std::lock_guard<std::mutex> lock(printerMapLock_);
+        for (const auto &[devId, printerInfo] : printerMap_) {
+            PRINT_HILOGI("[Printer: %{public}s] removed", PrintUtils::AnonymizePrinterId(devId).c_str());
+            if (printerInfo) {
+                removedUris.push_back(printerInfo->GetUri());
+            }
+        }
+        printerMap_.clear();
+    }
+    for (const auto &uri : removedUris) {
+        NotifyPrinterRemoved(uri);
+    }
+}
+
+extern "C" __attribute__((visibility("default"))) OHOS::Print::IPrintFeature *CreateRemotePrintFeature()
+{
+    return &OHOS::Print::RemotePrinterManagerImpl::GetInstance();
+}
+
+extern "C" __attribute__((visibility("default"))) void DestroyRemotePrintFeature(
+    OHOS::Print::IPrintFeature *feature)
+{
+    if (feature == nullptr) {
+        PRINT_HILOGW("DestroyRemotePrintFeature called with null feature");
+        return;
+    }
+    auto remote = static_cast<OHOS::Print::IRemotePrinterManager *>(
+        feature->QueryInterface(OHOS::Print::PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER));
+    if (remote == nullptr) {
+        PRINT_HILOGE("DestroyRemotePrintFeature: feature does not implement IRemotePrinterManager");
+        return;
+    }
+    remote->Destroy();
+    remote->SetEventHandler(nullptr);
+}
+
+} // namespace OHOS::Print

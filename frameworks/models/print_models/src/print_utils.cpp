@@ -844,18 +844,31 @@ std::string PrintUtils::ExtractIpFromUri(const std::string &uri)
 
 std::string PrintUtils::FormatHostForUri(const std::string &host)
 {
-    if (!host.empty() && host.find(':') != std::string::npos && host[0] != '[') {
-        return "[" + host + "]";
+    if (!host.empty() && host[0] == '[') {
+        return host;
     }
-    return host;
+    std::string result = host;
+    auto scopePos = result.find('%');
+    if (scopePos != std::string::npos) {
+        result.replace(scopePos, 1, "+");
+    }
+    if (result.find(':') != std::string::npos) {
+        return "[" + result + "]";
+    }
+    return result;
 }
 
 std::string PrintUtils::StripHostBrackets(const std::string &host)
 {
-    if (host.size() >= HOST_BRACKET_PAIR_LEN && host.front() == '[' && host.back() == ']') {
-        return host.substr(1, host.size() - HOST_BRACKET_PAIR_LEN);
+    std::string result = host;
+    if (result.size() >= HOST_BRACKET_PAIR_LEN && result.front() == '[' && result.back() == ']') {
+        result = result.substr(1, result.size() - HOST_BRACKET_PAIR_LEN);
     }
-    return host;
+    auto scopePos = result.find('+');
+    if (scopePos != std::string::npos) {
+        result.replace(scopePos, 1, "%");
+    }
+    return result;
 }
 
 }  // namespace OHOS::Print

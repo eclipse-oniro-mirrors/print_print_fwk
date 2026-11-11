@@ -28,6 +28,10 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service_phone/include",
     "${print_path}/services/print_service_phone/enterprise/include",
     "${print_path}/services/print_service_phone/include/event_callback",
+    "${print_path}/services/print_service_phone/include/remote",
+    "${print_path}/services/print_service_phone/src/internal",
+    "${print_path}/features/remote_service/include",
+    "${print_path}/features/print_failure_ai_notifier/include",
     "${print_utils_path}/include",
   ]
 
@@ -43,6 +47,7 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/print_bms_death_recipient_test.cpp",
     "${_test_path}/unittest/service_test/print_cups_attribute_test.cpp",
     "${_test_path}/unittest/service_test/print_caller_app_monitor_test.cpp",
+    "${_test_path}/unittest/service_test/print_data_repository_test.cpp",
     "${_test_path}/unittest/service_test/print_resource_manager_test.cpp",
     "${_test_path}/unittest/service_test/print_security_guard_info_test.cpp",
     "${_test_path}/unittest/service_test/print_security_guard_manager_test.cpp",
@@ -55,6 +60,10 @@ ohos_unittest("print_service_test") {
     "${_test_path}/unittest/service_test/print_service_stub_test.cpp",
     "${_test_path}/unittest/service_test/hisys_event_util_test.cpp",
     "${_test_path}/unittest/service_test/print_event_container_test.cpp",
+    "${_test_path}/unittest/service_test/print_feature_plugin_loader_test.cpp",
+    "${_test_path}/unittest/service_test/print_feature_plugin_manager_test.cpp",
+    "${_test_path}/unittest/service_test/remote_printer_manager_proxy_test.cpp",
+    "${print_path}/services/print_service_phone/src/print_resource_manager.cpp",
   ]
 
   deps = [
@@ -65,6 +74,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/frameworks/models/print_models:print_models",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service_phone:print_service_test",
+    ":print_feature_test_plugin",
   ]
 
   cflags_cc = [
@@ -75,6 +85,10 @@ ohos_unittest("print_service_test") {
 
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+
+  if (print_fwk_feature_remote_service) {
+    cflags_cc += [ "-DREMOTE_SERVICE_ENABLE" ]
   }
 
   external_deps = [
@@ -115,6 +129,8 @@ ohos_unittest("print_service_test") {
     external_deps += [
       "cups:cups",
       "cups-filters:cupsfilters",
+      "openssl:libcrypto_shared",
+      "openssl:libssl_shared",
     ]
   }
 
@@ -131,9 +147,13 @@ ohos_unittest("print_service_test") {
   }
 
   if (print_fwk_feature_print_failure_ai_notifier) {
+    external_deps += [ "os_account:os_account_innerkits" ]
     sources += [
       "${_test_path}/unittest/service_test/print_failure_ai_notifier_test.cpp",
       "${_test_path}/unittest/service_test/print_notification_builder_test.cpp",
+      "${print_path}/test/unittest/service_test/print_failure_ai_notifier_impl_test.cpp",
+      "${print_path}/features/print_failure_ai_notifier/src/print_failure_ai_notifier_impl.cpp",
+      "${print_path}/features/print_failure_ai_notifier/src/print_notification_builder.cpp",
     ]
     cflags_cc += [ "-DHAVE_PRINT_FAILURE_AI_NOTIFIER" ]
   }
@@ -218,6 +238,27 @@ ohos_unittest("scan_task_test") {
     "-Dprivate=public",
     "-Dprotected=public",
   ]
+}
+
+ohos_shared_library("print_feature_test_plugin") {
+  testonly = true
+  sources = [
+    "${_test_path}/unittest/service_test/plugin/print_feature_test_plugin.cpp",
+  ]
+
+  include_dirs = [
+    "${print_path}/services/print_service_phone/include",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+  ]
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+  output_name = "print_feature_test"
+  output_extension = "z.so"
+  install_enable = true
 }
 
 group("unittest") {

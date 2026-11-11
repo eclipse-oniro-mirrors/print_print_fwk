@@ -1160,16 +1160,16 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055_NeedRename, TestSize.Leve
     EXPECT_NE(printerInfo, nullptr);
     printerInfo->SetPrinterId(printerId1);
     printerInfo->SetPrinterName(printerName);
-    systemData->AddPrinterToDiscovery(printerInfo);
+    systemData->AddPrinterToDiscovery(*printerInfo);
     EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 1);
     auto discoveredPrinter = systemData->QueryDiscoveredPrinterInfoById(printerId1);
-    EXPECT_NE(discoveredPrinter, nullptr);
+    EXPECT_TRUE(discoveredPrinter.has_value());
     discoveredPrinter = systemData->QueryDiscoveredPrinterInfoById(printerId2);
-    EXPECT_EQ(discoveredPrinter, nullptr);
+    EXPECT_FALSE(discoveredPrinter.has_value());
     discoveredPrinter = systemData->QueryDiscoveredPrinterInfoByName(printerName);
-    EXPECT_NE(discoveredPrinter, nullptr);
+    EXPECT_TRUE(discoveredPrinter.has_value());
     discoveredPrinter = systemData->QueryDiscoveredPrinterInfoByName(printerId2);
-    EXPECT_EQ(discoveredPrinter, nullptr);
+    EXPECT_FALSE(discoveredPrinter.has_value());
     systemData->RemovePrinterFromDiscovery(printerId1);
     EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 0);
     systemData->ClearDiscoveredPrinterList();
@@ -1488,8 +1488,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0096_NeedRename, TestSize.Leve
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
-    systemData->AddIpPrinterToList(nullptr);
-    EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 0);
+    PrinterInfo emptyInfo;
+    systemData->AddIpPrinterToList(emptyInfo);
+    EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0097_NeedRename, TestSize.Level1)
@@ -1497,7 +1498,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0097_NeedRename, TestSize.Leve
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
-    systemData->AddIpPrinterToList(printerInfo);
+    systemData->AddIpPrinterToList(*printerInfo);
     EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 1);
 }
 
@@ -1606,11 +1607,11 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0104_NeedRename, TestSize.Leve
     std::string uri = "testUri";
     printerInfo->SetPrinterId(printerId);
     printerInfo->SetUri(uri);
-    systemData->UpdatePrinterUri(printerInfo);
+    systemData->UpdatePrinterUri(*printerInfo);
 
     PrinterInfo printerInfo1;
     systemData->addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo1));
-    systemData->UpdatePrinterUri(printerInfo);
+    systemData->UpdatePrinterUri(*printerInfo);
     PrinterInfo printer;
     systemData->QueryAddedPrinterInfoByPrinterId(printerId, printer);
     EXPECT_EQ(printer.GetUri(), uri);
@@ -1858,7 +1859,7 @@ HWTEST_F(PrintSystemDataTest, GetWebPrinterListFromSystemDataTest, TestSize.Leve
     std::string printerId = PrintUtils::GetGlobalId(WEBPRINTER_BUNDLE_NAME, "123");
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(printerId);
-    systemData->AddPrinterToDiscovery(printerInfo);
+    systemData->AddPrinterToDiscovery(*printerInfo);
     std::vector<std::string> printerIdList;
     systemData->GetWebPrinterListFromSystemData(printerIdList);
     EXPECT_EQ(printerIdList.size(), 1);
@@ -2214,6 +2215,34 @@ HWTEST_F(PrintSystemDataLargeUIntTest, ColorModeAndQuality_LargeUIntValues, Test
     ASSERT_EQ(qualities.size(), 2);
     EXPECT_EQ(qualities[0], 2147483648u);
     EXPECT_EQ(qualities[1], 4294967295u);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemData_SetEnterpriseState_CachesState, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+    systemData->SetEnterpriseState(true, true);
+    EXPECT_NO_FATAL_FAILURE(systemData->Init());
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemData_EnterpriseState_CachedAndUsed, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    ASSERT_NE(systemData, nullptr);
+
+    PrinterInfo info;
+    info.SetPrinterId("ent-001");
+    info.SetPrinterName("Enterprise Printer");
+    systemData->InsertAddedPrinter("ent-001", info);
+
+    PrinterInfo out;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId("ent-001", out));
+
+    systemData->SetEnterpriseState(true, true);
+    EXPECT_NO_FATAL_FAILURE(systemData->QueryAddedPrinterInfoByPrinterId("ent-001", out));
+
+    systemData->SetEnterpriseState(false, false);
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId("ent-001", out));
 }
 
 }  // namespace Print

@@ -1,0 +1,83 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos.gni")
+
+if (print_fwk_feature_remote_service) {
+  ohos_shared_library("print_feature_remote") {
+    sources = [
+      "${print_path}/features/remote_service/src/remote_printer_manager_impl.cpp",
+      "${print_path}/features/remote_service/src/remote_service_adapter.cpp",
+      "${print_path}/features/remote_service/src/print_ipc_connection.cpp",
+      "${print_path}/features/remote_service/src/remote_callback_stub.cpp",
+      "${print_path}/services/print_service/src/print_common_death_recipient.cpp",
+    ]
+
+    include_dirs = [
+      "${print_path}/features/remote_service/include",
+      "${print_path}/services/print_service/include",
+      "${print_path}/services/print_service/include/remote",
+      "${print_path}/frameworks/models/print_models/include",
+      "${print_utils_path}/include",
+    ]
+
+    deps = [
+      "${print_path}/frameworks/models/print_models:print_models",
+      "${print_path}/frameworks/ability_manager_adapter:print_ability_manager_adapter",
+    ]
+
+    external_deps = [
+      "ability_runtime:ability_connect_callback_stub",
+      "ability_runtime:extension_manager",
+      "ability_base:base",
+      "ability_base:configuration",
+      "ability_base:want",
+      "access_token:libaccesstoken_sdk",
+      "bundle_framework:appexecfwk_base",
+      "bundle_framework:appexecfwk_core",
+      "c_utils:utils",
+      "drivers_interface_usb:libusb_proxy_1.0",
+      "eventhandler:libeventhandler",
+      "hilog:libhilog",
+      "ipc:ipc_core",
+      "jsoncpp:jsoncpp",
+      "os_account:os_account_innerkits",
+      "safwk:system_ability_fwk",
+      "samgr:samgr_proxy",
+    ]
+
+    cflags_cc = [
+      "-fno-exceptions",
+      "-fdata-sections",
+      "-ffunction-sections",
+      "-fno-asynchronous-unwind-tables",
+      "-fno-unwind-tables",
+      "-flto",
+      "-Os",
+      "-fvisibility=hidden",
+    ]
+
+    output_name = "print_feature_remote"
+    subsystem_name = "print"
+    part_name = "print_fwk"
+    install_enable = true
+  }
+}
+
+group("print_feature_remote_service") {
+  deps = []
+  if (print_fwk_feature_remote_service) {
+    deps += [ ":print_feature_remote" ]
+  }
+}

@@ -109,12 +109,12 @@ static void AddTestPrinterWithPpd(const std::string &printerId, const std::strin
     PpdInfo ppdInfo;
     ppdInfo.SetPpdName(ppdName);
     printerInfo.SetSelectedDriver(ppdInfo);
-    PrintServiceAbility::GetInstance()->printSystemData_.GetAddedPrinterMap().Upsert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
 }
 
 static void RemoveTestPrinter(const std::string &printerId)
 {
-    PrintServiceAbility::GetInstance()->printSystemData_.GetAddedPrinterMap().Remove(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
 }
 
 void AddUsbPrinter(PrinterInfo &info);
@@ -712,7 +712,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_FitToPage, TestSi
 
 /**
  * @tc.name: PrintCupsClientTest_PrintScaling_BackwardCompat
- * @tc.desc: BuildJobParameters derives printScaling when unset: borderless=true, non-photo media -> FIT_TO_PAGE
+ * @tc.desc: BuildJobParameters derives printScaling when unset: non-photo media -> NONE
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -729,7 +729,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_BackwardCompat, T
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
-    EXPECT_EQ(jobParams->printScaling, PRINT_SCALING_FIT_TO_PAGE);
+    EXPECT_EQ(jobParams->printScaling, PRINT_SCALING_NONE);
     delete jobParams;
 }
 
@@ -775,6 +775,64 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_UserSet, TestSize
     params.mediaType = "stationery";
     printCupsClient.UpdatePrintScaling(testJob, &params);
     EXPECT_EQ(params.printScaling, PRINT_SCALING_FILL);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_PrintScaling_DefaultFallbackNone
+ * @tc.desc: UpdatePrintScaling falls back to NONE when job has no printScaling and no borderless photo media
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_DefaultFallbackNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    JobParameters params{};
+    params.borderless = 0;
+    params.mediaType = "stationery";
+    printCupsClient.UpdatePrintScaling(testJob, &params);
+    EXPECT_EQ(params.printScaling, PRINT_SCALING_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_PrintScaling_NoneOption
+ * @tc.desc: FillBorderlessOptions with printScaling=NONE sends print-scaling=none instead of fit-to-page
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_PrintScaling_NoneOption, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    jobParams->mediaType = "stationery";
+    jobParams->printScaling = PRINT_SCALING_NONE;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 3);
+    bool hasPrintScalingNone = false;
+    bool hasFitToPage = false;
+    for (int i = 0; i < ret; i++) {
+        if (std::string(options[i].name) == "print-scaling" && std::string(options[i].value) == "none") {
+            hasPrintScalingNone = true;
+        }
+        if (std::string(options[i].name) == "fit-to-page") {
+            hasFitToPage = true;
+        }
+    }
+    EXPECT_TRUE(hasPrintScalingNone);
+    EXPECT_FALSE(hasFitToPage);
+    delete jobParams;
+    delete options;
 }
 
 /**
@@ -3588,6 +3646,21 @@ HWTEST_F(PrintCupsClientTest, IsIpAddress_InvalidIpv6_Test, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PrintCupsClientTest_IsIpAddress_009
+ * @tc.desc: IsIpAddress with non-link-local IPv6 carrying a scope id must be rejected
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsIpAddress_NonLinkLocalWithScope_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    EXPECT_FALSE(printCupsClient.IsIpAddress("2001:db8::1%lo"));
+    EXPECT_FALSE(printCupsClient.IsIpAddress("::1%lo"));
+    EXPECT_FALSE(printCupsClient.IsIpAddress("fd00::1%lo"));
+    EXPECT_TRUE(printCupsClient.IsIpAddress("fe80::1%lo"));
+}
+
+/**
  * @tc.name: PrintCupsClientTest_QueryInfoByPpdName_001
  * @tc.desc: QueryInfoByPpdName with invalid file name
  * @tc.type: FUNC
@@ -5140,16 +5213,6 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, 
     }
 }
 
-HWTEST_F(PrintCupsClientTest, HasStateReason_ExactTokenMatch, TestSize.Level1)
-{
-    PrintCupsClient printCupsClient;
-    EXPECT_TRUE(printCupsClient.HasStateReason("offline-report", "offline-report"));
-    EXPECT_TRUE(printCupsClient.HasStateReason("paused, offline-report", "offline-report"));
-    EXPECT_TRUE(printCupsClient.HasStateReason("\"paused\",\"offline-report\"", "offline-report"));
-    EXPECT_FALSE(printCupsClient.HasStateReason("not-offline-report", "offline-report"));
-    EXPECT_FALSE(printCupsClient.HasStateReason("none", "offline-report"));
-}
-
 HWTEST_F(PrintCupsClientTest, IsDefaultAddedLanPrinter_Classification, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
@@ -5170,54 +5233,6 @@ HWTEST_F(PrintCupsClientTest, IsDefaultAddedLanPrinter_Classification, TestSize.
     EXPECT_FALSE(printCupsClient.IsDefaultAddedLanPrinter(param));
 }
 
-HWTEST_F(PrintCupsClientTest, ParseOfflineEvidence_ThreeStates, TestSize.Level1)
-{
-    PrintCupsClient printCupsClient;
-    EXPECT_EQ(printCupsClient.ParseOfflineEvidence(nullptr), OfflineEvidence::UNKNOWN);
-    EXPECT_EQ(printCupsClient.QueryIppOfflineEvidence(nullptr), OfflineEvidence::UNKNOWN);
-    ipp_t *response = ippNew();
-    ASSERT_NE(response, nullptr);
-    EXPECT_EQ(printCupsClient.ParseOfflineEvidence(response), OfflineEvidence::NONE);
-    static const char *const reasons[] = {"paused", "offline-report"};
-    ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "printer-state-reasons", 2, nullptr, reasons);
-    EXPECT_EQ(printCupsClient.ParseOfflineEvidence(response), OfflineEvidence::CONFIRMED);
-    ippDelete(response);
-}
-
-HWTEST_F(PrintCupsClientTest, EvaluatePrinterOffline_UnknownEvidenceSkipsUpdate, TestSize.Level1)
-{
-    PrintCupsClient printCupsClient;
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.wlan.group:mdns_test", nullptr);
-    std::string resource;
-    EXPECT_EQ(printCupsClient.ConnectToIppPrinter(param, resource), nullptr);
-    printCupsClient.EvaluatePrinterOffline(param, IPP_JOB_PROCESSING, "offline-report");
-    EXPECT_EQ(param->offlineCandidateCount, 1);
-    printCupsClient.EvaluatePrinterOffline(param, IPP_JOB_PROCESSING, "offline-report");
-    EXPECT_EQ(param->offlineCandidateCount, 0);
-    EXPECT_FALSE(param->offlineStatusReported);
-}
-
-HWTEST_F(PrintCupsClientTest, UpdateJobState_UnchangedStateStillEvaluatesOffline, TestSize.Level1)
-{
-    PrintCupsClient printCupsClient;
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID, "lpd://printer.local/queue", "HP LaserJet", "fwk.driver.wlan.group:mdns_test", nullptr);
-    param->job_state = IPP_JOB_PROCESSING;
-    strlcpy(param->job_printer_state_reasons, "offline-report", sizeof(param->job_printer_state_reasons));
-    param->timesOfSameState = 0;
-    param->offlineCandidateCount = 1;
-    ipp_t *response = ippNew();
-    ASSERT_NE(response, nullptr);
-    ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "job-state", IPP_JOB_PROCESSING);
-    ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "job-printer-state-reasons", nullptr,
-        "offline-report");
-    EXPECT_FALSE(printCupsClient.UpdateJobState(param, response));
-    EXPECT_EQ(param->offlineCandidateCount, 0);
-    EXPECT_FALSE(param->offlineStatusReported);
-    ippDelete(response);
-}
-
 HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_StrongOfflineEvidence, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
@@ -5228,16 +5243,16 @@ HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_StrongOfflin
     printer->SetPrinterId(printerId);
     printer->SetPrinterName("HP LaserJet");
     printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     auto param = std::make_shared<JobMonitorParam>(service, TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
         "ipp://printer.local/ipp/print", "HP LaserJet", printerId, nullptr);
 
     printCupsClient.UpdatePrinterStatusOnPreflightOffline(param);
 
     PrinterInfo result;
-    ASSERT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, result));
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
     EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
-    service->printSystemData_.addedPrinterMap_.Remove(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
 }
 
 }  // namespace Print

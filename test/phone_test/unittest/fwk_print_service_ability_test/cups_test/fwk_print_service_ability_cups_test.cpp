@@ -41,7 +41,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestS
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterName(printerName);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
     service->printerJobMap_[printerId].clear();
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
@@ -68,8 +68,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterInfoByPpd_InsertAddedPrinter_Cap
     std::string printerId2 = "printerId2";
     PrinterInfo info;
     info.SetPrinterId(printerId2);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId1, nullptr);
-    service->printSystemData_.addedPrinterMap_.Insert(printerId2, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId2, info);
     service->RefreshPrinterInfoByPpd();
     EXPECT_EQ(info.HasCapability(), false);
 }
@@ -258,16 +257,16 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_ShouldPr
     printerInfo1->SetPrinterId(printerId1);
     printerInfo1->SetPrinterName("Printer1");
     printerInfo1->SetPrinterMake("");
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId1, printerInfo1);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId1, printerInfo1);
     std::string printerId2 = "test_printer_id_2";
     auto printerInfo2 = std::make_shared<PrinterInfo>();
     printerInfo2->SetPrinterId(printerId2);
     printerInfo2->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo2->SetPrinterMake("Make2");
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId2, printerInfo2);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId2, printerInfo2);
     EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(true));
     service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 2);
 }
 
@@ -279,10 +278,10 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_QueryPpd
     printerInfo->SetPrinterId(printerId);
     printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo->SetPrinterMake("Make1");
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(Return(false));
     service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
 }
 
@@ -295,10 +294,10 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode
     printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo->SetPrinterMake("Make1");
     printerInfo->SetPpdHashCode("");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
     service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
 }
 
@@ -311,10 +310,10 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePpdForPreinstalledDriverPrinter_HashCode
     printerInfo->SetPrinterName(CUSTOM_PRINTER_NAME);
     printerInfo->SetPrinterMake("Make1");
     printerInfo->SetPpdHashCode("notEqualHash");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     EXPECT_CALL(*service, QueryPPDInformation(_, _)).WillOnce(DoAll(SetArgReferee<1>("ppd1"), Return(true)));
     service->UpdatePpdForPreinstalledDriverPrinter();
-    std::vector<std::string> printerIdList = service->printSystemData_.QueryAddedPrinterIdList();
+    std::vector<std::string> printerIdList = PrintDataRepository::GetInstance().QueryAddedPrinterIdList();
     EXPECT_EQ(printerIdList.size(), 1);
 }
 
@@ -344,7 +343,8 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_DoAddPrinterToCupsFa
     printerInfo->SetPrinterMake("HP");
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
-    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = printerInfo;
+printerInfo->SetPrinterId(globalPrinterId);
+    PrintDataRepository::GetInstance().AddIpPrinterToList(printerInfo);
     bool result = service->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
     EXPECT_EQ(result, false);
 }
@@ -366,51 +366,10 @@ HWTEST_F(PrintServiceAbilityTest, AddIpPrinterToCupsWithPpd_WhenValidPrinterInfo
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     PrinterCapability capability;
     printerInfo->SetCapability(capability);
-    service->printSystemData_.connectingIpPrinterInfoList_[globalPrinterId] = printerInfo;
+printerInfo->SetPrinterId(globalPrinterId);
+    PrintDataRepository::GetInstance().AddIpPrinterToList(printerInfo);
     EXPECT_CALL(*service, DoAddPrinterToCupsEnable(_, _, _, _, _)).WillOnce(Return(true));
     bool result = service->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
-    EXPECT_EQ(result, true);
-}
-
-HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenPrinterNotFound_ShouldReturnTrue, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string standardPrinterName = "test_printer";
-    std::string ppdHashCode = "hash_123456";
-    bool result = service->IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
-    EXPECT_EQ(result, true);
-}
-
-HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenHashCodeSame_ShouldReturnFalse, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "printer_001";
-    std::string printerName = "test_printer";
-    std::string standardPrinterName = PrintUtil::StandardizePrinterName(printerName);
-    std::string ppdHashCode = "hash_123456";
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    printerInfo->SetPrinterId(printerId);
-    printerInfo->SetPrinterName(printerName);
-    printerInfo->SetPpdHashCode(ppdHashCode);
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
-    bool result = service->IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
-    EXPECT_EQ(result, false);
-}
-
-HWTEST_F(PrintServiceAbilityTest, IsPrinterPpdUpdateRequired_WhenHashCodeDifferent_ShouldReturnTrue, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "printer_001";
-    std::string printerName = "test_printer";
-    std::string standardPrinterName = PrintUtil::StandardizePrinterName(printerName);
-    std::string oldPpdHashCode = "hash_123456";
-    std::string newPpdHashCode = "hash_789012";
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    printerInfo->SetPrinterId(printerId);
-    printerInfo->SetPrinterName(printerName);
-    printerInfo->SetPpdHashCode(oldPpdHashCode);
-    service->printSystemData_.GetAddedPrinterMap().Insert(printerId, printerInfo);
-    bool result = service->IsPrinterPpdUpdateRequired(standardPrinterName, newPpdHashCode);
     EXPECT_EQ(result, true);
 }
 
@@ -441,7 +400,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_PpdQuer
     pageSizeList.push_back(pageSize);
     caps.SetSupportedPageSize(pageSizeList);
     info->SetCapability(caps);
-    service->printSystemData_.AddPrinterToDiscovery(info);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
     bool result = service->UpdateSinglePrinterInfo(*info, DEFAULT_EXTENSION_ID);
     EXPECT_TRUE(result);
 }
@@ -465,7 +424,7 @@ HWTEST_F(PrintServiceAbilityTest, UpdateSinglePrinterInfo_HasPrinterMake_PpdRetu
     info->SetPrinterName("TestPrinter");
     info->SetPrinterId(GetDefaultPrinterId());
     info->SetPrinterMake("TestMake");
-    service->printSystemData_.AddPrinterToDiscovery(info);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
     bool result = service->UpdateSinglePrinterInfo(*info, DEFAULT_EXTENSION_ID);
     EXPECT_FALSE(result);
 }

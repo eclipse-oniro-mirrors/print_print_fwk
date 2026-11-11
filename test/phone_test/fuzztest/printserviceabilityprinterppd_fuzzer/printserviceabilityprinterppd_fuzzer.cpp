@@ -19,6 +19,7 @@
 #include "print_constant.h"
 #include "printer_capability.h"
 #include "print_log.h"
+#include "print_data_repository.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
 #include <functional>
@@ -91,7 +92,7 @@ void TestIsPrinterPpdUpdateRequired(const uint8_t *data, size_t size, FuzzedData
 {
     std::string standardPrinterName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string ppdHashCode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
+    PrintDataRepository::GetInstance().IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
 }
 
 void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

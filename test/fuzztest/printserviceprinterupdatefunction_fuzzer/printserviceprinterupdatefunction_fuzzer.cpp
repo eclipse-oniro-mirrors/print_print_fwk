@@ -117,7 +117,7 @@ void TestSyncAddedPrinterUri(const uint8_t *data, size_t size, FuzzedDataProvide
     PrinterInfo info;
     info.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     info.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    PrintServiceAbility::GetInstance()->SyncAddedPrinterUri(std::make_shared<PrinterInfo>(info));
+    PrintServiceAbility::GetInstance()->SyncAddedPrinterUri(info);
 }
 
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

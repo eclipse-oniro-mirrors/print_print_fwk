@@ -90,6 +90,8 @@ ohos_fuzztest("PrintCupsClientFuzzTest") {
       "cJSON:cjson",
       "cups:cups",
       "cups-filters:cupsfilters",
+      "openssl:libcrypto_shared",
+      "openssl:libssl_shared",
     ]
   }
 

@@ -87,6 +87,8 @@ ohos_unittest("fwk_print_cups_client_test") {
       "cJSON:cjson",
       "cups:cups",
       "cups-filters:cupsfilters",
+      "openssl:libcrypto_shared",
+      "openssl:libssl_shared",
     ]
   }
 

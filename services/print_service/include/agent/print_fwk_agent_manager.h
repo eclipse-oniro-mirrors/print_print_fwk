@@ -32,7 +32,7 @@
 
 namespace OHOS::Print {
 
-class PrintSystemData;
+class PrintDataRepository;
 class PrinterInfo;
 
 class PrintFwkAgentManager {
@@ -44,7 +44,7 @@ public:
 
     static PrintFwkAgentManager &GetInstance();
 
-    bool Init(PrintSystemData &systemData, PrintFwkAgentHost &host, DelayedTaskPoster delayedTaskPoster,
+    bool Init(PrintDataRepository &repository, PrintFwkAgentHost &host, DelayedTaskPoster delayedTaskPoster,
         std::unique_ptr<PrintFwkAgentClientLoader> loader = nullptr,
         NowProvider nowProvider = []() { return Clock::now(); });
     void Shutdown();
@@ -178,7 +178,7 @@ private:
     static constexpr std::chrono::seconds PENDING_TIMEOUT { 30 };
     static constexpr std::chrono::seconds BACKEND_KEEPALIVE_INTERVAL { 60 };
 
-    PrintSystemData *systemData_ = nullptr;
+    PrintDataRepository *repository_ = nullptr;
     PrintFwkAgentHost *host_ = nullptr;
     std::unique_ptr<PrintFwkAgentClientLoader> loader_;
     std::atomic<State> state_ { State::STOPPED };

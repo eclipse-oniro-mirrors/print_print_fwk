@@ -99,7 +99,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130_NeedRename, TestS
 
     std::shared_ptr<PrinterInfo> info1 = std::make_shared<PrinterInfo>();
     info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);
-    service->printSystemData_.discoveredPrinterInfoList_[DEFAULT_EXT_PRINTER_ID] = info1;
+info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(info1);
     EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_NONE);
     EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_INVALID_PRINTER);
 }
@@ -172,13 +173,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddVendorPrinterToDisc
     addedPrinter.SetPrinterId(globalId);
     addedPrinter.SetPrinterName(expectedPrinterName);
     addedPrinter.SetAlias(expectedAlias);
-    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, addedPrinter);
 
     PrinterInfo discoveredPrinter;
     discoveredPrinter.SetPrinterId(printerId);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
     EXPECT_TRUE(printerInfo->HasAlias());
@@ -202,13 +203,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddVendorPrinterToDisc
     PrinterInfo addedPrinter;
     addedPrinter.SetPrinterId(globalId);
     addedPrinter.SetPrinterName(expectedPrinterName);
-    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, addedPrinter);
 
     PrinterInfo discoveredPrinter;
     discoveredPrinter.SetPrinterId(printerId);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
     EXPECT_FALSE(printerInfo->HasAlias());
@@ -233,13 +234,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UpdateVendorPrinterToD
     addedPrinter.SetPrinterId(globalId);
     addedPrinter.SetPrinterName(expectedPrinterName);
     addedPrinter.SetAlias(expectedAlias);
-    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, addedPrinter);
 
     PrinterInfo discoveredPrinter;
     discoveredPrinter.SetPrinterId(printerId);
     EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, discoveredPrinter));
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetPrinterName(), expectedPrinterName);
     EXPECT_TRUE(printerInfo->HasAlias());
@@ -266,7 +267,7 @@ HWTEST_F(PrintServiceAbilityTest,
     addedPrinter.SetPrinterId(globalId);
     addedPrinter.SetPrinterName(printerName);
     addedPrinter.SetUri(printerUri);
-    service->printSystemData_.InsertAddedPrinter(globalId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, addedPrinter);
 
     PrinterInfo discoveredPrinter;
     discoveredPrinter.SetPrinterId(printerId);
@@ -274,7 +275,7 @@ HWTEST_F(PrintServiceAbilityTest,
     discoveredPrinter.SetUri(printerUri);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, discoveredPrinter));
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetPrinterId(), globalId);
 }
@@ -301,11 +302,11 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NotUpdateIpPrinter
     info.SetPrinterName(printerName);
     info.SetPrinterStatus(PRINTER_STATUS_IDLE);
 
-    service->printSystemData_.InsertAddedPrinter(globalId, info);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalId, info);
 
     info.SetPrinterName(discoveryPrinterName);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalId);
     EXPECT_EQ(printerInfo->GetPrinterName(), discoveryPrinterName);
 }
 
@@ -366,7 +367,7 @@ HWTEST_F(PrintServiceAbilityTest, HandleNewPrinterDiscovery_PrinterNotAdded_Shou
     ASSERT_NE(result, nullptr);
     EXPECT_EQ(result->GetPrinterId(), globalPrinterId);
 
-    auto discoveredPrinter = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto discoveredPrinter = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(discoveredPrinter, nullptr);
 }
 
@@ -388,7 +389,7 @@ HWTEST_F(PrintServiceAbilityTest, HandleNewPrinterDiscovery_PrinterIsIpAddress_S
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName(ipPrinterName);
     addedPrinter.SetAlias("TestAlias");
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");
@@ -417,7 +418,7 @@ HWTEST_F(PrintServiceAbilityTest, HandleNewPrinterDiscovery_HasAlias_ShouldSyncA
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName(expectedPrinterName);
     addedPrinter.SetAlias(expectedAlias);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");
@@ -447,7 +448,7 @@ HWTEST_F(PrintServiceAbilityTest, HandleNewPrinterDiscovery_NoAlias_ShouldNotSet
     PrinterInfo addedPrinter;
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName(expectedPrinterName);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");
@@ -479,7 +480,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_NewPrinter_ShouldA
     EXPECT_TRUE(result);
 
     std::string globalPrinterId = vendorName + ":" + info.GetPrinterId();
-    auto discoveredPrinter = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto discoveredPrinter = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(discoveredPrinter, nullptr);
 }
 
@@ -500,7 +501,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_ExistingPrinter_Sh
     auto existingPrinter = std::make_shared<PrinterInfo>();
     existingPrinter->SetPrinterId(globalPrinterId);
     existingPrinter->SetPrinterName("TestPrinter_001");
-    service->printSystemData_.AddPrinterToDiscovery(existingPrinter);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(existingPrinter);
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");
@@ -548,7 +549,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterBusy_Should
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName("TestPrinter_001");
     addedPrinter.SetPrinterStatus(PRINTER_STATUS_BUSY);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");
@@ -577,7 +578,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterHasActiveJo
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName("TestPrinter_001");
     addedPrinter.SetUri(originalUri);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     service->printerJobMap_[globalPrinterId]["job_001"] = true;
 
@@ -589,7 +590,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_PrinterHasActiveJo
     EXPECT_TRUE(result);
 
     PrinterInfo updatedPrinter;
-    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter);
+    PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter);
     EXPECT_EQ(updatedPrinter.GetUri(), originalUri);
     EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_BUSY);
 }
@@ -612,7 +613,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_CanSyncPrinterInfo
     PrinterInfo addedPrinter;
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName(expectedPrinterName);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     PrinterInfo info;
     info.SetPrinterId("TestPrinter_001");
@@ -622,7 +623,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_CanSyncPrinterInfo
     EXPECT_TRUE(result);
 
     PrinterInfo updatedPrinter;
-    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
     EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
@@ -647,7 +648,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_InvalidIpType_Shou
     info.SetUri("ipp://test.local:631/printers/TestPrinter_001");
     info.SetOption("test-option");
 
-    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
 
     PrinterInfo updatedInfo;
     updatedInfo.SetPrinterId(printerId);
@@ -658,7 +659,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_InvalidIpType_Shou
     bool result = service->AddVendorPrinterToDiscovery(vendorName, updatedInfo);
     EXPECT_TRUE(result);
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetUri(), "ipp://test.local:631/printers/TestPrinter_001");
     EXPECT_EQ(printerInfo->GetOption(), "test-option");
@@ -685,7 +686,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv6ToIpv4_ShouldS
     existingInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
     existingInfo.SetOption("ipv4-option");
 
-    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
 
     PrinterInfo ipv6Info;
     ipv6Info.SetPrinterId(printerId);
@@ -696,7 +697,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv6ToIpv4_ShouldS
     bool result = service->AddVendorPrinterToDiscovery(vendorName, ipv6Info);
     EXPECT_TRUE(result);
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
     EXPECT_EQ(printerInfo->GetOption(), "ipv4-option");
@@ -723,7 +724,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToIpv4_ShouldU
     existingInfo.SetUri("ipp://192.168.1.50:631/printers/TestPrinter_001");
     existingInfo.SetOption("old-option");
 
-    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
 
     PrinterInfo newInfo;
     newInfo.SetPrinterId(printerId);
@@ -734,7 +735,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToIpv4_ShouldU
     bool result = service->AddVendorPrinterToDiscovery(vendorName, newInfo);
     EXPECT_TRUE(result);
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
     EXPECT_EQ(printerInfo->GetOption(), "new-option");
@@ -761,7 +762,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToInvalid_Shou
     existingInfo.SetUri("ipp://192.168.1.100:631/printers/TestPrinter_001");
     existingInfo.SetOption("ipv4-option");
 
-    service->printSystemData_.AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(existingInfo));
 
     PrinterInfo hostnameInfo;
     hostnameInfo.SetPrinterId(printerId);
@@ -772,7 +773,7 @@ HWTEST_F(PrintServiceAbilityTest, AddVendorPrinterToDiscovery_Ipv4ToInvalid_Shou
     bool result = service->AddVendorPrinterToDiscovery(vendorName, hostnameInfo);
     EXPECT_TRUE(result);
 
-    auto printerInfo = service->printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     ASSERT_NE(printerInfo, nullptr);
     EXPECT_EQ(printerInfo->GetUri(), "ipp://192.168.1.100:631/printers/TestPrinter_001");
     EXPECT_EQ(printerInfo->GetOption(), "ipv4-option");
@@ -797,7 +798,7 @@ HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_HasActiveJob_ShouldSetBus
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName("TestPrinter_001");
     addedPrinter.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     service->printerJobMap_[globalPrinterId]["job_001"] = true;
 
@@ -808,7 +809,7 @@ HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_HasActiveJob_ShouldSetBus
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
 
     PrinterInfo updatedPrinter;
-    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
     EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_BUSY);
 }
 
@@ -831,7 +832,7 @@ HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_NoActiveJob_ShouldSetIdle
     addedPrinter.SetPrinterId(globalPrinterId);
     addedPrinter.SetPrinterName("TestPrinter_001");
     addedPrinter.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
-    service->printSystemData_.InsertAddedPrinter(globalPrinterId, addedPrinter);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(globalPrinterId, addedPrinter);
 
     PrinterInfo info;
     info.SetPrinterId(printerId);
@@ -840,7 +841,7 @@ HWTEST_F(PrintServiceAbilityTest, AddSinglePrinterInfo_NoActiveJob_ShouldSetIdle
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
 
     PrinterInfo updatedPrinter;
-    EXPECT_TRUE(service->printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
+    EXPECT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(globalPrinterId, updatedPrinter));
     EXPECT_EQ(updatedPrinter.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 

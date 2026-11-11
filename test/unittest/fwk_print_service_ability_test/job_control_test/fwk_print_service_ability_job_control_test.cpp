@@ -81,7 +81,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038_NeedRename, TestS
     printerInfo->SetPrinterName("testName");
     printerInfo->SetUri("testUri");
     printerInfo->SetPrinterMake("testMaker");
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     printJob.SetOption("test");
     EXPECT_EQ(service->StartNativePrintJob(printJob), E_PRINT_INVALID_PRINTER);
 }
@@ -250,7 +250,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052_NeedRename, TestS
     state = PRINT_JOB_BLOCKED;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
+printerInfo->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
     userData->queuedJobList_[jobId] = printJob;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(printJob->GetJobId(), state, subState), E_PRINT_NONE);
     state = PRINT_JOB_COMPLETED;
@@ -323,7 +324,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079_NeedRename, TestS
     printJob.SetPrinterId(printerId);
     printJob.SetOption(PrintJsonUtil::WriteString(opsJson));
     auto printer = std::make_shared<PrinterInfo>();
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     auto ret = service->StartNativePrintJob(printJob);
     EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
 }
@@ -339,7 +340,7 @@ HWTEST_F(PrintServiceAbilityTest, StartNativePrintJob_Is_JobId_Empty, TestSize.L
     printJob.SetPrinterId(printerId);
     printJob.SetOption(PrintJsonUtil::WriteString(opsJson));
     auto printer = std::make_shared<PrinterInfo>();
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
     auto ret = service->StartNativePrintJob(printJob);
     EXPECT_EQ(ret, E_PRINT_NONE);
     printJob.SetJobId("jobId");
@@ -358,7 +359,7 @@ HWTEST_F(PrintServiceAbilityTest, StartNativePrintJob_DuplicateJobId_Rejected, T
     printJob.SetPrinterId(printerId);
     printJob.SetOption(PrintJsonUtil::WriteString(opsJson));
     auto printer = std::make_shared<PrinterInfo>();
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
 
     printJob.SetJobId("dupBoth");
     service->printJobList_["dupBoth"] = std::make_shared<PrintJob>();
@@ -409,7 +410,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084_NeedRename, TestS
     userData->printJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
+printerInfo->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
 }
 
@@ -441,7 +443,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112_NeedRename, TestS
     userData->queuedJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
+printerInfo->SetPrinterId(printerId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
     service->currentUserId_ = 0;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
@@ -471,7 +474,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155_NeedRename, TestS
     Json::Value infoJson;
     infoJson["printerName"] = "testPrinterName";
     printJob.SetOption(PrintJsonUtil::WriteString(infoJson));
-    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
     EXPECT_EQ(service->CheckPrintJob(printJob), false);
     auto printJobPtr = std::make_shared<PrintJob>(printJob);
     service->printJobList_[jobId] = printJobPtr;
@@ -598,7 +601,8 @@ HWTEST_F(PrintServiceAbilityTest, RequestPreview_WhenListenerEmpty_ShouldReturnS
     service->printUserMap_[userId] = userData;
     auto printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterId(printId);
-    service->printSystemData_.discoveredPrinterInfoList_[printId] = printerInfo;
+printerInfo->SetPrinterId(printId);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
     std::string preview;
     int32_t result = service->RequestPreview(*printJob, preview);
     EXPECT_EQ(result, E_PRINT_SERVER_FAILURE);

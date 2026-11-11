@@ -28,7 +28,7 @@
 #include "print_constant.h"
 #include "print_json_util.h"
 #include "print_log.h"
-#include "print_system_data.h"
+#include "print_data_repository.h"
 #include "print_util.h"
 #include "printer_info.h"
 
@@ -340,7 +340,7 @@ PrintFwkAgentManager::~PrintFwkAgentManager()
     Shutdown();
 }
 
-bool PrintFwkAgentManager::Init(PrintSystemData &systemData, PrintFwkAgentHost &host,
+bool PrintFwkAgentManager::Init(PrintDataRepository &repository, PrintFwkAgentHost &host,
     DelayedTaskPoster delayedTaskPoster, std::unique_ptr<PrintFwkAgentClientLoader> loader,
     NowProvider nowProvider)
 {
@@ -352,7 +352,7 @@ bool PrintFwkAgentManager::Init(PrintSystemData &systemData, PrintFwkAgentHost &
         PRINT_HILOGE("agent manager Init: delayed task poster unavailable");
         return false;
     }
-    systemData_ = &systemData;
+    repository_ = &repository;
     host_ = &host;
     nowProvider_ = std::move(nowProvider);
     delayedTaskPoster_ = std::move(delayedTaskPoster);
@@ -598,20 +598,20 @@ int32_t PrintFwkAgentManager::EnsureAgentBackendReady()
 
 bool PrintFwkAgentManager::IsAgentPrinter(const std::string &printerId) const
 {
-    if (systemData_ == nullptr) {
+    if (repository_ == nullptr) {
         return false;
     }
     PrinterInfo info;
-    return systemData_->QueryAddedPrinterInfoByPrinterId(printerId, info) &&
+    return repository_->QueryAddedPrinterInfoByPrinterId(printerId, info) &&
         AgentPrinterOptionCodec::IsAgentRouted(info.GetOption());
 }
 
 bool PrintFwkAgentManager::HasPersistedAgentPrinters() const
 {
-    if (systemData_ == nullptr) {
+    if (repository_ == nullptr) {
         return false;
     }
-    for (const auto &printerId : systemData_->QueryAddedPrinterIdList()) {
+    for (const auto &printerId : repository_->QueryAddedPrinterIdList()) {
         if (IsAgentPrinter(printerId)) {
             return true;
         }
@@ -767,16 +767,16 @@ std::optional<int32_t> PrintFwkAgentManager::TryAddPrinterViaAgent(
 
 bool PrintFwkAgentManager::IsAgentRoutedPrinterByName(const std::string &printerName) const
 {
-    if (host_ == nullptr || systemData_ == nullptr || !host_->IsCallerSystemApp()) {
+    if (host_ == nullptr || repository_ == nullptr || !host_->IsCallerSystemApp()) {
         return false;
     }
     std::string standardizedName = PrintUtil::StandardizePrinterName(printerName);
-    std::string printerId = systemData_->QueryPrinterIdByStandardizeName(standardizedName);
+    std::string printerId = repository_->QueryPrinterIdByStandardizeName(standardizedName);
     if (printerId.empty()) {
         return false;
     }
     PrinterInfo printerInfo;
-    return systemData_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+    return repository_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
         AgentPrinterOptionCodec::IsAgentRouted(printerInfo.GetOption());
 }
 
@@ -828,12 +828,12 @@ bool PrintFwkAgentManager::BuildAgentQueueIdentity(const std::string &uri, Agent
 
 bool PrintFwkAgentManager::IsSourcePrinterAdded(const SourcePrinterIdentity &source) const
 {
-    if (systemData_ == nullptr) {
+    if (repository_ == nullptr) {
         return false;
     }
-    for (const auto &printerId : systemData_->QueryAddedPrinterIdList()) {
+    for (const auto &printerId : repository_->QueryAddedPrinterIdList()) {
         PrinterInfo printerInfo;
-        if (!systemData_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        if (!repository_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
             continue;
         }
         SourcePrinterIdentity persistedSource;
@@ -1052,15 +1052,15 @@ void PrintFwkAgentManager::HandleAddDone(int32_t errCode, const PrintAddPrinterR
 
 int32_t PrintFwkAgentManager::DeletePrinterFromAgent(const std::string &printerName)
 {
-    if (!IsRunning() || systemData_ == nullptr) {
+    if (!IsRunning() || repository_ == nullptr) {
         return E_PRINT_RPC_FAILURE;
     }
 
     std::string standardizedName = PrintUtil::StandardizePrinterName(printerName);
-    std::string printerId = systemData_->QueryPrinterIdByStandardizeName(standardizedName);
+    std::string printerId = repository_->QueryPrinterIdByStandardizeName(standardizedName);
     PrinterInfo printerInfo;
     PersistedAgentPrinterMetadata metadata;
-    if (printerId.empty() || !systemData_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) ||
+    if (printerId.empty() || !repository_->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) ||
         !AgentPrinterOptionCodec::ParsePersistedMetadata(printerInfo.GetOption(), metadata)) {
         PRINT_HILOGW("DeletePrinterFromAgent missing persisted agent metadata");
         return E_PRINT_INVALID_PRINTER;

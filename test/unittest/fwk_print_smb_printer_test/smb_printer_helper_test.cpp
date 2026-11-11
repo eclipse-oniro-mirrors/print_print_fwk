@@ -637,91 +637,91 @@ HWTEST_F(SmbPrinterHelperTest, SmbPrinterStateMonitor_Integration, TestSize.Leve
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_CreateContext_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.CreateContext(), nullptr);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->CreateContext(), nullptr);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_GetSmbError_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    const char* err = lib.GetSmbError(nullptr);
+    auto lib = SmbLibrary::GetInstance();
+    const char* err = lib->GetSmbError(nullptr);
     EXPECT_NE(err, nullptr);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_ConnectShare_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.ConnectShare(nullptr, "server", "share", "user"), E_PRINT_SERVER_FAILURE);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->ConnectShare(nullptr, "server", "share", "user"), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_DisconnectShare_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.DisconnectShare(nullptr), E_PRINT_SERVER_FAILURE);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->DisconnectShare(nullptr), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_ShareEnumAsync_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.ShareEnumAsync(nullptr, 0, nullptr, nullptr), E_PRINT_SERVER_FAILURE);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->ShareEnumAsync(nullptr, 0, nullptr, nullptr), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_GetFd_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.GetFd(nullptr), INVALID_FD);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->GetFd(nullptr), INVALID_FD);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_WhichEvents_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.WhichEvents(nullptr), -1);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->WhichEvents(nullptr), -1);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_Service_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_EQ(lib.Service(nullptr, 0), E_PRINT_SERVER_FAILURE);
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_EQ(lib->Service(nullptr, 0), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_CloseContext_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.CloseContext(nullptr));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->CloseContext(nullptr));
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_DestroyContext_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.DestroyContext(nullptr));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->DestroyContext(nullptr));
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_FreeData_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.FreeData(nullptr, nullptr));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->FreeData(nullptr, nullptr));
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_SetUser_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.SetUser(nullptr, "user"));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->SetUser(nullptr, "user"));
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_SetPassword_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.SetPassword(nullptr, "pass"));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->SetPassword(nullptr, "pass"));
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_SetSecurityMode_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.SetSecurityMode(nullptr, 0));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->SetSecurityMode(nullptr, 0));
 }
 
 HWTEST_F(SmbPrinterHelperTest, SmbLibrary_SetTimeout_NullCheck, TestSize.Level1)
 {
-    SmbLibrary& lib = SmbLibrary::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(lib.SetTimeout(nullptr, 0));
+    auto lib = SmbLibrary::GetInstance();
+    EXPECT_NO_FATAL_FAILURE(lib->SetTimeout(nullptr, 0));
 }

@@ -31,6 +31,7 @@ ohos_fuzztest("RemoteServiceFuzzTest") {
     "${_service_path}/print_service_phone/include",
     "${_service_path}/print_service_phone/include/remote",
     "${_service_path}/print_service_phone/include/event_callback",
+    "${print_path}/features/remote_service/include",
     "${print_utils_path}/include",
   ]
 
@@ -58,6 +59,10 @@ ohos_fuzztest("RemoteServiceFuzzTest") {
 
   sources = [
     "${_test_path}/phone_test/fuzztest/remoteservice_fuzzer/remoteservice_fuzzer.cpp",
+    "${print_path}/features/remote_service/src/remote_service_adapter.cpp",
+    "${print_path}/features/remote_service/src/remote_callback_stub.cpp",
+    "${print_path}/features/remote_service/src/print_ipc_connection.cpp",
+    "${print_path}/features/remote_service/src/remote_printer_manager_impl.cpp",
   ]
 
   external_deps = [
@@ -66,6 +71,7 @@ ohos_fuzztest("RemoteServiceFuzzTest") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:extension_manager",
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",

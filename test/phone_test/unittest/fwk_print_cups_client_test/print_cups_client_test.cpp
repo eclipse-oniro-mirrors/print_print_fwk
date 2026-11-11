@@ -14,6 +14,8 @@
  */
 
 #include <thread>
+#include <securec.h>
+#include <limits>
 #include <gtest/gtest.h>
 #define private public
 #include "print_cups_client.h"
@@ -109,12 +111,12 @@ static void AddTestPrinterWithPpd(const std::string &printerId, const std::strin
     PpdInfo ppdInfo;
     ppdInfo.SetPpdName(ppdName);
     printerInfo.SetSelectedDriver(ppdInfo);
-    PrintServiceAbility::GetInstance()->printSystemData_.GetAddedPrinterMap().Upsert(printerId, printerInfo);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
 }
 
 static void RemoveTestPrinter(const std::string &printerId)
 {
-    PrintServiceAbility::GetInstance()->printSystemData_.GetAddedPrinterMap().Remove(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
 }
 
 void AddUsbPrinter(PrinterInfo &info);
@@ -3332,7 +3334,7 @@ HWTEST_F(PrintCupsClientTest, getScheme_NoScheme_Test, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string uri = "invalid_uri_no_scheme";
     std::string scheme = printCupsClient.getScheme(uri);
-    EXPECT_TRUE(scheme.empty() || scheme == uri);
+    EXPECT_TRUE(scheme.empty());
 }
 
 /**
@@ -3522,20 +3524,6 @@ HWTEST_F(PrintCupsClientTest, GetPpdHashCode_ValidName_Test, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string hash = printCupsClient.GetPpdHashCode("test.ppd");
     EXPECT_TRUE(hash.empty());
-}
-
-/**
- * @tc.name: PrintCupsClientTest_IsCupsServerAlive_001
- * @tc.desc: IsCupsServerAlive basic test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, IsCupsServerAlive_Basic_Test, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    bool ret = printCupsClient.IsCupsServerAlive();
-    // Result depends on system state
-    EXPECT_TRUE(ret == true || ret == false);
 }
 
 /**
@@ -4147,6 +4135,751 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_PrintSharedDirEmpty_SkipsCupsOption
     const char *value = cupsGetOption(PRINT_SHARED_DIR_OPTION_KEY.c_str(), ret, options);
     EXPECT_EQ(value, nullptr);
     cupsFreeOptions(ret, options);
+}
+
+namespace {
+
+cups_dest_t *CreateFakeCupsDest(const char *name, const char *deviceUri,
+    const char *makeModel, int printerState)
+{
+    cups_dest_t *dest = static_cast<cups_dest_t *>(calloc(1, sizeof(cups_dest_t)));
+    if (dest == nullptr) {
+        return nullptr;
+    }
+    if (name == nullptr) {
+        free(dest);
+        return nullptr;
+    }
+    size_t nameLen = strlen(name);
+    if (nameLen >= std::numeric_limits<size_t>::max() - 1) {
+        free(dest);
+        return nullptr;
+    }
+    size_t allocSize = nameLen + 1;
+    dest->name = static_cast<char *>(malloc(allocSize));
+    if (dest->name == nullptr) {
+        free(dest);
+        return nullptr;
+    }
+    if (memcpy_s(dest->name, allocSize, name, allocSize) != EOK) {
+        free(dest->name);
+        free(dest);
+        return nullptr;
+    }
+    dest->num_options = 0;
+    dest->options = nullptr;
+    if (deviceUri != nullptr) {
+        dest->num_options = cupsAddOption("device-uri", deviceUri, dest->num_options, &dest->options);
+    }
+    if (makeModel != nullptr) {
+        dest->num_options = cupsAddOption(
+            "printer-make-and-model", makeModel, dest->num_options, &dest->options);
+    }
+    if (printerState >= 0) {
+        dest->num_options = cupsAddOption("printer-state", std::to_string(printerState).c_str(),
+            dest->num_options, &dest->options);
+    }
+    return dest;
+}
+
+} // namespace
+
+/**
+ * @tc.name: PrintCupsClientTest_SetCupsClientEnv_001
+ * @tc.desc: SetCupsClientEnv sets CUPS_SERVER socket path
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, SetCupsClientEnv_SetsSocketPath, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.SetCupsClientEnv();
+    const char *cupsServer = getenv("CUPS_SERVER");
+    ASSERT_NE(cupsServer, nullptr);
+    EXPECT_EQ(std::string(cupsServer), "/data/service/el1/public/print_service/cups/socket/cups.sock");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_StartCupsdServiceNotAlive_001
+ * @tc.desc: StartCupsdServiceNotAlive sets control parameter
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, StartCupsdServiceNotAlive_SetsParam, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    int32_t ret = printCupsClient.StartCupsdServiceNotAlive();
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterUri_001
+ * @tc.desc: ModifyCupsPrinterUri returns false when printAbility_ is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterUri_NullPrintAbility_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.printAbility_ = nullptr;
+    bool ret = printCupsClient.ModifyCupsPrinterUri("test_printer", "ipp://192.168.1.1/ipp");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterUri_002
+ * @tc.desc: ModifyCupsPrinterUri returns false when printer is not found
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterUri_PrinterNotFound_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr));
+    bool ret = printCupsClient.ModifyCupsPrinterUri("test_printer", "ipp://192.168.1.1/ipp");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterUri_003
+ * @tc.desc: ModifyCupsPrinterUri succeeds when DoRequest returns OK
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterUri_Success_ReturnsTrue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://old", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    bool ret = printCupsClient.ModifyCupsPrinterUri("test_printer", "ipp://new");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterUri_004
+ * @tc.desc: ModifyCupsPrinterUri standardizes URI for bsuni ppd
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterUri_BsuniPpd_StandardizesUri, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://old", BSUNI_PPD_NAME.c_str(), IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    bool ret = printCupsClient.ModifyCupsPrinterUri("test_printer", "ipp://new");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_001
+ * @tc.desc: IsPrinterExist returns false when printAbility_ is null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_NullPrintAbility_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.printAbility_ = nullptr;
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_002
+ * @tc.desc: IsPrinterExist returns false when printer is not found
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_PrinterNotFound_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr));
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_003
+ * @tc.desc: IsPrinterExist returns false when device-uri option is missing
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_DeviceUriNull_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", nullptr, "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_004
+ * @tc.desc: IsPrinterExist returns false when make-model option is missing
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_MakeModelNull_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", nullptr, IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_005
+ * @tc.desc: IsPrinterExist returns false when printer state is stopped
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_PrinterStopped_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_STOPPED);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_006
+ * @tc.desc: IsPrinterExist returns false when device-uri does not match
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_DeviceUriMismatch_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://old", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    bool ret = printCupsClient.IsPrinterExist("ipp://new", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_007
+ * @tc.desc: IsPrinterExist returns true for default ppd with IPP Everywhere make model
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_DefaultPpdWithIppEverywhere_ReturnsTrue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", DEFAULT_PPD_NAME.c_str());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_IsPrinterExist_008
+ * @tc.desc: IsPrinterExist returns true for bsuni ppd with matching make model
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, IsPrinterExist_BsuniPpd_ReturnsTrue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", BSUNI_PPD_NAME.c_str(), IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    bool ret = printCupsClient.IsPrinterExist("ipp://test", "test_printer", BSUNI_PPD_NAME.c_str());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddPrinterToCupsWithSpecificPpd_001
+ * @tc.desc: AddPrinterToCupsWithSpecificPpd returns none when printer already exists
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddPrinterToCupsWithSpecificPpd_PrinterExists_ReturnsNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    int32_t ret = printCupsClient.AddPrinterToCupsWithSpecificPpd("ipp://test", "test_printer", DEFAULT_PPD_NAME);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddPrinterToCupsWithSpecificPpd_002
+ * @tc.desc: AddPrinterToCupsWithSpecificPpd adds new printer with mocked DoRequest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddPrinterToCupsWithSpecificPpd_AddNew_ReturnsNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr));
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    int32_t ret = printCupsClient.AddPrinterToCupsWithSpecificPpd("ipp://test", "test_printer", DEFAULT_PPD_NAME);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddPrinterToCupsWithPpd_001
+ * @tc.desc: AddPrinterToCupsWithPpd returns none when printer already exists
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddPrinterToCupsWithPpd_PrinterExists_ReturnsNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    int32_t ret = printCupsClient.AddPrinterToCupsWithPpd("ipp://test", "test_printer", DEFAULT_PPD_NAME, "");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AddPrinterToCups_001
+ * @tc.desc: AddPrinterToCups returns none when printer already exists
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, AddPrinterToCups_PrinterExists_ReturnsNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    int32_t ret = printCupsClient.AddPrinterToCups("ipp://test", "test_printer", "testMake");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPPDInformation_001
+ * @tc.desc: QueryPPDInformation returns false when DoRequest returns null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPPDInformation_NullResponse_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    std::string ppdName;
+    bool ret = printCupsClient.QueryPPDInformation("testMake", ppdName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryAllPPDInformation_001
+ * @tc.desc: QueryAllPPDInformation returns false when DoRequest returns null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryAllPPDInformation_NullResponse_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    std::vector<PpdInfo> infos;
+    bool ret = printCupsClient.QueryAllPPDInformation("testMake", infos);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterAttrList_001
+ * @tc.desc: QueryPrinterAttrList returns values from mocked dest options
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterAttrList_Success_ReturnsValues, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    dest->num_options = cupsAddOption("test_key", "test_value", dest->num_options, &dest->options);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    std::vector<std::string> keyList = {"test_key"};
+    std::vector<std::string> valueList;
+    int32_t ret = printCupsClient.QueryPrinterAttrList("test_printer", keyList, valueList);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(valueList.size(), 1u);
+    EXPECT_EQ(valueList[0], "test_key&test_value");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ResumePrinter_001
+ * @tc.desc: ResumePrinter succeeds with mocked DoRequest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ResumePrinter_Success_ReturnsTrue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    bool ret = printCupsClient.ResumePrinter("test_printer");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_DeleteCupsPrinter_001
+ * @tc.desc: DeleteCupsPrinter succeeds with mocked DoRequest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, DeleteCupsPrinter_Success_ReturnsNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    int32_t ret = printCupsClient.DeleteCupsPrinter("test_printer");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ModifyCupsPrinterPpd_001
+ * @tc.desc: ModifyCupsPrinterPpd succeeds with mocked DoRequest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ModifyCupsPrinterPpd_Success_ReturnsTrue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    bool ret = printCupsClient.ModifyCupsPrinterPpd("test_printer", "test.ppd");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryPrinterCapabilityFromPPD_001
+ * @tc.desc: QueryPrinterCapabilityFromPPD succeeds with mocked dest info
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryPrinterCapabilityFromPPD_Success_ReturnsNone, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = static_cast<cups_dest_t *>(calloc(1, sizeof(cups_dest_t)));
+    ASSERT_NE(dest, nullptr);
+    const char *destName = "test_printer";
+    size_t destNameLen = strlen(destName);
+    ASSERT_LT(destNameLen, std::numeric_limits<size_t>::max() - 1);
+    size_t destAllocSize = destNameLen + 1;
+    dest->name = static_cast<char *>(malloc(destAllocSize));
+    ASSERT_NE(dest->name, nullptr);
+    EXPECT_EQ(memcpy_s(dest->name, destAllocSize, destName, destAllocSize), EOK);
+    cups_dinfo_t *dinfo = static_cast<cups_dinfo_t *>(calloc(1, sizeof(cups_dinfo_t)));
+    ASSERT_NE(dinfo, nullptr);
+    dinfo->attrs = ippNew();
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, CopyDestInfo(_, _)).WillOnce(Return(dinfo));
+    EXPECT_CALL(*rawMock, FreeDestInfo(dinfo)).WillOnce(Invoke(
+        [](cups_dinfo_t *di) { ippDelete(di->attrs); free(di); }));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    PrinterCapability caps;
+    int32_t ret = printCupsClient.QueryPrinterCapabilityFromPPD("test_printer", caps, "");
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CheckPrinterMakeModel_001
+ * @tc.desc: CheckPrinterMakeModel returns true for raw printer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CheckPrinterMakeModel_RawPrinter_ReturnsTrue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    cups_dest_t *dest = CreateFakeCupsDest("test_printer", "ipp://test", "IPP Everywhere", IPP_PRINTER_IDLE);
+    ASSERT_NE(dest, nullptr);
+    EXPECT_CALL(*rawMock, GetNamedDest(_, _, _)).WillOnce(Return(dest));
+    EXPECT_CALL(*rawMock, FreeDests(1, dest)).WillOnce(Invoke(
+        [](int, cups_dest_t *d) { cupsFreeDests(1, d); }));
+    JobParameters jobParams;
+    jobParams.printerId = RAW_PPD_DRIVER;
+    jobParams.printerName = "test_printer";
+    bool driverMissing = false;
+    bool ret = printCupsClient.CheckPrinterMakeModel(&jobParams, driverMissing);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_QueryJobState_001
+ * @tc.desc: QueryJobState returns false when DoRequest returns null
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, QueryJobState_NullResponse_ReturnsFalse, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    printCupsClient.StartCupsdService();
+    auto mockAbility = std::make_unique<MockIPrintAbilityBase>();
+    auto *rawMock = mockAbility.get();
+    delete printCupsClient.printAbility_;
+    printCupsClient.printAbility_ = rawMock;
+    mockAbility.release();
+    http_t *http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, 3000, nullptr);
+    ASSERT_NE(http, nullptr);
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, 1, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    EXPECT_CALL(*rawMock, DoRequest(_, _, _)).WillOnce(Return(nullptr));
+    bool ret = printCupsClient.QueryJobState(http, param);
+    EXPECT_FALSE(ret);
+    httpClose(http);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_UpdateJobState_001
+ * @tc.desc: UpdateJobState increments counter when state is unchanged
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, UpdateJobState_SameState_IncrementsCounter, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    param->job_state = IPP_JOB_PENDING;
+    ipp_t *response = ippNew();
+    ASSERT_NE(response, nullptr);
+    ippAddInteger(response, IPP_TAG_JOB, IPP_TAG_ENUM, "job-state", IPP_JOB_PENDING);
+    bool ret = printCupsClient.UpdateJobState(param, response);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(param->timesOfSameState, 0);
+    ippDelete(response);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_HandleFilesAndStartMonitoring_001
+ * @tc.desc: HandleFilesAndStartMonitoring returns early when HandleFiles fails
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, HandleFilesAndStartMonitoring_InvalidFd_ReturnsEarly, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    JobParameters *jobParams = new JobParameters();
+    jobParams->serviceAbility = PrintServiceAbility::GetInstance();
+    jobParams->serviceJobId = "test_job";
+    jobParams->printerName = "test_printer";
+    jobParams->documentFormat = "application/pdf";
+    jobParams->fdList = {static_cast<uint32_t>(-1)};
+    jobParams->isCanceled = false;
+    printCupsClient.HandleFilesAndStartMonitoring(jobParams, nullptr, 1);
+    EXPECT_EQ(printCupsClient.jobMonitorList_.size(), 0u);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_InterruptCupsJob_001
+ * @tc.desc: InterruptCupsJob removes job from queue and updates state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, InterruptCupsJob_JobInQueue_RemovesJob, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId("interrupt_job");
+    testJob.SetFdList({1});
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    ASSERT_NE(jobParams, nullptr);
+    printCupsClient.jobQueue_.push_back(jobParams);
+    printCupsClient.InterruptCupsJob("interrupt_job");
+    EXPECT_EQ(printCupsClient.jobQueue_.size(), 0u);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_CancelCupsJob_001
+ * @tc.desc: CancelCupsJob sets cancel flag on current job
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, CancelCupsJob_CurrentJob_SetsCanceled, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId("cancel_current");
+    testJob.SetFdList({1});
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    ASSERT_NE(jobParams, nullptr);
+    printCupsClient.currentJob_ = jobParams;
+    printCupsClient.CancelCupsJob("cancel_current");
+    EXPECT_TRUE(printCupsClient.currentJob_->isCanceled);
+    delete printCupsClient.currentJob_;
+    printCupsClient.currentJob_ = nullptr;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_ParseStateReasons_001
+ * @tc.desc: ParseStateReasons sets block flag for media-jam with default policy
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, ParseStateReasons_MediaJam_SetsBlock, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    strlcpy(param->job_printer_state_reasons, "media-jam", sizeof(param->job_printer_state_reasons));
+    printCupsClient.BuildMonitorPolicy(param);
+    printCupsClient.ParseStateReasons(param);
+    EXPECT_TRUE(param->isBlock);
+    EXPECT_NE(param->substate, 0u);
 }
 
 }  // namespace Print

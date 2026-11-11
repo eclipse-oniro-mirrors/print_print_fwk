@@ -844,12 +844,12 @@ HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_AddedLanPrinterSkippe
     printer->SetPrinterId(addedPrinterId);
     printer->SetOriginId(originId);
     printer->SetPrinterName("HP LaserJet");
-    service->printSystemData_.addedPrinterMap_.Insert(addedPrinterId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(addedPrinterId, printer);
 
     EXPECT_TRUE(vendorDriver.ShouldSkipPrinterRemoval(localPrinterId));
     EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(localPrinterId.c_str()), EXTENSION_ERROR_NONE);
 
-    service->printSystemData_.addedPrinterMap_.Remove(addedPrinterId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(addedPrinterId, addedPrinterId);
     VendorBsuniDriver::SetDriverWrapper(nullptr);
 }
 
@@ -870,11 +870,11 @@ HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_UnaddedNotSkippedAndI
     printer->SetPrinterId(addedPrinterId);
     printer->SetOriginId(originId);
     printer->SetPrinterName(ipPrinterId);
-    service->printSystemData_.addedPrinterMap_.Insert(addedPrinterId, printer);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(addedPrinterId, printer);
     EXPECT_TRUE(vendorDriver.ShouldSkipPrinterRemoval(ipPrinterId));
     EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(ipPrinterId.c_str()), EXTENSION_ERROR_NONE);
 
-    service->printSystemData_.addedPrinterMap_.Remove(addedPrinterId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(addedPrinterId, addedPrinterId);
     VendorBsuniDriver::SetDriverWrapper(nullptr);
 }
 
