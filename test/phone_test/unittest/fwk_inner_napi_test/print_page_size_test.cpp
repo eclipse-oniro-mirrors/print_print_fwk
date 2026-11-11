@@ -233,7 +233,8 @@ HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle, TestSize.Level1)
     page.SetWidth(CUSTOM_WIDTH);
     page.SetHeight(CUSTOM_HEIGHT);
     page.ConvertToPwgStyle();
-    EXPECT_EQ(page.GetName(), "Custom.185x260mm");
+    EXPECT_EQ(page.GetName(), "custom_184.99x259.99mm_184.99x259.99mm");
+    EXPECT_EQ(page.GetId(), "custom_184.99x259.99mm_184.99x259.99mm");
 }
 
 HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle_LargeDimensions_NoOverflow, TestSize.Level1)
@@ -242,7 +243,7 @@ HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle_LargeDimensions_NoOverflow, TestSi
     page.SetWidth(50000000);
     page.SetHeight(50000000);
     EXPECT_TRUE(page.ConvertToPwgStyle());
-    EXPECT_NE(page.GetName().find("Custom."), std::string::npos);
+    EXPECT_NE(page.GetName().find("custom_"), std::string::npos);
 }
 
 }  // namespace Print
