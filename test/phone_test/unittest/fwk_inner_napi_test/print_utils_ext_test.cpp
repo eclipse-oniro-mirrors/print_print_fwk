@@ -495,6 +495,41 @@ INSTANTIATE_TEST_SUITE_P(AnonymizeJobOptionCases, AnonymizeJobOptionTest, testin
         R"({"ipp":"ipp://49.4.22.xxx:16631/ipp/printers"})"}
 ));
 
+// ==================== AnonymizePrinterOption Test ====================
+struct AnonymizePrinterOptionTestParam {
+    std::string inputOption;
+    std::string expectedResult;
+};
+
+class AnonymizePrinterOptionTest : public testing::TestWithParam<AnonymizePrinterOptionTestParam> {};
+
+/**
+ * @tc.name: AnonymizePrinterOption
+ * @tc.desc: Verify AnonymizePrinterOption with various options.
+ * @tc.type: FUNC
+ */
+HWTEST_P(AnonymizePrinterOptionTest, AnonymizePrinterOption, TestSize.Level2)
+{
+    AnonymizePrinterOptionTestParam param = GetParam();
+    std::string result = PrintUtils::AnonymizePrinterOption(param.inputOption);
+    EXPECT_EQ(result, param.expectedResult);
+}
+
+INSTANTIATE_TEST_SUITE_P(AnonymizePrinterOptionCases, AnonymizePrinterOptionTest, testing::Values(
+    AnonymizePrinterOptionTestParam{"invalid json", ""},
+    AnonymizePrinterOptionTestParam{"", ""},
+    AnonymizePrinterOptionTestParam{R"json({"customPageSizeList":[]})json",
+        R"json({"customPageSizeList":[]})json"},
+    AnonymizePrinterOptionTestParam{
+        R"json({"customPageSizeList":[{"id":"custom:123",
+            "name":"MyForm(210x297mm)", "width":8268, "height":11693}]})json",
+        R"json({"customPageSizeList":[{"height":11693, "id":"custom:123",
+            "name":"MyF***********mm)", "width":8268}]})json"},
+    AnonymizePrinterOptionTestParam{
+        R"json({"otherKey":"value"})json",
+        R"json({"otherKey":"value"})json"}
+));
+
 // ==================== AnonymizeAlias Test ====================
 struct AnonymizeAliasTestParam {
     std::string inputAlias;

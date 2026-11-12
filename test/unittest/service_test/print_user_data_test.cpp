@@ -1574,5 +1574,154 @@ HWTEST_F(PrintUserDataTest, OpenCacheFileFd_EmptyJobId_ReturnsFalse, TestSize.Le
     EXPECT_TRUE(fdList.empty());
 }
 
+// ===== Custom page sizes user-isolation triplet Tests =====
+
+static std::vector<OHOS::Print::PrintPageSize> BuildTestCustomPageSizeList()
+{
+    std::vector<OHOS::Print::PrintPageSize> list;
+    constexpr uint32_t width = 8268;
+    constexpr uint32_t height = 11693;
+    list.emplace_back("custom:12345", "MyForm(210x297mm)", width, height);
+    return list;
+}
+
+HWTEST_F(PrintUserDataTest, SaveCustomPageSizes_UpdatesCache, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(10010);
+    std::vector<OHOS::Print::PrintPageSize> list = BuildTestCustomPageSizeList();
+    userData->printerCustomPageSizes_.clear();
+
+    bool result = userData->SaveCustomPageSizes("test_printer", "test_printer", list);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(userData->printerCustomPageSizes_.size(), 1u);
+    EXPECT_TRUE(userData->printerCustomPageSizes_.count("test_printer"));
+    EXPECT_EQ(userData->printerCustomPageSizes_["test_printer"].size(), 1u);
+}
+
+HWTEST_F(PrintUserDataTest, SaveCustomPageSizes_OverwritesExisting, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(10011);
+    std::vector<OHOS::Print::PrintPageSize> oldList = BuildTestCustomPageSizeList();
+    userData->printerCustomPageSizes_["printer_id"] = oldList;
+
+    std::vector<OHOS::Print::PrintPageSize> newList;
+    userData->SaveCustomPageSizes("printer_id", "printer_id", newList);
+    EXPECT_EQ(userData->printerCustomPageSizes_.size(), 1u);
+    EXPECT_EQ(userData->printerCustomPageSizes_["printer_id"].size(), 0u);
+}
+
+HWTEST_F(PrintUserDataTest, LoadCustomPageSizes_CachedList_ReturnsTrue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(10012);
+    std::vector<OHOS::Print::PrintPageSize> saved = BuildTestCustomPageSizeList();
+    userData->printerCustomPageSizes_["printer_cached"] = saved;
+
+    std::vector<OHOS::Print::PrintPageSize> loaded;
+    bool result = userData->LoadCustomPageSizes("printer_cached", "printer_cached", loaded);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(loaded.size(), 1u);
+    EXPECT_EQ(loaded[0].GetId(), "custom:12345");
+}
+
+HWTEST_F(PrintUserDataTest, LoadCustomPageSizes_NeitherCacheNorPath_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(99920);
+    std::vector<OHOS::Print::PrintPageSize> loaded;
+    bool result = userData->LoadCustomPageSizes("nonexistent", "nonexistent", loaded);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(PrintUserDataTest, DeleteCustomPageSizes_ExistingCache_DeletesSuccessfully, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(10013);
+    userData->printerCustomPageSizes_["printer_to_delete"] = BuildTestCustomPageSizeList();
+    EXPECT_EQ(userData->printerCustomPageSizes_.size(), 1u);
+
+    userData->DeleteCustomPageSizes("printer_to_delete", "printer_to_delete");
+    EXPECT_EQ(userData->printerCustomPageSizes_.size(), 0u);
+    EXPECT_FALSE(userData->printerCustomPageSizes_.count("printer_to_delete"));
+}
+
+// User isolation core scenario: the same printerId is mutually invisible across different userIds
+HWTEST_F(PrintUserDataTest, UserIsolation_DifferentUsers_DifferentData, TestSize.Level1)
+{
+    auto userA = std::make_shared<OHOS::Print::PrintUserData>();
+    userA->SetUserId(20001);
+    auto userB = std::make_shared<OHOS::Print::PrintUserData>();
+    userB->SetUserId(20002);
+
+    std::vector<OHOS::Print::PrintPageSize> listA = BuildTestCustomPageSizeList();
+    std::vector<OHOS::Print::PrintPageSize> listB;
+
+    userA->SaveCustomPageSizes("shared_printer", "shared_printer", listA);
+    userB->SaveCustomPageSizes("shared_printer", "shared_printer", listB);
+
+    std::vector<OHOS::Print::PrintPageSize> loadedA;
+    userA->LoadCustomPageSizes("shared_printer", "shared_printer", loadedA);
+    std::vector<OHOS::Print::PrintPageSize> loadedB;
+    userB->LoadCustomPageSizes("shared_printer", "shared_printer", loadedB);
+
+    EXPECT_EQ(loadedA.size(), 1u);
+    EXPECT_EQ(loadedB.size(), 0u);
+}
+
+// Custom page sizes share the user preferences file: after Save, a brand-new instance (no cache) can still Load it back
+HWTEST_F(PrintUserDataTest, CustomPageSizes_PersistedWithPreferences_RoundTrip, TestSize.Level1)
+{
+    auto writer = std::make_shared<OHOS::Print::PrintUserData>();
+    writer->SetUserId(20010);
+    writer->printerCustomPageSizes_.clear();
+    writer->printerUserPreferences_.clear();
+    std::vector<OHOS::Print::PrintPageSize> list = BuildTestCustomPageSizeList();
+    ASSERT_TRUE(writer->SaveCustomPageSizes("persist_printer", "persist_printer", list));
+
+    auto reader = std::make_shared<OHOS::Print::PrintUserData>();
+    reader->SetUserId(20010);
+    std::vector<OHOS::Print::PrintPageSize> loaded;
+    bool ok = reader->LoadCustomPageSizes("persist_printer", "persist_printer", loaded);
+    EXPECT_TRUE(ok);
+    ASSERT_EQ(loaded.size(), 1u);
+    EXPECT_EQ(loaded[0].GetId(), "custom:12345");
+    EXPECT_EQ(loaded[0].GetWidth(), 8268u);
+
+    // Same-file preferences are also present: LoadPrinterUserPreferences should still return customPageSizes
+    PrinterUserPreferences prefs;
+    ASSERT_TRUE(reader->LoadPrinterUserPreferences("persist_printer", "persist_printer", prefs));
+    EXPECT_TRUE(prefs.HasCustomPageSizes());
+    EXPECT_EQ(prefs.GetCustomPageSizes().size(), 1u);
+}
+
+// Custom page sizes coexist with vendorOptions: saving custom page sizes must not clear existing vendorOptions
+HWTEST_F(PrintUserDataTest, CustomPageSizes_PreservesVendorOptions, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    userData->SetUserId(20011);
+    userData->printerUserPreferences_.clear();
+    userData->printerCustomPageSizes_.clear();
+
+    PrinterUserPreferences prefs;
+    prefs.SetUserId(20011);
+    prefs.SetPrinterId("coexist_printer");
+    prefs.SetVendorOptions(R"({"duplex":"on"})");
+    ASSERT_TRUE(userData->SavePrinterUserPreferences("coexist_printer", "coexist_printer", prefs));
+
+    std::vector<OHOS::Print::PrintPageSize> list = BuildTestCustomPageSizeList();
+    ASSERT_TRUE(userData->SaveCustomPageSizes("coexist_printer", "coexist_printer", list));
+
+    auto reloader = std::make_shared<OHOS::Print::PrintUserData>();
+    reloader->SetUserId(20011);
+    PrinterUserPreferences loaded;
+    ASSERT_TRUE(reloader->LoadPrinterUserPreferences("coexist_printer", "coexist_printer", loaded));
+    EXPECT_TRUE(loaded.HasVendorOptions());
+    EXPECT_EQ(loaded.GetVendorOptions(), R"({"duplex":"on"})");
+    EXPECT_TRUE(loaded.HasCustomPageSizes());
+    EXPECT_EQ(loaded.GetCustomPageSizes().size(), 1u);
+}
+
 }  // namespace Print
 }  // namespace OHOS

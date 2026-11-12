@@ -31,6 +31,13 @@ using DiscreteId = std::string;
 using DiscretePageName = std::string;
 using PAGE_SIZE_ID = std::string;
 
+struct CustomPageSizeRange {
+    uint32_t minWidth = 0;
+    uint32_t maxWidth = 0;
+    uint32_t minHeight = 0;
+    uint32_t maxHeight = 0;
+};
+
 class PrintPageSize final : public Parcelable {
 public:
     static void BuildPageSizeMap();

@@ -16,6 +16,7 @@
 #include "print_page_size.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "print_utils.h"
 #include <cups/cups.h>
 
 namespace {
@@ -465,7 +466,11 @@ std::shared_ptr<PrintPageSize> PrintPageSize::Unmarshalling(Parcel &parcel)
 void PrintPageSize::Dump()
 {
     PRINT_HILOGD("id_ = %{public}s", id_.c_str());
-    PRINT_HILOGD("name_ = %{public}s", name_.c_str());
+    if (id_.compare(0, CUSTOM_PAGE_SIZE_ID_PREFIX.size(), CUSTOM_PAGE_SIZE_ID_PREFIX) == 0) {
+        PRINT_HILOGD("name_ = %{public}s", PrintUtils::AnonymizeString(name_).c_str());
+    } else {
+        PRINT_HILOGD("name_ = %{public}s", name_.c_str());
+    }
     PRINT_HILOGD("width_ = %{public}d", width_);
     PRINT_HILOGD("height_ = %{public}d", height_);
 }

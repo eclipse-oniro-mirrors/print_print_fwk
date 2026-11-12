@@ -22,6 +22,7 @@
 
 namespace OHOS::Print {
 void ParsePrinterAttributesFromIPP(ipp_t *response, PrinterCapability &printerCaps);
+void ParseCustomPageSizeRangeFromIPP(ipp_t *response, Json::Value &options);
 bool ParsePrinterStatusAttributes(ipp_t *response, PrinterStatus &status);
 } // namespace OHOS::Print
 #endif // PRINT_CUPS_ATTRIBUTE_H

@@ -1300,5 +1300,63 @@ void PrintUserData::DeletePrinterUserPreferences(const std::string &printerId,
     PRINT_HILOGI("Deleted PrinterUserPreferences file %{private}s", filePath.c_str());
 }
 
+bool PrintUserData::SaveCustomPageSizes(const std::string &printerId,
+                                        const std::string &standardizedPrinterName,
+                                        const std::vector<PrintPageSize> &list)
+{
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    printerCustomPageSizes_[printerId] = list;
+
+    PrinterUserPreferences userPrefs;
+    if (!LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        userPrefs.SetPrinterId(printerId);
+        userPrefs.SetUserId(userId_);
+    }
+    userPrefs.SetCustomPageSizes(list);
+    if (!SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        PRINT_HILOGE("Save custom page sizes via preferences file failed");
+        return false;
+    }
+    PRINT_HILOGI("Saved custom page sizes via preferences, printer=%{public}s, count=%{public}zu",
+        PrintUtils::AnonymizePrinterId(printerId).c_str(), list.size());
+    return true;
+}
+
+bool PrintUserData::LoadCustomPageSizes(const std::string &printerId,
+                                        const std::string &standardizedPrinterName,
+                                        std::vector<PrintPageSize> &list)
+{
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    auto iter = printerCustomPageSizes_.find(printerId);
+    if (iter != printerCustomPageSizes_.end()) {
+        list = iter->second;
+        return true;
+    }
+
+    PrinterUserPreferences userPrefs;
+    if (LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs) &&
+        userPrefs.HasCustomPageSizes()) {
+        list = userPrefs.GetCustomPageSizes();
+        printerCustomPageSizes_[printerId] = list;
+        PRINT_HILOGI("Loaded custom page sizes from preferences, printer=%{public}s, count=%{public}zu",
+            PrintUtils::AnonymizePrinterId(printerId).c_str(), list.size());
+        return true;
+    }
+    return false;
+}
+
+void PrintUserData::DeleteCustomPageSizes(const std::string &printerId,
+                                          const std::string &standardizedPrinterName)
+{
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    printerCustomPageSizes_.erase(printerId);
+
+    PrinterUserPreferences userPrefs;
+    if (LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        userPrefs.SetCustomPageSizes({});
+        SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs);
+    }
+}
+
 }  // namespace Print
 }  // namespace OHOS

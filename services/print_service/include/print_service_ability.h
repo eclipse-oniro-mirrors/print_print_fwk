@@ -32,6 +32,7 @@
 #include "iprint_callback.h"
 #include "iremote_object.h"
 #include "print_constant.h"
+#include "print_page_size.h"
 #include "print_service_stub.h"
 #include "i_remote_printer_manager.h"
 #include "system_ability.h"
@@ -129,6 +130,7 @@ public:
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
+    void InjectUserCustomPageSizes(const std::string &printerId, PrinterInfo &printer);
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
     int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override;
@@ -137,6 +139,7 @@ public:
     int32_t StartNativePrintJob(PrintJob &printJob) override;
     int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
     void CancelUserPrintJobs(const int32_t userId);
+    void CleanupUserDataOnUserRemoved(int32_t userId);
     void NotifyCurrentUserChanged(const int32_t userId);
     bool FlushCacheFileToUserData(const std::string &jobId);
     bool DeleteCacheFileFromUserData(const std::string &jobId);
@@ -152,6 +155,13 @@ public:
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
     int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
+    void LoadCustomPageSizeList(const std::string &printerId, std::vector<PrintPageSize> &customPageSizeList);
+    bool IsCustomPageSizeIdExistInUserPrefs(const std::string &pageSizeId, const PrinterUserPreferences &userPrefs);
+    void FallbackToPrinterDefaultPageSize(const PrinterInfo &printerInfo, PrinterPreferences &printerPrefs);
+    void MigrateCustomPageSizeIdToUserPrefs(const std::string &printerId, const PrinterInfo &printerInfo,
+        PrinterPreferences &printerPrefs, PrinterUserPreferences &userPrefs);
+    int32_t SaveOrClearUserPreferences(const std::string &printerId, const std::string &standardizedPrinterName,
+        PrinterUserPreferences &userPrefs);
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences) override;
@@ -221,6 +231,21 @@ private:
     void NotifyAppJobQueueChanged(const std::string &applyResult);
     bool isEprint(const std::string &printerId);
     bool ShouldUpdateCapabilityByPPD(const std::string &printerId);
+    CustomPageSizeRangeState GetCustomPageSizeRangeState(const PrinterInfo &printer, CustomPageSizeRange &range);
+    int32_t FillCustomPageSizeRange(const std::string &printerId, PrinterInfo &printer);
+    bool NeedFillCustomPageSizeRange(const PrinterInfo &printer);
+    void BackfillCustomPageSizeRangeIfNeeded(const std::string &printerId, PrinterInfo &printer);
+    void UpdatePrinterAliasInSystem(const std::string &printerId, const PrinterInfo &printerInfo, PrinterInfo &printer);
+    int32_t HandleCustomPageSizeList(const std::string &printerId, const PrinterInfo &printerInfo,
+        const std::vector<PrintPageSize> &customPageSizeList, PrinterInfo &printer);
+    int32_t ValidateAndSaveCustomPageSizeList(const std::string &printerId, const PrinterInfo &printerInfo,
+        const std::vector<PrintPageSize> &customPageSizeList, const CustomPageSizeRange &range, PrinterInfo &printer);
+    void ApplyCustomPageSizeListResult(const std::string &printerId, const PrinterInfo &printerInfo,
+        const std::vector<PrintPageSize> &customPageSizeList, PrinterInfo &printer);
+    int32_t ValidateCustomPageSizeList(const std::vector<PrintPageSize> &list, const CustomPageSizeRange &range,
+        const PrinterInfo &printer);
+    bool ValidateCustomPageSizeEntry(const PrintPageSize &item, const CustomPageSizeRange &range,
+        const std::vector<PrintPageSize> &supportedPageSizes, std::set<std::string> &usedIds);
     int32_t ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
@@ -236,8 +261,7 @@ private:
 private:
     int32_t DoRestartPrintJob(const std::string &oldJobId, std::shared_ptr<PrintJob> &printJob);
     void HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState);
-    void HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob,
-        bool jobInQueue);
+    void HandleJobCompletedState(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob, bool jobInQueue);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void RegisterAdapterListener(const std::string &jobId);
@@ -298,12 +322,15 @@ private:
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::string& extensionId,
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
-    void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions,
-                                                    const PrinterPreferences &preferences,
-                                                    const PrinterUserPreferences &userPrefs);
+    void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions, const PrinterPreferences &preferences,
+        const PrinterUserPreferences &userPrefs);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
-    int32_t ProcessVendorOptionsForPreference(const std::string &printerId,
-                                              const PrinterPreferences &preferences,
+    int32_t ValidateCustomPageSize(PrinterInfo &printerInfo, const PrintPageSize &pageSize);
+    int32_t GetCustomPageSizeRangeFromCapability(const PrinterCapability &printerCapability,
+        CustomPageSizeRange &range);
+    void FillJobOptionWithPrinterInfo(const PrinterInfo &printerInfo, Json::Value &infoJson);
+    void ApplyPrinterPreferencesToJob(const PrinterInfo &printerInfo, Json::Value &infoJson, PrintJob &printJob);
+    int32_t ProcessVendorOptionsForPreference(const std::string &printerId, const PrinterPreferences &preferences,
                                               PrinterPreferences &printerPrefs);
     void MergeVendorOptionsForPrintJob(const PrinterPreferences &preferences,
                                        const PrinterUserPreferences &userPrefs, PrintJob &printJob);

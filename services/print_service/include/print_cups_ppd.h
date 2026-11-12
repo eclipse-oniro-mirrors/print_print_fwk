@@ -37,6 +37,7 @@ bool ValidateVendorAbilityBundle(const std::string &abilityName, const std::stri
 
 void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::string &ppdName);
 void ParseVendorAbilityFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
+void ParseCustomPageSizeFromPpd(ppd_file_t *ppd, Json::Value &options);
 Json::Value FindCustomParamLimit(ppd_cparam_t *cparam);
 ppd_cparam_t *FindCustomParam(ppd_coption_t *coption);
 
