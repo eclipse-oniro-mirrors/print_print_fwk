@@ -1117,5 +1117,51 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_IpPrinterSkippe
     PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
 }
 
+HWTEST_F(PrintServiceAbilityTest, ReportPrinterIdle_DiscoveredUnavailablePrinterKeptOffline, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId = "fwk.driver.wlan.group:mdns_idle_unavailable_test";
+    auto addedPrinter = std::make_shared<PrinterInfo>();
+    addedPrinter->SetPrinterId(printerId);
+    addedPrinter->SetPrinterName("HP LaserJet");
+    addedPrinter->SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, addedPrinter);
+    auto discoveredPrinter = std::make_shared<PrinterInfo>();
+    discoveredPrinter->SetPrinterId(printerId);
+    discoveredPrinter->SetUri("ipp://printer.local/ipp/print");
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discoveredPrinter);
+
+    service->ReportPrinterIdle(printerId);
+
+    PrinterInfo result;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ReportPrinterIdle_DiscoveredBusyPrinterReleasedToIdle, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string printerId = "fwk.driver.wlan.group:mdns_idle_busy_test";
+    auto addedPrinter = std::make_shared<PrinterInfo>();
+    addedPrinter->SetPrinterId(printerId);
+    addedPrinter->SetPrinterName("HP LaserJet");
+    addedPrinter->SetPrinterStatus(PRINTER_STATUS_BUSY);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, addedPrinter);
+    auto discoveredPrinter = std::make_shared<PrinterInfo>();
+    discoveredPrinter->SetPrinterId(printerId);
+    discoveredPrinter->SetUri("ipp://printer.local/ipp/print");
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discoveredPrinter);
+
+    service->ReportPrinterIdle(printerId);
+
+    PrinterInfo result;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+    PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
+}
+
 }  // namespace Print
 }  // namespace OHOS
