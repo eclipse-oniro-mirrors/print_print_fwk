@@ -14,7 +14,10 @@
  */
 
 #include <gtest/gtest.h>
+#include <chrono>
+#include <future>
 #include <json/json.h>
+#include <thread>
 
 #include "print_json_util.h"
 #include "remote_constants.h"
@@ -420,9 +423,11 @@ HWTEST_F(RemotePrinterManagerImplTest, CreateRemotePrintFeature_ReturnsInstance,
 {
     auto feature = CreateRemotePrintFeature();
     ASSERT_NE(feature, nullptr);
+    EXPECT_EQ(feature, &RemotePrinterManagerImpl::GetInstance());
     auto remote = static_cast<IRemotePrinterManager *>(feature->QueryInterface(
         PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER));
     EXPECT_NE(remote, nullptr);
+    EXPECT_EQ(static_cast<void *>(remote), static_cast<void *>(feature));
     DestroyRemotePrintFeature(feature);
 }
 
@@ -439,6 +444,86 @@ HWTEST_F(RemotePrinterManagerImplTest, DestroyRemotePrintFeature_InvalidInputs_N
     };
     DummyFeature dummy;
     EXPECT_NO_FATAL_FAILURE(DestroyRemotePrintFeature(&dummy));
+
+    auto feature = CreateRemotePrintFeature();
+    ASSERT_NE(feature, nullptr);
+    RemotePrinterManagerImpl::GetInstance().SetEventHandler(&handler_);
+    DestroyRemotePrintFeature(feature);
+    EXPECT_EQ(RemotePrinterManagerImpl::GetInstance().eventHandler_, nullptr);
+}
+
+HWTEST_F(RemotePrinterManagerImplTest, WaitForActiveCallsIdle_TimeoutThenIdle, TestSize.Level1)
+{
+    auto &manager = RemotePrinterManagerImpl::GetInstance();
+    std::promise<void> acquired;
+    std::thread t([&manager, &acquired] {
+        RemotePrinterManagerImpl::ActiveCallGuard guard(manager);
+        acquired.set_value();
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    });
+    acquired.get_future().wait();
+    EXPECT_FALSE(manager.WaitForActiveCallsIdle(50));
+    t.join();
+    EXPECT_TRUE(manager.WaitForActiveCallsIdle(1000));
+}
+
+HWTEST_F(RemotePrinterManagerImplTest, ClearAllPrinters_WithExternalActiveCall_Completes, TestSize.Level1)
+{
+    auto &manager = RemotePrinterManagerImpl::GetInstance();
+    Json::Value array(Json::arrayValue);
+    array.append(BuildValidPrinterItem("dev_nested"));
+    manager.OnPrinterListReceived(array);
+
+    std::promise<void> acquired;
+    std::thread t([&manager, &acquired] {
+        RemotePrinterManagerImpl::ActiveCallGuard guard(manager);
+        acquired.set_value();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    });
+    acquired.get_future().wait();
+    manager.ClearAllPrinters();
+    t.join();
+    EXPECT_EQ(manager.GetPrinterInfo("dev_nested"), nullptr);
+}
+
+HWTEST_F(RemotePrinterManagerImplTest, Destroy_WaitsForActiveCallAndClears, TestSize.Level1)
+{
+    auto &manager = RemotePrinterManagerImpl::GetInstance();
+    Json::Value array(Json::arrayValue);
+    array.append(BuildValidPrinterItem("dev_destroy_wait"));
+    manager.OnPrinterListReceived(array);
+
+    std::promise<void> acquired;
+    std::thread t([&manager, &acquired] {
+        RemotePrinterManagerImpl::ActiveCallGuard guard(manager);
+        acquired.set_value();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    });
+    acquired.get_future().wait();
+    EXPECT_TRUE(manager.Destroy());
+    t.join();
+    EXPECT_EQ(manager.GetPrinterInfo("dev_destroy_wait"), nullptr);
+    EXPECT_EQ(manager.eventHandler_, nullptr);
+    manager.SetEventHandler(&handler_);
+}
+
+HWTEST_F(RemotePrinterManagerImplTest, Disconnect_WaitsForActiveCallAndClears, TestSize.Level1)
+{
+    auto &manager = RemotePrinterManagerImpl::GetInstance();
+    Json::Value array(Json::arrayValue);
+    array.append(BuildValidPrinterItem("dev_disconnect_wait"));
+    manager.OnPrinterListReceived(array);
+
+    std::promise<void> acquired;
+    std::thread t([&manager, &acquired] {
+        RemotePrinterManagerImpl::ActiveCallGuard guard(manager);
+        acquired.set_value();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    });
+    acquired.get_future().wait();
+    EXPECT_TRUE(manager.Disconnect());
+    t.join();
+    EXPECT_EQ(manager.GetPrinterInfo("dev_disconnect_wait"), nullptr);
 }
 
 } // namespace OHOS::Print

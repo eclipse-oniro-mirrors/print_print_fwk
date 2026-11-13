@@ -27,47 +27,45 @@ PrintFailureAiNotifier &PrintFailureAiNotifier::GetInstance()
     return instance;
 }
 
-void PrintFailureAiNotifier::EnsureLoaded()
+IPrintFailureAiNotifier *PrintFailureAiNotifier::GetAiInterface(IPrintFeature *feature)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (impl_ != nullptr) {
-        return;
+    if (feature == nullptr) {
+        return nullptr;
     }
-
-    auto base = PrintFeaturePluginManager::GetInstance().GetFeature(PrintFeatureType::AI_NOTIFIER);
-    if (base == nullptr) {
-        PRINT_HILOGE("AiNotifier plugin not loaded");
-        return;
-    }
-
-    impl_ = static_cast<IPrintFailureAiNotifier *>(
-        base->QueryInterface(PrintFeatureIid::IID_PRINT_FAILURE_AI_NOTIFIER));
-    if (impl_ == nullptr) {
-        PRINT_HILOGE("AiNotifier plugin does not implement IPrintFailureAiNotifier");
-    }
+    return static_cast<IPrintFailureAiNotifier *>(
+        feature->QueryInterface(PrintFeatureIid::IID_PRINT_FAILURE_AI_NOTIFIER));
 }
 
 void PrintFailureAiNotifier::HandleJobBlocked(const std::string &jobId, uint32_t subState,
     const std::string &printerName, int32_t userId)
 {
-    EnsureLoaded();
-    if (impl_ != nullptr) {
-        impl_->HandleJobBlocked(jobId, subState, printerName, userId);
+    auto guard = PrintFeaturePluginManager::GetInstance().AcquireFeature(PrintFeatureType::AI_NOTIFIER);
+    auto impl = GetAiInterface(guard.Get());
+    if (impl == nullptr) {
+        PRINT_HILOGE("AiNotifier plugin not available");
+        return;
     }
+    impl->HandleJobBlocked(jobId, subState, printerName, userId);
 }
 
 void PrintFailureAiNotifier::ClearJobState(const std::string &jobId)
 {
-    if (impl_ == nullptr) {
+    auto &manager = PrintFeaturePluginManager::GetInstance();
+    if (!manager.IsFeatureLoaded(PrintFeatureType::AI_NOTIFIER)) {
         return;
     }
-    impl_->ClearJobState(jobId);
+
+    auto guard = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
+    auto impl = GetAiInterface(guard.Get());
+    if (impl == nullptr) {
+        return;
+    }
+    impl->ClearJobState(jobId);
 }
 
 void PrintFailureAiNotifier::Reset()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    impl_ = nullptr;
+    // No cached implementation pointer; plugin manager unloading prevents future AcquireFeature.
 }
 
 } // namespace OHOS::Print

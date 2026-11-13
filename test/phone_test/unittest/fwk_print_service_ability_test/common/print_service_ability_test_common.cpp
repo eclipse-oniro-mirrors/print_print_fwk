@@ -93,6 +93,8 @@ void PrintServiceAbilityTest::TearDown(void)
     // 清理 BMS 单例的 helper，防止 gmock 泄漏
     std::shared_ptr<PrintServiceHelper> nullHelper;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(nullHelper);
+
+    PrintDataRepository::GetInstance().ResetForTest();
 }
 
 std::string PrintServiceAbilityTest::GetExtensionId(EXTENSION_ID_TYPE type)

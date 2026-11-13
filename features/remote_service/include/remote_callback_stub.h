@@ -16,7 +16,10 @@
 #ifndef REMOTE_CALLBACK_STUB_H
 #define REMOTE_CALLBACK_STUB_H
 
+#include <atomic>
+#include <condition_variable>
 #include <map>
+#include <mutex>
 #include <string>
 #include "iremote_callback.h"
 #include "iremote_stub.h"
@@ -29,6 +32,7 @@ public:
     RemoteCallbackStub();
     virtual ~RemoteCallbackStub() = default;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    bool WaitForIdle(int32_t timeoutMs);
 
 private:
     bool HandleGetPrinterStatus(const std::string &msg);
@@ -37,6 +41,9 @@ private:
 private:
     using REMOTE_CALLBACK_HANDLER = bool (RemoteCallbackStub::*)(const std::string &);
     std::map<uint32_t, REMOTE_CALLBACK_HANDLER> cmdMap_;
+    std::atomic<int32_t> pendingRequests_{0};
+    std::mutex idleMutex_;
+    std::condition_variable idleCv_;
 };
 
 } // namespace OHOS::Print

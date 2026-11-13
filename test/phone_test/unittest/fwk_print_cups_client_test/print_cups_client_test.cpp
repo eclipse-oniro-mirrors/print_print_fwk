@@ -4807,18 +4807,58 @@ HWTEST_F(PrintCupsClientTest, UpdateJobState_SameState_IncrementsCounter, TestSi
  * @tc.type: FUNC
  * @tc.require:
  */
+namespace {
+constexpr uint32_t CUPS_TEST_LONG_TIMEOUT_MS = 3000;
+
+class MockPrintServiceHelperForCupsTest : public PrintServiceHelper {
+public:
+    bool CheckPermission(const std::string& /* name */) override
+    {
+        return true;
+    }
+
+    bool QueryAccounts(std::vector<int>& /* accountList */) override
+    {
+        return true;
+    }
+};
+} // namespace
+
 HWTEST_F(PrintCupsClientTest, HandleFilesAndStartMonitoring_InvalidFd_ReturnsEarly, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
+    auto serviceAbility = PrintServiceAbility::GetInstance();
+    serviceAbility->state_ = ServiceRunningState::STATE_RUNNING;
+    serviceAbility->helper_ = std::make_shared<MockPrintServiceHelperForCupsTest>();
+
+    // The failure path in HandleFiles calls cupsCancelJob2. Passing a null http pointer
+    // can crash in some CUPS builds, so only run when a live CUPS server is available.
+    if (!printCupsClient.IsCupsServerAlive()) {
+        serviceAbility->helper_.reset();
+        serviceAbility->state_ = ServiceRunningState::STATE_NOT_START;
+        GTEST_SKIP() << "CUPS server is not available";
+    }
+    http_t *http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1,
+        CUPS_TEST_LONG_TIMEOUT_MS, nullptr);
+    if (http == nullptr) {
+        serviceAbility->helper_.reset();
+        serviceAbility->state_ = ServiceRunningState::STATE_NOT_START;
+        GTEST_SKIP() << "Failed to connect to CUPS server";
+    }
+
     JobParameters *jobParams = new JobParameters();
-    jobParams->serviceAbility = PrintServiceAbility::GetInstance();
+    jobParams->serviceAbility = serviceAbility.GetRefPtr();
     jobParams->serviceJobId = "test_job";
     jobParams->printerName = "test_printer";
     jobParams->documentFormat = "application/pdf";
     jobParams->fdList = {static_cast<uint32_t>(-1)};
     jobParams->isCanceled = false;
-    printCupsClient.HandleFilesAndStartMonitoring(jobParams, nullptr, 1);
+    printCupsClient.HandleFilesAndStartMonitoring(jobParams, http, 1);
     EXPECT_EQ(printCupsClient.jobMonitorList_.size(), 0u);
+
+    httpClose(http);
+    serviceAbility->helper_.reset();
+    serviceAbility->state_ = ServiceRunningState::STATE_NOT_START;
     delete jobParams;
 }
 

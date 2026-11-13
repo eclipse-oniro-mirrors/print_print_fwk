@@ -220,7 +220,7 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_004, TestSize.Level1)
     connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
     connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
     EXPECT_NE(nullptr, connection->deathRecipient_);
-    EXPECT_NE(nullptr, connection->remoteObject_);
+    EXPECT_EQ(connection->remoteObject_.GetRefPtr(), mockRemote.GetRefPtr());
 }
  
 /**

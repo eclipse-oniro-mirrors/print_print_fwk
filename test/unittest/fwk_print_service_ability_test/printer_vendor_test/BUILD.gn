@@ -87,7 +87,7 @@ ohos_unittest("fwk_print_service_ability_printer_vendor_test") {
     "usb_manager:usbsrv_client",
   ]
 
-  cflags_cc = []
+  cflags_cc = [ "-DUNIT_TEST" ]
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
     include_dirs += [ "${print_path}/services/print_service/enterprise/include" ]

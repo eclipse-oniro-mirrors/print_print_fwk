@@ -356,5 +356,12 @@ bool PrintDataRepository::IsPrinterPpdUpdateRequired(
     return lastPrinterPpdHashCode != ppdHashCode;
 }
 
+#ifdef UNIT_TEST
+void PrintDataRepository::ResetForTest()
+{
+    systemData_->ResetForTest();
+}
+#endif // UNIT_TEST
+
 } // namespace Print
 } // namespace OHOS

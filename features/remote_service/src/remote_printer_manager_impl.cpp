@@ -29,6 +29,9 @@
 namespace OHOS::Print {
 
 namespace {
+
+constexpr int32_t REMOTE_CALLBACK_IDLE_TIMEOUT_MS = 5000;
+
 const std::vector<uint32_t> DEFAULT_QUALITY_LIST = {
     PRINT_QUALITY_DRAFT, PRINT_QUALITY_NORMAL, PRINT_QUALITY_HIGH
 };
@@ -113,6 +116,12 @@ bool RemotePrinterManagerImpl::Destroy()
     StopPrinterDiscovery();
     serviceAdapter_.SetOnServiceDiedCallback(nullptr);
     serviceAdapter_.UnbindService();
+    if (!serviceAdapter_.WaitForCallbacksIdle(REMOTE_CALLBACK_IDLE_TIMEOUT_MS)) {
+        PRINT_HILOGW("WaitForCallbacksIdle timeout in Destroy, callbacks may still be active");
+    }
+    if (!WaitForActiveCallsIdle(REMOTE_CALLBACK_IDLE_TIMEOUT_MS)) {
+        PRINT_HILOGW("WaitForActiveCallsIdle timeout in Destroy, printer callbacks may still be active");
+    }
 
     {
         std::lock_guard<std::mutex> lock(printerMapLock_);
@@ -131,6 +140,12 @@ bool RemotePrinterManagerImpl::Disconnect()
     StopPrinterDiscovery();
     ClearAllPrinters();
     serviceAdapter_.UnbindService();
+    if (!serviceAdapter_.WaitForCallbacksIdle(REMOTE_CALLBACK_IDLE_TIMEOUT_MS)) {
+        PRINT_HILOGW("WaitForCallbacksIdle timeout in Disconnect, callbacks may still be active");
+    }
+    if (!WaitForActiveCallsIdle(REMOTE_CALLBACK_IDLE_TIMEOUT_MS)) {
+        PRINT_HILOGW("WaitForActiveCallsIdle timeout in Disconnect, printer callbacks may still be active");
+    }
     return true;
 }
 
@@ -417,6 +432,7 @@ bool RemotePrinterManagerImpl::OnPrinterStatusReceived(const Json::Value &jsonAr
 void RemotePrinterManagerImpl::ClearAllPrinters()
 {
     PRINT_HILOGI("RemotePrinterManagerImpl ClearAllPrinters");
+    ActiveCallGuard guard(*this);
 
     std::vector<std::string> removedUris;
     {
@@ -454,6 +470,13 @@ extern "C" __attribute__((visibility("default"))) void DestroyRemotePrintFeature
     }
     remote->Destroy();
     remote->SetEventHandler(nullptr);
+}
+
+bool RemotePrinterManagerImpl::WaitForActiveCallsIdle(int32_t timeoutMs)
+{
+    std::unique_lock<std::mutex> lock(activeMutex_);
+    return activeCv_.wait_for(lock, std::chrono::milliseconds(timeoutMs),
+        [this] { return activeCalls_.load(std::memory_order_acquire) == 0; });
 }
 
 } // namespace OHOS::Print
