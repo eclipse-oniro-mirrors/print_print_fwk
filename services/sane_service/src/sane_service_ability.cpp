@@ -36,13 +36,13 @@ const int32_t VALUE_BUFFER_LEN = 1024;
 struct SaneNumericContext {
     SANE_Handle handle;
     SANE_Int option;
-    const SANE_Option_Descriptor *saneDesc;
+    SANE_Int optionSize;
     SANE_Action action;
 };
 
-bool ValidateSaneSizeAndCreateBuffer(const SANE_Option_Descriptor *saneDesc, std::vector<char> &buffer)
+bool ValidateSaneSizeAndCreateBuffer(SANE_Int optionSize, std::vector<char> &buffer)
 {
-    int32_t actualSize = saneDesc->size;
+    int32_t actualSize = optionSize;
     if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
         SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
         return false;
@@ -54,7 +54,7 @@ bool ValidateSaneSizeAndCreateBuffer(const SANE_Option_Descriptor *saneDesc, std
 SANE_Status GetNumericSaneValue(const SaneNumericContext &ctx, int32_t &outValue)
 {
     std::vector<char> value;
-    if (!ValidateSaneSizeAndCreateBuffer(ctx.saneDesc, value)) {
+    if (!ValidateSaneSizeAndCreateBuffer(ctx.optionSize, value)) {
         return ::SANE_STATUS_INVAL;
     }
     SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(ctx.handle, ctx.option,
@@ -66,7 +66,7 @@ SANE_Status GetNumericSaneValue(const SaneNumericContext &ctx, int32_t &outValue
         SCAN_HILOGE("memset_s failed for option %{public}d", ctx.option);
         return ::SANE_STATUS_INVAL;
     }
-    size_t copyLen = std::min(static_cast<size_t>(ctx.saneDesc->size), sizeof(outValue));
+    size_t copyLen = std::min(static_cast<size_t>(ctx.optionSize), sizeof(outValue));
     if (memcpy_s(&outValue, sizeof(outValue), value.data(), copyLen) != EOK) {
         SCAN_HILOGE("memcpy_s failed for option %{public}d", ctx.option);
         return ::SANE_STATUS_INVAL;
@@ -77,18 +77,17 @@ SANE_Status GetNumericSaneValue(const SaneNumericContext &ctx, int32_t &outValue
 SANE_Status SetNumericSaneValue(const SaneNumericContext &ctx, int32_t inValue, SANE_Int &info)
 {
     std::vector<char> value;
-    if (!ValidateSaneSizeAndCreateBuffer(ctx.saneDesc, value)) {
+    if (!ValidateSaneSizeAndCreateBuffer(ctx.optionSize, value)) {
         return ::SANE_STATUS_INVAL;
     }
-    size_t copyLen = std::min(static_cast<size_t>(ctx.saneDesc->size), sizeof(inValue));
-    if (memcpy_s(value.data(), static_cast<size_t>(ctx.saneDesc->size), &inValue, copyLen) != EOK) {
+    size_t copyLen = std::min(static_cast<size_t>(ctx.optionSize), sizeof(inValue));
+    if (memcpy_s(value.data(), static_cast<size_t>(ctx.optionSize), &inValue, copyLen) != EOK) {
         SCAN_HILOGE("memcpy_s failed for option %{public}d", ctx.option);
         return ::SANE_STATUS_INVAL;
     }
     return SafeSANEAPI::GetInstance().SaneControlOption(ctx.handle, ctx.option, ctx.action, value.data(), &info);
 }
 constexpr int32_t SANE_SERVICE_ID = 3709;
-constexpr int32_t MAX_WORD_LIST_SIZE = 1000;
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 } //namespace
 
@@ -259,63 +258,17 @@ ErrCode SaneServerManager::SaneGetOptionDescriptor(
         return ERR_OK;
     }
     SCAN_HILOGI("saneOption %{public}d", saneOption);
-    const SANE_Option_Descriptor *saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, saneOption);
-    if (saneDesc == nullptr) {
+    auto saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, saneOption);
+    if (!saneDesc) {
         SCAN_HILOGE("saneDesc is a nullptr");
         status = SANE_STATUS_INVAL;
         return ERR_OK;
     }
-    ConvertSaneDescriptor(saneDesc, saneOptDes);
+    saneOptDes = *saneDesc;
     saneOptDes.Dump();
     SCAN_HILOGI("SaneGetOptionDescriptor end");
     status = SANE_STATUS_GOOD;
     return ERR_OK;
-}
-
-void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor *saneDesc, SaneOptionDescriptor &saneOptDes)
-{
-    SCAN_HILOGI("ConvertSaneDescriptor start");
-    if (saneDesc == nullptr) {
-        SCAN_HILOGE("saneDesc is a nullptr");
-        return;
-    }
-    if (saneDesc->name != nullptr) {
-        saneOptDes.optionName_ = std::string(saneDesc->name);
-    }
-    if (saneDesc->title != nullptr) {
-        saneOptDes.optionTitle_ = std::string(saneDesc->title);
-    }
-    if (saneDesc->desc != nullptr) {
-        saneOptDes.optionDesc_ = std::string(saneDesc->desc);
-    }
-    saneOptDes.optionType_ = static_cast<int32_t>(saneDesc->type);
-    saneOptDes.optionUnit_ = static_cast<int32_t>(saneDesc->unit);
-    saneOptDes.optionSize_ = saneDesc->size;
-    saneOptDes.optionCap_ = saneDesc->cap;
-    saneOptDes.optionConstraintType_ = static_cast<int32_t>(saneDesc->constraint_type);
-    if (saneDesc->constraint_type == ::SANE_CONSTRAINT_RANGE && saneDesc->constraint.range != nullptr) {
-        saneOptDes.minValue_ = saneDesc->constraint.range->min;
-        saneOptDes.maxValue_ = saneDesc->constraint.range->max;
-        saneOptDes.quantValue_ = saneDesc->constraint.range->quant;
-    } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_WORD_LIST && saneDesc->constraint.word_list != nullptr) {
-        saneOptDes.optionConstraintNumber_.clear();
-        int32_t sizeNumber = saneDesc->constraint.word_list[0];
-        if (sizeNumber < 0 || sizeNumber > MAX_WORD_LIST_SIZE) {
-            SCAN_HILOGE("Invalid word_list size: %{public}d", sizeNumber);
-            return;
-        }
-        for (int32_t i = 1; i <= sizeNumber; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", saneDesc->constraint.word_list[i]);
-            saneOptDes.optionConstraintNumber_.push_back(saneDesc->constraint.word_list[i]);
-        }
-    } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_STRING_LIST &&
-               saneDesc->constraint.string_list != nullptr) {
-        for (int32_t i = 0; saneDesc->constraint.string_list[i] != nullptr; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %{public}s", saneDesc->constraint.string_list[i]);
-            saneOptDes.optionConstraintString_.push_back(std::string(saneDesc->constraint.string_list[i]));
-        }
-    }
-    SCAN_HILOGI("ConvertSaneDescriptor end");
 }
 
 ErrCode SaneServerManager::SaneGetParameters(const std::string &scannerId, SaneParameters &spm, int32_t &status)
@@ -444,8 +397,8 @@ SaneStatus SaneServerManager::GetControlOption(
     SANE_Int option = controlParam.option_;
     int32_t valueType = controlParam.valueType_;
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
-    const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
-    if (saneDesc == nullptr) {
+    auto saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
+    if (!saneDesc) {
         SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
         return SANE_STATUS_INVAL;
     }
@@ -453,29 +406,27 @@ SaneStatus SaneServerManager::GetControlOption(
      * allocated while the SANE backend writes a variable-length string via
      * strcpy(), causing a stack buffer overflow.
      */
-    if (saneDesc->type == SANE_TYPE_STRING && valueType != SCAN_VALUE_STR) {
+    if (saneDesc->optionType_ == ::SANE_TYPE_STRING && valueType != SCAN_VALUE_STR) {
         SCAN_HILOGE("STRING option accessed with non-STRING valueType %{public}d", valueType);
         return SANE_STATUS_INVAL;
     }
     SCAN_HILOGI("valueSize_ = [%{public}d], valueType = [%{public}u]", controlParam.valueSize_, valueType);
     if (valueType == SCAN_VALUE_NUM) {
         int32_t numValue = 0;
-        SaneNumericContext ctx{handle, option, saneDesc, ::SANE_ACTION_GET_VALUE};
+        SaneNumericContext ctx{handle, option, saneDesc->optionSize_, ::SANE_ACTION_GET_VALUE};
         saneStatus = GetNumericSaneValue(ctx, numValue);
         outParam.valueNumber_ = numValue;
     } else if (valueType == SCAN_VALUE_STR) {
-        int32_t actualSize = saneDesc->size;
-        if (actualSize <= 0 || actualSize > VALUE_BUFFER_LEN) {
-            SCAN_HILOGE("invalid actualSize %{public}d", actualSize);
+        std::vector<char> value;
+        if (!ValidateSaneSizeAndCreateBuffer(saneDesc->optionSize_, value)) {
             return SANE_STATUS_INVAL;
         }
-        std::vector<char> value(actualSize, 0);
         saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
             value.data(), nullptr);
         outParam.valueStr_ = std::string(value.data());
     } else if (valueType == SCAN_VALUE_BOOL) {
         int32_t boolValue = 0;
-        SaneNumericContext ctx{handle, option, saneDesc, ::SANE_ACTION_GET_VALUE};
+        SaneNumericContext ctx{handle, option, saneDesc->optionSize_, ::SANE_ACTION_GET_VALUE};
         saneStatus = GetNumericSaneValue(ctx, boolValue);
         outParam.valueBool_ = boolValue > 0 ? true : false;
     }
@@ -497,12 +448,12 @@ SaneStatus SaneServerManager::SetControlOption(
     SANE_Action action = static_cast<SANE_Action>(controlParam.action_);
     SANE_Int &info = outParam.info_;
     int32_t valueType = controlParam.valueType_;
-    const SANE_Option_Descriptor* saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
-    if (saneDesc == nullptr) {
+    auto saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, option);
+    if (!saneDesc) {
         SCAN_HILOGE("saneDesc is nullptr for option %{public}d", option);
         return SANE_STATUS_INVAL;
     }
-    if (saneDesc->type == SANE_TYPE_STRING && valueType != SCAN_VALUE_STR) {
+    if (saneDesc->optionType_ == ::SANE_TYPE_STRING && valueType != SCAN_VALUE_STR) {
         SCAN_HILOGE("STRING option accessed with non-STRING valueType %{public}d", valueType);
         return SANE_STATUS_INVAL;
     }
@@ -510,14 +461,14 @@ SaneStatus SaneServerManager::SetControlOption(
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     if (valueType == SCAN_VALUE_STR) {
         std::string value = controlParam.valueStr_;
-        if (saneDesc->size < 0 || value.size() >= static_cast<size_t>(saneDesc->size)) {
+        if (saneDesc->optionSize_ < 0 || value.size() >= static_cast<size_t>(saneDesc->optionSize_)) {
             SCAN_HILOGE("String value too long for option %{public}d", option);
             return SANE_STATUS_INVAL;
         }
         saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, value.data(), &info);
         SCAN_HILOGI("SetControlOption, value = [%{public}s]", value.c_str());
     } else {
-        SaneNumericContext ctx{handle, option, saneDesc, action};
+        SaneNumericContext ctx{handle, option, saneDesc->optionSize_, action};
         saneStatus = SetNumericSaneValue(ctx, controlParam.valueNumber_, info);
         SCAN_HILOGI("SetControlOption, value = [%{public}d]", controlParam.valueNumber_);
     }

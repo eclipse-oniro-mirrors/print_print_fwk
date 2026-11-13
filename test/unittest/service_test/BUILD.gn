@@ -305,6 +305,39 @@ ohos_unittest("scan_task_test") {
   ]
 }
 
+ohos_unittest("sane_service_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/services/sane_service/include",
+    "${print_utils_path}/include",
+  ]
+
+  # Test suites: SafeSaneApiTest
+  sources = [
+    "${_test_path}/unittest/service_test/sane_service_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/frameworks/ISaneBackends:sane_backends",
+    "${print_path}/services/sane_service:sane_service_test",
+  ]
+
+  external_deps = [
+    "backends:sane",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+  ]
+
+  cflags_cc = [
+    "-DUNIT_TEST",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+}
+
 group("unittest") {
   testonly = true
 

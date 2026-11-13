@@ -14,6 +14,7 @@
 */
 #include <chrono>
 #include <thread>
+#include <utility>
 #include "safe_sane_api.h"
 #include "sane/sane.h"
 #include "sane/saneopts.h"
@@ -28,6 +29,60 @@ namespace {
 // Some backends (e.g. pixma) close pipes and terminate reader threads in cancel,
 // which needs time to complete before safe close.
 constexpr int32_t CANCEL_WAIT_TIMEOUT_MS = 100;
+constexpr int32_t MAX_WORD_LIST_SIZE = 1000;
+
+void ConvertSaneWordList(const SANE_Word *wordList, SaneOptionDescriptor &saneOptDes)
+{
+    if (wordList != nullptr) {
+        int32_t sizeNumber = wordList[0];
+        if (sizeNumber < 0 || sizeNumber > MAX_WORD_LIST_SIZE) {
+            SCAN_HILOGE("Invalid word_list size: %{public}d", sizeNumber);
+            return;
+        }
+        saneOptDes.optionConstraintNumber_.assign(wordList + 1, wordList + 1 + sizeNumber);
+    }
+}
+
+void ConvertSaneStringList(const SANE_String_Const *stringList, SaneOptionDescriptor &saneOptDes)
+{
+    if (stringList != nullptr) {
+        for (int32_t i = 0; i < MAX_WORD_LIST_SIZE && stringList[i] != nullptr; i++) {
+            saneOptDes.optionConstraintString_.emplace_back(stringList[i]);
+        }
+    }
+}
+
+void ConvertSaneConstraint(const SANE_Option_Descriptor &saneDesc, SaneOptionDescriptor &saneOptDes)
+{
+    if (saneDesc.constraint_type == ::SANE_CONSTRAINT_RANGE && saneDesc.constraint.range != nullptr) {
+        saneOptDes.minValue_ = saneDesc.constraint.range->min;
+        saneOptDes.maxValue_ = saneDesc.constraint.range->max;
+        saneOptDes.quantValue_ = saneDesc.constraint.range->quant;
+    } else if (saneDesc.constraint_type == ::SANE_CONSTRAINT_WORD_LIST) {
+        ConvertSaneWordList(saneDesc.constraint.word_list, saneOptDes);
+    } else if (saneDesc.constraint_type == ::SANE_CONSTRAINT_STRING_LIST) {
+        ConvertSaneStringList(saneDesc.constraint.string_list, saneOptDes);
+    }
+}
+
+void ConvertSaneDescriptor(const SANE_Option_Descriptor &saneDesc, SaneOptionDescriptor &saneOptDes)
+{
+    if (saneDesc.name != nullptr) {
+        saneOptDes.optionName_ = saneDesc.name;
+    }
+    if (saneDesc.title != nullptr) {
+        saneOptDes.optionTitle_ = saneDesc.title;
+    }
+    if (saneDesc.desc != nullptr) {
+        saneOptDes.optionDesc_ = saneDesc.desc;
+    }
+    saneOptDes.optionType_ = static_cast<int32_t>(saneDesc.type);
+    saneOptDes.optionUnit_ = static_cast<int32_t>(saneDesc.unit);
+    saneOptDes.optionSize_ = saneDesc.size;
+    saneOptDes.optionCap_ = saneDesc.cap;
+    saneOptDes.optionConstraintType_ = static_cast<int32_t>(saneDesc.constraint_type);
+    ConvertSaneConstraint(saneDesc, saneOptDes);
+}
 } // namespace
 
 SafeSANEAPI& SafeSANEAPI::GetInstance()
@@ -102,7 +157,7 @@ SANE_Status SafeSANEAPI::SaneOpen(const char* device_name, SANE_Handle* handle)
 {
     std::lock_guard<std::mutex> lock(globalLock_);
     SANE_Status status = sane_open(device_name, handle);
-    if (status == SANE_STATUS_GOOD && handle != nullptr && *handle != nullptr) {
+    if (status == ::SANE_STATUS_GOOD && handle != nullptr && *handle != nullptr) {
         AddHandleMutex(*handle);
     }
     return status;
@@ -124,10 +179,10 @@ SANE_Status SafeSANEAPI::SaneStart(SANE_Handle handle)
     std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneStart: handle not registered or already closed");
-        return SANE_STATUS_INVAL;
+        return ::SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), ::SANE_STATUS_INVAL, __func__);
     return sane_start(handle);
 }
 
@@ -146,16 +201,20 @@ void SafeSANEAPI::SaneCancel(SANE_Handle handle)
     sane_cancel(handle);
 }
 
-const SANE_Option_Descriptor* SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle handle, SANE_Int option)
+std::optional<SaneOptionDescriptor> SafeSANEAPI::SaneGetOptionDescriptor(SANE_Handle handle, SANE_Int option)
 {
     std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneGetOptionDescriptor: handle not registered or already closed");
-        return nullptr;
+        return std::nullopt;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), nullptr, __func__);
-    return sane_get_option_descriptor(handle, option);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), std::nullopt, __func__);
+    const SANE_Option_Descriptor* saneDesc = sane_get_option_descriptor(handle, option);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(saneDesc, std::nullopt, __func__);
+    std::optional<SaneOptionDescriptor> saneOptDes(std::in_place);
+    ConvertSaneDescriptor(*saneDesc, *saneOptDes);
+    return saneOptDes;
 }
 
 SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* params)
@@ -163,10 +222,10 @@ SANE_Status SafeSANEAPI::SaneGetParameters(SANE_Handle handle, SANE_Parameters* 
     std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneGetParameters: handle not registered or already closed");
-        return SANE_STATUS_INVAL;
+        return ::SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), ::SANE_STATUS_INVAL, __func__);
     return sane_get_parameters(handle, params);
 }
 
@@ -176,10 +235,10 @@ SANE_Status SafeSANEAPI::SaneControlOption(SANE_Handle handle, SANE_Int option,
     std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneControlOption: handle not registered or already closed");
-        return SANE_STATUS_INVAL;
+        return ::SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), ::SANE_STATUS_INVAL, __func__);
     return sane_control_option(handle, option, action, value, info);
 }
 
@@ -189,10 +248,10 @@ SANE_Status SafeSANEAPI::SaneRead(SANE_Handle handle, SANE_Byte* data,
     std::shared_ptr<std::mutex> mutexPtr = GetHandleMutex(handle);
     if (!mutexPtr) {
         SCAN_HILOGE("SaneRead: handle not registered or already closed");
-        return SANE_STATUS_INVAL;
+        return ::SANE_STATUS_INVAL;
     }
     std::lock_guard<std::mutex> lock(*mutexPtr);
-    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), SANE_STATUS_INVAL, __func__);
+    SCAN_CHECK_NULL_AND_RETURN_WITH_FUNC(GetHandleMutex(handle), ::SANE_STATUS_INVAL, __func__);
     return sane_read(handle, data, maxLength, length);
 }
 
