@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 #include <json/json.h>
 #include <climits>
 #include "print_page_size.h"
@@ -78,8 +79,15 @@ bool ConvertDuplexModeToJson(const DuplexModeCode &code, Json::Value &jsonObject
 bool ConvertPageSizeId(const char *src, std::string &id);
 bool ConvertPrintPageSize(const char *src, PrintPageSize &dst);
 bool ConvertPageSizeToJson(const PrintPageSize &code, Json::Value &jsonObject);
+bool ConvertJsonToPageSizeList(const Json::Value &list, std::vector<PrintPageSize> &pageSizes);
+void NormalizeCustomPageSizeList(std::vector<PrintPageSize> &entryList);
 bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst);
+bool ConvertCustomPageSizeBound(const char *src, bool &isMinBound, uint32_t &widthMils, uint32_t &heightMils);
+bool ConvertStrToDouble(const std::string &str, double &value);
+bool ConvertCustomPageSizeFromWidthAndLength(const double widthValue, const double lengthValue,
+    const std::string &unit, PrintPageSize &dst);
 std::string GetQulityString(int code);
+uint32_t GetUtf8CharCount(const std::string &s);
 }  // namespace Print
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_CONVERTER_H

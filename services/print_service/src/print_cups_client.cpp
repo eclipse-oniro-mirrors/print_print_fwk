@@ -25,6 +25,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <dirent.h>
+#include <cmath>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <wifi_device.h>
@@ -67,6 +68,8 @@
 
 namespace OHOS::Print {
 using namespace std;
+
+static std::string ConvertCustomPageSizeNameForCups(const PrintPageSize &pageSize);
 
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
 namespace {
@@ -1662,7 +1665,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
         PRINT_HILOGD("the printerInfo option");
         PrinterCapability printerCaps;
         std::string infoOpt = info.GetOption();
-        PRINT_HILOGD("the printerInfo option %{public}s", PrintUtils::AnonymizeJobOption(infoOpt).c_str());
+        PRINT_HILOGD("the printerInfo option %{public}s", PrintUtils::AnonymizePrinterOption(infoOpt).c_str());
         Json::Value infoJson;
         if (!PrintJsonUtil::Parse(infoOpt, infoJson)) {
             PRINT_HILOGE("infoOpt can not parse to json object");
@@ -2989,6 +2992,10 @@ std::string PrintCupsClient::GetMedieSize(const PrintJob &jobInfo)
 {
     PrintPageSize pageSize;
     jobInfo.GetPageSize(pageSize);
+    if (pageSize.GetId().compare(0, CUSTOM_PAGE_SIZE_ID_PREFIX.size(),
+        CUSTOM_PAGE_SIZE_ID_PREFIX) == 0) {
+        return ConvertCustomPageSizeNameForCups(pageSize);
+    }
     return pageSize.GetName();
 }
 
@@ -3703,7 +3710,8 @@ int32_t PrintCupsClient::CheckPrintJobConflicts(const std::string &ppdName, cons
 }
 
 int32_t PrintCupsClient::CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
-    const std::string &changedType, std::vector<std::string>& conflictTypes)
+    const std::vector<PrintPageSize> &customPageSizeList, const std::string &changedType,
+    std::vector<std::string>& conflictTypes)
 {
     std::string ppdFilePath = GetCurCupsModelDir() + ppdName;
     ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
@@ -3720,7 +3728,7 @@ int32_t PrintCupsClient::CheckPreferencesConflicts(const std::string &ppdName, c
 
     StdStringMap cupsOptinosMap;
     ppdMarkDefaults(ppd);
-    BuildCupsOptionParamsByPreferences(preferences, cupsOptinosMap);
+    BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, cupsOptinosMap);
     CheckOptionConflicts(ppd, cupsOptinosMap, changedType, conflictTypes);
     DumpCupsConflicts(cupsOptinosMap, changedType, conflictTypes);
 
@@ -3749,11 +3757,43 @@ int32_t PrintCupsClient::CheckOptionConflicts(ppd_file_t *ppd, const StdStringMa
     return CheckPpdConflicts(ppd, changedOption->first, changedOption->second, conflictTypes);
 }
 
+static std::string ConvertCustomPageSizeNameForCups(const PrintPageSize &pageSize)
+{
+    std::stringstream ss;
+    ss << CUSTOM_PREFIX << round(pageSize.GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
+       << round(pageSize.GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
+    return ss.str();
+}
+
+static const PrintPageSize *FindCustomPageSizeById(const std::vector<PrintPageSize> &list, const std::string &id)
+{
+    for (const auto &item : list) {
+        if (item.GetId() == id) {
+            return &item;
+        }
+    }
+    return nullptr;
+}
+
 void PrintCupsClient::BuildCupsOptionParamsByPreferences(
-    const PrinterPreferences &preferences, StdStringMap &mapParams)
+    const PrinterPreferences &preferences, const std::vector<PrintPageSize> &customPageSizeList,
+    StdStringMap &mapParams)
 {
     if (preferences.HasDefaultPageSizeId()) {
-        mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = preferences.GetDefaultPageSizeId();
+        const std::string &pageSizeId = preferences.GetDefaultPageSizeId();
+        std::string pageValue = pageSizeId;
+        if (pageSizeId.compare(0, CUSTOM_PAGE_SIZE_ID_PREFIX.size(),
+            CUSTOM_PAGE_SIZE_ID_PREFIX) == 0) {
+            const PrintPageSize *customPageSize = FindCustomPageSizeById(customPageSizeList, pageSizeId);
+            if (customPageSize != nullptr) {
+                pageValue = ConvertCustomPageSizeNameForCups(*customPageSize);
+            } else {
+                pageValue = "";
+            }
+        }
+        if (!pageValue.empty()) {
+            mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageValue;
+        }
     }
 
     if (preferences.HasDefaultDuplexMode()) {
@@ -3793,7 +3833,13 @@ void PrintCupsClient::BuildCupsOptionParamsByPrintJob(const PrintJob &printJob,
 {
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
-    mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSize.GetId();
+    const std::string &pageSizeId = pageSize.GetId();
+    if (pageSizeId.compare(0, CUSTOM_PAGE_SIZE_ID_PREFIX.size(),
+        CUSTOM_PAGE_SIZE_ID_PREFIX) == 0) {
+        mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = ConvertCustomPageSizeNameForCups(pageSize);
+    } else {
+        mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSizeId;
+    }
     mapParams[PRINT_PARAM_TYPE_DUPLEX_MODE] = jobParams.duplex;
     mapParams[PRINT_PARAM_TYPE_QUALITY] = jobParams.printQuality;
     mapParams[PRINT_PARAM_TYPE_COLOR_MODE] = jobParams.color;

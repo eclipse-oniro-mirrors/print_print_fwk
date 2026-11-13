@@ -17,6 +17,8 @@
 #include "vendor_helper.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "ohprint.h"
+#include "print_json_util.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -421,5 +423,177 @@ HWTEST_F(VendorHelperTest, UpdateDuplexCapability_CountExceedsMax_ReturnsFalse, 
     capability.supportedDuplexModesCount = MAX_DUPLEX_MODE_COUNT + 1;
     EXPECT_FALSE(UpdateDuplexCapability(printerCap, &capability));
 }
+
+// ===== ParseCustomPageSizeRangeFromVendor Tests =====
+
+void ParseCustomPageSizeRangeFromVendor(const Print_PrinterCapability *capability, Json::Value &options);
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_NullCapability_OptionsUnchanged, TestSize.Level1)
+{
+    Json::Value options;
+    options["existing"] = "value";
+    ParseCustomPageSizeRangeFromVendor(nullptr, options);
+    EXPECT_FALSE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+    EXPECT_EQ(options["existing"].asString(), "value");
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_NullSupportedPageSizes_OptionsUnchanged, TestSize.Level1)
+{
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = nullptr;
+    capability.supportedPageSizesCount = 0;
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    EXPECT_FALSE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_HasMinAndMax_RangeSet, TestSize.Level1)
+{
+    Print_PageSize pageSizes[2];
+    pageSizes[0].id = const_cast<char *>("CUSTOM_MIN");
+    pageSizes[0].name = const_cast<char *>("Custom Min");
+    pageSizes[0].width = 3000;
+    pageSizes[0].height = 4000;
+    pageSizes[1].id = const_cast<char *>("CUSTOM_MAX");
+    pageSizes[1].name = const_cast<char *>("Custom Max");
+    pageSizes[1].width = 8000;
+    pageSizes[1].height = 12000;
+
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedPageSizesCount = 2;
+
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+    const Json::Value &range = options[CUSTOM_PAGE_SIZE_RANGE_KEY];
+    ASSERT_TRUE(range.isObject());
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_WIDTH].asUInt(), 3000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_WIDTH].asUInt(), 8000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_HEIGHT].asUInt(), 4000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_HEIGHT].asUInt(), 12000u);
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_OnlyMin_NoRange, TestSize.Level1)
+{
+    Print_PageSize pageSizes[1];
+    pageSizes[0].id = const_cast<char *>("CUSTOM_MIN");
+    pageSizes[0].name = const_cast<char *>("Custom Min");
+    pageSizes[0].width = 3000;
+    pageSizes[0].height = 4000;
+
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedPageSizesCount = 1;
+
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    // only min present, no max → no range set
+    EXPECT_FALSE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_OnlyMax_NoRange, TestSize.Level1)
+{
+    Print_PageSize pageSizes[1];
+    pageSizes[0].id = const_cast<char *>("CUSTOM_MAX");
+    pageSizes[0].name = const_cast<char *>("Custom Max");
+    pageSizes[0].width = 8000;
+    pageSizes[0].height = 12000;
+
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedPageSizesCount = 1;
+
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    // only max present, no min → no range set
+    EXPECT_FALSE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_NoCustomPageSizes_NoRange, TestSize.Level1)
+{
+    Print_PageSize pageSizes[2];
+    pageSizes[0].id = const_cast<char *>("ISO_A4");
+    pageSizes[0].name = const_cast<char *>("A4");
+    pageSizes[0].width = 8268;
+    pageSizes[0].height = 11692;
+    pageSizes[1].id = const_cast<char *>("ISO_A3");
+    pageSizes[1].name = const_cast<char *>("A3");
+    pageSizes[1].width = 11690;
+    pageSizes[1].height = 16540;
+
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedPageSizesCount = 2;
+
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    EXPECT_FALSE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_NullIdInEntry_Skipped, TestSize.Level1)
+{
+    Print_PageSize pageSizes[3];
+    pageSizes[0].id = nullptr;  // null id → skipped
+    pageSizes[0].name = const_cast<char *>("Unknown");
+    pageSizes[0].width = 0;
+    pageSizes[0].height = 0;
+    pageSizes[1].id = const_cast<char *>("CUSTOM_MIN");
+    pageSizes[1].name = const_cast<char *>("Custom Min");
+    pageSizes[1].width = 3000;
+    pageSizes[1].height = 4000;
+    pageSizes[2].id = const_cast<char *>("CUSTOM_MAX");
+    pageSizes[2].name = const_cast<char *>("Custom Max");
+    pageSizes[2].width = 8000;
+    pageSizes[2].height = 12000;
+
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedPageSizesCount = 3;
+
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+    const Json::Value &range = options[CUSTOM_PAGE_SIZE_RANGE_KEY];
+    ASSERT_TRUE(range.isObject());
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_WIDTH].asUInt(), 3000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_WIDTH].asUInt(), 8000u);
+}
+
+HWTEST_F(VendorHelperTest, ParseCustomPageSizeRangeFromVendor_MixedWithRegularPageSizes_RangeSet, TestSize.Level1)
+{
+    Print_PageSize pageSizes[4];
+    pageSizes[0].id = const_cast<char *>("ISO_A4");
+    pageSizes[0].name = const_cast<char *>("A4");
+    pageSizes[0].width = 8268;
+    pageSizes[0].height = 11692;
+    pageSizes[1].id = const_cast<char *>("CUSTOM_MIN");
+    pageSizes[1].name = const_cast<char *>("Custom Min");
+    pageSizes[1].width = 2000;
+    pageSizes[1].height = 3000;
+    pageSizes[2].id = const_cast<char *>("ISO_A3");
+    pageSizes[2].name = const_cast<char *>("A3");
+    pageSizes[2].width = 11690;
+    pageSizes[2].height = 16540;
+    pageSizes[3].id = const_cast<char *>("CUSTOM_MAX");
+    pageSizes[3].name = const_cast<char *>("Custom Max");
+    pageSizes[3].width = 10000;
+    pageSizes[3].height = 15000;
+
+    Print_PrinterCapability capability = {0};
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedPageSizesCount = 4;
+
+    Json::Value options;
+    ParseCustomPageSizeRangeFromVendor(&capability, options);
+    ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+    const Json::Value &range = options[CUSTOM_PAGE_SIZE_RANGE_KEY];
+    ASSERT_TRUE(range.isObject());
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_WIDTH].asUInt(), 2000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_WIDTH].asUInt(), 10000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_HEIGHT].asUInt(), 3000u);
+    EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_HEIGHT].asUInt(), 15000u);
+}
+
 }  // namespace Print
 }  // namespace OHOS

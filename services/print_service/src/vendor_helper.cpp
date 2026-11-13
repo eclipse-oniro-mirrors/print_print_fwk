@@ -523,6 +523,46 @@ bool UpdateDefaultPageSizeId(PrinterCapability &printerCap, const std::string &d
     return false;
 }
 
+void ParseCustomPageSizeRangeFromVendor(const Print_PrinterCapability *capability, Json::Value &options)
+{
+    if (capability == nullptr || capability->supportedPageSizes == nullptr) {
+        return;
+    }
+    uint32_t minWidth = 0;
+    uint32_t maxWidth = 0;
+    uint32_t minHeight = 0;
+    uint32_t maxHeight = 0;
+    bool hasMin = false;
+    bool hasMax = false;
+    for (uint32_t i = 0; i < capability->supportedPageSizesCount; ++i) {
+        if (capability->supportedPageSizes[i].id != nullptr) {
+            std::string pageSizeId(capability->supportedPageSizes[i].id);
+            if (pageSizeId.find("CUSTOM_MIN") != std::string::npos) {
+                minWidth = capability->supportedPageSizes[i].width;
+                minHeight = capability->supportedPageSizes[i].height;
+                hasMin = true;
+                continue;
+            }
+            if (pageSizeId.find("CUSTOM_MAX") != std::string::npos) {
+                maxWidth = capability->supportedPageSizes[i].width;
+                maxHeight = capability->supportedPageSizes[i].height;
+                hasMax = true;
+                continue;
+            }
+        }
+    }
+    if (hasMin && hasMax) {
+        Json::Value rangeJson;
+        rangeJson[CUSTOM_PAGE_SIZE_MIN_WIDTH] = minWidth;
+        rangeJson[CUSTOM_PAGE_SIZE_MAX_WIDTH] = maxWidth;
+        rangeJson[CUSTOM_PAGE_SIZE_MIN_HEIGHT] = minHeight;
+        rangeJson[CUSTOM_PAGE_SIZE_MAX_HEIGHT] = maxHeight;
+        options[CUSTOM_PAGE_SIZE_RANGE_KEY] = rangeJson;
+        PRINT_HILOGI("customPageSizeRange: minWidth=%{public}u, maxWidth=%{public}u, "
+            "minHeight=%{public}u, maxHeight=%{public}u", minWidth, maxWidth, minHeight, maxHeight);
+    }
+}
+
 bool UpdatePageSizeCapability(
     PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
@@ -557,9 +597,10 @@ bool UpdatePageSizeCapability(
             }
         }
         if (capability->supportedPageSizes[i].name != nullptr && capability->supportedPageSizes[i].id != nullptr) {
-            if (strstr(capability->supportedPageSizes[i].id, "CUSTOM_MIN") ||
-                strstr(capability->supportedPageSizes[i].id, "CUSTOM_MAX")) {
-                PRINT_HILOGW("skip pageSize: %{public}s", capability->supportedPageSizes[i].name);
+            std::string pageSizeId(capability->supportedPageSizes[i].id);
+            if (pageSizeId.find("CUSTOM_MIN") != std::string::npos ||
+                pageSizeId.find("CUSTOM_MAX") != std::string::npos) {
+                PRINT_HILOGD("skip custom page size: %{public}s", capability->supportedPageSizes[i].name);
                 continue;
             }
             printPageSize.SetWidth(capability->supportedPageSizes[i].width);
@@ -828,6 +869,8 @@ bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryIte
     }
     Json::Value cupsOptionsJson = printerCap.GetPrinterAttrGroupJson();
     options["cupsOptions"] = cupsOptionsJson;
+    PRINT_HILOGI("cupsOptions from vendor: %{public}s", PrintJsonUtil::WriteString(cupsOptionsJson).c_str());
+    ParseCustomPageSizeRangeFromVendor(capability, options);
     std::string optionStr = PrintJsonUtil::WriteString(options);
     PRINT_HILOGD("SetOption: %{public}s", optionStr.c_str());
     printerCap.SetOption(optionStr);

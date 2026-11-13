@@ -21,6 +21,7 @@
 #include "print_log.h"
 #include "print_service_ability.h"
 #include "print_service_ability_mock_permission.h"
+#include "print_json_util.h"
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
 #include <functional>
@@ -123,9 +124,61 @@ void TestAdapterGetFileCallBack(const uint8_t *data, size_t size, FuzzedDataProv
     PrintServiceAbility::GetInstance()->AdapterGetFileCallBack(jobId, state, subState);
 }
 
+void TestFillJobOptionWithPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetUri(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetAlias(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterMake(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDeviceId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    Json::Value infoJson;
+    infoJson["printerName"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->FillJobOptionWithPrinterInfo(printerInfo, infoJson);
+}
+
+void TestApplyPrinterPreferencesToJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    Json::Value infoJson;
+    infoJson["printerName"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintJob printJob;
+    printJob.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->ApplyPrinterPreferencesToJob(printerInfo, infoJson, printJob);
+}
+
+void TestValidateCustomPageSize(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    bool hasCapability = dataProvider->ConsumeBool();
+    if (hasCapability) {
+        bool hasRange = dataProvider->ConsumeBool();
+        Json::Value optionJson;
+        if (hasRange) {
+            Json::Value rangeJson;
+            rangeJson["minWidth"] = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+            rangeJson["maxWidth"] = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+            rangeJson["minHeight"] = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+            rangeJson["maxHeight"] = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+            optionJson["customPageSizeRange"] = rangeJson;
+        } else {
+            optionJson["key"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        }
+        cap.SetOption(PrintJsonUtil::WriteString(optionJson));
+        printerInfo.SetCapability(cap);
+    }
+    PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    pageSize.SetWidth(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    pageSize.SetHeight(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->ValidateCustomPageSize(printerInfo, pageSize);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    
     PRINT_HILOGI("Multithreading is running at function TestAllFunction.");
     using TestHandler = std::function<void(const uint8_t*, size_t, FuzzedDataProvider*)>;
     TestHandler tasks[] = {
@@ -136,9 +189,12 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
         &TestUpdateQueuedJobList,
         &TestUpdatePrintJobOptionByPrinterId,
         &TestDelayStartDiscovery,
-        &TestAdapterGetFileCallBack
+        &TestAdapterGetFileCallBack,
+        &TestFillJobOptionWithPrinterInfo,
+        &TestApplyPrinterPreferencesToJob,
+        &TestValidateCustomPageSize
     };
-    
+
     TestHandler handler = dataProvider->PickValueInArray(tasks);
     handler(data, size, dataProvider);
 }

@@ -18,6 +18,8 @@
 #include <cerrno>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
+#include <set>
 #include <string>
 #include <sys/time.h>
 #include <thread>
@@ -38,6 +40,7 @@
 #include "print_data_repository.h"
 #include "print_feature_plugin_manager.h"
 #include "print_log.h"
+#include "print_util.h"
 #include "printer_info.h"
 #include "print_service_converter.h"
 #include "print_utils.h"
@@ -1243,6 +1246,24 @@ int32_t PrintServiceAbility::QueryRawAddedPrinter(std::vector<std::string> &prin
     return E_PRINT_NONE;
 }
 
+void PrintServiceAbility::BackfillCustomPageSizeRangeIfNeeded(const std::string &printerId, PrinterInfo &printer)
+{
+    if (!NeedFillCustomPageSizeRange(printer)) {
+        return;
+    }
+    PrinterInfo latest;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, latest)) {
+            return;
+        }
+    }
+    if (NeedFillCustomPageSizeRange(latest)) {
+        FillCustomPageSizeRange(printerId, latest);
+    }
+    printer = latest;
+}
+
 int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -1253,6 +1274,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     info.SetPrinterId(printerId);
     OHOS::Print::PrinterInfo printer;
     if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+        BackfillCustomPageSizeRangeIfNeeded(printerId, printer);
         info = printer;
     } else {
         std::string extensionId = PrintUtils::GetExtensionId(printerId);
@@ -1275,6 +1297,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     if (CheckIsLastUsedPrinter(printerId)) {
         info.SetIsLastUsedPrinter(true);
     }
+    InjectUserCustomPageSizes(printerId, info);
     return E_PRINT_NONE;
 }
 
@@ -1540,24 +1563,66 @@ int32_t PrintServiceAbility::ProcessVendorOptionsForPreference(const std::string
     printerPrefs = preferences;
     printerPrefs.SetVendorOptions(printerVendorOptions);
 
+    auto userData = GetUserDataByUserId(GetCurrentUserId());
     PrinterUserPreferences userPrefs;
-    userPrefs.SetUserId(GetCurrentUserId());
-    userPrefs.SetPrinterId(printerId);
+    if (userData == nullptr ||
+        !userData->LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        userPrefs.SetUserId(GetCurrentUserId());
+        userPrefs.SetPrinterId(printerId);
+    }
     userPrefs.SetVendorOptions(userVendorOptions);
     ExtractCustomOptionsFromPreferences(printerInfo, printerPrefs, userPrefs);
 
-    auto userData = GetUserDataByUserId(userPrefs.GetUserId());
-    if (userData != nullptr) {
-        if (!userPrefs.IsEmpty()) {
-            if (!userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
-                PRINT_HILOGE("Failed to save user preferences for user %{private}d", userPrefs.GetUserId());
-                return E_PRINT_FILE_IO;
-            }
-            PRINT_HILOGI("Saved user preferences for user %{private}d", userPrefs.GetUserId());
-        } else {
-            userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
-            PRINT_HILOGI("Cleared user preferences for user %{private}d", userPrefs.GetUserId());
+    MigrateCustomPageSizeIdToUserPrefs(printerId, printerInfo, printerPrefs, userPrefs);
+    return SaveOrClearUserPreferences(printerId, standardizedPrinterName, userPrefs);
+}
+
+void PrintServiceAbility::MigrateCustomPageSizeIdToUserPrefs(const std::string &printerId,
+    const PrinterInfo &printerInfo, PrinterPreferences &printerPrefs, PrinterUserPreferences &userPrefs)
+{
+    if (!printerPrefs.HasDefaultPageSizeId()) {
+        return;
+    }
+    const std::string &pageSizeId = printerPrefs.GetDefaultPageSizeId();
+    if (pageSizeId.compare(0, CUSTOM_PAGE_SIZE_ID_PREFIX.size(), CUSTOM_PAGE_SIZE_ID_PREFIX) != 0) {
+        userPrefs.SetDefaultCustomPageSizeId("");
+        return;
+    }
+    if (!IsCustomPageSizeIdExistInUserPrefs(pageSizeId, userPrefs)) {
+        PRINT_HILOGW("custom page size id %{public}s does not exist, fallback to printer default",
+            pageSizeId.c_str());
+        userPrefs.SetDefaultCustomPageSizeId("");
+        FallbackToPrinterDefaultPageSize(printerInfo, printerPrefs);
+        return;
+    }
+    userPrefs.SetDefaultCustomPageSizeId(pageSizeId);
+    PrinterPreferences originalPrefs;
+    if (printerInfo.HasPreferences()) {
+        printerInfo.GetPreferences(originalPrefs);
+    }
+    if (originalPrefs.HasDefaultPageSizeId()) {
+        printerPrefs.SetDefaultPageSizeId(originalPrefs.GetDefaultPageSizeId());
+    } else {
+        printerPrefs.SetDefaultPageSizeId("");
+    }
+}
+
+int32_t PrintServiceAbility::SaveOrClearUserPreferences(const std::string &printerId,
+    const std::string &standardizedPrinterName, PrinterUserPreferences &userPrefs)
+{
+    auto userData = GetUserDataByUserId(GetCurrentUserId());
+    if (userData == nullptr) {
+        return E_PRINT_NONE;
+    }
+    if (!userPrefs.IsEmpty()) {
+        if (!userData->SavePrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+            PRINT_HILOGE("Failed to save user preferences for user %{private}d", userPrefs.GetUserId());
+            return E_PRINT_FILE_IO;
         }
+        PRINT_HILOGI("Saved user preferences for user %{private}d", userPrefs.GetUserId());
+    } else {
+        userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
+        PRINT_HILOGI("Cleared user preferences for user %{private}d", userPrefs.GetUserId());
     }
     return E_PRINT_NONE;
 }
@@ -1686,6 +1751,7 @@ void PrintServiceAbility::ProcessSingleCustomOption(const std::string &key,
 bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
 {
     if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+        InjectUserCustomPageSizes(printerId, printer);
         return true;
     }
 
@@ -1693,10 +1759,84 @@ bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &pr
         auto printerInfoPtr = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
         if (printerInfoPtr != nullptr) {
             printer = *printerInfoPtr;
+            InjectUserCustomPageSizes(printerId, printer);
             return true;
         }
     }
     return false;
+}
+
+void PrintServiceAbility::InjectUserCustomPageSizes(const std::string &printerId, PrinterInfo &printer)
+{
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData == nullptr) {
+        PRINT_HILOGD("GetUserDataByUserId failed, skip injecting user custom page sizes");
+        return;
+    }
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printer.GetPrinterName());
+    PrinterUserPreferences userPrefs;
+    if (!userData->LoadPrinterUserPreferences(printerId, standardizedPrinterName, userPrefs)) {
+        return;
+    }
+    if (!userPrefs.HasCustomPageSizes() && !userPrefs.HasDefaultCustomPageSizeId()) {
+        return;
+    }
+    Json::Value optionJson(Json::objectValue);
+    if (printer.HasOption()) {
+        Json::Value parsed;
+        if (PrintJsonUtil::Parse(printer.GetOption(), parsed) && parsed.isObject()) {
+            optionJson = parsed;
+        }
+    }
+    if (userPrefs.HasCustomPageSizes()) {
+        Json::Value listJson(Json::arrayValue);
+        for (const auto &pageSize : userPrefs.GetCustomPageSizes()) {
+            Json::Value entry;
+            ConvertPageSizeToJson(pageSize, entry);
+            listJson.append(entry);
+        }
+        optionJson[CUSTOM_PAGE_SIZE_LIST_KEY] = listJson;
+    }
+    printer.SetOption(PrintJsonUtil::WriteString(optionJson));
+    if (userPrefs.HasDefaultCustomPageSizeId()) {
+        PrinterPreferences preferences;
+        printer.GetPreferences(preferences);
+        preferences.SetDefaultPageSizeId(userPrefs.GetDefaultCustomPageSizeId());
+        printer.SetPreferences(preferences);
+    }
+}
+
+void PrintServiceAbility::FillJobOptionWithPrinterInfo(const PrinterInfo &printerInfo, Json::Value &infoJson)
+{
+    infoJson["printerName"] = printerInfo.GetPrinterName();
+    infoJson["printerUri"] = printerInfo.GetUri();
+    infoJson["alias"] = printerInfo.GetAlias();
+    infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    infoJson["deviceId"] = printerInfo.GetDeviceId();
+    std::string outputFormat =
+        PrintCloudConfigManager::GetInstance().MatchPrinterMakeInCloudConfig(printerInfo.GetPrinterMake());
+    if (!outputFormat.empty()) {
+        infoJson["bsuniOutputFormat"] = outputFormat;
+        PRINT_HILOGI("printerMake %{public}s matched cloud config, set bsuniOutputFormat to %{public}s",
+            printerInfo.GetPrinterMake().c_str(), outputFormat.c_str());
+    }
+}
+
+void PrintServiceAbility::ApplyPrinterPreferencesToJob(const PrinterInfo &printerInfo,
+    Json::Value &infoJson, PrintJob &printJob)
+{
+    PrinterPreferences preferences;
+    printerInfo.GetPreferences(preferences);
+    PrinterUserPreferences userPrefs;
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData != nullptr) {
+        userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs);
+    }
+    UpdatePrintJobOptionWithPrinterPreferences(infoJson, preferences, userPrefs);
+    MergeVendorOptionsForPrintJob(preferences, userPrefs, printJob);
 }
 
 bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
@@ -1714,34 +1854,17 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
         PRINT_HILOGW("old option not accepted");
         return false;
     }
-    infoJson["printerName"] = printerInfo.GetPrinterName();
-    infoJson["printerUri"] = printerInfo.GetUri();
-    infoJson["alias"] = printerInfo.GetAlias();
-    infoJson["printerMake"] = printerInfo.GetPrinterMake();
-    infoJson["deviceId"] = printerInfo.GetDeviceId();
-    std::string outputFormat =
-        PrintCloudConfigManager::GetInstance().MatchPrinterMakeInCloudConfig(printerInfo.GetPrinterMake());
-    if (!outputFormat.empty()) {
-        infoJson["bsuniOutputFormat"] = outputFormat;
-        PRINT_HILOGI("printerMake %{public}s matched cloud config, set bsuniOutputFormat to %{public}s",
-            printerInfo.GetPrinterMake().c_str(), outputFormat.c_str());
-    }
-
-    PrinterPreferences preferences;
-    printerInfo.GetPreferences(preferences);
-    PrinterUserPreferences userPrefs;
-    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
-    int32_t userId = GetCurrentUserId();
-    auto userData = GetUserDataByUserId(userId);
-    if (userData != nullptr) {
-        userData->LoadPrinterUserPreferences(printerInfo.GetPrinterId(), standardizedPrinterName, userPrefs);
-    }
-    UpdatePrintJobOptionWithPrinterPreferences(infoJson, preferences, userPrefs);
-    MergeVendorOptionsForPrintJob(preferences, userPrefs, printJob);
+    FillJobOptionWithPrinterInfo(printerInfo, infoJson);
+    ApplyPrinterPreferencesToJob(printerInfo, infoJson, printJob);
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
     UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
     printJob.SetPageSize(pageSize);
+    if (ValidateCustomPageSize(printerInfo, pageSize) != E_PRINT_NONE) {
+        PRINT_HILOGE("custom page size validation failed, printerId=%{public}s, pageSizeId=%{public}s",
+            PrintUtils::AnonymizePrinterId(printJob.GetPrinterId()).c_str(), pageSize.GetId().c_str());
+        return false;
+    }
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
     PRINT_HILOGD("Updated print job option: %{public}s", PrintUtils::AnonymizeJobOption(updatedOption).c_str());
     printJob.SetOption(updatedOption);
@@ -2318,31 +2441,61 @@ void PrintServiceAbility::SetPrintJobCanceled(PrintJob &jobinfo)
 void PrintServiceAbility::CancelUserPrintJobs(const int32_t userId)
 {
     PRINT_HILOGI("CancelUserPrintJobs start, userId: %{public}d", userId);
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto removedUser = printUserMap_.find(userId);
-    if (removedUser == printUserMap_.end()) {
-        PRINT_HILOGE("User dose not exist.");
-        return;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        auto removedUser = printUserMap_.find(userId);
+        if (removedUser == printUserMap_.end()) {
+            PRINT_HILOGE("User dose not exist.");
+            return;
+        }
+        if (removedUser->second == nullptr) {
+            PRINT_HILOGE("PrintUserData is nullptr.");
+            return;
+        }
+        std::vector<std::string> jobIds;
+        for (const auto &jobIt : removedUser->second->queuedJobList_) {
+            jobIds.push_back(jobIt.first);
+        }
+        for (const auto &jobId : jobIds) {
+            PRINT_HILOGI("[Job Id: %{public}s] CancelUserPrintJobs", jobId.c_str());
+            int32_t ret = CancelPrintJob(jobId);
+            PRINT_HILOGI("CancelUserPrintJobs CancelPrintJob ret: %{public}d", ret);
+            userJobMap_.erase(jobId);
+        }
+        printUserMap_.erase(userId);
+        PRINT_HILOGI("remove user-%{public}d success.", userId);
     }
-    if (removedUser->second == nullptr) {
-        PRINT_HILOGE("PrintUserData is nullptr.");
-        return;
-    }
-    std::vector<std::string> jobIds;
-    for (const auto &jobIt : removedUser->second->queuedJobList_) {
-        jobIds.push_back(jobIt.first);
-    }
-    for (const auto &jobId : jobIds) {
-        PRINT_HILOGI("[Job Id: %{public}s] CancelUserPrintJobs", jobId.c_str());
-        int32_t ret = CancelPrintJob(jobId);
-        PRINT_HILOGI("CancelUserPrintJobs CancelPrintJob ret: %{public}d", ret);
-        userJobMap_.erase(jobId);
-    }
-    printUserMap_.erase(userId);
-    PRINT_HILOGI("remove user-%{public}d success.", userId);
+    CleanupUserDataOnUserRemoved(userId);
 #ifdef EDM_PRINT_POLICY_ENABLE
     EdmPrintPolicyManager::GetInstance().OnCurrentUserRemoved(userId);
 #endif
+}
+
+void PrintServiceAbility::CleanupUserDataOnUserRemoved(int32_t userId)
+{
+    // Clean up deleted user's isolated data dirs: preferences,
+    // custom page sizes, legacy custom page size dir, history job cache
+    std::error_code ec;
+    std::string userPrefDir = PRINTER_SERVICE_FILE_PATH + "/" + std::to_string(userId);
+    if (std::filesystem::exists(userPrefDir, ec)) {
+        std::filesystem::remove_all(userPrefDir, ec);
+        if (ec) {
+            PRINT_HILOGW("Failed to remove user data dir %{private}s, ec=%{public}s",
+                userPrefDir.c_str(), ec.message().c_str());
+        } else {
+            PRINT_HILOGI("Removed user data dir for user %{public}d: %{private}s", userId, userPrefDir.c_str());
+        }
+    }
+    std::string cacheDir = "/data/service/el2/" + std::to_string(userId) + "/print_service";
+    if (std::filesystem::exists(cacheDir, ec)) {
+        std::filesystem::remove_all(cacheDir, ec);
+        if (ec) {
+            PRINT_HILOGW("Failed to remove user cache dir %{private}s, ec=%{public}s",
+                cacheDir.c_str(), ec.message().c_str());
+        } else {
+            PRINT_HILOGI("Removed user cache dir for user %{public}d: %{private}s", userId, cacheDir.c_str());
+        }
+    }
 }
 
 void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
@@ -4496,6 +4649,18 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
     return result ? E_PRINT_NONE : E_PRINT_INVALID_PRINTER;
 }
 
+void PrintServiceAbility::UpdatePrinterAliasInSystem(const std::string &printerId,
+    const PrinterInfo &printerInfo, PrinterInfo &printer)
+{
+    if (!printerInfo.HasAlias()) {
+        return;
+    }
+    printer.SetAlias(printerInfo.GetAlias());
+    PrintDataRepository::GetInstance().UpdatePrinterAlias(printerId, printerInfo.GetAlias());
+    PrintDataRepository::GetInstance().SetDiscoveredPrinterAlias(printerId, printerInfo.GetAlias());
+    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+}
+
 int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInfo)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) && !CheckPermission(PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT)) {
@@ -4526,12 +4691,19 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
         PRINT_HILOGE("can not find printer in system");
         return E_PRINT_INVALID_PRINTER;
     }
-    if (printerInfo.HasAlias()) {
-        printer.SetAlias(printerInfo.GetAlias());
-        PrintDataRepository::GetInstance().UpdatePrinterAlias(printerId, printerInfo.GetAlias());
-        PrintDataRepository::GetInstance().SetDiscoveredPrinterAlias(printerId, printerInfo.GetAlias());
-        PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+
+    Json::Value requestOption;
+    if (printerInfo.HasOption() && PrintJsonUtil::Parse(printerInfo.GetOption(), requestOption) &&
+        requestOption.isObject() && PrintJsonUtil::IsMember(requestOption, CUSTOM_PAGE_SIZE_LIST_KEY)) {
+        std::vector<PrintPageSize> customPageSizeList;
+        if (!ConvertJsonToPageSizeList(requestOption[CUSTOM_PAGE_SIZE_LIST_KEY], customPageSizeList)) {
+            PRINT_HILOGE("invalid custom page size list in request option");
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        return HandleCustomPageSizeList(printerId, printerInfo, customPageSizeList, printer);
     }
+
+    UpdatePrinterAliasInSystem(printerId, printerInfo, printer);
 
     if (printerInfo.HasOption()) {
         printer.SetOption(printerInfo.GetOption());
@@ -4582,7 +4754,8 @@ void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId
 
         if (!isEnterpriseEnabled || userId == currentUserId) {
             userData->DeletePrinterUserPreferences(printerId, standardizedPrinterName);
-            PRINT_HILOGI("Deleted PrinterUserPreferences for user %{public}d", userId);
+            userData->DeleteCustomPageSizes(printerId, standardizedPrinterName);
+            PRINT_HILOGI("Deleted PrinterUserPreferences and custom page sizes for user %{public}d", userId);
         }
     }
 }
@@ -5810,6 +5983,79 @@ void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printer
     }
 }
 
+int32_t PrintServiceAbility::ValidateCustomPageSize(PrinterInfo &printerInfo, const PrintPageSize &pageSize)
+{
+    PrintPageSize matchedPageSize;
+    if (PrintPageSize::FindPageSizeById(pageSize.GetId(), matchedPageSize)) {
+        return E_PRINT_NONE;
+    }
+    PrinterCapability printerCapability;
+    printerInfo.GetCapability(printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    for (const auto &supportedPageSize : supportedPageSizeList) {
+        if (supportedPageSize.GetId() == pageSize.GetId()) {
+            return E_PRINT_NONE;
+        }
+    }
+    CustomPageSizeRange range;
+    int32_t ret = GetCustomPageSizeRangeFromCapability(printerCapability, range);
+    if (ret != E_PRINT_NONE) {
+        return ret;
+    }
+    uint32_t w = pageSize.GetWidth();
+    uint32_t h = pageSize.GetHeight();
+    // Open interval: values equal to minWidth/maxWidth/minHeight/maxHeight are rejected.
+    if (w < range.minWidth || w > range.maxWidth ||
+        h < range.minHeight || h > range.maxHeight) {
+        PRINT_HILOGE("custom page size out of range: w=%{public}u, h=%{public}u, "
+            "range=[%{public}u,%{public}u]x[%{public}u,%{public}u]",
+            w, h, range.minWidth, range.maxWidth, range.minHeight, range.maxHeight);
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    PRINT_HILOGI("custom page size validated: w=%{public}u, h=%{public}u", w, h);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::GetCustomPageSizeRangeFromCapability(const PrinterCapability &printerCapability,
+    CustomPageSizeRange &range)
+{
+    if (!printerCapability.HasOption()) {
+        PRINT_HILOGE("printer capability has no option, custom page size not supported");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(printerCapability.GetOption(), optionJson) || !optionJson.isObject()) {
+        std::string optionStr = printerCapability.GetOption();
+        PRINT_HILOGE("failed to parse printer capability option: %{public}s", optionStr.c_str());
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    if (!PrintJsonUtil::IsMember(optionJson, CUSTOM_PAGE_SIZE_RANGE_KEY) ||
+        !optionJson[CUSTOM_PAGE_SIZE_RANGE_KEY].isObject()) {
+        PRINT_HILOGE("printer does not support custom page size");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    Json::Value rangeJson = optionJson[CUSTOM_PAGE_SIZE_RANGE_KEY];
+    if (!PrintJsonUtil::IsMember(rangeJson, CUSTOM_PAGE_SIZE_MIN_WIDTH) ||
+        !PrintJsonUtil::IsMember(rangeJson, CUSTOM_PAGE_SIZE_MAX_WIDTH) ||
+        !PrintJsonUtil::IsMember(rangeJson, CUSTOM_PAGE_SIZE_MIN_HEIGHT) ||
+        !PrintJsonUtil::IsMember(rangeJson, CUSTOM_PAGE_SIZE_MAX_HEIGHT)) {
+        PRINT_HILOGE("customPageSizeRange is incomplete");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    range.minWidth = rangeJson[CUSTOM_PAGE_SIZE_MIN_WIDTH].asUInt();
+    range.maxWidth = rangeJson[CUSTOM_PAGE_SIZE_MAX_WIDTH].asUInt();
+    range.minHeight = rangeJson[CUSTOM_PAGE_SIZE_MIN_HEIGHT].asUInt();
+    range.maxHeight = rangeJson[CUSTOM_PAGE_SIZE_MAX_HEIGHT].asUInt();
+    if (range.minWidth > range.maxWidth || range.minHeight > range.maxHeight) {
+        PRINT_HILOGE("invalid customPageSizeRange: minWidth=%{public}u, maxWidth=%{public}u, "
+            "minHeight=%{public}u, maxHeight=%{public}u",
+            range.minWidth, range.maxWidth, range.minHeight, range.maxHeight);
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    return E_PRINT_NONE;
+}
+
 void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(
     Json::Value &jobOptions, const PrinterPreferences &preferences, const PrinterUserPreferences &userPrefs)
 {
@@ -5930,6 +6176,7 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
             printerInfo.SetCapability(printerCaps);
             BuildPrinterPreference(printerInfo);
         }
+        FillCustomPageSizeRange(printerId, printerInfo);
         std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
         printerInfo.SetPpdHashCode(ppdHashCode);
         PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
@@ -6431,10 +6678,12 @@ int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printe
 #ifdef CUPS_ENABLE
     std::string ppdName;
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::vector<PrintPageSize> customPageSizeList;
+    LoadCustomPageSizeList(printerId, customPageSizeList);
     int32_t ret = GetPpdNameByPrinterId(printerId, ppdName);
     if (ret == E_PRINT_NONE) {
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPreferencesConflicts(
-            ppdName, printerPreference, changedType, conflictingOptions);
+            ppdName, printerPreference, customPageSizeList, changedType, conflictingOptions);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("conflicts check error, skip! ret=%{public}d", ret); // 优先保障修改参数这一基本功能
@@ -6444,6 +6693,48 @@ int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printe
 #else
     return E_PRINT_NONE;
 #endif
+}
+
+void PrintServiceAbility::LoadCustomPageSizeList(const std::string &printerId,
+    std::vector<PrintPageSize> &customPageSizeList)
+{
+    PrinterInfo printerInfo;
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) ||
+        !printerInfo.HasOption()) {
+        return;
+    }
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(printerInfo.GetOption(), optionJson) || !optionJson.isObject() ||
+        !PrintJsonUtil::IsMember(optionJson, CUSTOM_PAGE_SIZE_LIST_KEY)) {
+        return;
+    }
+    ConvertJsonToPageSizeList(optionJson[CUSTOM_PAGE_SIZE_LIST_KEY], customPageSizeList);
+}
+
+bool PrintServiceAbility::IsCustomPageSizeIdExistInUserPrefs(const std::string &pageSizeId,
+    const PrinterUserPreferences &userPrefs)
+{
+    if (!userPrefs.HasCustomPageSizes()) {
+        return false;
+    }
+    for (const auto &item : userPrefs.GetCustomPageSizes()) {
+        if (item.GetId() == pageSizeId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void PrintServiceAbility::FallbackToPrinterDefaultPageSize(const PrinterInfo &printerInfo,
+    PrinterPreferences &printerPrefs)
+{
+    printerPrefs.SetDefaultPageSizeId("");
+    if (!printerInfo.HasCapability()) {
+        return;
+    }
+    PrinterCapability capability;
+    printerInfo.GetCapability(capability);
+    PrintDataRepository::GetInstance().BuildPrinterPreference(capability, printerPrefs);
 }
 
 int32_t PrintServiceAbility::CheckPrintJobConflicts(const std::string &changedType,
@@ -7144,4 +7435,235 @@ void PrintServiceAbility::CommitAgentPrinterDeleted(const std::string &printerId
 }
 
 #endif
+
+CustomPageSizeRangeState PrintServiceAbility::GetCustomPageSizeRangeState(
+    const PrinterInfo &printer, CustomPageSizeRange &range)
+{
+    PrinterCapability capability;
+    printer.GetCapability(capability);
+    if (!capability.HasOption()) {
+        return CUSTOM_PAGE_SIZE_RANGE_ABSENT;
+    }
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(capability.GetOption(), optionJson) || !optionJson.isObject()) {
+        return CUSTOM_PAGE_SIZE_RANGE_ABSENT;
+    }
+    if (!PrintJsonUtil::IsMember(optionJson, CUSTOM_PAGE_SIZE_RANGE_KEY)) {
+        return CUSTOM_PAGE_SIZE_RANGE_ABSENT;
+    }
+    const Json::Value &rangeValue = optionJson[CUSTOM_PAGE_SIZE_RANGE_KEY];
+    if (rangeValue.isNull()) {
+        return CUSTOM_PAGE_SIZE_RANGE_UNSUPPORTED;          // probed and confirmed unsupported
+    }
+    if (!rangeValue.isObject()) {
+        PRINT_HILOGW("custom page size range has an unexpected type, treat as absent");
+        return CUSTOM_PAGE_SIZE_RANGE_ABSENT;
+    }
+    if (!PrintJsonUtil::IsMember(rangeValue, CUSTOM_PAGE_SIZE_MIN_WIDTH) ||
+        !PrintJsonUtil::IsMember(rangeValue, CUSTOM_PAGE_SIZE_MAX_WIDTH) ||
+        !PrintJsonUtil::IsMember(rangeValue, CUSTOM_PAGE_SIZE_MIN_HEIGHT) ||
+        !PrintJsonUtil::IsMember(rangeValue, CUSTOM_PAGE_SIZE_MAX_HEIGHT)) {
+        PRINT_HILOGW("custom page size range is incomplete, treat as absent");
+        return CUSTOM_PAGE_SIZE_RANGE_ABSENT;
+    }
+    range.minWidth = rangeValue[CUSTOM_PAGE_SIZE_MIN_WIDTH].asUInt();
+    range.maxWidth = rangeValue[CUSTOM_PAGE_SIZE_MAX_WIDTH].asUInt();
+    range.minHeight = rangeValue[CUSTOM_PAGE_SIZE_MIN_HEIGHT].asUInt();
+    range.maxHeight = rangeValue[CUSTOM_PAGE_SIZE_MAX_HEIGHT].asUInt();
+    return CUSTOM_PAGE_SIZE_RANGE_SUPPORTED;
+}
+
+bool PrintServiceAbility::NeedFillCustomPageSizeRange(const PrinterInfo &printer)
+{
+    CustomPageSizeRange range;
+    return GetCustomPageSizeRangeState(printer, range) == CUSTOM_PAGE_SIZE_RANGE_ABSENT;
+}
+
+int32_t PrintServiceAbility::FillCustomPageSizeRange(const std::string &printerId, PrinterInfo &printer)
+{
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_SERVER_FAILURE);
+    PrinterCapability queriedCaps;
+    int32_t ret = printCupsClient->QueryPrinterCapabilityFromPPD(printer.GetPrinterName(), queriedCaps, "");
+    if (ret != E_PRINT_NONE || !queriedCaps.HasOption()) {
+        PRINT_HILOGW("[Printer: %{public}s] query capability for custom page size failed, ret = %{public}d",
+            PrintUtils::AnonymizePrinterId(printerId).c_str(), ret);
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    Json::Value queriedOption;
+    if (!PrintJsonUtil::Parse(queriedCaps.GetOption(), queriedOption) ||
+        !PrintJsonUtil::IsMember(queriedOption, CUSTOM_PAGE_SIZE_RANGE_KEY)) {
+        PRINT_HILOGW("queried capability has no custom page size range key");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    PrinterCapability persisted;
+    printer.GetCapability(persisted);
+    Json::Value persistedOption(Json::objectValue);
+    if (persisted.HasOption()) {
+        Json::Value parsed;
+        if (PrintJsonUtil::Parse(persisted.GetOption(), parsed) && parsed.isObject()) {
+            persistedOption = parsed;
+        }
+    }
+    persistedOption[CUSTOM_PAGE_SIZE_RANGE_KEY] = queriedOption[CUSTOM_PAGE_SIZE_RANGE_KEY];
+    persisted.SetOption(PrintJsonUtil::WriteString(persistedOption));
+    printer.SetCapability(persisted);
+
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
+    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+    PRINT_HILOGI("[Printer: %{public}s] custom page size range filled",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ValidateCustomPageSizeList(const std::vector<PrintPageSize> &list,
+    const CustomPageSizeRange &range, const PrinterInfo &printer)
+{
+    if (list.size() > MAX_CUSTOM_PAGE_SIZE_COUNT) {
+        PRINT_HILOGI("customPageSizeList has too many entries, count=%{public}zu", list.size());
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    std::set<std::string> usedIds;
+    for (const auto &item : list) {
+        if (!ValidateCustomPageSizeEntry(item, range, list, usedIds)) {
+            return E_PRINT_INVALID_PARAMETER;
+        }
+    }
+
+    return E_PRINT_NONE;
+}
+
+bool PrintServiceAbility::ValidateCustomPageSizeEntry(const PrintPageSize &item, const CustomPageSizeRange &range,
+    const std::vector<PrintPageSize> &list, std::set<std::string> &usedIds)
+{
+    std::string id = item.GetId();
+    if (id.empty()) {
+        PRINT_HILOGI("custom page size id is empty");
+        return false;
+    }
+    if (id.compare(0, CUSTOM_PAGE_SIZE_ID_PREFIX.size(), CUSTOM_PAGE_SIZE_ID_PREFIX) != 0) {
+        PRINT_HILOGI("custom page size id must start with custom: prefix, id=%{public}s", id.c_str());
+        return false;
+    }
+    std::string name = item.GetName();
+    // name format: <user-input>(<w>x<h>mm); validate user-input part length only.
+    size_t openPos = name.find_last_of('(');
+    std::string userInput = (openPos == std::string::npos) ? name : name.substr(0, openPos);
+    if (GetUtf8CharCount(userInput) > MAX_CUSTOM_PAGE_SIZE_NAME_LENGTH) {
+        PRINT_HILOGI("custom page size user input exceeds max length, name=%{public}s",
+            PrintUtils::AnonymizeString(name).c_str());
+        return false;
+    }
+    if (!usedIds.insert(id).second) {
+        PRINT_HILOGI("custom page size duplicated id, id=%{public}s", id.c_str());
+        return false;
+    }
+    uint32_t width = item.GetWidth();
+    uint32_t height = item.GetHeight();
+    // Open interval: values equal to minWidth/maxWidth/minHeight/maxHeight are rejected.
+    if (width < range.minWidth || width > range.maxWidth ||
+        height < range.minHeight || height > range.maxHeight) {
+        PRINT_HILOGI("custom page size out of range, w=%{public}u, h=%{public}u, "
+            "range=[%{public}u,%{public}u]x[%{public}u,%{public}u]",
+            width, height, range.minWidth, range.maxWidth, range.minHeight, range.maxHeight);
+        return false;
+    }
+    return true;
+}
+
+int32_t PrintServiceAbility::HandleCustomPageSizeList(const std::string &printerId,
+    const PrinterInfo &printerInfo, const std::vector<PrintPageSize> &customPageSizeList, PrinterInfo &printer)
+{
+    CustomPageSizeRange range;
+    CustomPageSizeRangeState state = GetCustomPageSizeRangeState(printer, range);
+    if (state == CUSTOM_PAGE_SIZE_RANGE_ABSENT) {
+        int32_t fillRet = FillCustomPageSizeRange(printerId, printer);
+        if (fillRet != E_PRINT_NONE) {
+            SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, printer);
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        state = GetCustomPageSizeRangeState(printer, range);
+    }
+    if (state != CUSTOM_PAGE_SIZE_RANGE_SUPPORTED) {
+        PRINT_HILOGW("[Printer: %{public}s] custom page size is not supported",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, printer);
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    std::vector<PrintPageSize> normalizedList = customPageSizeList;
+    NormalizeCustomPageSizeList(normalizedList);
+
+    int32_t ret = ValidateAndSaveCustomPageSizeList(printerId, printerInfo,
+        normalizedList, range, printer);
+    if (ret != E_PRINT_NONE) {
+        SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, printer);
+        return ret;
+    }
+
+    ApplyCustomPageSizeListResult(printerId, printerInfo, normalizedList, printer);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ValidateAndSaveCustomPageSizeList(const std::string &printerId,
+    const PrinterInfo &printerInfo, const std::vector<PrintPageSize> &customPageSizeList,
+    const CustomPageSizeRange &range, PrinterInfo &printer)
+{
+    int32_t ret = ValidateCustomPageSizeList(customPageSizeList, range, printer);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGI("[Printer: %{public}s] custom page size list rejected",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        return ret;
+    }
+    int32_t userId = GetCurrentUserId();
+    auto userData = GetUserDataByUserId(userId);
+    if (userData == nullptr) {
+        PRINT_HILOGE("GetUserDataByUserId failed for user %{public}d", userId);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printer.GetPrinterName());
+    if (!userData->SaveCustomPageSizes(printerId, standardizedPrinterName, customPageSizeList)) {
+        PRINT_HILOGE("Save custom page sizes to user-isolated storage failed");
+        return E_PRINT_FILE_IO;
+    }
+    return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::ApplyCustomPageSizeListResult(const std::string &printerId,
+    const PrinterInfo &printerInfo, const std::vector<PrintPageSize> &customPageSizeList, PrinterInfo &printer)
+{
+    bool hasAlias = printerInfo.HasAlias();
+    if (hasAlias) {
+        PrintDataRepository::GetInstance().UpdatePrinterAlias(printerId, printerInfo.GetAlias());
+        PrintDataRepository::GetInstance().SetDiscoveredPrinterAlias(printerId, printerInfo.GetAlias());
+        PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+    }
+    Json::Value merged(Json::objectValue);
+    Json::Value requestOption;
+    if (printerInfo.HasOption() &&
+        PrintJsonUtil::Parse(printerInfo.GetOption(), requestOption) && requestOption.isObject()) {
+        merged = requestOption;
+    } else if (printer.HasOption()) {
+        Json::Value parsed;
+        if (PrintJsonUtil::Parse(printer.GetOption(), parsed) && parsed.isObject()) {
+            merged = parsed;
+        }
+    }
+    Json::Value listJson(Json::arrayValue);
+    for (const auto &pageSize : customPageSizeList) {
+        Json::Value entry;
+        ConvertPageSizeToJson(pageSize, entry);
+        listJson.append(entry);
+    }
+    merged[CUSTOM_PAGE_SIZE_LIST_KEY] = listJson;
+    printer.SetOption(PrintJsonUtil::WriteString(merged));
+    if (hasAlias) {
+        printer.SetAlias(printerInfo.GetAlias());
+    }
+    SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, printer);
+    PRINT_HILOGI("[Printer: %{public}s] custom page size list updated, count = %{public}zu",
+        PrintUtils::AnonymizePrinterId(printerId).c_str(), customPageSizeList.size());
+}
 }  // namespace OHOS::Print
