@@ -2117,10 +2117,7 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
 bool PrintCupsClient::HandleMonitorOffline(std::shared_ptr<JobMonitorParam> monitorParams)
 {
     PRINT_HILOGE("[Job Id: %{public}s] unable connect to printer", monitorParams->serviceJobId.c_str());
-    if (monitorParams->serviceAbility == nullptr) {
-        PRINT_HILOGE("[Job Id: %{public}s] serviceAbility is null", monitorParams->serviceJobId.c_str());
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(monitorParams->serviceAbility, false);
     if (monitorParams->printerId.find(IPPOVERUSB_PREFIX) != std::string::npos) {
         PRINT_HILOGW("IPPOverUsb Printer Disconnect, cancel PrintJob!");
         if (!CancelPrinterJob(
@@ -2636,9 +2633,10 @@ bool PrintCupsClient::ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> 
 
 void PrintCupsClient::UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
 {
-    if (!IsDefaultAddedLanPrinter(monitorParams) || monitorParams->serviceAbility == nullptr) {
+    if (!IsDefaultAddedLanPrinter(monitorParams)) {
         return;
     }
+    PRINT_CHECK_NULL_RETURN_VOID(monitorParams->serviceAbility);
     monitorParams->serviceAbility->UpdatePrinterStatusByPrinterId(
         monitorParams->printerId, PRINTER_STATUS_UNAVAILABLE);
 }
