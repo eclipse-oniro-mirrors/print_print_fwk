@@ -247,6 +247,7 @@ private:
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     bool HandleMonitorOffline(std::shared_ptr<JobMonitorParam> monitorParams);
     bool IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorParam> &monitorParams);
+    bool ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> &monitorParams);
     void UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);

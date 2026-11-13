@@ -2086,17 +2086,14 @@ bool PrintCupsClient::IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam
 
 bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    bool defaultAddedLan = IsDefaultAddedLanPrinter(monitorParams);
     if (httpGetFd(monitorParams->http) < 0) {
         PRINT_HILOGE("[Job Id: %{public}s] http is nullptr", monitorParams->serviceJobId.c_str());
         httpReconnect2(monitorParams->http, LONG_LONG_TIME_OUT, nullptr);
     }
-    if (defaultAddedLan && httpGetFd(monitorParams->http) < 0) {
-        PRINT_HILOGW("[Job Id: %{public}s] cupsd query unavailable, skip offline judgment",
-            monitorParams->serviceJobId.c_str());
-        return true;
-    }
-    if (!defaultAddedLan && (httpGetFd(monitorParams->http) < 0 || !CheckPrinterOnline(monitorParams))) {
+    // [C3] 监控期 offline 判断仅限白名单打印机（USB/厂商/三方扩展/IPPOverUSB/SMB），
+    // 其余打印机（含全部网络打印机）跳过 offline 部分，直接查询任务状态
+    if (ShouldJudgeOffline(monitorParams) &&
+        (httpGetFd(monitorParams->http) < 0 || !CheckPrinterOnline(monitorParams))) {
         return HandleMonitorOffline(monitorParams);
     }
     if (monitorParams->isFirstQueryState) {
@@ -2613,6 +2610,29 @@ bool PrintCupsClient::IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorP
     std::string scheme = getScheme(monitorParams->printerUri);
     return strcasecmp(scheme.c_str(), "ipp") == 0 || strcasecmp(scheme.c_str(), "ipps") == 0 ||
         strcasecmp(scheme.c_str(), "lpd") == 0 || strcasecmp(scheme.c_str(), "socket") == 0;
+}
+
+bool PrintCupsClient::ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
+{
+    if (monitorParams == nullptr) {
+        return false;
+    }
+    const std::string &printerId = monitorParams->printerId;
+#ifdef HAVE_SMB_PRINTER
+    if (PrintUtil::startsWith(printerId, "smb")) {
+        return true;
+    }
+#endif
+    if (monitorParams->serviceAbility == nullptr) {
+        return false;
+    }
+    bool isUsbPrinter = monitorParams->printerUri.length() > USB_PRINTER.length() &&
+        monitorParams->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
+    bool isVendorPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
+    bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
+        PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
+    bool isIPPOverUsbPrinter = printerId.find(IPPOVERUSB_PREFIX) != std::string::npos;
+    return isUsbPrinter || isCustomizedExtension || isVendorPrinter || isIPPOverUsbPrinter;
 }
 
 void PrintCupsClient::UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
