@@ -586,6 +586,25 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     return PrintJsonUtil::WriteString(optionJson);
 }
 
+std::string PrintUtils::AnonymizePrinterOption(const std::string &option)
+{
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(option, optionJson)) {
+        return "";
+    }
+    if (PrintJsonUtil::IsMember(optionJson, CUSTOM_PAGE_SIZE_LIST_KEY) &&
+        optionJson[CUSTOM_PAGE_SIZE_LIST_KEY].isArray()) {
+        Json::Value &list = optionJson[CUSTOM_PAGE_SIZE_LIST_KEY];
+        for (Json::ArrayIndex i = 0; i < list.size(); ++i) {
+            if (list[i].isObject() && PrintJsonUtil::IsMember(list[i], CUSTOM_PAGE_SIZE_ITEM_NAME) &&
+                list[i][CUSTOM_PAGE_SIZE_ITEM_NAME].isString()) {
+                list[i][CUSTOM_PAGE_SIZE_ITEM_NAME] = AnonymizeString(list[i][CUSTOM_PAGE_SIZE_ITEM_NAME].asString());
+            }
+        }
+    }
+    return PrintJsonUtil::WriteString(optionJson);
+}
+
 void PrintUtils::AnonymizeAdvancedOptions(Json::Value &advancedOptions)
 {
     for (const auto &key : advancedOptions.getMemberNames()) {

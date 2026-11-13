@@ -370,6 +370,14 @@ enum DiscoveryState {
     DISCOVERY_WAITING = 2,
 };
 
+// Custom page size support. The capability key is tri-state: object = supported,
+// null = probed and unsupported, absent = not probed yet.
+enum CustomPageSizeRangeState {
+    CUSTOM_PAGE_SIZE_RANGE_SUPPORTED = 0,
+    CUSTOM_PAGE_SIZE_RANGE_UNSUPPORTED = 1,
+    CUSTOM_PAGE_SIZE_RANGE_ABSENT = 2,
+};
+
 inline const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 inline const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 inline const std::string SHARED_HOST_DISCOVER_EVENT_TYPE = "sharedHostDiscover";
@@ -398,6 +406,20 @@ inline const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
 inline const std::string PRINT_USER_DATA_VERSION = "v1";
 inline const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 inline const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
+inline const std::string CUSTOM_PAGE_SIZE_RANGE_KEY = "customPageSizeRange";
+inline const std::string CUSTOM_PAGE_SIZE_LIST_KEY = "customPageSizeList";
+inline const std::string DEFAULT_CUSTOM_PAGE_SIZE_ID_KEY = "defaultCustomPageSizeId";
+inline const std::string CUSTOM_PAGE_SIZE_ID_PREFIX = "custom:";
+inline const std::string CUSTOM_PAGE_SIZE_MIN_WIDTH = "minWidth";
+inline const std::string CUSTOM_PAGE_SIZE_MAX_WIDTH = "maxWidth";
+inline const std::string CUSTOM_PAGE_SIZE_MIN_HEIGHT = "minHeight";
+inline const std::string CUSTOM_PAGE_SIZE_MAX_HEIGHT = "maxHeight";
+inline const std::string CUSTOM_PAGE_SIZE_ITEM_ID = "id";
+inline const std::string CUSTOM_PAGE_SIZE_ITEM_NAME = "name";
+inline const std::string CUSTOM_PAGE_SIZE_ITEM_WIDTH = "width";
+inline const std::string CUSTOM_PAGE_SIZE_ITEM_HEIGHT = "height";
+constexpr uint32_t MAX_CUSTOM_PAGE_SIZE_COUNT = 20;
+constexpr uint32_t MAX_CUSTOM_PAGE_SIZE_NAME_LENGTH = 64;
 inline const std::string DEFAULT_MEDIA_TYPE = "stationery";
 inline const std::string TEXT_SMOOTH_OPTION = "oh-text-smooth";
 inline const std::string TEXT_SMOOTH_DEFAULT = "dpi";

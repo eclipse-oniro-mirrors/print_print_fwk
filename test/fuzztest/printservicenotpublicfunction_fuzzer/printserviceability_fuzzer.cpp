@@ -25,6 +25,7 @@
 #include "print_callback.h"
 #include "iprint_adapter_inner.h"
 #include "printer_user_preferences.h"
+#include "print_page_size.h"
 #include "print_vendor_options_util.h"
 #include "print_json_util.h"
 #include <functional>
@@ -34,6 +35,10 @@ namespace Print {
 constexpr uint8_t MAX_STRING_LENGTH = 20;
 constexpr int MAX_SET_NUMBER = 128;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr uint8_t SCENARIO_DEFAULT_PRINTER_OPTION = 0;
+constexpr uint8_t SCENARIO_DEFAULT_PAGE_SIZE_ID = 1;
+constexpr uint8_t SCENARIO_USER_PREFS_CUSTOM_PAGE_SIZE = 2;
+constexpr uint8_t SCENARIO_MAX = SCENARIO_USER_PREFS_CUSTOM_PAGE_SIZE;
 static constexpr const char *JOB_OPTIONS =
     "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
     "\"printerName\":\"testId\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\","
@@ -191,6 +196,56 @@ void TestMergeVendorOptionsForPrintJob(const uint8_t *data, size_t size, FuzzedD
     PrintServiceAbility::GetInstance()->MergeVendorOptionsForPrintJob(preferences, userPrefs, printJob);
 }
 
+static void SetupPrinterCustomPageSizeOption(const std::string &printerId, const std::string &customId,
+    FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    Json::Value optionJson(Json::objectValue);
+    Json::Value customList(Json::arrayValue);
+    Json::Value customEntry;
+    customEntry[CUSTOM_PAGE_SIZE_ITEM_ID] = customId;
+    customEntry[CUSTOM_PAGE_SIZE_ITEM_NAME] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    customList.append(customEntry);
+    optionJson[CUSTOM_PAGE_SIZE_LIST_KEY] = customList;
+    printerInfo.SetOption(PrintJsonUtil::WriteString(optionJson));
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
+}
+
+static void BuildMatchedPageSizeList(const std::string &customId, bool matchId,
+    FuzzedDataProvider *dataProvider, std::vector<PrintPageSize> &pageSizeList)
+{
+    if (matchId) {
+        PrintPageSize matchItem;
+        matchItem.SetId(customId);
+        matchItem.SetName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+        pageSizeList.push_back(matchItem);
+    } else {
+        std::string otherId = CUSTOM_PAGE_SIZE_ID_PREFIX + dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        PrintPageSize otherItem;
+        otherItem.SetId(otherId);
+        otherItem.SetName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+        pageSizeList.push_back(otherItem);
+    }
+}
+
+static void PrefillPrinterUserPreferences(const std::string &printerId, const PrinterUserPreferences &userPrefs)
+{
+    auto inst = PrintServiceAbility::GetInstance();
+    std::vector<int32_t> candidateUserIds = {-1, 0, 100};
+    for (const auto &kv : inst->printUserMap_) {
+        candidateUserIds.push_back(kv.first);
+    }
+    for (int32_t uid : candidateUserIds) {
+        auto userData = inst->GetUserDataByUserId(uid);
+        if (userData == nullptr) {
+            continue;
+        }
+        userData->printerUserPreferences_[printerId] = std::make_shared<PrinterUserPreferences>(userPrefs);
+    }
+}
+
 void TestProcessVendorOptionsForPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -198,6 +253,28 @@ void TestProcessVendorOptionsForPreference(const uint8_t *data, size_t size, Fuz
     PrinterPreferences preferences;
     std::string vendorOptions = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     preferences.SetVendorOptions(vendorOptions);
+
+    uint8_t scenario = dataProvider->ConsumeIntegralInRange<uint8_t>(0, SCENARIO_MAX);
+    if (scenario == SCENARIO_DEFAULT_PRINTER_OPTION) {
+        std::string customId = CUSTOM_PAGE_SIZE_ID_PREFIX + dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        preferences.SetDefaultPageSizeId(customId);
+        SetupPrinterCustomPageSizeOption(printerId, customId, dataProvider);
+    } else if (scenario == SCENARIO_DEFAULT_PAGE_SIZE_ID) {
+        preferences.SetDefaultPageSizeId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    } else if (scenario == SCENARIO_USER_PREFS_CUSTOM_PAGE_SIZE) {
+        std::string customId = CUSTOM_PAGE_SIZE_ID_PREFIX + dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        preferences.SetDefaultPageSizeId(customId);
+        SetupPrinterCustomPageSizeOption(printerId, customId, dataProvider);
+
+        bool matchId = dataProvider->ConsumeBool();
+        std::vector<PrintPageSize> pageSizeList;
+        BuildMatchedPageSizeList(customId, matchId, dataProvider, pageSizeList);
+
+        PrinterUserPreferences userPrefs;
+        userPrefs.SetPrinterId(printerId);
+        userPrefs.SetCustomPageSizes(pageSizeList);
+        PrefillPrinterUserPreferences(printerId, userPrefs);
+    }
 
     PrinterPreferences printerPrefs;
     PrintServiceAbility::GetInstance()->ProcessVendorOptionsForPreference(

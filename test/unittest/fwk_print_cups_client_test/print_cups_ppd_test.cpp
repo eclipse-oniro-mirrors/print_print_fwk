@@ -80,6 +80,33 @@ protected:
         return CreateTempPpdFile(content);
     }
 
+    std::string CreatePpdWithCustomPageSize()
+    {
+        std::string content = "*PPD-Adobe: \"4.3\"\n"
+            "*FileVersion: \"1.0\"\n"
+            "*LanguageEncoding: ISOLatin1\n"
+            "*LanguageLevel: \"2\"\n"
+            "*Manufacturer: \"Test\"\n"
+            "*ModelName: \"Test Printer\"\n"
+            "*NickName: \"Test Printer\"\n"
+            "*ColorDevice: True\n"
+            "*DefaultColor: Color\n"
+            "*OpenUI PageSize: PickOne\n"
+            "*OrderDependency: 10 AnySetup PageSize\n"
+            "*DefaultPageSize: A4\n"
+            "*PageSize A4/A4: \"<</PageSize[595 842]/ImagingBBox null>>setpagedevice\"\n"
+            "*PageSize Letter/US Letter: \"<</PageSize[612 792]/ImagingBBox null>>setpagedevice\"\n"
+            "*CloseUI: PageSize\n"
+            "*HWMargins: \"11.905511811024 11.905511811024 11.905511811024 11.905511811024\"\n"
+            "*ParamCustomPageSize Width: 1 points 216 612.283464566929\n"
+            "*ParamCustomPageSize Height: 2 points 394.015748031496 1700.787401574803\n"
+            "*ParamCustomPageSize WidthOffset: 3 points 0 0\n"
+            "*ParamCustomPageSize HeightOffset: 4 points 0 0\n"
+            "*ParamCustomPageSize Orientation: 5 int 0 3\n"
+            "*CustomPageSize True: \"pop pop pop <</PageSize[5 -2 roll]/ImagingBBox null>>setpagedevice\"\n";
+        return CreateTempPpdFile(content);
+    }
+
     std::string CreatePpdWithAllOptions()
     {
         std::string content = "*PPD-Adobe: \"4.3\"\n"
@@ -922,6 +949,112 @@ HWTEST_F(PrintCupsPpdTest, FillBasicOptions_EmptyPpdOptionMap_UsesPwgFallback, T
     if (options != nullptr) {
         cupsFreeOptions(num_options, options);
     }
+}
+
+// ===== ParseCustomPageSizeFromPpd Tests =====
+
+HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_NullPpd_OptionsUnchanged, TestSize.Level1)
+{
+    Json::Value options;
+    options["existing"] = "value";
+    ParseCustomPageSizeFromPpd(nullptr, options);
+    // null ppd → early return, options unchanged
+    EXPECT_FALSE(options.isMember("customPageSizeRange"));
+    EXPECT_EQ(options["existing"].asString(), "value");
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_NullCache_OptionsUnchanged, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    // deliberately do NOT create cache → ppd->cache is null
+    ASSERT_EQ(ppd->cache, nullptr);
+
+    Json::Value options;
+    ParseCustomPageSizeFromPpd(ppd, options);
+    EXPECT_FALSE(options.isMember("customPageSizeRange"));
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_WithCache_RangeSetOrNull, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithAllOptions();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    Json::Value options;
+    ParseCustomPageSizeFromPpd(ppd, options);
+    if (options["customPageSizeRange"].isObject()) {
+        const Json::Value &range = options["customPageSizeRange"];
+        EXPECT_TRUE(range.isMember("minWidth"));
+        EXPECT_TRUE(range.isMember("maxWidth"));
+        EXPECT_TRUE(range.isMember("minHeight"));
+        EXPECT_TRUE(range.isMember("maxHeight"));
+        EXPECT_GE(range["minWidth"].asUInt(), 0u);
+        EXPECT_GE(range["maxWidth"].asUInt(), range["minWidth"].asUInt());
+    } else {
+        // probed but not supported → null
+        EXPECT_TRUE(options["customPageSizeRange"].isNull());
+    }
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_SimplePpd_RangeNullOrObject, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithVendorAbility("", "");
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    Json::Value options;
+    ParseCustomPageSizeFromPpd(ppd, options);
+    // simple PPD without custom page size support → key present, value null
+    ASSERT_TRUE(options.isMember("customPageSizeRange"));
+    EXPECT_TRUE(options["customPageSizeRange"].isNull() || options["customPageSizeRange"].isObject());
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_WithCustomPageSize_RangeObject, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithCustomPageSize();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    Json::Value options;
+    ParseCustomPageSizeFromPpd(ppd, options);
+    // PPD with ParamCustomPageSize → ppdPageSizeLimits should succeed → range is an object
+    ASSERT_TRUE(options.isMember("customPageSizeRange"));
+    const Json::Value &range = options["customPageSizeRange"];
+    ASSERT_TRUE(range.isObject());
+    EXPECT_TRUE(range.isMember("minWidth"));
+    EXPECT_TRUE(range.isMember("maxWidth"));
+    EXPECT_TRUE(range.isMember("minHeight"));
+    EXPECT_TRUE(range.isMember("maxHeight"));
+    // ParamCustomPageSize Width:  216..612.283 points → mils = points * 1000 / 72
+    //   minWidth = round(216 * 1000 / 72)       = 3000
+    //   maxWidth = round(612.283 * 1000 / 72)   = 8504
+    // ParamCustomPageSize Height: 394.016..1700.787 points
+    //   minHeight = round(394.016 * 1000 / 72)  = 5472
+    //   maxHeight = round(1700.787 * 1000 / 72) = 23622
+    EXPECT_EQ(range["minWidth"].asUInt(), 3000u);
+    EXPECT_EQ(range["maxWidth"].asUInt(), 8504u);
+    EXPECT_EQ(range["minHeight"].asUInt(), 5472u);
+    EXPECT_EQ(range["maxHeight"].asUInt(), 23622u);
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
 }
 
 }  // namespace Print

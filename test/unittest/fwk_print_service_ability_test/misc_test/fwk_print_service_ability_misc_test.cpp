@@ -331,8 +331,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036_NeedRename, TestS
     Json::Value infoJson;
     infoJson["printerName"] = "testPrinterName";
     printJob2.SetOption(PrintJsonUtil::WriteString(infoJson));
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    printJob2.SetPageSize(pageSize);
     EXPECT_EQ(service->UpdatePrintJobOptionByPrinterId(printJob2), true);
-    service->StartNativePrintJob(printJob2);
+    EXPECT_EQ(service->StartNativePrintJob(printJob2), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048_NeedRename, TestSize.Level1)
@@ -976,6 +979,328 @@ HWTEST_F(PrintServiceAbilityTest, ValidateUpdate_SelfNameChangedConflict_Returns
     info.SetPrinterId("printer1");
     info.SetPrinterName("ConflictPrinter");
     EXPECT_EQ(service->ValidatePrinterForUpdateDiscovery(extId, info), E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_FillJobOptionWithPrinterInfo_001
+ * @tc.desc: FillJobOptionWithPrinterInfo with normal printer info
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_FillJobOptionWithPrinterInfo_001, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterName("testPrinter");
+    printerInfo.SetUri("ipp://192.168.0.1:631/ipp/print");
+    printerInfo.SetAlias("MyAlias");
+    printerInfo.SetPrinterMake("HP");
+    printerInfo.SetDeviceId("device_001");
+    Json::Value infoJson;
+    infoJson["printerName"] = "oldName";
+    service->FillJobOptionWithPrinterInfo(printerInfo, infoJson);
+    EXPECT_EQ(infoJson["printerName"].asString(), "testPrinter");
+    EXPECT_EQ(infoJson["printerUri"].asString(), "ipp://192.168.0.1:631/ipp/print");
+    EXPECT_EQ(infoJson["alias"].asString(), "MyAlias");
+    EXPECT_EQ(infoJson["printerMake"].asString(), "HP");
+    EXPECT_EQ(infoJson["deviceId"].asString(), "device_001");
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_FillJobOptionWithPrinterInfo_002
+ * @tc.desc: FillJobOptionWithPrinterInfo with empty printer info
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_FillJobOptionWithPrinterInfo_002, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    Json::Value infoJson;
+    service->FillJobOptionWithPrinterInfo(printerInfo, infoJson);
+    EXPECT_EQ(infoJson["printerName"].asString(), "");
+    EXPECT_EQ(infoJson["printerUri"].asString(), "");
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ApplyPrinterPreferencesToJob_001
+ * @tc.desc: ApplyPrinterPreferencesToJob with default preferences
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ApplyPrinterPreferencesToJob_001, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("printer_001");
+    printerInfo.SetPrinterName("testPrinter");
+    Json::Value infoJson;
+    infoJson["printerName"] = "testPrinter";
+    PrintJob printJob;
+    printJob.SetOption(PrintJsonUtil::WriteString(infoJson));
+    service->ApplyPrinterPreferencesToJob(printerInfo, infoJson, printJob);
+    EXPECT_TRUE(infoJson.isMember("isReverse"));
+    EXPECT_EQ(infoJson["isReverse"].asBool(), false);
+    EXPECT_TRUE(infoJson.isMember("isCollate"));
+    EXPECT_EQ(infoJson["isCollate"].asBool(), true);
+    EXPECT_FALSE(infoJson.isMember("advancedOptions"));
+    EXPECT_FALSE(printJob.HasPrintScaling());
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ValidateCustomPageSize_001
+ * @tc.desc: ValidateCustomPageSize with standard page size id
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ValidateCustomPageSize_001, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    EXPECT_EQ(service->ValidateCustomPageSize(printerInfo, pageSize), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ValidateCustomPageSize_002
+ * @tc.desc: ValidateCustomPageSize with empty page size and no capability
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ValidateCustomPageSize_002, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrintPageSize pageSize;
+    pageSize.SetId("");
+    EXPECT_EQ(service->ValidateCustomPageSize(printerInfo, pageSize), E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ValidateCustomPageSize_003
+ * @tc.desc: ValidateCustomPageSize with custom id found in supportedPageSizeList
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ValidateCustomPageSize_003, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    std::vector<PrintPageSize> pageSizes;
+    PrintPageSize custom;
+    custom.SetId("custom_001");
+    custom.SetWidth(21000);
+    custom.SetHeight(29700);
+    pageSizes.push_back(custom);
+    cap.SetSupportedPageSize(pageSizes);
+    printerInfo.SetCapability(cap);
+    PrintPageSize pageSize;
+    pageSize.SetId("custom_001");
+    EXPECT_EQ(service->ValidateCustomPageSize(printerInfo, pageSize), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ValidateCustomPageSize_004
+ * @tc.desc: ValidateCustomPageSize with valid custom range
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ValidateCustomPageSize_004, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    Json::Value rangeJson;
+    rangeJson["minWidth"] = 10000;
+    rangeJson["maxWidth"] = 50000;
+    rangeJson["minHeight"] = 10000;
+    rangeJson["maxHeight"] = 50000;
+    Json::Value optionJson;
+    optionJson["customPageSizeRange"] = rangeJson;
+    cap.SetOption(PrintJsonUtil::WriteString(optionJson));
+    printerInfo.SetCapability(cap);
+    PrintPageSize pageSize;
+    pageSize.SetId("custom_valid");
+    pageSize.SetWidth(21000);
+    pageSize.SetHeight(29700);
+    EXPECT_EQ(service->ValidateCustomPageSize(printerInfo, pageSize), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ValidateCustomPageSize_005
+ * @tc.desc: ValidateCustomPageSize with out-of-range custom page size
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ValidateCustomPageSize_005, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    Json::Value rangeJson;
+    rangeJson["minWidth"] = 10000;
+    rangeJson["maxWidth"] = 50000;
+    rangeJson["minHeight"] = 10000;
+    rangeJson["maxHeight"] = 50000;
+    Json::Value optionJson;
+    optionJson["customPageSizeRange"] = rangeJson;
+    cap.SetOption(PrintJsonUtil::WriteString(optionJson));
+    printerInfo.SetCapability(cap);
+    PrintPageSize pageSize;
+    pageSize.SetId("custom_oversized");
+    pageSize.SetWidth(60000);
+    pageSize.SetHeight(70000);
+    EXPECT_EQ(service->ValidateCustomPageSize(printerInfo, pageSize), E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_ValidateCustomPageSize_006
+ * @tc.desc: ValidateCustomPageSize with capability but no customPageSizeRange
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_ValidateCustomPageSize_006, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    Json::Value optionJson;
+    optionJson["someOtherKey"] = "value";
+    cap.SetOption(PrintJsonUtil::WriteString(optionJson));
+    printerInfo.SetCapability(cap);
+    PrintPageSize pageSize;
+    pageSize.SetId("custom_norange");
+    pageSize.SetWidth(21000);
+    pageSize.SetHeight(29700);
+    EXPECT_EQ(service->ValidateCustomPageSize(printerInfo, pageSize), E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: ValidateCustomPageSizeEntry_EmptyId_ReturnsFalse
+ * @tc.desc: Verify ValidateCustomPageSizeEntry rejects empty id.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, ValidateCustomPageSizeEntry_EmptyId_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize item;
+    item.SetId("");
+    CustomPageSizeRange range{1000, 50000, 1000, 50000};
+    std::vector<PrintPageSize> supportedPageSizes;
+    std::set<std::string> usedIds;
+    EXPECT_FALSE(service->ValidateCustomPageSizeEntry(item, range, supportedPageSizes, usedIds));
+}
+
+/**
+ * @tc.name: ValidateCustomPageSizeEntry_NonCustomPrefix_ReturnsFalse
+ * @tc.desc: Verify ValidateCustomPageSizeEntry rejects id without custom: prefix.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, ValidateCustomPageSizeEntry_NonCustomPrefix_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize item;
+    item.SetId("pgid-123");
+    item.SetName("Test(210x297mm)");
+    item.SetWidth(8268);
+    item.SetHeight(11693);
+    CustomPageSizeRange range{1000, 50000, 1000, 50000};
+    std::vector<PrintPageSize> supportedPageSizes;
+    std::set<std::string> usedIds;
+    EXPECT_FALSE(service->ValidateCustomPageSizeEntry(item, range, supportedPageSizes, usedIds));
+}
+
+/**
+ * @tc.name: ValidateCustomPageSizeEntry_ValidEntry_ReturnsTrue
+ * @tc.desc: Verify ValidateCustomPageSizeEntry accepts valid custom entry.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, ValidateCustomPageSizeEntry_ValidEntry_ReturnsTrue, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize item;
+    item.SetId("custom:123");
+    item.SetName("Test(210x297mm)");
+    item.SetWidth(8268);
+    item.SetHeight(11693);
+    CustomPageSizeRange range{1000, 50000, 1000, 50000};
+    std::vector<PrintPageSize> supportedPageSizes;
+    std::set<std::string> usedIds;
+    EXPECT_TRUE(service->ValidateCustomPageSizeEntry(item, range, supportedPageSizes, usedIds));
+}
+
+/**
+ * @tc.name: ValidateCustomPageSizeEntry_UserInputTooLong_ReturnsFalse
+ * @tc.desc: Verify ValidateCustomPageSizeEntry rejects name with user input exceeding 64 bytes.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, ValidateCustomPageSizeEntry_UserInputTooLong_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize item;
+    item.SetId("custom:123");
+    std::string longInput(65, 'a');
+    item.SetName(longInput + "(210x297mm)");
+    item.SetWidth(8268);
+    item.SetHeight(11693);
+    CustomPageSizeRange range{1000, 50000, 1000, 50000};
+    std::vector<PrintPageSize> supportedPageSizes;
+    std::set<std::string> usedIds;
+    EXPECT_FALSE(service->ValidateCustomPageSizeEntry(item, range, supportedPageSizes, usedIds));
+}
+
+/**
+ * @tc.name: ValidateCustomPageSizeEntry_DuplicateId_ReturnsFalse
+ * @tc.desc: Verify ValidateCustomPageSizeEntry rejects duplicate id.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, ValidateCustomPageSizeEntry_DuplicateId_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize item;
+    item.SetId("custom:123");
+    item.SetName("Test(210x297mm)");
+    item.SetWidth(8268);
+    item.SetHeight(11693);
+    CustomPageSizeRange range{1000, 50000, 1000, 50000};
+    std::vector<PrintPageSize> supportedPageSizes;
+    std::set<std::string> usedIds;
+    usedIds.insert("custom:123");
+    EXPECT_FALSE(service->ValidateCustomPageSizeEntry(item, range, supportedPageSizes, usedIds));
+}
+
+/**
+ * @tc.name: ValidateCustomPageSizeEntry_OutOfRange_ReturnsFalse
+ * @tc.desc: Verify ValidateCustomPageSizeEntry rejects width/height out of range.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, ValidateCustomPageSizeEntry_OutOfRange_ReturnsFalse, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize item;
+    item.SetId("custom:123");
+    item.SetName("Test(210x297mm)");
+    item.SetWidth(60000);
+    item.SetHeight(11693);
+    CustomPageSizeRange range{1000, 50000, 1000, 50000};
+    std::vector<PrintPageSize> supportedPageSizes;
+    std::set<std::string> usedIds;
+    EXPECT_FALSE(service->ValidateCustomPageSizeEntry(item, range, supportedPageSizes, usedIds));
+}
+
+/**
+ * @tc.name: GetCustomPageSizeRangeState_IncompleteRange_ReturnsAbsent
+ * @tc.desc: Verify GetCustomPageSizeRangeState treats a range object missing sub-keys as absent.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceAbilityTest, GetCustomPageSizeRangeState_IncompleteRange_ReturnsAbsent, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    Json::Value rangeJson;
+    rangeJson["minWidth"] = 3000;
+    rangeJson["maxWidth"] = 8503;   // minHeight / maxHeight intentionally missing
+    Json::Value optionJson;
+    optionJson["customPageSizeRange"] = rangeJson;
+    cap.SetOption(PrintJsonUtil::WriteString(optionJson));
+    printerInfo.SetCapability(cap);
+
+    CustomPageSizeRange range;
+    EXPECT_EQ(service->GetCustomPageSizeRangeState(printerInfo, range), CUSTOM_PAGE_SIZE_RANGE_ABSENT);
 }
 
 }  // namespace Print

@@ -15,10 +15,14 @@
 
 #include <vector>
 #include <string>
+#include <cstdint>
 
 #include "print_cups_attribute.h"
 #include "print_service_converter.h"
+#include "print_json_util.h"
 #include "print_log.h"
+#include "print_constant.h"
+#include "print_page_size.h"
 
 namespace OHOS::Print {
 template <typename T>
@@ -196,6 +200,72 @@ void ParsePageSizeAttributes(ipp_t *response, PrinterCapability &printerCaps)
     if (ParseAttributeToValue<std::string>(response, keyword, defaultPageSizeId, ConvertPageSizeId)) {
         printerCaps.SetPrinterAttrNameAndValue("defaultPageSizeId", defaultPageSizeId.c_str());
     }
+}
+
+namespace {
+constexpr uint32_t MAX_CUSTOM_PAGE_SIZE_EDGE_MILS = 200000;
+const char *const MEDIA_SUPPORTED_KEYWORD = "media-supported";
+
+bool IsValidCustomPageSizeRange(const CustomPageSizeRange &range)
+{
+    return range.minWidth > 0 && range.maxWidth > 0 && range.minHeight > 0 && range.maxHeight > 0 &&
+        range.minWidth <= range.maxWidth && range.minHeight <= range.maxHeight &&
+        range.maxWidth <= MAX_CUSTOM_PAGE_SIZE_EDGE_MILS && range.maxHeight <= MAX_CUSTOM_PAGE_SIZE_EDGE_MILS;
+}
+
+bool CollectCustomPageSizeRangeFromKeywords(ipp_t *response, CustomPageSizeRange &range)
+{
+    ipp_attribute_t *attrPtr = ippFindAttribute(response, MEDIA_SUPPORTED_KEYWORD, IPP_TAG_KEYWORD);
+    if (attrPtr == nullptr) {
+        return false;
+    }
+    bool hasMinBound = false;
+    bool hasMaxBound = false;
+    int num = ippGetCount(attrPtr);
+    for (int i = 0; i < num; i++) {
+        const char *mediaKeyword = ippGetString(attrPtr, i, nullptr);
+        if (mediaKeyword == nullptr) {
+            continue;
+        }
+        bool isMinBound = false;
+        uint32_t widthMils = 0;
+        uint32_t heightMils = 0;
+        if (!ConvertCustomPageSizeBound(mediaKeyword, isMinBound, widthMils, heightMils)) {
+            continue;
+        }
+        if (isMinBound) {
+            range.minWidth = widthMils;
+            range.minHeight = heightMils;
+            hasMinBound = true;
+        } else {
+            range.maxWidth = widthMils;
+            range.maxHeight = heightMils;
+            hasMaxBound = true;
+        }
+    }
+    return hasMinBound && hasMaxBound;
+}
+}  // namespace
+
+void ParseCustomPageSizeRangeFromIPP(ipp_t *response, Json::Value &options)
+{
+    if (response == nullptr) {
+        return;
+    }
+    CustomPageSizeRange range;
+    if (!CollectCustomPageSizeRangeFromKeywords(response, range) || !IsValidCustomPageSizeRange(range)) {
+        options[CUSTOM_PAGE_SIZE_RANGE_KEY] = Json::Value();
+        PRINT_HILOGI("custom page size is not supported by this printer");
+        return;
+    }
+    Json::Value rangeJson;
+    rangeJson[CUSTOM_PAGE_SIZE_MIN_WIDTH] = range.minWidth;
+    rangeJson[CUSTOM_PAGE_SIZE_MAX_WIDTH] = range.maxWidth;
+    rangeJson[CUSTOM_PAGE_SIZE_MIN_HEIGHT] = range.minHeight;
+    rangeJson[CUSTOM_PAGE_SIZE_MAX_HEIGHT] = range.maxHeight;
+    options[CUSTOM_PAGE_SIZE_RANGE_KEY] = rangeJson;
+    PRINT_HILOGI("custom page size range in mils: width [%{public}u, %{public}u], height [%{public}u, %{public}u]",
+        range.minWidth, range.maxWidth, range.minHeight, range.maxHeight);
 }
 
 void ParseQualityAttributes(ipp_t *response, PrinterCapability &printerCaps)
@@ -475,6 +545,8 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
 
     Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
     options["cupsOptions"] = cupsOptionsJson;
+
+    ParseCustomPageSizeRangeFromIPP(response, options);
 
     std::string optionStr = PrintJsonUtil::WriteString(options);
     PRINT_HILOGD("SetOption: %{public}s", optionStr.c_str());

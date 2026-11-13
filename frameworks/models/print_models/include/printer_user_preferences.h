@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include "json/json.h"
+#include "print_page_size.h"
 
 namespace OHOS::Print {
 
@@ -69,6 +70,15 @@ public:
     std::shared_ptr<CustomOption> GetCustomOption(const std::string &key) const;
     void RemoveCustomOption(const std::string &key);
     std::vector<std::string> GetAllCustomOptionKeys() const;
+
+    void SetCustomPageSizes(const std::vector<PrintPageSize> &list);
+    bool HasCustomPageSizes() const;
+    const std::vector<PrintPageSize> &GetCustomPageSizes() const;
+
+    void SetDefaultCustomPageSizeId(const std::string &id);
+    bool HasDefaultCustomPageSizeId() const;
+    const std::string &GetDefaultCustomPageSizeId() const;
+
     bool IsEmpty() const;
 
     Json::Value ConvertToJson() const;
@@ -77,11 +87,19 @@ public:
     void Dump() const;
 
 private:
+    void ParseCustomOptionsFromJson(const Json::Value &json);
+    void ParseCustomPageSizesFromJson(const Json::Value &json);
+    void ParseDefaultCustomPageSizeIdFromJson(const Json::Value &json);
+
     int32_t userId_ = 0;
     std::string printerId_ = "";
     bool hasVendorOptions_ = false;
     std::string vendorOptions_ = "";
     std::vector<CustomOption> customOptions_;
+    bool hasCustomPageSizes_ = false;
+    std::vector<PrintPageSize> customPageSizes_;
+    bool hasDefaultCustomPageSizeId_ = false;
+    std::string defaultCustomPageSizeId_ = "";
 };
 
 } // namespace OHOS::Print

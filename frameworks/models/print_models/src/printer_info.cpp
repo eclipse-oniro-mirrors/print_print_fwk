@@ -697,7 +697,7 @@ void PrinterInfo::Dump() const
         PRINT_HILOGD("printerUuid: %{private}s", printerUuid_.c_str());
     }
     if (hasOption_) {
-        PRINT_HILOGD("option: %{private}s", option_.c_str());
+        PRINT_HILOGD("option: %{private}s", PrintUtils::AnonymizePrinterOption(option_).c_str());
     }
     if (hasIsDefaultPrinter_) {
         PRINT_HILOGD("isDefaultPrinter: %{public}d", isDefaultPrinter_);

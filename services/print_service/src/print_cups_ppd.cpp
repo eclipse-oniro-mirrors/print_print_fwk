@@ -20,6 +20,8 @@
 #include "print_utils.h"
 #include "print_cups_client.h"
 #include <set>
+#include <cmath>
+#include <cstdint>
 
 namespace OHOS::Print {
 using namespace std;
@@ -514,6 +516,49 @@ void ParseQualityAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
 }
 
+void ParseCustomPageSizeFromPpd(ppd_file_t *ppd, Json::Value &options)
+{
+    if (ppd == nullptr || ppd->cache == nullptr) {
+        PRINT_HILOGE("ppd or cache is nullptr");
+        return;
+    }
+    ppdMarkDefaults(ppd);
+    ppd_size_t minSize;
+    ppd_size_t maxSize;
+
+    if (ppdPageSizeLimits(ppd, &minSize, &maxSize)) {
+        constexpr double POINT_PER_INCH = 72.0;
+        double minW = round(minSize.width * ONE_THOUSAND_INCH / POINT_PER_INCH);
+        double maxW = round(maxSize.width * ONE_THOUSAND_INCH / POINT_PER_INCH);
+        double minH = round(minSize.length * ONE_THOUSAND_INCH / POINT_PER_INCH);
+        double maxH = round(maxSize.length * ONE_THOUSAND_INCH / POINT_PER_INCH);
+        if (!isfinite(minW) || minW < 0 || minW > UINT32_MAX ||
+            !isfinite(maxW) || maxW < 0 || maxW > UINT32_MAX ||
+            !isfinite(minH) || minH < 0 || minH > UINT32_MAX ||
+            !isfinite(maxH) || maxH < 0 || maxH > UINT32_MAX) {
+            PRINT_HILOGE("invalid ppd page size limits, skip customPageSizeRange");
+            options["customPageSizeRange"] = Json::Value();
+            return;
+        }
+        uint32_t minWidth = static_cast<uint32_t>(minW);
+        uint32_t maxWidth = static_cast<uint32_t>(maxW);
+        uint32_t minHeight = static_cast<uint32_t>(minH);
+        uint32_t maxHeight = static_cast<uint32_t>(maxH);
+        Json::Value rangeJson;
+        rangeJson["minWidth"] = minWidth;
+        rangeJson["maxWidth"] = maxWidth;
+        rangeJson["minHeight"] = minHeight;
+        rangeJson["maxHeight"] = maxHeight;
+        options["customPageSizeRange"] = rangeJson;
+        PRINT_HILOGI("customPageSizeRange: minWidth=%{public}u, maxWidth=%{public}u, "
+            "minHeight=%{public}u, maxHeight=%{public}u",
+            minWidth, maxWidth, minHeight, maxHeight);
+    } else {
+        options["customPageSizeRange"] = Json::Value();
+        PRINT_HILOGI("customPageSizeRange: not supported (probed)");
+    }
+}
+
 void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     Json::Value options;
@@ -543,7 +588,7 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     }
 
     options["cupsOptions"] = printerCaps.GetPrinterAttrGroupJson();
-
+    ParseCustomPageSizeFromPpd(ppd, options);
     std::string optionStr = PrintJsonUtil::WriteString(options);
     PRINT_HILOGD("SetOption: %{public}s", optionStr.c_str());
     printerCaps.SetOption(optionStr);
@@ -785,13 +830,18 @@ int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type,
     std::string optName;
     std::string choiceName;
     ConvertOptionAndChoiceNameToPpd(ppd, type, val, optName, choiceName);
+    PRINT_HILOGI("CheckPpdConflicts: type=%{public}s, val=%{public}s, optName=%{public}s, choiceName=%{public}s",
+        type.c_str(), val.c_str(), optName.c_str(), choiceName.c_str());
 
     cups_option_t *conflictOptions = nullptr;
     int32_t conflictsNum = cupsGetConflicts(ppd, optName.c_str(), choiceName.c_str(), &conflictOptions);
+    PRINT_HILOGI("cupsGetConflicts returned %{public}d conflicts", conflictsNum);
     for (int32_t idx = 0; idx < conflictsNum; ++idx) {
         if (optName == conflictOptions[idx].name) {
             continue;
         }
+        PRINT_HILOGI("conflict[%{public}d]: option=%{public}s, choice=%{public}s",
+            idx, conflictOptions[idx].name, conflictOptions[idx].value);
 
         auto it = MAP_CUPS_OPTNAME_TO_TYPE.find(conflictOptions[idx].name);
         if (it != MAP_CUPS_OPTNAME_TO_TYPE.end()) {

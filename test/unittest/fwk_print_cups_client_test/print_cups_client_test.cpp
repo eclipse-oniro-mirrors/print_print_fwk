@@ -1610,6 +1610,34 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0069_NeedRename, TestSize.Leve
 }
 
 /**
+ * @tc.name: GetMedieSize_CustomPageSizeId_ReturnsCupsFormat
+ * @tc.desc: Verify GetMedieSize returns Custom.WxHmm format for custom page size id
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, GetMedieSize_CustomPageSizeId_ReturnsCupsFormat, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    testJob.SetColorMode(1);
+    testJob.SetCopyNumber(1);
+    testJob.SetDuplexMode(0);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("custom:abc");
+    pageSize.SetName("MyForm(210x297mm)");
+    pageSize.SetWidth(8268);
+    pageSize.SetHeight(11693);
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    std::string pageSizeName = printCupsClient.GetMedieSize(testJob);
+    EXPECT_EQ("Custom.210x297mm", pageSizeName);
+}
+
+/**
  * @tc.name: PrintCupsClientTest_0070
  * @tc.desc: GetDulpexString
  * @tc.type: FUNC
@@ -2528,7 +2556,9 @@ HWTEST_F(PrintCupsClientTest, CheckPreferencesConflicts_InvalidPpdName_Test, Tes
     std::string ppdName = "test_ppdName";
     std::vector<std::string> conflictTypes;
 
-    int32_t ret = printCupsClient.CheckPreferencesConflicts(ppdName, preferences, "", conflictTypes);
+    std::vector<PrintPageSize> customPageSizeList;
+    int32_t ret = printCupsClient.CheckPreferencesConflicts(ppdName, preferences,
+        customPageSizeList, "", conflictTypes);
     EXPECT_EQ(ret, E_PRINT_FILE_IO);
     EXPECT_TRUE(conflictTypes.empty());
 }
@@ -2554,43 +2584,44 @@ HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPreferences_Test, TestSize.
 {
     PrintCupsClient printCupsClient;
     PrinterPreferences preferences;
+    std::vector<PrintPageSize> customPageSizeList;
     std::map<std::string, std::string> mapParams;
 
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.empty());
 
     preferences.SetDefaultPageSizeId(PAGE_SIZE_ID_ISO_A4);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_PAGE_SIZE) != mapParams.end());
 
     preferences.SetDefaultDuplexMode(DUPLEX_MODE_NONE);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_DUPLEX_MODE) != mapParams.end());
 
     preferences.SetDefaultPrintQuality(PRINT_QUALITY_NORMAL);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_QUALITY) != mapParams.end());
 
     preferences.SetDefaultColorMode(PRINT_COLOR_MODE_MONOCHROME);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_COLOR_MODE) != mapParams.end());
 
     preferences.SetDefaultMediaType(CUPS_MEDIA_TYPE_PLAIN);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_MEDIA_TYPE) != mapParams.end());
 
     preferences.SetDefaultCollate(true);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_DELIVERY_ORDER) != mapParams.end());
 
     mapParams.clear();
     preferences.Reset();
     preferences.SetOption("");
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_TRUE(mapParams.empty());
 
     preferences.SetOption(JOB_OPTIONS);
-    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
     EXPECT_FALSE(mapParams.empty());
 }
 
@@ -2602,6 +2633,66 @@ HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPrintJob_Test, TestSize.Lev
     std::map<std::string, std::string> mapParams;
     printCupsClient.BuildCupsOptionParamsByPrintJob(jobInfo, jobParams, mapParams);
     EXPECT_FALSE(mapParams.empty());
+}
+
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPreferences_CustomPageSizeId_UsesNameFromList, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrinterPreferences preferences;
+    const std::string customId = CUSTOM_PAGE_SIZE_ID_PREFIX + "myform";
+    const std::string customName = "MyCustomForm(210x297mm)";
+    std::vector<PrintPageSize> customPageSizeList;
+    PrintPageSize customItem;
+    customItem.SetId(customId);
+    customItem.SetName(customName);
+    customItem.SetWidth(8268);
+    customItem.SetHeight(11693);
+    customPageSizeList.push_back(customItem);
+
+    preferences.SetDefaultPageSizeId(customId);
+    std::map<std::string, std::string> mapParams;
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
+    auto iter = mapParams.find(PRINT_PARAM_TYPE_PAGE_SIZE);
+    EXPECT_TRUE(iter != mapParams.end());
+    EXPECT_EQ(iter->second, std::string("Custom.210x297mm"));
+}
+
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPreferences_CustomPageSizeIdNotInList_SkipsPageSize,
+    TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrinterPreferences preferences;
+    const std::string customId = CUSTOM_PAGE_SIZE_ID_PREFIX + "missing";
+    std::vector<PrintPageSize> customPageSizeList;
+    PrintPageSize unrelatedItem;
+    unrelatedItem.SetId(CUSTOM_PAGE_SIZE_ID_PREFIX + "other");
+    unrelatedItem.SetName("OtherForm");
+    customPageSizeList.push_back(unrelatedItem);
+
+    preferences.SetDefaultPageSizeId(customId);
+    std::map<std::string, std::string> mapParams;
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, customPageSizeList, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_PAGE_SIZE) == mapParams.end());
+}
+
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPrintJob_CustomPageSizeId_UsesName, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    const std::string customId = CUSTOM_PAGE_SIZE_ID_PREFIX + "jobform";
+    const std::string customName = "JobCustomForm(210x297mm)";
+    PrintPageSize pageSize;
+    pageSize.SetId(customId);
+    pageSize.SetName(customName);
+    pageSize.SetWidth(8268);
+    pageSize.SetHeight(11693);
+    jobInfo.SetPageSize(pageSize);
+    JobParameters jobParams;
+    std::map<std::string, std::string> mapParams;
+    printCupsClient.BuildCupsOptionParamsByPrintJob(jobInfo, jobParams, mapParams);
+    auto iter = mapParams.find(PRINT_PARAM_TYPE_PAGE_SIZE);
+    EXPECT_TRUE(iter != mapParams.end());
+    EXPECT_EQ(iter->second, std::string("Custom.210x297mm"));
 }
 
 HWTEST_F(PrintCupsClientTest, CheckOptionConflicts_Test, TestSize.Level1)

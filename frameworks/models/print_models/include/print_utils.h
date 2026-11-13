@@ -99,6 +99,7 @@ public:
     static std::string AnonymizePrinterName(const std::string &printerName);
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
+    static std::string AnonymizePrinterOption(const std::string &option);
     static void AnonymizeAdvancedOptions(Json::Value &advancedOptions);
     static std::string AnonymizeString(const std::string &value);
     static void AnonymizeAlias(Json::Value &optionJson);
