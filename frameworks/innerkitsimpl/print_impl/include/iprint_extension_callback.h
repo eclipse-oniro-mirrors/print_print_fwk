@@ -28,14 +28,12 @@ public:
     virtual bool OnCallback() = 0;
     virtual bool OnCallback(const std::string &printerId) = 0;
     virtual bool OnCallback(const PrintJob &job) = 0;
-    virtual bool OnCallback(const std::string &printerId, PrinterCapability &cap) = 0;
 };
 
 enum {
     PRINT_EXTCB,
     PRINT_EXTCB_PRINTER,
     PRINT_EXTCB_PRINTJOB,
-    PRINT_EXTCB_PRINTCAPABILITY,
 };
 
 enum {

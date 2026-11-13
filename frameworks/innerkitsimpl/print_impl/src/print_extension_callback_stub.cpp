@@ -26,7 +26,6 @@ PrintExtensionCallbackStub::PrintExtensionCallbackStub() : extCb_(nullptr), jobC
     cmdMap_[PRINT_EXTCB] = &PrintExtensionCallbackStub::HandleExtCallback;
     cmdMap_[PRINT_EXTCB_PRINTER] = &PrintExtensionCallbackStub::HandlePrinterCallback;
     cmdMap_[PRINT_EXTCB_PRINTJOB] = &PrintExtensionCallbackStub::HandlePrintJobCallback;
-    cmdMap_[PRINT_EXTCB_PRINTCAPABILITY] = &PrintExtensionCallbackStub::HandleCapabilityCallback;
 }
 
 int32_t PrintExtensionCallbackStub::OnRemoteRequest(
@@ -90,21 +89,6 @@ bool PrintExtensionCallbackStub::OnCallback(const PrintJob &job)
     return false;
 }
 
-bool PrintExtensionCallbackStub::OnCallback(const std::string &printerId, PrinterCapability &cap)
-{
-    PrinterCapabilityCallback localCb = nullptr;
-    {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
-        localCb = capability_;
-    }
-    if (localCb != nullptr) {
-        if (localCb(printerId, cap)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 void PrintExtensionCallbackStub::SetExtCallback(PrintExtCallback cb)
 {
     std::lock_guard<std::mutex> lock(callbackMutex_);
@@ -159,15 +143,4 @@ bool PrintExtensionCallbackStub::HandlePrintJobCallback(MessageParcel &data, Mes
     return result;
 }
 
-bool PrintExtensionCallbackStub::HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply)
-{
-    std::string printerId;
-    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
-    PrinterCapability cap;
-    bool result = OnCallback(printerId, cap);
-    PRINT_HILOGI("Handle Printer Capability Extension Callback ret[%{public}d]", result);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteBool(result), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(cap.Marshalling(reply), false);
-    return result;
-}
 } // namespace OHOS::Print

@@ -41,7 +41,6 @@ public:
     bool OnCallback() override;
     bool OnCallback(const std::string &printerId) override;
     bool OnCallback(const PrintJob &job) override;
-    bool OnCallback(const std::string &printerId, PrinterCapability &cap) override;
 
     void SetExtCallback(PrintExtCallback cb);
     void SetPrintJobCallback(PrintJobCallback cb);
@@ -52,7 +51,6 @@ private:
     bool HandleExtCallback(MessageParcel &data, MessageParcel &reply);
     bool HandlePrinterCallback(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintJobCallback(MessageParcel &data, MessageParcel &reply);
-    bool HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply);
     void dataReadJob(MessageParcel &data, PrintJob &job);
 
 private:

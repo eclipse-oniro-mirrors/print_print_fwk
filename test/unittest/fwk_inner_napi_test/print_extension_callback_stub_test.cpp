@@ -209,51 +209,5 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0008, Te
     callback.SetPrinterCallback(printerCb);
     EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
-
-/**
- * @tc.name: PrintExtensionCallbackStubTest_0009
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0009, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(PRINT_EXTCB_PRINTCAPABILITY);
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
-    PrintExtensionCallbackStub callback;
-    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: PrintExtensionCallbackStubTest_0010
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0010, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(PRINT_EXTCB_PRINTCAPABILITY);
-    std::string testPrinterId = "printerId:1234";
-    PrinterCapability testCap;
-    testCap.SetColorMode(10);
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteString(testPrinterId));
-    EXPECT_TRUE(testCap.Marshalling(data));
-
-    PrintExtensionCallbackStub callback;
-    PrinterCapabilityCallback testCb = [](const std::string &, PrinterCapability &) -> bool { return true; };
-    callback.SetCapabilityCallback(testCb);
-    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
-    auto result = PrinterCapability::Unmarshalling(reply);
-    EXPECT_NE(result, nullptr);
-}
 }  // namespace Print
 }  // namespace OHOS
