@@ -85,6 +85,12 @@ struct JobStatus {
     ipp_jstate_t job_state;
     char job_state_reasons[1024];
 };
+struct JobStateData {
+    ipp_jstate_t jobState = IPP_JOB_PENDING;
+    std::string jobStateReasons;
+    std::string jobPrinterStateReasons;
+    std::string jobPrinterStateMessage;
+};
 struct JobMonitorParam {
     PrintServiceAbility *serviceAbility = nullptr;
     std::string serviceJobId;
