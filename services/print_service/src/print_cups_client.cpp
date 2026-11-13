@@ -2600,7 +2600,8 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
 
 bool PrintCupsClient::IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorParam> &monitorParams)
 {
-    if (monitorParams == nullptr || IsIpAddress(monitorParams->printerName.c_str())) {
+    PRINT_CHECK_NULL_AND_RETURN(monitorParams, false);
+    if (IsIpAddress(monitorParams->printerName.c_str())) {
         return false;
     }
     if (!PrintUtil::startsWith(monitorParams->printerId,
@@ -2614,9 +2615,7 @@ bool PrintCupsClient::IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorP
 
 bool PrintCupsClient::ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
 {
-    if (monitorParams == nullptr) {
-        return false;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(monitorParams, false);
     const std::string &printerId = monitorParams->printerId;
 #ifdef HAVE_SMB_PRINTER
     if (PrintUtil::startsWith(printerId, "smb")) {
