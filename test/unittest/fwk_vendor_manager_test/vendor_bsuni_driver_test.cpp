@@ -19,9 +19,6 @@
 #include "vendor_bsuni_driver.h"
 #undef private
 #undef protected
-#define private public
-#include "print_service_ability.h"
-#undef private
 #include "print_constant.h"
 #include "print_log.h"
 #include "mock/mock_bsuni_driver.h"
@@ -461,7 +458,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0013, TestSize.Level2)
     BuildDefaultValue(defaultValue);
     Print_PropertyList propertyList = {0};
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
         EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
@@ -831,50 +828,17 @@ HWTEST_F(VendorBsuniDriverTest, OnQueryCapabilityByIp_InvalidIpv6_ShouldNotCallE
     DoMockTest(testFunc);
 }
 
-HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_AddedLanPrinterSkipped, TestSize.Level1)
+HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_AllBsuniDiscoveredPrintersSkipped, TestSize.Level1)
 {
+    // opQueue 未启动：若移除操作仍会入队将返回 CALLBACK_FAIL，返回 NONE 即证明被直接拦截
     VendorBsuniDriver vendorDriver;
     VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
-    std::string localPrinterId = "mdns_added_lan_printer";
-    std::string originId = vendorDriver.GetGlobalPrinterId(localPrinterId);
-    std::string addedPrinterId = VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER + "uuid-added";
-    auto service = PrintServiceAbility::GetInstance();
-    ASSERT_NE(service, nullptr);
-    auto printer = std::make_shared<PrinterInfo>();
-    printer->SetPrinterId(addedPrinterId);
-    printer->SetOriginId(originId);
-    printer->SetPrinterName("HP LaserJet");
-    PrintDataRepository::GetInstance().InsertAddedPrinter(addedPrinterId, printer);
-
-    EXPECT_TRUE(vendorDriver.ShouldSkipPrinterRemoval(localPrinterId));
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(localPrinterId.c_str()), EXTENSION_ERROR_NONE);
-
-    PrintDataRepository::GetInstance().DeleteAddedPrinter(addedPrinterId, addedPrinterId);
-    VendorBsuniDriver::SetDriverWrapper(nullptr);
-}
-
-HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_UnaddedNotSkippedAndIpAddedSkipped, TestSize.Level1)
-{
-    VendorBsuniDriver vendorDriver;
-    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
-    auto service = PrintServiceAbility::GetInstance();
-    ASSERT_NE(service, nullptr);
-    std::string unaddedId = "mdns_unadded_lan_printer";
-    EXPECT_FALSE(vendorDriver.ShouldSkipPrinterRemoval(unaddedId));
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(unaddedId.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
-
+    std::string mdnsPrinterId = "mdns_discovered_printer";
+    std::string unaddedMdnsPrinterId = "mdns_unadded_printer";
     std::string ipPrinterId = "192.168.55.66";
-    std::string originId = vendorDriver.GetGlobalPrinterId(ipPrinterId);
-    std::string addedPrinterId = VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER + "uuid-ip";
-    auto printer = std::make_shared<PrinterInfo>();
-    printer->SetPrinterId(addedPrinterId);
-    printer->SetOriginId(originId);
-    printer->SetPrinterName(ipPrinterId);
-    PrintDataRepository::GetInstance().InsertAddedPrinter(addedPrinterId, printer);
-    EXPECT_TRUE(vendorDriver.ShouldSkipPrinterRemoval(ipPrinterId));
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(mdnsPrinterId.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(unaddedMdnsPrinterId.c_str()), EXTENSION_ERROR_NONE);
     EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(ipPrinterId.c_str()), EXTENSION_ERROR_NONE);
-
-    PrintDataRepository::GetInstance().DeleteAddedPrinter(addedPrinterId, addedPrinterId);
     VendorBsuniDriver::SetDriverWrapper(nullptr);
 }
 
