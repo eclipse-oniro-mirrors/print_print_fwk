@@ -27,11 +27,11 @@
 using namespace testing;
 using namespace testing::ext;
 
-// externs for library-internal composition helpers used by guards
-void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
-
 namespace OHOS {
 namespace Print {
+
+// externs for library-internal composition helpers used by guards
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 
 // Forward declaration: ConvertOptionAndChoiceNameToPpd is defined in print_cups_ppd.cpp
 // but not declared in the header. Declared here for direct unit testing.
