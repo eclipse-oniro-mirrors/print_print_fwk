@@ -56,6 +56,14 @@ protected:
         }
     }
 
+    Json::Value QueryOk(const std::string &ppdPath, const std::string &lang)
+    {
+        std::string resultJson;
+        EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, lang, resultJson), E_PRINT_NONE);
+        Json::Value root;
+        EXPECT_TRUE(PrintJsonUtil::Parse(resultJson, root));
+        return root;
+    }
 
     // PPD with all standard print options for testing option marking and lookup
     std::string CreatePpdWithAllOptions()
@@ -684,7 +692,7 @@ static const std::string K_LANG_PPD_CONTENT =
     "*NickName: \"Test Printer\"\n"
     "*ColorDevice: True\n"
     "*DefaultColor: Color\n"
-    "*cupsLanguages: \"en zh_CN fr\"\n"
+    "*cupsLanguages: \"en zh_CN fr de\"\n"
     "*OpenUI PageSize: PickOne\n"
     "*OrderDependency: 10 AnySetup PageSize\n"
     "*DefaultPageSize: A4\n"
@@ -699,6 +707,7 @@ static const std::string K_LANG_PPD_CONTENT =
     "*MediaType Plain/Plain Paper: \"<<MediaType(Plain)>>setpagedevice\"\n"
     "*MediaType Photo/Photo Paper: \"<<MediaType(Photo)>>setpagedevice\"\n"
     "*zh_CN.MediaType Plain/\u666e\u901a\u7eb8: \"<<MediaType(Plain)>>setpagedevice\"\n"
+    "*de.MediaType Plain/Ordinary Paper: \"<<MediaType(Plain)>>setpagedevice\"\n"
     "*CloseUI: MediaType\n"
     "*OpenUI ColorModel: PickOne\n"
     "*OrderDependency: 20 AnySetup ColorModel\n"
@@ -707,6 +716,25 @@ static const std::string K_LANG_PPD_CONTENT =
     "*zh_CN.ColorModel RGB/\u5f69\u8272: \"<<cupsColorModel 1>>setpagedevice\"\n"
     "*zh_CN.Translation ColorModel/CNOptionText: \"\"\n"
     "*CloseUI: ColorModel\n"
+    "*OpenUI Finishing: PickOne\n"
+    "*OrderDependency: 30 AnySetup Finishing\n"
+    "*DefaultFinishing: None\n"
+    "*Finishing None/Off: \"\"\n"
+    "*Finishing TwoSidedLongEdge/Two-Sided, Long-Edge: \"\"\n"
+    "*zh_CN.Finishing None/关闭: \"\"\n"
+    "*zh_CN.Translation Finishing/完成方式: \"\"\n"
+    "*CloseUI: Finishing\n"
+    "*OpenUI TestSheets: PickMany\n"
+    "*DefaultTestSheets: None\n"
+    "*TestSheets None/None: \"\"\n"
+    "*CloseUI: TestSheets\n"
+    "*OpenUI StockType: PickOne\n"
+    "*DefaultStockType: Plain\n"
+    "*StockType Plain/Plain: \"\"\n"
+    "*StockType Custom/Custom: \"\"\n"
+    "*CloseUI: StockType\n"
+    "*CustomStockType True:\n"
+    "*ParamCustomStockType Remark/Remark: \"1 string 1 40\"\n"
     "*OpenUI Collate: PickMany\n"
     "*OrderDependency: 30 AnySetup Collate\n"
     "*Collate True/Collated: \"<<Collated True>>setpagedevice\"\n"
@@ -727,10 +755,124 @@ void RemoveLangPpd(const std::string &path) { unlink(path.c_str()); }
 
 }
 
+// ===== T16: GetLocalizedStringsFromPpd tests =====
+// Pre-populated channel snapshot of advanceOptions, same preambles as production
+static Json::Value SnapshotAdvanceOptions(const std::string &ppdPath)
+{
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    EXPECT_NE(ppd, nullptr);
+    Json::Value adv;
+    if (ppd == nullptr) {
+        return adv;
+    }
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    PrinterCapability printerCaps;
+    GetAdvanceOptionsFromPPD(ppd, printerCaps);
+    // attr 组经 SetPrinterAttrNameAndValue 仅并入 GetOption 组装，须走一次
+    // ParsePrinterAttributesFromPPD（其内部 SetOption）方能从 GetOption 读回
+    ParsePrinterAttributesFromPPD(ppd, printerCaps);
+    ppdClose(ppd);
+    Json::Value optionJson;
+    EXPECT_TRUE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
+    const Json::Value &raw = optionJson["cupsOptions"]["advanceOptions"];
+    if (raw.isString()) {
+        EXPECT_TRUE(PrintJsonUtil::Parse(raw.asString(), adv));
+    } else {
+        adv = raw;
+    }
+    return adv;
+}
 
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_ZhQueryContract, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    // 内容集镜像预入：非 base 仅剩 Finishing/StockType，PickMany 缺席
+    ASSERT_EQ(root["advanceOptions"].size(), 2u);
+    const Json::Value &fin = root["advanceOptions"][0];
+    EXPECT_EQ(fin["keyword"].asString(), "Finishing");
+    EXPECT_TRUE(fin.isMember("uiType"));
+    EXPECT_EQ(fin["choice"]["zh_CN"]["None"].asString(), "关闭");
+    EXPECT_EQ(fin["choice"]["zh_CN"].size(), fin["choice"]["default"].size());
+    EXPECT_EQ(fin["optionText"]["zh_CN"].asString(), "完成方式");
+    EXPECT_EQ(root["advanceOptions"][1]["keyword"].asString(), "StockType");
+    EXPECT_EQ(PrintJsonUtil::WriteString(root).find("TestSheets"), std::string::npos);
+    // media 两 map 语言层恒写（D1）
+    for (const char *mapName : {"mediaSizeMap", "mediaTypeMap"}) {
+        ASSERT_TRUE(root.isMember(mapName));
+        for (const auto &key : root[mapName].getMemberNames()) {
+            EXPECT_TRUE(root[mapName][key].isMember("default"));
+            EXPECT_TRUE(root[mapName][key].isMember("zh_CN"));
+        }
+    }
+    // phone 形态：无 textMap，base 维度不进查询
+    EXPECT_FALSE(root.isMember("ppdOptionTextMap"));
+    EXPECT_EQ(PrintJsonUtil::WriteString(root).find("ColorModel"), std::string::npos);
+    RemoveLangPpd(ppdPath);
+}
 
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_ZhEqualsCapabilitySnapshot, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    Json::Value capAdv = SnapshotAdvanceOptions(ppdPath);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    // 语言无关不变式：条目集与 default 层两通道严格相等。zh 层**值**依赖进程
+    // locale（快照走 DEFAULT 本地化视图、查询走 ALL），环境不可比——只断言
+    // **形状**（恒写、与 default 等长）；zh 层的值一致性由 ZhQueryContract 覆盖。
+    ASSERT_EQ(capAdv.size(), root["advanceOptions"].size());
+    for (Json::ArrayIndex i = 0; i < capAdv.size(); i++) {
+        const Json::Value &c = capAdv[i];
+        const Json::Value &q = root["advanceOptions"][i];
+        EXPECT_EQ(c["keyword"], q["keyword"]);
+        EXPECT_EQ(c["uiType"], q["uiType"]);
+        EXPECT_EQ(c["choice"]["default"], q["choice"]["default"]);
+        EXPECT_EQ(c["optionText"]["default"], q["optionText"]["default"]);
+        EXPECT_EQ(c["choice"]["zh_CN"].size(), c["choice"]["default"].size());
+        EXPECT_EQ(q["choice"]["zh_CN"].size(), q["choice"]["default"].size());
+    }
+    RemoveLangPpd(ppdPath);
+}
 
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_AdvanceOptionMaxLenMatchesCapability, TestSize.Level1)
+{
+    if (setlocale(LC_ALL, "zh_CN.UTF-8") == nullptr) {
+        GTEST_SKIP() << "zh_CN.UTF-8 locale unavailable";
+    }
+    std::string content = "*PPD-Adobe: \"4.3\"\n*cupsLanguages: \"en zh_CN\"\n";
+    for (int i = 0; i < 105; i++) {
+        const std::string name = "Opt" + std::to_string(i);
+        content += "*OpenUI " + name + ": PickOne\n*Default" + name + ": A\n*" +
+            name + " A/Alpha: \"\"\n*CloseUI: " + name + "\n";
+    }
+    content += "*zh_CN.Opt0 A/\u7532: \"\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    const unsigned int expected = static_cast<unsigned int>(ADVANCE_OPTION_MAXLENGTH) + 1u;
+    EXPECT_EQ(SnapshotAdvanceOptions(ppdPath).size(), expected);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    EXPECT_EQ(root["advanceOptions"].size(), expected);
+    RemoveTempFile(ppdPath);
+}
 
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_PartialTranslationFallback, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    Json::Value root = QueryOk(ppdPath, "de");
+    const Json::Value &map = root["mediaTypeMap"];
+    ASSERT_GT(map.size(), 0u);
+    bool hasRealTranslation = false;
+    for (const auto &key : map.getMemberNames()) {
+        const Json::Value &entry = map[key];
+        EXPECT_TRUE(entry.isMember("default"));
+        EXPECT_TRUE(entry.isMember("de"));
+        if (entry["de"] != entry["default"]) {
+            hasRealTranslation = true;
+        }
+    }
+    EXPECT_TRUE(hasRealTranslation);   // 命中项为真译文，其余回填 default
+    EXPECT_EQ(root["advanceOptions"][0]["choice"]["de"].size(),
+        root["advanceOptions"][0]["choice"]["default"].size());
+    RemoveLangPpd(ppdPath);
+}
 
 HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_Fr_NoTranslation, TestSize.Level1)
 {
@@ -793,7 +935,7 @@ HWTEST_F(PrintCupsPpdTest, PpdAvailableLanguages_AtOptionLevel, TestSize.Level1)
     ASSERT_TRUE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
     EXPECT_TRUE(optionJson.isMember("ppdAvailableLanguages"));
     EXPECT_TRUE(optionJson["ppdAvailableLanguages"].isArray());
-    EXPECT_EQ(optionJson["ppdAvailableLanguages"].size(), 3u);
+    EXPECT_EQ(optionJson["ppdAvailableLanguages"].size(), 4u);
     // 旧位置不再承载该键（cupsOptions 属性组）
     RemoveLangPpd(ppdPath);
 }
@@ -855,7 +997,54 @@ HWTEST_F(PrintCupsPpdTest, BuildPpdAvailableLanguages_InvalidSkippedDeduped, Tes
     RemoveTempFile(ppdPath);
 }
 
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_OversizeResult_ReturnedInFull, TestSize.Level1)
+{
+    // cups 对超限字段直接判整份 PPD 不可解析（PPD_MAX_NAME=41 / PPD_MAX_TEXT=81，
+    // 超限即 _ppdOpenFile 返回 NULL），故大结果只能靠条数堆叠，字段取上限内最长
+    const std::string name(PPD_MAX_NAME - 1, 'a');   // 40 chars
+    const std::string text(PPD_MAX_TEXT - 1, 'b');   // 80 chars
+    std::string content = std::string("*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n"
+        "*ModelName: \"T\"\n*NickName: \"T\"\n*cupsLanguages: \"en zh_CN\"\n"
+        "*OpenUI MediaType: PickOne\n*OrderDependency: 50 AnySetup MediaType\n"
+        "*DefaultMediaType: Plain\n"
+        "*MediaType Plain/Plain Paper: \"x\"\n"
+        "*zh_CN.MediaType Plain/CNHit: \"x\"\n*CloseUI: MediaType\n");
+    for (int o = 0; o < 100; o++) {
+        char buf[8];
+        snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%02d", o);
+        std::string kw = std::string("Opt") + buf;
+        content += "*OpenUI " + kw + ": PickOne\n*OrderDependency: 10 AnySetup " + kw +
+            "\n*Default" + kw + ": c0\n";
+        for (int c = 0; c < 5; c++) {
+            char cb[8];
+            snprintf_s(cb, sizeof(cb), sizeof(cb) - 1, "c%d", c);
+            content += "*" + kw + " " + cb + "/" + name + ": \"" + text + "\"\n";
+        }
+        content += "*CloseUI: " + kw + "\n";
+    }
+    std::string ppdPath = CreateTempPpdFile(content);
+    std::string resultJson;
+    int32_t ret = GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NONE);   // no 100KB business cap: full result returned
+    EXPECT_GT(resultJson.size(), 60u * 1024u);  // ~100 options x 5 choices x dual layers ~= 90KB
+    RemoveTempFile(ppdPath);
+}
 
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_HasNoOptionTextMapKey, TestSize.Level1)
+{
+    // phone 形态镜像本树 capability（无 adapter/无 textMap 通道）：查询返回不含该键
+    std::string ppdPath = CreatePpdWithLanguages();
+    std::string resultJson;
+    int32_t ret = GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    Json::Value root;
+    ASSERT_TRUE(PrintJsonUtil::Parse(resultJson, root));
+    EXPECT_FALSE(root.isMember("ppdOptionTextMap"));
+    EXPECT_TRUE(root.isMember("advanceOptions"));
+    EXPECT_TRUE(root.isMember("mediaSizeMap"));
+    RemoveLangPpd(ppdPath);
+}
 
 HWTEST_F(PrintCupsPpdTest, QueryPpdAvailableLanguagesFromFile_EmptyAndOpenFail, TestSize.Level1)
 {

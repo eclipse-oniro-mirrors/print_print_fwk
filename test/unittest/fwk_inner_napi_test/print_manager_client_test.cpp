@@ -3003,6 +3003,17 @@ HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, GetPrinterLocalizedStrings_ServerNotReady, TestSize.Level1)
+{
+    std::string resultJson;
+    PrintManagerClient::GetInstance().LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance().GetPrinterLocalizedStrings(
+        "test", "zh_CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_TRUE(resultJson.empty());
+    PrintManagerClient::GetInstance().LoadServerSuccess();
+}
+
 HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_LoadServerFailed, TestSize.Level1)
 {
     std::string printerId = "testId";
@@ -3317,6 +3328,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0167_SetWantParam, TestS
     EXPECT_EQ(want.GetStringParam("jobId"), taskId);
     EXPECT_NE(want.GetIntParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, 0), 0);
 }
+
 
 }  // namespace Print
 }  // namespace OHOS
