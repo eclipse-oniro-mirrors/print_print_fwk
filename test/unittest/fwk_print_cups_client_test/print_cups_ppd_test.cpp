@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <clocale>
 #include <cups/ppd.h>
 #include <cups/ppd-private.h>
 #include <cups/cups.h>
@@ -50,6 +51,7 @@ protected:
             unlink(path.c_str());
         }
     }
+
 
     std::string CreatePpdWithVendorAbility(
         const std::string &prefAbility,
@@ -950,6 +952,217 @@ HWTEST_F(PrintCupsPpdTest, FillBasicOptions_EmptyPpdOptionMap_UsesPwgFallback, T
         cupsFreeOptions(num_options, options);
     }
 }
+
+// ===== T16: NormalizePpdLanguage tests =====
+HWTEST_F(PrintCupsPpdTest, NormalizePpdLanguage_BCP47_ToUnderscore, TestSize.Level1)
+{
+    std::string out;
+    EXPECT_TRUE(NormalizePpdLanguage("zh_CN", out));
+    EXPECT_EQ(out, "zh_CN");
+    EXPECT_TRUE(NormalizePpdLanguage("zh-Hans-CN", out));
+    EXPECT_EQ(out, "zh_CN");
+    EXPECT_TRUE(NormalizePpdLanguage("en-US", out));
+    EXPECT_EQ(out, "en_US");
+    EXPECT_TRUE(NormalizePpdLanguage("fr", out));
+    EXPECT_EQ(out, "fr");
+    EXPECT_TRUE(NormalizePpdLanguage("zh_tw", out));
+    EXPECT_EQ(out, "zh_TW");
+    EXPECT_TRUE(NormalizePpdLanguage("zh-TW", out));
+    EXPECT_EQ(out, "zh_TW");
+    EXPECT_TRUE(NormalizePpdLanguage("zh-Hant-TW", out));
+    EXPECT_EQ(out, "zh_TW");
+}
+
+// ===== T16: PPD with cupsLanguages + inline zh_CN translations =====
+namespace {
+static const std::string K_LANG_PPD_CONTENT =
+    "*PPD-Adobe: \"4.3\"\n"
+    "*FileVersion: \"1.0\"\n"
+    "*LanguageEncoding: ISOLatin1\n"
+    "*LanguageLevel: \"2\"\n"
+    "*Manufacturer: \"Test\"\n"
+    "*ModelName: \"Test Printer\"\n"
+    "*NickName: \"Test Printer\"\n"
+    "*ColorDevice: True\n"
+    "*DefaultColor: Color\n"
+    "*cupsLanguages: \"en zh_CN fr\"\n"
+    "*OpenUI PageSize: PickOne\n"
+    "*OrderDependency: 10 AnySetup PageSize\n"
+    "*DefaultPageSize: A4\n"
+    "*PageSize A4/A4: \"<</PageSize[595 842]>>setpagedevice\"\n"
+    "*PageSize Letter/US Letter: \"<</PageSize[612 792]>>setpagedevice\"\n"
+    "*zh_CN.PageSize A4/A4: \"A4\"\n"
+    "*zh_CN.PageSize Letter/Letter: \"\u4fe1\u7eb8\"\n"
+    "*CloseUI: PageSize\n"
+    "*OpenUI MediaType: PickOne\n"
+    "*OrderDependency: 50 AnySetup MediaType\n"
+    "*DefaultMediaType: Plain\n"
+    "*MediaType Plain/Plain Paper: \"<<MediaType(Plain)>>setpagedevice\"\n"
+    "*MediaType Photo/Photo Paper: \"<<MediaType(Photo)>>setpagedevice\"\n"
+    "*zh_CN.MediaType Plain/\u666e\u901a\u7eb8: \"<<MediaType(Plain)>>setpagedevice\"\n"
+    "*CloseUI: MediaType\n"
+    "*OpenUI ColorModel: PickOne\n"
+    "*OrderDependency: 20 AnySetup ColorModel\n"
+    "*DefaultColorModel: RGB\n"
+    "*ColorModel RGB/Color: \"<<cupsColorModel 1>>setpagedevice\"\n"
+    "*zh_CN.ColorModel RGB/\u5f69\u8272: \"<<cupsColorModel 1>>setpagedevice\"\n"
+    "*zh_CN.Translation ColorModel/CNOptionText: \"\"\n"
+    "*CloseUI: ColorModel\n"
+    "*OpenUI Collate: PickMany\n"
+    "*OrderDependency: 30 AnySetup Collate\n"
+    "*Collate True/Collated: \"<<Collated True>>setpagedevice\"\n"
+    "*zh_CN.Collate True/\u6253\u7d22: \"<<Collated True>>setpagedevice\"\n"
+    "*CloseUI: Collate\n";
+
+std::string CreatePpdWithLanguages()
+{
+    std::string content = K_LANG_PPD_CONTENT;
+    std::string tempPath = "/data/local/tmp/test_lang_" + std::to_string(getpid()) + ".ppd";
+    std::ofstream file(tempPath);
+    file << content;
+    file.close();
+    return tempPath;
+}
+
+void RemoveLangPpd(const std::string &path) { unlink(path.c_str()); }
+
+}
+
+
+
+
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_Fr_NoTranslation, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    std::string resultJson;
+    int32_t ret = GetLocalizedStringsFromPpd(ppdPath, "fr", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_TRUE(resultJson.empty());
+    RemoveLangPpd(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NotInList_InvalidParam, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    std::string resultJson;
+    int32_t ret = GetLocalizedStringsFromPpd(ppdPath, "ja", resultJson);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_TRUE(resultJson.empty());
+    RemoveLangPpd(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_InvalidPath_FileIO, TestSize.Level1)
+{
+    std::string resultJson;
+    int32_t ret = GetLocalizedStringsFromPpd("/nonexistent/path/test.ppd", "en", resultJson);
+    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+    EXPECT_TRUE(resultJson.empty());
+}
+
+// 入口契约：库层先内部归一（zh-Hans-CN→zh_CN）再做 cupsLanguages 白名单比对，
+// 任何调用方（SA 或库层直调）输入容忍度一致；归一纯函数行为另由 NormalizePpdLanguage 用例覆盖
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_LanguageNormalizedInternally, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    std::string resultJson;
+    ASSERT_EQ(GetLocalizedStringsFromPpd(ppdPath, "zh-Hans-CN", resultJson), E_PRINT_NONE);
+    Json::Value root;
+    ASSERT_TRUE(PrintJsonUtil::Parse(resultJson, root));
+    EXPECT_EQ(root["language"].asString(), "zh_CN");
+    EXPECT_TRUE(root.isMember("advanceOptions"));
+    EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, "1x", resultJson), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, "ja", resultJson), E_PRINT_INVALID_PARAMETER);
+    RemoveLangPpd(ppdPath);
+}
+
+// ===== T16: BuildPpdAvailableLanguages tests =====
+
+// ===== C: language-list edge cases =====
+HWTEST_F(PrintCupsPpdTest, PpdAvailableLanguages_AtOptionLevel, TestSize.Level1)
+{
+    std::string ppdPath = CreatePpdWithLanguages();
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+    PrinterCapability printerCaps;
+    SetOptionAttributeFromPPD(ppd, printerCaps);
+    ppdClose(ppd);
+    Json::Value optionJson;
+    ASSERT_TRUE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
+    EXPECT_TRUE(optionJson.isMember("ppdAvailableLanguages"));
+    EXPECT_TRUE(optionJson["ppdAvailableLanguages"].isArray());
+    EXPECT_EQ(optionJson["ppdAvailableLanguages"].size(), 3u);
+    // 旧位置不再承载该键（cupsOptions 属性组）
+    RemoveLangPpd(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, BuildPpdAvailableLanguages_TruncatedAtCountCap, TestSize.Level1)
+{
+    std::string tokens;  // 66 个双字母 ll，值总长 197 < cups 属性值上限(~255)
+    for (int i = 0; i < 66; i++) {
+        char ll0 = static_cast<char>('a' + i / 26);
+        char ll1 = static_cast<char>('a' + i % 26);
+        tokens += std::string(1, ll0) + std::string(1, ll1) + " ";
+    }
+    std::string content = std::string("*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n"
+        "*ModelName: \"T\"\n*NickName: \"T\"\n") + "*cupsLanguages: \"" + tokens + "\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    std::string val = PrintJsonUtil::WriteString(BuildPpdAvailableLanguages(ppd));
+    EXPECT_NE(val.find("\"bb\""), std::string::npos);   // token 28 kept
+    EXPECT_EQ(val.find("\"cm\""), std::string::npos);   // token 65 dropped (cap 64)
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_OversizeLanguagesValue_FileIO, TestSize.Level1)
+{
+    std::string tokens;
+    for (int i = 0; i < 1400; i++) {
+        tokens += "ab ";
+    }
+    std::string content = std::string("*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n"
+        "*ModelName: \"T\"\n*NickName: \"T\"\n") + "*cupsLanguages: \"" + tokens + "\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    // cups 解析器对属性值长度上限（~255B）先于框架 4096 防线拒绝整份 PPD：
+    // 真实文件通道下超长值不可达框架防线，查询按文件 I/O 错误返回
+    std::string resultJson;
+    EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson), E_PRINT_FILE_IO);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, BuildPpdAvailableLanguages_InvalidSkippedDeduped, TestSize.Level1)
+{
+    std::string content = std::string("*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n"
+        "*ModelName: \"T\"\n*NickName: \"T\"\n") +
+        "*cupsLanguages: \"en en FR 3x zh-Hant-TW\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    std::string val = PrintJsonUtil::WriteString(BuildPpdAvailableLanguages(ppd));
+    EXPECT_NE(val.find("\"en\""), std::string::npos);
+    EXPECT_EQ(val.find("\"en\""), val.rfind("\"en\""));   // deduped
+    EXPECT_NE(val.find("\"fr\""), std::string::npos);     // FR normalized
+    EXPECT_NE(val.find("\"zh_TW\""), std::string::npos);  // BCP-47 normalized
+    EXPECT_EQ(val.find("3x"), std::string::npos);           // invalid skipped
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+
+HWTEST_F(PrintCupsPpdTest, QueryPpdAvailableLanguagesFromFile_EmptyAndOpenFail, TestSize.Level1)
+{
+    Json::Value langs;
+    EXPECT_FALSE(QueryPpdAvailableLanguagesFromFile("", langs));
+    EXPECT_FALSE(QueryPpdAvailableLanguagesFromFile("/nonexistent/path/no_such.ppd", langs));
+}
+
 
 // ===== ParseCustomPageSizeFromPpd Tests =====
 

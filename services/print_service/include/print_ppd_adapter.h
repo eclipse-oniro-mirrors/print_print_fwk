@@ -44,7 +44,7 @@ struct CupsOptionInfo {
 
 struct EntryResult {
     Json::Value textDefault;
-    Json::Value textZhCN;
+    Json::Value textLang;
     Json::Value ppdChoices;
 };
 
@@ -54,6 +54,7 @@ struct ResolveContext {
     ResolverType resolver;
     const std::map<std::string, std::string> *reverseChoiceMap;
     const std::map<std::string, int> *enumMap;
+    std::string lang;
 };
 
 struct PwgOptionSpec {
@@ -71,6 +72,10 @@ extern const std::string PPD_OPT_NAME_INPUT_SLOT;
 class PpdAdapter {
 public:
     static void BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::Value &textMap);
+    // Same pipeline as BuildOptionMaps but textMap language layer keyed by the
+    // queried language (uses real PPD choice names internally; capability
+    // snapshot path keeps calling BuildOptionMaps for the zh_CN form).
+    static void BuildOptionTextMap(ppd_file_t *ppd, const std::string &language, Json::Value &textMap);
     static bool ConvertPwgToPpd(const Json::Value &optionMap, const std::string &pwgType,
         const std::string &pwgVal, std::string &optName, std::string &choiceName);
     static bool ConvertMediaOptions(const Json::Value &optionMap,
@@ -87,9 +92,12 @@ private:
     static ppd_option_t *FindPpdOptionByPwgType(ppd_file_t *ppd, const std::string &pwgType,
         const StdStringMultiMap *&outChoiceMmap, ResolverType &outResolver);
     static std::string GetCanonicalPpdName(const std::string &pwgType);
-    static void WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
+    static void WriteOptionMaps(const ResolveContext &ctx, const std::string &pwgType,
         const EntryResult &result, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap);
+    static void BuildOptionMapsInternal(ppd_file_t *ppd, const std::string &language,
+        Json::Value &optionMap, Json::Value &textMap);
     static void ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
+        const std::string &language,
         Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap);
 };
 }  // namespace OHOS::Print

@@ -91,6 +91,7 @@ private:
     bool OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply);
     bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
     bool OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply);
+    bool OnGetPrinterLocalizedStrings(MessageParcel &data, MessageParcel &reply);
     bool OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);

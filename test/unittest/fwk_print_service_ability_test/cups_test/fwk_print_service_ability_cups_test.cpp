@@ -14,6 +14,8 @@
  */
 
 #include "print_service_ability_test_common.h"
+#include "print_json_util.h"
+#include <filesystem>
 
 namespace OHOS {
 namespace Print {
@@ -55,11 +57,13 @@ static std::string GetTestPpdDir()
 static void CreateTestPpdFile(const std::string &fileName, const std::string &content)
 {
     std::string dir = GetTestPpdDir();
-    std::filesystem::create_directories(dir);
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
     std::string filePath = dir + "/" + fileName;
     std::ofstream ofs(filePath);
     ofs << content;
     ofs.close();
+    PrintServiceAbilityTest::RegisterTempFileForCleanup(filePath);
 }
 
 static void RemoveTestPpdFile(const std::string &fileName)

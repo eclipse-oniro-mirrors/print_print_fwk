@@ -21,7 +21,6 @@
 
 namespace OHOS::Print {
 
-const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char *choice, const char *defaultText);
 
 static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
     {PAGE_SIZE_ID_ISO_A0, "A0"},
@@ -342,13 +341,14 @@ void PpdAdapter::BuildEntries(const ResolveContext &ctx, EntryResult &result)
             result.ppdChoices[opt->choices[i].choice] = opt->choices[i].choice;
         }
         // Only insert textMap fields the PPD declares: default text when the choice has
-        // text, zh_CN when a CN localization exists; do not fill undeclared fields.
+        // text, the queried language when an inline localization exists; do not fill
+        // undeclared fields.
         if (opt->choices[i].text != nullptr && opt->choices[i].text[0] != '\0') {
             result.textDefault[textKey] = opt->choices[i].text;
         }
-        const char *cnText = GetCNFromPpdAttr(ppd, opt->keyword, opt->choices[i].choice, nullptr);
-        if (cnText != nullptr && cnText[0] != '\0') {
-            result.textZhCN[textKey] = cnText;
+        ppd_attr_t *locattr = _ppdLocalizedAttr(ppd, opt->keyword, opt->choices[i].choice, ctx.lang.c_str());
+        if (locattr != nullptr && locattr->text[0] != '\0') {
+            result.textLang[textKey] = locattr->text;
         }
     }
 }
@@ -387,26 +387,26 @@ std::string PpdAdapter::GetCanonicalPpdName(const std::string &pwgType)
 // Write built entries into optionMap and textMap JSON
 // optionMap: {pwgType: {optionName, choices}} (for PWG->PPD lookup when sending options)
 // textMap: {ppdKeyword: {default: {key: text}, zh_CN: {key: text}}} (for app display translation)
-void PpdAdapter::WriteOptionMaps(ppd_option_t *opt, const std::string &pwgType,
+void PpdAdapter::WriteOptionMaps(const ResolveContext &ctx, const std::string &pwgType,
     const EntryResult &result, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
     if (!pwgType.empty() && !result.ppdChoices.empty()) {
         Json::Value optionEntry;
-        optionEntry["optionName"] = opt->keyword;
+        optionEntry["optionName"] = ctx.opt->keyword;
         optionEntry["choices"] = result.ppdChoices;
         ppdOptionMap[pwgType] = optionEntry;
     }
     if (!result.textDefault.empty()) {
         Json::Value textMap;
         textMap["default"] = result.textDefault;
-        textMap["zh_CN"] = result.textZhCN;
+        textMap[ctx.lang] = result.textLang;
         ppdOptionTextMap[GetCanonicalPpdName(pwgType)] = textMap;
     }
 }
 
 // Full pipeline for one PWG type: find PPD option -> build reverseChoiceMap -> BuildEntries -> WriteOptionMaps
 void PpdAdapter::ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
-    Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
+    const std::string &language, Json::Value &ppdOptionMap, Json::Value &ppdOptionTextMap)
 {
     const StdStringMultiMap *choiceMmap = nullptr;
     ResolverType resolver = ResolverType::STANDARD;
@@ -423,25 +423,39 @@ void PpdAdapter::ProcessOptionEntry(ppd_file_t *ppd, const std::string &pwgType,
     for (const auto &entry : *choiceMmap) {
         reverseChoiceMap[entry.second] = entry.first;
     }
-    ResolveContext ctx = {ppd, opt, resolver, &reverseChoiceMap, enumMap};
+    ResolveContext ctx = {ppd, opt, resolver, &reverseChoiceMap, enumMap, language};
     EntryResult result;
     BuildEntries(ctx, result);
     PRINT_HILOGI("ProcessOptionEntry: pwgType=%{public}s, keyword=%{public}s, "
         "choices=%{public}d, text=%{public}d",
         pwgType.c_str(), opt->keyword, result.ppdChoices.size(), result.textDefault.size());
-    WriteOptionMaps(opt, pwgType, result, ppdOptionMap, ppdOptionTextMap);
+    WriteOptionMaps(ctx, pwgType, result, ppdOptionMap, ppdOptionTextMap);
 }
 
-// Build the complete optionMap and textMap from the PPD file
-// Iterate all PWG types in CUPS_PPD_FIELD_MMAP and call ProcessOptionEntry for each
+// Build the complete optionMap and textMap from the PPD file (capability snapshot,
+// zh_CN language layer, legacy behavior unchanged).
 void PpdAdapter::BuildOptionMaps(ppd_file_t *ppd, Json::Value &optionMap, Json::Value &textMap)
+{
+    BuildOptionMapsInternal(ppd, "zh_CN", optionMap, textMap);
+}
+
+// Language-parameterized textMap for the query interface: same dimension/key pipeline,
+// language layer keyed by the queried language with real PPD choice names as spec.
+void PpdAdapter::BuildOptionTextMap(ppd_file_t *ppd, const std::string &language, Json::Value &textMap)
+{
+    Json::Value optionMap;
+    BuildOptionMapsInternal(ppd, language, optionMap, textMap);
+}
+
+void PpdAdapter::BuildOptionMapsInternal(ppd_file_t *ppd, const std::string &language,
+    Json::Value &optionMap, Json::Value &textMap)
 {
     std::set<std::string> pwgTypes;
     for (const auto &entry : CUPS_PPD_FIELD_MMAP) {
         pwgTypes.insert(entry.first);
     }
     for (const auto &pwgType : pwgTypes) {
-        ProcessOptionEntry(ppd, pwgType, optionMap, textMap);
+        ProcessOptionEntry(ppd, pwgType, language, optionMap, textMap);
     }
 }
 

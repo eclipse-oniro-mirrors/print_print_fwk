@@ -16,6 +16,7 @@
 #include "print_service_ability_test_common.h"
 
 #include "print_service_mock_permission.h"
+#include <filesystem>
 
 namespace OHOS {
 uint32_t uid_ = 0;
@@ -26,6 +27,13 @@ pid_t IPCSkeleton::GetCallingUid()
 
 namespace Print {
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
+
+std::vector<std::string> PrintServiceAbilityTest::tempFilesForCleanup_;
+
+void PrintServiceAbilityTest::RegisterTempFileForCleanup(const std::string &filePath)
+{
+    tempFilesForCleanup_.push_back(filePath);
+}
 
 void PrintServiceAbilityTest::SetUpTestCase(void)
 {
@@ -75,6 +83,11 @@ std::shared_ptr<PrintServiceAbility> PrintServiceAbilityTest::CreateMockService(
 
 void PrintServiceAbilityTest::TearDown(void)
 {
+    std::error_code ec;
+    for (const auto &file : tempFilesForCleanup_) {
+        std::filesystem::remove(file, ec);
+    }
+    tempFilesForCleanup_.clear();
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
     PrintFwkAgentManager::GetInstance().Shutdown();
 #endif

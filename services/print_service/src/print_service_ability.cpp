@@ -27,6 +27,7 @@
 
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
+#include "print_cups_ppd.h"
 #endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
@@ -110,7 +111,6 @@ const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
 constexpr int64_t AGENT_BACKEND_READY_STARTUP_DELAY_MS = 5000;
 #endif
-
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -1299,6 +1299,62 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     }
     InjectUserCustomPageSizes(printerId, info);
     return E_PRINT_NONE;
+}
+int32_t PrintServiceAbility::GetPpdFilePathByPrinterId(const std::string &printerId,
+    std::string &resolvedPath)
+{
+    PrinterInfo printerInfo;
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId query printer info failed");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (cupsClient == nullptr) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId cups client unavailable");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PpdInfo ppdInfo;
+    printerInfo.GetSelectedDriver(ppdInfo);
+    std::string ppdName = ppdInfo.GetPpdName();
+    if (!ppdName.empty() && ppdName != PPD_NAME_AUTO && IsPpdNameValid(ppdName) &&
+        PrintUtils::ResolveAndValidatePath(cupsClient->GetCurCupsModelDir() + ppdName, resolvedPath)) {
+        PRINT_HILOGI("GetPpdFilePathByPrinterId resolved via manual driver");
+        return E_PRINT_NONE;
+    }
+    std::string queuePpdPath = cupsClient->GetCurCupsRootDir() + "/ppd/" +
+        PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName()) + ".ppd";
+    if (PrintUtils::ResolveAndValidatePath(queuePpdPath, resolvedPath)) {
+        PRINT_HILOGI("GetPpdFilePathByPrinterId resolved via queue-bound ppd");
+        return E_PRINT_NONE;
+    }
+    PRINT_HILOGE("GetPpdFilePathByPrinterId no usable ppd file, Id=%{private}s", printerId.c_str());
+    return E_PRINT_INVALID_PRINTER;
+}
+int32_t PrintServiceAbility::GetPrinterLocalizedStrings(const std::string &printerId,
+    const std::string &language, std::string &resultJson)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    ManualStart();
+    PRINT_HILOGI("GetPrinterLocalizedStrings in. printerId=%{private}s, language=%{private}s",
+        printerId.c_str(), language.c_str());
+    std::string normalizedLanguage;
+    if (!NormalizePpdLanguage(language, normalizedLanguage)) {
+        PRINT_HILOGE("GetPrinterLocalizedStrings invalid language parameter");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    std::string resolvedPpdFilePath;
+    int32_t ret = GetPpdFilePathByPrinterId(printerId, resolvedPpdFilePath);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId failed, ret=%{public}d", ret);
+        return ret;
+    }
+    ret = GetLocalizedStringsFromPpd(resolvedPpdFilePath, normalizedLanguage, resultJson);
+    PRINT_HILOGI("GetPrinterLocalizedStrings done, ret=%{public}d, size=%{public}zu",
+        ret, resultJson.size());
+    return ret;
 }
 
 int32_t PrintServiceAbility::QueryPrinterProperties(

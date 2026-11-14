@@ -316,11 +316,14 @@ private:
     void RefreshIpPrinter();
     void RefreshThirdDriverPrinter();
     bool IsPpdNameValid(const std::string &ppdName) override;
+    int32_t GetPrinterLocalizedStrings(const std::string &printerId,
+        const std::string &language, std::string &resultJson) override;
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName) override;
     int32_t InitServiceHelper();
 
 public:
+    int32_t GetPpdFilePathByPrinterId(const std::string &printerId, std::string &resolvedPath);
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;
