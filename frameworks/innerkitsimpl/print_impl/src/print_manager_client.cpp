@@ -580,6 +580,20 @@ int32_t PrintManagerClient::GetPrinterPreference(const std::string &printerId, P
     return ret;
 }
 
+int32_t PrintManagerClient::GetPrinterLocalizedStrings(const std::string &printerId,
+    const std::string &language, std::string &resultJson)
+{
+    PRINT_HILOGD("PrintManagerClient GetPrinterLocalizedStrings start.");
+    auto proxy = GetPrintServiceProxy();
+    if (proxy == nullptr) {
+        PRINT_HILOGE("GetPrintServiceProxy failed.");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = proxy->GetPrinterLocalizedStrings(printerId, language, resultJson);
+    PRINT_HILOGD("PrintManagerClient GetPrinterLocalizedStrings out ret = [%{public}d].", ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
     std::string &detail)
 {

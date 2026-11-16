@@ -137,6 +137,8 @@ public:
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences);
     int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference);
+    int32_t GetPrinterLocalizedStrings(const std::string &printerId,
+        const std::string &language, std::string &resultJson);
     int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName);

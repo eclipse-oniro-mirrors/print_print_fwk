@@ -26,6 +26,7 @@
 #include "print_utils.h"
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
+#include "print_cups_ppd.h"
 #endif  // CUPS_ENABLE
 
 namespace OHOS {
@@ -140,6 +141,7 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
         info.SetDeviceId(object["deviceId"].asString());
     }
 }
+
 
 bool PrintSystemData::Init()
 {
@@ -529,7 +531,6 @@ void PrintSystemData::UpdatePrinterUri(const PrinterInfo &printerInfo)
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }
-
 
 void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences)
 {
@@ -1268,7 +1269,6 @@ Json::Value PrintSystemData::GetCupsOptionsJson(const PrinterCapability &cap)
 
 int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences)
 {
-    PRINT_HILOGI("BuildPrinterPreference enter");
     Json::Value capOpt = GetCupsOptionsJson(cap);
     if (!capOpt.isNull()) {
         BuildPrinterPreferenceByDefault(capOpt, printPreferences);
@@ -1291,7 +1291,6 @@ static bool UpdateIntCapOption(const Json::Value &capOpt, const std::string &key
 
 void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences)
 {
-    PRINT_HILOGI("BuildPrinterPreferenceByDefault enter");
     if (printPreferences.GetDefaultPageSizeId().empty() &&
         PrintJsonUtil::IsMember(capOpt, "defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
         printPreferences.SetDefaultPageSizeId(capOpt["defaultPageSizeId"].asString());

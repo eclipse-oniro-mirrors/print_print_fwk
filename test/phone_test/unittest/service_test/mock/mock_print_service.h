@@ -309,6 +309,12 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t GetPrinterLocalizedStrings(const std::string &printerId,
+        const std::string &language, std::string &resultJson) override
+    {
+        return E_PRINT_NONE;
+    }
+
     int32_t Release() override
     {
         return E_PRINT_NONE;
@@ -367,6 +373,8 @@ public:
     MOCK_METHOD2(GetPrinterDefaultPreferences, int32_t(const std::string &printerId,
         PrinterPreferences &defaultPreferences));
     MOCK_METHOD2(GetPrinterPreference, int32_t(const std::string &printerId, PrinterPreferences &printerPreference));
+    MOCK_METHOD3(GetPrinterLocalizedStrings, int32_t(const std::string &printerId,
+        const std::string &language, std::string &resultJson));
     MOCK_METHOD1(GetSharedHosts, int32_t(std::vector<PrintSharedHost> &sharedHosts));
     MOCK_METHOD4(AuthSmbDevice, int32_t(const PrintSharedHost& sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos));

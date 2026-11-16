@@ -624,6 +624,7 @@ export default namespace print {
     native function removePrinterFromDiscoveryNative(printerId: string, callback: AsyncCallbackWrapper<void>): void;
 
     native function getPrinterInformationByIdNative(printerId: string, callback: AsyncCallbackWrapper<PrinterInformation>): void;
+    native function getPrinterLocalizedStringsNative(printerId: string, language: string, callback: AsyncCallbackWrapper<string>): void;
 
     native function startPrintNative(job: PrintJobData, callback: AsyncCallbackWrapper<void>): void;
 
@@ -1506,6 +1507,21 @@ export default namespace print {
             });
             taskpool.execute((): void => {
                 getPrinterInformationByIdNative(printerId, myCall);
+            });
+        });
+    }
+
+    export function getPrinterLocalizedStrings(printerId: string, language: string): Promise<string> {
+        return new Promise<string>((resolve: (data: string)=>void, reject:(err: BusinessError<void>)=>void): void => {
+            let myCall = new AsyncCallbackWrapper<string>((err : BusinessError<void> | null, data : string | undefined) => {
+                if ((err === null || err.code == 0) && data !== undefined) {
+                    resolve(data);
+                } else {
+                    reject(err as BusinessError);
+                }
+            });
+            taskpool.execute((): void => {
+                getPrinterLocalizedStringsNative(printerId, language, myCall);
             });
         });
     }

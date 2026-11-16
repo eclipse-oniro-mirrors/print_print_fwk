@@ -400,6 +400,7 @@ constexpr int64_t IPP_RAW_DATA_EXPIRE_SECONDS = 604800; // 7 * 24 * 3600
 constexpr int DECIMAL_BASE = 10;
 inline const std::string PRINTER_LIST_FILE = "printer_list.json";
 inline const std::string PRINTER_LIST_VERSION_FILE = "version.json";
+inline const std::string PPD_NAME_AUTO = "auto";
 inline const std::string PRINTER_LIST_VERSION_V1 = "v1";
 inline const std::string PRINTER_LIST_VERSION_V3 = "v3";
 inline const std::string PRINT_USER_DATA_FILE = "print_user_data.json";

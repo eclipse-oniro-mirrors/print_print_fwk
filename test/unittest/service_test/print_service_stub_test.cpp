@@ -2038,5 +2038,6 @@ HWTEST_F(PrintServiceStubTest, OnAuthSmbDevice_WithUserName_Failure, TestSize.Le
     ON_CALL(*stub, AuthSmbDevice).WillByDefault(Return(E_PRINT_GENERIC_FAILURE));
     EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_GENERIC_FAILURE);
 }
+
 }  // namespace Print
 }  // namespace OHOS
