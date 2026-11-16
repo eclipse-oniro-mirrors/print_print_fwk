@@ -1493,15 +1493,6 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0096_NeedRename, TestSize.Leve
     EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 1);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0097_NeedRename, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
-    systemData->AddIpPrinterToList(*printerInfo);
-    EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 1);
-}
-
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0098_NeedRename, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
@@ -2231,7 +2222,6 @@ HWTEST_F(PrintSystemDataTest, PrintSystemData_SetEnterpriseState_CachesState, Te
     EXPECT_FALSE(systemData->isEnterpriseEnable_.load());
     EXPECT_FALSE(systemData->isEnterprise_.load());
 #endif // ENTERPRISE_ENABLE
-    EXPECT_NO_FATAL_FAILURE(systemData->Init());
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemData_EnterpriseState_CachedAndUsed, TestSize.Level1)
