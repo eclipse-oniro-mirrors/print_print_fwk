@@ -1510,7 +1510,9 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NoCupsLanguages_Rejected, 
     std::string resultJson;
     EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson), E_PRINT_INVALID_PARAMETER);
     Json::Value langs;
-    EXPECT_FALSE(QueryPpdAvailableLanguagesFromFile(ppdPath, langs));
+    // 契约：文件可读即 true；无 cupsLanguages 属性 → 空数组（非失败）
+    EXPECT_TRUE(QueryPpdAvailableLanguagesFromFile(ppdPath, langs));
+    EXPECT_EQ(langs.size(), 0u);
     ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
     ASSERT_NE(ppd, nullptr);
     EXPECT_EQ(BuildPpdAvailableLanguages(ppd).size(), 0u);   // attr 缺失：空数组
