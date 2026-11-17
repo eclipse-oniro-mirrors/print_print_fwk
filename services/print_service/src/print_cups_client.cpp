@@ -2534,8 +2534,7 @@ bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorPara
     return needUpdate;
 }
 
-namespace {
-void ParseJobStateData(ipp_t *response, JobStateData &data)
+void PrintCupsClient::ParseJobStateData(ipp_t *response, JobStateData &data)
 {
     ipp_attribute_t *attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM);
     if (attr != nullptr) {
@@ -2559,7 +2558,6 @@ void ParseJobStateData(ipp_t *response, JobStateData &data)
         data.jobPrinterStateMessage = buffer;
         PRINT_HILOGI("job_printer_state_message: %{public}s", data.jobPrinterStateMessage.c_str());
     }
-}
 }
 
 bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorParams, ipp_t *response)

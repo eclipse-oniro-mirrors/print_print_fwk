@@ -242,6 +242,7 @@ private:
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
     bool QueryJobState(http_t *http, std::shared_ptr<JobMonitorParam> monitorParams);
+    void ParseJobStateData(ipp_t *response, JobStateData &data);
     bool UpdateJobState(std::shared_ptr<JobMonitorParam> monitorParams, ipp_t *response);
     bool IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
