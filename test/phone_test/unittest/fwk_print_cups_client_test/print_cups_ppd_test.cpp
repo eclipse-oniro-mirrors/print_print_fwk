@@ -1038,9 +1038,10 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_HasNoOptionTextMapKey, Tes
     EXPECT_EQ(ret, E_PRINT_NONE);
     Json::Value root;
     ASSERT_TRUE(PrintJsonUtil::Parse(resultJson, root));
+    // 本用例只锚定 phone 形态反向契约（无 textMap 键）；键存在性与媒体表由
+    // ZhQueryContract 负责，避免形态守卫耦合数据存在性断言
     EXPECT_FALSE(root.isMember("ppdOptionTextMap"));
     EXPECT_TRUE(root.isMember("advanceOptions"));
-    EXPECT_TRUE(root.isMember("mediaSizeMap"));
     RemoveLangPpd(ppdPath);
 }
 
