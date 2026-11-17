@@ -80,6 +80,7 @@ public:
     static napi_value UnregisterWatermarkCallback(napi_env env, napi_callback_info info);
     static napi_value NotifyWatermarkComplete(napi_env env, napi_callback_info info);
     static napi_value AddPrinter(napi_env env, napi_callback_info info);
+    static napi_value ConfirmCertTrust(napi_env env, napi_callback_info info);
     static napi_value OnPrinterInfoQuery(napi_env env, napi_callback_info info);
     static napi_value OffPrinterInfoQuery(napi_env env, napi_callback_info info);
 
@@ -123,6 +124,7 @@ private:
         PrintSharedHost sharedHost;
         std::vector<PrintSharedHost> sharedHosts;
         std::vector<PrinterInfo> printerInfos;
+        bool trusted = false;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};

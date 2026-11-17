@@ -158,6 +158,7 @@ if (print_fwk_feature_device_isolation) {
         "${_service_path}/src/print_cups_ppd.cpp",
         "${_service_path}/src/print_cups_client.cpp",
         "${_service_path}/src/print_cups_wrapper.cpp",
+        "${_service_path}/src/print_cert_manager.cpp",
       ]
       cflags_cc += [ "-DCUPS_ENABLE" ]
       external_deps += [
@@ -258,6 +259,7 @@ if (print_fwk_feature_device_isolation) {
         "${_service_path}/src/print_cups_ppd.cpp",
         "${_service_path}/src/print_cups_client.cpp",
         "${_service_path}/src/print_cups_wrapper.cpp",
+        "${_service_path}/src/print_cert_manager.cpp",
       ]
       cflags_cc += [ "-DCUPS_ENABLE" ]
       external_deps += [

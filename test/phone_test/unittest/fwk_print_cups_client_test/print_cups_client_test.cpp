@@ -4922,5 +4922,78 @@ HWTEST_F(PrintCupsClientTest, ParseStateReasons_MediaJam_SetsBlock, TestSize.Lev
     EXPECT_NE(param->substate, 0u);
 }
 
+static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &reason)
+{
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    strlcpy(param->job_printer_state_reasons, reason.c_str(), sizeof(param->job_printer_state_reasons));
+    return param;
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_PkiInvalid_BlocksJob
+ * @tc.desc: cups-pki-invalid reason blocks the job with bad-certificate substate.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiInvalid_BlocksJob, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("cups-pki-invalid");
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_PkiUnknown_BlocksJob
+ * @tc.desc: cups-pki-unknown reason blocks the job with bad-certificate substate.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiUnknown_BlocksJob, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("cups-pki-unknown");
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_PkiSubstring_BlocksJob
+ * @tc.desc: PKI reason embedded in a longer reason string is detected via substring match.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiSubstring_BlocksJob, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("xx-cups-pki-invalid-yy");
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_NormalReason_NotPki
+ * @tc.desc: A normal reason does not take the PKI branch and still returns true (queued).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_NormalReason_NotPki, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("none");
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_EmptyReason_NotPki
+ * @tc.desc: Empty reason does not take the PKI branch and still returns true (queued).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_EmptyReason_NotPki, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("");
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -2039,5 +2039,71 @@ HWTEST_F(PrintServiceStubTest, OnAuthSmbDevice_WithUserName_Failure, TestSize.Le
     EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_GENERIC_FAILURE);
 }
 
+/**
+ * @tc.name: OnConfirmCertTrust_Success
+ * @tc.desc: Verify ConfirmCertTrust success is forwarded and the result is written back.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceStubTest, OnConfirmCertTrust_Success, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_CONFIRM_CERT_TRUST);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintService::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(TEST_PRINTER_ID));
+    EXPECT_TRUE(data.WriteBool(true));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    EXPECT_CALL(*stub, ConfirmCertTrust(TEST_PRINTER_ID, true)).Times(1).WillOnce(Return(E_PRINT_NONE));
+    EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_EQ(reply.ReadInt32(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: OnConfirmCertTrust_ServiceError
+ * @tc.desc: Verify a service-side error is written back and reported as generic failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceStubTest, OnConfirmCertTrust_ServiceError, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_CONFIRM_CERT_TRUST);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintService::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(TEST_PRINTER_ID));
+    EXPECT_TRUE(data.WriteBool(false));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    EXPECT_CALL(*stub, ConfirmCertTrust(TEST_PRINTER_ID, false)).Times(1)
+        .WillOnce(Return(E_PRINT_INVALID_PRINTER));
+    EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_GENERIC_FAILURE);
+    EXPECT_EQ(reply.ReadInt32(), E_PRINT_INVALID_PRINTER);
+}
+
+/**
+ * @tc.name: OnConfirmCertTrust_ParcelReadFail
+ * @tc.desc: Verify missing parcel fields make the request fail without invoking the service.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceStubTest, OnConfirmCertTrust_ParcelReadFail, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_CONFIRM_CERT_TRUST);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintService::GetDescriptor()));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    EXPECT_CALL(*stub, ConfirmCertTrust(_, _)).Times(0);
+    EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_GENERIC_FAILURE);
+}
 }  // namespace Print
 }  // namespace OHOS

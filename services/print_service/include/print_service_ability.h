@@ -194,6 +194,7 @@ public:
     virtual bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
+    int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override;
     void HandleWebPrinterUninstall();
     std::shared_ptr<IHksAdapter> GetHksAdapter();
     int32_t GetCurrentUserId();
@@ -322,6 +323,7 @@ private:
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::string& extensionId,
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+    void CancelJobsByPrinterId(const std::string &printerId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions, const PrinterPreferences &preferences,
         const PrinterUserPreferences &userPrefs);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);

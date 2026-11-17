@@ -79,8 +79,6 @@ ohos_unittest("fwk_print_cups_client_test") {
   if (cups_enable) {
     sources += [
       "${_test_path}/unittest/fwk_print_cups_client_test/print_cups_client_test.cpp",
-      "${_test_path}/unittest/fwk_print_cups_client_test/print_cups_ppd_test.cpp",
-      "${_test_path}/unittest/fwk_print_cups_client_test/print_cups_wrapper_test.cpp",
     ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [

@@ -89,6 +89,7 @@ static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWat
 static constexpr const char *FUNCTION_UNREGISTER_WATERMARK_CALLBACK = "unregisterWatermarkCallback";
 static constexpr const char *FUNCTION_NOTIFY_WATERMARK_COMPLETE = "notifyWatermarkComplete";
 static constexpr const char *FUNCTION_ADD_PRINTER_NEW = "addPrinter";
+static constexpr const char *FUNCTION_CONFIRM_CERT_TRUST = "confirmCertTrust";
 static constexpr const char *FUNCTION_ON_PRINTER_INFO_QUERY = "onPrinterInfoQuery";
 static constexpr const char *FUNCTION_OFF_PRINTER_INFO_QUERY = "offPrinterInfoQuery";
 
@@ -540,6 +541,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_UNREGISTER_WATERMARK_CALLBACK, NapiInnerPrint::UnregisterWatermarkCallback),
         DECLARE_NAPI_FUNCTION(FUNCTION_NOTIFY_WATERMARK_COMPLETE, NapiInnerPrint::NotifyWatermarkComplete),
         DECLARE_NAPI_FUNCTION(FUNCTION_ADD_PRINTER_NEW, NapiInnerPrint::AddPrinter),
+        DECLARE_NAPI_FUNCTION(FUNCTION_CONFIRM_CERT_TRUST, NapiInnerPrint::ConfirmCertTrust),
         DECLARE_NAPI_FUNCTION(FUNCTION_ON_PRINTER_INFO_QUERY, NapiInnerPrint::OnPrinterInfoQuery),
         DECLARE_NAPI_FUNCTION(FUNCTION_OFF_PRINTER_INFO_QUERY, NapiInnerPrint::OffPrinterInfoQuery),
     };

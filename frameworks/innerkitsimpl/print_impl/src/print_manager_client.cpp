@@ -1223,6 +1223,19 @@ int32_t PrintManagerClient::AddPrinter(const std::string &printerName, const std
     return ret;
 }
 
+int32_t PrintManagerClient::ConfirmCertTrust(const std::string &printerId, bool trusted)
+{
+    PRINT_HILOGD("PrintManagerClient ConfirmCertTrust start.");
+    auto proxy = GetPrintServiceProxy();
+    if (proxy == nullptr) {
+        PRINT_HILOGE("GetPrintServiceProxy failed.");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = proxy->ConfirmCertTrust(printerId, trusted);
+    PRINT_HILOGD("PrintManagerClient ConfirmCertTrust out ret = [%{public}d].", ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::SavePdfFileJob(const std::string &jobId, uint32_t fd)
 {
     PRINT_HILOGD("PrintManagerClient SavePdfFileJob start.");

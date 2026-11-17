@@ -28,6 +28,7 @@
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
 #include "print_cups_ppd.h"
+#include "print_cert_manager.h"
 #endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
@@ -1483,6 +1484,53 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::ConfirmCertTrust(const std::string &printerId, bool trusted)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    ManualStart();
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("[Printer: %{public}s] ConfirmCertTrust start, trusted: %{public}d",
+        PrintUtils::AnonymizePrinterId(printerId).c_str(), trusted);
+
+    PrinterInfo printerInfo;
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("ConfirmCertTrust: cannot find printer info by printerId");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    std::string printerUri = printerInfo.GetUri();
+    if (printerUri.empty()) {
+        PRINT_HILOGE("ConfirmCertTrust: printer URI is empty");
+        return E_PRINT_INVALID_PRINTER;
+    }
+
+#ifdef CUPS_ENABLE
+    if (!trusted) {
+        PRINT_HILOGI("[Printer: %{public}s] User rejected cert trust, canceling jobs",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        CancelJobsByPrinterId(printerId);
+        return E_PRINT_NONE;
+    }
+
+    PRINT_HILOGI("[Printer: %{public}s] User accepted cert trust, saving cert and resuming printer",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    if (!DelayedSingleton<PrintCertManager>::GetInstance()->SaveCertForPrinter(printerUri, standardizedPrinterName)) {
+        PRINT_HILOGE("ConfirmCertTrust: failed to save cert for printer");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->ResumePrinter(standardizedPrinterName)) {
+        PRINT_HILOGE("ConfirmCertTrust: failed to resume printer");
+        return E_PRINT_SERVER_FAILURE;
+    }
+#endif  // CUPS_ENABLE
+
+    PRINT_HILOGI("[Printer: %{public}s] ConfirmCertTrust end", PrintUtils::AnonymizePrinterId(printerId).c_str());
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::AddPrinterToCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
@@ -2449,6 +2497,21 @@ void PrintServiceAbility::CancelPrintJobHandleCallback(
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
     } else {
         PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
+    }
+}
+
+void PrintServiceAbility::CancelJobsByPrinterId(const std::string &printerId)
+{
+    auto it = printerJobMap_.find(printerId);
+    if (it == printerJobMap_.end() || it->second.empty()) {
+        return;
+    }
+    std::vector<std::string> jobIdListToCancel;
+    for (const auto &pair : it->second) {
+        jobIdListToCancel.push_back(pair.first);
+    }
+    for (auto jobId : jobIdListToCancel) {
+        CancelPrintJob(jobId);
     }
 }
 
@@ -3956,6 +4019,9 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
     PRINT_HILOGI("[Job Id: %{public}s] PrintServiceAbility::SendPrintJobEvent, state: %{public}d, subState: %{public}d",
         jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
+    // if (jobInfo.GetSubState() == PRINT_JOB_BLOCKED_BAD_CERTIFICATE) {
+    //     ConfirmCertTrust(jobInfo.GetPrinterId(), true);
+    // }
     std::string stateInfo = "";
     uint32_t state = PRINT_PRINT_JOB_DEFAULT;
     GetPrintJobStateInfo(jobInfo, stateInfo, state);
@@ -4574,21 +4640,17 @@ int32_t PrintServiceAbility::ContinueDeletePrinterFromCups(
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
+    PrinterInfo printerInfo;
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+        !printerInfo.GetUri().empty()) {
+        DelayedSingleton<PrintCertManager>::GetInstance()->DeleteCertForPrinter(standardName);
+    }
 #endif  // CUPS_ENABLE
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
     PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
     RemoveSinglePrinterInfo(printerId);
-    auto it = printerJobMap_.find(printerId);
-    if (it != printerJobMap_.end() && !it->second.empty()) {
-        std::vector<std::string> jobIdListToCancel;
-        for (const auto &pair : it->second) {
-            jobIdListToCancel.push_back(pair.first);
-        }
-        for (auto jobId : jobIdListToCancel) {
-            CancelPrintJob(jobId);
-        }
-    }
+    CancelJobsByPrinterId(printerId);
 #ifdef HAVE_SMB_PRINTER
     if (SmbPrinterDiscoverer::IsSmbPrinterId(printerId)) {
         SmbPrinterStateMonitor::GetInstance().EraseSmbPrinterInMonitorListById(printerId);

@@ -152,6 +152,7 @@ public:
     int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback);
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
+    int32_t ConfirmCertTrust(const std::string &printerId, bool trusted);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

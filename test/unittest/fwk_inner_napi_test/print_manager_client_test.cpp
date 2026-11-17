@@ -3329,6 +3329,34 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0167_SetWantParam, TestS
     EXPECT_NE(want.GetIntParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, 0), 0);
 }
 
+/**
+ * @tc.name: ConfirmCertTrust_NoProxy
+ * @tc.desc: ConfirmCertTrust without a service proxy returns RPC failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintManagerClientTest, ConfirmCertTrust_NoProxy, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    EXPECT_EQ(mockPrintManagerClient.ConfirmCertTrust("printer_id", true), E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: ConfirmCertTrust_ForwardSuccess
+ * @tc.desc: ConfirmCertTrust forwards printerId and trusted flag to the service.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintManagerClientTest, ConfirmCertTrust_ForwardSuccess, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr;
+    CallRemoteObject(service, obj, dr, E_PRINT_NONE);
+    EXPECT_CALL(*service, ConfirmCertTrust(StrEq("printer_id"), true)).Times(1).WillOnce(Return(E_PRINT_NONE));
+
+    int32_t ret = PrintManagerClient::GetInstance().ConfirmCertTrust("printer_id", true);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
 
 }  // namespace Print
 }  // namespace OHOS
