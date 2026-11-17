@@ -644,17 +644,19 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_Bcp47Hit_Translatio
 #ifdef CUPS_ENABLE
     // BCP47 full form is normalized to zh_CN at both SA and library entries (idempotent)
     const std::string ppdName = "ut_loc_" + std::to_string(getpid()) + ".ppd";
-    CreateTestPpdFile(ppdName, UT_PPD_WITH_ZH);
     const std::string id = "ut_loc_" + std::to_string(getpid());
-    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Loc", ppdName));
-    // SA 入口 ManualStart 可能触发 OnStart 从 spool 重载并清洗内存表：先落盘再调用
-    PrintDataRepository::GetInstance().SavePrinterFile(id);
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
     auto mockHelper = std::make_shared<MockPrintServiceHelper>();
     EXPECT_CALL(*mockHelper, CheckPermission(_))
         .WillRepeatedly(Return(true));
     service->SetHelper(mockHelper);
+    // 预热：先触发 ManualStart→OnStart→Init 的 spool/环境收编清理（新实例必走），
+    // 测试数据在清理完成之后再落位，否则被 Init 回收导致 13100005
+    std::string warmupJson;
+    static_cast<IPrintService &>(*service).GetPrinterLocalizedStrings("ut_warmup_absent", "zh_CN", warmupJson);
+    CreateTestPpdFile(ppdName, UT_PPD_WITH_ZH);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Loc", ppdName));
     std::string resultJson;
     int32_t ret = static_cast<IPrintService &>(*service)
         .GetPrinterLocalizedStrings(id, "zh-Hans-CN", resultJson);
@@ -671,16 +673,18 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_NoTranslation_Resol
     const std::string ppdName = "ut_notrans_" + std::to_string(getpid()) + ".ppd";
     const std::string minimal =
         "*PPD-Adobe: \"4.3\"\n*cupsLanguages: \"en zh_CN\"\n*ModelName: \"T\"\n*NickName: \"T\"\n";
-    CreateTestPpdFile(ppdName, minimal);
     const std::string id = "ut_notrans_" + std::to_string(getpid());
-    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut NoTrans", ppdName));
-    PrintDataRepository::GetInstance().SavePrinterFile(id);
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
     auto mockHelper = std::make_shared<MockPrintServiceHelper>();
     EXPECT_CALL(*mockHelper, CheckPermission(_))
         .WillRepeatedly(Return(true));
     service->SetHelper(mockHelper);
+    // 预热同上：Init 收编清理先于测试数据落位
+    std::string warmupJson;
+    static_cast<IPrintService &>(*service).GetPrinterLocalizedStrings("ut_warmup_absent", "zh_CN", warmupJson);
+    CreateTestPpdFile(ppdName, minimal);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut NoTrans", ppdName));
     std::string resultJson = "keep";
     int32_t ret = static_cast<IPrintService &>(*service)
         .GetPrinterLocalizedStrings(id, "zh_CN", resultJson);
