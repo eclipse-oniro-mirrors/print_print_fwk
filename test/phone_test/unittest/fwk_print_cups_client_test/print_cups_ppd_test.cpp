@@ -1068,7 +1068,7 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NonStringCustomParamSkipsC
     EXPECT_EQ(stock["keyword"].asString(), "StockType");
     EXPECT_FALSE(stock["choice"]["default"].isMember("Custom"));   // 非 STRING 参数: choice 被跳过
     EXPECT_EQ(stock["choice"]["zh_CN"].size(), stock["choice"]["default"].size());
-
+    EXPECT_FALSE(stock.isMember("customParamType"));   // phone 基线无 customParam 字段
     RemoveTempFile(ppdPath);
 }
 

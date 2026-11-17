@@ -1461,6 +1461,9 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NonStringCustomParamSkipsC
     EXPECT_EQ(stock["keyword"].asString(), "StockType");
     EXPECT_FALSE(stock["choice"]["default"].isMember("Custom"));   // 非 STRING 参数: choice 被跳过
     EXPECT_EQ(stock["choice"]["zh_CN"].size(), stock["choice"]["default"].size());
+    EXPECT_TRUE(stock.isMember("customParamType"));   // 主树基线透出参数类型
+    RemoveTempFile(ppdPath);
+}
 
 HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_VendorAbilitySkipsCustomOption, TestSize.Level1)
 {
@@ -1472,9 +1475,6 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_VendorAbilitySkipsCustomOp
     Json::Value root = QueryOk(ppdPath, "zh_CN");
     ASSERT_EQ(root["advanceOptions"].size(), 1u);
     EXPECT_EQ(root["advanceOptions"][0u]["keyword"].asString(), "Finishing");
-    RemoveTempFile(ppdPath);
-}
-
     RemoveTempFile(ppdPath);
 }
 
@@ -1527,20 +1527,6 @@ HWTEST_F(PrintCupsPpdTest, NormalizePpdLanguage_EdgeInputs, TestSize.Level1)
     EXPECT_FALSE(NormalizePpdLanguage("zhh_CN", out));
     EXPECT_TRUE(NormalizePpdLanguage("ZH-cn", out));
     EXPECT_EQ(out, "zh_CN");
-}
-
-HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_VendorAbilitySkipsCustomOption, TestSize.Level1)
-{
-    // vendor 能力属性存在 + custom 参数项：整项跳过（HasVendorAbilityAttr true 分支；
-    // 镜像规则仅主树——phone 基线无此规则）
-    std::string content = K_LANG_PPD_CONTENT +
-        "*vendorPrinterPrefAbility: \"com.vendor.driver.VendorPrinterSettingsAbility\"\n";
-    std::string ppdPath = CreateTempPpdFile(content);
-    Json::Value root = QueryOk(ppdPath, "zh_CN");
-    ASSERT_EQ(root["advanceOptions"].size(), 1u);
-    EXPECT_EQ(root["advanceOptions"][0u]["keyword"].asString(), "Finishing");
-    EXPECT_EQ(SnapshotAdvanceOptions(ppdPath).size(), 1u);   // 预入快照同款跳过
-    RemoveTempFile(ppdPath);
 }
 
 }  // namespace Print
