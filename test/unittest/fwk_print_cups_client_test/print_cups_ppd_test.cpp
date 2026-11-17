@@ -1452,7 +1452,9 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NonStringCustomParamSkipsC
     const std::string strParam = "*ParamCustomStockType Remark/Remark: \"1 string 1 40\"\n";
     size_t pos = content.find(strParam);
     ASSERT_NE(pos, std::string::npos);
-    content.replace(pos, strParam.size(), "*ParamCustomStockType StockWidth/Width: \"1 int 1 100\"\n");
+    // 必须用 passcode：int 不匹配 FindCustomParam 的类型集合（会落入 cparam-null
+    // 分支），passcode 匹配且 !=STRING，才能命中"透出类型但跳过 choice"的分支
+    content.replace(pos, strParam.size(), "*ParamCustomStockType Pin/PIN: \"1 passcode 0 9999\"\n");
     std::string ppdPath = CreateTempPpdFile(content);
     Json::Value root = QueryOk(ppdPath, "zh_CN");
     const Json::Value &stock = root["advanceOptions"][1u];
