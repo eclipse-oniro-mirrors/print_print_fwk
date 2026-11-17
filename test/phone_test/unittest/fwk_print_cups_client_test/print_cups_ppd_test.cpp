@@ -701,6 +701,8 @@ static const std::string K_LANG_PPD_CONTENT =
     "*zh_CN.PageSize A4/A4: \"A4\"\n"
     "*zh_CN.PageSize Letter/Letter: \"\u4fe1\u7eb8\"\n"
     "*CloseUI: PageSize\n"
+    "*PaperDimension A4/A4: \"595 842\"\n"
+    "*PaperDimension Letter/Letter: \"612 792\"\n"
     "*OpenUI MediaType: PickOne\n"
     "*OrderDependency: 50 AnySetup MediaType\n"
     "*DefaultMediaType: Plain\n"
