@@ -1443,5 +1443,101 @@ HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_WithCustomPageSize_RangeOb
     RemoveTempFile(ppdPath);
 }
 
+// ===== 增量分支覆盖守卫 =====
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NonStringCustomParamSkipsChoice, TestSize.Level1)
+{
+    std::string content = K_LANG_PPD_CONTENT;
+    const std::string strParam = "*ParamCustomStockType Remark/Remark: \"1 string 1 40\"\n";
+    size_t pos = content.find(strParam);
+    ASSERT_NE(pos, std::string::npos);
+    content.replace(pos, strParam.size(), "*ParamCustomStockType StockWidth/Width: \"1 int 1 100\"\n");
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    const Json::Value &stock = root["advanceOptions"][1u];
+    EXPECT_EQ(stock["keyword"].asString(), "StockType");
+    EXPECT_FALSE(stock["choice"]["default"].isMember("Custom"));   // 非 STRING 参数: choice 被跳过
+    EXPECT_EQ(stock["choice"]["zh_CN"].size(), stock["choice"]["default"].size());
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_VendorAbilitySkipsCustomOption, TestSize.Level1)
+{
+    // vendor 能力属性存在 + custom 参数项：整项跳过（HasVendorAbilityAttr true 分支；
+    // 镜像规则仅主树——phone 基线无此规则）
+    std::string content = K_LANG_PPD_CONTENT +
+        "*vendorPrinterPrefAbility: \"com.vendor.driver.VendorPrinterSettingsAbility\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    ASSERT_EQ(root["advanceOptions"].size(), 1u);
+    EXPECT_EQ(root["advanceOptions"][0u]["keyword"].asString(), "Finishing");
+    RemoveTempFile(ppdPath);
+}
+
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_UnsupportedCustomParamSkipsChoice, TestSize.Level1)
+{
+    // *CustomStockType 声明存在但无 Param 行：FindCustomParam 空指针分支
+    std::string content =
+        "*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n*ModelName: \"T\"\n*NickName: \"T\"\n"
+        "*cupsLanguages: \"en zh_CN\"\n"
+        "*OpenUI StockType: PickOne\n*DefaultStockType: Plain\n"
+        "*StockType Plain/Plain: \"\"\n*StockType Custom/Custom: \"\"\n"
+        "*zh_CN.StockType Plain/\u666e\u901a: \"\"\n*CloseUI: StockType\n"
+        "*CustomStockType True:\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    ASSERT_EQ(root["advanceOptions"].size(), 1u);
+    const Json::Value &entry = root["advanceOptions"][0u];
+    EXPECT_EQ(entry["keyword"].asString(), "StockType");
+    EXPECT_FALSE(entry["choice"]["default"].isMember("Custom"));
+    EXPECT_TRUE(entry["choice"]["default"].isMember("Plain"));
+    EXPECT_FALSE(entry.isMember("customParamType"));
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NoCupsLanguages_Rejected, TestSize.Level1)
+{
+    std::string content =
+        "*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n*ModelName: \"T\"\n"
+        "*NickName: \"T\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    std::string resultJson;
+    EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson), E_PRINT_INVALID_PARAMETER);
+    Json::Value langs;
+    EXPECT_FALSE(QueryPpdAvailableLanguagesFromFile(ppdPath, langs));
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    EXPECT_EQ(BuildPpdAvailableLanguages(ppd).size(), 0u);   // attr 缺失：空数组
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, NormalizePpdLanguage_EdgeInputs, TestSize.Level1)
+{
+    std::string out;
+    EXPECT_FALSE(NormalizePpdLanguage("", out));
+    EXPECT_FALSE(NormalizePpdLanguage(std::string(33, 'z'), out));
+    EXPECT_FALSE(NormalizePpdLanguage("zh_CN_XX_YY", out));
+    EXPECT_FALSE(NormalizePpdLanguage("zhh_CN", out));
+    EXPECT_TRUE(NormalizePpdLanguage("ZH-cn", out));
+    EXPECT_EQ(out, "zh_CN");
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_VendorAbilitySkipsCustomOption, TestSize.Level1)
+{
+    // vendor 能力属性存在 + custom 参数项：整项跳过（HasVendorAbilityAttr true 分支；
+    // 镜像规则仅主树——phone 基线无此规则）
+    std::string content = K_LANG_PPD_CONTENT +
+        "*vendorPrinterPrefAbility: \"com.vendor.driver.VendorPrinterSettingsAbility\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    ASSERT_EQ(root["advanceOptions"].size(), 1u);
+    EXPECT_EQ(root["advanceOptions"][0u]["keyword"].asString(), "Finishing");
+    EXPECT_EQ(SnapshotAdvanceOptions(ppdPath).size(), 1u);   // 预入快照同款跳过
+    RemoveTempFile(ppdPath);
+}
+
 }  // namespace Print
 }  // namespace OHOS

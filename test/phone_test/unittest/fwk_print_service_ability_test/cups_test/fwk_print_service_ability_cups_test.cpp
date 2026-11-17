@@ -664,5 +664,31 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_Bcp47Hit_Translatio
     RemoveTestPpdFile(ppdName);
 #endif
 }
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_NoTranslation_ResolvesEmpty, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    const std::string ppdName = "ut_notrans_" + std::to_string(getpid()) + ".ppd";
+    const std::string minimal =
+        "*PPD-Adobe: \"4.3\"\n*cupsLanguages: \"en zh_CN\"\n*ModelName: \"T\"\n*NickName: \"T\"\n";
+    CreateTestPpdFile(ppdName, minimal);
+    const std::string id = "ut_notrans_" + std::to_string(getpid());
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut NoTrans", ppdName));
+    PrintDataRepository::GetInstance().SavePrinterFile(id);
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    std::string resultJson = "keep";
+    int32_t ret = static_cast<IPrintService &>(*service)
+        .GetPrinterLocalizedStrings(id, "zh_CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_TRUE(resultJson.empty());   // 无任何译文：命中但 resolve 空串
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(id, "Ut NoTrans");
+    RemoveTestPpdFile(ppdName);
+#endif
+}
 }  // namespace Print
 }  // namespace OHOS
