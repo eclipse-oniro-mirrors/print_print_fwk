@@ -2635,8 +2635,7 @@ void PrintCupsClient::UpdatePrinterStatusOnPreflightOffline(const std::shared_pt
         return;
     }
     PRINT_CHECK_NULL_RETURN_VOID(monitorParams->serviceAbility);
-    monitorParams->serviceAbility->UpdatePrinterStatusByPrinterId(
-        monitorParams->printerId, PRINTER_STATUS_UNAVAILABLE);
+    monitorParams->serviceAbility->RemovePrinterFromDiscoveryAndMarkOffline(monitorParams->printerId);
 }
 
 bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerUri)

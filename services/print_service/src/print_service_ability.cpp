@@ -319,6 +319,12 @@ void PrintServiceAbility::UpdatePrinterStatusByPrinterId(const std::string &prin
     UpdatePrinterStatus(printerInfo, printerStatus);
 }
 
+void PrintServiceAbility::RemovePrinterFromDiscoveryAndMarkOffline(const std::string &printerId)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    RemoveSinglePrinterInfo(printerId);
+}
+
 #ifdef VIRTUAL_PRINTER_ENABLE
 bool PrintServiceAbility::RefreshVirtualPrinter()
 {

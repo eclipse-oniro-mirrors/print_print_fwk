@@ -5345,7 +5345,7 @@ HWTEST_F(PrintCupsClientTest, ShouldJudgeOffline_WhitelistClassification, TestSi
     EXPECT_TRUE(printCupsClient.ShouldJudgeOffline(param));
 }
 
-HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_StrongOfflineEvidence, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_RemoveDiscoveryAndMarkUnavailable, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
     auto service = PrintServiceAbility::GetInstance();
@@ -5356,14 +5356,44 @@ HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_StrongOfflin
     printer->SetPrinterName("HP LaserJet");
     printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
     PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
+    auto discoveredPrinter = std::make_shared<PrinterInfo>(*printer);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discoveredPrinter);
     auto param = std::make_shared<JobMonitorParam>(service, TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
         "ipp://printer.local/ipp/print", "HP LaserJet", printerId, nullptr);
 
     printCupsClient.UpdatePrinterStatusOnPreflightOffline(param);
 
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), nullptr);
     PrinterInfo result;
     ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
     EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
+}
+
+HWTEST_F(PrintCupsClientTest, UpdatePrinterStatusOnPreflightOffline_IpPrinterStaysOnlineAndDiscovered,
+    TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    auto service = PrintServiceAbility::GetInstance();
+    ASSERT_NE(service, nullptr);
+    std::string printerId = "fwk.driver.wlan.group:192.168.55.66";
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterId(printerId);
+    printer->SetPrinterName("192.168.55.66");
+    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
+    auto discoveredPrinter = std::make_shared<PrinterInfo>(*printer);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(discoveredPrinter);
+    auto param = std::make_shared<JobMonitorParam>(service, TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID,
+        "ipp://192.168.55.66/ipp/print", "192.168.55.66", printerId, nullptr);
+
+    printCupsClient.UpdatePrinterStatusOnPreflightOffline(param);
+
+    EXPECT_NE(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), nullptr);
+    PrinterInfo result;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+    PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
     PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
 }
 
