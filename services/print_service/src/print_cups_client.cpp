@@ -3793,7 +3793,8 @@ void PrintCupsClient::BuildCupsOptionParamsByPrintJob(const PrintJob &printJob,
 {
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
-    mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSize.GetId();
+    // Match the PPD cache by map.pwg (pageSize.name), same as the actual media dispatch path.
+    mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSize.GetName();
     mapParams[PRINT_PARAM_TYPE_DUPLEX_MODE] = jobParams.duplex;
     mapParams[PRINT_PARAM_TYPE_QUALITY] = jobParams.printQuality;
     mapParams[PRINT_PARAM_TYPE_COLOR_MODE] = jobParams.color;

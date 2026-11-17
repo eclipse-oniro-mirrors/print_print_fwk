@@ -766,6 +766,71 @@ HWTEST_F(PrintCupsPpdTest, FindDuplexChoiceByPwg_UnrecognizedId_ReturnsFalse, Te
     RemoveTempFile(ppdPath);
 }
 
+HWTEST_F(PrintCupsPpdTest, PageSizeInteraction_UsesPwgNameAndKeepsPersistedForms, TestSize.Level1)
+{
+    std::string content = "*PPD-Adobe: \"4.3\"\n"
+        "*FileVersion: \"1.0\"\n"
+        "*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n"
+        "*Manufacturer: \"Test\"\n"
+        "*ModelName: \"Test Printer\"\n"
+        "*NickName: \"Test Printer\"\n"
+        "*ColorDevice: True\n"
+        "*DefaultColor: Color\n"
+        "*OpenUI PageSize: PickOne\n"
+        "*OrderDependency: 10 AnySetup PageSize\n"
+        "*DefaultPageSize: Env10\n"
+        "*PageSize A4/A4: \"<</PageSize[595 842]/ImagingBBox null>>setpagedevice\"\n"
+        "*PageSize Env10/#10 Envelope: \"<</PageSize[297 684]/ImagingBBox null>>setpagedevice\"\n"
+        "*CloseUI: PageSize\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    ASSERT_NE(ppd->cache, nullptr);
+
+    PrinterCapability printerCaps;
+    GetAdvanceOptionsFromPPD(ppd, printerCaps);
+    ParsePrinterAttributesFromPPD(ppd, printerCaps);
+
+    std::vector<PrintPageSize> supportedPageSizes;
+    printerCaps.GetSupportedPageSize(supportedPageSizes);
+    ASSERT_EQ(supportedPageSizes.size(), 2);
+    for (const auto &pageSize : supportedPageSizes) {
+        if (pageSize.GetName() == "iso_a4_210x297mm") {
+            EXPECT_EQ(pageSize.GetId(), "ISO_A4");
+        } else {
+            EXPECT_EQ(pageSize.GetName(), "na_number-10_4.125x9.5in");
+            EXPECT_EQ(pageSize.GetId(), "#10 Envelope");
+        }
+    }
+
+    Json::Value optionJson;
+    ASSERT_TRUE(PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson));
+    Json::Value textMap;
+    ASSERT_TRUE(PrintJsonUtil::Parse(optionJson["ppdOptionTextMap"].asString(), textMap));
+    Json::Value defaultTexts = textMap["PageSize"]["default"];
+    EXPECT_TRUE(defaultTexts.isMember("iso_a4_210x297mm"));
+    EXPECT_TRUE(defaultTexts.isMember("na_number-10_4.125x9.5in"));
+    EXPECT_FALSE(defaultTexts.isMember("ISO_A4"));
+    EXPECT_FALSE(defaultTexts.isMember("#10 Envelope"));
+
+    std::string choiceName;
+    EXPECT_TRUE(FindPageSizeChoiceByPwg(ppd, "iso_a4_210x297mm", choiceName));
+    EXPECT_EQ(choiceName, "A4");
+    EXPECT_TRUE(FindPageSizeChoiceByPwg(ppd, "na_number-10_4.125x9.5in", choiceName));
+    EXPECT_EQ(choiceName, "Env10");
+    EXPECT_TRUE(FindPageSizeChoiceByPwg(ppd, PAGE_SIZE_ID_ISO_A4, choiceName));
+    EXPECT_EQ(choiceName, "A4");
+    EXPECT_TRUE(FindPageSizeChoiceByPwg(ppd, "Env10", choiceName));
+    EXPECT_EQ(choiceName, "Env10");
+    EXPECT_TRUE(FindPageSizeChoiceByPwg(ppd, "#10 Envelope", choiceName));
+    EXPECT_EQ(choiceName, "Env10");
+
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
 HWTEST_F(PrintCupsPpdTest, BuildPpdOptionMap_AllOptions_PopulatesMaps, TestSize.Level1)
 {
     std::string ppdPath = CreatePpdWithAllOptions();
@@ -856,58 +921,6 @@ HWTEST_F(PrintCupsPpdTest, SetOptionAttributeFromPPD_PpdFieldsAtTopLevel, TestSi
     EXPECT_FALSE(cupsOptions.isMember("ppdOptionMap"));
     EXPECT_FALSE(cupsOptions.isMember("ppdOptionTextMap"));
     EXPECT_TRUE(cupsOptions.isMember("advanceOptions"));
-
-    ppdClose(ppd);
-    RemoveTempFile(ppdPath);
-}
-
-HWTEST_F(PrintCupsPpdTest, ParsePageSizeAttributesFromPPD_NonStandardSize_UsesPwgNameAsId, TestSize.Level1)
-{
-    std::string content = "*PPD-Adobe: \"4.3\"\n"
-        "*FileVersion: \"1.0\"\n"
-        "*LanguageEncoding: ISOLatin1\n"
-        "*LanguageLevel: \"2\"\n"
-        "*Manufacturer: \"Test\"\n"
-        "*ModelName: \"Test Printer\"\n"
-        "*NickName: \"Test Printer\"\n"
-        "*ColorDevice: True\n"
-        "*DefaultColor: Color\n"
-        "*OpenUI PageSize: PickOne\n"
-        "*OrderDependency: 10 AnySetup PageSize\n"
-        "*DefaultPageSize: Env10\n"
-        "*PageSize A4/A4: \"<</PageSize[595 842]/ImagingBBox null>>setpagedevice\"\n"
-        "*PageSize Env10/#10 Envelope: \"<</PageSize[297 684]/ImagingBBox null>>setpagedevice\"\n"
-        "*CloseUI: PageSize\n";
-    std::string ppdPath = CreateTempPpdFile(content);
-    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
-    ASSERT_NE(ppd, nullptr);
-    ppd->cache = _ppdCacheCreateWithPPD(ppd);
-    ASSERT_NE(ppd->cache, nullptr);
-
-    PrinterCapability printerCaps;
-    ParsePageSizeAttributesFromPPD(ppd, printerCaps);
-
-    std::vector<PrintPageSize> supportedPageSizes;
-    printerCaps.GetSupportedPageSize(supportedPageSizes);
-    ASSERT_EQ(supportedPageSizes.size(), 2);
-
-    bool hasStandardA4 = false;
-    bool hasNonStandardEnv10 = false;
-    for (const auto &pageSize : supportedPageSizes) {
-        if (pageSize.GetName() == "iso_a4_210x297mm") {
-            hasStandardA4 = true;
-            EXPECT_EQ(pageSize.GetId(), "ISO_A4");
-        } else if (pageSize.GetName() == "na_number-10_4.125x9.5in") {
-            hasNonStandardEnv10 = true;
-            EXPECT_EQ(pageSize.GetId(), "na_number-10_4.125x9.5in");
-        }
-    }
-    EXPECT_TRUE(hasStandardA4);
-    EXPECT_TRUE(hasNonStandardEnv10);
-
-    const char *defaultId = printerCaps.GetPrinterAttrValue("defaultPageSizeId");
-    ASSERT_NE(defaultId, nullptr);
-    EXPECT_STREQ(defaultId, "na_number-10_4.125x9.5in");
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);

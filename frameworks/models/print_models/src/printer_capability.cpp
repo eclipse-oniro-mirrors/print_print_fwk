@@ -703,12 +703,9 @@ std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize(
     const std::vector<PrintPageSize> &supportedPageSizeList)
 {
     std::vector<PrintPageSize> uniquePageSizeList = supportedPageSizeList;
-    // Move custom to the end to show standard sizes preferentially.
-    // Custom names come in two forms: the IPP/vendor "Custom.WxLmm" and the unified
-    // canonical PWG name "custom_WxLuu_WxLuu" kept by ConvertToPwgStyle.
+    // Move custom to the end to show standard sizes preferentially
     std::stable_partition(uniquePageSizeList.begin(), uniquePageSizeList.end(), [](const PrintPageSize &p) {
-        const std::string &name = p.GetName();
-        return name.find(CUSTOM_PREFIX) == std::string::npos && name.find("custom_") == std::string::npos;
+        return p.GetName().find(CUSTOM_PREFIX) == std::string::npos;
     });
     std::unordered_set<std::string> uniquePageSizeSet;
     auto it = uniquePageSizeList.begin();

@@ -233,8 +233,7 @@ HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle, TestSize.Level1)
     page.SetWidth(CUSTOM_WIDTH);
     page.SetHeight(CUSTOM_HEIGHT);
     page.ConvertToPwgStyle();
-    EXPECT_EQ(page.GetName(), "custom_184.99x259.99mm_184.99x259.99mm");
-    EXPECT_EQ(page.GetId(), "custom_184.99x259.99mm_184.99x259.99mm");
+    EXPECT_EQ(page.GetName(), "Custom.185x260mm");
 }
 
 HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle_LargeDimensions_NoOverflow, TestSize.Level1)
@@ -243,23 +242,7 @@ HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle_LargeDimensions_NoOverflow, TestSi
     page.SetWidth(50000000);
     page.SetHeight(50000000);
     EXPECT_TRUE(page.ConvertToPwgStyle());
-    EXPECT_NE(page.GetName().find("custom_"), std::string::npos);
-}
-
-/**
- * @tc.name: ConvertToPwgStyle_NonStandardSize_IdFallsBackToPwgName
- * @tc.desc: Non-standard size id falls back to the PWG name, consistent with the PPD paths.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle_NonStandardSize_IdFallsBackToPwgName, TestSize.Level1)
-{
-    PrintPageSize page;
-    page.SetWidth(4125); // 4.125 inch, #10 envelope width, not in the local page size table
-    page.SetHeight(9500); // 9.5 inch, #10 envelope length
-    EXPECT_TRUE(page.ConvertToPwgStyle());
-    EXPECT_EQ(page.GetName(), "na_number-10_4.125x9.5in");
-    EXPECT_EQ(page.GetId(), "na_number-10_4.125x9.5in");
+    EXPECT_NE(page.GetName().find("Custom."), std::string::npos);
 }
 
 }  // namespace Print

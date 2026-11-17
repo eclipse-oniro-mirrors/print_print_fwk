@@ -77,6 +77,8 @@ public:
 
     bool ConvertToPwgStyle();
 
+    bool ConvertToCustomStyle();
+
 private:
     bool ReadFromParcel(Parcel &parcel);
 

@@ -489,18 +489,29 @@ bool PrintPageSize::ConvertToPwgStyle()
         PRINT_HILOGE("pwgMedia Convert fail!");
         return false;
     }
+    std::string ppdName(pwgMedia->ppd);
     std::string pwgName(pwgMedia->pwg);
-    // Unified pageId rule: standard id (e.g. "ISO_A4") when the PWG name hits the local table,
-    // otherwise the PWG name itself, same as ParsePageSizeAttributesFromPPD/PpdAdapter::BuildEntries.
-    // Custom sizes keep the canonical self-describing PWG name ("custom_WxLuu_WxLuu") so the job
-    // pageId matches the PPD capability/mediaSizeMap/ppdOptionMap keys instead of a re-generated one.
-    SetId(pwgName);
+    SetId(ppdName);
     SetName(pwgName);
 
     PAGE_SIZE_ID matchId = MatchPageSize(pwgName);
     if (!matchId.empty()) {
         SetId(matchId);
     }
+
+    if (pwgName.find("custom_") != std::string::npos) {
+        ConvertToCustomStyle();
+    }
+    return true;
+}
+
+bool PrintPageSize::ConvertToCustomStyle()
+{
+    std::stringstream sizeName;
+    sizeName << CUSTOM_PREFIX << round(GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
+             << round(GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
+    SetId(sizeName.str());
+    SetName(sizeName.str());
     return true;
 }
 }  // namespace OHOS::Print
