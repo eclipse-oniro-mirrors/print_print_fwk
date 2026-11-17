@@ -1011,15 +1011,11 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_OversizeResult_ReturnedInF
         "*MediaType Plain/Plain Paper: \"x\"\n"
         "*zh_CN.MediaType Plain/CNHit: \"x\"\n*CloseUI: MediaType\n");
     for (int o = 0; o < 100; o++) {
-        char buf[8];
-        snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%02d", o);
-        std::string kw = std::string("Opt") + buf;
+        const std::string kw = "Opt" + (o < 10 ? std::string("0") : std::string()) + std::to_string(o);
         content += "*OpenUI " + kw + ": PickOne\n*OrderDependency: 10 AnySetup " + kw +
             "\n*Default" + kw + ": c0\n";
         for (int c = 0; c < 5; c++) {
-            char cb[8];
-            snprintf_s(cb, sizeof(cb), sizeof(cb) - 1, "c%d", c);
-            content += "*" + kw + " " + cb + "/" + name + ": \"" + text + "\"\n";
+            content += "*" + kw + " c" + std::to_string(c) + "/" + name + ": \"" + text + "\"\n";
         }
         content += "*CloseUI: " + kw + "\n";
     }
