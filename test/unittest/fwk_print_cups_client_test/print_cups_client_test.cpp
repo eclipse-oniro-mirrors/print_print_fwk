@@ -5304,9 +5304,10 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, 
     }
 }
 
-static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &reason)
+static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &reason,
+    PrintServiceAbility *serviceAbility)
 {
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+    auto param = std::make_shared<JobMonitorParam>(serviceAbility,
         TEST_SERVICE_JOB_ID,
         TEST_CUPS_JOB_ID,
         PRINTER_URI,
@@ -5317,6 +5318,15 @@ static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &
     return param;
 }
 
+// PrintServiceAbility owns a VendorManager whose destructor touches the vendor
+// framework and is not safe to run in the unit-test process, so keep the mock
+// alive for the whole test process instead of destroying it.
+static MockPrintServiceAbility *GetMockServiceAbility()
+{
+    static MockPrintServiceAbility *mockAbility = new MockPrintServiceAbility();
+    return mockAbility;
+}
+
 /**
  * @tc.name: HandleJobIsQueued_PkiInvalid_BlocksJob
  * @tc.desc: cups-pki-invalid reason blocks the job with bad-certificate substate.
@@ -5324,8 +5334,12 @@ static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &
  */
 HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiInvalid_BlocksJob, TestSize.Level1)
 {
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED),
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE))).WillOnce(Return(E_PRINT_NONE));
     OHOS::Print::PrintCupsClient printCupsClient;
-    auto param = CreateQueuedJobParam("cups-pki-invalid");
+    auto param = CreateQueuedJobParam("cups-pki-invalid", mockAbility);
     EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
 }
 
@@ -5336,8 +5350,12 @@ HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiInvalid_BlocksJob, TestSize.L
  */
 HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiUnknown_BlocksJob, TestSize.Level1)
 {
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED),
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE))).WillOnce(Return(E_PRINT_NONE));
     OHOS::Print::PrintCupsClient printCupsClient;
-    auto param = CreateQueuedJobParam("cups-pki-unknown");
+    auto param = CreateQueuedJobParam("cups-pki-unknown", mockAbility);
     EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
 }
 
@@ -5348,8 +5366,12 @@ HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiUnknown_BlocksJob, TestSize.L
  */
 HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiSubstring_BlocksJob, TestSize.Level1)
 {
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED),
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE))).WillOnce(Return(E_PRINT_NONE));
     OHOS::Print::PrintCupsClient printCupsClient;
-    auto param = CreateQueuedJobParam("xx-cups-pki-invalid-yy");
+    auto param = CreateQueuedJobParam("xx-cups-pki-invalid-yy", mockAbility);
     EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
 }
 
@@ -5360,8 +5382,12 @@ HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiSubstring_BlocksJob, TestSize
  */
 HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_NormalReason_NotPki, TestSize.Level1)
 {
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_QUEUED),
+        static_cast<uint32_t>(PRINT_JOB_COMPLETED_SUCCESS))).WillOnce(Return(E_PRINT_NONE));
     OHOS::Print::PrintCupsClient printCupsClient;
-    auto param = CreateQueuedJobParam("none");
+    auto param = CreateQueuedJobParam("none", mockAbility);
     EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
 }
 
@@ -5372,8 +5398,12 @@ HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_NormalReason_NotPki, TestSize.Le
  */
 HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_EmptyReason_NotPki, TestSize.Level1)
 {
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_QUEUED),
+        static_cast<uint32_t>(PRINT_JOB_COMPLETED_SUCCESS))).WillOnce(Return(E_PRINT_NONE));
     OHOS::Print::PrintCupsClient printCupsClient;
-    auto param = CreateQueuedJobParam("");
+    auto param = CreateQueuedJobParam("", mockAbility);
     EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
 }
 

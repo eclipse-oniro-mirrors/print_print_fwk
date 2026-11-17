@@ -116,7 +116,7 @@ public:
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override;
     int32_t StartNativePrintJob(PrintJob &printJob) override;
-    int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
+    virtual int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
     void CancelUserPrintJobs(const int32_t userId);
     void NotifyCurrentUserChanged(const int32_t userId);
     bool FlushCacheFileToUserData(const std::string &jobId);

@@ -4019,9 +4019,6 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
     PRINT_HILOGI("[Job Id: %{public}s] PrintServiceAbility::SendPrintJobEvent, state: %{public}d, subState: %{public}d",
         jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
-    // if (jobInfo.GetSubState() == PRINT_JOB_BLOCKED_BAD_CERTIFICATE) {
-    //     ConfirmCertTrust(jobInfo.GetPrinterId(), true);
-    // }
     std::string stateInfo = "";
     uint32_t state = PRINT_PRINT_JOB_DEFAULT;
     GetPrintJobStateInfo(jobInfo, stateInfo, state);

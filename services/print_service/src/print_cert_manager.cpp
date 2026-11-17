@@ -16,7 +16,7 @@
 #include "print_cert_manager.h"
 
 #include <cups/cups-private.h>
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 #include "print_log.h"
 #include "print_utils.h"
