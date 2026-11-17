@@ -1070,12 +1070,13 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_InvalidLanguageForm
 HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_Bcp47Hit_Translation, TestSize.Level1)
 {
 #ifdef CUPS_ENABLE
-    // SA layer is the normalization point: zh-Hans-CN -> zh_CN (library-level raw match
-    // contract covered by GetLocalizedStringsFromPpd_LanguageListRawMatch)
+    // BCP47 full form is normalized to zh_CN at both SA and library entries (idempotent)
     const std::string ppdName = "ut_loc_" + std::to_string(getpid()) + ".ppd";
     CreateTestPpdFile(ppdName, UT_PPD_WITH_ZH);
     const std::string id = "ut_loc_" + std::to_string(getpid());
     PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Loc", ppdName));
+    // SA 入口 ManualStart 可能触发 OnStart 从 spool 重载并清洗内存表：先落盘再调用
+    PrintDataRepository::GetInstance().SavePrinterFile(id);
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
     auto mockHelper = std::make_shared<MockPrintServiceHelper>();

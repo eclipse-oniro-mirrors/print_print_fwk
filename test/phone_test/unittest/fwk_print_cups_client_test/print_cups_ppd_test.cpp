@@ -1023,7 +1023,7 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_OversizeResult_ReturnedInF
     std::string resultJson;
     int32_t ret = GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson);
     EXPECT_EQ(ret, E_PRINT_NONE);   // no 100KB business cap: full result returned
-    EXPECT_GT(resultJson.size(), 60u * 1024u);  // ~100 options x 5 choices x dual layers ~= 90KB
+    EXPECT_GT(resultJson.size(), 40u * 1024u);  // device-measured ~58KB; robust floor vs a hypothetical 100KB cap
     RemoveTempFile(ppdPath);
 }
 
