@@ -130,7 +130,6 @@ public:
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
-    void UpdatePrinterStatusByPrinterId(const std::string &printerId, PrinterStatus printerStatus);
     void RemovePrinterFromDiscoveryAndMarkOffline(const std::string &printerId);
     void InjectUserCustomPageSizes(const std::string &printerId, PrinterInfo &printer);
 

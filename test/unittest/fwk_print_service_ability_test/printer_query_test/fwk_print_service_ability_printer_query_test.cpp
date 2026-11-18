@@ -1081,42 +1081,6 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionByPrinterId_withDeviceId, 
 }
 #endif
 
-HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_NonIpPrinterUpdated, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "fwk.driver.wlan.group:mdns_status_test";
-    auto printer = std::make_shared<PrinterInfo>();
-    printer->SetPrinterId(printerId);
-    printer->SetPrinterName("HP LaserJet");
-    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
-
-    service->UpdatePrinterStatusByPrinterId(printerId, PRINTER_STATUS_UNAVAILABLE);
-
-    PrinterInfo result;
-    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
-    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
-    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
-}
-
-HWTEST_F(PrintServiceAbilityTest, UpdatePrinterStatusByPrinterId_IpPrinterSkipped, TestSize.Level1)
-{
-    auto service = PrintServiceAbilityTest::CreateService();
-    std::string printerId = "fwk.driver.wlan.group:mdns_ip_status_test";
-    auto printer = std::make_shared<PrinterInfo>();
-    printer->SetPrinterId(printerId);
-    printer->SetPrinterName("192.168.0.1");
-    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
-
-    service->UpdatePrinterStatusByPrinterId(printerId, PRINTER_STATUS_UNAVAILABLE);
-
-    PrinterInfo result;
-    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
-    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_IDLE);
-    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
-}
-
 HWTEST_F(PrintServiceAbilityTest, ReportPrinterIdle_DiscoveredUnavailablePrinterKeptOffline, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();

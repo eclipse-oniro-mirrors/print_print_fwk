@@ -299,26 +299,6 @@ void PrintServiceAbility::UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterS
     SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
 }
 
-void PrintServiceAbility::UpdatePrinterStatusByPrinterId(const std::string &printerId, PrinterStatus printerStatus)
-{
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PrinterInfo printerInfo;
-    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
-        PRINT_HILOGW("[Printer: %{public}s] not added, skip status update",
-            PrintUtils::AnonymizePrinterId(printerId).c_str());
-        return;
-    }
-    if (DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerInfo.GetPrinterName().c_str())) {
-        PRINT_HILOGD("[Printer: %{public}s] ip-added printer, skip status update",
-            PrintUtils::AnonymizePrinterId(printerId).c_str());
-        return;
-    }
-    if (static_cast<PrinterStatus>(printerInfo.GetPrinterStatus()) == printerStatus) {
-        return;
-    }
-    UpdatePrinterStatus(printerInfo, printerStatus);
-}
-
 void PrintServiceAbility::RemovePrinterFromDiscoveryAndMarkOffline(const std::string &printerId)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
