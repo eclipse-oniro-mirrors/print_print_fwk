@@ -1630,6 +1630,41 @@ int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, Pr
     return ret;
 }
 
+int32_t PrintServiceProxy::GetPrinterLocalizedStrings(const std::string &printerId,
+    const std::string &language, std::string &resultJson)
+{
+    PRINT_HILOGI("PrintServiceProxy GetPrinterLocalizedStrings started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(language), E_PRINT_RPC_FAILURE);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy GetPrinterLocalizedStrings remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_LOCALIZED_STRINGS, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("GetPrinterLocalizedStrings SendRequest failed, ret = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t serviceRet = E_PRINT_NONE;
+    if (!reply.ReadInt32(serviceRet)) {
+        PRINT_HILOGE("GetPrinterLocalizedStrings read service ret failed");
+        return E_PRINT_RPC_FAILURE;
+    }
+    if (serviceRet == E_PRINT_NONE && !reply.ReadString(resultJson)) {
+        PRINT_HILOGE("GetPrinterLocalizedStrings read result json failed");
+        return E_PRINT_RPC_FAILURE;
+    }
+    PRINT_HILOGD("PrintServiceProxy GetPrinterLocalizedStrings done, ret = %{public}d, size = %{public}zu",
+        serviceRet, resultJson.size());
+    return serviceRet;
+}
+
 int32_t PrintServiceProxy::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)
 {
     PRINT_HILOGI("PrintServiceProxy GetSharedHosts started.");
@@ -1716,7 +1751,6 @@ int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, cons
     PRINT_HILOGI("PrintServiceProxy AuthSmbDevice out. ret = [%{public}d]", ret);
     return ret;
 }
-
 
 int32_t PrintServiceProxy::RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback)
 {

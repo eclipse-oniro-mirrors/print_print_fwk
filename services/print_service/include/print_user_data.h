@@ -22,11 +22,13 @@
 #include <map>
 #include <deque>
 #include <mutex>
+#include "json/json.h"
 
 #include "printer_info.h"
 #include "print_util.h"
 #include "iprint_callback.h"
 #include "printer_user_preferences.h"
+#include "print_page_size.h"
 
 namespace OHOS {
 namespace Print {
@@ -87,6 +89,12 @@ public:
                                      PrinterUserPreferences &userPrefs);
     void DeletePrinterUserPreferences(const std::string &printerId, const std::string &standardizedPrinterName);
 
+    bool SaveCustomPageSizes(const std::string &printerId, const std::string &standardizedPrinterName,
+                             const std::vector<PrintPageSize> &list);
+    bool LoadCustomPageSizes(const std::string &printerId, const std::string &standardizedPrinterName,
+                             std::vector<PrintPageSize> &list);
+    void DeleteCustomPageSizes(const std::string &printerId, const std::string &standardizedPrinterName);
+
 private:
     bool SetUserDataToFile();
     bool GetFileData(std::string &fileData);
@@ -138,6 +146,7 @@ private:
     std::map<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>
         printHistoryJobList_;
     std::map<std::string, std::shared_ptr<PrinterUserPreferences>> printerUserPreferences_;
+    std::map<std::string, std::vector<PrintPageSize>> printerCustomPageSizes_;
 };
 
 }  // namespace Print

@@ -162,9 +162,11 @@ public:
     void InitExtPrinterIdList(std::vector<std::string> &idList, size_t count);
     void InitFileList(std::vector<std::string> &fileList);
     void InitExtensionList(std::vector<AppExecFwk::ExtensionAbilityInfo> &extList);
+    static void RegisterTempFileForCleanup(const std::string &filePath);
 
 private:
     std::string parameterSaved;
+    static std::vector<std::string> tempFilesForCleanup_;
 };
 
 }  // namespace Print

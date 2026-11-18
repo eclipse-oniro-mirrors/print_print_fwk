@@ -35,6 +35,7 @@ public:
 void PrintDataRepositoryTest::SetUp()
 {
     PrintDataRepository::GetInstance().Init();
+    PrintDataRepository::GetInstance().ResetForTest();
 }
 
 void PrintDataRepositoryTest::TearDown()
@@ -124,6 +125,7 @@ HWTEST_F(PrintDataRepositoryTest, PrintDataRepository_DiscoveredPrinter_Concurre
             add->SetPrinterId(printerId);
             add->SetPrinterName("Readded" + std::to_string(i));
             PrintDataRepository::GetInstance().AddPrinterToDiscovery(add);
+            PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerId, PRINTER_CONNECTED);
         }
     });
     std::thread reader([printerId, iterations]() {
@@ -138,7 +140,10 @@ HWTEST_F(PrintDataRepositoryTest, PrintDataRepository_DiscoveredPrinter_Concurre
     updater.join();
     remover.join();
     reader.join();
-    EXPECT_TRUE(true);
+    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerId, PRINTER_CONNECTED);
+    auto finalInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    ASSERT_NE(finalInfo, nullptr);
+    EXPECT_EQ(finalInfo->GetPrinterState(), PRINTER_CONNECTED);
 }
 
 HWTEST_F(PrintDataRepositoryTest, PrintDataRepository_IpPrinter_ConcurrentQueryUpdateDelete, TestSize.Level1)
@@ -166,6 +171,7 @@ HWTEST_F(PrintDataRepositoryTest, PrintDataRepository_IpPrinter_ConcurrentQueryU
             add->SetPrinterId(printerId);
             add->SetPrinterName("IP Readded" + std::to_string(i));
             PrintDataRepository::GetInstance().AddIpPrinterToList(add);
+            PrintDataRepository::GetInstance().SetIpPrinterState(printerId, PRINTER_CONNECTED);
         }
     });
     std::thread reader([printerId, iterations]() {
@@ -178,8 +184,11 @@ HWTEST_F(PrintDataRepositoryTest, PrintDataRepository_IpPrinter_ConcurrentQueryU
     updater.join();
     remover.join();
     reader.join();
+    PrintDataRepository::GetInstance().SetIpPrinterState(printerId, PRINTER_CONNECTED);
+    auto finalInfo = PrintDataRepository::GetInstance().QueryIpPrinterInfoById(printerId);
+    ASSERT_NE(finalInfo, nullptr);
+    EXPECT_EQ(finalInfo->GetPrinterState(), PRINTER_CONNECTED);
     PrintDataRepository::GetInstance().RemoveIpPrinterFromList(printerId);
-    EXPECT_TRUE(true);
 }
 
 HWTEST_F(PrintDataRepositoryTest, PrintDataRepository_QueryAddedPrinterInfoByPrinterId_P2PFallback, TestSize.Level1)

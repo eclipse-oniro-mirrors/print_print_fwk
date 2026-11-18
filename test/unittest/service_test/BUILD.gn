@@ -90,7 +90,6 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
-    ":print_feature_test_plugin",
   ]
 
   cflags_cc = [
@@ -190,27 +189,6 @@ ohos_unittest("print_service_test") {
     ]
   }
 
-}
-
-ohos_shared_library("print_feature_test_plugin") {
-  testonly = true
-  sources = [
-    "${_test_path}/unittest/service_test/plugin/print_feature_test_plugin.cpp",
-  ]
-
-  include_dirs = [
-    "${print_path}/services/print_service/include",
-  ]
-
-  external_deps = [
-    "hilog:libhilog",
-  ]
-
-  subsystem_name = "print"
-  part_name = "print_fwk"
-  output_name = "print_feature_test"
-  output_extension = "z.so"
-  install_enable = true
 }
 
 ohos_unittest("scan_service_test") {

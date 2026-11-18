@@ -705,6 +705,45 @@ static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAn
     AsyncCallback(env, callback, stsErrCode, PrinterInfoAniHelper::CreatePrinterInformation(env, info));
 }
 
+static void GetPrinterLocalizedStringsNative(ani_env *env, ani_string printerIdAni,
+    ani_string languageAni, ani_object callback)
+{
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
+    PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(callback);
+    std::string printerId;
+    if (!GetStdString(env, printerIdAni, printerId)) {
+        PRINT_HILOGE("GetStdString fail for printerId");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
+    if (printerId.empty()) {
+        PRINT_HILOGE("printerId is empty");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
+    std::string language;
+    if (!GetStdString(env, languageAni, language)) {
+        PRINT_HILOGE("GetStdString fail for language");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
+    if (language.empty()) {
+        PRINT_HILOGE("language is empty");
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
+        return;
+    }
+    PRINT_HILOGD("printerId: %{private}s, language: %{private}s", printerId.c_str(), language.c_str());
+    std::string resultJson;
+    int32_t ret = PrintManagerClient::GetInstance().GetPrinterLocalizedStrings(
+        printerId, language, resultJson);
+    ani_object stsErrCode = CreateStsError(env, ret);
+    if (ret == E_PRINT_NONE) {
+        AsyncCallback(env, callback, stsErrCode, CreateAniString(env, resultJson));
+    } else {
+        AsyncCallback(env, callback, stsErrCode, nullptr);
+    }
+}
+
 static void OnPrinterStateChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_CHECK_NULL_RETURN_VOID_WITH_FUNC(env);
@@ -930,6 +969,7 @@ static std::array methods = {
     MakeNativeFunc("updatePrinterInDiscoveryNative", UpdatePrinterInDiscoveryNative),
     MakeNativeFunc("removePrinterFromDiscoveryNative", RemovePrinterFromDiscoveryNative),
     MakeNativeFunc("getPrinterInformationByIdNative", GetPrinterInformationByIdNative),
+    MakeNativeFunc("getPrinterLocalizedStringsNative", GetPrinterLocalizedStringsNative),
     MakeNativeFunc("onPrinterStateChangeNative", OnPrinterStateChangeNative),
     MakeNativeFunc("onJobStateChangeNative", OnJobStateChangeNative),
     MakeNativeFunc("onExtInfoChangeNative", OnExtInfoChangeNative),

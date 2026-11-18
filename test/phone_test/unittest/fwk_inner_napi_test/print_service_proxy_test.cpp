@@ -1354,6 +1354,7 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterDefaultPreferencesTest, TestSize.Level
     EXPECT_FALSE(testDefaultPreferences.HasOption());
 }
 
+
 HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
 {
     std::string testPrinterId = "111";
@@ -1380,7 +1381,8 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
     });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _))
         .WillOnce(Return(ERR_TRANSACTION_FAILED))
-        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
@@ -1391,6 +1393,48 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
     ret = proxy->GetPrinterPreference(testPrinterId, testPreferences);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_FALSE(testPreferences.HasOption());
+}
+
+HWTEST_F(PrintServiceProxyTest, GetPrinterLocalizedStringsTest, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    std::string testLanguage = "zh_CN";
+    std::string testResult;
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    int32_t ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    proxy.reset();
+
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, GetPrinterLocalizedStrings(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId, &testLanguage]
+            (const std::string &printerId, const std::string &language, std::string &resultJson) {
+            EXPECT_EQ(testPrinterId, printerId);
+            EXPECT_EQ(testLanguage, language);
+            resultJson = "{\"language\":\"zh_CN\"}";
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_TRANSACTION_FAILED))
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+
+    ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(testResult, "{\"language\":\"zh_CN\"}");
 }
 
 /**

@@ -26,6 +26,7 @@
 #include "print_utils.h"
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
+#include "print_cups_ppd.h"
 #endif  // CUPS_ENABLE
 
 namespace OHOS {
@@ -229,8 +230,50 @@ bool PrintSystemData::Init()
         DeleteFile(printerListFilePath);
     }
     MigratePrinterPrintScaling();
+    MigratePpdAvailableLanguages();
     CleanIppRawDataFiles();
     return true;
+}
+
+void PrintSystemData::MigratePpdAvailableLanguages()
+{
+    for (const auto &printerId : QueryAddedPrinterIdList()) {
+        PrinterInfo printerInfo;
+        if (!QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) || !printerInfo.HasCapability()) {
+            continue;
+        }
+        PrinterCapability printerCaps;
+        printerInfo.GetCapability(printerCaps);
+        Json::Value optionJson;
+        if (!PrintJsonUtil::Parse(printerCaps.GetOption(), optionJson) ||
+            optionJson.isMember("ppdAvailableLanguages")) {
+            continue;  // field present or unparsable option: idempotent skip
+        }
+        PpdInfo ppdInfo;
+        printerInfo.GetSelectedDriver(ppdInfo);
+        std::string ppdName = ppdInfo.GetPpdName();
+        if (ppdName.empty() || ppdName == PPD_NAME_AUTO) {
+            continue;  // driverless/auto out of scope: no vendor PPD migration (yet)
+        }
+        auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+        if (cupsClient == nullptr) {
+            PRINT_HILOGE("cups client unavailable, stop migration");
+            return;
+        }
+        std::string resolvedPath;
+        if (!PrintUtils::ResolveAndValidatePath(cupsClient->GetCurCupsModelDir() + ppdName, resolvedPath)) {
+            continue;  // no such model PPD: absence stays the trigger, retried next boot
+        }
+        Json::Value langs;
+        if (!QueryPpdAvailableLanguagesFromFile(resolvedPath, langs)) {
+            continue;
+        }
+        optionJson["ppdAvailableLanguages"] = langs;
+        printerCaps.SetOption(PrintJsonUtil::WriteString(optionJson));
+        printerInfo.SetCapability(printerCaps);
+        InsertAddedPrinter(printerId, printerInfo);
+        SavePrinterFile(printerId);
+    }
 }
 
 void PrintSystemData::MigratePrinterPrintScaling()
@@ -759,7 +802,6 @@ void PrintSystemData::UpdatePrinterUri(const PrinterInfo &printerInfo)
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }
-
 
 void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences)
 {
@@ -1572,7 +1614,6 @@ Json::Value PrintSystemData::GetCupsOptionsJson(const PrinterCapability &cap)
 
 int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences)
 {
-    PRINT_HILOGI("BuildPrinterPreference enter");
     Json::Value capOpt = GetCupsOptionsJson(cap);
     if (!capOpt.isNull()) {
         BuildPrinterPreferenceByDefault(capOpt, printPreferences);
@@ -1595,7 +1636,6 @@ static bool UpdateIntCapOption(const Json::Value &capOpt, const std::string &key
 
 void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences)
 {
-    PRINT_HILOGI("BuildPrinterPreferenceByDefault enter");
     if (printPreferences.GetDefaultPageSizeId().empty() &&
         PrintJsonUtil::IsMember(capOpt, "defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
         printPreferences.SetDefaultPageSizeId(capOpt["defaultPageSizeId"].asString());
@@ -1873,5 +1913,34 @@ void PrintSystemData::GetWebPrinterListFromSystemData(std::vector<std::string> &
     }
     return;
 }
+
+#ifdef UNIT_TEST
+void PrintSystemData::ResetForTest()
+{
+    addedPrinterMap_.Clear();
+#ifdef ENTERPRISE_ENABLE
+    addedPrinterEnterpriseMap_.Clear();
+    isEnterpriseEnable_.store(false);
+    isEnterprise_.store(false);
+#endif // ENTERPRISE_ENABLE
+
+    {
+        std::lock_guard<std::mutex> lock(discoveredListMutex);
+        discoveredPrinterInfoList_.clear();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+        connectingIpPrinterInfoList_.clear();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(smbPrinterListMutex);
+        discoveredSmbPrinterInfoList_.clear();
+    }
+
+    printEventMap_.Clear();
+}
+#endif // UNIT_TEST
 }  // namespace Print
 }  // namespace OHOS

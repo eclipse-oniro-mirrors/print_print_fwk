@@ -30,7 +30,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022_NeedRename, TestS
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
 info->SetPrinterId(printerId);
     PrintDataRepository::GetInstance().AddPrinterToDiscovery(info);
-    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), info);
+    auto result = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->GetPrinterId(), info->GetPrinterId());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0031_NeedRename, TestSize.Level1)

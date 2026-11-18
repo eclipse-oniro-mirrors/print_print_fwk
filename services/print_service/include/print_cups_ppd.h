@@ -19,6 +19,7 @@
 #include <cups/ppd.h>
 #include <cups/ppd-private.h>
 #include "printer_capability.h"
+#include <string>
 #include "print_constant.h"
 
 namespace OHOS::Print {
@@ -37,9 +38,17 @@ bool ValidateVendorAbilityBundle(const std::string &abilityName, const std::stri
 
 void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::string &ppdName);
 void ParseVendorAbilityFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
+void ParseCustomPageSizeFromPpd(ppd_file_t *ppd, Json::Value &options);
 Json::Value FindCustomParamLimit(ppd_cparam_t *cparam);
 ppd_cparam_t *FindCustomParam(ppd_coption_t *coption);
 
+bool NormalizePpdLanguage(const std::string &input, std::string &language);
+Json::Value BuildPpdAvailableLanguages(ppd_file_t *ppd);
+void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
+bool QueryPpdAvailableLanguagesFromFile(const std::string &resolvedPpdFilePath,
+    Json::Value &langs);
+int32_t GetLocalizedStringsFromPpd(const std::string &resolvedPpdFilePath,
+    const std::string &language, std::string &resultJson);
 const int ADVANCE_OPTION_MAXLENGTH = 100;
 }
 #endif // PRINT_CUPS_PPD_H

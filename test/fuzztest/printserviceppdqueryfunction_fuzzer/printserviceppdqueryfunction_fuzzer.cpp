@@ -20,6 +20,9 @@
 #include "printer_capability.h"
 #include "print_log.h"
 #include "print_service_ability.h"
+#include "print_cups_ppd.h"
+#include <fstream>
+#include <unistd.h>
 #include "print_service_ability_mock_permission.h"
 #include <functional>
 
@@ -121,6 +124,31 @@ void TestAddPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataPr
     PrintServiceAbility::GetInstance()->AddPrinter(printerName, printerUri, ppdName, options);
 }
 
+void TestGetPrinterLocalizedStringsChain(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string language = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string resultJson;
+    std::string resolvedPath;
+    PrintServiceAbility::GetInstance()->GetPpdFilePathByPrinterId(printerId, resolvedPath);
+    PrintServiceAbility::GetInstance()->GetPrinterLocalizedStrings(printerId, language, resultJson);
+}
+
+void TestLocalizedStringsFromFileApis(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string ppdContent = dataProvider->ConsumeRandomLengthString(900);
+    const std::string path = "/data/local/tmp/fuzz_l10n_" + std::to_string(getpid()) + ".ppd";
+    std::ofstream ofs(path, std::ios::trunc);
+    ofs << ppdContent;
+    ofs.close();
+    std::string language = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string resultJson;
+    GetLocalizedStringsFromPpd(path, language, resultJson);
+    Json::Value langs;
+    QueryPpdAvailableLanguagesFromFile(path, langs);
+    unlink(path.c_str());
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PRINT_HILOGI("multithreading is running at function TestPrintFunction.");
@@ -135,6 +163,8 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
         &TestParseSingleAdvanceOptJson,
         &TestGetConnectUri,
         &TestAddPrinter,
+        &TestGetPrinterLocalizedStringsChain,
+        &TestLocalizedStringsFromFileApis,
     };
 
     TestHandler handler = dataProvider->PickValueInArray(tasks);

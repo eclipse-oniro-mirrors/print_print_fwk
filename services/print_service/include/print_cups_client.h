@@ -200,10 +200,12 @@ public:
     int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
-        const std::string &changedType, std::vector<std::string>& conflictTypes);
+        const std::vector<PrintPageSize> &customPageSizeList, const std::string &changedType,
+        std::vector<std::string>& conflictTypes);
     IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
     std::string GetCurCupsModelDir();
+    const std::string& GetCurCupsRootDir();
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams);
@@ -274,7 +276,6 @@ private:
     static bool DecryptCustomOption(const std::string &keyStr,
         const struct HksBlob &base64Blob, struct HksBlob &plainBlob, PrintServiceAbility *serviceAbility);
     static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
-    const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerUri);
     int32_t HandleSystemAuthInfo(const std::string &jobId);
@@ -288,7 +289,8 @@ private:
     using StdStringMap = std::map<std::string, std::string>;
     int32_t CheckOptionConflicts(ppd_file_t *ppd, const StdStringMap &mapParams, const std::string& typeChanged,
         std::vector<std::string>& conflictTypes);
-    void BuildCupsOptionParamsByPreferences(const PrinterPreferences &preferences, StdStringMap &mapParams);
+    void BuildCupsOptionParamsByPreferences(const PrinterPreferences &preferences,
+        const std::vector<PrintPageSize> &customPageSizeList, StdStringMap &mapParams);
     void BuildCupsOptionParamsByPrintJob(const PrintJob &jobInfo,
         const JobParameters &jobParams, StdStringMap &mapParams);
     void BuildCupsOptionParamsByAdvJson(const Json::Value &jsonAdvOpt, StdStringMap &mapParams);

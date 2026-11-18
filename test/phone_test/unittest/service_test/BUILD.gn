@@ -74,7 +74,6 @@ ohos_unittest("print_service_test") {
     "${print_path}/frameworks/models/print_models:print_models",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service_phone:print_service_test",
-    ":print_feature_test_plugin",
   ]
 
   cflags_cc = [
@@ -238,27 +237,6 @@ ohos_unittest("scan_task_test") {
     "-Dprivate=public",
     "-Dprotected=public",
   ]
-}
-
-ohos_shared_library("print_feature_test_plugin") {
-  testonly = true
-  sources = [
-    "${_test_path}/unittest/service_test/plugin/print_feature_test_plugin.cpp",
-  ]
-
-  include_dirs = [
-    "${print_path}/services/print_service_phone/include",
-  ]
-
-  external_deps = [
-    "hilog:libhilog",
-  ]
-
-  subsystem_name = "print"
-  part_name = "print_fwk"
-  output_name = "print_feature_test"
-  output_extension = "z.so"
-  install_enable = true
 }
 
 group("unittest") {

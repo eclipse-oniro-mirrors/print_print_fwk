@@ -29,6 +29,7 @@
 #include "want.h"
 #include "os_account_manager.h"
 #include "syspara/parameter.h"
+#include "udmf_err_code.h"
 
 namespace {
     constexpr uint32_t ENABLE_BANNER_BIT = 1 << 9;
@@ -55,7 +56,12 @@ namespace {
 
     bool IsPhoneDevice()
     {
-        return std::string(GetDeviceType()) == DEVICE_TYPE_PHONE;
+        const char *deviceType = GetDeviceType();
+        if (deviceType == nullptr) {
+            PRINT_HILOGW("GetDeviceType returned nullptr, default to non-phone");
+            return false;
+        }
+        return std::string(deviceType) == DEVICE_TYPE_PHONE;
     }
 }
 
@@ -121,7 +127,11 @@ std::string UdmfDataGuard::Serialize()
     }
 
     char key[UDMF_KEY_BUFFER_SIZE] = {0};
-    OH_Udmf_SetUnifiedDataByOptions(option_, udmfUnifiedData_, key, UDMF_KEY_BUFFER_SIZE);
+    int32_t ret = OH_Udmf_SetUnifiedDataByOptions(option_, udmfUnifiedData_, key, UDMF_KEY_BUFFER_SIZE);
+    if (ret != UDMF_E_OK) {
+        PRINT_HILOGE("OH_Udmf_SetUnifiedDataByOptions failed, ret=%{public}d", ret);
+        return "";
+    }
     return std::string(key);
 }
 

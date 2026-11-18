@@ -122,6 +122,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_KIA_INTERCEPTOR_CB] =
                &PrintServiceStub::OnRegisterKiaInterceptorCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] = &PrintServiceStub::OnGetPrinterPreference;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_LOCALIZED_STRINGS] =
+        &PrintServiceStub::OnGetPrinterLocalizedStrings;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1188,6 +1190,20 @@ bool PrintServiceStub::OnGetPrinterPreference(MessageParcel &data, MessageParcel
     reply.WriteInt32(ret);
     printerPreference.Marshalling(reply);
     PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnGetPrinterLocalizedStrings(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnGetPrinterLocalizedStrings in");
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    std::string language;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(language), false);
+    std::string resultJson;
+    int32_t ret = GetPrinterLocalizedStrings(printerId, language, resultJson);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteString(resultJson), false);
     return ret == E_PRINT_NONE;
 }
 

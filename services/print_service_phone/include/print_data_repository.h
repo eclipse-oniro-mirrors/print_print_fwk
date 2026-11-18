@@ -37,6 +37,9 @@ public:
     static PrintDataRepository &GetInstance();
 
     bool Init();
+#ifdef UNIT_TEST
+    void ResetForTest();
+#endif // UNIT_TEST
 
     // Added printers
     void InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo);

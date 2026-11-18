@@ -442,7 +442,7 @@ int32_t PrintShellCommand::CopyFileToSandbox(const std::string& srcPath, std::st
     close(srcFd);
     close(dstFd);
 
-    PRINT_HILOGI("Copied file to sandbox: %{public}s -> %{public}s", srcPath.c_str(), sandboxPath.c_str());
+    PRINT_HILOGI("Copied file to sandbox.");
     return ERR_OK;
 }
 

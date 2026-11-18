@@ -107,7 +107,10 @@ PrinterUserPreferences::PrinterUserPreferences() {}
 PrinterUserPreferences::PrinterUserPreferences(const PrinterUserPreferences &other)
     : userId_(other.userId_), printerId_(other.printerId_),
       hasVendorOptions_(other.hasVendorOptions_), vendorOptions_(other.vendorOptions_),
-      customOptions_(other.customOptions_) {}
+      customOptions_(other.customOptions_),
+      hasCustomPageSizes_(other.hasCustomPageSizes_), customPageSizes_(other.customPageSizes_),
+      hasDefaultCustomPageSizeId_(other.hasDefaultCustomPageSizeId_),
+      defaultCustomPageSizeId_(other.defaultCustomPageSizeId_) {}
 
 PrinterUserPreferences::~PrinterUserPreferences() {}
 
@@ -194,6 +197,38 @@ std::vector<std::string> PrinterUserPreferences::GetAllCustomOptionKeys() const
     return keys;
 }
 
+void PrinterUserPreferences::SetCustomPageSizes(const std::vector<PrintPageSize> &list)
+{
+    customPageSizes_ = list;
+    hasCustomPageSizes_ = true;
+}
+
+bool PrinterUserPreferences::HasCustomPageSizes() const
+{
+    return hasCustomPageSizes_;
+}
+
+const std::vector<PrintPageSize> &PrinterUserPreferences::GetCustomPageSizes() const
+{
+    return customPageSizes_;
+}
+
+void PrinterUserPreferences::SetDefaultCustomPageSizeId(const std::string &id)
+{
+    defaultCustomPageSizeId_ = id;
+    hasDefaultCustomPageSizeId_ = !id.empty();
+}
+
+bool PrinterUserPreferences::HasDefaultCustomPageSizeId() const
+{
+    return hasDefaultCustomPageSizeId_;
+}
+
+const std::string &PrinterUserPreferences::GetDefaultCustomPageSizeId() const
+{
+    return defaultCustomPageSizeId_;
+}
+
 bool PrinterUserPreferences::IsEmpty() const
 {
     if (hasVendorOptions_) {
@@ -203,6 +238,12 @@ bool PrinterUserPreferences::IsEmpty() const
         if (!option.choice.empty()) {
             return false;
         }
+    }
+    if (hasCustomPageSizes_ && !customPageSizes_.empty()) {
+        return false;
+    }
+    if (hasDefaultCustomPageSizeId_) {
+        return false;
     }
     return true;
 }
@@ -226,7 +267,80 @@ Json::Value PrinterUserPreferences::ConvertToJson() const
         }
         userPrefsJson["customOptions"] = customArr;
     }
+    if (hasCustomPageSizes_) {
+        Json::Value listJson(Json::arrayValue);
+        for (const auto &pageSize : customPageSizes_) {
+            Json::Value entry;
+            entry[CUSTOM_PAGE_SIZE_ITEM_ID] = pageSize.GetId();
+            entry[CUSTOM_PAGE_SIZE_ITEM_NAME] = pageSize.GetName();
+            entry[CUSTOM_PAGE_SIZE_ITEM_WIDTH] = pageSize.GetWidth();
+            entry[CUSTOM_PAGE_SIZE_ITEM_HEIGHT] = pageSize.GetHeight();
+            listJson.append(entry);
+        }
+        userPrefsJson[CUSTOM_PAGE_SIZE_LIST_KEY] = listJson;
+    }
+    if (hasDefaultCustomPageSizeId_) {
+        userPrefsJson[DEFAULT_CUSTOM_PAGE_SIZE_ID_KEY] = defaultCustomPageSizeId_;
+    }
     return userPrefsJson;
+}
+
+void PrinterUserPreferences::ParseCustomOptionsFromJson(const Json::Value &json)
+{
+    if (!PrintJsonUtil::IsMember(json, "customOptions") || !json["customOptions"].isArray()) {
+        return;
+    }
+    for (const auto &optJson : json["customOptions"]) {
+        if (!optJson.isObject()) {
+            continue;
+        }
+        CustomOption opt;
+        if (optJson["key"].isString()) {
+            opt.key = optJson["key"].asString();
+        }
+        if (optJson["choice"].isString()) {
+            opt.choice = optJson["choice"].asString();
+        }
+        if (optJson["value"].isString()) {
+            opt.value.SetData(reinterpret_cast<const uint8_t *>(
+                optJson["value"].asString().c_str()), optJson["value"].asString().size());
+        }
+        customOptions_.push_back(opt);
+    }
+}
+
+void PrinterUserPreferences::ParseCustomPageSizesFromJson(const Json::Value &json)
+{
+    if (!PrintJsonUtil::IsMember(json, CUSTOM_PAGE_SIZE_LIST_KEY) ||
+        !json[CUSTOM_PAGE_SIZE_LIST_KEY].isArray()) {
+        return;
+    }
+    std::vector<PrintPageSize> pageSizes;
+    for (const auto &item : json[CUSTOM_PAGE_SIZE_LIST_KEY]) {
+        if (!item.isObject() || !PrintJsonUtil::IsMember(item, CUSTOM_PAGE_SIZE_ITEM_ID) ||
+            !item[CUSTOM_PAGE_SIZE_ITEM_ID].isString() ||
+            !PrintJsonUtil::IsMember(item, CUSTOM_PAGE_SIZE_ITEM_NAME) ||
+            !item[CUSTOM_PAGE_SIZE_ITEM_NAME].isString() ||
+            !PrintJsonUtil::IsMember(item, CUSTOM_PAGE_SIZE_ITEM_WIDTH) ||
+            !item[CUSTOM_PAGE_SIZE_ITEM_WIDTH].isUInt() ||
+            !PrintJsonUtil::IsMember(item, CUSTOM_PAGE_SIZE_ITEM_HEIGHT) ||
+            !item[CUSTOM_PAGE_SIZE_ITEM_HEIGHT].isUInt()) {
+            continue;
+        }
+        pageSizes.emplace_back(item[CUSTOM_PAGE_SIZE_ITEM_ID].asString(),
+            item[CUSTOM_PAGE_SIZE_ITEM_NAME].asString(),
+            item[CUSTOM_PAGE_SIZE_ITEM_WIDTH].asUInt(),
+            item[CUSTOM_PAGE_SIZE_ITEM_HEIGHT].asUInt());
+    }
+    SetCustomPageSizes(pageSizes);
+}
+
+void PrinterUserPreferences::ParseDefaultCustomPageSizeIdFromJson(const Json::Value &json)
+{
+    if (PrintJsonUtil::IsMember(json, DEFAULT_CUSTOM_PAGE_SIZE_ID_KEY) &&
+        json[DEFAULT_CUSTOM_PAGE_SIZE_ID_KEY].isString()) {
+        SetDefaultCustomPageSizeId(json[DEFAULT_CUSTOM_PAGE_SIZE_ID_KEY].asString());
+    }
 }
 
 void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
@@ -240,25 +354,9 @@ void PrinterUserPreferences::ConvertFromJson(Json::Value &json)
     if (PrintJsonUtil::IsMember(json, "vendorOptions") && json["vendorOptions"].isString()) {
         SetVendorOptions(json["vendorOptions"].asString());
     }
-    if (PrintJsonUtil::IsMember(json, "customOptions") && json["customOptions"].isArray()) {
-        for (const auto &optJson : json["customOptions"]) {
-            if (!optJson.isObject()) {
-                continue;
-            }
-            CustomOption opt;
-            if (optJson["key"].isString()) {
-                opt.key = optJson["key"].asString();
-            }
-            if (optJson["choice"].isString()) {
-                opt.choice = optJson["choice"].asString();
-            }
-            if (optJson["value"].isString()) {
-                opt.value.SetData(reinterpret_cast<const uint8_t *>(
-                    optJson["value"].asString().c_str()), optJson["value"].asString().size());
-            }
-            customOptions_.push_back(opt);
-        }
-    }
+    ParseCustomOptionsFromJson(json);
+    ParseCustomPageSizesFromJson(json);
+    ParseDefaultCustomPageSizeIdFromJson(json);
 }
 
 void PrinterUserPreferences::Dump() const
@@ -269,6 +367,12 @@ void PrinterUserPreferences::Dump() const
     for (const auto &opt : customOptions_) {
         PRINT_HILOGD("customOption: key=%{public}s, choice=%{public}s",
             opt.key.c_str(), opt.choice.c_str());
+    }
+    if (hasCustomPageSizes_ && !customPageSizes_.empty()) {
+        PRINT_HILOGD("customPageSizes count=%{public}zu", customPageSizes_.size());
+    }
+    if (hasDefaultCustomPageSizeId_) {
+        PRINT_HILOGD("defaultCustomPageSizeId=%{public}s", defaultCustomPageSizeId_.c_str());
     }
 }
 

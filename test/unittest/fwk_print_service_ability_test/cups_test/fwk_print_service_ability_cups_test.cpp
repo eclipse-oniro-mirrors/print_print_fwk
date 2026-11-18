@@ -14,6 +14,10 @@
  */
 
 #include "print_service_ability_test_common.h"
+#include "iprint_service.h"
+#include "print_data_repository.h"
+#include "print_json_util.h"
+#include <filesystem>
 
 namespace OHOS {
 namespace Print {
@@ -55,11 +59,13 @@ static std::string GetTestPpdDir()
 static void CreateTestPpdFile(const std::string &fileName, const std::string &content)
 {
     std::string dir = GetTestPpdDir();
-    std::filesystem::create_directories(dir);
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
     std::string filePath = dir + "/" + fileName;
     std::ofstream ofs(filePath);
     ofs << content;
     ofs.close();
+    PrintServiceAbilityTest::RegisterTempFileForCleanup(filePath);
 }
 
 static void RemoveTestPpdFile(const std::string &fileName)
@@ -946,5 +952,144 @@ HWTEST_F(PrintServiceAbilityTest, QueryPpdInfoMap_WhenFileNotOpen_ShouldReturnFa
     EXPECT_FALSE(cupsClient->QueryPpdInfoMap("/nonexistent/path/file.ppd", keyValues, info));
 }
 
+
+// ===== SA layer: GetPpdFilePathByPrinterId / GetPrinterLocalizedStrings branches =====
+namespace {
+const std::string UT_PPD_MINIMAL =
+    "*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n*LanguageEncoding: ISOLatin1\n"
+    "*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n*ModelName: \"T\"\n*NickName: \"T\"\n"
+    "*cupsLanguages: \"en zh_CN\"\n";
+const std::string UT_PPD_WITH_ZH = UT_PPD_MINIMAL +
+    "*OpenUI MediaType: PickOne\n*OrderDependency: 50 AnySetup MediaType\n"
+    "*DefaultMediaType: Plain\n*MediaType Plain/Plain Paper: \"<<MediaType(Plain)>>setpagedevice\"\n"
+    "*zh_CN.MediaType Plain/\u666e\u901a\u7eb8: \"<<MediaType(Plain)>>setpagedevice\"\n*CloseUI: MediaType\n";
+
+PrinterInfo MakeUtPrinter(const std::string &id, const std::string &name, const std::string &ppdName)
+{
+    PrinterInfo info;
+    info.SetPrinterId(id);
+    info.SetPrinterName(name);
+    info.SetUri("ipp://127.0.0.1/printers/" + name);
+    PpdInfo drv;
+    drv.SetPpdName(ppdName);
+    info.SetSelectedDriver(drv);
+    PrinterCapability caps;
+    caps.SetOption("{\"make\":\"T\"}");
+    info.SetCapability(caps);
+    return info;
+}
+} // namespace
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdFilePathByPrinterId_UnknownId_ReturnsInvalidPrinter, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string resolvedPath;
+    EXPECT_EQ(PrintServiceAbility::GetInstance()->GetPpdFilePathByPrinterId("", resolvedPath),
+        E_PRINT_INVALID_PRINTER);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdFilePathByPrinterId_ManualDriverHit_ReturnsNone, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    const std::string ppdName = "ut_manual_" + std::to_string(getpid()) + ".ppd";
+    CreateTestPpdFile(ppdName, UT_PPD_MINIMAL);
+    const std::string id = "ut_hit_" + std::to_string(getpid());
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Hit", ppdName));
+    std::string resolvedPath;
+    EXPECT_EQ(PrintServiceAbility::GetInstance()->GetPpdFilePathByPrinterId(id, resolvedPath), E_PRINT_NONE);
+    EXPECT_NE(resolvedPath.find(ppdName), std::string::npos);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(id, "Ut Hit");
+    RemoveTestPpdFile(ppdName);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdFilePathByPrinterId_TraversalNameAndQueueMiss_ReturnsInvalid, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    const std::string id = "ut_trav_" + std::to_string(getpid());
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Trav", "../evil.ppd"));
+    std::string resolvedPath;
+    EXPECT_EQ(PrintServiceAbility::GetInstance()->GetPpdFilePathByPrinterId(id, resolvedPath),
+        E_PRINT_INVALID_PRINTER);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(id, "Ut Trav");
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPpdFilePathByPrinterId_AutoDriverQueueHit_ReturnsNone, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    const std::string id = "ut_auto_" + std::to_string(getpid());
+    const std::string pname = "Ut Auto " + std::to_string(getpid());
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, pname, PPD_NAME_AUTO));
+    std::string queueDir = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsRootDir() + "/ppd";
+    std::string queuePath = queueDir + "/" + PrintUtil::StandardizePrinterName(pname) + ".ppd";
+    std::error_code ec;
+    std::filesystem::create_directories(queueDir, ec);
+    { std::ofstream ofs(queuePath); ofs << UT_PPD_MINIMAL; }
+    std::string resolvedPath;
+    EXPECT_EQ(PrintServiceAbility::GetInstance()->GetPpdFilePathByPrinterId(id, resolvedPath), E_PRINT_NONE);
+    unlink(queuePath.c_str());
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(id, pname);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_PermissionDenied_ReturnsNoPermission, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(false));
+    service->SetHelper(mockHelper);
+    std::string resultJson = "keep";
+    int32_t ret = static_cast<IPrintService &>(*service)
+        .GetPrinterLocalizedStrings("any", "zh_CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(resultJson, "keep");   // output untouched on failure
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_InvalidLanguageFormat_Err401, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    std::string resultJson;
+    int32_t ret = static_cast<IPrintService &>(*service)
+        .GetPrinterLocalizedStrings("any", "1x", resultJson);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_Bcp47Hit_Translation, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    // SA layer is the normalization point: zh-Hans-CN -> zh_CN (library-level raw match
+    // contract covered by GetLocalizedStringsFromPpd_LanguageListRawMatch)
+    const std::string ppdName = "ut_loc_" + std::to_string(getpid()) + ".ppd";
+    CreateTestPpdFile(ppdName, UT_PPD_WITH_ZH);
+    const std::string id = "ut_loc_" + std::to_string(getpid());
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Loc", ppdName));
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    std::string resultJson;
+    int32_t ret = static_cast<IPrintService &>(*service)
+        .GetPrinterLocalizedStrings(id, "zh-Hans-CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_NE(resultJson.find("\u666e\u901a\u7eb8"), std::string::npos);   // 普通纸 (UTF8 raw output)
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(id, "Ut Loc");
+    RemoveTestPpdFile(ppdName);
+#endif
+}
 }  // namespace Print
 }  // namespace OHOS

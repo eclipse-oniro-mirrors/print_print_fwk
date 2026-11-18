@@ -48,7 +48,24 @@ public:
     bool OnPrinterStatusReceived(const Json::Value &jsonArray) override;
     void ClearAllPrinters() override;
 
+    bool WaitForActiveCallsIdle(int32_t timeoutMs);
+
 private:
+    struct ActiveCallGuard {
+        explicit ActiveCallGuard(RemotePrinterManagerImpl &impl) : impl_(impl)
+        {
+            impl_.activeCalls_.fetch_add(1, std::memory_order_relaxed);
+        }
+        ~ActiveCallGuard()
+        {
+            if (impl_.activeCalls_.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+                std::lock_guard<std::mutex> lock(impl_.activeMutex_);
+                impl_.activeCv_.notify_all();
+            }
+        }
+        RemotePrinterManagerImpl &impl_;
+    };
+
     RemotePrinterManagerImpl();
     ~RemotePrinterManagerImpl() override;
     RemotePrinterManagerImpl(const RemotePrinterManagerImpl &) = delete;
@@ -73,6 +90,9 @@ private:
     std::once_flag initFlag_;
     IRemotePrinterEventHandler *eventHandler_ = nullptr;
     std::mutex handlerMutex_;
+    std::atomic<int32_t> activeCalls_{0};
+    std::mutex activeMutex_;
+    std::condition_variable activeCv_;
 };
 
 } // namespace OHOS::Print

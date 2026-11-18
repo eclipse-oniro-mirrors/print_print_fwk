@@ -25,6 +25,7 @@
 
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
+#include "print_cups_ppd.h"
 #endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
@@ -97,7 +98,6 @@ const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
 const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
-
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -643,7 +643,6 @@ int32_t PrintServiceAbility::CallSpooler(
     return E_PRINT_NONE;
 }
 
-
 int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &printerId)
 {
     PRINT_HILOGI("HandleExtensionConnectPrinter begin");
@@ -1122,6 +1121,62 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         info.SetIsLastUsedPrinter(true);
     }
     return E_PRINT_NONE;
+}
+int32_t PrintServiceAbility::GetPpdFilePathByPrinterId(const std::string &printerId,
+    std::string &resolvedPath)
+{
+    PrinterInfo printerInfo;
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId query printer info failed");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (cupsClient == nullptr) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId cups client unavailable");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PpdInfo ppdInfo;
+    printerInfo.GetSelectedDriver(ppdInfo);
+    std::string ppdName = ppdInfo.GetPpdName();
+    if (!ppdName.empty() && ppdName != PPD_NAME_AUTO && IsPpdNameValid(ppdName) &&
+        PrintUtils::ResolveAndValidatePath(cupsClient->GetCurCupsModelDir() + ppdName, resolvedPath)) {
+        PRINT_HILOGI("GetPpdFilePathByPrinterId resolved via manual driver");
+        return E_PRINT_NONE;
+    }
+    std::string queuePpdPath = cupsClient->GetCurCupsRootDir() + "/ppd/" +
+        PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName()) + ".ppd";
+    if (PrintUtils::ResolveAndValidatePath(queuePpdPath, resolvedPath)) {
+        PRINT_HILOGI("GetPpdFilePathByPrinterId resolved via queue-bound ppd");
+        return E_PRINT_NONE;
+    }
+    PRINT_HILOGE("GetPpdFilePathByPrinterId no usable ppd file, Id=%{private}s", printerId.c_str());
+    return E_PRINT_INVALID_PRINTER;
+}
+int32_t PrintServiceAbility::GetPrinterLocalizedStrings(const std::string &printerId,
+    const std::string &language, std::string &resultJson)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    ManualStart();
+    PRINT_HILOGI("GetPrinterLocalizedStrings in. printerId=%{private}s, language=%{private}s",
+        printerId.c_str(), language.c_str());
+    std::string normalizedLanguage;
+    if (!NormalizePpdLanguage(language, normalizedLanguage)) {
+        PRINT_HILOGE("GetPrinterLocalizedStrings invalid language parameter");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    std::string resolvedPpdFilePath;
+    int32_t ret = GetPpdFilePathByPrinterId(printerId, resolvedPpdFilePath);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId failed, ret=%{public}d", ret);
+        return ret;
+    }
+    ret = GetLocalizedStringsFromPpd(resolvedPpdFilePath, normalizedLanguage, resultJson);
+    PRINT_HILOGI("GetPrinterLocalizedStrings done, ret=%{public}d, size=%{public}zu",
+        ret, resultJson.size());
+    return ret;
 }
 
 int32_t PrintServiceAbility::QueryPrinterProperties(
@@ -2144,9 +2199,11 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
         return E_PRINT_INVALID_PRINTER;
     }
 
-    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerExtId, static_cast<PrinterState>(state));
-    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    PrinterInfo updatedInfo = *printerInfo;
+    updatedInfo.SetPrinterState(state);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerExtId, updatedInfo);
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, updatedInfo);
+    SendPrinterEvent(updatedInfo);
     PRINT_HILOGD("UpdatePrinterState end.");
     return E_PRINT_NONE;
 }
@@ -3994,7 +4051,10 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
         PRINT_HILOGI("new printer, add it");
         infoPtr->DumpInfo();
+        infoPtr->SetPrinterState(PRINTER_ADDED);
         PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
+    } else {
+        PrintDataRepository::GetInstance().SetDiscoveredPrinterState(infoPtr->GetPrinterId(), PRINTER_ADDED);
     }
     infoPtr->SetPrinterState(PRINTER_ADDED);
 
@@ -4084,13 +4144,14 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
-    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerId, PRINTER_REMOVED);
-    SendPrinterDiscoverEvent(PRINTER_REMOVED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    PrinterInfo removedInfo = *printerInfo;
+    removedInfo.SetPrinterState(PRINTER_REMOVED);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerId, removedInfo);
+    SendPrinterDiscoverEvent(PRINTER_REMOVED, removedInfo);
+    SendPrinterEvent(removedInfo);
     PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
 
     if (PrintDataRepository::GetInstance().IsPrinterAdded(printerId)) {
-        PrinterInfo removedInfo = *printerInfo;
         UpdatePrinterStatus(removedInfo, PRINTER_STATUS_UNAVAILABLE);
     }
     return true;
@@ -4354,8 +4415,6 @@ bool PrintServiceAbility::DoAddPrinterToCups(
     }
     return true;
 }
-
-
 
 bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
     std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData)

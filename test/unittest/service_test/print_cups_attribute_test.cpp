@@ -760,4 +760,134 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0032_DuplexMode_NullSrc,
     EXPECT_EQ(ConvertDuplexModeCode(nullptr, dst), false);
 }
 
+// ===== ParseCustomPageSizeRangeFromIPP Tests =====
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_NullResponse_NoCrash, TestSize.Level1)
+{
+    Json::Value options;
+    ParseCustomPageSizeRangeFromIPP(nullptr, options);
+    EXPECT_FALSE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_NoAttributes_RangeNull, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        // no media-supported keyword attributes
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        EXPECT_TRUE(options[CUSTOM_PAGE_SIZE_RANGE_KEY].isNull());
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_KeywordBoundsOnly_RangeSet, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        const char *media[] = {"custom_min_100x200mm", "custom_max_210x297mm"};
+        ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", 2, nullptr, media);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        const Json::Value &range = options[CUSTOM_PAGE_SIZE_RANGE_KEY];
+        ASSERT_TRUE(range.isObject());
+        EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_WIDTH].asUInt(), 3937u);
+        EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_WIDTH].asUInt(), 8268u);
+        EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MIN_HEIGHT].asUInt(), 7874u);
+        EXPECT_EQ(range[CUSTOM_PAGE_SIZE_MAX_HEIGHT].asUInt(), 11693u);
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_OnlyMinBound_RangeNull, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        const char *media[] = {"custom_min_100x200mm"};
+        ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", 1, nullptr, media);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        // only min bound present → not a valid range → null
+        EXPECT_TRUE(options[CUSTOM_PAGE_SIZE_RANGE_KEY].isNull());
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_InvalidKeywordBounds_RangeNull, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        // min width larger than max width → invalid range
+        const char *media[] = {"custom_min_300x400mm", "custom_max_100x200mm"};
+        ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", 2, nullptr, media);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        EXPECT_TRUE(options[CUSTOM_PAGE_SIZE_RANGE_KEY].isNull());
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_CollectionsIgnored_RangeNull, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        // media-size-supported / media-col-database are not parsed anymore;
+        // only custom_min_/custom_max_ keywords in media-supported establish a range.
+        ipp_t *inner = ippNew();
+        ippAddRange(inner, IPP_TAG_PRINTER, "x-dimension", 10000, 21000);
+        ippAddRange(inner, IPP_TAG_PRINTER, "y-dimension", 20000, 29700);
+        ippAddCollection(response, IPP_TAG_PRINTER, "media-size-supported", inner);
+        ippAddCollection(response, IPP_TAG_PRINTER, "media-col-database", inner);
+        ippDelete(inner);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        EXPECT_TRUE(options[CUSTOM_PAGE_SIZE_RANGE_KEY].isNull());
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_EmptyKeywordAttr_RangeNull, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        // media-supported present but with no usable bound keywords
+        const char *media[] = {"iso_a4_210x297mm"};
+        ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", 1, nullptr, media);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        EXPECT_TRUE(options[CUSTOM_PAGE_SIZE_RANGE_KEY].isNull());
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+HWTEST_F(PrintCupsAttributeTest, ParseCustomPageSizeRange_OversizedBound_RangeRejected, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        // 100000mm converts to ~3,937,000 mils which exceeds MAX_CUSTOM_PAGE_SIZE_EDGE_MILS (200000)
+        // IsValidCustomPageSizeRange rejects it → range becomes null
+        const char *media[] = {"custom_min_1x1mm", "custom_max_100000x100000mm"};
+        ippAddStrings(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-supported", 2, nullptr, media);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        Json::Value options;
+        ParseCustomPageSizeRangeFromIPP(response, options);
+        ASSERT_TRUE(options.isMember(CUSTOM_PAGE_SIZE_RANGE_KEY));
+        // oversized bound is rejected by IsValidCustomPageSizeRange, not clamped
+        EXPECT_TRUE(options[CUSTOM_PAGE_SIZE_RANGE_KEY].isNull());
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
 }  // namespace OHOS::Print

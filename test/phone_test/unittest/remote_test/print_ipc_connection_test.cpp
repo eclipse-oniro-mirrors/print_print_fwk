@@ -324,7 +324,7 @@ HWTEST_F(PrintIpcConnectionTest, OnAbilityConnectDone_AddDeathRecipientFail_Logs
     EXPECT_CALL(*mockRemote, AddDeathRecipient(_)).WillRepeatedly(Return(false));
     AppExecFwk::ElementName element;
     connection->OnAbilityConnectDone(element, mockRemote, ERR_OK);
-    EXPECT_NE(nullptr, connection->remoteObject_);
+    EXPECT_EQ(connection->remoteObject_.GetRefPtr(), mockRemote.GetRefPtr());
     EXPECT_NE(nullptr, connection->deathRecipient_);
 }
 
