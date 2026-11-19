@@ -167,6 +167,8 @@ public:
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
     int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override;
+    int32_t AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options) override;
     void HandleWebPrinterUninstall();
     virtual bool IsOversea();
 

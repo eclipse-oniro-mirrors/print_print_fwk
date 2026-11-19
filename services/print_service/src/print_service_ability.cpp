@@ -7048,6 +7048,190 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+    int32_t ppdFd, const std::string &options)
+{
+    // ppdFd 由 stub 层从 RPC 获取并统一关闭，本函数及其内部只读使用
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    ManualStart();
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("AddPrinterWithPpdFile options: %{public}s", options.c_str());
+
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (printCupsClient == nullptr) {
+        PRINT_HILOGE("printCupsClient is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (!printCupsClient->ValidatePpd(ppdFd)) {
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    std::string ppdData;
+    int32_t ppdReadRet = ReadPpdDataFromFd(ppdFd, ppdData);
+    if (ppdReadRet != E_PRINT_NONE) {
+        return ppdReadRet;
+    }
+
+    // 分支一：发现记录（printerId 非空）—— 名称取发现记录、支持 SMB 特例
+    if (!printerId.empty()) {
+        return ConnectPrinterByIdWithPpdFile(printerId, uri, ppdData);
+    }
+    // 分支二：完整 URI（IP 添加 / 自定义队列）—— 协议取 URI scheme、名称取解析出的 IP。
+    // 应用侧统一拼完整 URI（auto 等价 ipp），不存在裸 IP 入参；无 scheme 的 uri 由 ParsePrinterUri 拒绝。
+    return ConnectPrinterByUriWithPpdFile(uri, ppdData);
+}
+
+int32_t PrintServiceAbility::ConnectPrinterByIdWithPpdFile(const std::string &printerId, const std::string &uri,
+    const std::string &ppdData)
+{
+    PRINT_HILOGI("AddPrinterWithPpdFile by id");
+#ifdef EDM_PRINT_POLICY_ENABLE
+    if (IsPrinterBlockedByEdmPolicy(printerId)) {
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif
+#ifdef HAVE_SMB_PRINTER
+    if (auto smbPrinterInfo = PrintDataRepository::GetInstance().FindInfoInSmbPrinterDiscoverList(printerId)) {
+        PRINT_HILOGI("connect smb printer with ppd data");
+        return ConnectSmbPrinterWithPpdData(*smbPrinterInfo, ppdData);
+    }
+#endif // HAVE_SMB_PRINTER
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    PRINT_CHECK_NULL_AND_RETURN(discoveredInfo, E_PRINT_INVALID_PRINTER);
+    PrinterInfo printerInfo = *discoveredInfo;
+    std::string effectiveProtocol;
+    std::string connectUri = GetConnectUriByProtocol(printerInfo, uri, effectiveProtocol);
+    printerInfo.SetUri(connectUri);
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetSelectedProtocol(effectiveProtocol);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
+    return ConnectAndFinalizeWithPpd(printerInfo, ppdData);
+}
+
+int32_t PrintServiceAbility::ConnectPrinterByUriWithPpdFile(const std::string &uri, const std::string &ppdData)
+{
+    PRINT_HILOGI("AddPrinterWithPpdFile by uri");
+#ifdef EDM_PRINT_POLICY_ENABLE
+    PrinterInfo edmPrinterInfo;
+    edmPrinterInfo.SetUri(uri);
+    if (!EdmPrintPolicyManager::GetInstance().IsPrinterAllowedEdm(edmPrinterInfo)) {
+        PRINT_HILOGI("AddPrinterWithPpdFile by uri blocked by EDM Policy");
+        ReportPrinterBlockedEvent(PrintUtils::ExtractIpFromUri(uri), "");
+        return E_PRINT_EDM_POLICY_RESTRICTED;
+    }
+#endif
+    std::string printerIp;
+    std::string protocolFromUri;
+    std::string printQueue;
+    if (!ParsePrinterUri(uri, printerIp, protocolFromUri, printQueue)) {
+        return E_PRINT_INVALID_PRINTER;
+    }
+    PrinterInfo printerInfo;
+    // IP 添加规格：注册身份一律锚定 IP（fwk.driver.wlan.group:<ip>），自定义队列同规格
+    std::string globalPrinterId = PrintUtils::GetGlobalId(
+        VendorManager::GetGlobalVendorName("driver.wlan.group"), printerIp);
+    printerInfo.SetUri(uri);
+    printerInfo.SetPrinterId(globalPrinterId);
+    printerInfo.SetPrinterName(printerIp);
+    printerInfo.SetSelectedProtocol(protocolFromUri);
+    PrintDataRepository::GetInstance().ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    return ConnectAndFinalizeWithPpd(printerInfo, ppdData);
+}
+
+std::string PrintServiceAbility::GetConnectUriByProtocol(const PrinterInfo &printerInfo, const std::string &uri,
+    std::string &effectiveProtocol)
+{
+    effectiveProtocol = "auto";
+    const std::string &protocolSource = (uri.find("://") != std::string::npos) ? uri : printerInfo.GetUri();
+    size_t schemeEnd = protocolSource.find("://");
+    if (schemeEnd != std::string::npos) {
+        effectiveProtocol = protocolSource.substr(0, schemeEnd);
+    }
+    // 与厂商驱动链（DoAddPrinterToCups + GetConnectUri）保持一致：
+    // 用户所选协议决定实际连接/探测/注册 URI——优先取发现记录探测的 options[协议] 实测 URI，
+    // 探测未记录该协议时回退应用侧按所选协议重建的 URI（入参 uri 含 scheme），再退发现记录 URI
+    std::string connectUri = printerInfo.GetUri();
+    bool probedUriFound = false;
+    if (!effectiveProtocol.empty() && effectiveProtocol != "auto") {
+        Json::Value option;
+        if (PrintJsonUtil::Parse(printerInfo.GetOption(), option) &&
+            PrintJsonUtil::IsMember(option, effectiveProtocol) && option[effectiveProtocol].isString()) {
+            connectUri = option[effectiveProtocol].asString();
+            probedUriFound = true;
+        }
+    }
+    if (!probedUriFound && uri.find("://") != std::string::npos) {
+        connectUri = uri;
+    }
+    return connectUri;
+}
+
+int32_t PrintServiceAbility::ConnectAndFinalizeWithPpd(PrinterInfo &printerInfo, const std::string &ppdData)
+{
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    PRINT_CHECK_NULL_AND_RETURN(printCupsClient, E_PRINT_SERVER_FAILURE);
+    const std::string &uri = printerInfo.GetUri();
+    std::string finalName = RenamePrinterWhenAdded(printerInfo);
+    printerInfo.SetPrinterName(finalName);
+    int32_t ret = printCupsClient->AddPrinterToCupsWithPpd(uri, finalName, "local", ppdData);
+    if (ret != E_PRINT_NONE) {
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PrinterCapability printerCaps;
+    if (printCupsClient->QueryPrinterCapabilityFromCupsPpd(finalName, printerCaps) == E_PRINT_NONE) {
+        printerInfo.SetCapability(printerCaps);
+    }
+    printerInfo.SetPpdHashCode(printCupsClient->GetPpdHashCodeFromData(ppdData));
+    PpdInfo ppdInfo;
+    printCupsClient->QueryPpdInfoFromCupsPpd(finalName, ppdInfo);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    const std::string &printerId = printerInfo.GetPrinterId();
+    UpdatePrinterCapability(printerId, printerInfo);
+    printerInfo.SetPrinterState(PRINTER_CONNECTED);
+    SendPrinterEvent(printerInfo);
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, printerInfo);
+    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ReadPpdDataFromFd(int32_t ppdFd, std::string &ppdData)
+{
+    if (ppdFd < 0) {
+        PRINT_HILOGE("invalid ppd fd: %{public}d", ppdFd);
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    off_t ppdSize = lseek(ppdFd, 0, SEEK_END);
+    if (ppdSize <= 0) {
+        PRINT_HILOGE("ppd fd size invalid: %{public}d", static_cast<int>(ppdSize));
+        return E_PRINT_FILE_IO;
+    }
+    lseek(ppdFd, 0, SEEK_SET);
+    ppdData.resize(static_cast<size_t>(ppdSize));
+    ssize_t ppdTotalRead = 0;
+    while (ppdTotalRead < ppdSize) {
+        ssize_t n = read(ppdFd, &ppdData[ppdTotalRead], static_cast<size_t>(ppdSize) - ppdTotalRead);
+        if (n < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            PRINT_HILOGE("read ppd fd failed, errno: %{public}d", errno);
+            return E_PRINT_FILE_IO;
+        }
+        if (n == 0) {
+            break;
+        }
+        ppdTotalRead += n;
+    }
+    if (ppdTotalRead != ppdSize) {
+        PRINT_HILOGE("short read: expected %{public}d, got %{public}d",
+            static_cast<int>(ppdSize), static_cast<int>(ppdTotalRead));
+        return E_PRINT_FILE_IO;
+    }
+    return E_PRINT_NONE;
+}
+
 bool PrintServiceAbility::NeedUpdateAdvanceOptions(const std::string &printerId, const PrinterInfo &info)
 {
     if (!info.HasCapability()) {
@@ -7325,6 +7509,38 @@ int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const s
     SmbPrinterStateMonitor::GetInstance().SetSmbPrinterInMonitorList(printerInfo);
     TryStartSmbPrinterStatusMonitor();
     PRINT_HILOGI("ConnectSmbPrinter end");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ConnectSmbPrinterWithPpdData(PrinterInfo& printerInfo, const std::string &ppdData)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::string printerName = RenamePrinterWhenAdded(printerInfo);
+    printerInfo.SetPrinterName(printerName);
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (int32_t ret = printCupsClient->AddPrinterToCupsWithPpd(
+        printerInfo.GetUri(), printerInfo.GetPrinterName(), "local", ppdData); ret != E_PRINT_NONE) {
+        PRINT_HILOGE("AddPrinterToCupsWithPpd error = %{public}d.", ret);
+        return ret;
+    }
+    // 能力 + 元数据复用 cupsd 落盘的 PPD（<printerName>.ppd）
+    PrinterCapability printerCaps;
+    if (printCupsClient->QueryPrinterCapabilityFromCupsPpd(printerName, printerCaps) == E_PRINT_NONE) {
+        printerInfo.SetCapability(printerCaps);
+    }
+    printerInfo.SetPpdHashCode(printCupsClient->GetPpdHashCodeFromData(ppdData));
+    PpdInfo ppdInfo;
+    printCupsClient->QueryPpdInfoFromCupsPpd(printerName, ppdInfo);
+    printerInfo.SetSelectedDriver(ppdInfo);
+    printerInfo.SetSelectedProtocol("smb");
+    UpdatePrinterCapability(printerInfo.GetPrinterId(), printerInfo);
+    printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterEvent(printerInfo);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, printerInfo);
+    PrintDataRepository::GetInstance().SavePrinterFile(printerInfo.GetPrinterId());
+    SmbPrinterStateMonitor::GetInstance().SetSmbPrinterInMonitorList(printerInfo);
+    TryStartSmbPrinterStatusMonitor();
+    PRINT_HILOGI("ConnectSmbPrinterWithPpdData end");
     return E_PRINT_NONE;
 }
 

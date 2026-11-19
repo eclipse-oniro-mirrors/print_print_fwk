@@ -719,6 +719,11 @@ std::string PrintCupsClient::GetCurCupsModelDir()
     return GetCurCupsRootDir() + "/datadir/model/";
 }
 
+std::string PrintCupsClient::GetCurCupsPpdDir()
+{
+    return GetCurCupsRootDir() + "/ppd/";
+}
+
 const std::string &PrintCupsClient::GetCurCupsdControlParam()
 {
 #ifdef ENTERPRISE_ENABLE
@@ -927,13 +932,52 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(
     return E_PRINT_NONE;
 }
 
+// 发送本地 PPD 数据到 cupsd 并校验响应（CUPS-Add-Modify-Printer 的数据阶段）。
+// 与 cupsDoIORequest 语义对齐：写完数据后读取响应，既暴露失败，也保证 cupsd 已把 PPD
+// 落盘后再返回，否则调用方解析落盘 PPD 会 ENOENT。request 在所有返回路径上由本函数释放。
+static int32_t SendPpdDataAndCheckResponse(http_t *http, ipp_t *request, const std::string &ppdData)
+{
+    http_status_t status = cupsSendRequest(http, request, "/admin/", ippLength(request) + ppdData.length());
+    if (status == HTTP_STATUS_CONTINUE && request->state == IPP_STATE_DATA) {
+        status = cupsWriteRequestData(http, ppdData.c_str(), ppdData.length());
+    } else if (status != HTTP_STATUS_OK) {
+        ippDelete(request);
+        PRINT_HILOGW("ppd not send, status = %{public}d", static_cast<int>(status));
+        return E_PRINT_SERVER_FAILURE;
+    }
+    ippDelete(request);
+    // 与cupsDoIORequest保持一致：HTTP层未拿到最终状态时才继续读取响应（ERROR状态交由cupsGetResponse收敛）
+    if (status > HTTP_STATUS_CONTINUE && status != HTTP_STATUS_OK) {
+        PRINT_HILOGW("add error, status = %{public}d", static_cast<int>(status));
+        return E_PRINT_SERVER_FAILURE;
+    }
+    ipp_t *response = cupsGetResponse(http, "/admin/");
+    http_status_t httpStatus = httpGetStatus(http);
+    if (response == nullptr) {
+        PRINT_HILOGE("add error, no response, http status = %{public}d: %{public}s",
+            static_cast<int>(httpStatus), cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    ipp_status_t ippStatus = ippGetStatusCode(response);
+    ippDelete(response);
+    // 错误阈值与AddPrinterToCupsWithSpecificPpd（cupsDoRequest）保持一致
+    if (ippStatus > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGE("add error, ipp status = %{public}d: %{public}s",
+            static_cast<int>(ippStatus), cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (httpGetState(http) != HTTP_STATE_WAITING) {
+        httpFlush(http);
+    }
+    return E_PRINT_NONE;
+}
+
 int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
     const std::string &ppdName, const std::string &ppdData)
 {
     PRINT_HILOGI("AddPrinterToCupsWithPpd, ppdName: %{public}s", ppdName.c_str());
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    std::vector<string> ppds;
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     std::string standardUri = StandardizePrinterUri(printerUri, ppdName);
     if (IsPrinterExist(standardUri.c_str(), standardName.c_str(), ppdName.c_str())) {
@@ -942,10 +986,7 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
     }
     _cupsSetError(IPP_STATUS_OK, nullptr, 0);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
-    if (request == nullptr) {
-        PRINT_HILOGW("request is null");
-        return E_PRINT_SERVER_FAILURE;
-    }
+    PRINT_CHECK_NULL_AND_RETURN(request, E_PRINT_SERVER_FAILURE);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", standardName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
@@ -955,28 +996,18 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
-    http_status_t status =
-        cupsSendRequest(CUPS_HTTP_DEFAULT, request, "/admin/", ippLength(request) + ppdData.length());
-    if (status == HTTP_STATUS_CONTINUE && request->state == IPP_STATE_DATA) {
-        status = cupsWriteRequestData(CUPS_HTTP_DEFAULT, ppdData.c_str(), ppdData.length());
-    } else {
+    // 取默认连接句柄（与cupsDoIORequest一致）：httpGetState/httpGetStatus不接受CUPS_HTTP_DEFAULT空句柄
+    http_t *http = _cupsConnect();
+    if (http == nullptr) {
         ippDelete(request);
-        request = nullptr;
-        PRINT_HILOGW("ppd not send, status = %{public}d", static_cast<int>(status));
+        PRINT_HILOGW("connect cups server failed: %{public}s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
-    ippDelete(request);
-    request = nullptr;
-    if (status != HTTP_STATUS_OK && status != HTTP_STATUS_CONTINUE) {
-        PRINT_HILOGW("add error, status = %{public}d", static_cast<int>(status));
-        return E_PRINT_SERVER_FAILURE;
+    int32_t ret = SendPpdDataAndCheckResponse(http, request, ppdData);
+    if (ret == E_PRINT_NONE) {
+        PRINT_HILOGI("add success");
     }
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        PRINT_HILOGE("add error: %{public}s", cupsLastErrorString());
-        return E_PRINT_SERVER_FAILURE;
-    }
-    PRINT_HILOGI("add success");
-    return E_PRINT_NONE;
+    return ret;
 }
 
 int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
@@ -3341,13 +3372,13 @@ IpAddressType PrintCupsClient::GetIpAddressTypeFromUri(const std::string &printe
             PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_IPV4;
     }
-    
+
     if (inet_pton(AF_INET6, hostStr.c_str(), &addr6) == 1) {
         PRINT_HILOGI("[Uri: %{public}s] URI contains IPv6 address",
             PrintUtils::AnonymizePrinterUri(printerUri).c_str());
         return IP_ADDRESS_TYPE_IPV6;
     }
-    
+
     PRINT_HILOGW("[Uri: %{public}s] Host %{public}s is not a valid IP address",
         PrintUtils::AnonymizePrinterUri(printerUri).c_str(), host);
     return IP_ADDRESS_TYPE_INVALID;
@@ -3397,6 +3428,57 @@ std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
         return "";
     }
 
+    std::ostringstream oss;
+    constexpr int32_t HEX_STRING_WIDTH = 2;
+    oss << std::hex << std::setfill('0');
+    for (int i = 0; i < result; ++i) {
+        oss << std::setw(HEX_STRING_WIDTH) << static_cast<unsigned>(hash[i]);
+    }
+    return oss.str();
+}
+
+bool PrintCupsClient::ValidatePpd(int fd)
+{
+    return ValidatePpdFd(fd);
+}
+
+int32_t PrintCupsClient::QueryPrinterCapabilityFromCupsPpd(const std::string &printerName,
+    PrinterCapability &printerCaps)
+{
+    std::string fileName = PrintUtil::StandardizePrinterName(printerName) + PPD_EXTENSION;
+    return QueryPrinterCapabilityFromPpdPath(printerCaps, GetCurCupsPpdDir() + fileName);
+}
+
+bool PrintCupsClient::QueryPpdInfoFromCupsPpd(const std::string &printerName, PpdInfo &info)
+{
+    std::string fileName = PrintUtil::StandardizePrinterName(printerName) + PPD_EXTENSION;
+    if (!QueryInfoByPpdFile(GetCurCupsPpdDir() + fileName, fileName, info)) {
+        PRINT_HILOGW("cannot parse ppd info from cups ppd file: %{private}s", fileName.c_str());
+        info.SetPpdInfo("Others", fileName, fileName);
+        return false;
+    }
+    return true;
+}
+
+std::string PrintCupsClient::GetPpdHashCodeFromData(const std::string &ppdData)
+{
+    if (ppdData.empty()) {
+        PRINT_HILOGE("ppdData is empty");
+        return "";
+    }
+    int32_t HASH_BUFFER_SIZE = 32;
+    unsigned char hash[HASH_BUFFER_SIZE];
+    size_t hashSize = sizeof(hash);
+    const char *HASH_ALGORITHM = "sha2-256";
+    ssize_t result = cupsHashData(HASH_ALGORITHM, ppdData.data(), ppdData.size(), hash, hashSize);
+    if (result <= 0) {
+        PRINT_HILOGE("cupsHashData fail, ret = %{public}d", result);
+        return "";
+    }
+    if (result != HASH_BUFFER_SIZE) {
+        PRINT_HILOGE("cupsHashData result out of range, ret = %{public}d", result);
+        return "";
+    }
     std::ostringstream oss;
     constexpr int32_t HEX_STRING_WIDTH = 2;
     oss << std::hex << std::setfill('0');
@@ -3525,9 +3607,17 @@ int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
 
 bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &info)
 {
-    std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + fileName;
+    return QueryInfoByPpdFile(GetCurCupsModelDir() + fileName, fileName, info);
+}
+
+bool PrintCupsClient::QueryInfoByPpdFile(const std::string &ppdFilePath, const std::string &ppdName,
+    PpdInfo &info)
+{
     std::string resolvedPpdFilePath;
     if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
+        // 诊断日志：严格路径校验失败时输出errno与可读性，便于定界（真机曾出现cupsd落盘PPD被误拒）
+        PRINT_HILOGE("path check fail, errno = %{public}d, readable = %{public}d, path = %{private}s",
+            errno, access(ppdFilePath.c_str(), R_OK), ppdFilePath.c_str());
         return false;
     }
     std::unordered_map<std::string, std::string> keyValues;
@@ -3543,13 +3633,13 @@ bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &i
     }
     if (info.GetNickName().empty()) {
         PRINT_HILOGI("nickname empty");
-        info.SetNickName(fileName);
+        info.SetNickName(ppdName);
     }
     if (info.GetManufacturer().empty()) {
         PRINT_HILOGI("manufacturer empty");
         info.SetManufacturer("Others");
     }
-    info.SetPpdName(fileName);
+    info.SetPpdName(ppdName);
     return true;
 }
 

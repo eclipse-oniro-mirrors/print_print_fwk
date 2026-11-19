@@ -188,6 +188,7 @@ public:
         char *userPasswd);
     int32_t StartCupsdServiceNotAlive();
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
+    bool QueryInfoByPpdFile(const std::string &ppdFilePath, const std::string &ppdName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
     bool ExtractPpdKeyAndValue(const std::string &line, std::string &key, std::string &value);
@@ -207,6 +208,15 @@ public:
     std::string GetCurCupsModelDir();
     bool ResumePrinter(const std::string &printerName);
     const std::string& GetCurCupsRootDir();
+    std::string GetCurCupsPpdDir();
+    // 校验 fd 中的 PPD（转发 print_cups_ppd.cpp::ValidatePpdFd）
+    bool ValidatePpd(int fd);
+    // 从 cupsd 落盘的 PPD 文件（<printerName>.ppd）解析能力
+    int32_t QueryPrinterCapabilityFromCupsPpd(const std::string &printerName, PrinterCapability &printerCaps);
+    // 从 cupsd 落盘的 PPD 文件解析元数据
+    bool QueryPpdInfoFromCupsPpd(const std::string &printerName, PpdInfo &info);
+    // 计算内存 PPD 数据的 SHA-256 哈希（十六进制串），不访问磁盘
+    std::string GetPpdHashCodeFromData(const std::string &ppdData);
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams);

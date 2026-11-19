@@ -71,6 +71,8 @@ using PrintFwkAgentHostBase = PrintFwkAgentHost;
 class PrintFwkAgentHostBase {};
 #endif
 
+class PrintCupsClient;
+
 class PrintServiceAbility : public SystemAbility, public PrintServiceStub, public IPrintServiceAbility,
     public IRemotePrinterEventHandler, public PrintFwkAgentHostBase {
     DECLARE_SYSTEM_ABILITY(PrintServiceAbility);
@@ -195,6 +197,8 @@ public:
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
     int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override;
+    int32_t AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options) override;
     void HandleWebPrinterUninstall();
     std::shared_ptr<IHksAdapter> GetHksAdapter();
     int32_t GetCurrentUserId();
@@ -206,6 +210,14 @@ protected:
     void OnStop() override;
 
 private:
+    int32_t ReadPpdDataFromFd(int32_t ppdFd, std::string &ppdData);
+    int32_t ConnectPrinterByIdWithPpdFile(const std::string &printerId, const std::string &uri,
+        const std::string &ppdData);
+    int32_t ConnectPrinterByUriWithPpdFile(const std::string &uri, const std::string &ppdData);
+    std::string GetConnectUriByProtocol(const PrinterInfo &printerInfo, const std::string &uri,
+        std::string &effectiveProtocol);
+    // printerInfo 需预置 Uri/PrinterId/PrinterName/SelectedProtocol；连接事件清理由调用方按各自键完成
+    int32_t ConnectAndFinalizeWithPpd(PrinterInfo &printerInfo, const std::string &ppdData);
     int32_t Init();
     void RegisterRemoteEventHandler();
     int32_t InitServiceDependencies();
@@ -312,6 +324,7 @@ private:
         const std::string &ppdNameInput, std::string &ppdName);
     int32_t QuerySmbPrinterCapability(PrinterInfo &printerInfo, const std::string &ppdName);
     int32_t ConnectSmbPrinter(PrinterInfo& printerInfo, const std::string &ppdNameInput = "");
+    int32_t ConnectSmbPrinterWithPpdData(PrinterInfo& printerInfo, const std::string &ppdData);
 #endif // HAVE_SMB_PRINTER
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);

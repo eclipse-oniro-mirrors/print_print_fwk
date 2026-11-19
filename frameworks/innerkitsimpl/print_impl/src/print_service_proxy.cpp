@@ -796,6 +796,34 @@ int32_t PrintServiceProxy::ConfirmCertTrust(const std::string &printerId, bool t
     return ret;
 }
 
+int32_t PrintServiceProxy::AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+    int32_t ppdFd, const std::string &options)
+{
+    PRINT_HILOGI("PrintServiceProxy AddPrinterWithPpdFile started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(uri), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteFileDescriptor(ppdFd), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(options), E_PRINT_RPC_FAILURE);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddPrinterWithPpdFile remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERWITHPPDFILE,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("AddPrinterWithPpdFile Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy AddPrinterWithPpdFile out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
     PrinterCapability &printerCaps)
 {

@@ -1266,6 +1266,15 @@ int32_t PrintManagerClient::ConnectPrinterByIdAndPpd(const std::string &printerI
     return CALL_COMMON_CLIENT(func);
 }
 
+int32_t PrintManagerClient::AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+    int32_t ppdFd, const std::string &options)
+{
+    auto func = [&printerId, &uri, ppdFd, &options](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->AddPrinterWithPpdFile(printerId, uri, ppdFd, options);
+    };
+    return CALL_COMMON_CLIENT(func);
+}
+
 int32_t PrintManagerClient::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)
 {
     PRINT_HILOGD("PrintManagerClient GetSharedHosts start.");

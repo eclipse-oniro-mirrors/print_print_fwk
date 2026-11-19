@@ -322,6 +322,11 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -403,6 +408,8 @@ public:
     MOCK_METHOD3(AnalyzePrintEvents, int32_t(const std::string &, const std::string &, std::string &));
     MOCK_METHOD3(ConnectPrinterByIdAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
     MOCK_METHOD2(ConfirmCertTrust, int32_t(const std::string &, bool));
+    MOCK_METHOD4(AddPrinterWithPpdFile, int32_t(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options));
 };
 }  // namespace Print
 }  // namespace OHOS

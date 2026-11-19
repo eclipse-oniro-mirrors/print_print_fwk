@@ -1775,6 +1775,56 @@ napi_value NapiInnerPrint::ConnectPrinterByIdAndPpd(napi_env env, napi_callback_
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::AddPrinterWithPpdFile(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter AddPrinterWithPpdFile---->");
+    PrintUtil::PrintHistogramBoolean("BaseServicesKit.APICall.addPrinterWithPpdFile", PRINT_API_COUNTED);
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc >= NapiPrintUtils::ARGC_THREE && argc <= NapiPrintUtils::ARGC_FOUR,
+            "should 3 to 4 parameters!", napi_invalid_arg);
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerId is not a string", napi_string_expected);
+        context->printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerUri is not a string", napi_string_expected);
+        context->printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_number, "ppdFd is not a number", napi_number_expected);
+        context->ppdFd = NapiPrintUtils::GetInt32FromValue(env, argv[NapiPrintUtils::INDEX_TWO]);
+        if (argc == NapiPrintUtils::ARGC_FOUR) {
+            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_THREE], &valueType), napi_invalid_arg);
+            PRINT_ASSERT_BASE(env, valueType == napi_string, "options is not a string", napi_string_expected);
+            context->options = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_THREE]);
+        }
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        return napi_get_boolean(env, context->result, result);
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance().AddPrinterWithPpdFile(context->printerId,
+            context->printerUri, context->ppdFd, context->options);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to add printer with ppd file");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::GetSharedHosts(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter GetSharedHosts---->");

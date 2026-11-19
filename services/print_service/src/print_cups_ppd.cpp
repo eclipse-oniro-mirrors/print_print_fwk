@@ -25,6 +25,9 @@
 #include <algorithm>
 #include <sstream>
 #include <cctype>
+#include <unistd.h>
+#include <fcntl.h>
+#include <cerrno>
 
 namespace OHOS::Print {
 using namespace std;
@@ -1051,20 +1054,16 @@ int32_t GetLocalizedStringsFromPpd(const std::string &resolvedPpdFilePath,
     return BuildLocalizedResultJson(normalizedLanguage, parts, resultJson);
 }
 
-int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName)
+static int32_t QueryPrinterCapabilityFromPpdPathInternal(const std::string &ppdFilePath, PrinterCapability &printerCaps,
+    bool hasVendorBundleContext, const std::string &ppdName)
 {
-    std::string ppdFilePath = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir() + ppdName;
-    std::string resolvedPpdFilePath;
-    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", resolvedPpdFilePath.c_str());
+    PRINT_HILOGI("QueryPrinterCapabilityFromPpdPathInternal start %{private}s", ppdFilePath.c_str());
     char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
     if (locale == nullptr) {
         PRINT_HILOGE("setlocale fail");
         return E_PRINT_FILE_IO;
     }
-    ppd_file_t *ppd = ppdOpenFile(resolvedPpdFilePath.c_str());
+    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
     if (ppd == nullptr) {
         PRINT_HILOGE("Open PPD file failed");
         return E_PRINT_FILE_IO;
@@ -1077,12 +1076,40 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
         return E_PRINT_FILE_IO;
     }
     ParseVendorAbilityFromPPD(ppd, printerCaps);
-    ValidateAndClearVendorAbility(printerCaps, ppdName);
+    // 仅当调用方携带 bundle 归属上下文（厂商模型目录 PPD，ppdName 含 bundle 名）时才做归属校验。
+    // cupsd 落盘 PPD 无归属上下文（ppdName 为空串），ValidateVendorAbilityBundle 对空 ppdName 恒返回 false，
+    // 此时若仍执行校验，会把 vendorPrinterPrefAbility/vendorJobAttrAbility 误清空，厂商扩展 UI 静默丢失。
+    if (hasVendorBundleContext) {
+        ValidateAndClearVendorAbility(printerCaps, ppdName);
+    }
     GetAdvanceOptionsFromPPD(ppd, printerCaps);
     ParsePrinterAttributesFromPPD(ppd, printerCaps);
 
     ppdClose(ppd);
     return E_PRINT_NONE;
+}
+
+int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName)
+{
+    std::string ppdFilePath = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir() + ppdName;
+    std::string resolvedPpdFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    return QueryPrinterCapabilityFromPpdPathInternal(resolvedPpdFilePath, printerCaps, true, ppdName);
+}
+
+int32_t QueryPrinterCapabilityFromPpdPath(PrinterCapability &printerCaps, const std::string &ppdFilePath)
+{
+    std::string resolvedPpdFilePath;
+    if (!PrintUtils::ResolveAndValidatePath(ppdFilePath, resolvedPpdFilePath)) {
+        // 诊断日志：严格路径校验失败时输出errno与可读性，便于定界（真机曾出现cupsd落盘PPD被误拒）
+        PRINT_HILOGE("path check fail, errno = %{public}d, readable = %{public}d, path = %{private}s",
+            errno, access(ppdFilePath.c_str(), R_OK), ppdFilePath.c_str());
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    // cupsd 落盘 PPD：无 bundle 归属上下文，跳过归属校验，保留 PPD 中厂商能力原样下发
+    return QueryPrinterCapabilityFromPpdPathInternal(resolvedPpdFilePath, printerCaps, false, "");
 }
 
 bool FindDuplexChoiceByPwg(ppd_file_t *ppd, const std::string &duplexId, std::string &optName, std::string &choiceName)
@@ -1305,6 +1332,50 @@ int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type,
     }
 
     return conflictsNum;
+}
+
+// 本地 PPD 文件大小上限 1MB
+constexpr int64_t MAX_PPD_FILE_SIZE = 1 * 1024 * 1024;
+
+bool ValidatePpdFd(int fd)
+{
+    if (fd < 0) {
+        PRINT_HILOGE("Invalid PPD fd: %{public}d", fd);
+        return false;
+    }
+    // ① 用 lseek 取大小，不读内容
+    off_t size = lseek(fd, 0, SEEK_END);
+    if (size <= 0) {
+        PRINT_HILOGE("Invalid PPD file size: %{public}d", static_cast<int>(size));
+        return false;
+    }
+    if (size > MAX_PPD_FILE_SIZE) {
+        PRINT_HILOGE("PPD file exceeds 1MB limit, size: %{public}d", static_cast<int>(size));
+        return false;
+    }
+    lseek(fd, 0, SEEK_SET);
+
+    // ② dup 后交给 ppdOpenFd 解析，原 fd 保留给后续读取
+    int dupFd = dup(fd);
+    if (dupFd < 0) {
+        PRINT_HILOGE("Failed to duplicate fd");
+        return false;
+    }
+    // ppdOpenFd 的 fd 归属：打开成功时由 cupsFileClose 关闭 dupFd（含解析失败）；
+    // 仅 cupsFileOpenFd 失败（PPD_FILE_OPEN_ERROR）时 dupFd 未关闭，需手动 close
+    ppd_file_t *ppd = ppdOpenFd(dupFd);
+    if (ppd == nullptr) {
+        int line = 0;
+        ppd_status_t status = ppdLastError(&line);
+        PRINT_HILOGE("PPD validation failed: %{public}s (line %{public}d)",
+            ppdErrorString(status), line);
+        if (status == PPD_FILE_OPEN_ERROR) {
+            close(dupFd);
+        }
+        return false;
+    }
+    ppdClose(ppd);
+    return true;
 }
 
 }

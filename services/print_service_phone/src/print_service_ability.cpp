@@ -1330,6 +1330,13 @@ int32_t PrintServiceAbility::ConfirmCertTrust(const std::string &printerId, bool
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+    int32_t ppdFd, const std::string &options)
+{
+    PRINT_HILOGW("AddPrinterWithPpdFile is not supported on phone variant");
+    return E_PRINT_GENERIC_FAILURE;
+}
+
 int32_t PrintServiceAbility::AddPrinterToCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
