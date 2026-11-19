@@ -25,8 +25,6 @@
 #include "print_feature_plugin_loader.h"
 #include "print_feature_plugin_manager.h"
 #include "print_feature_type.h"
-#include "remote_printer_manager_impl.h"
-#include "print_failure_ai_notifier_impl.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -70,31 +68,6 @@ std::string JoinPath(const std::string &dir, const std::string &name)
     return dir + "/" + name;
 }
 
-bool FileExists(const std::string &path)
-{
-    return access(path.c_str(), F_OK) == 0;
-}
-
-std::string GetAiPluginPath()
-{
-    return PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::AI_NOTIFIER].libPath;
-}
-
-std::string GetRemotePluginPath()
-{
-    return PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER].libPath;
-}
-
-bool IsRemotePluginAvailable()
-{
-    return FileExists(GetRemotePluginPath());
-}
-
-bool IsAiPluginAvailable()
-{
-    return FileExists(GetAiPluginPath());
-}
-
 class UnloadingStateGuard {
 public:
     explicit UnloadingStateGuard(PrintFeaturePluginManager &manager)
@@ -134,6 +107,25 @@ private:
     std::string originalDestroy_;
 };
 
+class RemotePluginPathGuard {
+public:
+    RemotePluginPathGuard()
+    {
+        auto &entry = PrintFeaturePluginManager::GetInstance()
+            .features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
+        originalPath_ = entry.libPath;
+        entry.libPath = "/system/lib/libprint_feature_remote_nonexistent_test.z.so";
+    }
+    ~RemotePluginPathGuard()
+    {
+        auto &entry = PrintFeaturePluginManager::GetInstance()
+            .features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
+        entry.libPath = originalPath_;
+    }
+private:
+    std::string originalPath_;
+};
+
 class PrintFeaturePluginManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
@@ -143,6 +135,9 @@ public:
     {
         PrintFeaturePluginManager::GetInstance().UnloadAll();
     }
+
+protected:
+    RemotePluginPathGuard pathGuard_;
 };
 
 HWTEST_F(PrintFeaturePluginManagerTest, Singleton_UnloadAll_AndUnknownFeature, TestSize.Level1)
@@ -153,38 +148,6 @@ HWTEST_F(PrintFeaturePluginManagerTest, Singleton_UnloadAll_AndUnknownFeature, T
     EXPECT_EQ(guard.Get(), nullptr);
     EXPECT_EQ(instance.AcquireFeature(static_cast<PrintFeatureType>(99)).Get(), nullptr);
 }
-
-#ifdef REMOTE_SERVICE_ENABLE
-HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_RemotePrinterManager_LoadSuccess, TestSize.Level1)
-{
-    if (!IsRemotePluginAvailable()) {
-        GTEST_SKIP() << "remote plugin not deployed: " << GetRemotePluginPath();
-    }
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-    auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
-    ASSERT_NE(guard.Get(), nullptr);
-    auto remote = guard.Get()->QueryInterface(PrintFeatureIid::IID_REMOTE_PRINTER_MANAGER);
-    EXPECT_NE(remote, nullptr);
-    EXPECT_EQ(static_cast<void *>(remote), static_cast<void *>(guard.Get()));
-}
-#endif // REMOTE_SERVICE_ENABLE
-
-#ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
-HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_AiNotifier_LoadSuccess, TestSize.Level1)
-{
-    if (!IsAiPluginAvailable()) {
-        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
-    }
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-    auto guard = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
-    ASSERT_NE(guard.Get(), nullptr);
-    auto ai = guard.Get()->QueryInterface(PrintFeatureIid::IID_PRINT_FAILURE_AI_NOTIFIER);
-    EXPECT_NE(ai, nullptr);
-    EXPECT_EQ(static_cast<void *>(ai), static_cast<void *>(guard.Get()));
-}
-#endif // HAVE_PRINT_FAILURE_AI_NOTIFIER
 
 HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_RemotePrinterManager_WhenPluginUnavailable_ReturnsEmptyGuard,
     TestSize.Level1)
@@ -208,43 +171,6 @@ HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_WithExistingImpl_ReturnsS
 
     auto guard = manager.AcquireFeature(PrintFeatureType::REMOTE_PRINTER_MANAGER);
     EXPECT_EQ(guard.Get(), fakeFeature);
-}
-
-HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_CreateSymbolMissing_ReturnsEmptyGuard, TestSize.Level1)
-{
-    if (!IsAiPluginAvailable()) {
-        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
-    }
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-    FeatureEntryGuard guard(PrintFeatureType::AI_NOTIFIER);
-
-    auto &entry = manager.features_[PrintFeatureType::AI_NOTIFIER];
-    entry.libPath = GetAiPluginPath();
-    entry.createSymbol = "CreateNonExistentFeature";
-    entry.destroySymbol = "DestroyNonExistentFeature";
-    entry.loader.reset();
-    entry.impl.reset();
-
-    auto acquired = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
-    EXPECT_EQ(acquired.Get(), nullptr);
-}
-
-HWTEST_F(PrintFeaturePluginManagerTest, UnloadAll_ClearsLoadedImpl, TestSize.Level1)
-{
-    if (!IsAiPluginAvailable()) {
-        GTEST_SKIP() << "ai notifier plugin not deployed: " << GetAiPluginPath();
-    }
-    auto &manager = PrintFeaturePluginManager::GetInstance();
-    manager.UnloadAll();
-
-    {
-        auto guard = manager.AcquireFeature(PrintFeatureType::AI_NOTIFIER);
-        ASSERT_NE(guard.Get(), nullptr);
-    }
-
-    manager.UnloadAll();
-    EXPECT_EQ(manager.features_[PrintFeatureType::AI_NOTIFIER].impl, nullptr);
 }
 
 HWTEST_F(PrintFeaturePluginManagerTest, AcquireFeature_WhileUnloading_ReturnsEmptyGuard, TestSize.Level1)

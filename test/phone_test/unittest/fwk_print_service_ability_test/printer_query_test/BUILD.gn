@@ -27,6 +27,7 @@ ohos_unittest("fwk_print_service_ability_printer_query_test") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/services/print_service_phone/include",
     "${print_path}/services/print_service_phone/include/event_callback",
+    "${print_path}/features/remote_service/include",
     "${print_utils_path}/include",
   ]
 
