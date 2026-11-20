@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -129,7 +129,7 @@ bool PrintCertManager::DeleteCertForPrinter(const std::string &printerName)
     // alnum, '-' and '.' are kept, others replaced with '_'.
     std::string filename = std::string(CUPS_SSL_DIR) + "/";
     for (char c : printerName) {
-        if (isalnum(c) || c == '-' || c == '.') {
+        if (isalnum(static_cast<unsigned char>(c)) || c == '-' || c == '.') {
             filename += c;
         } else {
             filename += '_';

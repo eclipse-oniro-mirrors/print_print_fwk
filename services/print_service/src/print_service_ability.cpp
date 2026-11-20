@@ -4637,11 +4637,7 @@ int32_t PrintServiceAbility::ContinueDeletePrinterFromCups(
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
-    PrinterInfo printerInfo;
-    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
-        !printerInfo.GetUri().empty()) {
-        DelayedSingleton<PrintCertManager>::GetInstance()->DeleteCertForPrinter(standardName);
-    }
+    DelayedSingleton<PrintCertManager>::GetInstance()->DeleteCertForPrinter(standardName);
 #endif  // CUPS_ENABLE
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
