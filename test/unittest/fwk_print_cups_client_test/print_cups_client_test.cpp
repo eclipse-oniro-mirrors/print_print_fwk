@@ -2633,6 +2633,11 @@ HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPrintJob_Test, TestSize.Lev
     std::map<std::string, std::string> mapParams;
     printCupsClient.BuildCupsOptionParamsByPrintJob(jobInfo, jobParams, mapParams);
     EXPECT_FALSE(mapParams.empty());
+
+    mapParams.clear();
+    jobInfo.SetPageSize(PrintPageSize("#10 Envelope", "na_number-10_4.125x9.5in", 4125, 9500));
+    printCupsClient.BuildCupsOptionParamsByPrintJob(jobInfo, jobParams, mapParams);
+    EXPECT_EQ(mapParams[PRINT_PARAM_TYPE_PAGE_SIZE], "na_number-10_4.125x9.5in");
 }
 
 HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPreferences_CustomPageSizeId_UsesNameFromList, TestSize.Level1)

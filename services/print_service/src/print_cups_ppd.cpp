@@ -1146,28 +1146,30 @@ bool FindPageSizeChoiceByPwg(ppd_file_t *ppd, const std::string &pageSizeId, std
         return false;
     }
 
-    PrintPageSize pageSize;
-    if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
-        PRINT_HILOGE("unsupported page size id: %{public}s", pageSizeId.c_str());
-        return false;
-    }
-
     ppd_option_t *sizeOption = ppdFindOption(ppd, PPD_OPT_NAME_PAGESIZE.c_str());
     if (sizeOption == nullptr) {
         PRINT_HILOGE("FindPageSizeChoiceByPwg: ppdFindOption PageSize fail");
         return false;
     }
 
+    // Prefer the application/pageSize.name form (map.pwg). Also accept persisted legacy ids:
+    // standard enum ids, PPD keywords and PPD choice text, without rewriting the stored data.
+    std::string pwgName = pageSizeId;
+    PrintPageSize pageSize;
+    if (PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+        pwgName = pageSize.GetName();
+    }
     _ppd_cache_t *ppdCache = ppd->cache;
     pwg_size_t *cacheSizes = ppdCache->sizes;
     for (int i = 0; i < ppdCache->num_sizes; i++) {
         const pwg_size_t &pwgSize = cacheSizes[i];
-        if (pageSize.GetName() == pwgSize.map.pwg) {
-            ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
-            if (sizeChoice != nullptr) {
-                ppdChoiceName = sizeChoice->choice;
-                return true;
-            }
+        ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
+        if (sizeChoice == nullptr) {
+            continue;
+        }
+        if (pwgName == pwgSize.map.pwg || pageSizeId == pwgSize.map.ppd || pageSizeId == sizeChoice->text) {
+            ppdChoiceName = sizeChoice->choice;
+            return true;
         }
     }
     PRINT_HILOGD("no cache match for pageSizeId=%{public}s", pageSizeId.c_str());

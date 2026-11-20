@@ -294,7 +294,8 @@ bool PpdAdapter::FindCacheEntry(ppd_file_t *ppd, ResolverType resolver,
 }
 
 // Unified builder: iterate PPD choices, resolve the key by ResolverType, build optionMap choices and textMap
-// CACHE_SIZES: take PWG key from cache->sizes, convert textMap key via PrintPageSize::MatchPageSize
+// CACHE_SIZES: take PWG key from cache->sizes; both optionMap and textMap use the same PWG key,
+// matching the application-side pageSize.name key for standard and custom sizes alike
 // CACHE_SOURCES: take PWG key from cache->sources, use PPD choice name as textMap key
 // STANDALONE: use PPD choice name for both key and value (identity mapping)
 // STANDARD: reverse-lookup PWG value from reverseChoiceMap as key, convert to int enum via enumMap as textMap key
@@ -312,8 +313,7 @@ void PpdAdapter::BuildEntries(const ResolveContext &ctx, EntryResult &result)
             if (!FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, ppdKey)) {
                 continue;
             }
-            std::string pageId = PrintPageSize::MatchPageSize(ppdKey);
-            textKey = pageId.empty() ? ppdKey : pageId;
+            textKey = ppdKey;
         } else if (useCache && ctx.resolver == ResolverType::CACHE_SOURCES) {
             std::string cacheKey;
             if (FindCacheEntry(ppd, ctx.resolver, opt->choices[i].choice, cacheKey)) {

@@ -3838,7 +3838,8 @@ void PrintCupsClient::BuildCupsOptionParamsByPrintJob(const PrintJob &printJob,
         CUSTOM_PAGE_SIZE_ID_PREFIX) == 0) {
         mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = ConvertCustomPageSizeNameForCups(pageSize);
     } else {
-        mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSizeId;
+        // Match the PPD cache by map.pwg (pageSize.name), same as the actual media dispatch path.
+        mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSize.GetName();
     }
     mapParams[PRINT_PARAM_TYPE_DUPLEX_MODE] = jobParams.duplex;
     mapParams[PRINT_PARAM_TYPE_QUALITY] = jobParams.printQuality;

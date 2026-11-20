@@ -6025,20 +6025,26 @@ bool PrintServiceAbility::DeletePrintJobFromHistoryList(const std::string jobId)
 
 void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize)
 {
-    if (!PrintPageSize::FindPageSizeById(pageSize.GetId(), pageSize)) {
-        PrinterCapability printerCapability;
-        printerInfo.GetCapability(printerCapability);
-        std::vector<PrintPageSize> supportedPageSizeList;
-        printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    PrinterCapability printerCapability;
+    printerInfo.GetCapability(printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
 
-        for (const auto &supportedPageSize : supportedPageSizeList) {
-            if (supportedPageSize.GetId() == pageSize.GetId()) {
-                PRINT_HILOGI("PrintJob Set PageSize id = %{public}s, name = %{public}s",
-                    supportedPageSize.GetId().c_str(),
-                    supportedPageSize.GetName().c_str());
-                pageSize.SetName(supportedPageSize.GetName());
-                break;
-            }
+    // The application key is pageSize.name (map.pwg for PPD), so match it before legacy ids.
+    for (const auto &supportedPageSize : supportedPageSizeList) {
+        if (supportedPageSize.GetName() == pageSize.GetName()) {
+            return;
+        }
+    }
+    if (PrintPageSize::FindPageSizeById(pageSize.GetId(), pageSize)) {
+        return;
+    }
+    for (const auto &supportedPageSize : supportedPageSizeList) {
+        if (supportedPageSize.GetId() == pageSize.GetId()) {
+            PRINT_HILOGI("PrintJob Set PageSize id = %{public}s, name = %{public}s",
+                supportedPageSize.GetId().c_str(), supportedPageSize.GetName().c_str());
+            pageSize.SetName(supportedPageSize.GetName());
+            break;
         }
     }
 }
