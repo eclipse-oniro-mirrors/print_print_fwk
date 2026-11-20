@@ -38,6 +38,7 @@
 #include "parameters.h"
 #include "print_bms_helper.h"
 #include "print_constant.h"
+#include "print_custom_page_size_util.h"
 #include "print_data_repository.h"
 #include "print_feature_plugin_manager.h"
 #include "print_log.h"
@@ -6892,19 +6893,12 @@ int32_t PrintServiceAbility::GetPrinterPreference(const std::string &printerId, 
     }
     std::string option = printerPreference.GetOption();
     Json::Value opsJson(Json::objectValue);
-    if (!option.empty() && PrintJsonUtil::Parse(option, opsJson)) {
+    bool hasValidOption = !option.empty() && PrintJsonUtil::Parse(option, opsJson);
+    if (hasValidOption) {
         DecryptAndFillCustomOptionsToJson(userPrefs, opsJson);
-        if (userPrefs.HasCustomPageSizes()) {
-            Json::Value listJson(Json::arrayValue);
-            for (const auto &pageSize : userPrefs.GetCustomPageSizes()) {
-                Json::Value entry;
-                ConvertPageSizeToJson(pageSize, entry);
-                listJson.append(entry);
-            }
-            opsJson[CUSTOM_PAGE_SIZE_LIST_KEY] = listJson;
-        }
-        printerPreference.SetOption(PrintJsonUtil::WriteString(opsJson));
     }
+    PrintCustomPageSizeUtil::UpdateOptionWithCustomPageSizes(userPrefs, printerPreference,
+        opsJson, hasValidOption);
     if (userPrefs.HasDefaultCustomPageSizeId()) {
         printerPreference.SetDefaultPageSizeId(userPrefs.GetDefaultCustomPageSizeId());
         PRINT_HILOGD("GetPrinterPreference inject user default custom page size: %{public}s",

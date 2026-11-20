@@ -82,6 +82,7 @@ if (!print_fwk_feature_device_isolation) {
     "${_service_path}/src/remote/remote_printer_manager_proxy.cpp",
     "${print_path}/services/print_service/src/print_security_guard_util.cpp",
     "${print_path}/services/print_service/src/print_hks_adapter.cpp",
+    "${_service_path}/src/print_custom_page_size_util.cpp",
   ]
 
   _deps = [

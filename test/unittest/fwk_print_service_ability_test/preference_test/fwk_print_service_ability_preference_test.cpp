@@ -1178,5 +1178,144 @@ HWTEST_F(PrintServiceAbilityTest,
 
     PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
 }
+
+// 场景：打印机级偏好 option 为空（hasValidOption=false），userPrefs 含 customPageSizes
+// 预期：GetPrinterPreference 仍注入 option JSON，且 customPageSizeList[0].id == custom id，
+//       defaultPageSizeId 保持打印机级 ISO_A4
+HWTEST_F(PrintServiceAbilityTest,
+    GetPrinterPreference_EmptyPrinterOption_InjectsCustomPageSizeList, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = PrintServiceAbilityTest::CreateService();
+
+    const std::string printerId = "printer_q19_empty_option";
+    const std::string printerName = "Q19 EmptyOption Printer";
+    const std::string customId = "custom:1795099999999_301";
+
+    // 打印机级偏好：defaultPageSizeId = ISO_A4，不设置 option
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(printerName);
+    PrinterPreferences prefs;
+    prefs.SetDefaultPageSizeId("ISO_A4");
+    info.SetPreferences(prefs);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
+
+    // 用户级偏好：仅含 customPageSizes，无 defaultCustomPageSizeId
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    auto userPrefs = std::make_shared<PrinterUserPreferences>();
+    userPrefs->SetUserId(100);
+    userPrefs->SetPrinterId(printerId);
+    std::vector<PrintPageSize> customPageSizes;
+    PrintPageSize customSize(customId, "FormB(210x297mm)", 210, 297);
+    customPageSizes.push_back(customSize);
+    userPrefs->SetCustomPageSizes(customPageSizes);
+    userData->SavePrinterUserPreferences(printerId, printerName, *userPrefs);
+    service->printUserMap_[100] = userData;
+
+    PrinterPreferences result;
+    int32_t ret = service->GetPrinterPreference(printerId, result);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(result.GetDefaultPageSizeId(), "ISO_A4");
+
+    // option 原本为空，但 customPageSizeList 仍应被注入
+    Json::Value resultOptionJson;
+    EXPECT_TRUE(PrintJsonUtil::Parse(result.GetOption(), resultOptionJson));
+    EXPECT_TRUE(resultOptionJson.isMember("customPageSizeList"));
+    EXPECT_TRUE(resultOptionJson["customPageSizeList"].isArray());
+    ASSERT_GT(resultOptionJson["customPageSizeList"].size(), 0u);
+    EXPECT_EQ(resultOptionJson["customPageSizeList"][0]["id"].asString(), customId);
+
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
+}
+
+// 场景：打印机级偏好 option 为空，userPrefs 不含 customPageSizes
+// 预期：SetOption 不被调用（hasValidOption 与 HasCustomPageSizes 均为 false），
+//       返回的 option 保持为空，不写入 "{}"
+HWTEST_F(PrintServiceAbilityTest,
+    GetPrinterPreference_NoOptionNoCustomPageSizes_OptionStaysEmpty, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+
+    auto service = PrintServiceAbilityTest::CreateService();
+
+    const std::string printerId = "printer_q19_nothing";
+    const std::string printerName = "Q19 Nothing Printer";
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(printerName);
+    PrinterPreferences prefs;
+    prefs.SetDefaultPageSizeId("ISO_A4");
+    info.SetPreferences(prefs);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
+
+    // 用户级偏好：存在但无 customPageSizes、无 defaultCustomPageSizeId、无 vendorOptions
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    auto userPrefs = std::make_shared<PrinterUserPreferences>();
+    userPrefs->SetUserId(100);
+    userPrefs->SetPrinterId(printerId);
+    userData->SavePrinterUserPreferences(printerId, printerName, *userPrefs);
+    service->printUserMap_[100] = userData;
+
+    PrinterPreferences result;
+    int32_t ret = service->GetPrinterPreference(printerId, result);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_TRUE(result.GetOption().empty());
+    EXPECT_EQ(result.GetDefaultPageSizeId(), "ISO_A4");
+
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
+}
+
+// 场景：打印机级偏好 option 为有效 JSON（hasValidOption=true），userPrefs 不含 customPageSizes
+// 预期：写回分支（hasValidOption || HasCustomPageSizes = true||false）执行，
+//       返回 option 保留原 customPageSizeRange 内容，且不注入 customPageSizeList
+HWTEST_F(PrintServiceAbilityTest,
+    GetPrinterPreference_ValidOptionNoCustomPageSizes_NoListInjected, TestSize.Level1)
+{
+    OHOS::uid_ = 100 * 200000;
+    auto service = PrintServiceAbilityTest::CreateService();
+    const std::string printerId = "printer_q20_valid_option";
+    const std::string printerName = "Q20 ValidOption Printer";
+
+    // 打印机级偏好：option 为有效 JSON（含 customPageSizeRange）
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(printerName);
+    PrinterPreferences prefs;
+    prefs.SetDefaultPageSizeId("ISO_A4");
+    Json::Value optionJson(Json::objectValue);
+    Json::Value range;
+    range[CUSTOM_PAGE_SIZE_MIN_WIDTH] = 3000;
+    range[CUSTOM_PAGE_SIZE_MAX_WIDTH] = 8503;
+    optionJson["customPageSizeRange"] = range;
+    prefs.SetOption(PrintJsonUtil::WriteString(optionJson));
+    info.SetPreferences(prefs);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, info);
+
+    // 用户级偏好：存在但无 customPageSizes、无 defaultCustomPageSizeId
+    auto userData = std::make_shared<PrintUserData>();
+    userData->SetUserId(100);
+    auto userPrefs = std::make_shared<PrinterUserPreferences>();
+    userPrefs->SetUserId(100);
+    userPrefs->SetPrinterId(printerId);
+    userData->SavePrinterUserPreferences(printerId, printerName, *userPrefs);
+    service->printUserMap_[100] = userData;
+
+    PrinterPreferences result;
+    int32_t ret = service->GetPrinterPreference(printerId, result);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+
+    Json::Value resultOptionJson;
+    EXPECT_TRUE(PrintJsonUtil::Parse(result.GetOption(), resultOptionJson));
+    EXPECT_FALSE(resultOptionJson.isMember("customPageSizeList"));
+    EXPECT_TRUE(resultOptionJson.isMember("customPageSizeRange"));
+    EXPECT_EQ(resultOptionJson["customPageSizeRange"][CUSTOM_PAGE_SIZE_MIN_WIDTH].asInt(), 3000);
+
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
+}
 }  // namespace Print
 }  // namespace OHOS
