@@ -111,6 +111,7 @@ public:
     int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) override;
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options) override;
+    int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

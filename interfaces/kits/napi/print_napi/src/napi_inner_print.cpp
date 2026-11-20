@@ -1544,6 +1544,49 @@ napi_value NapiInnerPrint::AddPrinter(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::ConfirmCertTrust(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter ConfirmCertTrust---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerId is not a string", napi_string_expected);
+        context->printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (context->printerId == "") {
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_boolean, "trusted is not a boolean", napi_boolean_expected);
+        PRINT_CALL_BASE(env, napi_get_value_bool(env, argv[NapiPrintUtils::INDEX_ONE], &context->trusted),
+            napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        return napi_get_boolean(env, context->result, result);
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance().ConfirmCertTrust(context->printerId, context->trusted);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to confirm cert trust");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ConnectPrinterByIpAndPpd---->");

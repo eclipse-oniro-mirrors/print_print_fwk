@@ -124,6 +124,8 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnNotifyWatermarkComplete;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_KIA_INTERCEPTOR_CB] =
                &PrintServiceStub::OnRegisterKiaInterceptorCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONFIRM_CERT_TRUST] =
+               &PrintServiceStub::OnConfirmCertTrust;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1399,6 +1401,19 @@ bool PrintServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
     int32_t ret = AddPrinter(printerName, uri, ppdName, options);
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     PRINT_HILOGD("PrintServiceStub::OnAddPrinter out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnConfirmCertTrust(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnConfirmCertTrust in");
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    bool trusted = false;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadBool(trusted), false);
+    int32_t ret = ConfirmCertTrust(printerId, trusted);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
+    PRINT_HILOGD("PrintServiceStub::OnConfirmCertTrust out");
     return ret == E_PRINT_NONE;
 }
 

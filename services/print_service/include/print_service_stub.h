@@ -102,6 +102,7 @@ private:
     bool OnRegisterKiaInterceptorCallback(MessageParcel &data, MessageParcel &reply);
     bool OnStartSharedHostDiscovery(MessageParcel &data, MessageParcel &reply);
     bool OnAddPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnConfirmCertTrust(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

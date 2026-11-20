@@ -775,6 +775,27 @@ int32_t PrintServiceProxy::AddPrinter(const std::string &printerName, const std:
     return ret;
 }
 
+int32_t PrintServiceProxy::ConfirmCertTrust(const std::string &printerId, bool trusted)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), E_PRINT_RPC_FAILURE);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteBool(trusted), E_PRINT_RPC_FAILURE);
+    PRINT_HILOGD("PrintServiceProxy ConfirmCertTrust started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy ConfirmCertTrust remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret =
+        remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CONFIRM_CERT_TRUST, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy ConfirmCertTrust out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
     PrinterCapability &printerCaps)
 {

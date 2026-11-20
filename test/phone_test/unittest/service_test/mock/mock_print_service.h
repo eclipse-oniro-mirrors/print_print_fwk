@@ -319,6 +319,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -400,6 +404,7 @@ public:
     MOCK_METHOD1(StartNativePrintJob, int32_t(PrintJob &));
     MOCK_METHOD3(AnalyzePrintEvents, int32_t(const std::string &, const std::string &, std::string &));
     MOCK_METHOD3(ConnectPrinterByIdAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD2(ConfirmCertTrust, int32_t(const std::string &, bool));
 };
 }  // namespace Print
 }  // namespace OHOS

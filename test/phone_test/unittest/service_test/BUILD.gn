@@ -25,13 +25,13 @@ ohos_unittest("print_service_test") {
     "../fwk_inner_napi_test/mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/features/print_failure_ai_notifier/include",
     "${print_path}/services/print_service_phone/include",
     "${print_path}/services/print_service_phone/enterprise/include",
     "${print_path}/services/print_service_phone/include/event_callback",
     "${print_path}/services/print_service_phone/include/remote",
     "${print_path}/services/print_service_phone/src/internal",
     "${print_path}/features/remote_service/include",
-    "${print_path}/features/print_failure_ai_notifier/include",
     "${print_utils_path}/include",
   ]
 

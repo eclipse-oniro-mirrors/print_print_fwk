@@ -89,6 +89,7 @@ namespace OHOS::Print {
         CMD_REG_KIA_INTERCEPTOR_CB,
         CMD_GET_PRINTER_PREFERENCE,
         CMD_GET_PRINTER_LOCALIZED_STRINGS,
+        CMD_CONFIRM_CERT_TRUST,
     };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

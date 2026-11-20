@@ -237,6 +237,8 @@ static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string JOB_STATE_REASON_AUTHENTICATION = "cups-held-for-authentication";
 static const std::string JOB_STATE_REASON_SMB_PRINTER_CONNECTED_FAILED = "smb-printer-connected-failed";
 static const std::string JOB_STATE_REASON_JOB_HOLD = "job-hold-until-specified";
+static const std::string PRINTER_STATE_REASON_PKI_INVALID = "cups-pki-invalid";
+static const std::string PRINTER_STATE_REASON_PKI_UNKNOWN = "cups-pki-unknown";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string USB_PRINTER = "usb";
@@ -2235,6 +2237,13 @@ bool PrintCupsClient::HandleCompletedState(std::shared_ptr<JobMonitorParam> moni
 bool PrintCupsClient::HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitorParams)
 {
     PRINT_HILOGI("job is queued");
+    if (strstr(monitorParams->job_printer_state_reasons, PRINTER_STATE_REASON_PKI_INVALID.c_str()) != nullptr ||
+        strstr(monitorParams->job_printer_state_reasons, PRINTER_STATE_REASON_PKI_UNKNOWN.c_str()) != nullptr) {
+        PRINT_HILOGI("job blocked by certificate issue: %{public}s", monitorParams->job_printer_state_reasons);
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BAD_CERTIFICATE);
+        return true;
+    }
     if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);

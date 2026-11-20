@@ -1949,5 +1949,43 @@ HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_RpcFailure, TestS
 }
 #endif // KIA_INTERCEPTOR_ENABLE
 
+/**
+ * @tc.name: ConfirmCertTrust_RemoteNull
+ * @tc.desc: ConfirmCertTrust with a null remote returns RPC failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceProxyTest, ConfirmCertTrust_RemoteNull, TestSize.Level1)
+{
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+    EXPECT_EQ(proxy->ConfirmCertTrust("printer_id", true), E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: ConfirmCertTrust_Success
+ * @tc.desc: ConfirmCertTrust sends printerId and trusted flag and returns service result.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceProxyTest, ConfirmCertTrust_Success, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, ConfirmCertTrust(StrEq("printer_id"), false)).Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    EXPECT_EQ(proxy->ConfirmCertTrust("printer_id", false), E_PRINT_NONE);
+}
+
 }  // namespace Print
 }  // namespace OHOS
