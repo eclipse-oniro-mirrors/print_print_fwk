@@ -2169,8 +2169,11 @@ void PrintCupsClient::HandleAbortedState(std::shared_ptr<JobMonitorParam> monito
         return;
     }
     PRINT_HILOGI("job is aborted");
-    monitorParams->serviceAbility->UpdatePrintJobState(
-        monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
+    uint32_t substate = monitorParams->usbAbortSubstate;
+    if (substate == 0) {
+        substate = PRINT_JOB_BLOCKED_UNKNOWN;
+    }
+    monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_BLOCKED, substate);
 }
 
 bool PrintCupsClient::HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams)
@@ -2387,6 +2390,7 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
     }
     monitorParams->isBlock = false;
     monitorParams->substate = 0;
+    monitorParams->usbAbortSubstate = 0;
     int32_t index = 0;
     for (auto stateItem = FOLLOW_STATE_LIST.begin(); stateItem != FOLLOW_STATE_LIST.end(); stateItem++) {
         monitorParams->isBlock |= GetBlockedAndUpdateSubstate(
@@ -2463,6 +2467,10 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
             }
             if (policy == STATE_POLICY_DELAY && monitorParams->timesOfSameState == 0) {
                 return false;
+            }
+            if (monitorParams->job_state == IPP_JOB_ABORTED && jobSubstate != PRINT_JOB_BLOCKED_UNKNOWN &&
+                PrintUtil::startsWith(monitorParams->printerUri, "usb:")) {
+                monitorParams->usbAbortSubstate = GetNewSubstate(monitorParams->usbAbortSubstate, jobSubstate);
             }
             return true;  // STATE_POLICY_STANDARD
         } else {
