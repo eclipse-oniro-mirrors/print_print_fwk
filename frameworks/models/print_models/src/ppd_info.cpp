@@ -115,7 +115,6 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(manufacturer), false);
     if (manufacturer.empty()) {
         PRINT_HILOGE("manufacturer is empty");
-        return false;
     }
     SetManufacturer(manufacturer);
     
@@ -123,7 +122,6 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(nickName), false);
     if (nickName.empty()) {
         PRINT_HILOGE("nickName is empty");
-        return false;
     }
     SetNickName(nickName);
     
@@ -131,10 +129,9 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(ppdName), false);
     if (ppdName.empty()) {
         PRINT_HILOGE("ppdName is empty");
-        return false;
     }
     SetPpdName(ppdName);
-    
+
     return true;
 }
 

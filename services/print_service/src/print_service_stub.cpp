@@ -1061,6 +1061,7 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
 bool PrintServiceStub::OnQueryAllPrinterPpds(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryAllPrinterPpds in");
+    reply.SetMaxCapacity(PRINT_PARCEL_MAX_CAPACITY);
     std::vector<PpdInfo> ppdInfos;
     int32_t ret = QueryAllPrinterPpds(ppdInfos);
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);

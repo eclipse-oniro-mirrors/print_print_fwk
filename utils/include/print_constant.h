@@ -26,7 +26,7 @@ constexpr int PRINT_CALL_OK = 0;
 
 #define PRINT_MAX_PRINT_COUNT 1000
 #define PRINT_MAX_FILE_LIST_SIZE 100
-#define PRINT_MAX_PPD_COUNT 4096
+#define PRINT_MAX_PPD_COUNT 8192
 #define PRINT_PARCEL_MAX_CAPACITY (1024 * 1024)
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"
