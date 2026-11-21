@@ -299,12 +299,6 @@ void PrintServiceAbility::UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterS
     SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
 }
 
-void PrintServiceAbility::RemovePrinterFromDiscoveryAndMarkOffline(const std::string &printerId)
-{
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    RemoveSinglePrinterInfo(printerId);
-}
-
 #ifdef VIRTUAL_PRINTER_ENABLE
 bool PrintServiceAbility::RefreshVirtualPrinter()
 {
@@ -2936,6 +2930,15 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     printJob->SetSubState(subState);
 
     if (state == PRINT_JOB_BLOCKED) {
+        if (subState == PRINT_JOB_BLOCKED_OFFLINE) {
+            std::string printerId = printJob->GetPrinterId();
+            PrinterInfo addedPrinter;
+            if (PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER) &&
+                PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
+                !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
+                RemoveSinglePrinterInfo(printerId);
+            }
+        }
         HandleJobBlockedState(printJob, subState);
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);

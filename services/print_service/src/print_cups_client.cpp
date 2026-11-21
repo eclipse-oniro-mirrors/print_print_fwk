@@ -1786,7 +1786,6 @@ bool PrintCupsClient::VerifyPrintJob(
         PRINT_HILOGE("[Job Id: %{public}s] VerifyPrintJob printer is offline", jobParams->serviceJobId.c_str());
         jobParams->serviceAbility->UpdatePrintJobState(
             jobParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
-        UpdatePrinterStatusOnPreflightOffline(monitorParams);
         return false;
     }
     bool driverMissing = false;
@@ -2593,21 +2592,6 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     return true;
 }
 
-bool PrintCupsClient::IsDefaultAddedLanPrinter(const std::shared_ptr<JobMonitorParam> &monitorParams)
-{
-    PRINT_CHECK_NULL_AND_RETURN(monitorParams, false);
-    if (IsIpAddress(monitorParams->printerName.c_str())) {
-        return false;
-    }
-    if (!PrintUtil::startsWith(monitorParams->printerId,
-        VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER)) {
-        return false;
-    }
-    std::string scheme = getScheme(monitorParams->printerUri);
-    return strcasecmp(scheme.c_str(), "ipp") == 0 || strcasecmp(scheme.c_str(), "ipps") == 0 ||
-        strcasecmp(scheme.c_str(), "lpd") == 0 || strcasecmp(scheme.c_str(), "socket") == 0;
-}
-
 bool PrintCupsClient::ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
 {
     PRINT_CHECK_NULL_AND_RETURN(monitorParams, false);
@@ -2627,15 +2611,6 @@ bool PrintCupsClient::ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> 
         PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
     bool isIPPOverUsbPrinter = printerId.find(IPPOVERUSB_PREFIX) != std::string::npos;
     return isUsbPrinter || isCustomizedExtension || isVendorPrinter || isIPPOverUsbPrinter;
-}
-
-void PrintCupsClient::UpdatePrinterStatusOnPreflightOffline(const std::shared_ptr<JobMonitorParam> &monitorParams)
-{
-    if (!IsDefaultAddedLanPrinter(monitorParams)) {
-        return;
-    }
-    PRINT_CHECK_NULL_RETURN_VOID(monitorParams->serviceAbility);
-    monitorParams->serviceAbility->RemovePrinterFromDiscoveryAndMarkOffline(monitorParams->printerId);
 }
 
 bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerUri)

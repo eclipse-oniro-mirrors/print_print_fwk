@@ -651,5 +651,68 @@ HWTEST_F(PrintServiceAbilityTest, notifyAdapterJobChanged_WhenServiceHandlerNull
     EXPECT_EQ(service->serviceHandler_, nullptr);
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobState_OfflineLanPrinterRemovesDiscovery, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string jobId = "offline_lan_job";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    auto userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::string printerId = "fwk.driver.wlan.group:offline_lan_job_printer";
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(printerId);
+    printJob->SetOption("{}");
+    userData->queuedJobList_[jobId] = printJob;
+    service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterId(printerId);
+    printer->SetPrinterName("HP LaserJet");
+    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(*printer));
+
+    EXPECT_EQ(service->UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE), E_PRINT_NONE);
+
+    EXPECT_EQ(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), nullptr);
+    PrinterInfo result;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobState_OfflineIpPrinterStaysOnline, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    std::string jobId = "offline_ip_job";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    auto userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::string printerId = "fwk.driver.wlan.group:192.168.55.66";
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(printerId);
+    printJob->SetOption("{}");
+    userData->queuedJobList_[jobId] = printJob;
+    service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterId(printerId);
+    printer->SetPrinterName("192.168.55.66");
+    printer->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printer);
+    PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(*printer));
+
+    EXPECT_EQ(service->UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE), E_PRINT_NONE);
+
+    EXPECT_NE(PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId), nullptr);
+    PrinterInfo result;
+    ASSERT_TRUE(PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, result));
+    EXPECT_EQ(result.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+    PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerId);
+}
+
 }  // namespace Print
 }  // namespace OHOS
