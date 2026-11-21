@@ -2849,6 +2849,15 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
+    if (subState == PRINT_JOB_BLOCKED_OFFLINE) {
+        std::string printerId = printJob->GetPrinterId();
+        PrinterInfo addedPrinter;
+        if (PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER) &&
+            PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
+            !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
+            RemoveSinglePrinterInfo(printerId);
+        }
+    }
     AddPrintJobToHistoryList(printJob);
     ReportBlockedAuditEvent(printJob, subState);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
@@ -2930,15 +2939,6 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     printJob->SetSubState(subState);
 
     if (state == PRINT_JOB_BLOCKED) {
-        if (subState == PRINT_JOB_BLOCKED_OFFLINE) {
-            std::string printerId = printJob->GetPrinterId();
-            PrinterInfo addedPrinter;
-            if (PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER) &&
-                PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
-                !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
-                RemoveSinglePrinterInfo(printerId);
-            }
-        }
         HandleJobBlockedState(printJob, subState);
     } else if (state == PRINT_JOB_COMPLETED) {
         HandleJobCompletedState(jobId, printJob, jobInQueue);
