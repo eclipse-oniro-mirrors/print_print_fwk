@@ -2,7 +2,7 @@
 
 打印任务连接应用的打印意图、文档准备、服务调度和后端执行。打印服务持有框架任务及其用户关系，后端适配负责把任务转成可执行作业，再把执行结果带回服务。调用返回、框架终态、后端作业结束和设备实际输出是四种不同事实。
 
-本文以标准版 `print_service` 为范围，覆盖交互式打印、原生直打、CUPS 路由及打印扩展协作。phone 是独立服务实现，不据同名接口推定行为一致；构建开关和后端适用条件见[产品与跨仓边界](../architecture/variants-and-boundaries.md)。术语见[领域说明](../domain/overview.md)，实现定位统一从[仓库与组件导航](../development/repository-context.md)进入，接口可用范围见[API 入口](../api/README.md)。
+本文以标准版 `print_service` 为范围，覆盖交互式打印、原生直打、CUPS 路由及打印扩展协作。phone 是独立服务实现，不据同名接口推定行为一致；构建开关和后端适用条件见[产品与跨仓边界](../architecture/variants-and-boundaries.md)。术语见[领域说明](../domain/overview.md)，实现定位统一从[仓库与组件导航](../development/repository-context.md)进入，接口可用范围见[API 入口](../API-DOC.md)。
 
 ## 一、组件架构与职责
 

@@ -7,7 +7,7 @@
 - 首次定位源码、跟踪跨仓调用或选择编译树时，先读[仓库定位](docs/development/repository-context.md)。执行编译前核对[产品、目标与构建命令](docs/development/build.md)。
 - 分析模块职责、产品开关和接口两端时，从[架构总览](docs/architecture/overview.md)和[产品与跨仓边界](docs/architecture/variants-and-boundaries.md)进入。
 - 讨论设备、队列、任务或结果的归属时，核对[领域术语](docs/domain/overview.md)。提交、取消与状态通知见[打印任务](docs/workflows/print-job.md)，设备打开、读图与结果交接见[扫描流程](docs/workflows/scan.md)。
-- 修改 API、绑定、权限或错误码时，先对照 [API 文档](docs/api/README.md)的来源版本、目标 SDK 和当前实现。
+- 修改 API、绑定、权限或错误码时，通过 [API 文档入口](docs/API-DOC.md)查阅目标 SDK 对应版本的官方说明，并与当前实现核对。
 
 ## 团队编码文化
 
