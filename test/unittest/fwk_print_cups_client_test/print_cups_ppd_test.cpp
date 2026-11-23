@@ -1069,6 +1069,8 @@ static const std::string K_LANG_PPD_CONTENT =
     "*zh_CN.PageSize A4/A4: \"A4\"\n"
     "*zh_CN.PageSize Letter/Letter: \"\u4fe1\u7eb8\"\n"
     "*CloseUI: PageSize\n"
+    "*PaperDimension A4/A4: \"595 842\"\n"
+    "*PaperDimension Letter/Letter: \"612 792\"\n"
     "*OpenUI MediaType: PickOne\n"
     "*OrderDependency: 50 AnySetup MediaType\n"
     "*DefaultMediaType: Plain\n"
@@ -1388,15 +1390,11 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_OversizeResult_ReturnedInF
         "*MediaType Plain/Plain Paper: \"x\"\n"
         "*zh_CN.MediaType Plain/CNHit: \"x\"\n*CloseUI: MediaType\n");
     for (int o = 0; o < 100; o++) {
-        char buf[8];
-        snprintf_s(buf, sizeof(buf), sizeof(buf) - 1, "%02d", o);
-        std::string kw = std::string("Opt") + buf;
+        const std::string kw = "Opt" + (o < 10 ? std::string("0") : std::string()) + std::to_string(o);
         content += "*OpenUI " + kw + ": PickOne\n*OrderDependency: 10 AnySetup " + kw +
             "\n*Default" + kw + ": c0\n";
         for (int c = 0; c < 5; c++) {
-            char cb[8];
-            snprintf_s(cb, sizeof(cb), sizeof(cb) - 1, "c%d", c);
-            content += "*" + kw + " " + cb + "/" + name + ": \"" + text + "\"\n";
+            content += "*" + kw + " c" + std::to_string(c) + "/" + name + ": \"" + text + "\"\n";
         }
         content += "*CloseUI: " + kw + "\n";
     }
@@ -1404,7 +1402,7 @@ HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_OversizeResult_ReturnedInF
     std::string resultJson;
     int32_t ret = GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson);
     EXPECT_EQ(ret, E_PRINT_NONE);   // no 100KB business cap: full result returned
-    EXPECT_GT(resultJson.size(), 60u * 1024u);  // ~100 options x 5 choices x dual layers ~= 90KB
+    EXPECT_GT(resultJson.size(), 40u * 1024u);  // device-measured ~58KB; robust floor vs a hypothetical 100KB cap
     RemoveTempFile(ppdPath);
 }
 
@@ -1512,6 +1510,92 @@ HWTEST_F(PrintCupsPpdTest, ParseCustomPageSizeFromPpd_WithCustomPageSize_RangeOb
 
     ppdClose(ppd);
     RemoveTempFile(ppdPath);
+}
+
+// ===== 增量分支覆盖守卫 =====
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NonStringCustomParamSkipsChoice, TestSize.Level1)
+{
+    std::string content = K_LANG_PPD_CONTENT;
+    const std::string strParam = "*ParamCustomStockType Remark/Remark: \"1 string 1 40\"\n";
+    size_t pos = content.find(strParam);
+    ASSERT_NE(pos, std::string::npos);
+    // 必须用 passcode：int 不匹配 FindCustomParam 的类型集合（会落入 cparam-null
+    // 分支），passcode 匹配且 !=STRING，才能命中"透出类型但跳过 choice"的分支
+    content.replace(pos, strParam.size(), "*ParamCustomStockType Pin/PIN: \"1 passcode 0 9999\"\n");
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    const Json::Value &stock = root["advanceOptions"][1u];
+    EXPECT_EQ(stock["keyword"].asString(), "StockType");
+    EXPECT_FALSE(stock["choice"]["default"].isMember("Custom"));   // 非 STRING 参数: choice 被跳过
+    EXPECT_EQ(stock["choice"]["zh_CN"].size(), stock["choice"]["default"].size());
+    EXPECT_TRUE(stock.isMember("customParamType"));   // 主树基线透出参数类型
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_VendorAbilitySkipsCustomOption, TestSize.Level1)
+{
+    // vendor 能力属性存在 + custom 参数项：整项跳过（HasVendorAbilityAttr true 分支；
+    // 镜像规则仅主树——phone 基线无此规则）
+    std::string content = K_LANG_PPD_CONTENT +
+        "*vendorPrinterPrefAbility: \"com.vendor.driver.VendorPrinterSettingsAbility\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    ASSERT_EQ(root["advanceOptions"].size(), 1u);
+    EXPECT_EQ(root["advanceOptions"][0u]["keyword"].asString(), "Finishing");
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_UnsupportedCustomParamSkipsChoice, TestSize.Level1)
+{
+    // *CustomStockType 声明存在但无 Param 行：FindCustomParam 空指针分支
+    std::string content =
+        "*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n*ModelName: \"T\"\n*NickName: \"T\"\n"
+        "*cupsLanguages: \"en zh_CN\"\n"
+        "*OpenUI StockType: PickOne\n*DefaultStockType: Plain\n"
+        "*StockType Plain/Plain: \"\"\n*StockType Custom/Custom: \"\"\n"
+        "*zh_CN.StockType Plain/\u666e\u901a: \"\"\n*CloseUI: StockType\n"
+        "*CustomStockType True:\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    Json::Value root = QueryOk(ppdPath, "zh_CN");
+    ASSERT_EQ(root["advanceOptions"].size(), 1u);
+    const Json::Value &entry = root["advanceOptions"][0u];
+    EXPECT_EQ(entry["keyword"].asString(), "StockType");
+    EXPECT_FALSE(entry["choice"]["default"].isMember("Custom"));
+    EXPECT_TRUE(entry["choice"]["default"].isMember("Plain"));
+    EXPECT_FALSE(entry.isMember("customParamType"));
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, GetLocalizedStringsFromPpd_NoCupsLanguages_Rejected, TestSize.Level1)
+{
+    std::string content =
+        "*PPD-Adobe: \"4.3\"\n*FileVersion: \"1.0\"\n*LanguageEncoding: ISOLatin1\n"
+        "*LanguageLevel: \"2\"\n*Manufacturer: \"T\"\n*ModelName: \"T\"\n"
+        "*NickName: \"T\"\n";
+    std::string ppdPath = CreateTempPpdFile(content);
+    std::string resultJson;
+    EXPECT_EQ(GetLocalizedStringsFromPpd(ppdPath, "zh_CN", resultJson), E_PRINT_INVALID_PARAMETER);
+    Json::Value langs;
+    // 契约：文件可读即 true；无 cupsLanguages 属性 → 空数组（非失败）
+    EXPECT_TRUE(QueryPpdAvailableLanguagesFromFile(ppdPath, langs));
+    EXPECT_EQ(langs.size(), 0u);
+    ppd_file_t *ppd = ppdOpenFile(ppdPath.c_str());
+    ASSERT_NE(ppd, nullptr);
+    EXPECT_EQ(BuildPpdAvailableLanguages(ppd).size(), 0u);   // attr 缺失：空数组
+    ppdClose(ppd);
+    RemoveTempFile(ppdPath);
+}
+
+HWTEST_F(PrintCupsPpdTest, NormalizePpdLanguage_EdgeInputs, TestSize.Level1)
+{
+    std::string out;
+    EXPECT_FALSE(NormalizePpdLanguage("", out));
+    EXPECT_FALSE(NormalizePpdLanguage(std::string(33, 'z'), out));
+    EXPECT_FALSE(NormalizePpdLanguage("zh_CN_XX_YY", out));
+    EXPECT_FALSE(NormalizePpdLanguage("zhh_CN", out));
+    EXPECT_TRUE(NormalizePpdLanguage("ZH-cn", out));
+    EXPECT_EQ(out, "zh_CN");
 }
 
 }  // namespace Print

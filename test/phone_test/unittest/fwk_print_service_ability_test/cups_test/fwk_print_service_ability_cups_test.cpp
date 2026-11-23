@@ -642,24 +642,55 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_InvalidLanguageForm
 HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_Bcp47Hit_Translation, TestSize.Level1)
 {
 #ifdef CUPS_ENABLE
-    // SA layer is the normalization point: zh-Hans-CN -> zh_CN (library-level raw match
-    // contract covered by GetLocalizedStringsFromPpd_LanguageListRawMatch)
+    // BCP47 full form is normalized to zh_CN at both SA and library entries (idempotent)
     const std::string ppdName = "ut_loc_" + std::to_string(getpid()) + ".ppd";
-    CreateTestPpdFile(ppdName, UT_PPD_WITH_ZH);
     const std::string id = "ut_loc_" + std::to_string(getpid());
-    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Loc", ppdName));
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
     auto mockHelper = std::make_shared<MockPrintServiceHelper>();
     EXPECT_CALL(*mockHelper, CheckPermission(_))
         .WillRepeatedly(Return(true));
     service->SetHelper(mockHelper);
+    // 预热：先触发 ManualStart→OnStart→Init 的 spool/环境收编清理（新实例必走），
+    // 测试数据在清理完成之后再落位，否则被 Init 回收导致 13100005
+    std::string warmupJson;
+    static_cast<IPrintService &>(*service).GetPrinterLocalizedStrings("ut_warmup_absent", "zh_CN", warmupJson);
+    CreateTestPpdFile(ppdName, UT_PPD_WITH_ZH);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut Loc", ppdName));
     std::string resultJson;
     int32_t ret = static_cast<IPrintService &>(*service)
         .GetPrinterLocalizedStrings(id, "zh-Hans-CN", resultJson);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(resultJson.find("\u666e\u901a\u7eb8"), std::string::npos);   // 普通纸 (UTF8 raw output)
     PrintDataRepository::GetInstance().DeleteAddedPrinter(id, "Ut Loc");
+    RemoveTestPpdFile(ppdName);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterLocalizedStrings_NoTranslation_ResolvesEmpty, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    const std::string ppdName = "ut_notrans_" + std::to_string(getpid()) + ".ppd";
+    const std::string minimal =
+        "*PPD-Adobe: \"4.3\"\n*cupsLanguages: \"en zh_CN\"\n*ModelName: \"T\"\n*NickName: \"T\"\n";
+    const std::string id = "ut_notrans_" + std::to_string(getpid());
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
+    // 预热同上：Init 收编清理先于测试数据落位
+    std::string warmupJson;
+    static_cast<IPrintService &>(*service).GetPrinterLocalizedStrings("ut_warmup_absent", "zh_CN", warmupJson);
+    CreateTestPpdFile(ppdName, minimal);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(id, MakeUtPrinter(id, "Ut NoTrans", ppdName));
+    std::string resultJson = "keep";
+    int32_t ret = static_cast<IPrintService &>(*service)
+        .GetPrinterLocalizedStrings(id, "zh_CN", resultJson);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_TRUE(resultJson.empty());   // 无任何译文：命中但 resolve 空串
+    PrintDataRepository::GetInstance().DeleteAddedPrinter(id, "Ut NoTrans");
     RemoveTestPpdFile(ppdName);
 #endif
 }

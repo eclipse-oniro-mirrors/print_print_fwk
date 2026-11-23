@@ -879,11 +879,14 @@ static void BuildLocalizedMediaSizeMap(const PpdLocale &ctx,
         return;
     }
     ppd_option_t *sizeOption = ppdFindOption(ctx.ppd, "PageSize");
+    Json::Value built;
+    bool anyHit = false;
     for (int i = 0; i < ppdCache->num_sizes; i++) {
         pwg_size_t pwgSize = ppdCache->sizes[i];
         ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
         if (sizeChoice == nullptr) {
-            continue;
+            PRINT_HILOGE("sizeChoice null: drop whole mediaSizeMap");
+            return;
         }
         Json::Value entry;
         entry["default"] = sizeChoice->text;
@@ -891,9 +894,13 @@ static void BuildLocalizedMediaSizeMap(const PpdLocale &ctx,
         entry[ctx.language] = GetLocalizedText(ctx, "PageSize", sizeChoice->choice,
             sizeChoice->text, found);
         if (found) {
-            hasTranslation = true;
+            anyHit = true;
         }
-        mediaSizeMap[pwgSize.map.pwg] = entry;
+        built[pwgSize.map.pwg] = entry;
+    }
+    mediaSizeMap = built;
+    if (anyHit) {
+        hasTranslation = true;
     }
 }
 
@@ -982,7 +989,9 @@ static int32_t BuildLocalizedResultJson(const std::string &language,
     Json::Value rootJs;
     rootJs["language"] = language;
     rootJs["advanceOptions"] = parts.advanceOptJs;
-    rootJs["mediaSizeMap"] = parts.mediaSizeMap;
+    if (!parts.mediaSizeMap.empty()) {
+        rootJs["mediaSizeMap"] = parts.mediaSizeMap;  // dropped/empty -> key absent like capability
+    }
     if (!parts.mediaTypeMap.empty()) {
         rootJs["mediaTypeMap"] = parts.mediaTypeMap;  // D3: empty (dropped) -> key absent like capability
     }

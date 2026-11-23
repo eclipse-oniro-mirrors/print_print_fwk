@@ -3009,7 +3009,9 @@ HWTEST_F(PrintManagerClientTest, GetPrinterLocalizedStrings_ServerNotReady, Test
     PrintManagerClient::GetInstance().LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance().GetPrinterLocalizedStrings(
         "test", "zh_CN", resultJson);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    // 代理已被缓存时 LoadServerFail 不一定置空，调用可真正到达 SA 被权限拒绝；
+    // 不变式是"非成功 + 输出未被写"，两种失败面均接受
+    EXPECT_TRUE(ret == E_PRINT_RPC_FAILURE || ret == E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(resultJson.empty());
     PrintManagerClient::GetInstance().LoadServerSuccess();
 }

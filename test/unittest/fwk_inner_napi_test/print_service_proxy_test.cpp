@@ -1432,6 +1432,22 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterLocalizedStringsTest, TestSize.Level1)
     EXPECT_EQ(testResult, "{\"language\":\"zh_CN\"}");
 }
 
+HWTEST_F(PrintServiceProxyTest, GetPrinterLocalizedStrings_EmptyReply_ReturnsRpcFailure, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    std::string testLanguage = "zh_CN";
+    std::string testResult;
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    // 传输成功但 reply 未写入任何字段：读取判返回值分支（防截断假成功）
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_NONE));
+    int32_t ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
 /**
  * @tc.name: RegisterWatermarkCallback_NullCallback
  * @tc.desc: Verify RegisterWatermarkCallback returns error when callback is null.

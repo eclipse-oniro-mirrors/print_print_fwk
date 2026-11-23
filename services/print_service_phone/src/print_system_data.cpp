@@ -26,7 +26,6 @@
 #include "print_utils.h"
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
-#include "print_cups_ppd.h"
 #endif  // CUPS_ENABLE
 
 namespace OHOS {
