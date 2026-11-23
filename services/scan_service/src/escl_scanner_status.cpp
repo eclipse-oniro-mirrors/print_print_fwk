@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include "scan_log.h"
 #include "escl_scanner_status.h"
+#include "escl_driver_manager.h"
 
 namespace OHOS::Scan {
 static const int32_t MAX_PORT_NUMBER = 65535;
@@ -57,16 +58,19 @@ bool EsclScannerStatus::ParseXmlResponse(const std::string& responseBuffer,
 }
 
 bool EsclScannerStatus::QueryScannerStatus(const std::string& ipAddress, int32_t portNumber,
-    std::map<std::string, std::string>& statusMap)
+    std::map<std::string, std::string>& statusMap,
+    bool isHttps)
 {
     if (!ValidateParameters(ipAddress, portNumber)) {
         SCAN_HILOGE("Parameter validation failed");
         return false;
     }
 
-    SCAN_HILOGI("Query scanner status: ip=%{private}s, port=%{private}d", ipAddress.c_str(), portNumber);
+    std::string scheme = isHttps ? SCHEME_HTTPS : SCHEME_HTTP;
+    SCAN_HILOGI("Query scanner status: ip=%{private}s, port=%{private}d, scheme=%{public}s",
+        ipAddress.c_str(), portNumber, scheme.c_str());
 
-    std::string url = "http://" + ipAddress + ":" + std::to_string(portNumber) + "/eSCL/ScannerStatus";
+    std::string url = scheme + "://" + ipAddress + ":" + std::to_string(portNumber) + "/eSCL/ScannerStatus";
     std::string responseBuffer;
 
     if (!CurlHttpClient::PerformHttpRequest(url, responseBuffer)) {

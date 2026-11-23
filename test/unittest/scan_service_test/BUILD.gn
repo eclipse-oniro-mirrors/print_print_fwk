@@ -1,0 +1,133 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/test.gni")
+
+_test_path = "${print_path}/test"
+_scan_service_path = "${print_path}/services/scan_service"
+
+module_output_path = unit_test_output_path
+
+ohos_unittest("scan_service_common_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/test/unittest/service_test/mock",
+    "${print_path}/frameworks/models/scan_models/include",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${_scan_service_path}/include",
+    "${print_utils_path}/include",
+  ]
+
+  cflags_cc = [ "-DUNIT_TEST" ]
+
+  sources = [
+    "${_test_path}/unittest/scan_service_test/scanner_info_test.cpp",
+    "${_test_path}/unittest/scan_service_test/scan_service_utils_test.cpp",
+    "${_test_path}/unittest/scan_service_test/scan_ability_connection_test.cpp",
+    "${_test_path}/unittest/scan_service_test/scan_cert_dialog_callback_test.cpp",
+    "${print_path}/frameworks/models/scan_models/src/scanner_info.cpp",
+    "${_scan_service_path}/src/scan_service_utils.cpp",
+    "${_scan_service_path}/src/scan_ability_connection.cpp",
+    "${_scan_service_path}/src/scan_cert_dialog_callback.cpp",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
+
+# TOFU certificate lifecycle tests (IP-change rename atomicity and the
+# pending-cert invalidation token). These link the full scan_service test
+# static library because EsclDriverManager lives alongside scanner/SANE code
+# that cannot be compiled in isolation.
+ohos_unittest("scan_cert_tofu_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "${print_path}/test/unittest/service_test/mock",
+    "${print_path}/frameworks/models/scan_models/include",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/frameworks/ISaneBackends/include",
+    "${_scan_service_path}/include",
+    "${print_utils_path}/include",
+  ]
+
+  cflags_cc = [ "-DUNIT_TEST" ]
+
+  sources = [
+    "${_test_path}/unittest/scan_service_test/scan_cert_tofu_test.cpp",
+  ]
+
+  deps = [
+    "${_scan_service_path}:scan_service_test",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "backends:sane",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "curl:curl_shared",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "image_framework:image_ndk",
+    "image_framework:image_native",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
+    "libuv:uv",
+    "libxml2:libxml2",
+    "napi:ace_napi",
+    "netmanager_ext:mdns_manager_if",
+    "node:node_header_notice",
+    "openssl:libcrypto_shared",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
+    "usb_manager:usbsrv_client",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+
+  deps = []
+
+  deps += [
+    ":scan_service_common_test",
+    ":scan_cert_tofu_test",
+  ]
+}

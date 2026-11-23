@@ -31,6 +31,7 @@ ScanDeviceInfoTCP::ScanDeviceInfoTCP()
     button="";
     feeder="";
     deviceState = 0;
+    isHttps = false;
 }
 
 ScanDeviceInfoTCP::ScanDeviceInfoTCP(const ScanDeviceInfoTCP &right)
@@ -45,6 +46,7 @@ ScanDeviceInfoTCP::ScanDeviceInfoTCP(const ScanDeviceInfoTCP &right)
     button = right.button;
     feeder = right.feeder;
     deviceState = right.deviceState;
+    isHttps = right.isHttps;
 }
 
 ScanDeviceInfoTCP &ScanDeviceInfoTCP::operator=(const ScanDeviceInfoTCP &right)
@@ -60,6 +62,7 @@ ScanDeviceInfoTCP &ScanDeviceInfoTCP::operator=(const ScanDeviceInfoTCP &right)
         button = right.button;
         feeder = right.feeder;
         deviceState = right.deviceState;
+        isHttps = right.isHttps;
     }
     return *this;
 }
@@ -114,6 +117,11 @@ void ScanDeviceInfoTCP::SetDeviceState(const uint32_t& deviceState_)
     deviceState = deviceState_;
 }
 
+void ScanDeviceInfoTCP::SetIsHttps(bool isHttps_)
+{
+    isHttps = isHttps_;
+}
+
 const std::string& ScanDeviceInfoTCP::GetDeviceName() const
 {
     return deviceName;
@@ -164,6 +172,11 @@ const uint32_t& ScanDeviceInfoTCP::GetDeviceState() const
     return deviceState;
 }
 
+bool ScanDeviceInfoTCP::GetIsHttps() const
+{
+    return isHttps;
+}
+
 bool ScanDeviceInfoTCP::ReadFromParcel(Parcel &parcel)
 {
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceName), false);
@@ -175,6 +188,7 @@ bool ScanDeviceInfoTCP::ReadFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(addr), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(button), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(feeder), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isHttps), false);
     return true;
 }
 
@@ -189,6 +203,7 @@ bool ScanDeviceInfoTCP::Marshalling(Parcel &parcel) const
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(addr), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(button), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(feeder), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(isHttps), false);
     return true;
 }
 
@@ -215,6 +230,7 @@ ScanDeviceInfo::ScanDeviceInfo()
     deviceName = "";
     uniqueId = "";
     uuid = "";
+    isHttps = false;
     deviceAvailable = true;
 }
 
@@ -230,6 +246,7 @@ ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
     deviceName = right.deviceName;
     uniqueId = right.uniqueId;
     uuid = right.uuid;
+    isHttps = right.isHttps;
     deviceAvailable = right.deviceAvailable;
 }
 
@@ -246,6 +263,7 @@ ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
         deviceName = right.deviceName;
         uniqueId = right.uniqueId;
         uuid = right.uuid;
+        isHttps = right.isHttps;
         deviceAvailable = right.deviceAvailable;
     }
     return *this;
@@ -362,6 +380,16 @@ bool ScanDeviceInfo::GetDeviceAvailable() const
     return deviceAvailable;
 }
 
+void ScanDeviceInfo::SetIsHttps(bool isHttps)
+{
+    this->isHttps = isHttps;
+}
+
+bool ScanDeviceInfo::GetIsHttps() const
+{
+    return isHttps;
+}
+
 bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
 {
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceId), false);
@@ -372,6 +400,7 @@ bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(serialNumber), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(deviceName), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(uniqueId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(isHttps), false);
     return true;
 }
 
@@ -385,6 +414,7 @@ bool ScanDeviceInfo::Marshalling(Parcel &parcel) const
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(serialNumber), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(deviceName), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(uniqueId), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(isHttps), false);
     return true;
 }
 

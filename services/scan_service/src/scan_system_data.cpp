@@ -23,6 +23,7 @@
 #include "scan_util.h"
 #include "scan_system_data.h"
 #include "scan_service_ability.h"
+#include "escl_driver_manager.h"
 #include "scan_service_utils.h"
 
 namespace {
@@ -45,34 +46,26 @@ bool ScanSystemData::CheckJsonObjectValue(const Json::Value &object)
     return true;
 }
 
+void ScanSystemData::ParseStringField(Json::Value &object, const char *key, std::string &value)
+{
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, key) && object[key].isString()) {
+        value = object[key].asString();
+    }
+}
+
 void ScanSystemData::ParseScannerJsonV1(ScanDeviceInfo &scanDeviceInfo, Json::Value &object)
 {
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "deviceId") && object["deviceId"].isString()) {
-        scanDeviceInfo.deviceId = object["deviceId"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "manufacturer") && object["manufacturer"].isString()) {
-        scanDeviceInfo.manufacturer = object["manufacturer"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "model") && object["model"].isString()) {
-        scanDeviceInfo.model = object["model"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "deviceType") && object["deviceType"].isString()) {
-        scanDeviceInfo.deviceType = object["deviceType"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "discoverMode") && object["discoverMode"].isString()) {
-        scanDeviceInfo.discoverMode = object["discoverMode"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "serialNumber") && object["serialNumber"].isString()) {
-        scanDeviceInfo.serialNumber = object["serialNumber"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "deviceName") && object["deviceName"].isString()) {
-        scanDeviceInfo.deviceName = object["deviceName"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "uniqueId") && object["uniqueId"].isString()) {
-        scanDeviceInfo.uniqueId = object["uniqueId"].asString();
-    }
-    if (OHOS::Print::PrintJsonUtil::IsMember(object, "uuid") && object["uuid"].isString()) {
-        scanDeviceInfo.uuid = object["uuid"].asString();
+    ParseStringField(object, "deviceId", scanDeviceInfo.deviceId);
+    ParseStringField(object, "manufacturer", scanDeviceInfo.manufacturer);
+    ParseStringField(object, "model", scanDeviceInfo.model);
+    ParseStringField(object, "deviceType", scanDeviceInfo.deviceType);
+    ParseStringField(object, "discoverMode", scanDeviceInfo.discoverMode);
+    ParseStringField(object, "serialNumber", scanDeviceInfo.serialNumber);
+    ParseStringField(object, "deviceName", scanDeviceInfo.deviceName);
+    ParseStringField(object, "uniqueId", scanDeviceInfo.uniqueId);
+    ParseStringField(object, "uuid", scanDeviceInfo.uuid);
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "isHttps") && object["isHttps"].isBool()) {
+        scanDeviceInfo.SetIsHttps(object["isHttps"].asBool());
     }
 }
 
@@ -305,6 +298,7 @@ bool ScanSystemData::SaveScannerMap()
         scannerJson["deviceName"] = info->deviceName;
         scannerJson["uniqueId"] = info->uniqueId;
         scannerJson["uuid"] = info->uuid;
+        scannerJson["isHttps"] = info->GetIsHttps();
         scannerMapJson.append(scannerJson);
     }
     Json::Value jsonObject;
@@ -370,16 +364,22 @@ std::optional<std::pair<std::string, std::string>> ScanSystemData::UpdateNetScan
         return std::nullopt;
     }
     SCAN_HILOGD("newdeviceId = %{private}s", newDeviceId.c_str());
-    addedScannerMap_.erase(oldKey);
+
+    // Reject IP update if the target IP is already occupied.
     std::string newKey = ScannerDiscoveryMode::TCP_MODE + ip;
+    if (addedScannerMap_.find(newKey) != addedScannerMap_.end()) {
+        SCAN_HILOGW("IP conflict: %{public}s already occupied, reject IP update",
+            ip.c_str());
+        return std::nullopt;
+    }
+
+    addedScannerMap_.erase(oldKey);
     scannerInfo->deviceId = newDeviceId;
     scannerInfo->uniqueId = ip;
-    auto it = addedScannerMap_.find(newKey);
-    if (it == addedScannerMap_.end()) {
-        addedScannerMap_.insert(std::make_pair(newKey, scannerInfo));
-    } else {
-        it->second = scannerInfo;
-    }
+    addedScannerMap_.insert(std::make_pair(newKey, scannerInfo));
+
+    // Keep map update and cert rename in the same critical section.
+    EsclDriverManager::RenameTofuCert(oldDeviceId, newDeviceId);
     return std::make_pair(oldDeviceId, newDeviceId);
 }
 

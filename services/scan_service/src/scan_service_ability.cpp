@@ -14,7 +14,6 @@
  */
 #include "scan_service_ability.h"
 
-#include <cerrno>
 #include <ctime>
 #include <string>
 #include <sys/time.h>
@@ -26,7 +25,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-#include <random>
+#include <atomic>
 #include <condition_variable>
 #include <regex>
 
@@ -39,6 +38,7 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "scan_service_utils.h"
+#include "tofu_cert_store.h"
 #include "scan_constant.h"
 #include "scan_log.h"
 #include "scan_util.h"
@@ -63,6 +63,9 @@
 #include "saneopts.h"
 #include "caller_app_monitor.h"
 #include "escl_driver_manager.h"
+#include "ability_manager_adapter.h"
+#include "scan_ability_connection.h"
+#include "want.h"
 
 namespace OHOS::Scan {
 using namespace std;
@@ -73,6 +76,10 @@ using SteadyTimePoint = std::chrono::steady_clock::time_point;
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
 constexpr int32_t MAX_SCANNER_PARA_COUNT = 1000;
+constexpr uint32_t CERT_DIALOG_MAX_RETRY_TIMES = 2;
+constexpr int32_t CERT_DIALOG_RETRY_INTERVAL_MS = 200;
+// Reclaim the single dialog slot if the ability never reports connected.
+constexpr int32_t CERT_DIALOG_LAUNCH_TIMEOUT_MS = 10000;
 
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
@@ -94,6 +101,16 @@ static const std::unordered_map<std::string, std::string> SCAN_PERMISSION_MAP = 
     {GET_SCANNER_DEVICE_LIST, PERMISSION_NAME_PRINT}};
 
 std::map<std::string, sptr<IScanCallback>> OHOS::Scan::ScanServiceAbility::registeredListeners_;
+
+namespace {
+std::string GenerateSessionId()
+{
+    // Generational token, not a secret; SA-lifetime uniqueness suffices.
+    static std::atomic<uint64_t> sessionCounter{0};
+    uint64_t id = ++sessionCounter;
+    return std::to_string(id);
+}
+} // namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(ScanServiceAbility, SCAN_SERVICE_ID, true);
 
@@ -202,6 +219,7 @@ void ScanServiceAbility::OnStop()
         SCAN_HILOGW("service is not running");
         return;
     }
+    DestroyCertDialogIfActive();
     {
         std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         serviceHandler_ = nullptr;
@@ -288,6 +306,7 @@ void ScanServiceAbility::CleanupScanService()
     }
     scannerState_.store(SCANNER_READY);
     scanPictureData_.CleanAllCache();
+    DestroyCertDialogIfActive();
     {
         std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         SCAN_HILOGI("clear registeredListeners_ on service cleanup, size=%{public}zu",
@@ -445,6 +464,10 @@ void ScanServiceAbility::UpdateScanSystemData(const ScanDeviceInfo &info)
         auto updateResult = scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
         if (updateResult.has_value()) {
             scanDeviceInfoSync.oldDeviceId = updateResult.value().first;
+            /* IP changed: the baseline was already renamed inside
+             * UpdateNetScannerByUuid. Invalidate the active dialog session,
+             * dropping its pending cert. */
+            InvalidateCertDialogForDevice(updateResult.value().first);
             SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
         }
     }
@@ -509,12 +532,7 @@ int32_t ScanServiceAbility::GetScannerList()
     }
     ManualStart();
     SCAN_HILOGI("ScanServiceAbility GetScannerList start");
-    // USB device insertion triggers multiple USB attach events, each calling
-    // GetScannerList, causing multiple SaneGetScanner tasks to pile up in the
-    // single-threaded serviceHandler_ queue and blocking subsequent async tasks
-    // such as AddScanner. Use coalescing dedup here: if discovery is in progress,
-    // do not post a new task, just mark rediscoverPending_ and let the current
-    // round pick it up after it finishes.
+    // USB attach can fire GetScannerList repeatedly; coalesce discovery tasks.
     {
         std::lock_guard<std::mutex> lock(discoverMutex_);
         if (discoverInProgress_) {
@@ -527,9 +545,7 @@ int32_t ScanServiceAbility::GetScannerList()
     auto exec_sane_getscaner = [=]() {
         while (true) {
             SaneGetScanner();
-            // After the current discovery round finishes, check whether a new
-            // discovery request arrived during the round (device inserted while
-            // discovery was running).
+            // Pick up a discovery request that arrived during this round.
             std::lock_guard<std::mutex> lock(discoverMutex_);
             if (rediscoverPending_) {
                 rediscoverPending_ = false;
@@ -552,6 +568,51 @@ int32_t ScanServiceAbility::GetScannerList()
     return E_SCAN_NONE;
 }
 
+// Called with lock_ held.
+int32_t ScanServiceAbility::DoOpenScanner(const std::string &scannerId)
+{
+    SaneStatus status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
+    if (status == SANE_STATUS_TLS_CERT_CHANGED) {
+        // 100 is deterministic; return immediately and raise the dialog async.
+        SCAN_HILOGE("SaneOpen cert changed, status: [%{public}u]", status);
+        return HandleSaneStatus(scannerId, status);
+    }
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
+        status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
+    }
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
+        // HTTPS unavailable only if two https opens fail and a plain-HTTP open succeeds.
+        std::string plainDeviceId;
+        if (EsclDriverManager::BuildPlainHttpDeviceId(scannerId, plainDeviceId,
+            GetPlainHttpPort(scannerId))) {
+            if (IsPlainHttpReachable(plainDeviceId)) {
+                return E_SCAN_HTTPS_UNAVAILABLE;
+            }
+        }
+        // The retry may itself have hit 100; route through the shared handler.
+        return HandleSaneStatus(scannerId, status);
+    }
+    openedScanner_ = OpenedScanner{scannerId, IPCSkeleton::GetCallingPid(), GetCurrentUserId()};
+    return E_SCAN_NONE;
+}
+
+// True when the plain-HTTP open works (caller should prompt an https re-add).
+bool ScanServiceAbility::IsPlainHttpReachable(const std::string &plainDeviceId)
+{
+    SaneStatus plainStatus = SaneManagerClient::GetInstance().SaneOpen(plainDeviceId);
+    if (plainStatus != SANE_STATUS_GOOD) {
+        SCAN_HILOGI("https open failed twice, plain HTTP probe also failed, status: [%{public}u]",
+            plainStatus);
+        return false;
+    }
+    SaneManagerClient::GetInstance().SaneClose(plainDeviceId);
+    SCAN_HILOGI("HTTPS unavailable but plain HTTP open ok, prompt re-add: %{private}s",
+        plainDeviceId.c_str());
+    return true;
+}
+
 int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -566,7 +627,11 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("OpenScanner scannerId is empty");
         return E_SCAN_INVALID_PARAMETER;
     }
-    
+    // Opening a different device invalidates the previous one's dialog.
+    if (certDialogSession_.has_value() && certDialogSession_->scannerId != scannerId) {
+        InvalidateCertDialog("open other scanner");
+    }
+
     if (openedScanner_.has_value()) {
         if (openedScanner_->scannerId == scannerId &&
             openedScanner_->callerPid == IPCSkeleton::GetCallingPid() &&
@@ -578,18 +643,11 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
                     openedScanner_->scannerId.c_str());
         return E_SCAN_DEVICE_BUSY;
     }
-    SaneStatus status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
-        status = SaneManagerClient::GetInstance().SaneOpen(scannerId);
+    int32_t ret = DoOpenScanner(scannerId);
+    if (ret == E_SCAN_NONE) {
+        SCAN_HILOGI("ScanServiceAbility OpenScanner end");
     }
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
-        return ScanServiceUtils::ConvertErro(status);
-    }
-    openedScanner_ = OpenedScanner{scannerId, IPCSkeleton::GetCallingPid(), GetCurrentUserId()};
-    SCAN_HILOGI("ScanServiceAbility OpenScanner end");
-    return E_SCAN_NONE;
+    return ret;
 }
 
 int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
@@ -614,10 +672,11 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
     SaneStatus status = SaneManagerClient::GetInstance().SaneClose(scannerId);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     openedScanner_.reset();
     colorModeSettings_.erase(scannerId);
+    InvalidateCertDialogForDevice(scannerId);
     SCAN_HILOGI("ScanServiceAbility CloseScanner end");
     return E_SCAN_NONE;
 }
@@ -639,7 +698,7 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
     SaneStatus status = SaneManagerClient::GetInstance().SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}u]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     if (EsclDriverManager::IsEsclScanner(scannerId)) {
         EsclDriverManager::InjectLineartOption(saneDesc);
@@ -693,7 +752,7 @@ int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const in
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     if (auto sit = colorModeSettings_.find(scannerId); sit != colorModeSettings_.end()) {
         sit->second.erase(optionIndex);
@@ -725,7 +784,7 @@ int32_t ScanServiceAbility::ActionGetValue(
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_control_option failed, status: [%{public}d]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     if (valueType == SCAN_VALUE_NUM) {
         value.SetNumValue(outParam.valueNumber_);
@@ -764,7 +823,7 @@ int32_t ScanServiceAbility::ActionSetValue(
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, ret = [%{public}d]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
 
     if (shouldDowngrade) {
@@ -836,7 +895,7 @@ int32_t ScanServiceAbility::GetScanParametersInternal(const std::string &scanner
     SaneStatus status = SaneManagerClient::GetInstance().SaneGetParameters(scannerId, saneParams);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetParameters failed, status: [%{public}u]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     int32_t frameValue = static_cast<int32_t>(saneParams.format_);
     if (frameValue < SANE_FRAME_GRAY || frameValue >= SANE_FRAME_MAX) {
@@ -870,7 +929,7 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
     SaneStatus saneStatus = SaneManagerClient::GetInstance().SaneCancel(scannerId);
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneCancel failed, status: [%{public}u]", saneStatus);
-        return ScanServiceUtils::ConvertErro(saneStatus);
+        return HandleSaneStatus(scannerId, saneStatus);
     }
     if (scannerState_.load() == SCANNER_SCANING) {
         SCAN_HILOGW("ScannerState change to SCANNER_CANCELING");
@@ -1147,12 +1206,387 @@ void ScanServiceAbility::AddNetScanner(const std::string& uniqueId, const std::s
         SCAN_HILOGE("The net scanner has already been added");
         return;
     }
+    ProbeHttpsAndDowngrade(info);
     scanData.InsertScannerInfo(discoverMode + uniqueId, info);
     if (!scanData.SaveScannerMap()) {
         SCAN_HILOGE("ScanServiceAbility AddNetScanner SaveScannerMap fail");
         return;
     }
     SendDeviceInfo(info, SCAN_DEVICE_ADD);
+}
+
+std::string ScanServiceAbility::GetPlainHttpPort(const std::string& scannerId)
+{
+    std::string ipAddress;
+    int32_t portNumber = 0;
+    std::string plainPort = "80";
+    if (EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
+        ScanMdnsService::GetInstance().GetPlainHttpPort(ipAddress, plainPort);
+    }
+    return plainPort;
+}
+
+std::string ScanServiceAbility::GetDeviceName(const std::string& scannerId)
+{
+    std::string ipAddress;
+    int32_t portNumber = 0;
+    if (!EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
+        return "";
+    }
+    ScanDeviceInfo info;
+    bool found = ScanSystemData::GetInstance().QueryScannerInfoByUniqueId(ipAddress, info);
+    if (!found) {
+        found = scannerDiscoverData_.GetEsclDevice(ipAddress, info);
+    }
+    if (!found) {
+        return "";
+    }
+    if (!info.GetDeviceName().empty()) {
+        return info.GetDeviceName();
+    }
+    if (!info.GetManufacturer().empty() || !info.GetModel().empty()) {
+        return info.GetManufacturer() + "-" + info.GetModel();
+    }
+    return "";
+}
+
+void ScanServiceAbility::ProbeHttpsAndDowngrade(ScanDeviceInfo &info)
+{
+    // Add-time protocol probe: decide https/http once, while the user is present.
+    if (!info.GetIsHttps()) {
+        return;
+    }
+    SaneStatus status = SaneManagerClient::GetInstance().SaneOpen(info.deviceId);
+    if (status == SANE_STATUS_GOOD) {
+        SaneManagerClient::GetInstance().SaneClose(info.deviceId);
+        SCAN_HILOGI("AddNetScanner https probe ok, keep https: %{private}s", info.deviceId.c_str());
+        return;
+    }
+    SCAN_HILOGW("AddNetScanner https probe failed, status: [%{public}u], downgrade to http", status);
+    // Persist the downgrade so the record and runtime path use plain HTTP.
+    std::string plainDeviceId;
+    if (EsclDriverManager::BuildPlainHttpDeviceId(info.deviceId, plainDeviceId,
+        GetPlainHttpPort(info.deviceId))) {
+        info.SetDeviceId(plainDeviceId);
+    } else {
+        // Should not happen (isHttps implies https scheme); no-op.
+        return;
+    }
+    info.SetIsHttps(false);
+}
+
+int32_t ScanServiceAbility::HandleSaneStatus(const std::string &scannerId, SaneStatus status)
+{
+    // Any SANE call can surface 100; every path raises the dialog.
+    if (status == SANE_STATUS_TLS_CERT_CHANGED) {
+        SCAN_HILOGE("SANE status cert changed on scanner %{private}s", scannerId.c_str());
+        std::string ipAddress;
+        int32_t portNumber = 0;
+        EsclDriverManager::ExtractIpAndPort(scannerId, ipAddress, portNumber);
+        // The pending certificate is the only thing the user can confirm.
+        std::string fingerprint;
+        if (!TofuCertStore::GetInstance().ReadPendingFingerprint(ipAddress, fingerprint)) {
+            SCAN_HILOGE("cert changed but pending cert unavailable for %{private}s", scannerId.c_str());
+            return E_SCAN_IO_ERROR;
+        }
+        LaunchCertDialog(ScanDialogEventType::CERT_CHANGED, {
+            {ScanDialogParam::SESSION_ID, GenerateSessionId()},
+            {ScanDialogParam::SCANNER_ID, scannerId},
+            {ScanDialogParam::DEVICE_NAME, GetDeviceName(scannerId)},
+            {ScanDialogParam::DEVICE_IP, ipAddress},
+            {ScanDialogParam::DEVICE_PORT, portNumber > 0 ? std::to_string(portNumber) : ""},
+            {ScanDialogParam::CERT_FINGERPRINT, fingerprint}
+        });
+        return E_SCAN_TLS_CERT_CHANGED;
+    }
+    return ScanServiceUtils::ConvertErro(status);
+}
+
+// Fills the single dialog slot under lock_. False = a dialog is active or params are invalid.
+bool ScanServiceAbility::PrepareCertDialogSession(const std::vector<std::pair<std::string, std::string>> &params,
+    CertDialogSession &session)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    if (certDialogSession_.has_value()) {
+        // De-dup: one dialog at a time; later 100s only return the error code.
+        SCAN_HILOGI("cert dialog already active, skip launch");
+        return false;
+    }
+    for (const auto &param : params) {
+        if (param.first == ScanDialogParam::SESSION_ID) {
+            session.sessionId = param.second;
+        } else if (param.first == ScanDialogParam::SCANNER_ID) {
+            session.scannerId = param.second;
+        } else if (param.first == ScanDialogParam::DEVICE_IP) {
+            session.ipAddress = param.second;
+        } else if (param.first == ScanDialogParam::CERT_FINGERPRINT) {
+            session.fingerprint = param.second;
+        }
+    }
+    if (session.sessionId.empty() || session.scannerId.empty() || session.ipAddress.empty()) {
+        SCAN_HILOGE("launch cert dialog: missing session/scanner/ip");
+        return false;
+    }
+    session.state = CertDialogState::LAUNCHING;
+    certDialogSession_ = session;
+    return true;
+}
+
+void ScanServiceAbility::ResetCertDialogSession(const std::string &sessionId)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    if (certDialogSession_.has_value() && certDialogSession_->sessionId == sessionId) {
+        certDialogSession_.reset();
+    }
+}
+
+int32_t ScanServiceAbility::ConnectCertDialogWithRetry(const AAFwk::Want &want,
+    const sptr<ScanAbilityConnection> &connection)
+{
+    // Do not hold lock_ across the ability-connect IPC + retry sleeps.
+    ErrCode ret = ERR_OK;
+    for (uint32_t retry = 0; retry < CERT_DIALOG_MAX_RETRY_TIMES; retry++) {
+        ret = OHOS::Print::AbilityManagerAdapter::GetInstance().ConnectAbility(want, connection, -1);
+        if (ret == ERR_OK) {
+            break;
+        }
+        SCAN_HILOGE("connect cert dialog ability failed, ret: %{public}d, retry: %{public}u",
+            ret, retry);
+        std::this_thread::sleep_for(std::chrono::milliseconds(CERT_DIALOG_RETRY_INTERVAL_MS));
+    }
+    return ret;
+}
+
+void ScanServiceAbility::PublishCertDialogConnection(const CertDialogSession &session,
+    const std::string &eventType, const sptr<ScanAbilityConnection> &connection,
+    const sptr<ScanCertDecisionCallback> &callback)
+{
+    bool staleConnection = false;
+    {
+        std::lock_guard<std::recursive_mutex> autoLock(lock_);
+        if (!certDialogSession_.has_value() ||
+            certDialogSession_->sessionId != session.sessionId) {
+            // The dialog was invalidated or replaced while retrying; drop the stale connection.
+            staleConnection = true;
+        } else {
+            certDialogSession_->connection = connection;
+            certDialogSession_->callback = callback;
+            certDialogSession_->dialogRemote = connection->GetRemote();
+            SCAN_HILOGI("launch cert dialog requested, eventType: %{public}s, scanner: %{private}s",
+                eventType.c_str(), session.scannerId.c_str());
+        }
+    }
+    if (staleConnection) {
+        SCAN_HILOGI("cert dialog session changed before launch completed, disconnect stale connection");
+        OHOS::Print::AbilityManagerAdapter::GetInstance().DisconnectAbility(connection);
+    }
+}
+
+void ScanServiceAbility::DoLaunchCertDialog(const std::string &eventType,
+    const std::vector<std::pair<std::string, std::string>> &params, const CertDialogSession &session)
+{
+    AAFwk::Want want;
+    want.SetElementName(SCAN_APP_BUNDLE_NAME, SCAN_CERT_DIALOG_EXT_ABILITY);
+    want.SetParam(ScanDialogParam::EVENT_TYPE, eventType);
+    for (const auto &param : params) {
+        want.SetParam(param.first, param.second);
+    }
+    sptr<ScanCertDecisionCallback> callback = new ScanCertDecisionCallback(
+        [this](const std::string &sessionId, const std::string &scannerId,
+            const std::string &fingerprint, int32_t decision) {
+            this->OnCertDecision(sessionId, scannerId, fingerprint, decision);
+        });
+    sptr<ScanAbilityConnection> connection = new ScanAbilityConnection(
+        [this](const std::string &sessionId) { this->OnCertDialogConnected(sessionId); },
+        [this](const std::string &sessionId) { this->OnCertDialogClosed(sessionId); });
+    connection->SetDecisionCallback(callback, session.sessionId);
+    int32_t ret = ConnectCertDialogWithRetry(want, connection);
+    if (ret != ERR_OK) {
+        SCAN_HILOGE("launch cert dialog failed, keep error-code path only");
+        ResetCertDialogSession(session.sessionId);
+        return;
+    }
+    PublishCertDialogConnection(session, eventType, connection, callback);
+}
+
+void ScanServiceAbility::LaunchCertDialog(const std::string &eventType,
+    const std::vector<std::pair<std::string, std::string>> &params)
+{
+    CertDialogSession session;
+    if (!PrepareCertDialogSession(params, session)) {
+        return;
+    }
+    // Launch asynchronously: callers hold lock_ and must not block on ability connect.
+    auto launch = [this, eventType, params, session]() {
+        DoLaunchCertDialog(eventType, params, session);
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        handler = serviceHandler_;
+    }
+    if (handler == nullptr) {
+        SCAN_HILOGE("LaunchCertDialog: serviceHandler_ is nullptr");
+        ResetCertDialogSession(session.sessionId);
+        return;
+    }
+    handler->PostTask(launch, ASYNC_CMD_DELAY);
+    // Watchdog: if no connect callback arrives, free the slot for the next 100.
+    auto timeout = [this, sessionId = session.sessionId]() {
+        OnCertDialogLaunchTimeout(sessionId);
+    };
+    handler->PostTask(timeout, CERT_DIALOG_LAUNCH_TIMEOUT_MS);
+}
+
+void ScanServiceAbility::OnCertDialogLaunchTimeout(const std::string &sessionId)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    if (!certDialogSession_.has_value() ||
+        certDialogSession_->sessionId != sessionId ||
+        certDialogSession_->state != CertDialogState::LAUNCHING) {
+        return;
+    }
+    SCAN_HILOGE("cert dialog launch timeout, session: %{private}s", sessionId.c_str());
+    InvalidateCertDialog("launch timeout");
+}
+
+void ScanServiceAbility::OnCertDialogConnected(const std::string &sessionId)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    if (!certDialogSession_.has_value() ||
+        certDialogSession_->sessionId != sessionId) {
+        SCAN_HILOGI("ignore stale cert dialog connect, session: %{private}s", sessionId.c_str());
+        return;
+    }
+    if (certDialogSession_->state == CertDialogState::LAUNCHING) {
+        certDialogSession_->state = CertDialogState::SHOWING;
+        SCAN_HILOGI("cert dialog showing, scanner: %{private}s", certDialogSession_->scannerId.c_str());
+    }
+}
+
+void ScanServiceAbility::OnCertDialogClosed(const std::string &sessionId)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    // Connection lifecycle is the close notification.
+    if (!certDialogSession_.has_value() ||
+        certDialogSession_->sessionId != sessionId) {
+        SCAN_HILOGI("ignore stale cert dialog close, session: %{private}s", sessionId.c_str());
+        return;
+    }
+    if (certDialogSession_->state == CertDialogState::CLOSING) {
+        // A decision is in progress outside lock_; do not delete its pending cert.
+        SCAN_HILOGI("cert dialog closed while decision in progress, skip cleanup");
+        return;
+    }
+    SCAN_HILOGI("cert dialog closed without decision, reset state");
+    TofuCertStore::GetInstance().DropPending(certDialogSession_->ipAddress);
+    certDialogSession_.reset();
+}
+
+void ScanServiceAbility::DestroyCertDialogIfActive()
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    InvalidateCertDialog("destroy");
+}
+
+void ScanServiceAbility::InvalidateCertDialog(const std::string &reason)
+{
+    // Caller holds lock_.
+    if (!certDialogSession_.has_value()) {
+        return;
+    }
+    CertDialogSession session = *certDialogSession_;
+    certDialogSession_.reset();
+    SCAN_HILOGI("invalidate cert dialog: %{public}s, scanner: %{private}s",
+        reason.c_str(), session.scannerId.c_str());
+    if (session.connection != nullptr) {
+        if (session.connection->IsConnected()) {
+            session.connection->SendDismiss(session.sessionId);
+        }
+        // Also disconnect a connection that is still LAUNCHING.
+        OHOS::Print::AbilityManagerAdapter::GetInstance().DisconnectAbility(session.connection);
+    }
+    TofuCertStore::GetInstance().DropPending(session.ipAddress);
+}
+
+void ScanServiceAbility::InvalidateCertDialogForDevice(const std::string &deviceId)
+{
+    std::lock_guard<std::recursive_mutex> autoLock(lock_);
+    if (certDialogSession_.has_value() && certDialogSession_->scannerId == deviceId) {
+        InvalidateCertDialog("device changed");
+    }
+}
+
+void ScanServiceAbility::OnCertDecision(const std::string &sessionId, const std::string &scannerId,
+    const std::string &fingerprint, int32_t decision)
+{
+    CertDialogSession session;
+    {
+        std::lock_guard<std::recursive_mutex> autoLock(lock_);
+        if (!certDialogSession_.has_value() ||
+            certDialogSession_->state != CertDialogState::SHOWING ||
+            certDialogSession_->sessionId != sessionId ||
+            certDialogSession_->scannerId != scannerId ||
+            certDialogSession_->fingerprint != fingerprint) {
+            SCAN_HILOGE("stale or invalid cert decision dropped");
+            return;
+        }
+        session = *certDialogSession_;
+        // Claim the session so duplicate/late decisions are dropped.
+        certDialogSession_->state = CertDialogState::CLOSING;
+    }
+
+    // File I/O and binder IPC must not run under lock_.
+    int32_t ret = E_SCAN_NONE;
+    if (decision == static_cast<int32_t>(ScanCertDecision::TRUST)) {
+        ret = HandleTrustCert(session);
+    } else {
+        HandleRejectCert(session);
+    }
+    if (ret != E_SCAN_NONE) {
+        SCAN_HILOGE("cert decision failed: %{public}d", ret);
+    }
+    FinishCertDialog(session);
+
+    {
+        std::lock_guard<std::recursive_mutex> autoLock(lock_);
+        if (certDialogSession_.has_value() &&
+            certDialogSession_->sessionId == session.sessionId) {
+            certDialogSession_.reset();
+        }
+    }
+}
+
+void ScanServiceAbility::FinishCertDialog(const CertDialogSession &session)
+{
+    if (session.connection != nullptr && session.connection->IsConnected()) {
+        session.connection->SendDismiss(session.sessionId);
+        OHOS::Print::AbilityManagerAdapter::GetInstance().DisconnectAbility(session.connection);
+    }
+    TofuCertStore::GetInstance().DropPending(session.ipAddress);
+}
+
+int32_t ScanServiceAbility::HandleTrustCert(CertDialogSession &session)
+{
+    if (TofuCertStore::GetInstance().PromotePending(session.ipAddress, session.fingerprint) !=
+        TofuCertStore::PromoteResult::OK) {
+        return E_SCAN_IO_ERROR;
+    }
+    // Drop the cached handle so the next operation re-handshakes.
+    SaneManagerClient::GetInstance().SaneClose(session.scannerId);
+    // Re-open so the app's retry on the same session finds a handle.
+    SaneStatus reopenStatus = SaneManagerClient::GetInstance().SaneOpen(session.scannerId);
+    if (reopenStatus != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("reopen scanner after trust failed, status: %{public}u", reopenStatus);
+    }
+    SCAN_HILOGI("trusted new cert for %{private}s", session.scannerId.c_str());
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::HandleRejectCert(CertDialogSession &session)
+{
+    TofuCertStore::GetInstance().DropPending(session.ipAddress);
+    SCAN_HILOGI("rejected new cert for %{private}s, old baseline kept", session.scannerId.c_str());
 }
 
 void ScanServiceAbility::AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode)
@@ -1198,6 +1632,16 @@ int32_t ScanServiceAbility::DeleteScanner(const std::string &serialNumber, const
         SCAN_HILOGE("ScanServiceAbility DeleteScanner SaveScannerMap fail");
         return E_SCAN_GENERIC_FAILURE;
     }
+    InvalidateCertDialogForDevice(scannerInfo.GetDeviceId());
+    // Remove TOFU certificate for eSCL scanner
+    if (EsclDriverManager::IsEsclScanner(scannerInfo.GetDeviceId())) {
+        std::string ipAddress;
+        int32_t portNumber = 0;
+        if (EsclDriverManager::ExtractIpAndPort(scannerInfo.GetDeviceId(), ipAddress, portNumber)) {
+            TofuCertStore::GetInstance().RemoveCert(ipAddress);
+        }
+    }
+
     SendDeviceInfo(scannerInfo, SCAN_DEVICE_DEL);
     SCAN_HILOGI("ScanServiceAbility DeleteScanner end");
     return E_SCAN_NONE;
@@ -1230,7 +1674,7 @@ int32_t ScanServiceAbility::StartScanOnceInternal(const std::string &scannerId)
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneStart failed, status is %{public}u", saneStatus);
         SaneManagerClient::GetInstance().SaneCancel(scannerId);
-        return ScanServiceUtils::ConvertErro(saneStatus);
+        return HandleSaneStatus(scannerId, saneStatus);
     }
     SCAN_HILOGI("ScanServiceAbility StartScan end");
     return E_SCAN_NONE;
@@ -1247,7 +1691,10 @@ int32_t ScanServiceAbility::CheckAdfEmpty(const std::string &scannerId)
         SCAN_HILOGE("Failed to extract IP and port from scannerId");
         return E_SCAN_INVALID_PARAMETER;
     }
-    if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(ipAddress, portNumber)) {
+    ScanDeviceInfo discoveredInfo;
+    bool isHttps =
+        scannerDiscoverData_.GetEsclDevice(ipAddress, discoveredInfo) && discoveredInfo.GetIsHttps();
+    if (EsclDriverManager::IsAdfMode(scannerId) && EsclDriverManager::IsAdfEmpty(isHttps, ipAddress, portNumber)) {
         SCAN_HILOGI("ADF is empty, no paper available");
         return E_SCAN_NO_DOCS;
     }
@@ -1315,14 +1762,15 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
     std::lock_guard<std::recursive_mutex> autoLock(lock_);
     SaneManagerClient::GetInstance().SaneCancel(scanTask.GetScannerId());
     SaneManagerClient::GetInstance().SaneClose(scanTask.GetScannerId());
-    SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId());
+    // Re-open for the next job; a 100 here still raises the dialog.
+    HandleSaneStatus(scanTask.GetScannerId(),
+        SaneManagerClient::GetInstance().SaneOpen(scanTask.GetScannerId()));
     colorModeSettings_.erase(scanTask.GetScannerId());
     if (scannerState_.load() == SCANNER_CANCELING) {
         scanPictureData_.CleanScanQueue();
     }
     scannerState_.store(SCANNER_READY);
-    // Consume a deferred cleanup (caller exited/crashed mid-scan). Release the
-    // handle only if still this caller's — don't evict a new app that opened meanwhile.
+    // Consume a deferred cleanup; release only if still this caller's handle.
     if (pendingCleanOwner_ == scanTask.GetCallerPid()) {
         if (openedScanner_.has_value() && openedScanner_->callerPid == scanTask.GetCallerPid()) {
             openedScanner_.reset();
@@ -1483,7 +1931,7 @@ void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, Sc
         SanePictureData pictureData;
         SaneStatus saneStatus = SaneManagerClient::GetInstance().SaneRead(scanTask.GetScannerId(),
             BUFFER_SIZE, pictureData);
-        scanStatus = ScanServiceUtils::ConvertErro(saneStatus);
+        scanStatus = HandleSaneStatus(scanTask.GetScannerId(), saneStatus);
         if (pictureData.ret_ == SANE_READ_FAIL) {
             SCAN_HILOGE("sane_read failed, scanStatus: [%{public}d]", scanStatus);
             break;
@@ -1547,9 +1995,7 @@ void ScanServiceAbility::CleanupDeadCaller(int32_t deadPid)
         // Clear the queue so a stale front won't block the next owner.
         scanPictureData_.CleanScanQueue();
         if (scannerState_.load() != SCANNER_READY) {
-            // Scan winding down: defer cleanup + release to task end (after writes).
-            // Keep openedScanner_ held; stay CANCELING so task end clears any
-            // picId RestartScan re-pushes.
+            // Task still winding down: defer cleanup and release to task end.
             pendingCleanOwner_ = deadPid;
             scannerState_.store(SCANNER_CANCELING);
         } else {
@@ -1589,7 +2035,7 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     SaneStatus status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     if (outParam.valueNumber_ <= 0 || outParam.valueNumber_ > MAX_SCANNER_PARA_COUNT) {
         SCAN_HILOGE("Invalid option count: [%{public}d]", outParam.valueNumber_);
@@ -1601,7 +2047,7 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
         status = SaneManagerClient::GetInstance().SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
         if (status != SANE_STATUS_GOOD) {
             SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}u]", status);
-            return ScanServiceUtils::ConvertErro(status);
+            return HandleSaneStatus(scannerId, status);
         }
         if ((saneDesc.optionType_ == SCAN_VALUE_NUM)
             && (saneDesc.optionUnit_ == SCANNER_UNIT_DPI)
@@ -1620,7 +2066,7 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
     status = SaneManagerClient::GetInstance().SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
-        return ScanServiceUtils::ConvertErro(status);
+        return HandleSaneStatus(scannerId, status);
     }
     dpi = outParam.valueNumber_;
     return E_SCAN_NONE;

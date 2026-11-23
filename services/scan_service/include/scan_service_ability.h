@@ -37,6 +37,9 @@
 #include "scan_mdns_service.h"
 #include "scan_option_descriptor.h"
 #include "scan_discover_data.h"
+#include "scan_ability_connection.h"
+#include "scan_cert_dialog_callback.h"
+#include "sane_info.h"
 #include "scan_task.h"
 #include "scan_picture_data.h"
 #include "scan_option_value.h"
@@ -78,8 +81,11 @@ public:
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo);
     void NetScannerLossNotify(const ScanDeviceInfoSync& usbSyncInfo);
     void NotifyEsclScannerFound(const ScanDeviceInfo& info);
+    // Invalidate the active cert dialog session (if any) for this device.
+    void InvalidateCertDialogForDevice(const std::string &deviceId);
 
 private:
+    struct CertDialogSession;
     int32_t ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex);
     int32_t ActionGetValue(const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex);
     int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
@@ -115,6 +121,8 @@ private:
     void UpdateScanSystemData(const ScanDeviceInfo &info);
     void CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus);
     int32_t RestartScan(const std::string &scannerId);
+    int32_t DoOpenScanner(const std::string &scannerId);
+    bool IsPlainHttpReachable(const std::string &plainDeviceId);
     void InitializeScanService();
     void CleanupScanService();
     int32_t StartScanOnceInternal(const std::string &scannerId);
@@ -127,14 +135,59 @@ private:
     bool PrepareBwScan(const std::string& scannerId);
     void AddNetScanner(const std::string& uniqueId, const std::string &discoverMode);
     void AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode);
+    void ProbeHttpsAndDowngrade(ScanDeviceInfo &info);
+    // Plain-HTTP port advertised by mDNS (_uscan._tcp), or "80" if unknown.
+    std::string GetPlainHttpPort(const std::string& scannerId);
+    // Display name: added-scanner name, else mDNS name, else manufacturer-model.
+    std::string GetDeviceName(const std::string& scannerId);
+    // Maps SANE status to a scan error code; 100 also raises the dialog.
+    int32_t HandleSaneStatus(const std::string &scannerId, SaneStatus status);
+    void LaunchCertDialog(const std::string &eventType,
+        const std::vector<std::pair<std::string, std::string>> &params);
+    void DestroyCertDialogIfActive();
+    void OnCertDialogConnected(const std::string &sessionId);
+    void OnCertDialogClosed(const std::string &sessionId);
+    void OnCertDialogLaunchTimeout(const std::string &sessionId);
+    void OnCertDecision(const std::string &sessionId, const std::string &scannerId,
+        const std::string &fingerprint, int32_t decision);
+    int32_t HandleTrustCert(CertDialogSession &session);
+    void HandleRejectCert(CertDialogSession &session);
+    bool PrepareCertDialogSession(const std::vector<std::pair<std::string, std::string>> &params,
+        CertDialogSession &session);
+    void DoLaunchCertDialog(const std::string &eventType,
+        const std::vector<std::pair<std::string, std::string>> &params, const CertDialogSession &session);
+    int32_t ConnectCertDialogWithRetry(const AAFwk::Want &want, const sptr<ScanAbilityConnection> &connection);
+    void PublishCertDialogConnection(const CertDialogSession &session, const std::string &eventType,
+        const sptr<ScanAbilityConnection> &connection, const sptr<ScanCertDecisionCallback> &callback);
+    void ResetCertDialogSession(const std::string &sessionId);
+    // Sends DISMISS, disconnects and clears the pending cert; no lock_ held.
+    void FinishCertDialog(const CertDialogSession &session);
+    void InvalidateCertDialog(const std::string &reason);
     struct OpenedScanner {
         std::string scannerId;
         int32_t callerPid;
         int32_t userId;
     };
+    enum class CertDialogState {
+        IDLE = 0,
+        LAUNCHING = 1,
+        SHOWING = 2,
+        CLOSING = 3
+    };
+    struct CertDialogSession {
+        std::string sessionId;
+        std::string scannerId;
+        std::string ipAddress;
+        std::string fingerprint;
+        CertDialogState state = CertDialogState::IDLE;
+        sptr<IRemoteObject> dialogRemote;
+        sptr<ScanAbilityConnection> connection;
+        sptr<ScanCertDecisionCallback> callback;
+    };
     std::optional<OpenedScanner> openedScanner_;
-    // owner pid whose cache cleanup is deferred to scan-task end (after files
-    // are written). Guarded by lock_.
+    // At most one dialog is active; further 100s only return the error code.
+    std::optional<CertDialogSession> certDialogSession_;
+    // Owner pid with cleanup deferred to scan-task end. Guarded by lock_.
     std::optional<int32_t> pendingCleanOwner_;
     std::atomic<ServiceRunningState> state_;
     std::recursive_mutex lock_;

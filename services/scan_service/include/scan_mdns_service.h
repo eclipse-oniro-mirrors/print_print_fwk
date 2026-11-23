@@ -90,6 +90,10 @@ public:
     bool OnStartDiscoverService();
     bool OnStopDiscoverService();
     bool FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo);
+    // Port advertised by the plain-HTTP _uscan._tcp record. The full mDNS
+    // record is kept in netScannerInfoMap_; this is a typed lookup helper.
+    bool GetPlainHttpPort(const std::string& ip, std::string& port);
+    void RemoveScannerInfoMap(const std::string& ip, const std::string& type);
 private:
     void UpdateScannerIdThread();
     void SaveMdnsCallbackStubPtr(const std::string& type, sptr<ScanMDnsDiscoveryObserver> callbackPtr);

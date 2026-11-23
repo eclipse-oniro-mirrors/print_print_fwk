@@ -153,6 +153,8 @@ enum ScanErrorCode {
     E_SCAN_NO_MEM = 13200012,  // out of memory
     E_SCAN_EOF = 132000013,  // no more data available (end-of-file)
     E_SCAN_ACCESS_DENIED = 13200014,  // access to resource has been denied
+    E_SCAN_HTTPS_UNAVAILABLE = 13100015,  // TLS failed, re-add scanner to re-negotiate
+    E_SCAN_TLS_CERT_CHANGED = 13100016,  // TOFU cert changed, ask user to trust
 };
 
 const uint32_t SCAN_INVALID_ID = 0xFFFFFFFF;   // -1
@@ -177,6 +179,7 @@ const int HTTP_COMMON_CONST_VALUE_100 = 100;
 const int HTTP_COMMON_CONST_VALUE_2 = 2;
 const int USB_DEVICEID_FIRSTID_LEN_3 = 3;
 const std::string PRINTER_SERVICE_SANE_TEMPORARY_PATH = "/data/service/el2/public/print_service/sane/tmp";
+const std::string SCANNER_SANE_CERT_DIR = "/data/service/el1/public/print_service/sane/certs";
 
 enum ScanFrame  {
     SCAN_FRAME_GRAY = 0,  /* band covering human visual range */
@@ -249,6 +252,29 @@ namespace ScannerDiscoveryMode {
 namespace ScannerSyncMode {
     constexpr const char* UPDATE_MODE = "update";
     constexpr const char* DELETE_MODE = "delete";
+};
+
+// Framework-hosted scanner confirmation dialog .
+constexpr const char* SCAN_APP_BUNDLE_NAME = "com.ohos.spooler";
+constexpr const char* SCAN_CERT_DIALOG_EXT_ABILITY = "ScanDialogExtAbility";
+
+// Want keys of the dialog protocol; published keys must not be renamed.
+namespace ScanDialogParam {
+    constexpr const char* EVENT_TYPE = "scan_dialog.eventType";
+    constexpr const char* SESSION_ID = "scan_dialog.sessionId";
+    constexpr const char* SCANNER_ID = "scan_dialog.scannerId";
+    constexpr const char* DEVICE_NAME = "scan_dialog.deviceName";
+    constexpr const char* DEVICE_IP = "scan_dialog.deviceIp";
+    constexpr const char* DEVICE_PORT = "scan_dialog.devicePort";
+    constexpr const char* CERT_FINGERPRINT = "scan_dialog.certFingerprint";
+};
+
+// Pending TOFU cert on change, promoted to <ip>.crt once trusted.
+constexpr const char* SCANNER_SANE_CERT_PENDING_SUFFIX = ".crt.pending";
+constexpr const char* SCANNER_SANE_CERT_SUFFIX = ".crt";
+
+namespace ScanDialogEventType {
+    constexpr const char* CERT_CHANGED = "CERT_CHANGED";
 };
 
 constexpr int32_t BYTE_BITS = 8;

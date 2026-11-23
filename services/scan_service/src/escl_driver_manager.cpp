@@ -24,6 +24,7 @@
 #include "securec.h"
 #include "scan_log.h"
 #include "scan_constant.h"
+#include "tofu_cert_store.h"
 #include "scan_discover_data.h"
 #include "escl_driver_manager.h"
 #include "escl_scanner_status.h"
@@ -40,6 +41,7 @@ static const char* CONFIG_FILE_PATH = "/data/service/el1/public/print_service/sa
 static const char* CONFIG_FILE_CONTENT = "airscan";
 static const char* CONFIG_DIR_PATH = "/data/service/el1/public/print_service/sane/config";
 static const int32_t MAX_PORT_NUMBER = 65535;
+constexpr int32_t MAX_DEVICE_ID_LENGTH = 1024;
 
 int32_t EsclDriverManager::InitializeEsclScannerDriver()
 {
@@ -100,10 +102,10 @@ bool EsclDriverManager::CreateAirscanConfigFile()
 
 bool EsclDriverManager::GenerateEsclScannerInfo(const ScanDeviceInfoTCP& rawInfo, ScanDeviceInfo& info)
 {
-    constexpr int32_t MAX_DEVICE_ID_LENGTH = 1024;
     char deviceId[MAX_DEVICE_ID_LENGTH] = {0};
-    if (sprintf_s(deviceId, sizeof(deviceId), "airscan:eSCL:scanner:http://%s:%s/eSCL/",
-        rawInfo.addr.c_str(), rawInfo.port.c_str()) < 0) {
+    const char* scheme = rawInfo.GetIsHttps() ? SCHEME_HTTPS : SCHEME_HTTP;
+    if (sprintf_s(deviceId, sizeof(deviceId), "airscan:eSCL:scanner:%s://%s:%s/eSCL/",
+        scheme, rawInfo.addr.c_str(), rawInfo.port.c_str()) < 0) {
         SCAN_HILOGE("GenerateEsclScannerInfo sprintf_s fail");
         return false;
     }
@@ -111,6 +113,7 @@ bool EsclDriverManager::GenerateEsclScannerInfo(const ScanDeviceInfoTCP& rawInfo
     info.deviceId = std::string(deviceId);
     info.uniqueId = rawInfo.addr;
     info.discoverMode = ScannerDiscoveryMode::TCP_MODE;
+    info.isHttps = rawInfo.isHttps;
     return true;
 }
 
@@ -162,6 +165,43 @@ bool EsclDriverManager::ExtractIpAndPort(const std::string& scannerId, std::stri
     return true;
 }
 
+// Rename the TOFU baseline when a scanner's IP changes.
+void EsclDriverManager::RenameTofuCert(const std::string& oldDeviceId, const std::string& newDeviceId)
+{
+    std::string oldIp;
+    int32_t oldPort = 0;
+    std::string newIp;
+    int32_t newPort = 0;
+    if (!ExtractIpAndPort(oldDeviceId, oldIp, oldPort) ||
+        !ExtractIpAndPort(newDeviceId, newIp, newPort)) {
+        SCAN_HILOGW("RenameTofuCert: cannot extract IP from deviceId");
+        return;
+    }
+    if (oldIp == newIp) {
+        return;
+    }
+    TofuCertStore::GetInstance().Migrate(oldIp, newIp);
+}
+
+// Build the plain-HTTP counterpart of an https deviceId for the liveness probe.
+bool EsclDriverManager::BuildPlainHttpDeviceId(const std::string& scannerId, std::string& plainDeviceId,
+    const std::string& plainPort)
+{
+    size_t schemePos = scannerId.find(SCHEME_HTTPS + std::string("://"));
+    if (schemePos == std::string::npos || schemePos == 0) {
+        SCAN_HILOGD("BuildPlainHttpDeviceId: not an https deviceId, skip probe");
+        return false;
+    }
+    std::string ipAddress;
+    int32_t portNumber = 0;
+    if (!ExtractIpAndPort(scannerId, ipAddress, portNumber)) {
+        return false;
+    }
+    plainDeviceId = scannerId.substr(0, schemePos) + SCHEME_HTTP + "://" +
+        ipAddress + ":" + plainPort + "/eSCL/";
+    return true;
+}
+
 bool EsclDriverManager::IsAdfMode(const std::string& scannerId)
 {
     bool isAdfMode = false;
@@ -199,10 +239,10 @@ bool EsclDriverManager::IsAdfMode(const std::string& scannerId)
     return isAdfMode;
 }
 
-bool EsclDriverManager::IsAdfEmpty(const std::string& ipAddress, int32_t portNumber)
+bool EsclDriverManager::IsAdfEmpty(bool isHttps, const std::string& ipAddress, int32_t portNumber)
 {
     std::map<std::string, std::string> statusMap;
-    if (!EsclScannerStatus::QueryScannerStatus(ipAddress, portNumber, statusMap)) {
+    if (!EsclScannerStatus::QueryScannerStatus(ipAddress, portNumber, statusMap, isHttps)) {
         SCAN_HILOGE("Failed to query scanner status");
         return false;
     }
