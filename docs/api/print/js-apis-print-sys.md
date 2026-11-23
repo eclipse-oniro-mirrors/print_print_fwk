@@ -1,0 +1,2345 @@
+# @ohos.print (打印)(系统接口)
+
+<!--Kit: Basic Services Kit-->
+<!--Subsystem: Print-->
+<!--Owner: @Zouhaifeng1-->
+<!--Designer: @gcw_4D6e0BBd-->
+<!--Tester: @baozewei-->
+<!--Adviser: @fang-jinxu-->
+
+该模块为打印管理的系统接口，提供查询打印机扩展服务、打印机发现与管理、设置打印机首选项与默认打印机、打印任务管理、监听状态变化事件等功能。
+
+> **说明：**
+> 本模块首批接口从API version 10开始支持。后续版本的新增接口，采用上角标单独标记接口的起始版本。
+> 当前界面仅包含本模块的系统接口，其他公开接口参见[@ohos.print (打印)](js-apis-print.md)。
+
+## 导入模块
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+```
+
+## PrinterExtensionInfo
+
+定义打印机扩展信息的接口。
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**属性：**
+
+| 名称 | 类型 | 只读 | 可选 | 说明 |
+| -------- | -------- | -------- | -------- | -------- |
+| extensionId | string | 否 | 否 | 表示打印机扩展ID。 |
+| vendorId | string | 否 | 否 | 表示扩展的供应商ID。 |
+| vendorName | string | 否 | 否 | 表示供应商名称。 |
+| vendorIcon | number | 否 | 否 | 表示供应商图标资源ID。 |
+| version | string | 否 | 否 | 表示当前打印机扩展的版本。 |
+
+## print.queryAllPrinterExtensionInfos
+
+queryAllPrinterExtensionInfos(callback: AsyncCallback&lt;Array&lt;PrinterExtensionInfo&gt;&gt;): void
+
+查询所有已安装的打印机扩展服务，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| callback | AsyncCallback&lt;Array&lt;[PrinterExtensionInfo](#printerextensioninfo)&gt;&gt; | 是 | 异步查询所有已安装的打印机扩展服务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryAllPrinterExtensionInfos((error: BusinessError, extensionInfos: print.PrinterExtensionInfo[]) => {
+    if (error) {
+        console.error(`Failed to query all printer extension infos. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('queryAllPrinterExtensionInfos success ' + JSON.stringify(extensionInfos));
+    }
+});
+```
+
+## print.queryAllPrinterExtensionInfos
+
+queryAllPrinterExtensionInfos(): Promise&lt;Array&lt;PrinterExtensionInfo&gt;&gt;
+
+查询所有已安装的打印机扩展服务，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;Array&lt;[PrinterExtensionInfo](#printerextensioninfo)&gt;&gt; | Promise对象，返回包含所有已安装的打印机扩展服务信息的列表。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryAllPrinterExtensionInfos().then((extensionInfos: print.PrinterExtensionInfo[]) => {
+    console.info('queryAllPrinterExtensionInfos success ' + JSON.stringify(extensionInfos));
+    // ...
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query all printer extension infos. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.disconnectPrinter
+
+disconnectPrinter(printerId: string, callback: AsyncCallback&lt;void&gt;): void
+
+断开指定打印机的连接，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步断开指定打印机的连接之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId: string = 'printerId_32';
+print.disconnectPrinter(printerId, (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to disconnect printer. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('start disconnect Printer success');
+    }
+});
+```
+
+## print.disconnectPrinter
+
+disconnectPrinter(printerId: string): Promise&lt;void&gt;
+
+断开指定打印机的连接，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。断开打印机连接成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId: string = 'printerId_32';
+print.disconnectPrinter(printerId).then(() => {
+    console.info('start disconnect Printer success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to disconnect printer. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.queryPrinterCapability
+
+queryPrinterCapability(printerId: string, callback: AsyncCallback&lt;void&gt;): void
+
+查询打印机能力，使用callback异步回调。能力查询结果可通过监听[on('printerStateChange')](#printon)事件回调中的PrinterInfo.capability获取。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步查询打印机能力之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId: string = 'printerId_32';
+print.queryPrinterCapability(printerId, (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to query printer capability. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('start query Printer Capability success');
+    }
+});
+```
+
+## print.queryPrinterCapability
+
+queryPrinterCapability(printerId: string): Promise&lt;void&gt;
+
+查询打印机能力，使用Promise异步回调。能力查询结果可通过监听[on('printerStateChange')](#printon)事件回调中的PrinterInfo.capability获取。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。查询打印机能力成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId: string = 'printerId_32';
+print.queryPrinterCapability(printerId).then(() => {
+    console.info('start query Printer success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query printer capability. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.startPrintJob
+
+startPrintJob(jobInfo: PrintJob, callback: AsyncCallback&lt;void&gt;): void
+
+开始打印任务，使用callback异步回调。可通过监听[on('jobStateChange')](#printon-1)事件获取打印任务状态变化。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobInfo | [PrintJob](js-apis-print.md#printjob24) | 是 | 打印任务信息，用于指定要执行的打印任务详细配置，包括文件列表、任务ID、打印机ID、打印参数等。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步开始打印任务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobInfo : print.PrintJob = {
+    fdList : [44, 45], // fdList中的fd可通过fs.open等文件操作获取文件描述符
+    jobId : 'jobId_12',
+    printerId : 'printerId_32',
+    jobState : print.PrintJobState.PRINT_JOB_COMPLETED,
+    jobSubstate : print.PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS,
+    copyNumber : 1,
+    pageRange : {},
+    isSequential : false,
+    pageSize : {id : '', name : '', width : 10, height : 20},
+    isLandscape : false,
+    colorMode : print.PrintColorMode.COLOR_MODE_COLOR,
+    duplexMode : print.PrintDuplexMode.DUPLEX_MODE_NONE,
+    margin : undefined,
+    preview : undefined,
+    options : undefined
+};
+print.startPrintJob(jobInfo, (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to start print job. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('start Print Job success');
+    }
+});
+```
+
+## print.startPrintJob
+
+startPrintJob(jobInfo: PrintJob): Promise&lt;void&gt;
+
+开始打印任务，使用Promise异步回调。可通过监听[on('jobStateChange')](#printon-1)事件获取打印任务状态变化。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobInfo | [PrintJob](js-apis-print.md#printjob24) | 是 | 打印任务信息，用于指定要执行的打印任务详细配置，包括文件列表、任务ID、打印机ID、打印参数等。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。开始打印任务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobInfo : print.PrintJob = {
+    fdList : [44, 45], // fdList中的fd可通过fs.open等文件操作获取文件描述符
+    jobId : 'jobId_12',
+    printerId : 'printerId_32',
+    jobState : print.PrintJobState.PRINT_JOB_COMPLETED,
+    jobSubstate : print.PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS,
+    copyNumber : 1,
+    pageRange : {},
+    isSequential : false,
+    pageSize : {id : '', name : '', width : 10, height : 20},
+    isLandscape : false,
+    colorMode : print.PrintColorMode.COLOR_MODE_COLOR,
+    duplexMode : print.PrintDuplexMode.DUPLEX_MODE_NONE,
+    margin : undefined,
+    preview : undefined,
+    options : undefined
+};
+print.startPrintJob(jobInfo).then(() => {
+    console.info('start Print success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to start print job. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.cancelPrintJob
+
+cancelPrintJob(jobId: string, callback: AsyncCallback&lt;void&gt;): void
+
+取消已发送到打印机的打印任务，使用callback异步回调。仅可取消处于运行状态的打印任务，对不存在或已完成的任务调用将返回错误。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 已发送到打印机的打印任务ID。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步取消已发送到打印机的打印任务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '121212';
+print.cancelPrintJob(jobId, (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to cancel print job. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('cancelPrintJob success');
+    }
+});
+```
+
+## print.cancelPrintJob
+
+cancelPrintJob(jobId: string): Promise&lt;void&gt;
+
+取消已发送到打印机的打印任务，使用Promise异步回调。仅可取消处于运行状态的打印任务，对不存在或已完成的任务调用将返回错误。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 已发送到打印机的打印任务ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。取消打印任务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '121212';
+print.cancelPrintJob(jobId).then(() => {
+    console.info('cancelPrintJob success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to cancel print job. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.restartPrintJob<sup>20+</sup>
+
+restartPrintJob(jobId: string): Promise&lt;void&gt;
+
+重新开始失败的打印任务，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 历史打印任务ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。重新打印任务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '121212';
+print.restartPrintJob(jobId).then(() => {
+    console.info('restartPrintJob success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to restart print job. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.requestPrintPreview
+
+requestPrintPreview(jobInfo: PrintJob, callback: Callback&lt;number&gt;): void
+
+请求预览打印数据，使用callback回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobInfo | [PrintJob](js-apis-print.md#printjob24) | 是 | 打印任务信息，用于指定要预览的打印任务详细配置。 |
+| callback | Callback&lt;number&gt; | 是 | 请求预览打印数据之后的回调，用于接收预览结果。回调参数为number类型，表示预览打印数据的返回结果，0表示请求成功，非零值表示失败原因的错误码。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+let jobInfo : print.PrintJob = {
+    fdList : [44, 45], // fdList中的fd可通过fs.open等文件操作获取文件描述符
+    jobId : 'jobId_12',
+    printerId : 'printerId_32',
+    jobState : print.PrintJobState.PRINT_JOB_COMPLETED,
+    jobSubstate : print.PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS,
+    copyNumber : 1,
+    pageRange : {},
+    isSequential : false,
+    pageSize : {id : '', name : '', width : 10, height : 20},
+    isLandscape : false,
+    colorMode : print.PrintColorMode.COLOR_MODE_COLOR,
+    duplexMode : print.PrintDuplexMode.DUPLEX_MODE_NONE,
+    margin : undefined,
+    preview : undefined,
+    options : undefined
+};
+print.requestPrintPreview(jobInfo, (num : number) => {
+    console.info('requestPrintPreview success, num : ' + JSON.stringify(num));
+
+});
+```
+
+## print.requestPrintPreview
+
+requestPrintPreview(jobInfo: PrintJob): Promise&lt;number&gt;
+
+请求预览打印数据，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobInfo | [PrintJob](js-apis-print.md#printjob24) | 是 | 打印任务信息，用于指定要预览的打印任务详细配置。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;number&gt; | Promise对象，返回预览打印数据的结果。结果为number类型，0表示请求成功，非零值表示失败原因的错误码。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobInfo : print.PrintJob = {
+    fdList : [44, 45], // fdList中的fd可通过fs.open等文件操作获取文件描述符
+    jobId : 'jobId_12',
+    printerId : 'printerId_32',
+    jobState : print.PrintJobState.PRINT_JOB_COMPLETED,
+    jobSubstate : print.PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS,
+    copyNumber : 1,
+    pageRange : {},
+    isSequential : false,
+    pageSize : {id : '', name : '', width : 10, height : 20},
+    isLandscape : false,
+    colorMode : print.PrintColorMode.COLOR_MODE_COLOR,
+    duplexMode : print.PrintDuplexMode.DUPLEX_MODE_NONE,
+    margin : undefined,
+    preview : undefined,
+    options : undefined
+};
+print.requestPrintPreview(jobInfo).then((num: number) => {
+    console.info('requestPrintPreview success, num : ' + JSON.stringify(num));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to request print preview. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.on
+
+on(type: 'printerStateChange', callback: (state: PrinterState, info: PrinterInfo) => void): void
+
+注册打印机状态变化事件回调，使用callback回调。在不需要监听时，可调用[print.off('printerStateChange')](#printoff)注销回调，否则可能会导致回调持续触发及内存泄漏问题。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| type | 'printerStateChange' | 是 | 表示打印机状态改变。 |
+| callback | (state: [PrinterState](js-apis-print.md#printerstate14), info: [PrinterInfo](js-apis-print.md#printerinfo24)) => void | 是 | 打印机状态改变之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+print.on('printerStateChange', (state: print.PrinterState, info: print.PrinterInfo) => {
+    if (state === null || info === null) {
+        console.error('printer state changed state is null or info is null');
+        return;
+    } else {
+        console.info('on printer state changed, state : ' + JSON.stringify(state));
+        console.info('on printer state changed, info : ' + JSON.stringify(info));
+    }
+});
+```
+
+## print.off
+
+off(type: 'printerStateChange', callback?: Callback&lt;boolean&gt;): void
+
+取消注册打印机状态变化事件回调，使用callback回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| type | 'printerStateChange' | 是 | 表示打印机状态改变。 |
+| callback | Callback&lt;boolean&gt; | 否 | 表示取消注册打印机状态变化事件是否成功。true表示成功，false表示失败。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+print.off('printerStateChange', (data: boolean) => {
+    console.info('off printerStateChange data : ' + JSON.stringify(data));
+});
+```
+
+## print.on
+
+on(type: 'jobStateChange', callback: (state: PrintJobState, job: PrintJob) => void): void
+
+注册打印任务状态变化事件回调，使用callback回调。在不需要监听时，可调用[print.off('jobStateChange')](#printoff-1)注销回调，否则可能会导致回调持续触发及内存泄漏问题。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| type | 'jobStateChange' | 是 | 表示打印任务状态改变。 |
+| callback | (state: [PrintJobState](js-apis-print.md#printjobstate14), job: [PrintJob](js-apis-print.md#printjob24)) => void | 是 | 打印任务状态改变之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+print.on('jobStateChange', (state: print.PrintJobState, job: print.PrintJob) => {
+    console.info('onJobStateChange, state : ' + JSON.stringify(state) + ', job : ' + JSON.stringify(job));
+});
+```
+
+## print.off
+
+off(type: 'jobStateChange', callback?: Callback&lt;boolean&gt;): void
+
+取消注册打印任务状态变化事件回调，使用callback回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| type | 'jobStateChange' | 是 | 表示打印任务状态改变。 |
+| callback | Callback&lt;boolean&gt; | 否 | 表示取消注册打印任务状态变化事件是否成功。true表示成功，false表示失败。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+print.off('jobStateChange', (data: boolean) => {
+    console.info('offJobStateChanged data : ' + JSON.stringify(data));
+});
+```
+
+## print.on
+
+on(type: 'extInfoChange', callback: (extensionId: string, info: string) => void): void
+
+注册打印机扩展信息变化事件回调，使用callback回调。在不需要监听时，可调用[print.off('extInfoChange')](#printoff-2)注销回调，否则可能会导致回调持续触发及内存泄漏问题。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| type | 'extInfoChange' | 是 | 表示打印机扩展信息改变。 |
+| callback | (extensionId: string, info: string) => void | 是 | 打印机扩展信息改变之后的回调。extensionId表示打印机扩展ID，info表示扩展信息内容。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+print.on('extInfoChange', (extensionId: string, info: string) => {
+    console.info('onExtInfoChange, extensionId : ' + JSON.stringify(extensionId) + ', info : ' + JSON.stringify(info));
+});
+```
+
+## print.off
+
+off(type: 'extInfoChange', callback?: Callback&lt;boolean&gt;): void
+
+取消注册打印机扩展信息变化事件回调，使用callback回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| type | 'extInfoChange' | 是 | 表示打印机扩展信息改变。 |
+| callback | Callback&lt;boolean&gt; | 否 | 表示取消注册打印机扩展信息变化事件是否成功。true表示成功，false表示失败。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+print.off('extInfoChange', (data: boolean) => {
+    console.info('offExtInfoChange data : ' + JSON.stringify(data));
+});
+```
+
+## print.addPrinters
+
+addPrinters(printers: Array&lt;PrinterInfo&gt;, callback: AsyncCallback&lt;void&gt;): void
+
+添加打印机，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printers | Array&lt;[PrinterInfo](js-apis-print.md#printerinfo24)&gt; | 是 | 表示待添加的打印机列表。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步添加打印机之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerInfo : print.PrinterInfo = {
+    printerId : '3232',
+    printerName : 'hhhhh',
+    printerState : 0,
+    printerIcon : 12,
+    description : 'str',
+    capability : undefined,
+    options : 'opt'
+};
+print.addPrinters([printerInfo], (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to add printers. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('addPrinters success');
+    }
+});
+```
+
+## print.addPrinters
+
+addPrinters(printers: Array&lt;PrinterInfo&gt;): Promise&lt;void&gt;
+
+添加打印机，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printers | Array&lt;[PrinterInfo](js-apis-print.md#printerinfo24)&gt; | 是 | 表示待添加的打印机列表。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。添加打印机成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerInfo : print.PrinterInfo = {
+    printerId : '3232',
+    printerName : 'hhhhh',
+    printerState : 0,
+    printerIcon : 12,
+    description : 'str',
+    capability : undefined,
+    options : 'opt'
+};
+print.addPrinters([printerInfo]).then(() => {
+    console.info('add printers success.');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to add printers. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.removePrinters
+
+removePrinters(printerIds: Array&lt;string&gt;, callback: AsyncCallback&lt;void&gt;): void
+
+移除打印机，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerIds | Array&lt;string&gt; | 是 | 表示需移除的打印机ID列表。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步移除打印机之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = '1212';
+print.removePrinters([printerId], (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to remove printers. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('removePrinters success');
+    }
+});
+```
+
+## print.removePrinters
+
+removePrinters(printerIds: Array&lt;string&gt;): Promise&lt;void&gt;
+
+移除打印机，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerIds | Array&lt;string&gt; | 是 | 表示需移除的打印机ID列表。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。移除打印机成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = '1212';
+print.removePrinters([printerId]).then(() => {
+    console.info('remove printers success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to remove printers. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.updatePrinters
+
+updatePrinters(printers: Array&lt;PrinterInfo&gt;, callback: AsyncCallback&lt;void&gt;): void
+
+更新指定打印机的信息，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printers | Array&lt;[PrinterInfo](js-apis-print.md#printerinfo24)&gt; | 是 | 表示待更新的打印机列表。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步更新打印机信息之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerInfo : print.PrinterInfo = {
+    printerId : '3232',
+    printerName : 'hhhhh',
+    printerState : 0,
+    printerIcon : 12,
+    description : 'str',
+    capability : undefined,
+    options : 'opt'
+};
+print.updatePrinters([printerInfo], (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to update printers. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('updatePrinters success');
+    }
+});
+```
+
+## print.updatePrinters
+
+updatePrinters(printers: Array&lt;PrinterInfo&gt;): Promise&lt;void&gt;
+
+更新指定打印机的信息，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printers | Array&lt;[PrinterInfo](js-apis-print.md#printerinfo24)&gt; | 是 | 表示待更新的打印机列表。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。更新打印机信息成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerInfo : print.PrinterInfo = {
+    printerId : '3232',
+    printerName : 'hhhhh',
+    printerState : 0,
+    printerIcon : 12,
+    description : 'str',
+    capability : undefined,
+    options : 'opt'
+};
+print.updatePrinters([printerInfo]).then(() => {
+    console.info('update printers success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to update printers. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.updatePrinterState
+
+updatePrinterState(printerId: string, state: PrinterState, callback: AsyncCallback&lt;void&gt;): void
+
+更新打印机状态，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+| state | [PrinterState](js-apis-print.md#printerstate14) | 是 | 表示打印机状态，用于指定要更新的打印机状态值。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步更新打印机状态之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = '1212';
+let state : print.PrinterState = print.PrinterState.PRINTER_CONNECTED;
+print.updatePrinterState(printerId, state, (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to update printer state. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('updatePrinterState success');
+    }
+});
+```
+
+## print.updatePrinterState
+
+updatePrinterState(printerId: string, state: PrinterState): Promise&lt;void&gt;
+
+更新打印机状态，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+| state | [PrinterState](js-apis-print.md#printerstate14) | 是 | 表示打印机状态，用于指定要更新的打印机状态值。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。更新打印机状态成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = '1212';
+let state : print.PrinterState = print.PrinterState.PRINTER_CONNECTED;
+print.updatePrinterState(printerId, state).then(() => {
+    console.info('update printer state success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to update printer state. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.updateExtensionInfo
+
+updateExtensionInfo(info: string, callback: AsyncCallback&lt;void&gt;): void
+
+更新打印机扩展信息，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| info | string | 是 | 表示打印机扩展变更信息。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步更新打印机扩展信息之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let info : string = 'WIFI_INACTIVE';
+print.updateExtensionInfo(info, (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to update extension info. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('updateExtensionInfo success');
+    }
+});
+```
+
+## print.updateExtensionInfo
+
+updateExtensionInfo(info: string): Promise&lt;void&gt;
+
+更新打印机扩展信息，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| info | string | 是 | 表示打印机扩展变更信息。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。更新打印机扩展信息成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let info : string = 'WIFI_INACTIVE';
+print.updateExtensionInfo(info).then(() => {
+    console.info('updateExtensionInfo success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to update extension info. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.queryAllPrintJobs<sup>(deprecated)</sup>
+
+> 从API version 10开始支持，从API version 11开始废弃。建议使用[queryPrintJobList](#printqueryprintjoblist11)替代。
+
+queryAllPrintJobs(callback: AsyncCallback&lt;void&gt;): void
+
+查询所有打印任务，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步查询所有打印任务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryAllPrintJobs((error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to query all print jobs. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('queryAllPrintJobs success');
+    }
+});
+```
+
+## print.queryAllPrintJobs<sup>(deprecated)</sup>
+
+> 从API version 10开始支持，从API version 11开始废弃。建议使用[queryPrintJobList](#printqueryprintjoblist11-1)替代。
+
+queryAllPrintJobs(): Promise&lt;void&gt;
+
+查询所有打印任务，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。查询所有打印任务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryAllPrintJobs().then(() => {
+    console.info('queryAllPrintJobs success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query all print jobs. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.queryAllActivePrintJobs<sup>20+</sup>
+
+queryAllActivePrintJobs(): Promise&lt;[PrintJob](js-apis-print.md#printjob24)[]&gt;
+
+查询所有活跃中的打印任务，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;[PrintJob](js-apis-print.md#printjob24)[]&gt; | Promise对象，返回包含所有活跃中的打印任务的列表。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryAllActivePrintJobs().then((printJobs : print.PrintJob[]) => {
+    console.info('queryAllActivePrintJobs success, data : ' + JSON.stringify(printJobs));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query all active print jobs. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.queryPrintJobList<sup>11+</sup>
+
+queryPrintJobList(callback: AsyncCallback&lt;Array&lt;PrintJob&gt;&gt;): void
+
+查询所有打印任务，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| callback | AsyncCallback&lt;Array&lt;[PrintJob](js-apis-print.md#printjob24)&gt;&gt; | 是 | 异步查询所有打印任务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryPrintJobList((error: BusinessError, printJobs : print.PrintJob[]) => {
+    if (error) {
+        console.error(`Failed to query print job list. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('queryPrintJobList success, data : ' + JSON.stringify(printJobs));
+    }
+});
+```
+
+## print.queryPrintJobList<sup>11+</sup>
+
+queryPrintJobList(): Promise&lt;Array&lt;PrintJob&gt;&gt;
+
+查询所有打印任务，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;Array&lt;[PrintJob](js-apis-print.md#printjob24)&gt;&gt; | Promise对象，返回包含所有打印任务的列表。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.queryPrintJobList().then((printJobs : print.PrintJob[]) => {
+    console.info('queryPrintJobList success, data : ' + JSON.stringify(printJobs));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query print job list. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.queryPrintJobById<sup>11+</sup>
+
+queryPrintJobById(jobId: string, callback: AsyncCallback&lt;PrintJob&gt;): void
+
+按打印任务ID查询打印任务，使用callback异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 表示已创建的打印任务ID。 |
+| callback | AsyncCallback&lt;[PrintJob](js-apis-print.md#printjob24)&gt; | 是 | 异步按打印任务ID查询打印任务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '1';
+print.queryPrintJobById(jobId, (error: BusinessError, printJob : print.PrintJob) => {
+    if (error) {
+        console.error(`Failed to query print job by id. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('queryPrintJobById success, data : ' + JSON.stringify(printJob));
+    }
+});
+```
+
+## print.queryPrintJobById<sup>11+</sup>
+
+queryPrintJobById(jobId: string): Promise&lt;PrintJob&gt;
+
+按打印任务ID查询打印任务，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 表示已创建的打印任务ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;[PrintJob](js-apis-print.md#printjob24)&gt; | Promise对象，返回查询到的打印任务。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '1';
+print.queryPrintJobById(jobId).then((printJob : print.PrintJob) => {
+    console.info('queryPrintJobById data : ' + JSON.stringify(printJob));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query print job by id. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.startGettingPrintFile<sup>11+</sup>
+
+startGettingPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number, onFileStateChanged: Callback&lt;PrintFileCreationState&gt;): void
+
+开始获取打印文件，使用callback回调。在print()已执行、jobId已创建、[PrintDocumentAdapter](js-apis-print.md#printdocumentadapter11)已注册之后，可以调用该函数获取实际打印文件内容。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 表示已创建的打印任务ID。 |
+| printAttributes | [PrintAttributes](js-apis-print.md#printattributes11) | 是 | 表示打印参数。 |
+| fd | number | 是 | 表示打印文件描述符，应为非负整数。 |
+| onFileStateChanged | Callback&lt;[PrintFileCreationState](js-apis-print.md#printfilecreationstate11)&gt; | 是 | 表示更新文件状态的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+
+let jobId : string = '1';
+class MyPrintAttributes implements print.PrintAttributes {
+    copyNumber?: number;
+    pageRange?: print.PrintPageRange;
+    pageSize?: print.PrintPageSize | print.PrintPageType;
+    directionMode?: print.PrintDirectionMode;
+    colorMode?: print.PrintColorMode;
+    duplexMode?: print.PrintDuplexMode;
+}
+
+class MyPrintPageRange implements print.PrintPageRange {
+    startPage?: number;
+    endPage?: number;
+    pages?: Array<number>;
+}
+
+let printAttributes = new MyPrintAttributes();
+printAttributes.copyNumber = 2;
+printAttributes.pageRange = new MyPrintPageRange();
+printAttributes.pageRange.pages = [1, 3];
+printAttributes.pageSize = print.PrintPageType.PAGE_ISO_A3;
+printAttributes.directionMode = print.PrintDirectionMode.DIRECTION_MODE_AUTO;
+printAttributes.colorMode = print.PrintColorMode.COLOR_MODE_MONOCHROME;
+printAttributes.duplexMode = print.PrintDuplexMode.DUPLEX_MODE_NONE;
+
+// fd可通过fs.open等文件操作获取文件描述符
+let fd : number = 1;
+print.startGettingPrintFile(jobId, printAttributes, fd, (state: print.PrintFileCreationState) => {
+    console.info('onFileStateChanged success, data : ' + JSON.stringify(state));
+});
+```
+
+## print.notifyPrintService<sup>11+</sup>
+
+notifyPrintService(jobId: string, type: 'spooler_closed_for_cancelled' | 'spooler_closed_for_started', callback: AsyncCallback&lt;void&gt;): void
+
+将打印预览界面关闭信息通知打印服务，使用callback异步回调。用于在打印预览界面关闭后，让打印服务进行清理、退出等操作。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 表示已创建的打印任务ID。 |
+| type | 'spooler_closed_for_cancelled' \| 'spooler_closed_for_started' | 是 | 表示打印预览界面关闭信息的类型。'spooler_closed_for_cancelled'表示因取消当前打印任务而关闭打印预览界面；'spooler_closed_for_started'表示因打印任务成功下发而关闭打印预览界面。 |
+| callback | AsyncCallback&lt;void&gt; | 是 | 异步将打印预览界面关闭信息通知打印服务之后的回调。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '1';
+print.notifyPrintService(jobId, 'spooler_closed_for_started', (error: BusinessError) => {
+    if (error) {
+        console.error(`Failed to notify print service. Code: ${error.code}, message: ${error.message}`);
+    } else {
+        console.info('notifyPrintService success');
+    }
+});
+```
+
+## print.notifyPrintService<sup>11+</sup>
+
+notifyPrintService(jobId: string, type: 'spooler_closed_for_cancelled' | 'spooler_closed_for_started'): Promise&lt;void&gt;
+
+将打印预览界面关闭信息通知打印服务，使用Promise异步回调。用于在打印预览界面关闭后，让打印服务进行清理、退出等操作。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| jobId | string | 是 | 表示已创建的打印任务ID。 |
+| type | 'spooler_closed_for_cancelled' \| 'spooler_closed_for_started' | 是 | 表示打印预览界面关闭信息的类型。'spooler_closed_for_cancelled'表示因取消当前打印任务而关闭打印预览界面；'spooler_closed_for_started'表示因打印任务成功下发而关闭打印预览界面。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。将打印预览界面关闭信息通知打印服务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let jobId : string = '1';
+print.notifyPrintService(jobId, 'spooler_closed_for_started').then(() => {
+    console.info('notifyPrintService success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to notify print service. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.getPrinterInfoById<sup>12+</sup>
+
+getPrinterInfoById(printerId: string): Promise&lt;PrinterInfo&gt;
+
+根据打印机ID获取打印机信息，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;[PrinterInfo](js-apis-print.md#printerinfo24)&gt; | Promise对象，返回查询到的打印机信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = '1';
+print.getPrinterInfoById(printerId).then((printerInfo : print.PrinterInfo) => {
+    console.info('getPrinterInfoById data : ' + JSON.stringify(printerInfo));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to get printer info by id. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.notifyPrintServiceEvent<sup>12+</sup>
+
+notifyPrintServiceEvent(event: ApplicationEvent): Promise&lt;void&gt;
+
+将打印应用相关事件通知打印服务，使用Promise异步回调。用于在打印应用创建、销毁等生命周期事件发生时通知打印服务进行相应处理。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| event | [ApplicationEvent](js-apis-print.md#applicationevent14) | 是 | 表示打印应用事件。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。将打印应用相关事件通知打印服务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let event : print.ApplicationEvent = print.ApplicationEvent.APPLICATION_CREATED;
+print.notifyPrintServiceEvent(event).then(() => {
+    console.info('notifyPrintServiceEvent success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to notify print service event. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.setPrinterPreferences<sup>18+</sup>
+
+setPrinterPreferences(printerId: string, printerPreferences: PrinterPreferences): Promise&lt;void&gt;
+
+设置打印机首选项，使用Promise异步回调。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+| printerPreferences | [PrinterPreferences](js-apis-print.md#printerpreferences18) | 是 | 表示打印机首选项，用于配置打印机的默认打印参数，如默认双面打印模式等。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。设置打印机首选项成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = 'testPrinterId';
+let preferences : print.PrinterPreferences = {
+    defaultDuplexMode: print.PrintDuplexMode.DUPLEX_MODE_NONE
+};
+print.setPrinterPreferences(printerId, preferences).then(() => {
+    console.info('setPrinterPreferences success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to set printer preferences. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.discoverUsbPrinters<sup>18+</sup>
+
+discoverUsbPrinters(): Promise&lt;Array&lt;PrinterInformation&gt;&gt;
+
+发现USB打印机，使用Promise异步回调。返回发现的USB打印机信息，其打印机URI可用于[queryPrinterCapabilityByUri](#printqueryprintercapabilitybyuri24)查询打印机能力或[addPrinterToCups](#printaddprintertocups24)添加打印机到CUPS。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;Array&lt;[PrinterInformation](js-apis-print.md#printerinformation14)&gt;&gt; | Promise对象，返回发现的USB打印机信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+print.discoverUsbPrinters().then((printers : print.PrinterInformation[]) => {
+    console.info('discoverUsbPrinters data : ' + JSON.stringify(printers));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to discover USB printers. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.setDefaultPrinter<sup>18+</sup>
+
+setDefaultPrinter(printerId: string, type: DefaultPrinterType): Promise&lt;void&gt;
+
+设置默认打印机，使用Promise异步回调。用于需要指定系统默认打印机的场景，如用户手动选择默认打印机或系统自动将最后使用的打印机设为默认打印机。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerId | string | 是 | 表示打印机ID。 |
+| type | [DefaultPrinterType](js-apis-print.md#defaultprintertype18) | 是 | 表示默认打印机类型，用于指定默认打印机的设置方式。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。设置默认打印机成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerId : string = '1';
+let type : print.DefaultPrinterType = print.DefaultPrinterType.DEFAULT_PRINTER_TYPE_SET_BY_USER;
+print.setDefaultPrinter(printerId, type).then(() => {
+    console.info('setDefaultPrinter success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to set default printer. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.notifyPrintServiceEvent<sup>18+</sup>
+
+notifyPrintServiceEvent(event: ApplicationEvent, jobId: string): Promise&lt;void&gt;
+
+将打印应用相关事件通知打印服务，使用Promise异步回调。用于在打印应用创建、销毁等生命周期事件发生时，携带打印任务ID通知打印服务进行相应处理。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| event | [ApplicationEvent](js-apis-print.md#applicationevent14) | 是 | 表示打印应用事件，用于给打印服务通知应用的生命周期事件。 |
+| jobId | string | 是 | 表示已创建的打印任务ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。将打印应用相关事件通知打印服务成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 401 | Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let event : print.ApplicationEvent = print.ApplicationEvent.APPLICATION_CREATED;
+let jobId : string = '1';
+print.notifyPrintServiceEvent(event, jobId).then(() => {
+    console.info('notifyPrintServiceEvent success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to notify print service event. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.queryPrinterCapabilityByUri<sup>24+</sup>
+
+queryPrinterCapabilityByUri(printerUri: string, printerId: string): Promise&lt;[PrinterCapabilities](js-apis-print.md#printercapabilities14)&gt;
+
+使用打印机的URI查询打印机能力，使用Promise异步回调。可用于在已知打印机URI但打印机未在本地注册时，直接查询其支持的能力；也可用于USB打印机能力的发现。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**模型约束：** 此接口仅可在Stage模型下使用。
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerUri | string | 是 | 表示打印机URI，可通过[PrinterInformation](js-apis-print.md#printerinformation14)获取。 |
+| printerId | string | 是 | 表示打印机ID。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;[PrinterCapabilities](js-apis-print.md#printercapabilities14)&gt; | Promise对象，返回查询到的打印机能力，用于获取打印机支持的功能与配置选项。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)和[打印服务错误码](errorcode-print.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 13100005 | Can not find the printer in system. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+// printerUri可通过discoverUsbPrinters接口返回的PrinterInformation获取
+let printerUri : string = 'testPrinterUri';
+let printerId : string = 'testPrinterId';
+print.queryPrinterCapabilityByUri(printerUri, printerId).then((capabilities: print.PrinterCapabilities) => {
+    console.info('queryPrinterCapabilityByUri success' + JSON.stringify(capabilities));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to query printer capability by uri. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.addPrinterToCups<sup>24+</sup>
+
+addPrinterToCups(printerUri: string, printerName: string, printerMake: string): Promise&lt;boolean&gt;
+
+添加打印机到CUPS，使用Promise异步回调。CUPS是系统中的打印服务框架，用于管理打印机和打印任务。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**模型约束：** 此接口仅可在Stage模型下使用。
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerUri | string | 是 | 表示打印机URI，可通过[PrinterInformation](js-apis-print.md#printerinformation14)获取。 |
+| printerName | string | 是 | 表示打印机名称。 |
+| printerMake | string | 是 | 表示打印机品牌。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;boolean&gt; | Promise对象，返回true表示添加打印机到CUPS成功；返回false表示添加打印机到CUPS失败。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)和[打印服务错误码](errorcode-print.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+| 13100003 | Add a printer to cups failed. |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+// printerUri可通过discoverUsbPrinters接口返回的PrinterInformation获取
+let printerUri : string = 'testPrinterUri';
+let printerName : string = 'testPrinterName';
+let printerMake : string = 'testPrinterMake';
+
+print.addPrinterToCups(printerUri, printerName, printerMake).then((result: boolean) => {
+    console.info('addPrinterToCups success' + JSON.stringify(result));
+}).catch((error: BusinessError) => {
+    console.error(`Failed to add printer to cups. Code: ${error.code}, message: ${error.message}`);
+});
+```
+
+## print.deletePrinterFromCups<sup>24+</sup>
+
+deletePrinterFromCups(printerName: string): Promise&lt;void&gt;
+
+从CUPS中删除打印机，使用Promise异步回调。CUPS是系统中的打印服务框架，用于管理打印机和打印任务。
+
+**需要权限：** ohos.permission.MANAGE_PRINT_JOB
+
+**系统接口：** 此接口为系统接口。
+
+**系统能力：** SystemCapability.Print.PrintFramework
+
+**模型约束：** 此接口仅可在Stage模型下使用。
+
+**参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+| -------- | -------- | -------- | -------- |
+| printerName | string | 是 | 表示打印机名称。 |
+
+**返回值：**
+
+| 类型 | 说明 |
+| -------- | -------- |
+| Promise&lt;void&gt; | Promise对象，无返回结果。从CUPS删除打印机成功时resolve，失败时reject并返回错误信息。 |
+
+**错误码：**
+
+以下错误码的详细介绍请参见[通用错误码](../common/errorcode-universal.md)。
+
+| 错误码ID | 错误信息                                    |
+| -------- | ------------------------------------------- |
+| 201 | the application does not have permission to call this function. |
+| 202 | not system application |
+
+**示例：**
+
+```ts
+import { print } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+
+let printerName : string = 'testPrinterName';
+
+print.deletePrinterFromCups(printerName).then(() => {
+    console.info('deletePrinterFromCups success');
+}).catch((error: BusinessError) => {
+    console.error(`Failed to delete printer from cups. Code: ${error.code}, message: ${error.message}`);
+});
+```

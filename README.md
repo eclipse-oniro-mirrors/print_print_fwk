@@ -4,6 +4,8 @@
 
 OpenHarmony Print Scan Framework is a complete solution that provides printing and scanning capabilities for the OpenHarmony operating system. The framework implements print services and scan services, supports multiple device connection methods and protocols, and provides unified printing and scanning interfaces for applications.
 
+The [developer documentation (Chinese)](docs/README.md) covers terminology, print and scan workflows, API references, and build commands.
+
 ## System Architecture
 
 ### Print System Architecture
