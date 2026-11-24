@@ -25,6 +25,7 @@ if (print_fwk_feature_device_isolation) {
     include_dirs = [
       "${_service_path}/include",
       "${_service_path}/include/remote",
+      "${print_path}/features/remote_service/include",
       "${_service_path}/src/internal",
       "${print_path}/frameworks/models/print_models/include",
     ]
@@ -129,6 +130,7 @@ if (print_fwk_feature_device_isolation) {
     "${_service_path}/include/event_callback",
     "${_service_path}/enterprise/include",
     "${_service_path}/include/remote",
+    "${print_path}/features/remote_service/include",
     "${print_utils_path}/include",
   ]
 

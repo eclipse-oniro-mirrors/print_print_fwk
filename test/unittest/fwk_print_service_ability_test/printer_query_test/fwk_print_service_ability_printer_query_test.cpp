@@ -15,7 +15,7 @@
 
 #include "print_service_ability_test_common.h"
 #ifdef REMOTE_SERVICE_ENABLE
-#include "remote/remote_constants.h"
+#include "remote_constants.h"
 #endif
 
 namespace OHOS {

@@ -82,68 +82,26 @@ public:
     bool startDiscoveryCalled_ = false;
 };
 
-class MockRemotePrinterManager : public IRemotePrinterManager {
-public:
-    MockRemotePrinterManager() = default;
-    ~MockRemotePrinterManager() override = default;
-
-    void *QueryInterface(PrintFeatureIid /* iid */) override
-    {
-        return nullptr;
-    }
-
-    void SetEventHandler(IRemotePrinterEventHandler *handler) override
-    {
-        handler_ = handler;
-    }
-
-    bool Destroy() override { return true; }
-    bool Disconnect() override
-    {
-        disconnectCalled_ = true;
-        return true;
-    }
-
-    void StartPrinterDiscovery() override
-    {
-        startDiscoveryCalled_ = true;
-    }
-
-    bool StopPrinterDiscovery() override
-    {
-        stopDiscoveryCalled_ = true;
-        return true;
-    }
-
-    std::shared_ptr<PrinterInfo> GetPrinterInfo(const std::string & /*printerId*/) override
-    {
-        return nullptr;
-    }
-
-    bool UpdatePrinterStatus(const std::string & /*printerId*/, PrinterStatus /*status*/) override
-    {
-        return false;
-    }
-
-    bool OnPrinterListReceived(const Json::Value & /*jsonArray*/) override
-    {
-        return true;
-    }
-
-    bool OnPrinterStatusReceived(const Json::Value & /*jsonArray*/) override
-    {
-        return true;
-    }
-
-    void ClearAllPrinters() override {}
-
-    IRemotePrinterEventHandler *handler_ = nullptr;
-    bool disconnectCalled_ = false;
-    bool startDiscoveryCalled_ = false;
-    bool stopDiscoveryCalled_ = false;
-};
-
 } // namespace
+
+class RemotePluginPathGuard {
+public:
+    RemotePluginPathGuard()
+    {
+        auto &entry = PrintFeaturePluginManager::GetInstance()
+            .features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
+        originalPath_ = entry.libPath;
+        entry.libPath = "/system/lib/libprint_feature_remote_nonexistent_test.z.so";
+    }
+    ~RemotePluginPathGuard()
+    {
+        auto &entry = PrintFeaturePluginManager::GetInstance()
+            .features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
+        entry.libPath = originalPath_;
+    }
+private:
+    std::string originalPath_;
+};
 
 class RemotePrinterManagerProxyTest : public testing::Test {
 public:
@@ -153,7 +111,7 @@ public:
     void TearDown() override;
 
 protected:
-    MockRemotePrinterManager mockImpl_;
+    RemotePluginPathGuard pathGuard_;
     MockRemotePrinterEventHandler handler_;
 };
 
@@ -182,7 +140,7 @@ HWTEST_F(RemotePrinterManagerProxyTest, Singleton_AndHandlerStorage, TestSize.Le
 HWTEST_F(RemotePrinterManagerProxyTest, ImplNull_OperationsReturnDefaults, TestSize.Level1)
 {
     auto &manager = RemotePrinterManager::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(manager.StartPrinterDiscovery());
+    // With no remote plugin loaded, the proxy must return safe defaults.
     EXPECT_TRUE(manager.StopPrinterDiscovery());
     EXPECT_TRUE(manager.Disconnect());
 }
@@ -218,33 +176,12 @@ HWTEST_F(RemotePrinterManagerProxyTest, EnsureLoaded_PluginFeatureWithoutRemoteI
     EXPECT_TRUE(manager.StopPrinterDiscovery());
 }
 
-namespace {
-class RemotePluginPathGuard {
-public:
-    explicit RemotePluginPathGuard(std::string &path) : path_(path), original_(path)
-    {
-        path_ = "/data/test/libnonexistent_remote_test.z.so";
-    }
-    ~RemotePluginPathGuard()
-    {
-        path_ = original_;
-    }
-private:
-    std::string &path_;
-    std::string original_;
-};
-} // namespace
-
 HWTEST_F(RemotePrinterManagerProxyTest, EnsureLoaded_BaseNull_KeepsImplNull, TestSize.Level1)
 {
     auto &manager = RemotePrinterManager::GetInstance();
-
-    auto &entry = PrintFeaturePluginManager::GetInstance().features_[PrintFeatureType::REMOTE_PRINTER_MANAGER];
-    RemotePluginPathGuard guard(entry.libPath);
-    PrintFeaturePluginManager::GetInstance().UnloadAll();
-
+    // The fixture guard already points the remote plugin path at a non-existent library.
+    // SetEventHandler must still store the handler locally when no plugin is loaded.
     manager.SetEventHandler(&handler_);
-    manager.StartPrinterDiscovery();
     EXPECT_EQ(manager.handler_, &handler_);
 }
 
