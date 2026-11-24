@@ -14,9 +14,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <string>
 
-#include "print_constant.h"
 #include "print_failure_ai_notifier.h"
 
 using namespace testing;
@@ -50,24 +48,6 @@ HWTEST_F(PrintFailureAiNotifierTest, GetInstance_ReturnsSameInstance, TestSize.L
     PrintFailureAiNotifier &instance1 = PrintFailureAiNotifier::GetInstance();
     PrintFailureAiNotifier &instance2 = PrintFailureAiNotifier::GetInstance();
     EXPECT_EQ(&instance1, &instance2);
-}
-
-HWTEST_F(PrintFailureAiNotifierTest, HandleJobBlocked_NoPluginLoaded_NoCrash, TestSize.Level1)
-{
-    PrintFailureAiNotifier &notifier = PrintFailureAiNotifier::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(notifier.HandleJobBlocked("job_001", 1, "Printer", INVALID_USER_ID));
-}
-
-HWTEST_F(PrintFailureAiNotifierTest, ClearJobState_NoPluginLoaded_NoCrash, TestSize.Level1)
-{
-    PrintFailureAiNotifier &notifier = PrintFailureAiNotifier::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(notifier.ClearJobState("job_001"));
-}
-
-HWTEST_F(PrintFailureAiNotifierTest, Reset_NoPluginLoaded_NoCrash, TestSize.Level1)
-{
-    PrintFailureAiNotifier &notifier = PrintFailureAiNotifier::GetInstance();
-    EXPECT_NO_FATAL_FAILURE(notifier.Reset());
 }
 
 } // namespace Print

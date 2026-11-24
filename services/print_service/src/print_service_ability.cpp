@@ -27,6 +27,8 @@
 
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
+#include "print_cups_ppd.h"
+#include "print_cert_manager.h"
 #endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
@@ -110,7 +112,6 @@ const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
 #ifdef PRINT_FWK_AGENT_CLIENT_ENABLE
 constexpr int64_t AGENT_BACKEND_READY_STARTUP_DELAY_MS = 5000;
 #endif
-
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -1300,6 +1301,62 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     InjectUserCustomPageSizes(printerId, info);
     return E_PRINT_NONE;
 }
+int32_t PrintServiceAbility::GetPpdFilePathByPrinterId(const std::string &printerId,
+    std::string &resolvedPath)
+{
+    PrinterInfo printerInfo;
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId query printer info failed");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    auto cupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (cupsClient == nullptr) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId cups client unavailable");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PpdInfo ppdInfo;
+    printerInfo.GetSelectedDriver(ppdInfo);
+    std::string ppdName = ppdInfo.GetPpdName();
+    if (!ppdName.empty() && ppdName != PPD_NAME_AUTO && IsPpdNameValid(ppdName) &&
+        PrintUtils::ResolveAndValidatePath(cupsClient->GetCurCupsModelDir() + ppdName, resolvedPath)) {
+        PRINT_HILOGI("GetPpdFilePathByPrinterId resolved via manual driver");
+        return E_PRINT_NONE;
+    }
+    std::string queuePpdPath = cupsClient->GetCurCupsRootDir() + "/ppd/" +
+        PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName()) + ".ppd";
+    if (PrintUtils::ResolveAndValidatePath(queuePpdPath, resolvedPath)) {
+        PRINT_HILOGI("GetPpdFilePathByPrinterId resolved via queue-bound ppd");
+        return E_PRINT_NONE;
+    }
+    PRINT_HILOGE("GetPpdFilePathByPrinterId no usable ppd file, Id=%{private}s", printerId.c_str());
+    return E_PRINT_INVALID_PRINTER;
+}
+int32_t PrintServiceAbility::GetPrinterLocalizedStrings(const std::string &printerId,
+    const std::string &language, std::string &resultJson)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    ManualStart();
+    PRINT_HILOGI("GetPrinterLocalizedStrings in. printerId=%{private}s, language=%{private}s",
+        printerId.c_str(), language.c_str());
+    std::string normalizedLanguage;
+    if (!NormalizePpdLanguage(language, normalizedLanguage)) {
+        PRINT_HILOGE("GetPrinterLocalizedStrings invalid language parameter");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    std::string resolvedPpdFilePath;
+    int32_t ret = GetPpdFilePathByPrinterId(printerId, resolvedPpdFilePath);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("GetPpdFilePathByPrinterId failed, ret=%{public}d", ret);
+        return ret;
+    }
+    ret = GetLocalizedStringsFromPpd(resolvedPpdFilePath, normalizedLanguage, resultJson);
+    PRINT_HILOGI("GetPrinterLocalizedStrings done, ret=%{public}d, size=%{public}zu",
+        ret, resultJson.size());
+    return ret;
+}
 
 int32_t PrintServiceAbility::QueryPrinterProperties(
     const std::string &printerId, const std::vector<std::string> &keyList, std::vector<std::string> &valueList)
@@ -1424,6 +1481,53 @@ int32_t PrintServiceAbility::AddPrinter(const std::string &printerName, const st
     }
 
     PRINT_HILOGI("AddPrinter end.");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ConfirmCertTrust(const std::string &printerId, bool trusted)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    ManualStart();
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("[Printer: %{public}s] ConfirmCertTrust start, trusted: %{public}d",
+        PrintUtils::AnonymizePrinterId(printerId).c_str(), trusted);
+
+    PrinterInfo printerInfo;
+    if (!PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGE("ConfirmCertTrust: cannot find printer info by printerId");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    std::string printerUri = printerInfo.GetUri();
+    if (printerUri.empty()) {
+        PRINT_HILOGE("ConfirmCertTrust: printer URI is empty");
+        return E_PRINT_INVALID_PRINTER;
+    }
+
+#ifdef CUPS_ENABLE
+    if (!trusted) {
+        PRINT_HILOGI("[Printer: %{public}s] User rejected cert trust, canceling jobs",
+            PrintUtils::AnonymizePrinterId(printerId).c_str());
+        CancelJobsByPrinterId(printerId);
+        return E_PRINT_NONE;
+    }
+
+    PRINT_HILOGI("[Printer: %{public}s] User accepted cert trust, saving cert and resuming printer",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
+    std::string standardizedPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+    if (!DelayedSingleton<PrintCertManager>::GetInstance()->SaveCertForPrinter(printerUri, standardizedPrinterName)) {
+        PRINT_HILOGE("ConfirmCertTrust: failed to save cert for printer");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->ResumePrinter(standardizedPrinterName)) {
+        PRINT_HILOGE("ConfirmCertTrust: failed to resume printer");
+        return E_PRINT_SERVER_FAILURE;
+    }
+#endif  // CUPS_ENABLE
+
+    PRINT_HILOGI("[Printer: %{public}s] ConfirmCertTrust end", PrintUtils::AnonymizePrinterId(printerId).c_str());
     return E_PRINT_NONE;
 }
 
@@ -2396,6 +2500,21 @@ void PrintServiceAbility::CancelPrintJobHandleCallback(
     }
 }
 
+void PrintServiceAbility::CancelJobsByPrinterId(const std::string &printerId)
+{
+    auto it = printerJobMap_.find(printerId);
+    if (it == printerJobMap_.end() || it->second.empty()) {
+        return;
+    }
+    std::vector<std::string> jobIdListToCancel;
+    for (const auto &pair : it->second) {
+        jobIdListToCancel.push_back(pair.first);
+    }
+    for (auto jobId : jobIdListToCancel) {
+        CancelPrintJob(jobId);
+    }
+}
+
 int32_t PrintServiceAbility::BlockPrintJob(const std::string &jobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] BlockPrintJob start", jobId.c_str());
@@ -2771,9 +2890,11 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
         return E_PRINT_INVALID_PRINTER;
     }
 
-    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerExtId, static_cast<PrinterState>(state));
-    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    PrinterInfo updatedInfo = *printerInfo;
+    updatedInfo.SetPrinterState(state);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerExtId, updatedInfo);
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, updatedInfo);
+    SendPrinterEvent(updatedInfo);
     PRINT_HILOGD("UpdatePrinterState end.");
     return E_PRINT_NONE;
 }
@@ -4531,21 +4652,13 @@ int32_t PrintServiceAbility::ContinueDeletePrinterFromCups(
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
+    DelayedSingleton<PrintCertManager>::GetInstance()->DeleteCertForPrinter(standardName);
 #endif  // CUPS_ENABLE
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
     PrintDataRepository::GetInstance().DeleteAddedPrinter(printerId, printerName);
     RemoveSinglePrinterInfo(printerId);
-    auto it = printerJobMap_.find(printerId);
-    if (it != printerJobMap_.end() && !it->second.empty()) {
-        std::vector<std::string> jobIdListToCancel;
-        for (const auto &pair : it->second) {
-            jobIdListToCancel.push_back(pair.first);
-        }
-        for (auto jobId : jobIdListToCancel) {
-            CancelPrintJob(jobId);
-        }
-    }
+    CancelJobsByPrinterId(printerId);
 #ifdef HAVE_SMB_PRINTER
     if (SmbPrinterDiscoverer::IsSmbPrinterId(printerId)) {
         SmbPrinterStateMonitor::GetInstance().EraseSmbPrinterInMonitorListById(printerId);
@@ -4925,7 +5038,10 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
         PRINT_HILOGI("new printer, add it");
         infoPtr->DumpInfo();
+        infoPtr->SetPrinterState(PRINTER_ADDED);
         PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
+    } else {
+        PrintDataRepository::GetInstance().SetDiscoveredPrinterState(infoPtr->GetPrinterId(), PRINTER_ADDED);
     }
     infoPtr->SetPrinterState(PRINTER_ADDED);
 
@@ -4986,8 +5102,6 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
 
     printerInfo.Dump();
 
-    printerInfo.Dump();
-
     // Always commit the basic info (name/uri/alias/state/id) back to the discovery map,
     // preserving the baseline semantics where *printerInfo = info was executed unconditionally.
     PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printExtId, printerInfo);
@@ -5019,15 +5133,16 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
-    PrintDataRepository::GetInstance().SetDiscoveredPrinterState(printerId, PRINTER_REMOVED);
-    SendPrinterDiscoverEvent(PRINTER_REMOVED, *printerInfo);
-    SendPrinterEvent(*printerInfo);
+    PrinterInfo removedInfo = *printerInfo;
+    removedInfo.SetPrinterState(PRINTER_REMOVED);
+    PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(printerId, removedInfo);
+    SendPrinterDiscoverEvent(PRINTER_REMOVED, removedInfo);
+    SendPrinterEvent(removedInfo);
     PrintDataRepository::GetInstance().RemovePrinterFromDiscovery(printerId);
 
     PrinterInfo addedPrinter;
     if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
         !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
-        PrinterInfo removedInfo = *printerInfo;
         UpdatePrinterStatus(removedInfo, PRINTER_STATUS_UNAVAILABLE);
     }
     return true;
@@ -5980,20 +6095,26 @@ bool PrintServiceAbility::DeletePrintJobFromHistoryList(const std::string jobId)
 
 void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize)
 {
-    if (!PrintPageSize::FindPageSizeById(pageSize.GetId(), pageSize)) {
-        PrinterCapability printerCapability;
-        printerInfo.GetCapability(printerCapability);
-        std::vector<PrintPageSize> supportedPageSizeList;
-        printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    PrinterCapability printerCapability;
+    printerInfo.GetCapability(printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
 
-        for (const auto &supportedPageSize : supportedPageSizeList) {
-            if (supportedPageSize.GetId() == pageSize.GetId()) {
-                PRINT_HILOGI("PrintJob Set PageSize id = %{public}s, name = %{public}s",
-                    supportedPageSize.GetId().c_str(),
-                    supportedPageSize.GetName().c_str());
-                pageSize.SetName(supportedPageSize.GetName());
-                break;
-            }
+    // The application key is pageSize.name (map.pwg for PPD), so match it before legacy ids.
+    for (const auto &supportedPageSize : supportedPageSizeList) {
+        if (supportedPageSize.GetName() == pageSize.GetName()) {
+            return;
+        }
+    }
+    if (PrintPageSize::FindPageSizeById(pageSize.GetId(), pageSize)) {
+        return;
+    }
+    for (const auto &supportedPageSize : supportedPageSizeList) {
+        if (supportedPageSize.GetId() == pageSize.GetId()) {
+            PRINT_HILOGI("PrintJob Set PageSize id = %{public}s, name = %{public}s",
+                supportedPageSize.GetId().c_str(), supportedPageSize.GetName().c_str());
+            pageSize.SetName(supportedPageSize.GetName());
+            break;
         }
     }
 }

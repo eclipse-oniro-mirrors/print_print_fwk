@@ -55,7 +55,6 @@ private:
     SANE_Handle GetScanHandle(const std::string &scannerId);
     SaneStatus GetControlOption(SANE_Handle& handle, const SaneControlParam& controlParam, SaneOutParam& outParam);
     SaneStatus SetControlOption(SANE_Handle& handle, const SaneControlParam& controlParam, SaneOutParam& outParam);
-    void ConvertSaneDescriptor(const SANE_Option_Descriptor* saneDesc, SaneOptionDescriptor& saneOptDes);
     struct OpenedSaneHandle {
         std::string scannerId;
         SANE_Handle handle;

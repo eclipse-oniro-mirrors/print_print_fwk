@@ -4807,18 +4807,58 @@ HWTEST_F(PrintCupsClientTest, UpdateJobState_SameState_IncrementsCounter, TestSi
  * @tc.type: FUNC
  * @tc.require:
  */
+namespace {
+constexpr uint32_t CUPS_TEST_LONG_TIMEOUT_MS = 3000;
+
+class MockPrintServiceHelperForCupsTest : public PrintServiceHelper {
+public:
+    bool CheckPermission(const std::string& /* name */) override
+    {
+        return true;
+    }
+
+    bool QueryAccounts(std::vector<int>& /* accountList */) override
+    {
+        return true;
+    }
+};
+} // namespace
+
 HWTEST_F(PrintCupsClientTest, HandleFilesAndStartMonitoring_InvalidFd_ReturnsEarly, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
+    auto serviceAbility = PrintServiceAbility::GetInstance();
+    serviceAbility->state_ = ServiceRunningState::STATE_RUNNING;
+    serviceAbility->helper_ = std::make_shared<MockPrintServiceHelperForCupsTest>();
+
+    // The failure path in HandleFiles calls cupsCancelJob2. Passing a null http pointer
+    // can crash in some CUPS builds, so only run when a live CUPS server is available.
+    if (!printCupsClient.IsCupsServerAlive()) {
+        serviceAbility->helper_.reset();
+        serviceAbility->state_ = ServiceRunningState::STATE_NOT_START;
+        GTEST_SKIP() << "CUPS server is not available";
+    }
+    http_t *http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1,
+        CUPS_TEST_LONG_TIMEOUT_MS, nullptr);
+    if (http == nullptr) {
+        serviceAbility->helper_.reset();
+        serviceAbility->state_ = ServiceRunningState::STATE_NOT_START;
+        GTEST_SKIP() << "Failed to connect to CUPS server";
+    }
+
     JobParameters *jobParams = new JobParameters();
-    jobParams->serviceAbility = PrintServiceAbility::GetInstance();
+    jobParams->serviceAbility = serviceAbility.GetRefPtr();
     jobParams->serviceJobId = "test_job";
     jobParams->printerName = "test_printer";
     jobParams->documentFormat = "application/pdf";
     jobParams->fdList = {static_cast<uint32_t>(-1)};
     jobParams->isCanceled = false;
-    printCupsClient.HandleFilesAndStartMonitoring(jobParams, nullptr, 1);
+    printCupsClient.HandleFilesAndStartMonitoring(jobParams, http, 1);
     EXPECT_EQ(printCupsClient.jobMonitorList_.size(), 0u);
+
+    httpClose(http);
+    serviceAbility->helper_.reset();
+    serviceAbility->state_ = ServiceRunningState::STATE_NOT_START;
     delete jobParams;
 }
 
@@ -4880,6 +4920,109 @@ HWTEST_F(PrintCupsClientTest, ParseStateReasons_MediaJam_SetsBlock, TestSize.Lev
     printCupsClient.ParseStateReasons(param);
     EXPECT_TRUE(param->isBlock);
     EXPECT_NE(param->substate, 0u);
+}
+
+static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &reason,
+    PrintServiceAbility *serviceAbility)
+{
+    auto param = std::make_shared<JobMonitorParam>(serviceAbility,
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    strlcpy(param->job_printer_state_reasons, reason.c_str(), sizeof(param->job_printer_state_reasons));
+    return param;
+}
+
+// PrintServiceAbility owns a VendorManager whose destructor touches the vendor
+// framework and is not safe to run in the unit-test process, so keep the mock
+// alive for the whole test process instead of destroying it.
+static MockPrintServiceAbility *GetMockServiceAbility()
+{
+    static MockPrintServiceAbility *mockAbility = new MockPrintServiceAbility();
+    return mockAbility;
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_PkiInvalid_BlocksJob
+ * @tc.desc: cups-pki-invalid reason blocks the job with bad-certificate substate.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiInvalid_BlocksJob, TestSize.Level1)
+{
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED),
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE))).WillOnce(Return(E_PRINT_NONE));
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("cups-pki-invalid", mockAbility);
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_PkiUnknown_BlocksJob
+ * @tc.desc: cups-pki-unknown reason blocks the job with bad-certificate substate.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiUnknown_BlocksJob, TestSize.Level1)
+{
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED),
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE))).WillOnce(Return(E_PRINT_NONE));
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("cups-pki-unknown", mockAbility);
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_PkiSubstring_BlocksJob
+ * @tc.desc: PKI reason embedded in a longer reason string is detected via substring match.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_PkiSubstring_BlocksJob, TestSize.Level1)
+{
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED),
+        static_cast<uint32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE))).WillOnce(Return(E_PRINT_NONE));
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("xx-cups-pki-invalid-yy", mockAbility);
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_NormalReason_NotPki
+ * @tc.desc: A normal reason does not take the PKI branch and still returns true (queued).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_NormalReason_NotPki, TestSize.Level1)
+{
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_QUEUED),
+        static_cast<uint32_t>(PRINT_JOB_COMPLETED_SUCCESS))).WillOnce(Return(E_PRINT_NONE));
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("none", mockAbility);
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
+}
+
+/**
+ * @tc.name: HandleJobIsQueued_EmptyReason_NotPki
+ * @tc.desc: Empty reason does not take the PKI branch and still returns true (queued).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, HandleJobIsQueued_EmptyReason_NotPki, TestSize.Level1)
+{
+    auto mockAbility = GetMockServiceAbility();
+    EXPECT_CALL(*mockAbility, UpdatePrintJobState(TEST_SERVICE_JOB_ID,
+        static_cast<uint32_t>(PRINT_JOB_QUEUED),
+        static_cast<uint32_t>(PRINT_JOB_COMPLETED_SUCCESS))).WillOnce(Return(E_PRINT_NONE));
+    OHOS::Print::PrintCupsClient printCupsClient;
+    auto param = CreateQueuedJobParam("", mockAbility);
+    EXPECT_TRUE(printCupsClient.HandleJobIsQueued(param));
 }
 
 }  // namespace Print

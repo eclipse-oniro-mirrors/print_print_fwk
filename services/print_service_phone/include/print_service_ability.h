@@ -116,7 +116,7 @@ public:
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override;
     int32_t StartNativePrintJob(PrintJob &printJob) override;
-    int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
+    virtual int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
     void CancelUserPrintJobs(const int32_t userId);
     void NotifyCurrentUserChanged(const int32_t userId);
     bool FlushCacheFileToUserData(const std::string &jobId);
@@ -166,6 +166,7 @@ public:
     virtual bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode = O_RDONLY);
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
+    int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override;
     void HandleWebPrinterUninstall();
     virtual bool IsOversea();
 
@@ -271,6 +272,7 @@ private:
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::string& extensionId,
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+    void CancelJobsByPrinterId(const std::string &printerId);
     void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
@@ -316,11 +318,14 @@ private:
     void RefreshIpPrinter();
     void RefreshThirdDriverPrinter();
     bool IsPpdNameValid(const std::string &ppdName) override;
+    int32_t GetPrinterLocalizedStrings(const std::string &printerId,
+        const std::string &language, std::string &resultJson) override;
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName) override;
     int32_t InitServiceHelper();
 
 public:
+    int32_t GetPpdFilePathByPrinterId(const std::string &printerId, std::string &resolvedPath);
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;

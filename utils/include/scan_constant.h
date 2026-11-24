@@ -283,6 +283,6 @@ inline const std::vector<std::string> SCAN_PICTURE_SUFFIXES = {
 
 constexpr const char* SCAN_MODE_LINEART = "Lineart";
 constexpr const char* SCAN_MODE_GRAY = "Gray";
-constexpr int32_t SCAN_BW_THRESHOLD = 170;
+constexpr int32_t SCAN_BW_THRESHOLD = 200;
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

@@ -30,4 +30,5 @@ group("unittest") {
   deps += [ "driver_option_test:unittest" ]
   deps += [ "watermark_test:unittest" ]
   deps += [ "misc_test:unittest" ]
+  deps += [ "cert_trust_test:unittest" ]
 }

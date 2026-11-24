@@ -47,13 +47,15 @@ public:
     int32_t RequestPrinterList();
     
     void SetOnServiceDiedCallback(std::function<void()> cb);
-    
+
     void OnRemoteServiceDied();
+    bool WaitForCallbacksIdle(int32_t timeoutMs);
 
 private:
     sptr<PrintIpcConnection> connection_;
     sptr<RemoteCallbackStub> callbackStub_;
     std::function<void()> onServiceDiedCb_;
+    mutable std::mutex callbackMutex_;
     std::mutex bindMutex_;
 };
 

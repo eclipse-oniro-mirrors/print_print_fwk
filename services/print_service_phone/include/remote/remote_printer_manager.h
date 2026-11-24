@@ -16,9 +16,9 @@
 #ifndef REMOTE_PRINTER_MANAGER_H
 #define REMOTE_PRINTER_MANAGER_H
 
-#include <memory>
 #include <mutex>
 
+#include "i_print_feature.h"
 #include "i_remote_printer_manager.h"
 #include "print_feature_type.h"
 
@@ -41,11 +41,10 @@ private:
     RemotePrinterManager(const RemotePrinterManager &) = delete;
     RemotePrinterManager &operator=(const RemotePrinterManager &) = delete;
 
-    void EnsureLoaded();
+    static IRemotePrinterManager *GetRemoteInterface(IPrintFeature *feature);
 
     std::mutex mutex_;
     IRemotePrinterEventHandler *handler_ = nullptr;
-    IRemotePrinterManager *impl_ = nullptr;
 };
 
 } // namespace OHOS::Print

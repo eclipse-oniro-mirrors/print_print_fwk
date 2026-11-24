@@ -15,11 +15,16 @@ import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
 if (print_fwk_feature_print_failure_ai_notifier) {
+  _resource_manager_source = "${print_path}/services/print_service/src/print_resource_manager.cpp"
+  if (print_fwk_feature_device_isolation) {
+    _resource_manager_source = "${print_path}/services/print_service_phone/src/print_resource_manager.cpp"
+  }
+
   ohos_shared_library("print_feature_ai_notifier") {
     sources = [
       "${print_path}/features/print_failure_ai_notifier/src/print_failure_ai_notifier_impl.cpp",
       "${print_path}/features/print_failure_ai_notifier/src/print_notification_builder.cpp",
-      "${print_path}/services/print_service/src/print_resource_manager.cpp",
+      _resource_manager_source,
     ]
 
     include_dirs = [

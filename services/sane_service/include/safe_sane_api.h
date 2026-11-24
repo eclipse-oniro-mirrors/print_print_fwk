@@ -15,11 +15,13 @@
 #ifndef SAFE_SANE_API_H
 #define SAFE_SANE_API_H
 
+#include <optional>
 #include <mutex>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 #include "sane/sane.h"
+#include "sane_option_descriptor.h"
 
 namespace OHOS {
 namespace Scan {
@@ -45,7 +47,8 @@ public:
     
     void SaneCancel(SANE_Handle handle);
     
-    const SANE_Option_Descriptor* SaneGetOptionDescriptor(SANE_Handle handle, SANE_Int option);
+    // Returns an owned copy made under the handle mutex, or nullopt if unavailable.
+    std::optional<SaneOptionDescriptor> SaneGetOptionDescriptor(SANE_Handle handle, SANE_Int option);
     
     SANE_Status SaneGetParameters(SANE_Handle handle, SANE_Parameters* params);
     

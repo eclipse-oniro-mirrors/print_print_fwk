@@ -1126,25 +1126,45 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_SavePdfFileJob, TestSize.L
 
 HWTEST_F(PrintServiceProxyTest, QueryAllPrinterPpdsTest, TestSize.Level1)
 {
-    std::vector<PpdInfo> testPpds;
-    sptr<MockRemoteObject> obj = new MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    auto proxy = std::make_shared<PrintServiceProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
+    std::vector<PpdInfo> catalog;
+    size_t replyBytes = 0;
     auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryAllPrinterPpds(_))
-        .Times(Exactly(1))
-        .WillOnce([&testPpds](const std::vector<PpdInfo> &ppds) {
-            return E_PRINT_NONE;
+    EXPECT_CALL(*service, QueryAllPrinterPpds(_)).WillRepeatedly([&catalog](std::vector<PpdInfo> &ppds) {
+        ppds = catalog;
+        return E_PRINT_NONE;
+    });
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).WillRepeatedly(
+        [&service, &replyBytes](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            int32_t ret = service->OnRemoteRequest(code, data, reply, option);
+            replyBytes = reply.GetDataSize();
+            return ret;
         });
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
-    ON_CALL(*obj, SendRequest)
-        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_NONE;
-        });
-    proxy->QueryAllPrinterPpds(testPpds);
+    PrintServiceProxy proxy(obj);
+    std::vector<PpdInfo> result;
+    ASSERT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_NONE);
+    EXPECT_TRUE(result.empty());
+
+    PpdInfo driver;
+    driver.SetPpdInfo("Test Manufacturer", "Test Printer Model", "test-driver.ppd");
+    for (size_t count : {4097u, 8192u}) {
+        catalog.assign(count, driver);
+        catalog.back().SetPpdName("last-driver.ppd");
+        ASSERT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_NONE);
+        EXPECT_GT(replyBytes, 200u * 1024u);
+        EXPECT_LT(replyBytes, PRINT_PARCEL_MAX_CAPACITY);
+        ASSERT_EQ(result.size(), count);
+        EXPECT_EQ(result.back(), catalog.back());
+        result.clear();
+    }
+    catalog.push_back(driver);
+    EXPECT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_INVALID_PARAMETER);
+    EXPECT_TRUE(result.empty());
+
+    driver.SetManufacturer(std::string(PRINT_PARCEL_MAX_CAPACITY, 'M'));
+    catalog.assign(1, driver);
+    EXPECT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_RPC_FAILURE);
+    EXPECT_TRUE(result.empty());
 }
 
 /**
@@ -1350,6 +1370,7 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterDefaultPreferencesTest, TestSize.Level
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
+
 HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
 {
     std::string testPrinterId = "111";
@@ -1376,7 +1397,8 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
     });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _))
         .WillOnce(Return(ERR_TRANSACTION_FAILED))
-        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
@@ -1386,6 +1408,64 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterPreferenceTest, TestSize.Level1)
 
     ret = proxy->GetPrinterPreference(testPrinterId, testPreferences);
     EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceProxyTest, GetPrinterLocalizedStringsTest, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    std::string testLanguage = "zh_CN";
+    std::string testResult;
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    int32_t ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    proxy.reset();
+
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, GetPrinterLocalizedStrings(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId, &testLanguage]
+            (const std::string &printerId, const std::string &language, std::string &resultJson) {
+            EXPECT_EQ(testPrinterId, printerId);
+            EXPECT_EQ(testLanguage, language);
+            resultJson = "{\"language\":\"zh_CN\"}";
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_TRANSACTION_FAILED))
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+
+    ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(testResult, "{\"language\":\"zh_CN\"}");
+}
+
+HWTEST_F(PrintServiceProxyTest, GetPrinterLocalizedStrings_EmptyReply_ReturnsRpcFailure, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    std::string testLanguage = "zh_CN";
+    std::string testResult;
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    // 传输成功但 reply 未写入任何字段：读取判返回值分支（防截断假成功）
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_NONE));
+    int32_t ret = proxy->GetPrinterLocalizedStrings(testPrinterId, testLanguage, testResult);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 /**
@@ -1904,6 +1984,44 @@ HWTEST_F(PrintServiceProxyTest, RegisterKiaInterceptorCallback_RpcFailure, TestS
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 #endif // KIA_INTERCEPTOR_ENABLE
+
+/**
+ * @tc.name: ConfirmCertTrust_RemoteNull
+ * @tc.desc: ConfirmCertTrust with a null remote returns RPC failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceProxyTest, ConfirmCertTrust_RemoteNull, TestSize.Level1)
+{
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+    EXPECT_EQ(proxy->ConfirmCertTrust("printer_id", true), E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: ConfirmCertTrust_Success
+ * @tc.desc: ConfirmCertTrust sends printerId and trusted flag and returns service result.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintServiceProxyTest, ConfirmCertTrust_Success, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, ConfirmCertTrust(StrEq("printer_id"), false)).Times(1)
+        .WillOnce(Return(E_PRINT_NONE));
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    EXPECT_EQ(proxy->ConfirmCertTrust("printer_id", false), E_PRINT_NONE);
+}
 
 }  // namespace Print
 }  // namespace OHOS

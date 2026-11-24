@@ -22,6 +22,9 @@
 #include <set>
 #include <cmath>
 #include <cstdint>
+#include <algorithm>
+#include <sstream>
+#include <cctype>
 
 namespace OHOS::Print {
 using namespace std;
@@ -107,6 +110,14 @@ void ValidateAndClearVendorAbility(PrinterCapability &printerCaps, const std::st
     }
 }
 
+static const char *CUPS_LANGUAGES_KEYWORD = "cupsLanguages";
+constexpr size_t SUPPORTED_LANGUAGES_MAX_VALUE_LEN = 4096;
+constexpr unsigned int SUPPORTED_LANGUAGES_MAX_COUNT = 64;
+constexpr size_t PPD_LANGUAGE_MAX_INPUT_LEN = 32;
+constexpr size_t PPD_LANGUAGE_SEG_LEN = 2;
+constexpr size_t PPD_LANGUAGE_SCRIPT_LEN = 4;    // script segment (Hans, Hant, Latn...)
+constexpr size_t PPD_LANGUAGE_SEG_BUF_SIZE = 8;  // segment char buffer (max segment + NUL)
+
 const std::vector<std::string> baseOptionStr = {
     "PageSize",
     "PageRegion",
@@ -126,6 +137,28 @@ const std::vector<std::string> baseOptionStr = {
     "orientation-requested"
 };
 
+// Immutable query context: PPD handle + target language, created once per query.
+struct PpdLocale {
+    ppd_file_t *ppd;
+    std::string language;
+};
+
+static const char *GetLocalizedText(const PpdLocale &ctx, const char *keyword, const char *spec,
+    const char *defaultText, bool &hasTranslation)
+{
+    ppd_attr_t *locattr = _ppdLocalizedAttr(ctx.ppd, keyword, spec, ctx.language.c_str());
+    if (locattr == nullptr || locattr->text[0] == '\0') {
+        return defaultText;
+    }
+    hasTranslation = true;
+    PRINT_HILOGD("Inline hit: keyword=%{public}s", keyword);
+    return locattr->text;
+}
+
+// Legacy capability-path helper, kept byte-identical to upstream semantics:
+// an attribute declared with empty translation text is returned as-is (not a
+// miss). Query-path miss semantics (empty text = no translation) live only in
+// GetLocalizedText.
 const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char* choice, const char* defaultText)
 {
     ppd_attr_t *locattrCN = _ppdLocalizedAttr(ppd, keyword, choice, "zh_CN");
@@ -480,7 +513,6 @@ void ParseColorModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printer
     printerCaps.SetPrinterAttrNameAndValue("defaultColorMode", std::to_string(mode).c_str());
 }
 
-
 void ParseQualityAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     std::vector<PrintQualityCode> supportedQualitiesList;
@@ -587,6 +619,7 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
         options["ppdOptionTextMap"] = PrintJsonUtil::WriteString(ppdOptionTextMap);
     }
 
+    options["ppdAvailableLanguages"] = BuildPpdAvailableLanguages(ppd);
     options["cupsOptions"] = printerCaps.GetPrinterAttrGroupJson();
     ParseCustomPageSizeFromPpd(ppd, options);
     std::string optionStr = PrintJsonUtil::WriteString(options);
@@ -604,6 +637,429 @@ void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     SetOptionAttributeFromPPD(ppd, printerCaps);
 }
 
+// Normalizes the 2-char segment to lowercase IN PLACE; true if valid ll shape.
+static bool NormalizeSegToLower(char *seg)
+{
+    seg[0] = static_cast<char>(tolower(static_cast<unsigned char>(seg[0])));
+    seg[1] = static_cast<char>(tolower(static_cast<unsigned char>(seg[1])));
+    return seg[0] >= 'a' && seg[0] <= 'z' && seg[1] >= 'a' && seg[1] <= 'z';
+}
+
+// Normalizes the 2-char segment to uppercase IN PLACE; true if valid region shape.
+static bool NormalizeSegToUpper(char *seg)
+{
+    seg[0] = static_cast<char>(toupper(static_cast<unsigned char>(seg[0])));
+    seg[1] = static_cast<char>(toupper(static_cast<unsigned char>(seg[1])));
+    return seg[0] >= 'A' && seg[0] <= 'Z' && seg[1] >= 'A' && seg[1] <= 'Z';
+}
+
+// Processes a separator-delimited segment; returns false on invalid grammar.
+// Updates ll/region in place; script segments are silently skipped.
+static bool ProcessSegment(char *seg, size_t segIdx, std::string &ll, std::string &region)
+{
+    seg[segIdx] = '\0';  // terminate before read: stale tail bytes from longer segments must not leak
+    if (segIdx == PPD_LANGUAGE_SEG_LEN && ll.empty()) {
+        if (!NormalizeSegToLower(seg)) {
+            return false;
+        }
+        ll = seg;
+    } else if (segIdx == PPD_LANGUAGE_SCRIPT_LEN && !ll.empty()) {
+        // Skip script segment (Hans, Hant, Latn, Cyrl...)
+    } else if (segIdx == PPD_LANGUAGE_SEG_LEN && !ll.empty() && region.empty()) {
+        if (!NormalizeSegToUpper(seg)) {
+            return false;
+        }
+        region = seg;
+    } else if (segIdx > 0) {
+        return false;
+    }
+    return true;
+}
+
+bool NormalizePpdLanguage(const std::string &input, std::string &language)
+{
+    PRINT_HILOGD("NormalizePpdLanguage in: %{private}s", input.c_str());
+    language.clear();
+    if (input.empty() || input.size() > PPD_LANGUAGE_MAX_INPUT_LEN) {
+        return false;
+    }
+    std::string ll;
+    std::string region;
+    char seg[PPD_LANGUAGE_SEG_BUF_SIZE] = {0};
+    size_t segIdx = 0;
+    for (size_t i = 0; i <= input.size(); i++) {
+        char c = (i < input.size()) ? input[i] : '\0';
+        if (c == '-' || c == '_' || c == '\0') {
+            if (!ProcessSegment(seg, segIdx, ll, region)) {
+                return false;
+            }
+            segIdx = 0;
+            seg[0] = '\0';
+            seg[1] = '\0';
+        } else if (isalpha(static_cast<unsigned char>(c))) {
+            if (segIdx < PPD_LANGUAGE_SEG_BUF_SIZE - 1) {
+                seg[segIdx++] = c;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    if (ll.empty()) {
+        return false;
+    }
+    language = region.empty() ? ll : (ll + "_" + region);
+    PRINT_HILOGD("NormalizePpdLanguage out ok: %{public}s", language.c_str());
+    return true;
+}
+
+static bool LanguageInCupsList(ppd_file_t *ppd, const std::string &normalizedLanguage)
+{
+    ppd_attr_t *attr = ppdFindAttr(ppd, CUPS_LANGUAGES_KEYWORD, nullptr);
+    if (attr == nullptr || attr->value == nullptr || strlen(attr->value) > SUPPORTED_LANGUAGES_MAX_VALUE_LEN) {
+        return false;
+    }
+    std::istringstream stream(attr->value);
+    std::string token;
+    unsigned int consumed = 0;
+    while (stream >> token) {
+        if (++consumed > SUPPORTED_LANGUAGES_MAX_COUNT) {
+            PRINT_HILOGW("cupsLanguages exceeds %{public}u tokens, remaining ignored in list check",
+                SUPPORTED_LANGUAGES_MAX_COUNT);
+            break;
+        }
+        std::string norm;
+        if (NormalizePpdLanguage(token, norm) && norm == normalizedLanguage) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Parses cupsLanguages attribute value into a deduplicated, normalized array.
+// Enforces SUPPORTED_LANGUAGES_MAX_VALUE_LEN and MAX_COUNT bounds.
+static void ParseLanguagesFromAttr(const char *value, Json::Value &langArr)
+{
+    if (strlen(value) > SUPPORTED_LANGUAGES_MAX_VALUE_LEN) {
+        return;
+    }
+    std::istringstream stream(value);
+    std::string token;
+    std::vector<std::string> added;
+    while (stream >> token && added.size() < SUPPORTED_LANGUAGES_MAX_COUNT) {
+        std::string norm;
+        if (!NormalizePpdLanguage(token, norm)) {
+            PRINT_HILOGW("cupsLanguages token invalid, skipped: %{public}s", token.c_str());
+            continue;
+        }
+        if (std::find(added.begin(), added.end(), norm) == added.end()) {
+            added.push_back(norm);
+            langArr.append(norm);
+        }
+    }
+    if (added.size() >= SUPPORTED_LANGUAGES_MAX_COUNT && (stream >> token)) {
+        PRINT_HILOGW("cupsLanguages exceeds %{public}u entries, list truncated", SUPPORTED_LANGUAGES_MAX_COUNT);
+    }
+}
+
+Json::Value BuildPpdAvailableLanguages(ppd_file_t *ppd)
+{
+    Json::Value langArr(Json::arrayValue);
+    ppd_attr_t *attr = ppdFindAttr(ppd, CUPS_LANGUAGES_KEYWORD, nullptr);
+    if (attr != nullptr && attr->value != nullptr) {
+        ParseLanguagesFromAttr(attr->value, langArr);
+    }
+    return langArr;
+}
+
+// Pre-populated capability records vendor ability from these PPD attributes
+// (ParseVendorAbilityFromPPD); query reads the same file with the same raw test
+// (D4-a: divergence only possible for malformed PPD cleared by ValidateAndClear).
+static bool HasVendorAbilityAttr(ppd_file_t *ppd)
+{
+    ppd_attr_t *pref = ppdFindAttr(ppd, "vendorPrinterPrefAbility", nullptr);
+    ppd_attr_t *job = ppdFindAttr(ppd, "vendorJobAttrAbility", nullptr);
+    return (pref != nullptr && pref->value != nullptr && pref->value[0] != '\0') ||
+        (job != nullptr && job->value != nullptr && job->value[0] != '\0');
+}
+
+// One advanceOptions entry mirroring GetAdvanceOptJsSingleJSFromOption (pre-populated):
+// custom param handling identical; language layer always written, per-token miss falls
+// back to the default text (D1). anyHit reports real inline translations for resolve.
+static void GetLocalizedAdvanceOptJsSingle(const PpdLocale &ctx, ppd_option_t *opt,
+    Json::Value &entry, bool &hasCustomParam, bool &anyHit)
+{
+    Json::Value defaultChoices;
+    Json::Value langChoices;
+    ppd_choice_t *choices = opt->choices;
+    for (int k = 0; k < opt->num_choices; k++) {
+        if (choices + k == nullptr) {
+            PRINT_HILOGE("PPD choice found error: %{public}s", opt->keyword);
+            break;
+        }
+        ppd_coption_t *coption = nullptr;
+        if (!strcmp(choices[k].choice, "Custom") &&
+            (coption = ppdFindCustomOption(ctx.ppd, opt->keyword))) {
+            ppd_cparam_t *cparam = FindCustomParam(coption);
+            if (cparam == nullptr) {
+                PRINT_HILOGW("Unsupported custom param type.");
+                continue;
+            }
+            entry["customParamType"] = cparam->type;
+            entry["customParamLimit"] = FindCustomParamLimit(cparam);
+            hasCustomParam = true;
+            if (cparam->type != PPD_CUSTOM_STRING) {
+                continue;
+            }
+        }
+        defaultChoices[choices[k].choice] = choices[k].text;
+        bool found = false;
+        langChoices[choices[k].choice] = GetLocalizedText(ctx, opt->keyword,
+            choices[k].choice, choices[k].text, found);
+        if (found) {
+            anyHit = true;
+        }
+    }
+    entry["choice"]["default"] = defaultChoices;
+    entry["choice"][ctx.language] = langChoices;
+    entry["optionText"]["default"] = opt->text;
+    bool foundText = false;
+    entry["optionText"][ctx.language] = GetLocalizedText(ctx, "Translation",
+        opt->keyword, opt->text, foundText);
+    if (foundText) {
+        anyHit = true;
+    }
+}
+
+// advanceOptions for the queried language: content set, exclusion rules, entry shape
+// and max-count guard mirror GetAdvanceOptionsFromPPD (pre-populated capability)
+// exactly - baseOptionStr excluded, PickMany skipped, vendor+custom entry skipped;
+// the always-written language layer (miss falls back) is the only supplement.
+static void BuildLocalizedAdvanceOptions(const PpdLocale &ctx,
+    Json::Value &advanceOptJs, bool &hasTranslation)
+{
+    bool hasVendorAbility = HasVendorAbilityAttr(ctx.ppd);
+    for (ppd_option_t *opt = (ppd_option_t*)cupsArrayFirst(ctx.ppd->options);
+        opt != nullptr; opt = (ppd_option_t*)cupsArrayNext(ctx.ppd->options)) {
+        if (advanceOptJs.size() > ADVANCE_OPTION_MAXLENGTH) {
+            PRINT_HILOGE("AdvanceOption size is over max length!");
+            break;
+        }
+        if (std::find(baseOptionStr.begin(), baseOptionStr.end(),
+            string(opt->keyword)) != baseOptionStr.end()) {
+            continue;
+        }
+        if (opt->ui == PPD_UI_PICKMANY) {
+            PRINT_HILOGW("PPD_UI_PICKMANY Found: %{public}s", opt->keyword);
+            continue;
+        }
+        Json::Value entry;
+        bool hasCustomParam = false;
+        bool anyHit = false;
+        entry["keyword"] = opt->keyword;
+        GetLocalizedAdvanceOptJsSingle(ctx, opt, entry, hasCustomParam, anyHit);
+        if (hasVendorAbility && hasCustomParam) {
+            PRINT_HILOGW("has vendor ability, skip adding custom params");
+            continue;
+        }
+        if (anyHit) {
+            hasTranslation = true;
+        }
+        entry["uiType"] = opt->ui;
+        advanceOptJs.append(entry);
+    }
+}
+
+static void BuildLocalizedMediaSizeMap(const PpdLocale &ctx,
+    Json::Value &mediaSizeMap, bool &hasTranslation)
+{
+    _ppd_cache_t *ppdCache = ctx.ppd->cache;
+    if (ppdCache == nullptr || ppdCache->sizes == nullptr) {
+        return;
+    }
+    ppd_option_t *sizeOption = ppdFindOption(ctx.ppd, "PageSize");
+    Json::Value built;
+    bool anyHit = false;
+    for (int i = 0; i < ppdCache->num_sizes; i++) {
+        pwg_size_t pwgSize = ppdCache->sizes[i];
+        ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
+        if (sizeChoice == nullptr) {
+            PRINT_HILOGE("sizeChoice null: drop whole mediaSizeMap");
+            return;
+        }
+        Json::Value entry;
+        entry["default"] = sizeChoice->text;
+        bool found = false;
+        entry[ctx.language] = GetLocalizedText(ctx, "PageSize", sizeChoice->choice,
+            sizeChoice->text, found);
+        if (found) {
+            anyHit = true;
+        }
+        built[pwgSize.map.pwg] = entry;
+    }
+    mediaSizeMap = built;
+    if (anyHit) {
+        hasTranslation = true;
+    }
+}
+
+// mediaTypeMap for the queried language. Mirrors pre-populated ParseMediaTypeAttributes
+// incl. its fail-fast rule (D3): a malformed cache entry drops the WHOLE map (key then
+// absent from the response, same shape as capability). Language layer always written
+// with per-token fallback (D1).
+static void BuildLocalizedMediaTypeMap(const PpdLocale &ctx,
+    Json::Value &mediaTypeMap, bool &hasTranslation)
+{
+    _ppd_cache_t *ppdCache = ctx.ppd->cache;
+    if (ppdCache == nullptr || ppdCache->types == nullptr) {
+        return;
+    }
+    ppd_option_t *typeOption = ppdFindOption(ctx.ppd, "MediaType");
+    Json::Value built;
+    bool anyHit = false;
+    for (int i = 0; i < ppdCache->num_types; i++) {
+        if (ppdCache->types[i].ppd == nullptr) {
+            PRINT_HILOGE("types[%{public}d].ppd null: drop whole mediaTypeMap", i);
+            return;
+        }
+        ppd_choice_t *typeChoice = ppdFindChoice(typeOption, ppdCache->types[i].ppd);
+        if (typeChoice == nullptr) {
+            PRINT_HILOGE("typeChoice null: drop whole mediaTypeMap");
+            return;
+        }
+        Json::Value entry;
+        entry["default"] = typeChoice->text;
+        bool found = false;
+        entry[ctx.language] = GetLocalizedText(ctx, "MediaType", typeChoice->choice,
+            typeChoice->text, found);
+        if (found) {
+            anyHit = true;
+        }
+        built[ppdCache->types[i].pwg] = entry;
+    }
+    mediaTypeMap = built;
+    if (anyHit) {
+        hasTranslation = true;
+    }
+}
+
+// Builds ppdOptionTextMap by reusing PpdAdapter's dimension/key pipeline
+// (CUPS_PPD_FIELD_MMAP drives selection - zero drift) with the language layer
+// keyed by the queried language. The adapter queries real PPD choice names
+// internally; language key always present with default-text fallback for
+// tokens without inline translation (always-write ruling).
+static void BuildLocalizedOptionTextMap(const PpdLocale &ctx,
+    Json::Value &textMap, bool &hasTranslation)
+{
+    Json::Value adapterMap;
+    PpdAdapter::BuildOptionTextMap(ctx.ppd, ctx.language, adapterMap);
+    for (const auto &keyword : adapterMap.getMemberNames()) {
+        const Json::Value &entry = adapterMap[keyword];
+        if (!entry.isMember("default")) {
+            continue;
+        }
+        textMap[keyword]["default"] = entry["default"];
+        Json::Value langChoices = entry.isMember(ctx.language) ?
+            entry[ctx.language] : Json::Value(Json::objectValue);
+        if (!langChoices.empty()) {
+            hasTranslation = true;
+        }
+        for (const auto &token : entry["default"].getMemberNames()) {
+            if (!langChoices.isMember(token)) {
+                langChoices[token] = entry["default"][token];
+            }
+        }
+        textMap[keyword][ctx.language] = langChoices;
+    }
+    PRINT_HILOGD("OptionTextMap built: %{public}u dimensions", textMap.size());
+}
+
+// Assembled JSON parts from all builders, consumed by BuildLocalizedResultJson.
+struct LocalizedResultParts {
+    Json::Value advanceOptJs;
+    Json::Value mediaSizeMap;
+    Json::Value mediaTypeMap;
+    Json::Value optionTextMap;
+};
+
+static int32_t BuildLocalizedResultJson(const std::string &language,
+    const LocalizedResultParts &parts, std::string &resultJson)
+{
+    Json::Value rootJs;
+    rootJs["language"] = language;
+    rootJs["advanceOptions"] = parts.advanceOptJs;
+    if (!parts.mediaSizeMap.empty()) {
+        rootJs["mediaSizeMap"] = parts.mediaSizeMap;  // dropped/empty -> key absent like capability
+    }
+    if (!parts.mediaTypeMap.empty()) {
+        rootJs["mediaTypeMap"] = parts.mediaTypeMap;  // D3: empty (dropped) -> key absent like capability
+    }
+    rootJs["ppdOptionTextMap"] = parts.optionTextMap;
+    resultJson = PrintJsonUtil::WriteStringUTF8(rootJs);
+    return E_PRINT_NONE;
+}
+
+// Synchronous on-demand query: opens PPD with _PPD_LOCALIZATION_ALL, validates
+// language against cupsLanguages list, builds JSON from inline attributes only.
+bool QueryPpdAvailableLanguagesFromFile(const std::string &resolvedPpdFilePath, Json::Value &langs)
+{
+    if (resolvedPpdFilePath.empty()) {
+        PRINT_HILOGW("ppd file path is empty");
+        return false;
+    }
+    ppd_file_t *ppd = ppdOpenFile(resolvedPpdFilePath.c_str());
+    if (ppd == nullptr) {
+        PRINT_HILOGE("open ppd file failed: %{private}s", resolvedPpdFilePath.c_str());
+        return false;
+    }
+    langs = BuildPpdAvailableLanguages(ppd);
+    ppdClose(ppd);
+    return true;
+}
+
+int32_t GetLocalizedStringsFromPpd(const std::string &resolvedPpdFilePath,
+    const std::string &language, std::string &resultJson)
+{
+    resultJson.clear();
+    // Entry contract: normalize first (idempotent for SA-already-normalized input),
+    // so every caller of this library function shares one input tolerance
+    std::string normalizedLanguage;
+    if (!NormalizePpdLanguage(language, normalizedLanguage)) {
+        PRINT_HILOGE("GetLocalizedStringsFromPpd invalid language format");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    ppd_file_t *ppd = _ppdOpenFile(resolvedPpdFilePath.c_str(), _PPD_LOCALIZATION_ALL);
+    if (ppd == nullptr) {
+        PRINT_HILOGE("Open PPD file failed");
+        return E_PRINT_FILE_IO;
+    }
+    if (!LanguageInCupsList(ppd, normalizedLanguage)) {
+        PRINT_HILOGE("Language not in cupsLanguages list, language: %{public}s", normalizedLanguage.c_str());
+        ppdClose(ppd);
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    if (ppd->cache == nullptr) {
+        PRINT_HILOGE("PPDCacheCreateWithPPD failed");
+        ppdClose(ppd);
+        return E_PRINT_FILE_IO;
+    }
+    PpdLocale ctx = {ppd, normalizedLanguage};
+    LocalizedResultParts parts;
+    bool hasTranslation = false;
+    BuildLocalizedAdvanceOptions(ctx, parts.advanceOptJs, hasTranslation);
+    BuildLocalizedMediaSizeMap(ctx, parts.mediaSizeMap, hasTranslation);
+    BuildLocalizedMediaTypeMap(ctx, parts.mediaTypeMap, hasTranslation);
+    BuildLocalizedOptionTextMap(ctx, parts.optionTextMap, hasTranslation);
+    ppdClose(ppd);
+    if (!hasTranslation) {
+        PRINT_HILOGI("No translation found for language: %{public}s", normalizedLanguage.c_str());
+        return E_PRINT_NONE;
+    }
+    return BuildLocalizedResultJson(normalizedLanguage, parts, resultJson);
+}
+
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName)
 {
     std::string ppdFilePath = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir() + ppdName;
@@ -619,13 +1075,13 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
     }
     ppd_file_t *ppd = ppdOpenFile(resolvedPpdFilePath.c_str());
     if (ppd == nullptr) {
-        PRINT_HILOGE("Open PPD File fail");
+        PRINT_HILOGE("Open PPD file failed");
         return E_PRINT_FILE_IO;
     }
 
     ppd->cache = _ppdCacheCreateWithPPD(ppd);
     if (ppd->cache == nullptr) {
-        PRINT_HILOGE("PPDCacheCreateWithPPD fail");
+        PRINT_HILOGE("PPDCacheCreateWithPPD failed");
         ppdClose(ppd);
         return E_PRINT_FILE_IO;
     }
@@ -699,28 +1155,30 @@ bool FindPageSizeChoiceByPwg(ppd_file_t *ppd, const std::string &pageSizeId, std
         return false;
     }
 
-    PrintPageSize pageSize;
-    if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
-        PRINT_HILOGE("unsupported page size id: %{public}s", pageSizeId.c_str());
-        return false;
-    }
-
     ppd_option_t *sizeOption = ppdFindOption(ppd, PPD_OPT_NAME_PAGESIZE.c_str());
     if (sizeOption == nullptr) {
         PRINT_HILOGE("FindPageSizeChoiceByPwg: ppdFindOption PageSize fail");
         return false;
     }
 
+    // Prefer the application/pageSize.name form (map.pwg). Also accept persisted legacy ids:
+    // standard enum ids, PPD keywords and PPD choice text, without rewriting the stored data.
+    std::string pwgName = pageSizeId;
+    PrintPageSize pageSize;
+    if (PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+        pwgName = pageSize.GetName();
+    }
     _ppd_cache_t *ppdCache = ppd->cache;
     pwg_size_t *cacheSizes = ppdCache->sizes;
     for (int i = 0; i < ppdCache->num_sizes; i++) {
         const pwg_size_t &pwgSize = cacheSizes[i];
-        if (pageSize.GetName() == pwgSize.map.pwg) {
-            ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
-            if (sizeChoice != nullptr) {
-                ppdChoiceName = sizeChoice->choice;
-                return true;
-            }
+        ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
+        if (sizeChoice == nullptr) {
+            continue;
+        }
+        if (pwgName == pwgSize.map.pwg || pageSizeId == pwgSize.map.ppd || pageSizeId == sizeChoice->text) {
+            ppdChoiceName = sizeChoice->choice;
+            return true;
         }
     }
     PRINT_HILOGD("no cache match for pageSizeId=%{public}s", pageSizeId.c_str());

@@ -23,8 +23,10 @@
 #define private public
 #include "print_system_data.h"
 #undef private
+#include "print_json_util.h"
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_cups_client.h"
 
 using namespace testing::ext;
 
@@ -53,6 +55,119 @@ void PrintSystemDataTest::SetUp(void)
 
 void PrintSystemDataTest::TearDown(void)
 {}
+
+HWTEST_F(PrintSystemDataTest, MigratePpdAvailableLanguages_SkipBranches, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    // 无 capability / 驱动不存在 / PPD 内容非法：全部跳过不崩溃
+    const char *ids[] = {"pid_nocap", "pid_badppd", "pid_badcontent", "pid_bj"};
+    for (auto id : ids) {
+        PrinterInfo info;
+        info.SetPrinterId(id);
+        PpdInfo drv;
+        drv.SetPpdName(id == std::string("pid_nocap") ? "" :
+            (id == std::string("pid_bj") ? "any.ppd" : "bad.ppd"));
+        info.SetSelectedDriver(drv);
+        if (id != std::string("pid_nocap")) {
+            PrinterCapability caps;
+            caps.SetOption(id == std::string("pid_bj") ? "{invalid" : "{\"make\":\"B\"}");
+            info.SetCapability(caps);
+        }
+        systemData->InsertAddedPrinter(id, info);
+    }
+    // 创建一个非法内容的 PPD 文件
+    std::string modelDir = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir();
+    std::error_code ec;
+    std::filesystem::create_directories(modelDir, ec);
+    { std::ofstream f2(modelDir + "bad.ppd"); f2 << "not a ppd"; }
+    systemData->MigratePpdAvailableLanguages();
+    // 全部跳过分支：capability 未被改写、字段未被补齐
+    for (auto id : ids) {
+        PrinterInfo out;
+        ASSERT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId(id, out));
+        if (out.HasCapability()) {
+            PrinterCapability capsOut;
+            out.GetCapability(capsOut);
+            EXPECT_EQ(capsOut.GetOption().find("ppdAvailableLanguages"), std::string::npos);
+            if (id == std::string("pid_bj")) {
+                EXPECT_EQ(capsOut.GetOption(), "{invalid");
+            }
+        } else {
+            EXPECT_EQ(id, std::string("pid_nocap"));
+        }
+    }
+    std::filesystem::remove(modelDir + "bad.ppd", ec);
+}
+
+HWTEST_F(PrintSystemDataTest, MigratePpdAvailableLanguages_InvalidJsonOption, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    PrinterInfo infoBadJson;
+    infoBadJson.SetPrinterId("pid_badjson");
+    PpdInfo drvJson;
+    drvJson.SetPpdName("any.ppd");
+    infoBadJson.SetSelectedDriver(drvJson);
+    PrinterCapability capsBadJson;
+    capsBadJson.SetOption("{invalid json");
+    infoBadJson.SetCapability(capsBadJson);
+    systemData->InsertAddedPrinter("pid_badjson", infoBadJson);
+    systemData->MigratePpdAvailableLanguages();
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId("pid_badjson", infoBadJson));
+    PrinterCapability upJson;
+    infoBadJson.GetCapability(upJson);
+    EXPECT_EQ(upJson.GetOption(), "{invalid json");   // 未被改写
+}
+
+HWTEST_F(PrintSystemDataTest, MigratePpdAvailableLanguages_ModelDirSupplement, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string modelDir = DelayedSingleton<PrintCupsClient>::GetInstance()->GetCurCupsModelDir();
+    std::error_code ec;
+    std::filesystem::create_directories(modelDir, ec);
+    std::string ppdPath = modelDir + "migrate_lang.ppd";
+    {
+        std::ofstream file(ppdPath, std::ios::trunc);
+        file << "*PPD-Adobe: \"4.3\"\n*cupsLanguages: \"en zh_CN\"\n";
+    }
+    auto add = [&systemData](const std::string &id, const std::string &ppdName) {
+        PrinterInfo info;
+        info.SetPrinterId(id);
+        PpdInfo drv;
+        drv.SetPpdName(ppdName);
+        info.SetSelectedDriver(drv);
+        PrinterCapability caps;
+        caps.SetOption("{\"make\":\"T\"}");
+        info.SetCapability(caps);
+        systemData->InsertAddedPrinter(id, info);
+    };
+    // 场景1：厂商驱动（model 目录 PPD）+ capability 无字段 → 补齐
+    add("pid_mig", "migrate_lang.ppd");
+    // 场景2：auto 驱动（无驱）不在迁移范围 → 字段保持缺失
+    add("pid_auto", PPD_NAME_AUTO);
+    systemData->MigratePpdAvailableLanguages();
+    PrinterInfo updated;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId("pid_mig", updated));
+    PrinterCapability upCaps;
+    updated.GetCapability(upCaps);
+    Json::Value upOpt;
+    ASSERT_TRUE(PrintJsonUtil::Parse(upCaps.GetOption(), upOpt));
+    const Json::Value &langs = upOpt["ppdAvailableLanguages"];
+    EXPECT_EQ(langs.size(), 2u);
+    EXPECT_EQ(langs[0].asString(), "en");
+    EXPECT_EQ(langs[1].asString(), "zh_CN");
+    std::string savedOpt = upCaps.GetOption();
+    PrinterInfo updatedAuto;
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId("pid_auto", updatedAuto));
+    PrinterCapability upCapsAuto;
+    updatedAuto.GetCapability(upCapsAuto);
+    EXPECT_EQ(upCapsAuto.GetOption(), "{\"make\":\"T\"}");
+    // 幂等：再次迁移字段不变
+    systemData->MigratePpdAvailableLanguages();
+    EXPECT_TRUE(systemData->QueryAddedPrinterInfoByPrinterId("pid_mig", updated));
+    updated.GetCapability(upCaps);
+    EXPECT_EQ(upCaps.GetOption(), savedOpt);
+    std::filesystem::remove(ppdPath, ec);
+}
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002_NeedRename, TestSize.Level1)
 {
@@ -2707,13 +2822,20 @@ HWTEST_F(PrintSystemDataTest, MigratePrinterPrintScaling_AlreadySet, TestSize.Le
     EXPECT_EQ(static_cast<uint32_t>(PRINT_SCALING_FILL), outPrefs.GetDefaultPrintScaling());
 }
 
+#ifdef ENTERPRISE_ENABLE
 HWTEST_F(PrintSystemDataTest, PrintSystemData_SetEnterpriseState_CachesState, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     ASSERT_NE(systemData, nullptr);
     systemData->SetEnterpriseState(true, true);
-    EXPECT_NO_FATAL_FAILURE(systemData->Init());
+    EXPECT_TRUE(systemData->isEnterpriseEnable_.load());
+    EXPECT_TRUE(systemData->isEnterprise_.load());
+
+    systemData->SetEnterpriseState(false, false);
+    EXPECT_FALSE(systemData->isEnterpriseEnable_.load());
+    EXPECT_FALSE(systemData->isEnterprise_.load());
 }
+#endif // ENTERPRISE_ENABLE
 
 HWTEST_F(PrintSystemDataTest, PrintSystemData_EnterpriseState_CachedAndUsed, TestSize.Level1)
 {

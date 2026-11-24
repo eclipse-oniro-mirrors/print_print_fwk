@@ -195,6 +195,8 @@ public:
     IpAddressType GetIpAddressTypeFromUri(const std::string &printerUri);
     bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
     std::string GetCurCupsModelDir();
+    bool ResumePrinter(const std::string &printerName);
+    const std::string& GetCurCupsRootDir();
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams);
@@ -250,13 +252,11 @@ private:
     void ParsePPDInfo(ipp_t *response, std::vector<std::string> &ppds);
     ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
         const char * const *pattrs);
-    bool ResumePrinter(const std::string &printerName);
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillSharedDirOption(JobParameters *jobParams, int num_options, cups_option_t **options);
     static std::string GetInputSlotFromAdvancedOps(const Json::Value &advancedOpsJson);
-    const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
     int32_t HandleSystemAuthInfo(const std::string &jobId);

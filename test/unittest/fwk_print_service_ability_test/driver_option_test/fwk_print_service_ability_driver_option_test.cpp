@@ -71,6 +71,25 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_CannotFindNo
     EXPECT_EQ(pageSize.GetName(), "iso_a4_210x297mm");
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_PrefersPwgName, TestSize.Level1)
+{
+    auto service = PrintServiceAbilityTest::CreateService();
+    PrintPageSize pageSize;
+    pageSize.SetId("legacy-id");
+    pageSize.SetName("na_number-10_4.125x9.5in");
+
+    PrinterInfo printerInfo;
+    PrinterCapability printerCapability;
+    std::vector<PrintPageSize> supportedPageSizeList;
+    supportedPageSizeList.emplace_back("#10 Envelope", "na_number-10_4.125x9.5in", 4125, 9500);
+    printerCapability.SetSupportedPageSize(supportedPageSizeList);
+    printerInfo.SetCapability(printerCapability);
+
+    service->UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
+    EXPECT_EQ(pageSize.GetId(), "legacy-id");
+    EXPECT_EQ(pageSize.GetName(), "na_number-10_4.125x9.5in");
+}
+
 HWTEST_F(PrintServiceAbilityTest, RefreshPrinterPageSize, TestSize.Level1)
 {
     auto service = PrintServiceAbilityTest::CreateService();

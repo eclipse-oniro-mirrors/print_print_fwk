@@ -26,7 +26,7 @@ constexpr int PRINT_CALL_OK = 0;
 
 #define PRINT_MAX_PRINT_COUNT 1000
 #define PRINT_MAX_FILE_LIST_SIZE 100
-#define PRINT_MAX_PPD_COUNT 4096
+#define PRINT_MAX_PPD_COUNT 8192
 #define PRINT_PARCEL_MAX_CAPACITY (1024 * 1024)
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"
@@ -400,6 +400,7 @@ constexpr int64_t IPP_RAW_DATA_EXPIRE_SECONDS = 604800; // 7 * 24 * 3600
 constexpr int DECIMAL_BASE = 10;
 inline const std::string PRINTER_LIST_FILE = "printer_list.json";
 inline const std::string PRINTER_LIST_VERSION_FILE = "version.json";
+inline const std::string PPD_NAME_AUTO = "auto";
 inline const std::string PRINTER_LIST_VERSION_V1 = "v1";
 inline const std::string PRINTER_LIST_VERSION_V3 = "v3";
 inline const std::string PRINT_USER_DATA_FILE = "print_user_data.json";

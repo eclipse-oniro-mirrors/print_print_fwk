@@ -15,6 +15,8 @@
 
 #include "print_feature_plugin_manager.h"
 
+#include <chrono>
+
 #include "print_failure_ai_notifier.h"
 #include "print_log.h"
 
@@ -39,6 +41,7 @@ constexpr const char *REMOTE_DESTROY_SYMBOL = "DestroyRemotePrintFeature";
 constexpr const char *AI_NOTIFIER_CREATE_SYMBOL = "CreatePrintFailureAiNotifier";
 constexpr const char *AI_NOTIFIER_DESTROY_SYMBOL = "DestroyPrintFailureAiNotifier";
 constexpr const char *MANAGER_LOG_TAG = "PrintFeaturePluginManager";
+constexpr int32_t PLUGIN_UNLOAD_TIMEOUT_MS = 5000;
 
 using CreateFeatureFn = IPrintFeature *(*)();
 using DestroyFeatureFn = void (*)(IPrintFeature *);
@@ -109,51 +112,135 @@ std::unique_ptr<IPrintFeature, PrintFeatureDeleter> PrintFeaturePluginManager::C
     return loadedFeature;
 }
 
-IPrintFeature *PrintFeaturePluginManager::GetFeature(PrintFeatureType type)
+PrintFeaturePluginManager::FeatureUseGuard::FeatureUseGuard(
+    PrintFeaturePluginManager *mgr, PrintFeatureType type, IPrintFeature *feature)
+    : mgr_(mgr), type_(type), feature_(feature)
 {
-    FeatureEntry *entryPtr = nullptr;
-    std::string featureName;
+}
+
+PrintFeaturePluginManager::FeatureUseGuard::~FeatureUseGuard()
+{
+    Release();
+}
+
+PrintFeaturePluginManager::FeatureUseGuard::FeatureUseGuard(FeatureUseGuard &&other) noexcept
+    : mgr_(other.mgr_), type_(other.type_), feature_(other.feature_)
+{
+    other.mgr_ = nullptr;
+    other.feature_ = nullptr;
+}
+
+PrintFeaturePluginManager::FeatureUseGuard &PrintFeaturePluginManager::FeatureUseGuard::operator=(
+    FeatureUseGuard &&other) noexcept
+{
+    if (this != &other) {
+        Release();
+        mgr_ = other.mgr_;
+        type_ = other.type_;
+        feature_ = other.feature_;
+        other.mgr_ = nullptr;
+        other.feature_ = nullptr;
+    }
+    return *this;
+}
+
+void PrintFeaturePluginManager::FeatureUseGuard::Release()
+{
+    if (mgr_ == nullptr) {
+        return;
+    }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto it = features_.find(type);
-        if (it == features_.end()) {
-            PRINT_HILOGE("[%{public}s] unsupported feature type", MANAGER_LOG_TAG);
-            return nullptr;
-        }
-        entryPtr = &it->second;
-        if (entryPtr->impl != nullptr) {
-            return entryPtr->impl.get();
-        }
-        featureName = std::to_string(static_cast<int32_t>(type));
-        if (!EnsureLoaderCreated(*entryPtr, featureName)) {
-            return nullptr;
+        std::lock_guard<std::mutex> lock(mgr_->mutex_);
+        auto it = mgr_->activeCounts_.find(type_);
+        if (it != mgr_->activeCounts_.end() && it->second > 0) {
+            --(it->second);
         }
     }
+    mgr_->unloadCv_.notify_all();
+    mgr_ = nullptr;
+    feature_ = nullptr;
+}
 
-    auto loadedFeature = CreateLoadedFeature(*entryPtr->loader, featureName);
-    if (loadedFeature == nullptr) {
-        return nullptr;
-    }
-
+PrintFeaturePluginManager::FeatureUseGuard PrintFeaturePluginManager::AcquireFeature(PrintFeatureType type)
+{
     std::lock_guard<std::mutex> lock(mutex_);
-    if (entryPtr->impl != nullptr) {
-        return entryPtr->impl.get();
+
+    auto it = features_.find(type);
+    if (it == features_.end()) {
+        PRINT_HILOGE("[%{public}s] unsupported feature type", MANAGER_LOG_TAG);
+        return FeatureUseGuard();
     }
-    entryPtr->impl = std::move(loadedFeature);
-    return entryPtr->impl.get();
+
+    FeatureEntry &entry = it->second;
+    if (unloading_) {
+        PRINT_HILOGW("[%{public}s] feature is unloading", MANAGER_LOG_TAG);
+        return FeatureUseGuard();
+    }
+
+    if (entry.impl != nullptr) {
+        ++activeCounts_[type];
+        return FeatureUseGuard(this, type, entry.impl.get());
+    }
+
+    std::string featureName = std::to_string(static_cast<int32_t>(type));
+    if (!EnsureLoaderCreated(entry, featureName)) {
+        return FeatureUseGuard();
+    }
+
+    auto loadedFeature = CreateLoadedFeature(*entry.loader, featureName);
+    if (loadedFeature == nullptr) {
+        return FeatureUseGuard();
+    }
+
+    entry.impl = std::move(loadedFeature);
+    ++activeCounts_[type];
+    return FeatureUseGuard(this, type, entry.impl.get());
+}
+
+bool PrintFeaturePluginManager::IsFeatureLoaded(PrintFeatureType type)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = features_.find(type);
+    if (it == features_.end()) {
+        return false;
+    }
+    return it->second.impl != nullptr;
 }
 
 void PrintFeaturePluginManager::UnloadAll()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        unloading_ = true;
+    }
 
-    for (auto &pair : features_) {
-        FeatureEntry &entry = pair.second;
-        entry.impl.reset();
-        if (entry.loader != nullptr) {
-            entry.loader->Unload();
-            entry.loader.reset();
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        bool idle = unloadCv_.wait_for(lock, std::chrono::milliseconds(PLUGIN_UNLOAD_TIMEOUT_MS),
+            [this] {
+                for (auto &pair : activeCounts_) {
+                    if (pair.second > 0) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+        if (!idle) {
+            PRINT_HILOGW("[%{public}s] timeout waiting for feature usage idle", MANAGER_LOG_TAG);
         }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto &pair : features_) {
+            FeatureEntry &entry = pair.second;
+            entry.impl.reset();
+            if (entry.loader != nullptr) {
+                entry.loader->Unload();
+                entry.loader.reset();
+            }
+        }
+        unloading_ = false;
     }
     PrintFailureAiNotifier::GetInstance().Reset();
 }

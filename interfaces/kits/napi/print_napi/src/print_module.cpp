@@ -78,6 +78,7 @@ static constexpr const char *FUNCTION_CHECK_PREFERENCES_CONFLICTS = "checkPrefer
 static constexpr const char *FUNCTION_CHECK_PRINTJOB_CONFLICTS = "checkPrintJobConflicts";
 static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrinterDefaultPreferences";
 static constexpr const char *FUNCTION_GET_PRINTER_PREFERENCE = "getPrinterPreferences";
+static constexpr const char *FUNCTION_GET_PRINTER_LOCALIZED_STRINGS = "getPrinterLocalizedStrings";
 static constexpr const char *FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID = "queryRecommendDriversById";
 static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD = "connectPrinterByIdAndPpd";
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
@@ -88,6 +89,7 @@ static constexpr const char *FUNCTION_REGISTER_WATERMARK_CALLBACK = "registerWat
 static constexpr const char *FUNCTION_UNREGISTER_WATERMARK_CALLBACK = "unregisterWatermarkCallback";
 static constexpr const char *FUNCTION_NOTIFY_WATERMARK_COMPLETE = "notifyWatermarkComplete";
 static constexpr const char *FUNCTION_ADD_PRINTER_NEW = "addPrinter";
+static constexpr const char *FUNCTION_CONFIRM_CERT_TRUST = "confirmCertTrust";
 static constexpr const char *FUNCTION_ON_PRINTER_INFO_QUERY = "onPrinterInfoQuery";
 static constexpr const char *FUNCTION_OFF_PRINTER_INFO_QUERY = "offPrinterInfoQuery";
 
@@ -528,6 +530,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_CHECK_PRINTJOB_CONFLICTS, NapiInnerPrint::CheckPrintJobConflicts),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES, NapiInnerPrint::GetPrinterDefaultPreferences),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_PRINTER_PREFERENCE, NapiInnerPrint::GetPrinterPreference),
+        DECLARE_NAPI_FUNCTION(FUNCTION_GET_PRINTER_LOCALIZED_STRINGS, NapiInnerPrint::GetPrinterLocalizedStrings),
         DECLARE_NAPI_FUNCTION(FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID, NapiInnerPrint::QueryRecommendDriversById),
         DECLARE_NAPI_FUNCTION(FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD, NapiInnerPrint::ConnectPrinterByIdAndPpd),
         DECLARE_NAPI_FUNCTION(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
@@ -538,6 +541,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION(FUNCTION_UNREGISTER_WATERMARK_CALLBACK, NapiInnerPrint::UnregisterWatermarkCallback),
         DECLARE_NAPI_FUNCTION(FUNCTION_NOTIFY_WATERMARK_COMPLETE, NapiInnerPrint::NotifyWatermarkComplete),
         DECLARE_NAPI_FUNCTION(FUNCTION_ADD_PRINTER_NEW, NapiInnerPrint::AddPrinter),
+        DECLARE_NAPI_FUNCTION(FUNCTION_CONFIRM_CERT_TRUST, NapiInnerPrint::ConfirmCertTrust),
         DECLARE_NAPI_FUNCTION(FUNCTION_ON_PRINTER_INFO_QUERY, NapiInnerPrint::OnPrinterInfoQuery),
         DECLARE_NAPI_FUNCTION(FUNCTION_OFF_PRINTER_INFO_QUERY, NapiInnerPrint::OffPrinterInfoQuery),
     };

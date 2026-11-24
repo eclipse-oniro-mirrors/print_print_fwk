@@ -16,10 +16,11 @@
 #ifndef PRINT_FEATURE_PLUGIN_MANAGER_H
 #define PRINT_FEATURE_PLUGIN_MANAGER_H
 
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <string>
+#include <cstring>
 
 #include "i_print_feature.h"
 #include "print_feature_plugin_loader.h"
@@ -31,7 +32,29 @@ class PrintFeaturePluginManager {
 public:
     static PrintFeaturePluginManager &GetInstance();
 
-    IPrintFeature *GetFeature(PrintFeatureType type);
+    class FeatureUseGuard {
+    public:
+        FeatureUseGuard() = default;
+        FeatureUseGuard(PrintFeaturePluginManager *mgr, PrintFeatureType type, IPrintFeature *feature);
+        ~FeatureUseGuard();
+        FeatureUseGuard(FeatureUseGuard &&other) noexcept;
+        FeatureUseGuard &operator=(FeatureUseGuard &&other) noexcept;
+        FeatureUseGuard(const FeatureUseGuard &) = delete;
+        FeatureUseGuard &operator=(const FeatureUseGuard &) = delete;
+
+        explicit operator bool() const { return feature_ != nullptr; }
+        IPrintFeature *Get() const { return feature_; }
+
+    private:
+        void Release();
+
+        PrintFeaturePluginManager *mgr_ = nullptr;
+        PrintFeatureType type_ = static_cast<PrintFeatureType>(-1);
+        IPrintFeature *feature_ = nullptr;
+    };
+
+    FeatureUseGuard AcquireFeature(PrintFeatureType type);
+    bool IsFeatureLoaded(PrintFeatureType type);
     void UnloadAll();
 
 private:
@@ -52,7 +75,10 @@ private:
         PrintFeaturePluginLoader &loader, const std::string &featureName);
 
     std::mutex mutex_;
+    std::condition_variable unloadCv_;
     std::map<PrintFeatureType, FeatureEntry> features_;
+    std::map<PrintFeatureType, int32_t> activeCounts_;
+    bool unloading_ = false;
 };
 
 } // namespace OHOS::Print

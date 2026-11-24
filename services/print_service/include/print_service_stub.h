@@ -91,6 +91,7 @@ private:
     bool OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply);
     bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
     bool OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply);
+    bool OnGetPrinterLocalizedStrings(MessageParcel &data, MessageParcel &reply);
     bool OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);
@@ -101,6 +102,7 @@ private:
     bool OnRegisterKiaInterceptorCallback(MessageParcel &data, MessageParcel &reply);
     bool OnStartSharedHostDiscovery(MessageParcel &data, MessageParcel &reply);
     bool OnAddPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnConfirmCertTrust(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

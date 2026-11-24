@@ -61,7 +61,11 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJsEx(napi_env env, 
     }
     PrintPageSize pageSize(id, name, width, height);
     PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
-    if (ret.empty() && cvtToPwgSize && !pageSize.ConvertToPwgStyle()) {
+    // Preserve MatchPageSize semantics and the legacy conversion fallback. Only an existing
+    // custom PWG name must pass through unchanged: it is the application key and the map.pwg
+    // value used by the framework; re-generating it would break that matching contract.
+    bool isCustomPwgName = name.rfind("custom_", 0) == 0;
+    if (ret.empty() && cvtToPwgSize && !isCustomPwgName && !pageSize.ConvertToPwgStyle()) {
         PRINT_HILOGE("pwgMedia build fail from JS: %{public}s.", id.c_str());
         return nullptr;
     }

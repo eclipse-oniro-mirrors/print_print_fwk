@@ -107,6 +107,8 @@ public:
     virtual int32_t GetPrinterDefaultPreferences(const std::string &printerId,
         PrinterPreferences &defaultPreferences) = 0;
     virtual int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference) = 0;
+    virtual int32_t GetPrinterLocalizedStrings(const std::string &printerId,
+        const std::string &language, std::string &resultJson) = 0;
     virtual int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds) = 0;
     virtual int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName) = 0;
@@ -120,6 +122,7 @@ public:
     virtual int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback) = 0;
     virtual int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options) = 0;
+    virtual int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

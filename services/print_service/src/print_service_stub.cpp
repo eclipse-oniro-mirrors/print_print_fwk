@@ -106,6 +106,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERDEFAULTPREFERENCES] =
         &PrintServiceStub::OnGetPrinterDefaultPreferences;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] = &PrintServiceStub::OnGetPrinterPreference;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_LOCALIZED_STRINGS] =
+        &PrintServiceStub::OnGetPrinterLocalizedStrings;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYRECOMMENDDRVIERSBYID] =
         &PrintServiceStub::OnQueryRecommendDriversById;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIDANDPPD] =
@@ -122,6 +124,8 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnNotifyWatermarkComplete;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_KIA_INTERCEPTOR_CB] =
                &PrintServiceStub::OnRegisterKiaInterceptorCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONFIRM_CERT_TRUST] =
+               &PrintServiceStub::OnConfirmCertTrust;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1061,6 +1065,7 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
 bool PrintServiceStub::OnQueryAllPrinterPpds(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryAllPrinterPpds in");
+    reply.SetMaxCapacity(PRINT_PARCEL_MAX_CAPACITY);
     std::vector<PpdInfo> ppdInfos;
     int32_t ret = QueryAllPrinterPpds(ppdInfos);
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
@@ -1189,6 +1194,20 @@ bool PrintServiceStub::OnGetPrinterPreference(MessageParcel &data, MessageParcel
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     CHECK_PARCEL_OP_AND_RETURN_VAL(printerPreference.Marshalling(reply), false);
     PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnGetPrinterLocalizedStrings(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnGetPrinterLocalizedStrings in");
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    std::string language;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(language), false);
+    std::string resultJson;
+    int32_t ret = GetPrinterLocalizedStrings(printerId, language, resultJson);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteString(resultJson), false);
     return ret == E_PRINT_NONE;
 }
 
@@ -1383,6 +1402,19 @@ bool PrintServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
     int32_t ret = AddPrinter(printerName, uri, ppdName, options);
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     PRINT_HILOGD("PrintServiceStub::OnAddPrinter out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnConfirmCertTrust(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnConfirmCertTrust in");
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    bool trusted = false;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadBool(trusted), false);
+    int32_t ret = ConfirmCertTrust(printerId, trusted);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
+    PRINT_HILOGD("PrintServiceStub::OnConfirmCertTrust out");
     return ret == E_PRINT_NONE;
 }
 

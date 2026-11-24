@@ -503,7 +503,7 @@ bool PrintPageSize::ConvertToPwgStyle()
     if (!matchId.empty()) {
         SetId(matchId);
     }
-    
+
     if (pwgName.find("custom_") != std::string::npos) {
         ConvertToCustomStyle();
     }

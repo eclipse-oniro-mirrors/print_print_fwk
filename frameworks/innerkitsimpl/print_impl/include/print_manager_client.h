@@ -137,6 +137,8 @@ public:
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
     int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences);
     int32_t GetPrinterPreference(const std::string &printerId, PrinterPreferences &printerPreference);
+    int32_t GetPrinterLocalizedStrings(const std::string &printerId,
+        const std::string &language, std::string &resultJson);
     int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName);
@@ -150,6 +152,7 @@ public:
     int32_t RegisterKiaInterceptorCallback(const sptr<IKiaInterceptorCallback> &callback);
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
+    int32_t ConfirmCertTrust(const std::string &printerId, bool trusted);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

@@ -69,6 +69,7 @@ public:
     static napi_value CheckPrintJobConflicts(napi_env env, napi_callback_info info);
     static napi_value GetPrinterDefaultPreferences(napi_env env, napi_callback_info info);
     static napi_value GetPrinterPreference(napi_env env, napi_callback_info info);
+    static napi_value GetPrinterLocalizedStrings(napi_env env, napi_callback_info info);
     static napi_value QueryRecommendDriversById(napi_env env, napi_callback_info info);
     static napi_value ConnectPrinterByIdAndPpd(napi_env env, napi_callback_info info);
     static napi_value GetSharedHosts(napi_env env, napi_callback_info info);
@@ -79,6 +80,7 @@ public:
     static napi_value UnregisterWatermarkCallback(napi_env env, napi_callback_info info);
     static napi_value NotifyWatermarkComplete(napi_env env, napi_callback_info info);
     static napi_value AddPrinter(napi_env env, napi_callback_info info);
+    static napi_value ConfirmCertTrust(napi_env env, napi_callback_info info);
     static napi_value OnPrinterInfoQuery(napi_env env, napi_callback_info info);
     static napi_value OffPrinterInfoQuery(napi_env env, napi_callback_info info);
 
@@ -108,6 +110,8 @@ private:
         PrinterInfo printerInfo;
         std::string jobId = "";
         std::string printerId = "";
+        std::string language = "";
+        std::string resultJson = "";
         std::vector<std::string> extensionList;
         uint32_t applicationEvent = -1;
         PrinterPreferences printerPreference;
@@ -120,6 +124,7 @@ private:
         PrintSharedHost sharedHost;
         std::vector<PrintSharedHost> sharedHosts;
         std::vector<PrinterInfo> printerInfos;
+        bool trusted = false;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
