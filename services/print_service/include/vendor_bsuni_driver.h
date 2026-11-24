@@ -54,7 +54,6 @@ public:
 private:
     bool LoadDriverExtension();
     void OnDiscoveredPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo);
-    void OnDiscoveredPrinterRemove(std::shared_ptr<std::string> printerId);
     void OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo, std::shared_ptr<std::string> ppdData);
     void OnCupsPrinterRemove(std::shared_ptr<std::string> printerId);
     void OnPpdQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> ppdData);

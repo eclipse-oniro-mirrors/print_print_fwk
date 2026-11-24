@@ -121,17 +121,15 @@ int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
         PRINT_HILOGW("printerId is null");
         return EXTENSION_INVALID_PARAMETER;
     }
-    auto vendorPrinterId = std::make_shared<std::string>(printerId);
     std::lock_guard<std::mutex> lock(g_driverMutex);
     if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    auto op = std::bind(&VendorBsuniDriver::OnDiscoveredPrinterRemove, g_driverWrapper, vendorPrinterId);
-    if (!g_driverWrapper->opQueue.Push(op)) {
-        PRINT_HILOGW("fail to remove discovered printer");
-        return EXTENSION_ERROR_CALLBACK_FAIL;
-    }
+    // 接口约定：本回调仅承接 bsuni 发现的局域网打印机；
+    // 发现列表条目不因广播超时移除（与 Win/Mac 对齐），统一直接拦截
+    PRINT_HILOGI("[Printer: %{public}s] bsuni discovered printer, skip remove from discovery",
+        PrintUtils::AnonymizePrinterId(printerId).c_str());
     return EXTENSION_ERROR_NONE;
 }
 
@@ -468,19 +466,6 @@ void VendorBsuniDriver::OnDiscoveredPrinterAdd(std::shared_ptr<PrinterInfo> prin
     }
     printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
     vendorManager->AddPrinterToDiscovery(GetVendorName(), *printerInfo);
-}
-
-void VendorBsuniDriver::OnDiscoveredPrinterRemove(std::shared_ptr<std::string> printerId)
-{
-    if (printerId == nullptr) {
-        PRINT_HILOGW("printerId is null");
-        return;
-    }
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
-        return;
-    }
-    vendorManager->RemovePrinterFromDiscovery(GetVendorName(), *printerId);
 }
 
 void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo, std::shared_ptr<std::string> ppdData)

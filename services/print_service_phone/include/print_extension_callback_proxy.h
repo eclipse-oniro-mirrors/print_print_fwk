@@ -27,7 +27,6 @@ public:
     bool OnCallback() override;
     bool OnCallback(const std::string &printerId) override;
     bool OnCallback(const PrintJob &job) override;
-    bool OnCallback(const std::string &printerId, PrinterCapability &cap) override;
 
 private:
     static inline BrokerDelegator<PrintExtensionCallbackProxy> delegator_;

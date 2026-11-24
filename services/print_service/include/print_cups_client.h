@@ -79,10 +79,17 @@ enum StatePolicy {
     STATE_POLICY_HINT = 2,
     STATE_POLICY_DELAY = 3,
 };
+
 struct JobStatus {
     char printer_state_reasons[1024];
     ipp_jstate_t job_state;
     char job_state_reasons[1024];
+};
+struct JobStateData {
+    ipp_jstate_t jobState = IPP_JOB_PENDING;
+    std::string jobStateReasons;
+    std::string jobPrinterStateReasons;
+    std::string jobPrinterStateMessage;
 };
 struct JobMonitorParam {
     PrintServiceAbility *serviceAbility = nullptr;
@@ -237,9 +244,12 @@ private:
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
     bool QueryJobState(http_t *http, std::shared_ptr<JobMonitorParam> monitorParams);
+    void ParseJobStateData(ipp_t *response, JobStateData &data);
     bool UpdateJobState(std::shared_ptr<JobMonitorParam> monitorParams, ipp_t *response);
     bool IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam> monitorParams);
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleMonitorOffline(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool ShouldJudgeOffline(const std::shared_ptr<JobMonitorParam> &monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateMessage(std::shared_ptr<JobMonitorParam> monitorParams);

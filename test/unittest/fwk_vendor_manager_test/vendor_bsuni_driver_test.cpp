@@ -458,7 +458,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0013, TestSize.Level2)
     BuildDefaultValue(defaultValue);
     Print_PropertyList propertyList = {0};
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
         EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
@@ -826,6 +826,20 @@ HWTEST_F(VendorBsuniDriverTest, OnQueryCapabilityByIp_InvalidIpv6_ShouldNotCallE
             EXPECT_EQ(vendorDriver.OnQueryCapabilityByIp("not_an_ip", "ipp", ""), false);
         };
     DoMockTest(testFunc);
+}
+
+HWTEST_F(VendorBsuniDriverTest, RemovePrinterFromDiscovery_AllBsuniDiscoveredPrintersSkipped, TestSize.Level1)
+{
+    // opQueue 未启动：若移除操作仍会入队将返回 CALLBACK_FAIL，返回 NONE 即证明被直接拦截
+    VendorBsuniDriver vendorDriver;
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
+    std::string mdnsPrinterId = "mdns_discovered_printer";
+    std::string unaddedMdnsPrinterId = "mdns_unadded_printer";
+    std::string ipPrinterId = "192.168.55.66";
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(mdnsPrinterId.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(unaddedMdnsPrinterId.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(ipPrinterId.c_str()), EXTENSION_ERROR_NONE);
+    VendorBsuniDriver::SetDriverWrapper(nullptr);
 }
 
 }  // namespace Print

@@ -5309,6 +5309,27 @@ HWTEST_F(PrintCupsClientTest, FillJobOptions_EmptyPpdOptionMap_UsesPwgFallback, 
     }
 }
 
+HWTEST_F(PrintCupsClientTest, ShouldJudgeOffline_WhitelistClassification, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    EXPECT_FALSE(printCupsClient.ShouldJudgeOffline(nullptr));
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(), TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID, "ipp://192.168.0.1/ipp/print", "192.168.0.1", "fwk.driver.bsuni:192.168.0.1", nullptr);
+    // 网络打印机（含 IP 添加、默认添加）不在白名单，跳过 offline 判断
+    EXPECT_FALSE(printCupsClient.ShouldJudgeOffline(param));
+    param->printerId = "fwk.driver.wlan.group:mdns_test";
+    param->printerName = "HP LaserJet";
+    EXPECT_FALSE(printCupsClient.ShouldJudgeOffline(param));
+    // USB/厂商/三方扩展/IPPOverUSB 在白名单
+    param->printerId = "fwk.driver.ppd:mdns_test";
+    EXPECT_TRUE(printCupsClient.ShouldJudgeOffline(param));
+    param->printerId = "fwk.driver.bsuni:IPP-usb_test";
+    EXPECT_TRUE(printCupsClient.ShouldJudgeOffline(param));
+    param->printerUri = "usb://test";
+    param->printerId = "com.example.ext:mdns_test";
+    EXPECT_TRUE(printCupsClient.ShouldJudgeOffline(param));
+}
+
 static std::shared_ptr<JobMonitorParam> CreateQueuedJobParam(const std::string &reason,
     PrintServiceAbility *serviceAbility)
 {

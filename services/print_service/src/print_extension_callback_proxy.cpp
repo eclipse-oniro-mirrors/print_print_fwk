@@ -87,40 +87,4 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
     PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
     return true;
 }
-
-bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId, PrinterCapability &cap)
-{
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteInterfaceToken(GetDescriptor()), false);
-    CHECK_PARCEL_OP_AND_RETURN_VAL(data.WriteString(printerId), false);
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        PRINT_HILOGE("error: remote is null");
-        return false;
-    }
-    int error = remote->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    bool ret = false;
-    if (!reply.ReadBool(ret)) {
-        PRINT_HILOGE("ReadBool for ret failed");
-        return false;
-    }
-    if (ret) {
-        auto capPtr = PrinterCapability::Unmarshalling(reply);
-        if (capPtr == nullptr) {
-            PRINT_HILOGE("Failed to create printer capability object");
-            return false;
-        }
-        cap = *capPtr;
-    }
-
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
-    return ret;
-}
 } // namespace OHOS::Print

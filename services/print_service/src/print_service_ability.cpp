@@ -2970,6 +2970,15 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 void PrintServiceAbility::HandleJobBlockedState(const std::shared_ptr<PrintJob> &printJob, uint32_t subState)
 {
+    if (subState == PRINT_JOB_BLOCKED_OFFLINE) {
+        std::string printerId = printJob->GetPrinterId();
+        PrinterInfo addedPrinter;
+        if (PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP + GLOBAL_ID_DELIMITER) &&
+            PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, addedPrinter) &&
+            !DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(addedPrinter.GetPrinterName().c_str())) {
+            RemoveSinglePrinterInfo(printerId);
+        }
+    }
     AddPrintJobToHistoryList(printJob);
     ReportBlockedAuditEvent(printJob, subState);
 #ifdef HAVE_PRINT_FAILURE_AI_NOTIFIER
@@ -3090,30 +3099,36 @@ void PrintServiceAbility::ClosePrintJobFd(const std::shared_ptr<PrintJob> &print
 void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
 {
     auto iter = printerJobMap_.find(printerId);
-    if (iter == printerJobMap_.end() || iter->second.empty()) {
-        std::shared_ptr<PrinterInfo> printerInfo;
-        auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
-        if (discoveredInfo != nullptr) {
-            printerInfo = std::make_shared<PrinterInfo>(*discoveredInfo);
-        } else {
-            auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-            if (printCupsClient != nullptr) {
-                printerInfo = printCupsClient->QueryUsbPrinterInfoByPrinterId(printerId);
-            } else {
-                PRINT_HILOGE("printCupsClient is nullptr");
-            }
-        }
-        if (printerInfo != nullptr) {
+    if (iter != printerJobMap_.end() && !iter->second.empty()) {
+        return;
+    }
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+    if (discoveredInfo != nullptr) {
+        // 发现列表条目不等于设备可达（已添加打印机不会因广播超时被移除），
+        // 仅在已添加状态为 BUSY 时释放为 IDLE，避免任务结束时把 UNAVAILABLE 覆盖回在线
+        PrinterInfo addedPrinterInfo;
+        if (PrintDataRepository::GetInstance().QueryPrinterInfoById(printerId, addedPrinterInfo) &&
+            addedPrinterInfo.GetPrinterStatus() == PRINTER_STATUS_BUSY) {
+            auto printerInfo = std::make_shared<PrinterInfo>(*discoveredInfo);
             UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
-        } else {
-            PrinterInfo addedPrinterInfo;
-            if (!PrintDataRepository::GetInstance().QueryPrinterInfoById(printerId, addedPrinterInfo)) {
-                return;
-            }
-            if (addedPrinterInfo.GetPrinterStatus() == PRINTER_STATUS_BUSY) {
-                UpdatePrinterStatus(addedPrinterInfo, PRINTER_STATUS_IDLE);
-            }
         }
+        return;
+    }
+    std::shared_ptr<PrinterInfo> printerInfo = nullptr;
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (printCupsClient != nullptr) {
+        printerInfo = printCupsClient->QueryUsbPrinterInfoByPrinterId(printerId);
+    } else {
+        PRINT_HILOGE("printCupsClient is nullptr");
+    }
+    if (printerInfo != nullptr) {
+        UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
+        return;
+    }
+    PrinterInfo addedPrinterInfo;
+    if (PrintDataRepository::GetInstance().QueryPrinterInfoById(printerId, addedPrinterInfo) &&
+        addedPrinterInfo.GetPrinterStatus() == PRINTER_STATUS_BUSY) {
+        UpdatePrinterStatus(addedPrinterInfo, PRINTER_STATUS_IDLE);
     }
 }
 
