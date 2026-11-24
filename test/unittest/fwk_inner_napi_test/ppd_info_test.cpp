@@ -90,6 +90,20 @@ HWTEST_F(PpdInfoTest, ReadFromParcel_Test, TestSize.Level1)
     EXPECT_EQ("Test.ppd", info.GetPpdName());
 }
 
+HWTEST_F(PpdInfoTest, ReadFromParcelEmptyString_Test, TestSize.Level1)
+{
+    OHOS::Print::PpdInfo info;
+    Parcel parcel;
+    parcel.WriteString("");
+    parcel.WriteString("");
+    parcel.WriteString("");
+    EXPECT_TRUE(info.ReadFromParcel(parcel));
+    Json::Value json = info.ConvertToJson();
+    EXPECT_TRUE(json.isMember("manufacturer"));
+    EXPECT_TRUE(json.isMember("nickName"));
+    EXPECT_TRUE(json.isMember("ppdName"));
+}
+
 class PpdInfoCommon {
 public:
     static void SetUpTestCase(void){};

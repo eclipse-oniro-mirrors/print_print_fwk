@@ -1493,6 +1493,7 @@ HWTEST_F(PrintServiceStubTest, OnQueryAllPrinterPpds_ShouldReturnTrue, TestSize.
     EXPECT_NE(stub, nullptr);
     ON_CALL(*stub, QueryAllPrinterPpds).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_EQ(reply.GetMaxCapacity(), PRINT_PARCEL_MAX_CAPACITY);
 }
 
 HWTEST_F(PrintServiceStubTest, OnQueryPrinterInfoByIp_ShouldReturnTrue, TestSize.Level0)

@@ -1126,25 +1126,45 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_SavePdfFileJob, TestSize.L
 
 HWTEST_F(PrintServiceProxyTest, QueryAllPrinterPpdsTest, TestSize.Level1)
 {
-    std::vector<PpdInfo> testPpds;
-    sptr<MockRemoteObject> obj = new MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    auto proxy = std::make_shared<PrintServiceProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
+    std::vector<PpdInfo> catalog;
+    size_t replyBytes = 0;
     auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryAllPrinterPpds(_))
-        .Times(Exactly(1))
-        .WillOnce([&testPpds](const std::vector<PpdInfo> &ppds) {
-            return E_PRINT_NONE;
+    EXPECT_CALL(*service, QueryAllPrinterPpds(_)).WillRepeatedly([&catalog](std::vector<PpdInfo> &ppds) {
+        ppds = catalog;
+        return E_PRINT_NONE;
+    });
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).WillRepeatedly(
+        [&service, &replyBytes](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            int32_t ret = service->OnRemoteRequest(code, data, reply, option);
+            replyBytes = reply.GetDataSize();
+            return ret;
         });
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
-    ON_CALL(*obj, SendRequest)
-        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_NONE;
-        });
-    proxy->QueryAllPrinterPpds(testPpds);
+    PrintServiceProxy proxy(obj);
+    std::vector<PpdInfo> result;
+    ASSERT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_NONE);
+    EXPECT_TRUE(result.empty());
+
+    PpdInfo driver;
+    driver.SetPpdInfo("Test Manufacturer", "Test Printer Model", "test-driver.ppd");
+    for (size_t count : {4097u, 8192u}) {
+        catalog.assign(count, driver);
+        catalog.back().SetPpdName("last-driver.ppd");
+        ASSERT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_NONE);
+        EXPECT_GT(replyBytes, 200u * 1024u);
+        EXPECT_LT(replyBytes, PRINT_PARCEL_MAX_CAPACITY);
+        ASSERT_EQ(result.size(), count);
+        EXPECT_EQ(result.back(), catalog.back());
+        result.clear();
+    }
+    catalog.push_back(driver);
+    EXPECT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_INVALID_PARAMETER);
+    EXPECT_TRUE(result.empty());
+
+    driver.SetManufacturer(std::string(PRINT_PARCEL_MAX_CAPACITY, 'M'));
+    catalog.assign(1, driver);
+    EXPECT_EQ(proxy.QueryAllPrinterPpds(result), E_PRINT_RPC_FAILURE);
+    EXPECT_TRUE(result.empty());
 }
 
 /**
