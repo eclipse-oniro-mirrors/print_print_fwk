@@ -351,6 +351,7 @@ private:
     int32_t StartCupsPrintJob(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
+    void FillVendorBundleNameIfAbsent(const std::string &printerId, PrinterInfo &info) const;
     int32_t TryConnectPrinterByIp(const std::string &params);
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);

@@ -70,6 +70,8 @@ public:
 
     void SetOriginId(const std::string &originId);
 
+    void SetBundleName(const std::string &bundleName);
+
     void SetDeviceId(const std::string &deviceId);
 
     [[nodiscard]] const std::string &GetPrinterId() const;
@@ -143,6 +145,10 @@ public:
     [[nodiscard]] bool HasOriginId() const;
 
     [[nodiscard]] std::string GetOriginId() const;
+
+    [[nodiscard]] bool HasBundleName() const;
+
+    [[nodiscard]] std::string GetBundleName() const;
 
     [[nodiscard]] const std::string &GetDeviceId() const;
 
@@ -239,6 +245,10 @@ private:
     bool hasOriginId_;
 
     std::string originId_;
+
+    bool hasBundleName_;
+
+    std::string bundleName_;
 
     std::string deviceId_;
 };

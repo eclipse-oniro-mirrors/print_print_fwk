@@ -51,6 +51,8 @@ PrinterInfo::PrinterInfo()
       selectedProtocol_(""),
       hasOriginId_(false),
       originId_(""),
+      hasBundleName_(false),
+      bundleName_(""),
       deviceId_("")
 {
     capability_.Reset();
@@ -93,6 +95,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       selectedProtocol_(right.selectedProtocol_),
       hasOriginId_(right.hasOriginId_),
       originId_(right.originId_),
+      hasBundleName_(right.hasBundleName_),
+      bundleName_(right.bundleName_),
       deviceId_(right.deviceId_)
 {
 }
@@ -133,6 +137,8 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         selectedProtocol_ = right.selectedProtocol_;
         hasOriginId_ = right.hasOriginId_;
         originId_ = right.originId_;
+        hasBundleName_ = right.hasBundleName_;
+        bundleName_ = right.bundleName_;
         deviceId_ = right.deviceId_;
     }
     return *this;
@@ -410,6 +416,22 @@ std::string PrinterInfo::GetOriginId() const
     return originId_;
 }
 
+void PrinterInfo::SetBundleName(const std::string &bundleName)
+{
+    hasBundleName_ = true;
+    bundleName_ = bundleName;
+}
+
+bool PrinterInfo::HasBundleName() const
+{
+    return hasBundleName_;
+}
+
+std::string PrinterInfo::GetBundleName() const
+{
+    return bundleName_;
+}
+
 void PrinterInfo::SetDeviceId(const std::string &deviceId)
 {
     deviceId_ = deviceId;
@@ -544,6 +566,11 @@ bool PrinterInfo::ReadFlagsFromParcel(PrinterInfo& right, Parcel& parcel)
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.alias_), false);
     }
 
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasBundleName_), false);
+    if (right.hasBundleName_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.bundleName_), false);
+    }
+
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadBool(right.hasOption_), false);
     if (right.hasOption_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.ReadString(right.option_), false);
@@ -636,6 +663,11 @@ bool PrinterInfo::MarshallingInnerProperty(Parcel &parcel) const
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetAlias()), false);
     }
 
+    CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasBundleName_), false);
+    if (hasBundleName_) {
+        CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetBundleName()), false);
+    }
+
     CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteBool(hasOption_), false);
     if (hasOption_) {
         CHECK_PARCEL_OP_AND_RETURN_VAL(parcel.WriteString(GetOption()), false);
@@ -718,6 +750,9 @@ void PrinterInfo::DumpInnerInfo() const
 {
     if (hasOriginId_) {
         PRINT_HILOGD("originId: %{private}s", originId_.c_str());
+    }
+    if (hasBundleName_) {
+        PRINT_HILOGD("bundleName: %{public}s", bundleName_.c_str());
     }
 }
 void PrinterInfo::DumpInfo() const
