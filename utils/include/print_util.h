@@ -206,7 +206,9 @@ inline void PrintUtil::SafeDeleteAuthInfo(char *&userPasswd)
         PRINT_HILOGE("The ptr is nullptr!");
         return;
     }
-    memset_s(userPasswd, MAX_AUTH_LENGTH_SIZE, '\0', MAX_AUTH_LENGTH_SIZE);
+    if (memset_s(userPasswd, MAX_AUTH_LENGTH_SIZE, '\0', MAX_AUTH_LENGTH_SIZE) != EOK) {
+        PRINT_HILOGE("memset_s failed");
+    }
     delete []userPasswd;
     userPasswd = nullptr;
 }
