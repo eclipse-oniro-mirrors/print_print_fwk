@@ -38,6 +38,7 @@ static constexpr const char *PARAM_INFO_PRINTER_PREFERENCES = "preferences";
 static constexpr const char *PARAM_INFO_ALIAS = "alias";
 static constexpr const char *PARAM_INFO_PROTOCOL = "selectedProtocol";
 static constexpr const char *PARAM_INFO_DRIVER = "selectedDriver";
+static constexpr const char *PARAM_INFO_BUNDLENAME = "bundleName";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {
@@ -92,6 +93,10 @@ void PrinterInfoHelper::MakeJsInnerProperty(napi_env env, const PrinterInfo &inf
 {
     if (info.HasAlias()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_ALIAS, info.GetAlias());
+    }
+
+    if (info.HasBundleName()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_BUNDLENAME, info.GetBundleName());
     }
 
     if (info.HasOption()) {
@@ -225,6 +230,7 @@ bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_INFO_PRINTER_STATUS, PRINT_PARAM_OPT},
         {PARAM_INFO_PRINTER_PREFERENCES, PRINT_PARAM_OPT},
         {PARAM_INFO_ALIAS, PRINT_PARAM_OPT},
+        {PARAM_INFO_BUNDLENAME, PRINT_PARAM_OPT},
         {PARAM_INFO_PROTOCOL, PRINT_PARAM_OPT},
         {PARAM_INFO_DRIVER, PRINT_PARAM_OPT},
         {PARAM_INFO_IS_DAFAULT_PRINTER, PRINT_PARAM_OPT},

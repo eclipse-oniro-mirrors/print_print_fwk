@@ -291,6 +291,7 @@ export default namespace print {
         selectedDriver?: PpdInfo;
         selectedProtocol?: string;
         options?: string;
+        bundleName?: string;
     }
 
     export class PrinterInformationImp implements PrinterInformation {
@@ -306,6 +307,7 @@ export default namespace print {
         selectedDriver?: PpdInfo = undefined;
         selectedProtocol?: string = undefined;
         options?: string = undefined;
+        bundleName?: string = undefined;
     }
 
     export interface PrinterCapability {
@@ -429,6 +431,7 @@ export default namespace print {
         description?: string;
         capability?: PrinterCapability;
         options?: Object;
+        bundleName?: string;
     }
 
     export interface PrinterCapabilities {
@@ -451,6 +454,7 @@ export default namespace print {
         description?: string = undefined;
         capability?: PrinterCapability = undefined;
         options?: Object = undefined;
+        bundleName?: string = undefined;
     }
 
     export interface PrinterPreferences {

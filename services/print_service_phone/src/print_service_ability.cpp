@@ -285,50 +285,52 @@ void PrintServiceAbility::UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterS
 bool PrintServiceAbility::RefreshVirtualPrinter()
 {
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
-    if (printCupsClient == nullptr) {
-        PRINT_HILOGW("printCupsClient is null");
-        return false;
-    }
-    std::string printerId = VIRTUAL_PRINTER_ID;
-    std::string printerUri = VIRTUAL_PRINTER_SCHEME + "://";
-    std::string printerName = VIRTUAL_PRINTER_NAME;
-    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-    std::string ppdName = VIRTUAL_PRINTER_PPD;
-    std::string ppdHashCode = printCupsClient->GetPpdHashCode(ppdName);
+    std::string ppdHashCode = printCupsClient != nullptr ? printCupsClient->GetPpdHashCode(VIRTUAL_PRINTER_PPD) : "";
     if (ppdHashCode.empty()) {
-        PRINT_HILOGW("The ppd of virtual printer is incorrect");
+        PRINT_HILOGW("printCupsClient is null or the ppd of virtual printer is incorrect");
         return false;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::string printerUri = VIRTUAL_PRINTER_SCHEME + "://";
+    std::string printerName = VIRTUAL_PRINTER_NAME;
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PrinterInfo printerInfo;
-    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+    if (PrintDataRepository::GetInstance().QueryAddedPrinterInfoByPrinterId(VIRTUAL_PRINTER_ID, printerInfo) &&
         printerInfo.GetPpdHashCode() == ppdHashCode &&
-        printCupsClient->IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
+        printCupsClient->IsPrinterExist(printerUri.c_str(), standardName.c_str(), VIRTUAL_PRINTER_PPD.c_str())) {
         PRINT_HILOGI("virtual printer has added.");
+        if (!printerInfo.HasBundleName()) {
+            // Virtual printer is a built-in ppd driver printer (fwk.driver.ppd), its source
+            // follows the vendor prefix convention. Backfill for legacy persisted data.
+            printerInfo.SetBundleName(PrintUtils::GetExtensionId(VIRTUAL_PRINTER_ID));
+            PrintDataRepository::GetInstance().InsertAddedPrinter(VIRTUAL_PRINTER_ID, printerInfo);
+            PrintDataRepository::GetInstance().SavePrinterFile(VIRTUAL_PRINTER_ID);
+        }
         UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
         return true;
     }
-    int32_t result = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
+    int32_t result = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerUri, printerName, VIRTUAL_PRINTER_PPD);
     if (result != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCupsWithSpecificPpd error = %{public}d.", result);
         return false;
     }
     PrinterCapability printerCaps;
-    result = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps, ppdName);
+    result = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps, VIRTUAL_PRINTER_PPD);
     if (result != E_PRINT_NONE) {
         PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", result);
         printCupsClient->DeleteCupsPrinter(standardName.c_str());
         return false;
     }
-    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterId(VIRTUAL_PRINTER_ID);
+    printerInfo.SetBundleName(PrintUtils::GetExtensionId(VIRTUAL_PRINTER_ID));
     printerInfo.SetPrinterName(printerName);
     printerInfo.SetUri(printerUri);
     printerInfo.SetCapability(printerCaps);
     printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo.SetPpdHashCode(ppdHashCode);
     BuildPrinterPreference(printerInfo);
-    PrintDataRepository::GetInstance().InsertAddedPrinter(printerId, printerInfo);
-    PrintDataRepository::GetInstance().SavePrinterFile(printerId);
+    PrintDataRepository::GetInstance().InsertAddedPrinter(VIRTUAL_PRINTER_ID, printerInfo);
+    PrintDataRepository::GetInstance().SavePrinterFile(VIRTUAL_PRINTER_ID);
     UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
     return true;
 }
@@ -923,6 +925,7 @@ int32_t PrintServiceAbility::AddRawPrinter(PrinterInfo &info)
         PRINT_HILOGD("QueryCallerBundleName error, contains RAW_PPD_DRIVER.");
         return E_PRINT_INVALID_EXTENSION;
     }
+    info.SetBundleName(extensionId);
     std::string printerId = info.GetPrinterId();
     std::string globalPrinterId = PrintUtils::GetGlobalId(extensionId, printerId);
     std::string rawGlobalPrinterId = RAW_PPD_DRIVER + RAW_GLOBAL_ID_DELIMITER + globalPrinterId;
@@ -1111,6 +1114,12 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         if (ret != 0) {
             PRINT_HILOGE("cups QueryPrinterInfoByPrinterId fail, ret = %{public}d", ret);
             return E_PRINT_INVALID_PRINTER;
+        }
+    }
+    if (!info.HasBundleName()) {
+        auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(printerId);
+        if (discoveredInfo != nullptr && discoveredInfo->HasBundleName()) {
+            info.SetBundleName(discoveredInfo->GetBundleName());
         }
     }
     PRINT_HILOGI("[Printer: %{public}s] QueryPrinterInfoByPrinterId printerStatus: %{public}d",
@@ -4101,14 +4110,21 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
 {
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     infoPtr->SetPrinterId(PrintUtils::GetGlobalId(extensionId, infoPtr->GetPrinterId()));
+    infoPtr->SetBundleName(extensionId);
     PRINT_HILOGI("[Printer: %{public}s] AddSinglePrinterInfo start",
         PrintUtils::AnonymizePrinterId(infoPtr->GetPrinterId()).c_str());
-    if (PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
+    auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId());
+    if (discoveredInfo == nullptr) {
         PRINT_HILOGI("new printer, add it");
         infoPtr->DumpInfo();
         infoPtr->SetPrinterState(PRINTER_ADDED);
         PrintDataRepository::GetInstance().AddPrinterToDiscovery(infoPtr);
     } else {
+        if (!discoveredInfo->HasBundleName()) {
+            PrinterInfo updatedDiscovered = *discoveredInfo;
+            updatedDiscovered.SetBundleName(extensionId);
+            PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(infoPtr->GetPrinterId(), updatedDiscovered);
+        }
         PrintDataRepository::GetInstance().SetDiscoveredPrinterState(infoPtr->GetPrinterId(), PRINTER_ADDED);
     }
     infoPtr->SetPrinterState(PRINTER_ADDED);
@@ -4143,6 +4159,7 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     PrinterInfo printerInfo = info;
     printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
     printerInfo.SetPrinterId(printExtId);
+    printerInfo.SetBundleName(extensionId);
 
     // Query complete printer capability from PPD file to fix incomplete capability issue.
     // External applications may provide incomplete printer capability information,
@@ -4292,6 +4309,7 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::HandleNewPrinterDiscovery(cons
     }
 
     printerInfo->SetPrinterId(globalPrinterId);
+    FillVendorBundleNameIfAbsent(globalPrinterId, *printerInfo);
     PrintDataRepository::GetInstance().AddPrinterToDiscovery(printerInfo);
 
     PRINT_HILOGD("HandleNewPrinterDiscovery completed");
@@ -4335,6 +4353,7 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
         printerInfo = info;
         printerInfo.SetPrinterId(globalPrinterId);
         SyncAddedPrinterInfo(globalPrinterId, printerInfo);
+        FillVendorBundleNameIfAbsent(globalPrinterId, printerInfo);
         PrintDataRepository::GetInstance().AddPrinterToDiscovery(std::make_shared<PrinterInfo>(printerInfo));
         return true;
     }
@@ -4345,6 +4364,7 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
         printerInfo = info;
         printerInfo.SetPrinterId(globalPrinterId);
         SyncAddedPrinterInfo(globalPrinterId, printerInfo);
+        FillVendorBundleNameIfAbsent(globalPrinterId, printerInfo);
         PrintDataRepository::GetInstance().UpdateDiscoveredPrinterInfo(globalPrinterId, printerInfo);
     }
     return true;
@@ -4588,6 +4608,7 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
         PrinterInfo printerInfo = info;
         SyncAddedPrinterInfo(globalPrinterId, printerInfo);
         printerInfo.SetPrinterId(globalPrinterId);
+        FillVendorBundleNameIfAbsent(globalPrinterId, printerInfo);
         PrintDataRepository::GetInstance().AddIpPrinterToList(std::make_shared<PrinterInfo>(printerInfo));
     }
     return true;
@@ -4817,6 +4838,7 @@ int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPri
     auto discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (discoveredInfo != nullptr && discoveredInfo->HasCapability()) {
         info = *discoveredInfo;
+        FillVendorBundleNameIfAbsent(globalPrinterId, info);
         return E_PRINT_NONE;
     }
     const int waitTimeout = 5000;
@@ -4826,9 +4848,21 @@ int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPri
     discoveredInfo = PrintDataRepository::GetInstance().QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (discoveredInfo != nullptr && discoveredInfo->HasCapability()) {
         info = *discoveredInfo;
+        FillVendorBundleNameIfAbsent(globalPrinterId, info);
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PRINTER;
+}
+
+void PrintServiceAbility::FillVendorBundleNameIfAbsent(const std::string &printerId, PrinterInfo &info) const
+{
+    if (info.HasBundleName()) {
+        return;
+    }
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    if (!VendorManager::ExtractVendorName(extensionId).empty()) {
+        info.SetBundleName(extensionId);
+    }
 }
 
 int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
@@ -5268,6 +5302,7 @@ int32_t PrintServiceAbility::AddPrinterByPrinterDriver(const std::string &printe
     printerInfo->SetPrinterId(printerId);
     printerInfo->SetPrinterName(printerName);
     printerInfo->SetUri(uri);
+    printerInfo->SetBundleName(bundleName);
 
     std::string finalPrinterName = RenamePrinterWhenAdded(*printerInfo);
     printerInfo->SetPrinterName(finalPrinterName);

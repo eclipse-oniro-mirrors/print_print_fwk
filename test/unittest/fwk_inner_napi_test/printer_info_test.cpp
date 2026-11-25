@@ -571,5 +571,93 @@ HWTEST_F(PrinterInfoTest, ReadFromParcel_EmptyParcel, TestSize.Level1)
     auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
     EXPECT_EQ(nullptr, result);
 }
+
+/**
+ * @tc.name: PrinterInfoTest_BundleName_SetAndGet
+ * @tc.desc: Verify SetBundleName/GetBundleName/HasBundleName.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_BundleName_SetAndGet, TestSize.Level2)
+{
+    OHOS::Print::PrinterInfo info;
+    EXPECT_FALSE(info.HasBundleName());
+    EXPECT_EQ(info.GetBundleName(), "");
+    info.SetBundleName("com.example.printext");
+    EXPECT_TRUE(info.HasBundleName());
+    EXPECT_EQ(info.GetBundleName(), "com.example.printext");
+}
+
+/**
+ * @tc.name: PrinterInfoTest_BundleName_CopyConstructor
+ * @tc.desc: Verify bundleName is copied by copy constructor.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_BundleName_CopyConstructor, TestSize.Level2)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetBundleName("com.example.printext");
+    OHOS::Print::PrinterInfo copyInfo(info);
+    EXPECT_TRUE(copyInfo.HasBundleName());
+    EXPECT_EQ(copyInfo.GetBundleName(), "com.example.printext");
+}
+
+/**
+ * @tc.name: PrinterInfoTest_BundleName_Assignment
+ * @tc.desc: Verify bundleName is copied by operator=.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_BundleName_Assignment, TestSize.Level2)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetBundleName("com.example.printext");
+    OHOS::Print::PrinterInfo assigned;
+    assigned = info;
+    EXPECT_TRUE(assigned.HasBundleName());
+    EXPECT_EQ(assigned.GetBundleName(), "com.example.printext");
+}
+
+/**
+ * @tc.name: PrinterInfoTest_BundleName_Marshalling
+ * @tc.desc: Verify bundleName marshalling and unmarshalling round-trip.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_BundleName_Marshalling, TestSize.Level2)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetBundleName("com.example.printext");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+    auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
+    ASSERT_NE(nullptr, result);
+    EXPECT_TRUE(result->HasBundleName());
+    EXPECT_EQ(result->GetBundleName(), "com.example.printext");
+}
+
+/**
+ * @tc.name: PrinterInfoTest_BundleName_Marshalling_WhenNotSet
+ * @tc.desc: Verify marshalling works when bundleName is not set.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_BundleName_Marshalling_WhenNotSet, TestSize.Level2)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+    auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
+    ASSERT_NE(nullptr, result);
+    EXPECT_FALSE(result->HasBundleName());
+    EXPECT_EQ(result->GetBundleName(), "");
+}
 }  // namespace Print
 }  // namespace OHOS

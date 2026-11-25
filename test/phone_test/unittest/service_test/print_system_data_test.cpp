@@ -1925,9 +1925,113 @@ HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_EmptyDeviceId, TestSize.Lev
 
     Json::Value printerJson;
     systemData->ParseInfoToPrinterJson(std::make_shared<PrinterInfo>(info), printerJson);
-    
+
     EXPECT_TRUE(printerJson.isMember("deviceId"));
     EXPECT_EQ(printerJson["deviceId"].asString(), "");
+}
+
+HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_WithBundleName, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string bundleName = "com.example.printext";
+
+    PrinterInfo info;
+    info.SetPrinterId("com.example.printext:local_id");
+    info.SetPrinterName("TestPrinter");
+    info.SetBundleName(bundleName);
+
+    Json::Value printerJson;
+    systemData->ParseInfoToPrinterJson(std::make_shared<PrinterInfo>(info), printerJson);
+
+    EXPECT_TRUE(printerJson.isMember("bundleName"));
+    EXPECT_EQ(printerJson["bundleName"].asString(), bundleName);
+}
+
+HWTEST_F(PrintSystemDataTest, ParseInfoToPrinterJson_WithoutBundleName, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+
+    PrinterInfo info;
+    info.SetPrinterId("com.example.printext:local_id");
+    info.SetPrinterName("TestPrinter");
+
+    Json::Value printerJson;
+    systemData->ParseInfoToPrinterJson(std::make_shared<PrinterInfo>(info), printerJson);
+
+    EXPECT_FALSE(printerJson.isMember("bundleName"));
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_WithBundleName, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string bundleName = "com.example.printext";
+
+    // The printerId prefix differs from the json bundleName on purpose:
+    // the persisted json value must take priority over the printerId fallback.
+    PrinterInfo info;
+    info.SetPrinterId("another.example:local_id");
+    Json::Value printerJson;
+    printerJson["bundleName"] = bundleName;
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+
+    EXPECT_TRUE(info.HasBundleName());
+    EXPECT_EQ(info.GetBundleName(), bundleName);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_BundleName_FromPrinterId, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string extId = "com.example.printext";
+
+    PrinterInfo info;
+    info.SetPrinterId(extId + ":local_id");
+    Json::Value printerJson;
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+
+    EXPECT_TRUE(info.HasBundleName());
+    EXPECT_EQ(info.GetBundleName(), extId);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_BundleName_NonStringJsonFallsBack, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    std::string extId = "com.example.printext";
+
+    PrinterInfo info;
+    info.SetPrinterId(extId + ":local_id");
+    Json::Value printerJson;
+    printerJson["bundleName"] = 123;
+    systemData->ConvertInnerJsonToPrinterInfo(printerJson, info);
+
+    EXPECT_TRUE(info.HasBundleName());
+    EXPECT_EQ(info.GetBundleName(), extId);
+}
+
+HWTEST_F(PrintSystemDataTest, ConvertInnerJsonToPrinterInfo_BundleName_VendorAndRawPrefixFilled, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+
+    PrinterInfo vendorInfo;
+    vendorInfo.SetPrinterId("fwk.driver.bsuni:local_id");
+    Json::Value vendorJson;
+    systemData->ConvertInnerJsonToPrinterInfo(vendorJson, vendorInfo);
+    EXPECT_TRUE(vendorInfo.HasBundleName());
+    EXPECT_EQ(vendorInfo.GetBundleName(), "fwk.driver.bsuni");
+
+    PrinterInfo rawInfo;
+    rawInfo.SetPrinterId("driver.raw.com.example.printext:local_id");
+    Json::Value rawJson;
+    systemData->ConvertInnerJsonToPrinterInfo(rawJson, rawInfo);
+    EXPECT_TRUE(rawInfo.HasBundleName());
+    EXPECT_EQ(rawInfo.GetBundleName(), "driver.raw.com.example.printext");
+
+    PrinterInfo plainInfo;
+    plainInfo.SetPrinterId("local_id_without_delimiter");
+    Json::Value plainJson;
+    systemData->ConvertInnerJsonToPrinterInfo(plainJson, plainInfo);
+    // No delimiter in printerId: the prefix parse yields an empty string, but the write is unconditional.
+    EXPECT_TRUE(plainInfo.HasBundleName());
+    EXPECT_TRUE(plainInfo.GetBundleName().empty());
 }
 
 HWTEST_F(PrintSystemDataTest, PrinterCapability_JsonReadWrite_BasicFields, TestSize.Level1)

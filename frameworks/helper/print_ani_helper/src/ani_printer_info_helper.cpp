@@ -34,6 +34,7 @@ static constexpr const char *PARAM_INFO_PRINTER_MAKE = "printerMake";
 static constexpr const char *PARAM_INFO_URI = "uri";
 static constexpr const char *PARAM_INFO_PRINTER_PREFERENCES = "preferences";
 static constexpr const char *PARAM_INFO_ALIAS = "alias";
+static constexpr const char *PARAM_INFO_BUNDLENAME = "bundleName";
 PrinterInfo PrinterInfoAniHelper::ParsePrinterInfo(ani_env *env, ani_ref printerInfo)
 {
     PRINT_HILOGI("enter ParsePrinterInfo");
@@ -151,6 +152,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
     SetStringProperty(env, obj, PARAM_INFO_URI, info.GetUri());
     SetStringProperty(env, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
     SetStringProperty(env, obj, PARAM_INFO_ALIAS, info.GetAlias());
+    SetStringProperty(env, obj, PARAM_INFO_BUNDLENAME, info.GetBundleName());
     SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
     ani_enum_item printerStateEnum = CreateEnumByIndex(env, "@ohos.print.print.PrinterState",
         static_cast<int32_t>(info.GetPrinterState()));
@@ -197,6 +199,8 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
     SetStringProperty(env, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
 
     SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
+
+    SetStringProperty(env, obj, PARAM_INFO_BUNDLENAME, info.GetBundleName());
 
     return obj;
 }
