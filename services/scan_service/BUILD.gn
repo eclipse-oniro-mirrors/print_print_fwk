@@ -47,10 +47,13 @@ _sources = [
   "${_service_path}/src/scan_system_data.cpp",
   "${_service_path}/src/scan_usb_manager.cpp",
   "${_service_path}/src/scan_service_utils.cpp",
+  "${_service_path}/src/tofu_cert_store.cpp",
   "${_service_path}/src/scan_discover_data.cpp",
   "${_service_path}/src/scan_task.cpp",
   "${_service_path}/src/scan_picture_data.cpp",
   "${_service_path}/src/caller_app_monitor.cpp",
+  "${_service_path}/src/scan_ability_connection.cpp",
+  "${_service_path}/src/scan_cert_dialog_callback.cpp",
   "${_service_path}/src/escl_driver_manager.cpp",
   "${_service_path}/src/escl_scanner_status.cpp",
   "${_service_path}/src/curl_http_client.cpp",
@@ -78,12 +81,14 @@ _deps = [
   "${print_path}/frameworks/ISaneBackends:sane_backends",
   "${print_path}/frameworks/models/scan_models:scan_models",
   "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
+  "${print_path}/frameworks/ability_manager_adapter:print_ability_manager_adapter",
 ]
 
 _external_deps = [
   "ability_base:base",
   "ability_base:want",
   "ability_base:zuri",
+  "ability_runtime:ability_connect_callback_stub",
   "ability_runtime:ability_manager",
   "ability_runtime:abilitykit_native",
   "access_token:libaccesstoken_sdk",
@@ -114,6 +119,7 @@ _external_deps = [
   "image_framework:image_native",
   "curl:curl_shared",
   "libxml2:libxml2",
+  "openssl:libcrypto_shared",
 ]
 
 ohos_shared_library("scan_service") {

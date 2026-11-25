@@ -26,7 +26,8 @@ namespace OHOS::Scan {
 class EsclScannerStatus {
 public:
     static bool QueryScannerStatus(const std::string& ipAddress, int32_t portNumber,
-        std::map<std::string, std::string>& statusMap);
+        std::map<std::string, std::string>& statusMap,
+        bool isHttps = false);
 private:
     static bool ValidateParameters(const std::string& ipAddress, int32_t portNumber);
     static bool ParseXmlResponse(const std::string& responseBuffer,

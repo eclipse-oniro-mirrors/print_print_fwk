@@ -18,7 +18,11 @@
 #include "scanner_info.h"
 #include <string>
 namespace OHOS::Scan {
+constexpr const char* SCHEME_HTTPS = "https";
+constexpr const char* SCHEME_HTTP = "http";
+
 class SaneOptionDescriptor;
+
 class EsclDriverManager {
 public:
     static int32_t InitializeEsclScannerDriver();
@@ -27,9 +31,12 @@ public:
     static bool IsEsclScanner(const std::string& scannerId);
     static bool IsAdfMode(const std::string& scannerId);
     static bool ExtractIpAndPort(const std::string& scannerId, std::string& ipAddress, int32_t& portNumber);
-    static bool IsAdfEmpty(const std::string& ipAddress, int32_t portNumber);
+    static bool IsAdfEmpty(bool isHttps, const std::string& ipAddress, int32_t portNumber);
     static void InjectLineartOption(SaneOptionDescriptor &saneDesc);
     static bool ShouldDowngradeBwMode(const std::string& scannerId, const std::string& value);
+    static void RenameTofuCert(const std::string& oldDeviceId, const std::string& newDeviceId);
+    static bool BuildPlainHttpDeviceId(const std::string& scannerId, std::string& plainDeviceId,
+        const std::string& plainPort = "80");
 private:
     static bool CreateSoftLink();
     static bool CreateAirscanConfigFile();

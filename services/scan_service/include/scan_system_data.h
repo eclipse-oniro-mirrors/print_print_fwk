@@ -51,6 +51,7 @@ public:
 private:
     bool ParseScannerListJsonV1(Json::Value& jsonObject);
     bool CheckJsonObjectValue(const Json::Value& object);
+    static void ParseStringField(Json::Value &object, const char *key, std::string &value);
     void ParseScannerJsonV1(ScanDeviceInfo &scanDeviceInfo, Json::Value &object);
     std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
     std::mutex addedScannerMapLock_;

@@ -75,11 +75,18 @@ bool CurlHttpClient::PerformHttpRequest(const std::string& url, std::string& res
     curl_easy_setopt(curlHandle, CURLOPT_WRITEDATA, &responseBuffer);
     curl_easy_setopt(curlHandle, CURLOPT_TIMEOUT, HTTP_REQUEST_TIMEOUT);
     curl_easy_setopt(curlHandle, CURLOPT_MAXFILESIZE, MAX_RESPONSE_SIZE);
-    // Enforce TLS 1.2 or higher
-    curl_easy_setopt(curlHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-     // Allow only AEAD ciphers with forward secrecy
-    curl_easy_setopt(curlHandle, CURLOPT_SSL_CIPHER_LIST, SECURE_CIPHER_LIST);
-    curl_easy_setopt(curlHandle, CURLOPT_TLS13_CIPHERS, TLS13_CIPHER_LIST);
+
+    if (url.find("https://") == 0) {
+        // Enforce TLS 1.2 or higher
+        curl_easy_setopt(curlHandle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+        // Allow only AEAD ciphers with forward secrecy
+        curl_easy_setopt(curlHandle, CURLOPT_SSL_CIPHER_LIST, SECURE_CIPHER_LIST);
+        curl_easy_setopt(curlHandle, CURLOPT_TLS13_CIPHERS, TLS13_CIPHER_LIST);
+        /* Certificate verification relies on sane-airscan's TOFU store;
+         * this client only serves non-sensitive status queries (IsAdfEmpty). */
+        curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYHOST, 0L);
+    }
 
     CURLcode curlResult = curl_easy_perform(curlHandle);
     if (curlResult != CURLE_OK) {

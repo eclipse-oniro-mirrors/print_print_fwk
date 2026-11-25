@@ -25,7 +25,9 @@ namespace OHOS::Scan {
 using namespace OHOS::NetManagerStandard;
 const char* MDNS_TYPE_SCANNER_TCP = "_scanner._tcp";
 const char* MDNS_TYPE_USCAN_TCP = "_uscan._tcp";
+const char* MDNS_TYPE_USCANS_TCP = "_uscans._tcp";
 constexpr int32_t MDNS_PORT = 5353;
+constexpr int32_t MDNS_DISCOVER_WAIT_SECONDS = 1;
 
 ScanMdnsService& ScanMdnsService::GetInstance()
 {
@@ -38,6 +40,23 @@ void ScanMdnsService::SetScannerInfoMap(const std::string& ip, const ScanDeviceI
     std::lock_guard<std::mutex> autoLock(ipToScannerInfoMapLock_);
     std::string key = ip + "-" + info.deviceType;
     netScannerInfoMap_[key] = info;
+}
+
+bool ScanMdnsService::GetPlainHttpPort(const std::string& ip, std::string& port)
+{
+    std::lock_guard<std::mutex> autoLock(ipToScannerInfoMapLock_);
+    auto it = netScannerInfoMap_.find(ip + "-" + MDNS_TYPE_USCAN_TCP);
+    if (it == netScannerInfoMap_.end() || it->second.GetPort().empty()) {
+        return false;
+    }
+    port = it->second.GetPort();
+    return true;
+}
+
+void ScanMdnsService::RemoveScannerInfoMap(const std::string& ip, const std::string& type)
+{
+    std::lock_guard<std::mutex> autoLock(ipToScannerInfoMapLock_);
+    netScannerInfoMap_.erase(ip + "-" + type);
 }
 
 void ScanMdnsService::SaveMdnsCallbackStubPtr(const std::string& type, sptr<ScanMDnsDiscoveryObserver> callbackPtr)
@@ -71,7 +90,8 @@ std::string ScanMDnsResolveObserver::GetMdnsInfoAttribute(MDnsServiceInfo &info,
 
 bool ScanMdnsService::OnStartDiscoverService()
 {
-    const std::vector<std::string> scannerServiceTypes = { MDNS_TYPE_USCAN_TCP, MDNS_TYPE_SCANNER_TCP};
+    const std::vector<std::string> scannerServiceTypes = { MDNS_TYPE_USCAN_TCP, MDNS_TYPE_USCANS_TCP,
+        MDNS_TYPE_SCANNER_TCP};
     for (const auto& type : scannerServiceTypes) {
         MDnsServiceInfo mdnsInfo;
         mdnsInfo.type = type;
@@ -86,8 +106,7 @@ bool ScanMdnsService::OnStartDiscoverService()
             return false;
         }
         SaveMdnsCallbackStubPtr(type, callbackPtr);
-        constexpr int32_t WAIT_TIME = 1;
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+        std::this_thread::sleep_for(std::chrono::seconds(MDNS_DISCOVER_WAIT_SECONDS));
     }
     if (!isListening_.load()) {
         std::thread updateScannerId(&ScanMdnsService::UpdateScannerIdThread, this);
@@ -152,6 +171,12 @@ bool ScanMdnsService::FindNetScannerInfoByIp(const std::string& ip, ScanDeviceIn
         netScannerInfo = it->second;
         return true;
     }
+    std::string keyUscans = ip + "-" + MDNS_TYPE_USCANS_TCP;
+    it = netScannerInfoMap_.find(keyUscans);
+    if (it != netScannerInfoMap_.end() && it->second.uuid != "") {
+        netScannerInfo = it->second;
+        return true;
+    }
     std::string keyUscan = ip + "-" + MDNS_TYPE_USCAN_TCP;
     it = netScannerInfoMap_.find(keyUscan);
     if (it != netScannerInfoMap_.end() && it->second.uuid != "") {
@@ -188,17 +213,33 @@ int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info
     MDnsServiceInfo infoTmp = info;
     std::string uuidValue = GetMdnsInfoAttribute(infoTmp, uuidKey);
     tcpInfo.uuid = uuidValue;
+    // Determine scheme based on mDNS service type
+    if (info.type == MDNS_TYPE_USCANS_TCP) {
+        tcpInfo.SetIsHttps(true);
+    } else {
+        tcpInfo.SetIsHttps(false);
+    }
+    // Keep the full mDNS record for every service type (the HTTP probe needs the _uscan port).
+    tcpInfo.deviceType = info.type;
+    ScanMdnsService::GetInstance().SetScannerInfoMap(tcpInfo.addr, tcpInfo);
     ScanDeviceInfo scanInfo;
-    if (info.type == MDNS_TYPE_USCAN_TCP && EsclDriverManager::GenerateEsclScannerInfo(tcpInfo, scanInfo)) {
-        scanInfo.deviceType = MDNS_TYPE_USCAN_TCP;
+    if ((info.type == MDNS_TYPE_USCAN_TCP || info.type == MDNS_TYPE_USCANS_TCP)
+        && EsclDriverManager::GenerateEsclScannerInfo(tcpInfo, scanInfo)) {
+        scanInfo.deviceType = info.type;
+        // Only proceed if new device or upgrading http -> https
+        ScanDeviceInfo existingInfo;
+        bool alreadyExists = ScannerDiscoverData::GetInstance().GetEsclDevice(
+            scanInfo.uniqueId, existingInfo);
+        if (alreadyExists && existingInfo.GetIsHttps()) {
+            SCAN_HILOGI("Skip for %{private}s: existing=https, new=%{public}s",
+                scanInfo.uniqueId.c_str(), tcpInfo.GetIsHttps() ? SCHEME_HTTPS : SCHEME_HTTP);
+            return NETMANAGER_EXT_SUCCESS;
+        }
         ScannerDiscoverData::GetInstance().SetEsclDevice(scanInfo.uniqueId, scanInfo);
         if (auto scanService = ScanServiceAbility::GetInstance()) {
             scanService->NotifyEsclScannerFound(scanInfo);
         }
-    } else {
-        tcpInfo.deviceType = MDNS_TYPE_SCANNER_TCP;
     }
-    ScanMdnsService::GetInstance().SetScannerInfoMap(tcpInfo.addr, tcpInfo);
     SyncSysDataAndNotifyScanService(tcpInfo);
     return NETMANAGER_EXT_SUCCESS;
 }
@@ -215,6 +256,11 @@ int32_t ScanMDnsResolveObserver::SyncSysDataAndNotifyScanService(ScanDeviceInfoT
         SCAN_HILOGW("SaveScannerMap fail");
     }
     auto& [oldDeviceId, newDeviceId] = updateResult.value();
+    /* IP changed: the baseline was already renamed inside UpdateNetScannerByUuid.
+     * Invalidate the active dialog session, dropping its pending cert. */
+    if (auto scanService = ScanServiceAbility::GetInstance()) {
+        scanService->InvalidateCertDialogForDevice(oldDeviceId);
+    }
     ScanDeviceInfoSync syncInfo;
     syncInfo.deviceId = newDeviceId;
     syncInfo.oldDeviceId = oldDeviceId;
@@ -239,6 +285,7 @@ int32_t ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info
 int32_t ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGI("mdnsloss name = [%{public}s], type = [%{public}s]", info.name.c_str(), info.type.c_str());
+    ScanMdnsService::GetInstance().RemoveScannerInfoMap(info.addr, info.type);
     auto& discoverData = ScannerDiscoverData::GetInstance();
     ScanDeviceInfo discoveredInfo;
     bool hasTcp = discoverData.GetTcpDevice(info.addr, discoveredInfo);

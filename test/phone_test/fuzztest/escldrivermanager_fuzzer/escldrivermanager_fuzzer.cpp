@@ -172,9 +172,10 @@ void TestIsAdfMode(const uint8_t* data, size_t size, FuzzedDataProvider* dataPro
 
 void TestIsAdfEmpty(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
+    bool isHttps = dataProvider->ConsumeBool();
     std::string ipAddress = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int32_t portNumber = dataProvider->ConsumeIntegralInRange<int32_t>(1, FUZZ_MAX_TCP_PORT);
-    EsclDriverManager::IsAdfEmpty(ipAddress, portNumber);
+    EsclDriverManager::IsAdfEmpty(isHttps, ipAddress, portNumber);
 }
 }  // namespace Scan
 }  // namespace OHOS

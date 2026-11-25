@@ -35,6 +35,10 @@ enum SaneStatus {
     SANE_STATUS_IO_ERROR, // error during device I/O
     SANE_STATUS_NO_MEM, // out of memory
     SANE_STATUS_ACCESS_DENIED, // access to resource has been denied
+    // TOFU cert mismatch (100). sane.h defines it as a macro; guard the expansion.
+#ifndef SANE_STATUS_TLS_CERT_CHANGED
+    SANE_STATUS_TLS_CERT_CHANGED = 100,
+#endif
     SANE_STATUS_NO_PERMISSION = 201, // no permission
     SANE_STATUS_INVALID_PARAMETER = 401, // invalid parameter
     SANE_STATUS_GENERIC_FAILURE = 13100001, // generic failure of sane service

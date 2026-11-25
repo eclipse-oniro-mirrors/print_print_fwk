@@ -41,7 +41,7 @@ public:
     void SetButton(const std::string &button_);
     void SetFeeder(const std::string &feeder_);
     void SetDeviceState(const uint32_t &deviceState_);
-    void SetInfoType(const std::string &infoType_);
+    void SetIsHttps(bool isHttps_);
 
     [[nodiscard]] const std::string &GetDeviceName() const;
     [[nodiscard]] const std::string &GetUuid() const;
@@ -53,7 +53,7 @@ public:
     [[nodiscard]] const std::string &GetButton() const;
     [[nodiscard]] const std::string &GetFeeder() const;
     [[nodiscard]] const uint32_t &GetDeviceState() const;
-    [[nodiscard]] const std::string &GetInfoType() const;
+    [[nodiscard]] bool GetIsHttps() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -77,6 +77,7 @@ private:
     std::string button;
     std::string feeder;
     uint32_t deviceState;
+    bool isHttps = false;
 };
 
 class ScanDeviceInfo final : public Parcelable {
@@ -101,6 +102,7 @@ public:
     void SetUniqueId(const std::string &uniqueId);
     void SetUuid(const std::string &uuid);
     void SetDeviceAvailable(bool deviceAvailable);
+    void SetIsHttps(bool isHttps);
 
     [[nodiscard]] const std::string &GetDeviceId() const;
     [[nodiscard]] const std::string &GetManufacturer() const;
@@ -113,6 +115,7 @@ public:
     [[nodiscard]] const std::string &GetUniqueId() const;
     [[nodiscard]] const std::string &GetUuid() const;
     [[nodiscard]] bool GetDeviceAvailable() const;
+    [[nodiscard]] bool GetIsHttps() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -136,6 +139,7 @@ private:
     std::string deviceName;
     std::string uniqueId;
     std::string uuid;
+    bool isHttps = false;
     bool deviceAvailable;
 };
 

@@ -44,6 +44,8 @@ std::unordered_map<uint32_t, std::string> NapiScanUtils::scanErrorCodeMap_ = {
     {E_SCAN_COVER_OPEN, "SCAN_ERROR_COVER_OPEN"},
     {E_SCAN_IO_ERROR, "SCAN_ERROR_IO_ERROR"},
     {E_SCAN_NO_MEM, "SCAN_ERROR_NO_MEMORY"},
+    {E_SCAN_HTTPS_UNAVAILABLE, "SCAN_ERROR_HTTPS_UNAVAILABLE"},
+    {E_SCAN_TLS_CERT_CHANGED, "SCAN_ERROR_TLS_CERT_CHANGED"}
 };
 napi_valuetype NapiScanUtils::GetValueType(napi_env env, napi_value value)
 {
