@@ -1158,6 +1158,67 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051_NeedRename, TestSize.Leve
 }
 
 /**
+ * @tc.name: UsbAbortPreservesPrinterError
+ * @tc.desc: Verify the service job state after parsing an aborted USB job.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrintCupsClientTest, UsbAbortPreservesPrinterError, TestSize.Level1)
+{
+    auto ability = PrintServiceAbility::GetInstance();
+    ability->ManualStart();
+    constexpr int32_t userId = 98341;
+    const std::string jobId = "cups-usb-abort-test";
+    const std::string printerId = "cups-usb-abort-test-printer";
+    ASSERT_EQ(ability->printerJobMap_.count(printerId), 0u);
+    ASSERT_EQ(ability->printUserMap_.count(userId), 0u);
+    ASSERT_EQ(ability->userJobMap_.count(jobId), 0u);
+    auto user = std::make_shared<PrintUserData>();
+    user->SetUserId(userId);
+    ability->printUserMap_[userId] = user;
+    ability->userJobMap_[jobId] = userId;
+    const bool queueWasBlocked = ability->isJobQueueBlocked_;
+    auto job = std::make_shared<PrintJob>();
+    job->SetJobId(jobId);
+    job->SetPrinterId(printerId);
+    PrintCupsClient client;
+    auto param = std::make_shared<JobMonitorParam>(ability, jobId, TEST_CUPS_JOB_ID, "", PRINTER_PRINTER_NAME,
+        printerId, nullptr);
+    param->job_state = IPP_JOB_ABORTED;
+    struct {
+        const char* uri;
+        const char* reasons;
+        bool canceled;
+        uint32_t state;
+        uint32_t substate;
+    } cases[] = {
+        {"usb://test", "media-empty-error", false, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OUT_OF_PAPER},
+        {"usb://test", "marker-supply-empty-error", false, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OUT_OF_INK},
+        {"usb://test", "media-empty-error", true, PRINT_JOB_RUNNING, 0},
+        {"ipp://test", "media-empty-error", false, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN},
+        {"usb://test", "toner-low-warning", false, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN},
+    };
+    for (const auto& entry : cases) {
+        SCOPED_TRACE(entry.uri + std::string(" ") + entry.reasons);
+        user->queuedJobList_[jobId] = job;
+        job->SetJobState(PRINT_JOB_RUNNING);
+        job->SetSubState(0);
+        param->printerUri = entry.uri;
+        param->isCanceled = entry.canceled;
+        strlcpy(param->job_printer_state_reasons, entry.reasons, sizeof(param->job_printer_state_reasons));
+        client.ParseStateReasons(param);
+        strlcpy(param->job_printer_state_message, "port-error", sizeof(param->job_printer_state_message));
+        client.ParseStateMessage(param);
+        EXPECT_FALSE(client.JobStatusCallback(param));
+        EXPECT_EQ(job->GetJobState(), entry.state);
+        EXPECT_EQ(job->GetSubState(), entry.substate);
+    }
+    ability->printerJobMap_.erase(printerId);
+    ability->userJobMap_.erase(jobId);
+    ability->printUserMap_.erase(userId);
+    ability->isJobQueueBlocked_ = queueWasBlocked;
+}
+
+/**
  * @tc.name: PrintCupsClientTest_0052
  * @tc.desc: JobStatusCallback
  * @tc.type: FUNC

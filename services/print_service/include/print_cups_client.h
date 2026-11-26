@@ -109,6 +109,7 @@ struct JobMonitorParam {
     int32_t timesOfSameState = -1;
     bool isBlock = false;
     uint32_t substate = 0;
+    uint32_t usbAbortSubstate = 0;
     std::string jobOriginatingUserName;
     std::atomic<bool> isCanceled{false};
     std::atomic<bool> isInterrupt{false};
