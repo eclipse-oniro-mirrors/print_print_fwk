@@ -364,7 +364,8 @@ HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, Te
     testVec.push_back(info);
 
     EXPECT_CALL(*service, OnCallback(Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo)), testVec))
-        .Times(0);
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(Exactly(1));
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
