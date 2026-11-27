@@ -21,16 +21,23 @@
 #include "printer_capability.h"
 #include <string>
 #include "print_constant.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdName);
 
 const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char *choice,
     const char *defaultText);
+// 从指定 PPD 文件路径解析能力（本地 PPD 无 bundle 归属，跳过 ValidateAndClearVendorAbility）
+int32_t QueryPrinterCapabilityFromPpdPath(PrinterCapability &printerCaps, const std::string &ppdFilePath);
 
 int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::string &val);
 int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type, const std::string &val,
     std::vector<std::string>& conflictTypes);
+
+// 校验 fd 中的 PPD：内部 dup 一份给 ppdOpenFd，原 fd 保留给后续读取。
+// 通过条件：大小 <= 1MB、可解析。失败详情经 PRINT_HILOGE 输出。
+bool ValidatePpdFd(int fd);
 
 std::string ExtractBundleNameFromPpdName(const std::string &ppdName);
 std::string ExtractBundleNameFromAbilityName(const std::string &abilityName);

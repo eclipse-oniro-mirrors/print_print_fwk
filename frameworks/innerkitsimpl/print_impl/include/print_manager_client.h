@@ -153,6 +153,8 @@ public:
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options);
     int32_t ConfirmCertTrust(const std::string &printerId, bool trusted);
+    int32_t AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

@@ -112,6 +112,8 @@ public:
     int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options) override;
     int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) override;
+    int32_t AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

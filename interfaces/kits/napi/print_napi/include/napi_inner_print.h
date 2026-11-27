@@ -81,6 +81,7 @@ public:
     static napi_value NotifyWatermarkComplete(napi_env env, napi_callback_info info);
     static napi_value AddPrinter(napi_env env, napi_callback_info info);
     static napi_value ConfirmCertTrust(napi_env env, napi_callback_info info);
+    static napi_value AddPrinterWithPpdFile(napi_env env, napi_callback_info info);
     static napi_value OnPrinterInfoQuery(napi_env env, napi_callback_info info);
     static napi_value OffPrinterInfoQuery(napi_env env, napi_callback_info info);
 
@@ -110,6 +111,9 @@ private:
         PrinterInfo printerInfo;
         std::string jobId = "";
         std::string printerId = "";
+        int32_t ppdFd = -1;
+        std::string printerUri = "";
+        std::string options = "";
         std::string language = "";
         std::string resultJson = "";
         std::vector<std::string> extensionList;

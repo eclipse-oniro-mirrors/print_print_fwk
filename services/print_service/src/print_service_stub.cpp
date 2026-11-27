@@ -24,6 +24,7 @@
 #include "print_job.h"
 #include "print_log.h"
 #include "print_util.h"
+#include <unistd.h>
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -126,6 +127,8 @@ PrintServiceStub::PrintServiceStub()
                &PrintServiceStub::OnRegisterKiaInterceptorCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONFIRM_CERT_TRUST] =
                &PrintServiceStub::OnConfirmCertTrust;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERWITHPPDFILE] =
+        &PrintServiceStub::OnAddPrinterWithPpdFile;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1415,6 +1418,33 @@ bool PrintServiceStub::OnConfirmCertTrust(MessageParcel &data, MessageParcel &re
     int32_t ret = ConfirmCertTrust(printerId, trusted);
     CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
     PRINT_HILOGD("PrintServiceStub::OnConfirmCertTrust out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnAddPrinterWithPpdFile(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnAddPrinterWithPpdFile in");
+    std::string printerId;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(printerId), false);
+    std::string uri;
+    CHECK_PARCEL_OP_AND_RETURN_VAL(data.ReadString(uri), false);
+    int32_t ppdFd = data.ReadFileDescriptor();
+    if (ppdFd < 0) {
+        PRINT_HILOGE("dup ppd fd failed by RPC");
+        CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(E_PRINT_RPC_FAILURE), false);
+        return false;
+    }
+    std::string options;
+    if (!data.ReadString(options)) {
+        PRINT_HILOGE("read options from parcel failed, close ppd fd");
+        close(ppdFd);
+        return false;
+    }
+    // ppdFd 从 RPC 获取，服务层只读不关闭，统一在本函数释放
+    int32_t ret = AddPrinterWithPpdFile(printerId, uri, ppdFd, options);
+    close(ppdFd);
+    CHECK_PARCEL_OP_AND_RETURN_VAL(reply.WriteInt32(ret), false);
+    PRINT_HILOGD("PrintServiceStub::OnAddPrinterWithPpdFile out");
     return ret == E_PRINT_NONE;
 }
 

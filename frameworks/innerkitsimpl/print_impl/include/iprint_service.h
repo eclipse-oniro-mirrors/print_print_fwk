@@ -123,6 +123,8 @@ public:
     virtual int32_t AddPrinter(const std::string &printerName, const std::string &uri,
         const std::string &ppdName, const std::string &options) = 0;
     virtual int32_t ConfirmCertTrust(const std::string &printerId, bool trusted) = 0;
+    virtual int32_t AddPrinterWithPpdFile(const std::string &printerId, const std::string &uri,
+        int32_t ppdFd, const std::string &options) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H
